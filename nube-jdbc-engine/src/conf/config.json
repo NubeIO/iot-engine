@@ -1,0 +1,6 @@
+{
+  "url":"jdbc:mysql://localhost/vertx_test",
+  "driver_class":"com.mysql.jdbc.Driver",
+  "user" : "root",
+  "password" : "root"
+}

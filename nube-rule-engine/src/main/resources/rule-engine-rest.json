@@ -1,0 +1,8 @@
+{
+  "main": "io.nubespark.RulesRestVerticle",
+  "options": {
+    "config" : {
+      "http.port": 3030
+    }
+  }
+}
