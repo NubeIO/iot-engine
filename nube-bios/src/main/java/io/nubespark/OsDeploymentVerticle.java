@@ -40,7 +40,10 @@ public class OsDeploymentVerticle extends MicroServiceVerticle {
     @Override
     public void start() {
         super.start();
-
+        System.out.println(this.getClass().getCanonicalName() + " Loader = " + OsDeploymentVerticle.class.getClassLoader());
+        System.out.println("Current thread loader = " + Thread.currentThread().getContextClassLoader());
+        System.out.println("Config on nube bios");
+        System.out.println(Json.encodePrettily(config()));
         initializeJDBCClient(
                 void1 -> initializeDB(
                     void2 -> setupMavenRepos(
@@ -71,7 +74,7 @@ public class OsDeploymentVerticle extends MicroServiceVerticle {
         JsonObject jdbcConfig = new JsonObject();
         jdbcConfig.put("url", "jdbc:sqlite:nube-bios.db");
         jdbcConfig.put("driver_class", "org.sqlite.JDBC");
-        jdbc = JDBCClient.createShared(vertx, jdbcConfig);
+        jdbc = JDBCClient.createNonShared(vertx, jdbcConfig);
         next.handle(Future.succeededFuture());
     }
 
@@ -168,8 +171,10 @@ public class OsDeploymentVerticle extends MicroServiceVerticle {
     private void handleInstall(String version, JsonObject options, Handler<AsyncResult<Void>> next) {
 
         String serviceName = getServiceName(version);
-        DeploymentOptions deploymentOptions = new DeploymentOptions(config().mergeIn(options));
-        vertx.deployVerticle(serviceName, deploymentOptions, handler-> {
+        System.out.println("Config after merging in BIOS....");
+        System.out.println(Json.encodePrettily(config().mergeIn(options)));
+//        DeploymentOptions deploymentOptions = new DeploymentOptions(config().mergeIn(options));
+        vertx.deployVerticle(serviceName, handler-> {
             if (handler.succeeded()) {
                 logger.info("Successfully deployed ", serviceName);
                 String deploymentId = handler.result();

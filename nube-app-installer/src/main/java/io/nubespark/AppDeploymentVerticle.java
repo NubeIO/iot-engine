@@ -13,7 +13,10 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLConnection;
+import io.vertx.servicediscovery.types.MessageSource;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -36,7 +39,9 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
     @Override
     public void start() {
         super.start();
-        jdbc = JDBCClient.createShared(vertx, config());
+        jdbc = JDBCClient.createNonShared(vertx, config());
+        System.out.println(this.getClass().getCanonicalName() + " Loader = " + AppDeploymentVerticle.class.getClassLoader());
+        System.out.println("Current thread loader = " + Thread.currentThread().getContextClassLoader());
         System.out.println("Config on app installer");
         System.out.println(Json.encodePrettily(config()));
 
@@ -49,13 +54,21 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
             }
         }));
 
-        vertx.eventBus().consumer(ADDRESS_INSTALLER, this::installer);
 
         publishMessageSource(ADDRESS_INSTALLER, ADDRESS_INSTALLER, ar-> {
             if (ar.failed()) {
                 ar.cause().printStackTrace();
             } else {
                 System.out.println("Nube App Installer (Message source) published : " + ar.succeeded());
+            }
+        });
+
+        MessageSource.getConsumer(discovery, new JsonObject().put("name", ADDRESS_INSTALLER), message->{
+            if(message.failed()) {
+                logger.error(message.cause().getMessage());
+                message.cause().printStackTrace();
+            } else {
+                message.result().handler(this::installer);
             }
         });
     }
@@ -148,6 +161,11 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
                             handleInstall(verticleName, next-> {
                                 if(next.succeeded()) {
                                     Future.succeededFuture();
+                                    System.out.println("Classpath of Nube App installer = "+ System.getProperty("java.class.path"));
+                                    URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                                    for(URL url: urlClassLoader.getURLs()) {
+                                        System.out.println(url.getPath());
+                                    }
                                 } else {
                                     Future.failedFuture(next.cause());
                                 }

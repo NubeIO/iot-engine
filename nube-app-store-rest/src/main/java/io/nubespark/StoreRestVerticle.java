@@ -43,6 +43,8 @@ public class StoreRestVerticle extends MicroServiceVerticle {
     @Override
     public void start() {
         super.start();
+        System.out.println("Config on app store REST");
+        System.out.println(Json.encodePrettily(config()));
         startWebApp(http -> {
             if (http.succeeded()) {
                 System.out.println("Server started");

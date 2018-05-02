@@ -2,12 +2,17 @@ package io.nubespark;
 
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.asyncsql.AsyncSQLClient;
+import io.vertx.ext.asyncsql.MySQLClient;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.servicediscovery.types.MessageSource;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -17,13 +22,25 @@ import java.util.StringJoiner;
  */
 public class JdbcVerticle extends MicroServiceVerticle {
 
-    JDBCClient jdbc;
+    AsyncSQLClient jdbc;
     public static String ADDRESS = "io.nubespark.jdbc.engine";
 
     @Override
     public void start() {
         super.start();
-        jdbc = JDBCClient.createShared(vertx, config());
+        System.out.println("Config on JDBC Engine app");
+        System.out.println(Json.encodePrettily(config()));
+
+        System.out.println("Classpath of JDBC Engine app = "+ System.getProperty("java.class.path"));
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        URL[] urls = ((URLClassLoader)cl).getURLs();
+        for(URL url: urls){
+            System.out.println(url.getFile());
+        }
+        System.out.println("Current thread loader = " + Thread.currentThread().getContextClassLoader());
+        System.out.println(JdbcVerticle.class.getClassLoader());
+
+        jdbc = MySQLClient.createNonShared(vertx, config());
         initializeDatabase();
         publishMessageSource("jdbc-engine", ADDRESS, handler -> {
             if(handler.failed()) {
@@ -67,6 +84,7 @@ public class JdbcVerticle extends MicroServiceVerticle {
         jdbc.getConnection(ar -> {
             if (ar.failed()) {
                 System.out.println("Cannot get connection object");
+                ar.cause().printStackTrace();
                 Future.failedFuture(ar.cause());
                 return;
             }

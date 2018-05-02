@@ -22,6 +22,8 @@ public class RulesRestVerticle extends MicroServiceVerticle {
     @Override
     public void start() {
         super.start();
+        System.out.println("Config on Rules REST engine app");
+        System.out.println(Json.encodePrettily(config()));
         startWebApp(http -> {
             if (http.succeeded()) {
                 System.out.println("Server started");
