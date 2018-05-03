@@ -34,10 +34,10 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
-            <plugin>
-                <!-- copy the cluster configuration -->
-                <artifactId>maven-dependency-plugin</artifactId>
-            </plugin>
+            <!--<plugin>-->
+                <!--&lt;!&ndash; copy the cluster configuration &ndash;&gt;-->
+                <!--<artifactId>maven-dependency-plugin</artifactId>-->
+            <!--</plugin>-->
         </plugins>
     </build>
 
