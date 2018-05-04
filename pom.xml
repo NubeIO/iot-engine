@@ -21,6 +21,7 @@
         <module>nube-app-installer</module>
         <module>nube-app-store-rest</module>
         <module>nube-bios</module>
+        <module>nube-web-server</module>
     </modules>
 
     <parent>
