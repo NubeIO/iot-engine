@@ -1,5 +1,7 @@
 package io.nubespark;
 
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
@@ -8,18 +10,22 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by topsykretts on 4/28/18.
@@ -38,7 +44,6 @@ public class StoreRestVerticle extends MicroServiceVerticle {
     public static final String ADDRESS_BIOS = "io.nubespark.bios";
 
     Logger logger = LoggerFactory.getLogger(StoreRestVerticle.class);
-
 
     @Override
     public void start() {
@@ -120,6 +125,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
         router.post("/api/store/uninstall").handler(routingContext -> install(routingContext, "uninstall"));
         router.post("/api/store/os").handler(this::installOS);
         router.get("/api/store/deployments").handler(this::getDeployments);
+        router.get("/api/store/nodes").handler(this::getNodes);
 
         // This is last handler that gives not found message
         router.route().last().handler(routingContext -> {
@@ -144,6 +150,26 @@ public class StoreRestVerticle extends MicroServiceVerticle {
                         config().getInteger("http.port", 8080),
                         next::handle
                 );
+    }
+
+    private void getNodes(RoutingContext routingContext) {
+
+        List<JsonObject> nodesInfo = new ArrayList<>();
+        for(HazelcastInstance instance:Hazelcast.getAllHazelcastInstances()) {
+            JsonObject info = new JsonObject();
+            info.put("instance", instance.getName());
+            List<String> members = instance.getCluster().getMembers()
+                    .stream()
+                    .map(member -> member.getAddress().getHost() + ":" + member.getAddress().getPort())
+                    .collect(Collectors.toList());
+            info.put("members", new JsonArray(members));
+            nodesInfo.add(info);
+        }
+
+        routingContext.response()
+                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                .end(Json.encodePrettily(new JsonArray(nodesInfo)));
+
     }
 
     private void installOS(RoutingContext routingContext) {
