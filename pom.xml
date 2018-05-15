@@ -6,7 +6,7 @@
 
     <properties>
         <nube.version>1.0-SNAPSHOT</nube.version>
-        <stack.version>3.4.1</stack.version>
+        <stack.version>3.5.1</stack.version>
         <!--overridden in each project packaged as a fat jar -->
         <main.verticle/>
     </properties>
@@ -22,6 +22,8 @@
         <module>nube-app-store-rest</module>
         <module>nube-bios</module>
         <module>nube-web-server</module>
+        <module>nube-server-ditto-driver</module>
+        <module>nube-edge-ditto-driver</module>
     </modules>
 
     <parent>
@@ -48,12 +50,12 @@
         <repository>
             <id>nexus</id>
             <name>Releases</name>
-            <url>http://localhost:8081/repository/maven-releases/</url>
+            <url>http://localhost:9099/repository/maven-releases/</url>
         </repository>
         <snapshotRepository>
             <id>nexus</id>
             <name>Snapshot</name>
-            <url>http://localhost:8081/repository/maven-snapshots/</url>
+            <url>http://localhost:9099/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 

@@ -21,6 +21,10 @@
             <artifactId>vertx-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-api-contract</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.nubespark</groupId>
             <artifactId>nube-vertx-common</artifactId>
             <version>1.0-SNAPSHOT</version>

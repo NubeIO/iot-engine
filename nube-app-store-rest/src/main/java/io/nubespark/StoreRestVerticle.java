@@ -10,7 +10,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.impl.FailedFuture;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -18,8 +19,9 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
+import io.vertx.ext.web.api.contract.RouterFactoryOptions;
+import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
+import io.vertx.ext.web.handler.StaticHandler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,53 +105,45 @@ public class StoreRestVerticle extends MicroServiceVerticle {
     }
 
     private void startWebApp(Handler<AsyncResult<HttpServer>> next) {
-        // Create a router object.
-        Router router = Router.router(vertx);
+        System.out.println("Starting web app from Open API 3 Specification..");
+        OpenAPI3RouterFactory.create(this.vertx, "/webroot/apidoc/nube-app-store.json", openAPI3RouterFactoryAsyncResult -> {
+            System.out.println("Handler of openAPI3RouterFactory called...");
+            if (openAPI3RouterFactoryAsyncResult.succeeded()) {
+                System.out.println("Success of OpenAPI3RouterFactory");
+                OpenAPI3RouterFactory routerFactory = openAPI3RouterFactoryAsyncResult.result();
 
-        // Bind "/" to our hello message.
-        router.route("/").handler(routingContext -> {
-            HttpServerResponse response = routingContext.response();
-            response
-                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(new JsonObject()
-                            .put("name", "nubespark app store REST API")
-                            .put("version", "1.0")
-                            .put("vert.x_version", "3.4.1")
-                            .put("java_version", "8.0")
-                    ));
-        });
+                // Enable automatic response when ValidationException is thrown
+                RouterFactoryOptions options =
+                        new RouterFactoryOptions()
+                                .setMountNotImplementedHandler(true)
+                                .setMountValidationFailureHandler(true);
 
-        //// TODO: 4/26/18 other routing logic here
-        router.route("/api/store*").handler(BodyHandler.create());
-        router.post("/api/store/install").handler(routingContext -> install(routingContext, "install"));
-        router.post("/api/store/uninstall").handler(routingContext -> install(routingContext, "uninstall"));
-        router.post("/api/store/os").handler(this::installOS);
-        router.get("/api/store/deployments").handler(this::getDeployments);
-        router.get("/api/store/nodes").handler(this::getNodes);
+                routerFactory.setOptions(options);
 
-        // This is last handler that gives not found message
-        router.route().last().handler(routingContext -> {
-            String uri = routingContext.request().absoluteURI();
-            routingContext.response()
-                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                    .setStatusCode(404)
-                    .end(Json.encodePrettily(new JsonObject()
-                            .put("uri", uri)
-                            .put("status", 404)
-                            .put("message", "Resource Not Found")
-                    ));
-        });
 
-        // Create the HTTP server and pass the "accept" method to the request handler.
-        vertx
-                .createHttpServer()
-                .requestHandler(router::accept)
-                .listen(
-                        // Retrieve the port from the configuration,
-                        // default to 8080.
-                        config().getInteger("http.port", 8080),
-                        next::handle
+                // Add routes handlers
+                routerFactory.addHandlerByOperationId("installApp", routingContext -> install(routingContext, "install"));
+                routerFactory.addHandlerByOperationId("uninstallApp", routingContext -> install(routingContext, "install"));
+                routerFactory.addHandlerByOperationId("upgradeOs", this::installOS);
+                routerFactory.addHandlerByOperationId("getNodes", this::getNodes);
+
+
+                // Generate the router
+                Router router = routerFactory.getRouter();
+
+                router.route().handler(StaticHandler.create());
+
+                HttpServer server = vertx.createHttpServer(new HttpServerOptions()
+                        .setPort(config().getInteger("http.port", 3031))
+                        .setHost(config().getString("http.host", "localhost"))
                 );
+                server.requestHandler(router::accept).listen();
+                next.handle(Future.succeededFuture(server));
+            } else {
+                System.out.println("Failure in OpenAPI3RouterFactory");
+                next.handle(Future.failedFuture(openAPI3RouterFactoryAsyncResult.cause()));
+            }
+        });
     }
 
     private void getNodes(RoutingContext routingContext) {
