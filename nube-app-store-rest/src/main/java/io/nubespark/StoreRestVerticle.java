@@ -124,7 +124,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
 
                 // Add routes handlers
                 routerFactory.addHandlerByOperationId("installApp", routingContext -> install(routingContext, "install"));
-                routerFactory.addHandlerByOperationId("uninstallApp", routingContext -> install(routingContext, "install"));
+                routerFactory.addHandlerByOperationId("uninstallApp", routingContext -> install(routingContext, "uninstall"));
                 routerFactory.addHandlerByOperationId("upgradeOs", this::installOS);
                 routerFactory.addHandlerByOperationId("getNodes", this::getNodes);
 
