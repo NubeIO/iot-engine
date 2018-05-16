@@ -64,6 +64,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
 
         vertx.eventBus().consumer(ADDRESS_BIOS_REPORT, this::handleReports);
 
+        //// TODO: 5/16/18 get public host name and add an API to get available services
         publishHttpEndpoint("io.nubespark.app.store.rest", "localhost", config().getInteger("http.port", 8080), ar -> {
             if (ar.failed()) {
                 ar.cause().printStackTrace();
@@ -135,7 +136,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
 
                 HttpServer server = vertx.createHttpServer(new HttpServerOptions()
                         .setPort(config().getInteger("http.port", 3031))
-                        .setHost(config().getString("http.host", "localhost"))
+//                        .setHost(config().getString("http.host", "localhost"))
                 );
                 server.requestHandler(router::accept).listen();
                 next.handle(Future.succeededFuture(server));
