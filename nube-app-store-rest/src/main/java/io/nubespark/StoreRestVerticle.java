@@ -134,6 +134,18 @@ public class StoreRestVerticle extends MicroServiceVerticle {
 
                 router.route().handler(StaticHandler.create());
 
+                router.route().last().handler(routingContext -> {
+                    if(routingContext.response().getStatusCode() == 404) {
+                        System.out.println("Resource Not Found..");
+                    }
+                   routingContext.response()
+                           .setStatusCode(404)
+                           .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                           .end(Json.encodePrettily(new JsonObject()
+                                   .put("message", "Resource Not Found")
+                           ));
+                });
+
                 HttpServer server = vertx.createHttpServer(new HttpServerOptions()
                         .setPort(config().getInteger("http.port", 3031))
 //                        .setHost(config().getString("http.host", "localhost"))
