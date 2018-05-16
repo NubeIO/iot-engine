@@ -129,15 +129,23 @@ public class ServerDittoDriver extends MicroServiceVerticle {
         String uri = message.getString("uri"); //resource of ditto
         String method = message.getString("method"); //request method Eg: GET, PUT, POST, DELETE, etc.
         HttpMethod httpMethod = HttpMethod.valueOf(method);
+        String host = config().getString("ditto.http.host", "localhost");
+        Integer port = config().getInteger("ditto.http.port", 8080);
+        boolean ssl = false;
+        if (port == 443 || port == 8443) {
+            ssl = true;
+        }
         Buffer body = null;
         if(message.fieldNames().contains("body")) {
             body = Buffer.buffer(message.getBinary("body"));
         }
 
         HttpClientRequest c_req = client.request(httpMethod,
-                config().getInteger("ditto.http.port", 7171),
-                config().getString("ditto.http.host", "localhost"),
-                uri,
+                new RequestOptions()
+                        .setHost(host)
+                        .setPort(port)
+                        .setURI(uri)
+                        .setSsl(ssl),
                 c_res -> {
                     System.out.println("Proxying response: " + c_res.statusCode());
                     JsonObject response = new JsonObject();
