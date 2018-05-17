@@ -28,7 +28,10 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         // creating body handler
         router.route().handler(BodyHandler.create());
 
-        BridgeOptions options = new BridgeOptions().addOutboundPermitted(new PermittedOptions().setAddress("news-feed"));
+        BridgeOptions options = new BridgeOptions()
+                .addOutboundPermitted(new PermittedOptions().setAddress("news-feed"))
+                .addOutboundPermitted(new PermittedOptions().setAddress("io.nubespark.ditto.events"));
+
 
         router.route("/eventbus/*").handler(SockJSHandler.create(vertx).bridge(options, event -> {
 

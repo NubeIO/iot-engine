@@ -20,10 +20,10 @@
 <div id="status" class="news"></div>
 
 <script>
-    var eb = new EventBus("http://localhost:8080/eventbus");
+    var eb = new EventBus("http://localhost:8085/eventbus");
     eb.onopen = function () {
-        eb.registerHandler("news-feed", function (err, msg) {
-            var str = "<code>" + JSON.stringify(msg.body) + "</code><br>";
+        eb.registerHandler("io.nubespark.ditto.events", function (err, msg) {
+            var str = "<code>" + JSON.stringify(msg.body, null, 2) + "</code><br>";
             $('#status').prepend(str);
         })
     }

@@ -5,8 +5,10 @@ import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.*;
+import io.vertx.core.http.impl.headers.VertxHttpHeaders;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
@@ -22,6 +24,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
 
     private static final String EDGE_DITTO_DRIVER = "io.nubespark.edge.ditto.driver";
     private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
+    private static final String DITTO_EVENTS = "io.nubespark.ditto.events";
 
     @Override
     public void start() {
@@ -38,6 +41,32 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                 message.reply(dittoResponse);
             });
 
+        });
+
+        // Subscribe to ditto events and make it available to vertx event bus
+        //// TODO: 5/17/18 checking if connection will be alive
+        String host = config().getString("ditto.http.host", "localhost");
+        Integer port = config().getInteger("ditto.http.port", 8080);
+        client.websocket(
+                new RequestOptions()
+                        .setHost(host)
+                        .setPort(port)
+                        .setURI("/ws/2")
+                ,
+                MultiMap.caseInsensitiveMultiMap()
+                        .add(HttpHeaders.AUTHORIZATION, "Basic " + getAuthKey())
+                ,
+                webSocket -> {
+            webSocket.handler( data ->{
+                if (data.toString("ISO-8859-1").endsWith("ACK")) {
+                    System.out.println("Received ack ditto:: " + data.toString("ISO-8859-1"));
+                } else {
+                    System.out.println("Publishing in vertex event bus");
+                    System.out.println(data.toString("ISO-8859-1"));
+                    vertx.eventBus().publish(DITTO_EVENTS, new JsonObject(data));
+                }
+            });
+            webSocket.writeTextMessage("START-SEND-EVENTS");
         });
 
         vertx.createHttpServer().requestHandler(req -> {
