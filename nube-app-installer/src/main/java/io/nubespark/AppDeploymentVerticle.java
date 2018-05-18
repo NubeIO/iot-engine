@@ -104,10 +104,12 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
                 SQLConnection connection = handler.result();
                 getAllDeployments(connection, allDeployments -> {
                     List<JsonObject> records = allDeployments.result();
-                    for(JsonObject record: records) {
+                    for(int i=0; i<records.size(); i++) {
                         logger.info("Starting installed deployments..");
+                        JsonObject record = records.get(i);
                         String deploymentId = record.getString("deploymentId");
                         String verticleName = record.getString("serviceName");
+                        final int finalI1 = i;
                         handleInstall(verticleName, next-> {
                             if(next.succeeded()) {
                                 String query = "DELETE FROM deployed_verticles where deploymentId = ?";
@@ -115,11 +117,18 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
                                 connection.updateWithParams(query, params, deleteHandler-> {
                                     if(deleteHandler.failed()) {
                                         handleFailure(deleteHandler);
+                                        if(finalI1 == records.size()-1) {
+                                            connection.close();
+                                        }
+                                        step.handle(Future.failedFuture(next.cause()));
                                     } else {
                                         logger.info("Clearing earlier deploymentId ", deploymentId, " success.");
+                                        if(finalI1 == records.size()-1) {
+                                            connection.close();
+                                        }
+                                        step.handle(Future.succeededFuture());
                                     }
                                 });
-                                step.handle(Future.succeededFuture());
                             } else {
                                 step.handle(Future.failedFuture(next.cause()));
                             }
@@ -140,7 +149,7 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
         }
         logger.info("Host Name = ", System.getProperty("host.name"));
         if (where == null || where.equals("all") || where.equals(System.getProperty("host.name"))) {
-            logger.info("Executing action ", action);
+            logger.info("Executing action " + action);
             String msg = message.body().toString();
             JsonObject info = new JsonObject(msg);
             String groupId = info.getString("groupId", "io.nubespark");
@@ -150,9 +159,9 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
             if (artifactId != null) {
                 String service = info.getString("service", artifactId);
                 String verticleName = "maven:" + groupId + ":" + artifactId + ":" + version + "::" + service;
-                
                 final String finalAction = action;
                 checkIfServiceRunning(verticleName, isRunning -> {
+                    logger.info("Finished checking service..");
                     JsonObject jsonObject = isRunning.result();
                     Boolean isVerticleRunning = jsonObject.getBoolean("isRunning");
                     if(!isVerticleRunning) {
@@ -161,11 +170,11 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
                             handleInstall(verticleName, next-> {
                                 if(next.succeeded()) {
                                     Future.succeededFuture();
-                                    System.out.println("Classpath of Nube App installer = "+ System.getProperty("java.class.path"));
-                                    URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-                                    for(URL url: urlClassLoader.getURLs()) {
-                                        System.out.println(url.getPath());
-                                    }
+//                                    System.out.println("Classpath of Nube App installer = "+ System.getProperty("java.class.path"));
+//                                    URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+//                                    for(URL url: urlClassLoader.getURLs()) {
+//                                        System.out.println(url.getPath());
+//                                    }
                                 } else {
                                     Future.failedFuture(next.cause());
                                 }
@@ -189,6 +198,7 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
     }
 
     private void handleUnInstall(String deploymentId, String verticleName) {
+        logger.info("Handling uninstall");
         vertx.undeploy(deploymentId, unInstallHandler-> jdbc.getConnection(handler -> {
            if(handler.failed()) {
                handleFailure(handler);
@@ -222,6 +232,7 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
     }
 
     private void handleInstall(String verticleName, Handler<AsyncResult<Void>> next) {
+        logger.info("handling install");
         vertx.deployVerticle(verticleName,
                 ar -> {
                     if (ar.succeeded()) {
@@ -262,8 +273,10 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
             connection.updateWithParams(insertQuery, params, insertHandler -> {
                 if(insertHandler.failed()) {
                     handleFailure(insertHandler);
+                    connection.close();
                 } else {
                     logger.info("Persisting ", deploymentID, " and ", serviceName, "in database");
+                    connection.close();
                 }
             });
 
@@ -271,8 +284,10 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
     }
 
     private void checkIfServiceRunning(String serviceName, Handler<AsyncResult<JsonObject>> next) {
+        logger.info("Checking if service is running: "+ serviceName);
         jdbc.getConnection(handler -> {
             if(handler.failed()) {
+                logger.error("JDBC connection Failed. ", handler.cause().getMessage());
                 handleFailure(handler);
             } else {
                 SQLConnection connection = handler.result();
@@ -280,7 +295,9 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
                 JsonArray params = new JsonArray(Collections.singletonList(serviceName));
                 connection.queryWithParams(query, params, selectHandler-> {
                     if(selectHandler.failed()) {
+                        logger.error("SQL execution failed. ", selectHandler.cause().getMessage());
                         handleFailure(selectHandler);
+                        connection.close();
                     } else {
                         if(selectHandler.result().getNumRows() > 0) {
                             logger.info("Already running Service: ", serviceName);
@@ -288,17 +305,18 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
                             jsonObject.put("isRunning", true);
                             jsonObject.put("deploymentId", selectHandler.result().getRows().get(0).getValue("deploymentId"));
                             logger.debug("return value = ", jsonObject);
+                            connection.close();
                             next.handle(Future.succeededFuture(jsonObject));
                         } else {
                             logger.info("Not running Service: ", serviceName);
                             JsonObject jsonObject = new JsonObject();
                             jsonObject.put("isRunning", false);
+                            connection.close();
                             next.handle(Future.succeededFuture(jsonObject));
                         }
                     }
                 });
             }
-
         });
     }
 
