@@ -11,7 +11,6 @@ import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.impl.FailedFuture;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -21,6 +20,8 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.api.contract.RouterFactoryOptions;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
+import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
 import java.util.ArrayList;
@@ -128,26 +129,42 @@ public class StoreRestVerticle extends MicroServiceVerticle {
                 routerFactory.addHandlerByOperationId("upgradeOs", this::installOS);
                 routerFactory.addHandlerByOperationId("getNodes", this::getNodes);
 
-
                 // Generate the router
                 Router router = routerFactory.getRouter();
+                // router.route().handler(BodyHandler.create());
 
-                router.route().handler(StaticHandler.create());
+                // For testing server we make CORS available
+                router.route().handler(CorsHandler.create("*")
+                        .allowedMethod(io.vertx.core.http.HttpMethod.GET)
+                        .allowedMethod(io.vertx.core.http.HttpMethod.POST)
+                        .allowedMethod(io.vertx.core.http.HttpMethod.OPTIONS)
+                        .allowedHeader("Access-Control-Request-Method")
+                        .allowedHeader("Access-Control-Allow-Credentials")
+                        .allowedHeader("Access-Control-Allow-Origin")
+                        .allowedHeader("Access-Control-Allow-Headers")
+                        .allowedHeader("Content-Type")
+                        .allowedHeader("origin")
+                        .allowedHeader("x-requested-with")
+                        .allowedHeader("accept")
+                        .allowedHeader("X-PINGARUNER")
+                );
+
+                router.route("/*").handler(StaticHandler.create());
 
                 router.route().last().handler(routingContext -> {
                     if(routingContext.response().getStatusCode() == 404) {
-                        System.out.println("Resource Not Found..");
+                        System.out.println("Resource Not Found");
                     }
-                   routingContext.response()
-                           .setStatusCode(404)
-                           .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                           .end(Json.encodePrettily(new JsonObject()
-                                   .put("message", "Resource Not Found")
-                           ));
+                    routingContext.response()
+                            .setStatusCode(404)
+                            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                            .end(Json.encodePrettily(new JsonObject()
+                                    .put("message", "Resource Not Found")
+                            ));
                 });
 
                 HttpServer server = vertx.createHttpServer(new HttpServerOptions()
-                        .setPort(config().getInteger("http.port", 3031))
+                                .setPort(config().getInteger("http.port", 3031))
 //                        .setHost(config().getString("http.host", "localhost"))
                 );
                 server.requestHandler(router::accept).listen();
@@ -175,6 +192,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
 
         routingContext.response()
                 .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                .putHeader("Access-Control-Allow-Origin", "*")
                 .end(Json.encodePrettily(new JsonArray(nodesInfo)));
 
     }
@@ -187,6 +205,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
         logger.info(Json.encodePrettily(new JsonObject().put("version", version).put("options", options)));
         routingContext.response()
                 .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                .putHeader("Access-Control-Allow-Origin", "*")
                 .end(Json.encodePrettily(new JsonObject()
                         .put("action", "update")
                         .put("body", reqBody)
@@ -194,16 +213,17 @@ public class StoreRestVerticle extends MicroServiceVerticle {
     }
 
     private void install(RoutingContext routingContext, String action) {
-            JsonObject reqBody = routingContext.getBodyAsJson();
-            System.out.println(Json.encodePrettily(reqBody));
-            vertx.eventBus().publish(ADDRESS_EDGE_INSTALLER, reqBody, new DeliveryOptions().addHeader("action", action));
-            routingContext.response()
-                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(new JsonObject()
-                    .put("action", action)
-                    .put("body", reqBody)
-                    .put("status", "PUBLISHED")
-            ));
+        JsonObject reqBody = routingContext.getBodyAsJson();
+        System.out.println(Json.encodePrettily(reqBody));
+        vertx.eventBus().publish(ADDRESS_EDGE_INSTALLER, reqBody, new DeliveryOptions().addHeader("action", action));
+        routingContext.response()
+                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                .putHeader("Access-Control-Allow-Origin", "*")
+                .end(Json.encodePrettily(new JsonObject()
+                        .put("action", action)
+                        .put("body", reqBody)
+                        .put("status", "PUBLISHED")
+                ));
 
 
 
