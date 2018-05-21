@@ -1,33 +1,39 @@
-<html>
-<head>
-    <title></title>
-    <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
-    <script src="//cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js"></script>
-    <script src="vertx-eventbus.js"></script>
-</head>
+<!DOCTYPE html>
+<html lang="en">
 
-<style>
-    .news {
-        font-size: 20pt;
-    }
-</style>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EnviroServicess</title>
+  <link rel="icon" href="/favicon.png" type="image/x-icon">
+  <script src="//cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/vertx/2.0.0/vertxbus.min.js"></script>
+
+<link href="/index.1bac7456.css" rel="stylesheet"></head>
 
 <body>
-
-<div class="news">Latest news:</div>
-<br>
-
-<div id="status" class="news"></div>
+<div id="root"></div>
 
 <script>
-    var eb = new EventBus("http://localhost:8085/eventbus");
-    eb.onopen = function () {
-        eb.registerHandler("io.nubespark.ditto.events", function (err, msg) {
-            var str = "<code>" + JSON.stringify(msg.body, null, 2) + "</code><br>";
-            $('#status').prepend(str);
-        })
+  var eb;
+  var address = "io.nubespark.ditto.events";
+  var registerEventBus = (component) => {
+    eb = new vertx.EventBus("http://localhost:8085/eventbus");
+    eb.onopen = function() {
+      eb.registerHandler(address, function(event) {
+        component.callback(event);
+      });
     }
+  }
+
+  var unregisterEventBus = () => {
+    console.log('Before closing')
+    eb.close();
+  }
+
 </script>
 
-</body>
+<script type="text/javascript" src="/index.aa796ec4.js"></script></body>
+
 </html>
