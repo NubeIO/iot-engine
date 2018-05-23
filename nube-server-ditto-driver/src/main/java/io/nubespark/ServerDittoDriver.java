@@ -5,7 +5,6 @@ import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.*;
 import io.vertx.core.http.impl.headers.VertxHttpHeaders;
@@ -30,7 +29,12 @@ public class ServerDittoDriver extends MicroServiceVerticle {
     public void start() {
         super.start();
 
-        HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+        String host = config().getString("ditto.http.host", "localhost");
+        Integer port = config().getInteger("ditto.http.port", 8080);
+        HttpClient client = vertx.createHttpClient(new HttpClientOptions()
+                .setVerifyHost(false)
+                .setTrustAll(true)
+        );
 
         //This is message received from Edge ditto driver
         vertx.eventBus().<JsonObject>consumer(SERVER_DITTO_DRIVER, message -> {
@@ -45,29 +49,37 @@ public class ServerDittoDriver extends MicroServiceVerticle {
 
         // Subscribe to ditto events and make it available to vertx event bus
         //// TODO: 5/17/18 checking if connection will be alive
-        String host = config().getString("ditto.http.host", "localhost");
-        Integer port = config().getInteger("ditto.http.port", 8080);
+        RequestOptions requestOptions = new RequestOptions()
+                .setHost(host)
+                .setPort(port)
+                .setURI("/ws/2");
+        if(port == 443 || port == 8443 || config().getBoolean("ditto.ssl", false)) {
+            requestOptions.setSsl(true);
+        }
+
         client.websocket(
-                new RequestOptions()
-                        .setHost(host)
-                        .setPort(port)
-                        .setURI("/ws/2")
-                ,
-                MultiMap.caseInsensitiveMultiMap()
+                requestOptions,
+                new VertxHttpHeaders()
                         .add(HttpHeaders.AUTHORIZATION, "Basic " + getAuthKey())
                 ,
                 webSocket -> {
-            webSocket.handler( data ->{
-                if (data.toString("ISO-8859-1").endsWith("ACK")) {
-                    System.out.println("Received ack ditto:: " + data.toString("ISO-8859-1"));
-                } else {
-                    System.out.println("Publishing in vertex event bus");
-                    System.out.println(data.toString("ISO-8859-1"));
-                    vertx.eventBus().publish(DITTO_EVENTS, new JsonObject(data));
-                }
+                    System.out.println("Websocket connection established");
+                    webSocket.handler( data -> {
+                        if (data.toString("ISO-8859-1").endsWith("ACK")) {
+                            System.out.println("Received ack ditto:: " + data.toString("ISO-8859-1"));
+                        } else {
+                            System.out.println("Publishing in vertex event bus");
+                            System.out.println(data.toString("ISO-8859-1"));
+                            vertx.eventBus().publish(DITTO_EVENTS, new JsonObject(data));
+                        }
             });
             webSocket.writeTextMessage("START-SEND-EVENTS");
-        });
+        },
+                error-> {
+                    System.out.println("Connection to websocket failed.");
+                    System.out.println(error.getMessage());
+                    error.printStackTrace();
+                });
 
         vertx.createHttpServer().requestHandler(req -> {
             JsonObject request = new JsonObject();
