@@ -6,12 +6,17 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.*;
 import io.vertx.core.http.impl.headers.VertxHttpHeaders;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.servicediscovery.types.MessageSource;
 
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,63 +29,77 @@ public class ServerDittoDriver extends MicroServiceVerticle {
     private static final String EDGE_DITTO_DRIVER = "io.nubespark.edge.ditto.driver";
     private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
     private static final String DITTO_EVENTS = "io.nubespark.ditto.events";
+    private Logger logger = LoggerFactory.getLogger(ServerDittoDriver.class);
+
+    private Boolean first = true;
+    private Boolean checkPong = false;
+    private long lastPongTs = 0;
+    private WebSocket dittoWebSocket;
 
     @Override
     public void start() {
         super.start();
 
-        String host = config().getString("ditto.http.host", "localhost");
-        Integer port = config().getInteger("ditto.http.port", 8080);
         HttpClient client = vertx.createHttpClient(new HttpClientOptions()
                 .setVerifyHost(false)
                 .setTrustAll(true)
+                .setTcpKeepAlive(true)
         );
 
-        //This is message received from Edge ditto driver
-        vertx.eventBus().<JsonObject>consumer(SERVER_DITTO_DRIVER, message -> {
-            System.out.println("Received message:: " + Json.encodePrettily(message.body()));
-            // Request ditto server and send response ...
-            requestDittoServer(client, message.body(), dittoResHandler -> {
-                JsonObject dittoResponse = dittoResHandler.result();
-                message.reply(dittoResponse);
-            });
 
+        //todo find way to keep connection alive and reconnect on network failure
+        handleDittoWebSocket(client);
+
+        handleWebServer(client);
+
+        publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER, ar-> {
+            if (ar.failed()) {
+                ar.cause().printStackTrace();
+            } else {
+                System.out.println("Published Ditto Server message source");
+            }
         });
 
-        // Subscribe to ditto events and make it available to vertx event bus
-        //// TODO: 5/17/18 checking if connection will be alive
-        RequestOptions requestOptions = new RequestOptions()
-                .setHost(host)
-                .setPort(port)
-                .setURI("/ws/2");
-        if(port == 443 || port == 8443 || config().getBoolean("ditto.ssl", false)) {
-            requestOptions.setSsl(true);
-        }
+        publishMessageSource(DITTO_EVENTS, DITTO_EVENTS, ar-> {
+            if (ar.failed()) {
+                ar.cause().printStackTrace();
+            } else {
+                System.out.println("Published Ditto Events message source");
+            }
+        });
 
-        client.websocket(
-                requestOptions,
-                new VertxHttpHeaders()
-                        .add(HttpHeaders.AUTHORIZATION, "Basic " + getAuthKey())
-                ,
-                webSocket -> {
-                    System.out.println("Websocket connection established");
-                    webSocket.handler( data -> {
-                        if (data.toString("ISO-8859-1").endsWith("ACK")) {
-                            System.out.println("Received ack ditto:: " + data.toString("ISO-8859-1"));
-                        } else {
-                            System.out.println("Publishing in vertex event bus");
-                            System.out.println(data.toString("ISO-8859-1"));
-                            vertx.eventBus().publish(DITTO_EVENTS, new JsonObject(data));
-                        }
-            });
-            webSocket.writeTextMessage("START-SEND-EVENTS");
-        },
-                error-> {
-                    System.out.println("Connection to websocket failed.");
-                    System.out.println(error.getMessage());
-                    error.printStackTrace();
+        //This is message received from Edge ditto driver
+        MessageSource.<JsonObject>getConsumer(discovery, new JsonObject().put("name", SERVER_DITTO_DRIVER), ar -> {
+            if (ar.failed()) {
+                logger.error("Message source {} is not discovered.",SERVER_DITTO_DRIVER);
+            } else {
+                MessageConsumer<JsonObject> consumer = ar.result();
+                consumer.handler(message -> {
+                    System.out.println("Received message:: " + Json.encodePrettily(message.body()));
+                    // Request ditto server and send response ...
+                    requestDittoServer(client, message.body(), dittoResHandler -> {
+                        JsonObject dittoResponse = dittoResHandler.result();
+                        message.reply(dittoResponse);
+                    });
                 });
+            }
+        });
 
+        //re-establishing websocket with ditto
+        vertx.setPeriodic(1000, handler-> {
+            if(checkPong && lastPongTs != 0) {
+                long now = new Date().getTime();
+                long diff = now - lastPongTs;
+                if(diff/(1000) > 2) {
+                    System.out.println("Pong not received for = " + diff);
+                    //todo re-establish connection if automatically not established by vertx.
+                }
+            }
+        });
+    }
+
+
+    private void handleWebServer(HttpClient client) {
         vertx.createHttpServer().requestHandler(req -> {
             JsonObject request = new JsonObject();
             request.put("method", req.method().toString());
@@ -142,6 +161,71 @@ public class ServerDittoDriver extends MicroServiceVerticle {
             } else {
                 System.out.println("Failed to deploy Ditto Server Driver");
             }
+        });
+    }
+
+    private void handleDittoWebSocket(HttpClient client) {
+        String host = config().getString("ditto.http.host", "localhost");
+        Integer port = config().getInteger("ditto.http.port", 8080);
+        // Subscribe to ditto events and make it available to vertx event bus
+        //// TODO: 5/17/18 checking if connection will be alive
+        RequestOptions requestOptions = new RequestOptions()
+                .setHost(host)
+                .setPort(port)
+                .setURI("/ws/2");
+        if(port == 443 || port == 8443 || config().getBoolean("ditto.ssl", false)) {
+            requestOptions.setSsl(true);
+        }
+
+//        vertx.createHttpClient().
+
+        client.websocket(
+                requestOptions,
+                new VertxHttpHeaders()
+                        .add(HttpHeaders.AUTHORIZATION, "Basic " + getAuthKey())
+                ,
+                this::handleWebSocketSuccess,
+                error-> {
+                    System.out.println("Connection to websocket failed.");
+                    System.out.println(error.getMessage());
+                    error.printStackTrace();
+                });
+    }
+
+    private void handleWebSocketSuccess(WebSocket webSocket) {
+        System.out.println("Websocket connection established");
+        dittoWebSocket = webSocket;
+        dittoWebSocket.handler( data -> {
+            if (data.toString("ISO-8859-1").endsWith("ACK")) {
+                System.out.println("Received ack ditto:: " + data.toString("ISO-8859-1"));
+                if (first) {
+                    first = false;
+                    // When web app gets first acknowledgement, periodically sent heartbeat messages
+                    // to keep connection alive
+                    vertx.setPeriodic(1000, handler-> {
+//                        System.out.println("Sending Ping to ditto websocket");
+                        dittoWebSocket.writePing(Buffer.buffer());
+                        checkPong = true;
+                    });
+                }
+            } else if (data.toString("ISO-8859-1").equals("")) {
+//                System.out.println("Received Pong message :: " + data.toString("ISO-8859-1"));
+                lastPongTs = new Date().getTime();
+            } else {
+//                System.out.println("Publishing in vertex event bus");
+//                System.out.println(data.toString("ISO-8859-1"));
+                vertx.eventBus().publish(DITTO_EVENTS, new JsonObject(data));
+            }
+        });
+
+        dittoWebSocket.writeTextMessage("START-SEND-EVENTS");
+
+        dittoWebSocket.exceptionHandler(handler -> {
+            logger.error(handler.getMessage());
+        });
+
+        dittoWebSocket.closeHandler(handler -> {
+            logger.warn("Websocket connection has been closed..");
         });
     }
 
@@ -220,5 +304,17 @@ public class ServerDittoDriver extends MicroServiceVerticle {
         String secretKey = config().getString("ditto.http.password", "ditto");
         String auth = apiKey + ":" + secretKey;
         return Base64.getEncoder().encodeToString(auth.getBytes());
+    }
+
+    @Override
+    public void stop(Future<Void> future) throws Exception {
+        super.stop(future);
+        if(dittoWebSocket!=null) {
+            System.out.println("Verticle is stopping.. Unsubscribing from ditto events");
+            dittoWebSocket.writeTextMessage("STOP-SEND-EVENTS");
+            dittoWebSocket.close();
+        } else {
+            System.out.println("Ditto websocket it null. Fix it");
+        }
     }
 }
