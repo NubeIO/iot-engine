@@ -10,30 +10,11 @@
   <script src="//cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/vertx/2.0.0/vertxbus.min.js"></script>
 
-<link href="/index.1bac7456.css" rel="stylesheet"></head>
+<link href="/index.6c570cd9.css" rel="stylesheet"></head>
 
 <body>
 <div id="root"></div>
 
-<script>
-  var eb;
-  var address = "io.nubespark.ditto.events";
-  var registerEventBus = (component) => {
-    eb = new vertx.EventBus("http://localhost:8085/eventbus");
-    eb.onopen = function() {
-      eb.registerHandler(address, function(event) {
-        component.callback(event);
-      });
-    }
-  }
-
-  var unregisterEventBus = () => {
-    console.log('Before closing')
-    eb.close();
-  }
-
-</script>
-
-<script type="text/javascript" src="/index.aa796ec4.js"></script></body>
+<script type="text/javascript" src="/index.9341942b.js"></script></body>
 
 </html>
