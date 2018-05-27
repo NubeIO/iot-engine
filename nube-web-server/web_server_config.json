@@ -1,3 +1,14 @@
 {
-"http.port":8085
+"http.port":8085,
+  "keycloak":{
+    "realm": "nubeiot",
+    "auth-server-url": "http://localhost:8080/auth",
+    "ssl-required": "external",
+    "resource": "nube-web-api-gateway",
+    "credentials": {
+      "secret": "01a69fc7-9f56-4e63-a8de-e61a088511d2"
+    },
+    "confidential-port": 0,
+    "policy-enforcer": {}
+  }
 }
