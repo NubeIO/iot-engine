@@ -98,7 +98,7 @@ public class HttpServerVerticle extends MicroServiceVerticle {
             System.out.println("Handling login..");
 
             JsonObject body = ctx.getBodyAsJson();
-            String username = body.getString("userName");
+            String username = body.getString("username");
             String password = body.getString("password");
 
             loginAuth.authenticate(new JsonObject().put("username", username).put("password", password), res-> {
