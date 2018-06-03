@@ -63,6 +63,9 @@ public class HttpServerVerticle extends MicroServiceVerticle {
 
         //creating static resource handler
         router.route().handler(StaticHandler.create());
+        router.route("/*").handler(ctx -> {
+            ctx.response().sendFile("webroot/index.html");
+        });
 
         //By default index.html from webroot/ is available on "/".
         vertx.createHttpServer()
