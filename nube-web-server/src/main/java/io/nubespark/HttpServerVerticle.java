@@ -3,7 +3,7 @@ package io.nubespark;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.*;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
@@ -177,27 +177,34 @@ public class HttpServerVerticle extends MicroServiceVerticle {
             }
         });
 
-        router.route("/api/logout").handler(ctx -> {
-            User user = ctx.user();
-            if (user != null) {
-                AccessToken token = (AccessToken) user;
-                token.revoke("access_token", res-> {
-                    if (res.failed()) {
-                        res.cause().printStackTrace();
-                        ctx.fail(503);
-                    } else {
-                        token.revoke("refresh_token", res1-> {
-                            if (res1.failed()) {
-                                res1.cause().printStackTrace();
-                            }
-                            ctx.response().setStatusCode(204).end();
-                        });
-                    }
-                });
-            } else {
-                System.out.println("User is not logged in");
-                ctx.fail(400);
-            }
+        router.route("/api/logout").handler(this::redirectLogout);
+    }
+
+    public void redirectLogout(RoutingContext ctx) {
+        JsonObject body = ctx.getBodyAsJson();
+        User user = ctx.user();
+        String access_token = user.principal().getString("access_token");
+        String refresh_token = body.getString("refresh_token");
+        String client_id = config().getJsonObject("keycloak").getString("resource");
+        String client_secret = config().getJsonObject("keycloak")
+                .getJsonObject("credentials").getString("secret");
+        String uri = config().getJsonObject("keycloak").getString("auth-server-url")
+                + "/realms/master/protocol/openid-connect/logout";
+
+        System.out.println("POST URI: " + uri);
+        HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+
+        HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response -> {
+            ctx.response().setStatusCode(response.statusCode()).end();
         });
+        request.setChunked(true);
+
+        String body$ = "refresh_token=" + refresh_token + "&client_id=" + client_id
+                + "&client_secret=" + client_secret;
+        System.out.println("Body: " + body$);
+        request.putHeader("content-type", "application/x-www-form-urlencoded");
+        request.putHeader("Authorization", "Bearer " + access_token);
+
+        request.write(body$).end();
     }
 }
