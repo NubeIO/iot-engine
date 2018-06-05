@@ -185,11 +185,13 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         User user = ctx.user();
         String access_token = user.principal().getString("access_token");
         String refresh_token = body.getString("refresh_token");
-        String client_id = config().getJsonObject("keycloak").getString("resource");
-        String client_secret = config().getJsonObject("keycloak")
+        JsonObject keycloakConfig = config().getJsonObject("keycloak");
+        String client_id = keycloakConfig.getString("resource");
+        String client_secret = keycloakConfig
                 .getJsonObject("credentials").getString("secret");
-        String uri = config().getJsonObject("keycloak").getString("auth-server-url")
-                + "/realms/master/protocol/openid-connect/logout";
+        String realmName = keycloakConfig.getString("realm");
+        String uri = keycloakConfig.getString("auth-server-url")
+                + "/realms/" + realmName + "/protocol/openid-connect/logout";
 
         System.out.println("POST URI: " + uri);
         HttpClient client = vertx.createHttpClient(new HttpClientOptions());
