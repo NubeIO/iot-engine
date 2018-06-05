@@ -33,7 +33,6 @@ public class HttpServerVerticle extends MicroServiceVerticle {
     public void start() {
         super.start();
         //// TODO: 5/4/18 Use SockJs to make event bus available
-
         //// TODO: 5/5/18 Implement backend logic of users, roles, authentication, business logic end points
 
         Router router = Router.router(vertx);
@@ -83,11 +82,11 @@ public class HttpServerVerticle extends MicroServiceVerticle {
                         }
                 );
         publishHttpEndpoint(SERVICE_NAME, config().getString("host", "localhost"),
-                config().getInteger("http.port", 8080), ar-> {
+                config().getInteger("http.port", 8080), ar -> {
                     if (ar.failed()) {
                         ar.cause().printStackTrace();
                     } else {
-                        System.out.println("Front End Server service published : " + ar.succeeded());
+                        System.out.println("Front End Server service published: " + ar.succeeded());
                     }
                 });
 
@@ -97,22 +96,17 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         //login approach
         loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, config().getJsonObject("keycloak"));
         router.route("/api/login/account").handler((RoutingContext ctx) -> {
-
-            System.out.println("Handling login..");
-
             JsonObject body = ctx.getBodyAsJson();
             String username = body.getString("username");
             String password = body.getString("password");
 
-            loginAuth.authenticate(new JsonObject().put("username", username).put("password", password), res-> {
+            loginAuth.authenticate(new JsonObject().put("username", username).put("password", password), res -> {
                 if (res.failed()) {
                     res.cause().printStackTrace();
                     System.out.println(res.result());
                     ctx.fail(401);
                 } else {
-                    System.out.println("Login Success");
                     AccessToken token = (AccessToken) res.result();
-                    System.out.println(token.principal());
                     ctx.response()
                             .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
                             .end(Json.encodePrettily(token.principal()));
@@ -122,7 +116,6 @@ public class HttpServerVerticle extends MicroServiceVerticle {
 
         router.route("/api/*").handler(ctx -> {
             String authorization = ctx.request().getHeader(HttpHeaders.AUTHORIZATION);
-            System.out.println(authorization);
             if (authorization != null) {
                 authorization = authorization.substring("Bearer ".length());
                 System.out.println(authorization);
@@ -139,15 +132,13 @@ public class HttpServerVerticle extends MicroServiceVerticle {
                     }
                 });
             } else {
-                System.out.println("No Authorization Header");
                 ctx.fail(401);
             }
         });
 
         router.route("/api/currentUser").handler(ctx -> {
-            System.out.println("Inside currentUser");
             User user = ctx.user();
-            if(user != null) {
+            if (user != null) {
 
                 JsonObject accessToken = KeycloakHelper.accessToken(user.principal());
 
@@ -171,8 +162,9 @@ public class HttpServerVerticle extends MicroServiceVerticle {
                 //todo
                 System.out.println("Send not authorized error and user should login");
                 ctx.fail(401);
-//                ctx.response().putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-//                        .end(Json.encodePrettily(new JsonObject("{\"name\":\"Serati Ma\",\"avatar\":\"https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png\",\"userid\":\"00000001\",\"notifyCount\":12}")));
+
+                /*ctx.response().putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                        .end(Json.encodePrettily(new JsonObject("{\"name\":\"Serati Ma\",\"avatar\":\"https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png\",\"userid\":\"00000001\",\"notifyCount\":12}")));*/
 
             }
         });
@@ -180,7 +172,7 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         router.route("/api/logout").handler(this::redirectLogout);
     }
 
-    public void redirectLogout(RoutingContext ctx) {
+    private void redirectLogout(RoutingContext ctx) {
         JsonObject body = ctx.getBodyAsJson();
         User user = ctx.user();
         String access_token = user.principal().getString("access_token");
@@ -193,7 +185,6 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         String uri = keycloakConfig.getString("auth-server-url")
                 + "/realms/" + realmName + "/protocol/openid-connect/logout";
 
-        System.out.println("POST URI: " + uri);
         HttpClient client = vertx.createHttpClient(new HttpClientOptions());
 
         HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response -> {
@@ -203,7 +194,6 @@ public class HttpServerVerticle extends MicroServiceVerticle {
 
         String body$ = "refresh_token=" + refresh_token + "&client_id=" + client_id
                 + "&client_secret=" + client_secret;
-        System.out.println("Body: " + body$);
         request.putHeader("content-type", "application/x-www-form-urlencoded");
         request.putHeader("Authorization", "Bearer " + access_token);
 
