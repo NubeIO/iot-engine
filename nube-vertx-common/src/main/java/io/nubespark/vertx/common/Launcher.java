@@ -2,8 +2,11 @@ package io.nubespark.vertx.common;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.eventbus.EventBusOptions;
+import io.vertx.core.http.ClientAuth;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.JksOptions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,9 +24,18 @@ public class Launcher extends io.vertx.core.Launcher {
     @Override
     public void beforeStartingVertx(VertxOptions options) {
         if(!options.isClustered()) {
-            options.setClustered(true)
-                    .setClusterHost("127.0.0.1");
+            options.setClustered(true);
         }
+        System.out.println("Enabling vertx event bus encryption...");
+        //set encryption in vertx event bus
+        //todo change keystore in production
+        options.setEventBusOptions(
+                        new EventBusOptions()
+                                .setSsl(true)
+                                .setKeyStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
+                                .setTrustStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
+                                .setClientAuth(ClientAuth.REQUIRED)
+                );
     }
 
     @Override
@@ -34,7 +46,7 @@ public class Launcher extends io.vertx.core.Launcher {
         }
 
         File conf = new File("src/conf/config.json");
-        deploymentOptions.getConfig().mergeIn(getConfiguration(conf));
+        getConfiguration(conf).mergeIn(deploymentOptions.getConfig());
     }
 
     private JsonObject getConfiguration(File config) {
