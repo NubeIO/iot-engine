@@ -32,8 +32,7 @@ public class HttpServerVerticle extends MicroServiceVerticle {
     @Override
     public void start() {
         super.start();
-        //// TODO: 5/4/18 Use SockJs to make event bus available
-        //// TODO: 5/5/18 Implement backend logic of users, roles, authentication, business logic end points
+        // TODO: 5/5/18 Implement backend logic of users, roles, authentication, business logic end points
 
         Router router = Router.router(vertx);
         // creating body handler
@@ -119,21 +118,14 @@ public class HttpServerVerticle extends MicroServiceVerticle {
             if (authorization != null) {
                 authorization = authorization.substring("Bearer ".length());
                 System.out.println(authorization);
-                loginAuth.introspectToken(authorization, res -> {
-                    if (res.succeeded()) {
-                        System.out.println("Auth Success");
-                        AccessToken token = res.result();
-                        ctx.setUser(token);
-                        ctx.next();
-                    } else {
-                        System.out.println("Auth Fail");
-                        res.cause().printStackTrace();
-                        ctx.fail(401);
-                    }
-                });
+                setAuthenticUser(ctx, authorization);
             } else {
                 ctx.fail(401);
             }
+        });
+
+        router.route("/eventbus/*").handler(ctx -> {
+            setAuthenticUser(ctx, ctx.request().getParam("access_token"));
         });
 
         router.route("/api/currentUser").handler(ctx -> {
@@ -154,22 +146,29 @@ public class HttpServerVerticle extends MicroServiceVerticle {
                                 .put("avatar", avatar)
                                 .put("userid", userid)
                                 .put("notifyCount", notifyCount)
-
                         ));
-
-
             } else {
-                //todo
                 System.out.println("Send not authorized error and user should login");
                 ctx.fail(401);
-
-                /*ctx.response().putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(new JsonObject("{\"name\":\"Serati Ma\",\"avatar\":\"https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png\",\"userid\":\"00000001\",\"notifyCount\":12}")));*/
-
             }
         });
 
         router.route("/api/logout").handler(this::redirectLogout);
+    }
+
+    private void setAuthenticUser(RoutingContext ctx, String authorization) {
+        loginAuth.introspectToken(authorization, res -> {
+            if (res.succeeded()) {
+                System.out.println("Auth Success");
+                AccessToken token = res.result();
+                ctx.setUser(token);
+                ctx.next();
+            } else {
+                System.out.println("Auth Fail");
+                res.cause().printStackTrace();
+                ctx.fail(401);
+            }
+        });
     }
 
     private void redirectLogout(RoutingContext ctx) {
