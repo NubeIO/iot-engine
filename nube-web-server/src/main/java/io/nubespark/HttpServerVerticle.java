@@ -17,6 +17,7 @@ import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
@@ -37,6 +38,23 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         Router router = Router.router(vertx);
         // creating body handler
         router.route().handler(BodyHandler.create());
+
+        // For testing server we make CORS available, we will comment out in production cluster
+        router.route().handler(CorsHandler.create("*")
+                .allowedMethod(io.vertx.core.http.HttpMethod.GET)
+                .allowedMethod(io.vertx.core.http.HttpMethod.POST)
+                .allowedMethod(io.vertx.core.http.HttpMethod.OPTIONS)
+                .allowedHeader("Access-Control-Request-Method")
+                .allowedHeader("Access-Control-Allow-Credentials")
+                .allowedHeader("Access-Control-Allow-Origin")
+                .allowedHeader("Access-Control-Allow-Headers")
+                .allowedHeader("Content-Type")
+                .allowedHeader("origin")
+                .allowedHeader("x-requested-with")
+                .allowedHeader("accept")
+                .allowedHeader("X-PINGARUNER")
+                .allowedHeader("Authorization")
+        );
 
         handleAuth(router);
 
