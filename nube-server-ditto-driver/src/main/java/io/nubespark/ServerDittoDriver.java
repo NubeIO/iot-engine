@@ -6,6 +6,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.*;
 import io.vertx.core.http.impl.headers.VertxHttpHeaders;
@@ -117,9 +118,8 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                         request.put("body", body.getBytes());
                     }
                     System.out.println(Json.encodePrettily(request));
-                    String edgeAddress = EDGE_DITTO_DRIVER;
                     System.out.println("Forwarding request to check with edge driver");
-                    vertx.eventBus().send(edgeAddress, request, messageHandler -> {
+                    vertx.eventBus().send(EDGE_DITTO_DRIVER, request, messageHandler -> {
                         if (messageHandler.succeeded()) {
                             JsonObject message = (JsonObject) messageHandler.result().body();
                             //Check if request is acknowledged by edge device
@@ -167,6 +167,9 @@ public class ServerDittoDriver extends MicroServiceVerticle {
     private void handleDittoWebSocket(HttpClient client) {
         String host = config().getString("ditto.http.host", "localhost");
         Integer port = config().getInteger("ditto.http.port", 8080);
+
+        System.out.println("Ditto server: " + host);
+        System.out.println("Ditto port: " + port);
         // Subscribe to ditto events and make it available to vertx event bus
         //// TODO: 5/17/18 checking if connection will be alive
         RequestOptions requestOptions = new RequestOptions()
@@ -176,8 +179,6 @@ public class ServerDittoDriver extends MicroServiceVerticle {
         if(port == 443 || port == 8443 || config().getBoolean("ditto.ssl", false)) {
             requestOptions.setSsl(true);
         }
-
-//        vertx.createHttpClient().
 
         client.websocket(
                 requestOptions,
@@ -203,17 +204,13 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                     // When web app gets first acknowledgement, periodically sent heartbeat messages
                     // to keep connection alive
                     vertx.setPeriodic(1000, handler-> {
-//                        System.out.println("Sending Ping to ditto websocket");
                         dittoWebSocket.writePing(Buffer.buffer());
                         checkPong = true;
                     });
                 }
             } else if (data.toString("ISO-8859-1").equals("")) {
-//                System.out.println("Received Pong message :: " + data.toString("ISO-8859-1"));
                 lastPongTs = new Date().getTime();
             } else {
-//                System.out.println("Publishing in vertex event bus");
-//                System.out.println(data.toString("ISO-8859-1"));
                 vertx.eventBus().publish(DITTO_EVENTS, new JsonObject(data));
             }
         });
@@ -281,11 +278,10 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                     }
                     response.put("headers", headers);
 
-                    c_res.handler(data -> {
-//                        System.out.println("Proxying response body: " + data.toString("ISO-8859-1"));
-                        response.put("body", data.getBytes());
-                    });
+                    Buffer data = new BufferImpl();
+                    c_res.handler(x -> data.appendBytes(x.getBytes()));
                     c_res.endHandler((v) -> {
+                        response.put("body", data.getBytes());
                         System.out.println("Proxy Response Completed.");
                         next.handle(Future.succeededFuture(response));
                     });
