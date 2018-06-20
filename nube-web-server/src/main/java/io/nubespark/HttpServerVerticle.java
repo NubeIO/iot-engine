@@ -3,6 +3,7 @@ package io.nubespark;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.*;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -22,12 +23,17 @@ import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static io.nubespark.utils.Constants.SERVER_DITTO_DRIVER;
+import static io.nubespark.utils.Constants.SERVICE_NAME;
+
 /**
  * Created by topsykretts on 5/4/18.
  */
 public class HttpServerVerticle extends MicroServiceVerticle {
 
-    public static final String SERVICE_NAME = "io.nubespark.frontend.server";
     private OAuth2Auth loginAuth;
 
     @Override
@@ -39,6 +45,45 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         // creating body handler
         router.route().handler(BodyHandler.create());
 
+        // we are here enabling CORS, for QCing things from frontend
+        handleEnableCors(router);
+        handleAuth(router);
+        handleDittoRESTFulRequest(router);
+        handleEventBus(router);
+
+        //creating static resource handler
+        router.route().handler(StaticHandler.create());
+        router.route("/*").handler(ctx -> ctx.response().sendFile("webroot/index.html"));
+
+        String host = config().getString("host", "localhost");
+        int port = config().getInteger("http.port", 8080);
+
+        //By default index.html from webroot/ is available on "/".
+        vertx.createHttpServer()
+                .requestHandler(router::accept)
+                .listen(port,
+                        handler -> {
+                            if (handler.failed()) {
+                                handler.cause().printStackTrace();
+                                Future.failedFuture(handler.cause());
+                            } else {
+                                System.out.println("Front End server started on port: " + port);
+                                Future.succeededFuture();
+                            }
+                        }
+                );
+
+        publishHttpEndpoint(SERVICE_NAME, host, port, ar -> {
+            if (ar.failed()) {
+                ar.cause().printStackTrace();
+            } else {
+                System.out.println("Front End Server service published: " + ar.succeeded());
+            }
+        });
+
+    }
+
+    private void handleEnableCors(Router router) {
         // For testing server we make CORS available, we will comment out in production cluster
         router.route().handler(CorsHandler.create("*")
                 .allowedMethod(io.vertx.core.http.HttpMethod.GET)
@@ -55,58 +100,6 @@ public class HttpServerVerticle extends MicroServiceVerticle {
                 .allowedHeader("X-PINGARUNER")
                 .allowedHeader("Authorization")
         );
-
-        handleAuth(router);
-
-        BridgeOptions options = new BridgeOptions()
-                .addOutboundPermitted(new PermittedOptions().setAddress("news-feed"))
-                .addOutboundPermitted(new PermittedOptions().setAddress("io.nubespark.ditto.events"));
-
-        router.route("/eventbus/*").handler(SockJSHandler.create(vertx).bridge(options, event -> {
-
-            // You can also optionally provide a handler like this which will be passed any events that occur on the bridge
-            // You can use this for monitoring or logging, or to change the raw messages in-flight.
-            // It can also be used for fine grained access control.
-
-            if (event.type() == BridgeEventType.SOCKET_CREATED) {
-                System.out.println("A socket was created");
-            }
-
-            // This signals that it's ok to process the event
-            event.complete(true);
-
-        }));
-
-        //creating static resource handler
-        router.route().handler(StaticHandler.create());
-        router.route("/*").handler(ctx -> {
-            ctx.response().sendFile("webroot/index.html");
-        });
-
-        //By default index.html from webroot/ is available on "/".
-        vertx.createHttpServer()
-                .requestHandler(router::accept)
-                .listen(
-                        config().getInteger("http.port", 8080),
-                        handler -> {
-                            if (handler.failed()) {
-                                handler.cause().printStackTrace();
-                                Future.failedFuture(handler.cause());
-                            } else {
-                                System.out.println("Front End server started...");
-                                Future.succeededFuture();
-                            }
-                        }
-                );
-        publishHttpEndpoint(SERVICE_NAME, config().getString("host", "localhost"),
-                config().getInteger("http.port", 8080), ar -> {
-                    if (ar.failed()) {
-                        ar.cause().printStackTrace();
-                    } else {
-                        System.out.println("Front End Server service published: " + ar.succeeded());
-                    }
-                });
-
     }
 
     private void handleAuth(Router router) {
@@ -142,9 +135,8 @@ public class HttpServerVerticle extends MicroServiceVerticle {
             }
         });
 
-        router.route("/eventbus/*").handler(ctx -> {
-            setAuthenticUser(ctx, ctx.request().getParam("access_token"));
-        });
+        router.route("/eventbus/*").handler(ctx ->
+                setAuthenticUser(ctx, ctx.request().getParam("access_token")));
 
         router.route("/api/currentUser").handler(ctx -> {
             User user = ctx.user();
@@ -172,6 +164,71 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         });
 
         router.route("/api/logout").handler(this::redirectLogout);
+    }
+
+    private void handleDittoRESTFulRequest(Router router) {
+        router.route("/api/2/*").handler(ctx -> {
+            HttpServerRequest req = ctx.request();
+            JsonObject request = new JsonObject();
+            request.put("method", req.method().toString());
+            request.put("uri", req.uri());
+            Buffer body = ctx.getBody();
+            if (body != null) {
+                request.put("body", body.getBytes());
+            }
+            System.out.println(Json.encodePrettily(request));
+            System.out.println("Sending response...");
+
+            vertx.eventBus().<JsonObject>send(SERVER_DITTO_DRIVER, request, handler -> {
+                if (handler.succeeded()) {
+                    JsonObject response = handler.result().body();
+                    ctx.request().response().setChunked(true);
+                    JsonObject headers = response.getJsonObject("headers");
+                    Map<String, String> headerMap = new HashMap<>();
+                    for (String header : headers.fieldNames()) {
+                        headerMap.put(header, headers.getString(header));
+                    }
+                    ctx.request().response()
+                            .headers().setAll(headerMap);
+                    ctx.request().response().setStatusCode(response.getInteger("statusCode"));
+                    byte[] responseBody = response.getBinary("body");
+                    if (responseBody != null) {
+                        ctx.request().response().write(Buffer.buffer(responseBody));
+                    }
+                    ctx.request().response().end();
+                } else {
+                    // // TODO: 5/12/18 Identify cases where request fails and handle accordingly
+                    ctx.request().response()
+                            .setStatusCode(500)
+                            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                            .end(Json.encodePrettily(new JsonObject()
+                                    .put("message", "Internal Server Error")
+                                    .put("error", handler.cause().getMessage())
+                            ));
+                }
+            });
+        });
+    }
+
+    private void handleEventBus(Router router) {
+        BridgeOptions options = new BridgeOptions()
+                .addOutboundPermitted(new PermittedOptions().setAddress("news-feed"))
+                .addOutboundPermitted(new PermittedOptions().setAddress("io.nubespark.ditto.events"));
+
+        router.route("/eventbus/*").handler(SockJSHandler.create(vertx).bridge(options, event -> {
+
+            // You can also optionally provide a handler like this which will be passed any events that occur on the bridge
+            // You can use this for monitoring or logging, or to change the raw messages in-flight.
+            // It can also be used for fine grained access control.
+
+            if (event.type() == BridgeEventType.SOCKET_CREATED) {
+                System.out.println("A socket was created");
+            }
+
+            // This signals that it's ok to process the event
+            event.complete(true);
+
+        }));
     }
 
     private void setAuthenticUser(RoutingContext ctx, String authorization) {
