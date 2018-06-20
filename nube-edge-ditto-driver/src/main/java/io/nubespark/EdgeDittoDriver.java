@@ -25,9 +25,6 @@ public class EdgeDittoDriver extends MicroServiceVerticle {
     @Override
     public void start() {
         super.start();
-        String deviceAddress = getDeviceAddress();
-        String edgeAddress = EDGE_DITTO_DRIVER + "." + deviceAddress;
-
         String nodeRedHost = config().getString("nodered.host", "localhost");
         Integer nodeRedPort = config().getInteger("nodered.port", 1880);
 
@@ -69,6 +66,7 @@ public class EdgeDittoDriver extends MicroServiceVerticle {
 
         });
 
+        // TODO: Since we are doing same this work from HttpServerVerticle with Auth protection, we don't need this one.
         vertx.createHttpServer().requestHandler(req -> {
             JsonObject request = new JsonObject();
             request.put("method", req.method().toString());
