@@ -182,6 +182,9 @@ public class HttpServerVerticle extends MicroServiceVerticle {
             vertx.eventBus().<JsonObject>send(SERVER_DITTO_DRIVER, request, handler -> {
                 if (handler.succeeded()) {
                     JsonObject response = handler.result().body();
+                    if (req.method() != HttpMethod.GET) {
+                        ctx.request().response().setChunked(true);
+                    }
                     JsonObject headers = response.getJsonObject("headers");
                     Map<String, String> headerMap = new HashMap<>();
                     for (String header : headers.fieldNames()) {
