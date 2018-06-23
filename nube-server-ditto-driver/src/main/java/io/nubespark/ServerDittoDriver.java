@@ -30,6 +30,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
     private static final String EDGE_DITTO_DRIVER = "io.nubespark.edge.ditto.driver";
     private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
     private static final String DITTO_EVENTS = "io.nubespark.ditto.events";
+
     private Logger logger = LoggerFactory.getLogger(ServerDittoDriver.class);
 
     private Boolean first = true;
@@ -47,32 +48,31 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                 .setTcpKeepAlive(true)
         );
 
-
-        //todo find way to keep connection alive and reconnect on network failure
+        // TODO: find way to keep connection alive and reconnect on network failure
         handleDittoWebSocket(client);
 
         handleWebServer(client);
 
-        publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER, ar-> {
+        publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER, ar -> {
             if (ar.failed()) {
                 ar.cause().printStackTrace();
             } else {
-                System.out.println("Published Ditto Server message source");
+                System.out.println("Published Ditto Server message source.");
             }
         });
 
-        publishMessageSource(DITTO_EVENTS, DITTO_EVENTS, ar-> {
+        publishMessageSource(DITTO_EVENTS, DITTO_EVENTS, ar -> {
             if (ar.failed()) {
                 ar.cause().printStackTrace();
             } else {
-                System.out.println("Published Ditto Events message source");
+                System.out.println("Published Ditto Events message source.");
             }
         });
 
-        //This is message received from Edge ditto driver
+        // This is message received from Edge ditto driver
         MessageSource.<JsonObject>getConsumer(discovery, new JsonObject().put("name", SERVER_DITTO_DRIVER), ar -> {
             if (ar.failed()) {
-                logger.error("Message source {} is not discovered.",SERVER_DITTO_DRIVER);
+                logger.error("Message source {} is not discovered.", SERVER_DITTO_DRIVER);
             } else {
                 MessageConsumer<JsonObject> consumer = ar.result();
                 consumer.handler(message -> {
@@ -86,12 +86,12 @@ public class ServerDittoDriver extends MicroServiceVerticle {
             }
         });
 
-        //re-establishing websocket with ditto
-        vertx.setPeriodic(1000, handler-> {
-            if(checkPong && lastPongTs != 0) {
+        // re-establishing websocket with ditto
+        vertx.setPeriodic(1000, handler -> {
+            if (checkPong && lastPongTs != 0) {
                 long now = new Date().getTime();
                 long diff = now - lastPongTs;
-                if(diff/(1000) > 2) {
+                if (diff / (1000) > 2) {
                     System.out.println("Pong not received for = " + diff);
                     //todo re-establish connection if automatically not established by vertx.
                 }
@@ -106,7 +106,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
             request.put("method", req.method().toString());
             request.put("uri", req.uri());
 
-            if(req.method().equals(HttpMethod.GET)) {
+            if (req.method().equals(HttpMethod.GET)) {
                 System.out.println("Proxying request: " + req.uri());
                 requestDittoServer(client, request, dittoResHandler -> {
                     JsonObject dittoRes = dittoResHandler.result();
@@ -114,7 +114,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                 });
             } else {
                 req.bodyHandler(body -> {
-                    if (body!= null) {
+                    if (body != null) {
                         request.put("body", body.getBytes());
                     }
                     System.out.println(Json.encodePrettily(request));
@@ -123,7 +123,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                         if (messageHandler.succeeded()) {
                             JsonObject message = (JsonObject) messageHandler.result().body();
                             //Check if request is acknowledged by edge device
-                            if(message.getInteger("statusCode") == 200) {
+                            if (message.getInteger("statusCode") == 200) {
                                 System.out.println("Received acknowledgement from edge");
                                 //Execute actual request...
                                 requestDittoServer(client, request, dittoResHandler -> {
@@ -155,8 +155,8 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                     });
                 });
             }
-        }).listen(config().getInteger("http.port",7272), handler -> {
-            if(handler.succeeded()) {
+        }).listen(config().getInteger("http.port", 7272), handler -> {
+            if (handler.succeeded()) {
                 System.out.println("Ditto Server Driver Http Endpoint published");
             } else {
                 System.out.println("Failed to deploy Ditto Server Driver");
@@ -176,7 +176,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                 .setHost(host)
                 .setPort(port)
                 .setURI("/ws/2");
-        if(port == 443 || port == 8443 || config().getBoolean("ditto.ssl", false)) {
+        if (port == 443 || port == 8443 || config().getBoolean("ditto.ssl", false)) {
             requestOptions.setSsl(true);
         }
 
@@ -186,7 +186,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                         .add(HttpHeaders.AUTHORIZATION, "Basic " + getAuthKey())
                 ,
                 this::handleWebSocketSuccess,
-                error-> {
+                error -> {
                     System.out.println("Connection to websocket failed.");
                     System.out.println(error.getMessage());
                     error.printStackTrace();
@@ -196,14 +196,14 @@ public class ServerDittoDriver extends MicroServiceVerticle {
     private void handleWebSocketSuccess(WebSocket webSocket) {
         System.out.println("Websocket connection established");
         dittoWebSocket = webSocket;
-        dittoWebSocket.handler( data -> {
+        dittoWebSocket.handler(data -> {
             if (data.toString("ISO-8859-1").endsWith("ACK")) {
-                System.out.println("Received ack ditto:: " + data.toString("ISO-8859-1"));
+                System.out.println("Received ack ditto::: " + data.toString("ISO-8859-1"));
                 if (first) {
                     first = false;
                     // When web app gets first acknowledgement, periodically sent heartbeat messages
                     // to keep connection alive
-                    vertx.setPeriodic(1000, handler-> {
+                    vertx.setPeriodic(1000, handler -> {
                         dittoWebSocket.writePing(Buffer.buffer());
                         checkPong = true;
                     });
@@ -217,13 +217,9 @@ public class ServerDittoDriver extends MicroServiceVerticle {
 
         dittoWebSocket.writeTextMessage("START-SEND-EVENTS");
 
-        dittoWebSocket.exceptionHandler(handler -> {
-            logger.error(handler.getMessage());
-        });
+        dittoWebSocket.exceptionHandler(handler -> logger.error(handler.getMessage()));
 
-        dittoWebSocket.closeHandler(handler -> {
-            logger.warn("Websocket connection has been closed..");
-        });
+        dittoWebSocket.closeHandler(handler -> logger.warn("Websocket connection has been closed..."));
     }
 
     private void proxyDittoResponse(JsonObject dittoRes, HttpServerRequest req) {
@@ -231,15 +227,15 @@ public class ServerDittoDriver extends MicroServiceVerticle {
         System.out.println(Json.encodePrettily(dittoRes));
         req.response().setChunked(true);
         JsonObject headers = dittoRes.getJsonObject("headers");
-        Map<String,String> headerMap = new HashMap<>();
-        for (String header:headers.fieldNames()){
+        Map<String, String> headerMap = new HashMap<>();
+        for (String header : headers.fieldNames()) {
             headerMap.put(header, headers.getString(header));
         }
         req.response()
                 .headers().setAll(headerMap);
         req.response().setStatusCode(dittoRes.getInteger("statusCode"));
         byte[] responseBody = dittoRes.getBinary("body");
-        if(responseBody != null) {
+        if (responseBody != null) {
             req.response().write(Buffer.buffer(responseBody));
         }
         req.response().end();
@@ -247,7 +243,6 @@ public class ServerDittoDriver extends MicroServiceVerticle {
     }
 
     private void requestDittoServer(HttpClient client, JsonObject message, Handler<AsyncResult<JsonObject>> next) {
-
         String uri = message.getString("uri"); //resource of ditto
         String method = message.getString("method"); //request method Eg: GET, PUT, POST, DELETE, etc.
         HttpMethod httpMethod = HttpMethod.valueOf(method);
@@ -258,7 +253,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
             ssl = true;
         }
         Buffer body = null;
-        if(message.fieldNames().contains("body")) {
+        if (message.fieldNames().contains("body")) {
             body = Buffer.buffer(message.getBinary("body"));
         }
 
@@ -273,7 +268,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                     JsonObject response = new JsonObject();
                     response.put("statusCode", c_res.statusCode());
                     JsonObject headers = new JsonObject();
-                    for (Map.Entry<String,String> entry: c_res.headers().entries()){
+                    for (Map.Entry<String, String> entry : c_res.headers().entries()) {
                         headers.put(entry.getKey(), entry.getValue());
                     }
                     response.put("headers", headers);
@@ -288,8 +283,8 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                 });
         c_req.setChunked(true);
         //Adding ditto authorization
-        c_req.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+getAuthKey());
-        if(body != null) {
+        c_req.putHeader(HttpHeaders.AUTHORIZATION, "Basic " + getAuthKey());
+        if (body != null) {
             c_req.write(body);
         }
         c_req.end();
@@ -305,8 +300,8 @@ public class ServerDittoDriver extends MicroServiceVerticle {
     @Override
     public void stop(Future<Void> future) throws Exception {
         super.stop(future);
-        if(dittoWebSocket!=null) {
-            System.out.println("Verticle is stopping.. Unsubscribing from ditto events");
+        if (dittoWebSocket != null) {
+            System.out.println("Verticle is stopping... Un-subscribing from ditto events");
             dittoWebSocket.writeTextMessage("STOP-SEND-EVENTS");
             dittoWebSocket.close();
         } else {

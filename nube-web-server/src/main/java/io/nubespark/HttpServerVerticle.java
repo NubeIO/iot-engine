@@ -39,7 +39,6 @@ public class HttpServerVerticle extends MicroServiceVerticle {
     @Override
     public void start() {
         super.start();
-        // TODO: 5/5/18 Implement backend logic of users, roles, authentication, business logic end points
 
         Router router = Router.router(vertx);
         // creating body handler
@@ -48,17 +47,15 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         // we are here enabling CORS, for QCing things from frontend
         handleEnableCors(router);
         handleAuth(router);
+        handleAuthEventBus(router);
         handleDittoRESTFulRequest(router);
         handleEventBus(router);
-
-        //creating static resource handler
-        router.route().handler(StaticHandler.create());
-        router.route("/*").handler(ctx -> ctx.response().sendFile("webroot/index.html"));
+        handleStaticResource(router);
 
         String host = config().getString("host", "localhost");
-        int port = config().getInteger("http.port", 8080);
+        int port = config().getInteger("http.port", 8085);
 
-        //By default index.html from webroot/ is available on "/".
+        // By default index.html from webroot/ is available on "/".
         vertx.createHttpServer()
                 .requestHandler(router::accept)
                 .listen(port,
@@ -102,8 +99,11 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         );
     }
 
+    /**
+     * An implementation of handling authentication system and response on the authentic URLs only
+     * @param router for routing the URLs
+     */
     private void handleAuth(Router router) {
-        //login approach
         loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, config().getJsonObject("keycloak"));
         router.route("/api/login/account").handler((RoutingContext ctx) -> {
             JsonObject body = ctx.getBodyAsJson();
@@ -135,27 +135,14 @@ public class HttpServerVerticle extends MicroServiceVerticle {
             }
         });
 
-        router.route("/eventbus/*").handler(ctx ->
-                setAuthenticUser(ctx, ctx.request().getParam("access_token")));
-
         router.route("/api/currentUser").handler(ctx -> {
             User user = ctx.user();
             if (user != null) {
-
                 JsonObject accessToken = KeycloakHelper.accessToken(user.principal());
-
                 String name = accessToken.getString("name", accessToken.getString("preferred_username"));
-
-                //dummy for mock
-                String avatar = "https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png";
-                String userid = "00000001";
-                Integer notifyCount = 12;
                 ctx.response().putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
                         .end(Json.encodePrettily(new JsonObject()
                                 .put("name", name)
-                                .put("avatar", avatar)
-                                .put("userid", userid)
-                                .put("notifyCount", notifyCount)
                         ));
             } else {
                 System.out.println("Send not authorized error and user should login");
@@ -164,6 +151,11 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         });
 
         router.route("/api/logout").handler(this::redirectLogout);
+    }
+
+    private void handleAuthEventBus(Router router) {
+        router.route("/eventbus/*").handler(ctx ->
+                setAuthenticUser(ctx, ctx.request().getParam("access_token")));
     }
 
     private void handleDittoRESTFulRequest(Router router) {
@@ -199,7 +191,7 @@ public class HttpServerVerticle extends MicroServiceVerticle {
                     }
                     ctx.request().response().end();
                 } else {
-                    // // TODO: 5/12/18 Identify cases where request fails and handle accordingly
+                    // TODO: 5/12/18 Identify cases where request fails and handle accordingly
                     ctx.request().response()
                             .setStatusCode(500)
                             .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
@@ -218,19 +210,28 @@ public class HttpServerVerticle extends MicroServiceVerticle {
                 .addOutboundPermitted(new PermittedOptions().setAddress("io.nubespark.ditto.events"));
 
         router.route("/eventbus/*").handler(SockJSHandler.create(vertx).bridge(options, event -> {
-
             // You can also optionally provide a handler like this which will be passed any events that occur on the bridge
             // You can use this for monitoring or logging, or to change the raw messages in-flight.
             // It can also be used for fine grained access control.
-
             if (event.type() == BridgeEventType.SOCKET_CREATED) {
                 System.out.println("A socket was created");
             }
 
             // This signals that it's ok to process the event
             event.complete(true);
-
         }));
+    }
+
+    /**
+     * By default index.html from webroot/ is available on route "/" only.
+     * <p>
+     * For single page application, when we did refresh the page then we firstly need to return index.html then the
+     * requested APIs values. So here we are making the index.html page available for those actions.
+     * @param router routing the URLs
+     */
+    private void handleStaticResource(Router router) {
+        router.route().handler(StaticHandler.create());
+        router.route("/*").handler(ctx -> ctx.response().sendFile("webroot/index.html"));
     }
 
     private void setAuthenticUser(RoutingContext ctx, String authorization) {
