@@ -85,6 +85,7 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         router.route().handler(CorsHandler.create("*")
                 .allowedMethod(io.vertx.core.http.HttpMethod.GET)
                 .allowedMethod(io.vertx.core.http.HttpMethod.POST)
+                .allowedMethod(io.vertx.core.http.HttpMethod.PUT)
                 .allowedMethod(io.vertx.core.http.HttpMethod.OPTIONS)
                 .allowedHeader("Access-Control-Request-Method")
                 .allowedHeader("Access-Control-Allow-Credentials")
@@ -184,6 +185,11 @@ public class HttpServerVerticle extends MicroServiceVerticle {
                     }
                     ctx.request().response()
                             .headers().setAll(headerMap);
+                    // Handling front end 404 page redirection, we can handle differently later...
+                    if (response.getInteger("statusCode") == 404){
+                        ctx.next();
+                        return;
+                    }
                     ctx.request().response().setStatusCode(response.getInteger("statusCode"));
                     byte[] responseBody = response.getBinary("body");
                     if (responseBody != null) {
