@@ -185,11 +185,6 @@ public class HttpServerVerticle extends MicroServiceVerticle {
                     }
                     ctx.request().response()
                             .headers().setAll(headerMap);
-                    // Handling front end 404 page redirection, we can handle differently later...
-                    if (response.getInteger("statusCode") == 404){
-                        ctx.next();
-                        return;
-                    }
                     ctx.request().response().setStatusCode(response.getInteger("statusCode"));
                     byte[] responseBody = response.getBinary("body");
                     if (responseBody != null) {
