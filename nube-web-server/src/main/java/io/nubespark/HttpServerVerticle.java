@@ -4,6 +4,7 @@ import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.http.*;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -23,10 +24,8 @@ import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import static io.nubespark.utils.Constants.SERVER_DITTO_DRIVER;
 import static io.nubespark.utils.Constants.SERVICE_NAME;
 
 /**
@@ -161,47 +160,28 @@ public class HttpServerVerticle extends MicroServiceVerticle {
 
     private void handleDittoRESTFulRequest(Router router) {
         router.route("/api/2/*").handler(ctx -> {
-            HttpServerRequest req = ctx.request();
-            JsonObject request = new JsonObject();
-            request.put("method", req.method().toString());
-            request.put("uri", req.uri());
-            Buffer body = ctx.getBody();
-            if (body != null) {
-                request.put("body", body.getBytes());
-            }
-            System.out.println(Json.encodePrettily(request));
-            System.out.println("Sending response...");
-
-            vertx.eventBus().<JsonObject>send(SERVER_DITTO_DRIVER, request, handler -> {
-                if (handler.succeeded()) {
-                    JsonObject response = handler.result().body();
-                    if (req.method() != HttpMethod.GET) {
-                        ctx.request().response().setChunked(true);
+            HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+            JsonObject config = config();
+            String dittoServerHost = config.getString("ditto-server-host", "http://localhost:7272");
+            HttpClientRequest request = client.requestAbs(ctx.request().method(),
+                    dittoServerHost + ctx.request().uri(), res -> {
+                Buffer data = new BufferImpl();
+                res.handler(x -> data.appendBytes(x.getBytes()));
+                res.endHandler((v) -> {
+                    HttpServerResponse response = ctx.response();
+                    for (Map.Entry<String, String> entry : res.headers().entries()){
+                        System.out.println(entry.getKey() + ":::" + entry.getValue());
+                        ctx.response().putHeader(entry.getKey(), entry.getValue());
                     }
-                    JsonObject headers = response.getJsonObject("headers");
-                    Map<String, String> headerMap = new HashMap<>();
-                    for (String header : headers.fieldNames()) {
-                        headerMap.put(header, headers.getString(header));
+                    if (!Buffer.buffer(data.getBytes()).toString().equals("")){
+                        response.write(Buffer.buffer(data.getBytes()));
                     }
-                    ctx.request().response()
-                            .headers().setAll(headerMap);
-                    ctx.request().response().setStatusCode(response.getInteger("statusCode"));
-                    byte[] responseBody = response.getBinary("body");
-                    if (responseBody != null) {
-                        ctx.request().response().write(Buffer.buffer(responseBody));
-                    }
-                    ctx.request().response().end();
-                } else {
-                    // TODO: 5/12/18 Identify cases where request fails and handle accordingly
-                    ctx.request().response()
-                            .setStatusCode(500)
-                            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(new JsonObject()
-                                    .put("message", "Internal Server Error")
-                                    .put("error", handler.cause().getMessage())
-                            ));
-                }
+                    response.setStatusCode(res.statusCode()).end();
+                    System.out.println("Proxy Response Completed.");
+                });
             });
+            request.setChunked(true);
+            request.write(ctx.getBody()).end();
         });
     }
 

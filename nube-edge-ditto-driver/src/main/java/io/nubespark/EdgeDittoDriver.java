@@ -29,6 +29,8 @@ public class EdgeDittoDriver extends MicroServiceVerticle {
         super.start();
         String nodeRedHost = config().getString("nodered.host", "localhost");
         Integer nodeRedPort = config().getInteger("nodered.port", 1880);
+        System.out.println("NodeRED Host:" + nodeRedHost);
+        System.out.println("NodeRED Port:" + nodeRedPort);
 
         HttpClient client = vertx.createHttpClient(new HttpClientOptions());
 

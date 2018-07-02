@@ -1,5 +1,6 @@
 {
-"http.port":8085,
+  "ditto-server-host": "http://localhost:7272",
+  "http.port":8085,
   "keycloak":{
     "realm": "nubeiot",
     "auth-server-url": "http://localhost:8080/auth",
