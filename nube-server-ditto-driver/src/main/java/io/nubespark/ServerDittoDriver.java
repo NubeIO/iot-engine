@@ -1,6 +1,5 @@
 package io.nubespark;
 
-import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -51,6 +50,12 @@ public class ServerDittoDriver extends MicroServiceVerticle {
         // TODO: find way to keep connection alive and reconnect on network failure
         handleDittoWebSocket(client);
 
+        /**
+         * Handling web request: GET, PUT (mainly), POST (doesn't fit here, since only command will be executed from here)
+         * GET: for getting details
+         * PUT: for sending command to WebApplication -> WebServer -> ServerDittoDriver -> EdgeDittoDriver ->
+         * ServerDittoDriver -> Ditto -> ServerDittoDriver -> WebServer -> WebApplication
+         */
         handleWebServer(client);
 
         publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER, ar -> {
@@ -114,12 +119,14 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                 });
             } else {
                 req.bodyHandler(body -> {
+                    JsonObject decodedRequest = new JsonObject(request.toString());
                     if (body != null) {
                         request.put("body", body.getBytes());
+                        decodedRequest.put("body", new String(body.getBytes()));
                     }
                     System.out.println(Json.encodePrettily(request));
                     System.out.println("Forwarding request to check with edge driver");
-                    vertx.eventBus().send(EDGE_DITTO_DRIVER, request, messageHandler -> {
+                    vertx.eventBus().send(EDGE_DITTO_DRIVER, decodedRequest, messageHandler -> {
                         if (messageHandler.succeeded()) {
                             JsonObject message = (JsonObject) messageHandler.result().body();
                             //Check if request is acknowledged by edge device
@@ -134,23 +141,12 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                             } else {
                                 System.out.println("Received error from edge");
                                 // Return error from edge to client
-                                req.response()
-                                        .setStatusCode(409)
-                                        .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                                        .end(Json.encodePrettily(new JsonObject()
-                                                .put("message", "Edge device gave status code " + message.getInteger("statusCode"))
-                                                .put("body", Buffer.buffer(message.getBinary("body")).toString("ISO-8859-1"))
-                                        ));
+                                req.response().setStatusCode(message.getInteger("statusCode")).end();
                             }
                         } else {
                             System.out.println("Problem in receiving message from edge");
                             // Give info about error
-                            req.response()
-                                    .setStatusCode(500)
-                                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                                    .end(Json.encodePrettily(new JsonObject()
-                                            .put("message", messageHandler.cause().getMessage())
-                                    ));
+                            req.response().setStatusCode(500).end();
                         }
                     });
                 });

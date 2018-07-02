@@ -39,7 +39,7 @@ public class EdgeDittoDriver extends MicroServiceVerticle {
             JsonObject request = message.body();
             System.out.println("Received request from server...");
 
-            HttpClientRequest c_req = client.request(HttpMethod.POST,
+            HttpClientRequest c_req = client.request(HttpMethod.PUT,
                     nodeRedPort,
                     nodeRedHost,
                     "/device/manager",
