@@ -125,29 +125,11 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                         decodedRequest.put("body", new String(body.getBytes()));
                     }
                     System.out.println(Json.encodePrettily(request));
-                    System.out.println("Forwarding request to check with edge driver");
-                    vertx.eventBus().send(EDGE_DITTO_DRIVER, decodedRequest, messageHandler -> {
-                        if (messageHandler.succeeded()) {
-                            JsonObject message = (JsonObject) messageHandler.result().body();
-                            //Check if request is acknowledged by edge device
-                            if (message.getInteger("statusCode") == 200) {
-                                System.out.println("Received acknowledgement from edge");
-                                //Execute actual request...
-                                requestDittoServer(client, request, dittoResHandler -> {
-                                    JsonObject dittoRes = dittoResHandler.result();
-                                    System.out.println("Got response from ditto");
-                                    proxyDittoResponse(dittoRes, req);
-                                });
-                            } else {
-                                System.out.println("Received error from edge");
-                                // Return error from edge to client
-                                req.response().setStatusCode(message.getInteger("statusCode")).end();
-                            }
-                        } else {
-                            System.out.println("Problem in receiving message from edge");
-                            // Give info about error
-                            req.response().setStatusCode(500).end();
-                        }
+                    //Execute actual request...
+                    requestDittoServer(client, request, dittoResHandler -> {
+                        JsonObject dittoRes = dittoResHandler.result();
+                        System.out.println("Got response from ditto");
+                        proxyDittoResponse(dittoRes, req);
                     });
                 });
             }
