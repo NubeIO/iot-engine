@@ -24,6 +24,7 @@
         <module>nube-web-server</module>
         <module>nube-server-ditto-driver</module>
         <module>nube-edge-ditto-driver</module>
+        <module>nube-vertx-hive</module>
     </modules>
 
     <parent>

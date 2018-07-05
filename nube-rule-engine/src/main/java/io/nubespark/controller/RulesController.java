@@ -50,10 +50,10 @@ public class RulesController {
         HttpServerRequest request = routingContext.request();
         String id = request.getParam("id");
         // just a test
-        String query = "SELECT * FROM metadata where tag = ?";
+        String query = "SELECT * FROM metadata where " + id + " = ? ";
         JsonObject queryObj = new JsonObject();
         queryObj.put("query", query);
-        queryObj.put("params", new JsonArray(Collections.singletonList(id)));
+        queryObj.put("params", new JsonArray(Collections.singletonList("m:")));
         vertx.eventBus().send("io.nubespark.jdbc.engine", queryObj, message -> {
             JsonObject replyJson = new JsonObject()
                     .put("controller", "rules")

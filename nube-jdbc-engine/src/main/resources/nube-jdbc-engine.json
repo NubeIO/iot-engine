@@ -2,9 +2,10 @@
   "main": "io.nubespark.JdbcVerticle",
   "options": {
     "config": {
-      "username" : "root",
-      "password" : "root",
-      "database" : "vertx_test"
+      "url":"jdbc:hive2://45.77.51.155:10000/filodb",
+      "driver_class":"org.apache.hive.jdbc.HiveDriver",
+      "user" : "root",
+      "password" : ""
     }
   }
 }

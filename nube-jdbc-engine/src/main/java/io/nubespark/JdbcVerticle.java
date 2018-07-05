@@ -22,7 +22,7 @@ import java.util.StringJoiner;
  */
 public class JdbcVerticle extends MicroServiceVerticle {
 
-    AsyncSQLClient jdbc;
+    private JDBCClient jdbc;
     public static String ADDRESS = "io.nubespark.jdbc.engine";
 
     @Override
@@ -40,7 +40,7 @@ public class JdbcVerticle extends MicroServiceVerticle {
         System.out.println("Current thread loader = " + Thread.currentThread().getContextClassLoader());
         System.out.println(JdbcVerticle.class.getClassLoader());
 
-        jdbc = MySQLClient.createNonShared(vertx, config());
+        jdbc = JDBCClient.createNonShared(vertx, config());
         initializeDatabase();
         publishMessageSource("jdbc-engine", ADDRESS, handler -> {
             if(handler.failed()) {
