@@ -1,5 +1,6 @@
 {
   "ditto-server-host": "http://localhost:7272",
+  "mongodb-host": "http://localhost:8087",
   "http.port":8085,
   "keycloak":{
     "realm": "nubeiot",

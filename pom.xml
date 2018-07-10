@@ -25,6 +25,7 @@
         <module>nube-server-ditto-driver</module>
         <module>nube-edge-ditto-driver</module>
         <module>nube-vertx-hive</module>
+        <module>nube-vertx-mongodb</module>
     </modules>
 
     <parent>

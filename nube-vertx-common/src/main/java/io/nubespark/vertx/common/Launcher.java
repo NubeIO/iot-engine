@@ -46,7 +46,7 @@ public class Launcher extends io.vertx.core.Launcher {
         }
 
         File conf = new File("src/conf/config.json");
-        getConfiguration(conf).mergeIn(deploymentOptions.getConfig());
+        deploymentOptions.setConfig(getConfiguration(conf).mergeIn(deploymentOptions.getConfig()));
     }
 
     private JsonObject getConfiguration(File config) {

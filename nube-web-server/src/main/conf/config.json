@@ -1,0 +1,4 @@
+{
+  "ditto-server-host": "http://localhost:7272",
+  "mongodb-host": "http://localhost:8087"
+}

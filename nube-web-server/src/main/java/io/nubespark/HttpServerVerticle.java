@@ -48,6 +48,7 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         handleAuth(router);
         handleAuthEventBus(router);
         handleDittoRESTFulRequest(router);
+        handleMongoDBRESTFulRequest(router);
         handleEventBus(router);
         handleStaticResource(router);
 
@@ -101,6 +102,7 @@ public class HttpServerVerticle extends MicroServiceVerticle {
 
     /**
      * An implementation of handling authentication system and response on the authentic URLs only
+     *
      * @param router for routing the URLs
      */
     private void handleAuth(Router router) {
@@ -159,30 +161,11 @@ public class HttpServerVerticle extends MicroServiceVerticle {
     }
 
     private void handleDittoRESTFulRequest(Router router) {
-        router.route("/api/2/*").handler(ctx -> {
-            HttpClient client = vertx.createHttpClient(new HttpClientOptions());
-            JsonObject config = config();
-            String dittoServerHost = config.getString("ditto-server-host", "http://localhost:7272");
-            HttpClientRequest request = client.requestAbs(ctx.request().method(),
-                    dittoServerHost + ctx.request().uri(), res -> {
-                Buffer data = new BufferImpl();
-                res.handler(x -> data.appendBytes(x.getBytes()));
-                res.endHandler((v) -> {
-                    HttpServerResponse response = ctx.response();
-                    for (Map.Entry<String, String> entry : res.headers().entries()){
-                        System.out.println(entry.getKey() + ":::" + entry.getValue());
-                        ctx.response().putHeader(entry.getKey(), entry.getValue());
-                    }
-                    if (!Buffer.buffer(data.getBytes()).toString().equals("")){
-                        response.write(Buffer.buffer(data.getBytes()));
-                    }
-                    response.setStatusCode(res.statusCode()).end();
-                    System.out.println("Proxy Response Completed.");
-                });
-            });
-            request.setChunked(true);
-            request.write(ctx.getBody()).end();
-        });
+        handleRESTfulRequest(router, "/api/2/*", "ditto-server-host");
+    }
+
+    private void handleMongoDBRESTFulRequest(Router router) {
+        handleRESTfulRequest(router, "/api/*", "mongodb-host");
     }
 
     private void handleEventBus(Router router) {
@@ -208,6 +191,7 @@ public class HttpServerVerticle extends MicroServiceVerticle {
      * <p>
      * For single page application, when we did refresh the page then we firstly need to return index.html then the
      * requested APIs values. So here we are making the index.html page available for those actions.
+     *
      * @param router routing the URLs
      */
     private void handleStaticResource(Router router) {
@@ -256,5 +240,33 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         request.putHeader("Authorization", "Bearer " + access_token);
 
         request.write(body$).end();
+    }
+
+    private void handleRESTfulRequest(Router router, String path, String host) {
+        router.route(path).handler(ctx -> {
+            HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+            JsonObject config = config();
+            String dittoServerHost = config.getString(host, "http://localhost:7272");
+            HttpClientRequest request = client.requestAbs(ctx.request().method(),
+                    dittoServerHost + ctx.request().uri(), res -> {
+                        Buffer data = new BufferImpl();
+                        res.handler(x -> data.appendBytes(x.getBytes()));
+                        res.endHandler((v) -> {
+                            HttpServerResponse response = ctx.response();
+                            for (Map.Entry<String, String> entry : res.headers().entries()) {
+                                System.out.println(entry.getKey() + ":::" + entry.getValue());
+                                ctx.response().putHeader(entry.getKey(), entry.getValue());
+                            }
+                            if (!Buffer.buffer(data.getBytes()).toString().equals("")) {
+                                response.write(Buffer.buffer(data.getBytes()));
+                            }
+                            System.out.println("Response status code: " + res.statusCode());
+                            response.setStatusCode(res.statusCode()).end();
+                            System.out.println("Proxy Response Completed.");
+                        });
+                    });
+            request.setChunked(true);
+            request.write(ctx.getBody()).end();
+        });
     }
 }
