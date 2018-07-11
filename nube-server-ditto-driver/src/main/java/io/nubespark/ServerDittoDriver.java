@@ -201,8 +201,8 @@ public class ServerDittoDriver extends MicroServiceVerticle {
     }
 
     private void proxyDittoResponse(JsonObject dittoRes, HttpServerRequest req) {
-        System.out.println("Sending response to caller");
-        System.out.println(Json.encodePrettily(dittoRes));
+//        System.out.println("Sending response to caller");
+//        System.out.println(Json.encodePrettily(dittoRes));
         req.response().setChunked(true);
         JsonObject headers = dittoRes.getJsonObject("headers");
         Map<String, String> headerMap = new HashMap<>();
@@ -217,7 +217,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
             req.response().write(Buffer.buffer(responseBody));
         }
         req.response().end();
-        System.out.println("Response sent to caller..");
+//        System.out.println("Response sent to caller..");
     }
 
     private void requestDittoServer(HttpClient client, JsonObject message, Handler<AsyncResult<JsonObject>> next) {
