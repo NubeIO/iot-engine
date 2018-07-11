@@ -54,12 +54,11 @@ public class HttpServerVerticle extends RestAPIVerticle {
         handleAuth(router);
         handleAuthEventBus(router);
         handleDittoRESTFulRequest(router);
-        handleMongoDBRESTFulRequest(router);
+        //todo enable MongoDB later
+//        handleMongoDBRESTFulRequest(router);
         handleEventBus(router);
 
-        // api dispatcher
-        //todo check after auth enabling
-        router.route("/api/*").handler(this::dispatchRequests);
+        handleGateway(router);
 
         handleStaticResource(router);
 
@@ -89,6 +88,11 @@ public class HttpServerVerticle extends RestAPIVerticle {
             }
         });
 
+    }
+
+    private void handleGateway(Router router) {
+        // api dispatcher
+        router.route("/api/*").handler(this::dispatchRequests);
     }
 
     private void dispatchRequests(RoutingContext context) {
