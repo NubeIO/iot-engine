@@ -2,6 +2,7 @@ package io.nubespark;
 
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
+import io.nubespark.vertx.common.RestAPIVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.buffer.impl.BufferImpl;
@@ -23,15 +24,20 @@ import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.ServiceDiscovery;
+import io.vertx.servicediscovery.types.HttpEndpoint;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static io.nubespark.utils.Constants.SERVICE_NAME;
 
 /**
  * Created by topsykretts on 5/4/18.
  */
-public class HttpServerVerticle extends MicroServiceVerticle {
+public class HttpServerVerticle extends RestAPIVerticle {
 
     private OAuth2Auth loginAuth;
 
@@ -50,6 +56,11 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         handleDittoRESTFulRequest(router);
         handleMongoDBRESTFulRequest(router);
         handleEventBus(router);
+
+        // api dispatcher
+        //todo check after auth enabling
+        router.route("/api/*").handler(this::dispatchRequests);
+
         handleStaticResource(router);
 
         String host = config().getString("host", "localhost");
@@ -79,6 +90,106 @@ public class HttpServerVerticle extends MicroServiceVerticle {
         });
 
     }
+
+    private void dispatchRequests(RoutingContext context) {
+        System.out.println("Dispatch Requests called");
+        int initialOffset = 5; // length of `/api/`
+        // run with circuit breaker in order to deal with failure
+        circuitBreaker.execute(future -> {
+            getAllEndpoints().setHandler(ar -> {
+                if (ar.succeeded()) {
+                    List<Record> recordList = ar.result();
+                    // get relative path and retrieve prefix to dispatch client
+                    String path = context.request().uri();
+
+                    if (path.length() <= initialOffset) {
+                        notFound(context);
+                        future.complete();
+                        return;
+                    }
+                    String prefix = (path.substring(initialOffset)
+                            .split("/"))[0];
+                    // generate new relative path
+                    String newPath = path.substring(initialOffset + prefix.length());
+                    // get one relevant HTTP client, may not exist
+                    Optional<Record> client = recordList.stream()
+                            .filter(record -> record.getMetadata().getString("api.name") != null)
+                            .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
+                            .findAny(); // simple load balance
+
+                    if (client.isPresent()) {
+                        System.out.println("Found client for uri " + path);
+                        doDispatch(context, newPath, discovery.getReference(client.get()).get(), future);
+                    } else {
+                        notFound(context);
+                        future.complete();
+                    }
+                } else {
+                    future.fail(ar.cause());
+                }
+            });
+        }).setHandler(ar -> {
+            if (ar.failed()) {
+                badGateway(ar.cause(), context);
+            }
+        });
+    }
+
+    /**
+     * Dispatch the request to the downstream REST layers.
+     *
+     * @param context routing context instance
+     * @param path    relative path
+     * @param client  relevant HTTP client
+     */
+    private void doDispatch(RoutingContext context, String path, HttpClient client, Future<Object> cbFuture) {
+        HttpClientRequest toReq = client
+                .request(context.request().method(), path, response -> {
+                    response.bodyHandler(body -> {
+                        if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
+                            cbFuture.fail(response.statusCode() + ": " + body.toString());
+                        } else {
+                            HttpServerResponse toRsp = context.response()
+                                    .setStatusCode(response.statusCode());
+                            response.headers().forEach(header -> {
+                                toRsp.putHeader(header.getKey(), header.getValue());
+                            });
+                            // send response
+                            toRsp.end(body);
+                            cbFuture.complete();
+                        }
+                        ServiceDiscovery.releaseServiceObject(discovery, client);
+                    });
+                });
+        // set headers
+        context.request().headers().forEach(header -> {
+            toReq.putHeader(header.getKey(), header.getValue());
+        });
+        //todo check authentication part in client app ??
+//        if (context.user() != null) {
+//            toReq.putHeader("user-principal", context.user().principal().encode());
+//        }
+        // send request
+        if (context.getBody() == null) {
+            toReq.end();
+        } else {
+            toReq.end(context.getBody());
+        }
+    }
+
+    /**
+     * Get all REST endpoints from the service discovery infrastructure.
+     *
+     * @return async result
+     */
+    private Future<List<Record>> getAllEndpoints() {
+        Future<List<Record>> future = Future.future();
+        discovery.getRecords(record -> record.getType().equals(HttpEndpoint.TYPE),
+                future.completer());
+        return future;
+    }
+
+
 
     private void handleEnableCors(Router router) {
         // For testing server we make CORS available, we will comment out in production cluster

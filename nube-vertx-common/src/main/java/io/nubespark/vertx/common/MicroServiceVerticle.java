@@ -1,7 +1,10 @@
 package io.nubespark.vertx.common;
 
+import io.vertx.circuitbreaker.CircuitBreaker;
+import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.*;
 import io.vertx.core.impl.ConcurrentHashSet;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.ServiceDiscovery;
@@ -21,16 +24,32 @@ import java.util.Set;
 public class MicroServiceVerticle extends AbstractVerticle {
 
   protected ServiceDiscovery discovery;
+  protected CircuitBreaker circuitBreaker;
   protected Set<Record> registeredRecords = new ConcurrentHashSet<>();
 
   @Override
   public void start() {
-    discovery = ServiceDiscovery.create(vertx, new ServiceDiscoveryOptions().setBackendConfiguration(config()));
+
+      //initializing service discovery
+      discovery = ServiceDiscovery.create(vertx, new ServiceDiscoveryOptions().setBackendConfiguration(config()));
+
+      // init circuit breaker instance
+      JsonObject cbOptions = config().getJsonObject("circuit-breaker") != null ?
+              config().getJsonObject("circuit-breaker") : new JsonObject();
+      circuitBreaker = CircuitBreaker.create(cbOptions.getString("name", "circuit-breaker"), vertx,
+              new CircuitBreakerOptions()
+                      .setMaxFailures(cbOptions.getInteger("max-failures", 5))
+                      .setTimeout(cbOptions.getLong("timeout", 10000L))
+                      .setFallbackOnFailure(true)
+                      .setResetTimeout(cbOptions.getLong("reset-timeout", 30000L))
+      );
   }
 
   public void publishHttpEndpoint(String name, String host, int port, Handler<AsyncResult<Void>>
       completionHandler) {
-    Record record = HttpEndpoint.createRecord(name, host, port, "/");
+    Record record = HttpEndpoint.createRecord(name, host, port, "/",
+            new JsonObject().put("api.name", config().getString("api.name", ""))
+    );
     publish(record, completionHandler);
   }
 
@@ -93,6 +112,14 @@ public class MicroServiceVerticle extends AbstractVerticle {
       });
     }
   }
+
+    protected void publishApiGateway(String host, int port, Handler<AsyncResult<Void>>
+            completionHandler) {
+        Record record = HttpEndpoint.createRecord("api-gateway", true, host, port, "/", null)
+                .setType("api-gateway");
+         publish(record, completionHandler);
+    }
+
 
     public void handleFailure(Logger logger, AsyncResult handler) {
         logger.error(handler.cause().getMessage());

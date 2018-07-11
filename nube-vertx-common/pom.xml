@@ -14,5 +14,11 @@
 
     <artifactId>nube-vertx-common</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
