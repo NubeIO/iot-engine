@@ -1,3 +1,20 @@
 {
-  "main": "io.nubespark.MongoDBVerticle"
+  "main": "io.nubespark.MongoDBVerticle",
+  "config": {
+    "hosts": [
+      {
+        "host": "localhost",
+        "port": 27017
+      }
+    ],
+    "db_name": "nube",
+    "username": "root",
+    "password": "root",
+    "authSource": "admin",
+    "maxPoolSize": 30,
+    "minPoolSize": 5,
+    "waitQueueMultiple": 100,
+    "http.port": 8087,
+    "api.name": "mongo"
+  }
 }

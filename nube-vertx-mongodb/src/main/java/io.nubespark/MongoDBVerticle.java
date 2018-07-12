@@ -12,8 +12,8 @@ import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 
 public class MongoDBVerticle extends MicroServiceVerticle {
-    MongoDBController controller;
-    MongoClient client;
+    private MongoDBController controller;
+    private MongoClient client;
 
     @Override
     public void start() {
@@ -21,7 +21,7 @@ public class MongoDBVerticle extends MicroServiceVerticle {
         System.out.println("Config on MongoDB");
         System.out.println(Json.encodePrettily(config()));
 
-        client = MongoClient.createShared(vertx, config());
+        client = MongoClient.createNonShared(vertx, config());
 
         handleRESTfulRequest(http -> {
             if (http.succeeded()) {
@@ -36,11 +36,11 @@ public class MongoDBVerticle extends MicroServiceVerticle {
         controller = new MongoDBController(vertx, client);
 
         Router router = Router.router(vertx);
-        router.get("/api/get/:document").handler(routingContext -> controller.getAll(routingContext));
-        router.get("/api/get/:document/:id").handler(routingContext -> controller.getOne(routingContext));
-        router.post("/api/save/:document").handler(routingContext -> controller.save(routingContext));
-        router.delete("/api/delete/:document").handler(routingContext -> controller.deleteAll(routingContext));
-        router.delete("/api/delete/:document/:id").handler(routingContext -> controller.deleteOne(routingContext));
+        router.get("/get/:document").handler(routingContext -> controller.getAll(routingContext));
+        router.get("/get/:document/:id").handler(routingContext -> controller.getOne(routingContext));
+        router.post("/save/:document").handler(routingContext -> controller.save(routingContext));
+        router.delete("/delete/:document").handler(routingContext -> controller.deleteAll(routingContext));
+        router.delete("/delete/:document/:id").handler(routingContext -> controller.deleteOne(routingContext));
 
         // This is last handler that gives not found message
         router.route().last().handler(routingContext -> {

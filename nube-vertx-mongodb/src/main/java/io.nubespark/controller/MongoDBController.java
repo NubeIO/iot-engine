@@ -13,8 +13,8 @@ import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 
 public class MongoDBController {
-    Vertx vertx;
-    MongoClient client;
+    private Vertx vertx;
+    private MongoClient client;
 
     public MongoDBController(Vertx vertx, MongoClient client) {
         this.vertx = vertx;
