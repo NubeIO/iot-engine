@@ -78,24 +78,28 @@ public class RulesController {
     }
 
     public void getFiloData(RoutingContext routingContext) {
-        routingContext.request().bodyHandler((body) -> {
-            JsonObject jsonObject = new JsonObject(body);
-            String query = jsonObject.getString("query");
+
+        JsonObject body = routingContext.getBodyAsJson();
+        String query = null;
+        if (body != null) {
+            query = body.getString("query", null);
+        }
+        if (query == null) {
+            routingContext.response()
+                    .setStatusCode(400)
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(new JsonObject().put("message", "Request must have a valid JSON body with 'query' field.")));
+        } else  {
+
             JsonObject queryObj = new JsonObject();
-//        Boolean isReadQuery = SQLFilter.isReadType(query);
-//        if (isReadQuery) {
             queryObj.put("query", query);
-//            queryObj.put("params", new JsonArray(Collections.singletonList("m:")));
-//        }
+            String finalQuery = query;
             vertx.eventBus().send("io.nubespark.jdbc.engine", queryObj, message -> {
-                JsonObject replyJson = new JsonObject()
-                        .put("controller", "rules")
-                        .put("action", "getFiloData")
-                        .put("desc", "Read data from filodb")
-                        .put("query", query);
-//            if (!isReadQuery) {
-//                replyJson.put("access", Constants.ACCESS_DENIED);
-//            }
+                        JsonObject replyJson = new JsonObject()
+                                .put("controller", "rules")
+                                .put("action", "getFiloData")
+                                .put("desc", "Read data from filodb")
+                                .put("query", finalQuery);
                 if (message.succeeded()) {
                     Object reply = message.result().body();
                     if (reply != null) {
@@ -110,8 +114,7 @@ public class RulesController {
                         .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encodePrettily(replyJson));
             });
-        });
-
+        }
     }
 
 }
