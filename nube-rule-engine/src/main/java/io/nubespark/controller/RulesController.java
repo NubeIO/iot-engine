@@ -7,7 +7,12 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.servicediscovery.ServiceDiscovery;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.Select;
 
+import java.io.StringReader;
 import java.util.Collections;
 
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
@@ -89,31 +94,44 @@ public class RulesController {
                     .setStatusCode(400)
                     .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                     .end(Json.encodePrettily(new JsonObject().put("message", "Request must have a valid JSON body with 'query' field.")));
-        } else  {
-
-            JsonObject queryObj = new JsonObject();
-            queryObj.put("query", query);
-            String finalQuery = query;
-            vertx.eventBus().send("io.nubespark.jdbc.engine", queryObj, message -> {
-                        JsonObject replyJson = new JsonObject()
-                                .put("controller", "rules")
-                                .put("action", "getFiloData")
-                                .put("desc", "Read data from filodb")
-                                .put("query", finalQuery);
-                if (message.succeeded()) {
-                    Object reply = message.result().body();
-                    if (reply != null) {
-                        replyJson.put("resultSet", reply);
-                    }
-                } else {
-                    message.cause().printStackTrace();
-                    System.out.println(message.cause().getLocalizedMessage());
-                    System.out.println("Failed to receive reply...");
-                }
+        } else {
+            Statement statement = null;
+            CCJSqlParserManager ccjSqlParserManager = new CCJSqlParserManager();
+            try {
+                statement = ccjSqlParserManager.parse(new StringReader(query));
+            } catch (JSQLParserException e) {
+                e.printStackTrace();
+            }
+            if (!(statement instanceof Select)) {
                 routingContext.response()
+                        .setStatusCode(403)
                         .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(replyJson));
-            });
+                        .end(Json.encodePrettily(new JsonObject().put("message", "You do not have permission to run this query.")));
+            } else {
+                JsonObject queryObj = new JsonObject();
+                queryObj.put("query", query);
+                String finalQuery = query;
+                vertx.eventBus().send("io.nubespark.jdbc.engine", queryObj, message -> {
+                    JsonObject replyJson = new JsonObject()
+                            .put("controller", "rules")
+                            .put("action", "getFiloData")
+                            .put("desc", "Read data from filodb")
+                            .put("query", finalQuery);
+                    if (message.succeeded()) {
+                        Object reply = message.result().body();
+                        if (reply != null) {
+                            replyJson.put("resultSet", reply);
+                        }
+                    } else {
+                        message.cause().printStackTrace();
+                        System.out.println(message.cause().getLocalizedMessage());
+                        System.out.println("Failed to receive reply...");
+                    }
+                    routingContext.response()
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .end(Json.encodePrettily(replyJson));
+                });
+            }
         }
     }
 
