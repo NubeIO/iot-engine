@@ -1,11 +1,8 @@
 package io.nubespark;
 
 import io.nubespark.utils.response.ResponseUtils;
-import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.nubespark.vertx.common.RestAPIVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.http.*;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -20,7 +17,6 @@ import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
@@ -29,7 +25,6 @@ import io.vertx.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static io.nubespark.utils.Constants.SERVICE_NAME;
@@ -50,7 +45,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
         router.route().handler(BodyHandler.create());
 
         // we are here enabling CORS, for QCing things from frontend
-        handleEnableCors(router);
+        enableCorsSupport(router);
         handleAuth(router);
         handleAuthEventBus(router);
         handleEventBus(router);
@@ -191,28 +186,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
         return future;
     }
 
-
-
-    private void handleEnableCors(Router router) {
-        // For testing server we make CORS available, we will comment out in production cluster
-        router.route().handler(CorsHandler.create("*")
-                .allowedMethod(io.vertx.core.http.HttpMethod.GET)
-                .allowedMethod(io.vertx.core.http.HttpMethod.POST)
-                .allowedMethod(io.vertx.core.http.HttpMethod.PUT)
-                .allowedMethod(io.vertx.core.http.HttpMethod.OPTIONS)
-                .allowedHeader("Access-Control-Request-Method")
-                .allowedHeader("Access-Control-Allow-Credentials")
-                .allowedHeader("Access-Control-Allow-Origin")
-                .allowedHeader("Access-Control-Allow-Headers")
-                .allowedHeader("Content-Type")
-                .allowedHeader("origin")
-                .allowedHeader("x-requested-with")
-                .allowedHeader("accept")
-                .allowedHeader("X-PINGARUNER")
-                .allowedHeader("Authorization")
-        );
-    }
-
     /**
      * An implementation of handling authentication system and response on the authentic URLs only
      *
@@ -346,5 +319,4 @@ public class HttpServerVerticle extends RestAPIVerticle {
 
         request.write(body$).end();
     }
-
 }

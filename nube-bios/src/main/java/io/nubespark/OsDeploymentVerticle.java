@@ -2,7 +2,6 @@ package io.nubespark;
 
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -281,9 +280,6 @@ public class OsDeploymentVerticle extends MicroServiceVerticle {
                     });
                 }
             });
-
-
         }
     }
-
 }

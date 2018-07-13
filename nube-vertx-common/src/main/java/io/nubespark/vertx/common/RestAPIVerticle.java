@@ -47,11 +47,16 @@ public class RestAPIVerticle extends MicroServiceVerticle {
      */
     protected void enableCorsSupport(Router router) {
         Set<String> allowHeaders = new HashSet<>();
-        allowHeaders.add("x-requested-with");
+        allowHeaders.add("Access-Control-Request-Method");
+        allowHeaders.add("Access-Control-Allow-Credentials");
         allowHeaders.add("Access-Control-Allow-Origin");
-        allowHeaders.add("origin");
+        allowHeaders.add("Access-Control-Allow-Headers");
         allowHeaders.add("Content-Type");
+        allowHeaders.add("origin");
+        allowHeaders.add("x-requested-with");
         allowHeaders.add("accept");
+        allowHeaders.add("X-PINGARUNER");
+        allowHeaders.add("Authorization");
         Set<HttpMethod> allowMethods = new HashSet<>();
         allowMethods.add(HttpMethod.GET);
         allowMethods.add(HttpMethod.PUT);

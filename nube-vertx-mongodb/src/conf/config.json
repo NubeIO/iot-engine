@@ -12,5 +12,6 @@
   "maxPoolSize": 30,
   "minPoolSize": 5,
   "waitQueueMultiple": 100,
-  "http.port": 8087
+  "http.port": 8083,
+  "api.name": "mongo"
 }
