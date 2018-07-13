@@ -1,10 +1,12 @@
 package io.nubespark.vertx.common;
 
+import io.nubespark.utils.response.ResponseUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -326,5 +328,11 @@ public class RestAPIVerticle extends MicroServiceVerticle {
         context.response().setStatusCode(503)
                 .putHeader("content-type", "application/json")
                 .end(new JsonObject().put("error", cause).encodePrettily());
+    }
+
+    protected void failAuthentication(RoutingContext ctx) {
+        ctx.response().setStatusCode(401)
+                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                .end(Json.encodePrettily(new JsonObject().put("message", "Unauthorized")));
     }
 }

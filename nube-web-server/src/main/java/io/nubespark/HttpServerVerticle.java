@@ -53,7 +53,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
         handleEnableCors(router);
         handleAuth(router);
         handleAuthEventBus(router);
-        handleDittoRESTFulRequest(router);
+//        handleDittoRESTFulRequest(router);
         //todo enable MongoDB later
 //        handleMongoDBRESTFulRequest(router);
         handleEventBus(router);
@@ -113,9 +113,11 @@ public class HttpServerVerticle extends RestAPIVerticle {
                     }
                     String prefix = (path.substring(initialOffset)
                             .split("/"))[0];
+                    System.out.println("prefix = " + prefix);
                     // generate new relative path
                     String newPath = path.substring(initialOffset + prefix.length());
                     // get one relevant HTTP client, may not exist
+                    System.out.println("new path = " + newPath);
                     Optional<Record> client = recordList.stream()
                             .filter(record -> record.getMetadata().getString("api.name") != null)
                             .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
@@ -125,6 +127,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                         System.out.println("Found client for uri " + path);
                         doDispatch(context, newPath, discovery.getReference(client.get()).get(), future);
                     } else {
+                        System.out.println("Client endpoint not found for uri " + path);
                         notFound(context);
                         future.complete();
                     }
@@ -231,7 +234,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 if (res.failed()) {
                     res.cause().printStackTrace();
                     System.out.println(res.result());
-                    ctx.fail(401);
+                    failAuthentication(ctx);
                 } else {
                     AccessToken token = (AccessToken) res.result();
                     ctx.response()
@@ -248,7 +251,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 System.out.println(authorization);
                 setAuthenticUser(ctx, authorization);
             } else {
-                ctx.fail(401);
+                failAuthentication(ctx);
             }
         });
 
@@ -263,7 +266,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                         ));
             } else {
                 System.out.println("Send not authorized error and user should login");
-                ctx.fail(401);
+                failAuthentication(ctx);
             }
         });
 
@@ -324,7 +327,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
             } else {
                 System.out.println("Auth Fail");
                 res.cause().printStackTrace();
-                ctx.fail(401);
+                failAuthentication(ctx);
             }
         });
     }

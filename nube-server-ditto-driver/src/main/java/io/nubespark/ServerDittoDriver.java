@@ -136,6 +136,18 @@ public class ServerDittoDriver extends MicroServiceVerticle {
         }).listen(config().getInteger("http.port", 7272), handler -> {
             if (handler.succeeded()) {
                 System.out.println("Ditto Server Driver Http Endpoint published");
+                publishHttpEndpoint("ditto-api",
+                        config().getString("http.host", "0.0.0.0"),
+                        config().getInteger("http.port", 7272),
+                        ar -> {
+                            if (ar.succeeded()) {
+                                System.out.println("Ditto Server Driver Http Endpoint published");
+                            } else {
+                                System.out.println("Failed to publish Ditto Server Driver Http Endpoint");
+                                ar.cause().printStackTrace();
+                            }
+                        }
+                );
             } else {
                 System.out.println("Failed to deploy Ditto Server Driver");
             }

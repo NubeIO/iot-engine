@@ -1,3 +1,9 @@
 {
-  "main": "io.nubespark.ServerDittoDriver"
+  "main": "io.nubespark.ServerDittoDriver",
+  "options":{
+    "config": {
+      "http.port": 7272,
+      "api.name": "ditto"
+    }
+  }
 }

@@ -63,5 +63,18 @@ public class MongoDBVerticle extends MicroServiceVerticle {
                         // default to 8087
                         config().getInteger("http.port", 8087),
                         next::handle);
+
+        publishHttpEndpoint("mongodb-api",
+                config().getString("http.host", "0.0.0.0"),
+                config().getInteger("http.port", 8087),
+                ar -> {
+                    if (ar.succeeded()) {
+                        System.out.println("MongoDB REST endpoint published successfully..");
+                    } else {
+                        System.out.println("Failed to publish MongoDB REST endpoint");
+                        ar.cause().printStackTrace();
+                    }
+                }
+                );
     }
 }
