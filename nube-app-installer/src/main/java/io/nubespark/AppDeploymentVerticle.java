@@ -109,9 +109,11 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
                         String deploymentId = record.getString("deploymentId");
                         String verticleName = record.getString("serviceName");
                         String configString = record.getString("config");
-                        JsonObject config = new JsonObject();
+                        JsonObject config;
                         if(configString != null) {
                             config = new JsonObject(configString);
+                        } else {
+                            config = null;
                         }
                         // TODO: 5/22/18 change in swagger
                         final int finalI1 = i;
@@ -160,7 +162,7 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
             String groupId = info.getString("groupId", "io.nubespark");
             String artifactId = info.getString("artifactId");
             String version = info.getString("version", "1.0-SNAPSHOT");
-            JsonObject config = info.getJsonObject("config", new JsonObject());
+            JsonObject config = info.getJsonObject("config", null);
 
             if (artifactId != null) {
                 String service = info.getString("service", artifactId);
@@ -239,15 +241,21 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
 
     private void handleInstall(String verticleName, JsonObject config, Handler<AsyncResult<Void>> next) {
         logger.info("handling install");
-        logger.info("Loading config in deployment options:: ", Json.encodePrettily(config));
-        DeploymentOptions options = new DeploymentOptions().setConfig(config);
+        DeploymentOptions options = new DeploymentOptions();
+        String configString = null;
+        if (config != null) {
+            logger.info("Loading config in deployment options:: ", Json.encodePrettily(config));
+            options.setConfig(config);
+            configString = config.toString();
+        }
+        String finalConfigString = configString;
         vertx.deployVerticle(verticleName,
                 options,
                 ar -> {
                     if (ar.succeeded()) {
                         logger.info("Successfully deployed ", verticleName);
                         String deploymentId = ar.result();
-                        saveData(deploymentId, verticleName, config.toString()); //persisting deployment info
+                        saveData(deploymentId, verticleName, finalConfigString); //persisting deployment info
 
                         JsonObject report = new JsonObject(); //reporting deployment back to store
                         report.put("serverId", "localhost-app-installer");
