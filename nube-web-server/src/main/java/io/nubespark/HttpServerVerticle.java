@@ -53,13 +53,8 @@ public class HttpServerVerticle extends RestAPIVerticle {
         handleEnableCors(router);
         handleAuth(router);
         handleAuthEventBus(router);
-//        handleDittoRESTFulRequest(router);
-        //todo enable MongoDB later
-//        handleMongoDBRESTFulRequest(router);
         handleEventBus(router);
-
         handleGateway(router);
-
         handleStaticResource(router);
 
         String host = config().getString("host", "localhost");
@@ -278,14 +273,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 setAuthenticUser(ctx, ctx.request().getParam("access_token")));
     }
 
-    private void handleDittoRESTFulRequest(Router router) {
-        handleRESTfulRequest(router, "/api/2/*", "ditto-server-host");
-    }
-
-    private void handleMongoDBRESTFulRequest(Router router) {
-        handleRESTfulRequest(router, "/api/*", "mongodb-host");
-    }
-
     private void handleEventBus(Router router) {
         BridgeOptions options = new BridgeOptions()
                 .addOutboundPermitted(new PermittedOptions().setAddress("news-feed"))
@@ -360,31 +347,4 @@ public class HttpServerVerticle extends RestAPIVerticle {
         request.write(body$).end();
     }
 
-    private void handleRESTfulRequest(Router router, String path, String host) {
-        router.route(path).handler(ctx -> {
-            HttpClient client = vertx.createHttpClient(new HttpClientOptions());
-            JsonObject config = config();
-            String dittoServerHost = config.getString(host, "http://localhost:7272");
-            HttpClientRequest request = client.requestAbs(ctx.request().method(),
-                    dittoServerHost + ctx.request().uri(), res -> {
-                        Buffer data = new BufferImpl();
-                        res.handler(x -> data.appendBytes(x.getBytes()));
-                        res.endHandler((v) -> {
-                            HttpServerResponse response = ctx.response();
-                            for (Map.Entry<String, String> entry : res.headers().entries()) {
-                                System.out.println(entry.getKey() + ":::" + entry.getValue());
-                                ctx.response().putHeader(entry.getKey(), entry.getValue());
-                            }
-                            if (!Buffer.buffer(data.getBytes()).toString().equals("")) {
-                                response.write(Buffer.buffer(data.getBytes()));
-                            }
-                            System.out.println("Response status code: " + res.statusCode());
-                            response.setStatusCode(res.statusCode()).end();
-                            System.out.println("Proxy Response Completed.");
-                        });
-                    });
-            request.setChunked(true);
-            request.write(ctx.getBody()).end();
-        });
-    }
 }
