@@ -314,8 +314,8 @@ public class RestAPIVerticle extends MicroServiceVerticle {
         context.response()
                 .setStatusCode(502)
                 .putHeader("content-type", "application/json")
-                .end(new JsonObject().put("error", "bad_gateway")
-                        //.put("message", ex.getMessage())
+                .end(new JsonObject().put("error", "Bad Gateway")
+                        .put("message", ex.getMessage())
                         .encodePrettily());
     }
 
