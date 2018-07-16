@@ -1,6 +1,0 @@
-{
- "ditto.http.port":8080,
- "ditto.http.host":"localhost",
- "ditto.http.username":"ditto",
- "ditto.http.password":"ditto"
-}

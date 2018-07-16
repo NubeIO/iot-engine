@@ -29,6 +29,11 @@
 
         <dependency>
             <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-api-contract</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
             <artifactId>vertx-mongo-client</artifactId>
             <version>3.5.2</version>
         </dependency>

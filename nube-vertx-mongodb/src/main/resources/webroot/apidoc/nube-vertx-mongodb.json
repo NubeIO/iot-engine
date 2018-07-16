@@ -1,0 +1,203 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Nube Vert.x MongoDB API",
+    "description": "An API for CURD operation between Vert.x with MongoDB"
+  },
+  "paths": {
+    "/get/{document}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "document",
+          "schema": {
+            "type": "string"
+          },
+          "required": true,
+          "description": "Document of MongoDB"
+        }
+      ],
+      "get": {
+        "tags": [
+          "GET"
+        ],
+        "description": "GET request with MongoDB document",
+        "operationId": "/get/:document",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Document"
+                  },
+                  "example": [
+                    {
+                      "_id": "1",
+                      "value": "abc"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get/{document}/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "document",
+          "schema": {
+            "type": "string"
+          },
+          "required": true,
+          "description": "Document of MongoDB"
+        },
+        {
+          "in": "path",
+          "name": "id",
+          "schema": {
+            "type": "string"
+          },
+          "required": true,
+          "description": "_id for particular document"
+        }
+      ],
+      "get": {
+        "tags": [
+          "GET"
+        ],
+        "description": "GET request with MongoDB document id",
+        "operationId": "/get/:document/:id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/save/{document}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "document",
+          "schema": {
+            "type": "string"
+          },
+          "required": true,
+          "description": "Document of MongoDB"
+        }
+      ],
+      "post": {
+        "tags": [
+          "SAVE"
+        ],
+        "description": "SAVE request with MongoDB document",
+        "operationId": "/save/:document",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Document"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created."
+          }
+        }
+      }
+    },
+    "/delete/{document}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "document",
+          "schema": {
+            "type": "string"
+          },
+          "required": true,
+          "description": "Document of MongoDB"
+        }
+      ],
+      "delete": {
+        "tags": [
+          "DELETE"
+        ],
+        "description": "DELETE request with MongoDB document",
+        "operationId": "/delete/:document",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/delete/{document}/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "document",
+          "schema": {
+            "type": "string"
+          },
+          "required": true,
+          "description": "Document of MongoDB"
+        },
+        {
+          "in": "path",
+          "name": "id",
+          "schema": {
+            "type": "string"
+          },
+          "required": true,
+          "description": "_id for particular document"
+        }
+      ],
+      "delete": {
+        "tags": [
+          "DELETE"
+        ],
+        "description": "DELETE request with MongoDB document id",
+        "operationId": "/delete/:document/:id",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Document": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "1"
+          },
+          "value": {
+            "type": "string",
+            "example": "abc"
+          }
+        }
+      }
+    }
+  }
+}

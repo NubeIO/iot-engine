@@ -4,12 +4,17 @@ import io.nubespark.controller.MongoDBController;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.api.contract.RouterFactoryOptions;
+import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
+import io.vertx.ext.web.handler.StaticHandler;
 
 public class MongoDBVerticle extends MicroServiceVerticle {
     private MongoDBController controller;
@@ -33,36 +38,55 @@ public class MongoDBVerticle extends MicroServiceVerticle {
     }
 
     private void handleRESTfulRequest(Handler<AsyncResult<HttpServer>> next) {
-        controller = new MongoDBController(vertx, client);
+        controller = new MongoDBController(client);
 
-        Router router = Router.router(vertx);
-        router.get("/get/:document").handler(routingContext -> controller.getAll(routingContext));
-        router.get("/get/:document/:id").handler(routingContext -> controller.getOne(routingContext));
-        router.post("/save/:document").handler(routingContext -> controller.save(routingContext));
-        router.delete("/delete/:document").handler(routingContext -> controller.deleteAll(routingContext));
-        router.delete("/delete/:document/:id").handler(routingContext -> controller.deleteOne(routingContext));
+        OpenAPI3RouterFactory.create(this.vertx, "/webroot/apidoc/nube-vertx-mongodb.json",
+                ar -> {
+                    System.out.println("Handler of OpenAPI3RouterFactory is called...");
+                    if (ar.succeeded()) {
+                        System.out.println("Success of OpenAPI3RouterFactory");
+                        OpenAPI3RouterFactory routerFactory = ar.result();
 
-        // This is last handler that gives not found message
-        router.route().last().handler(routingContext -> {
-            String uri = routingContext.request().absoluteURI();
-            routingContext.response()
-                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                    .setStatusCode(404)
-                    .end(Json.encodePrettily(new JsonObject()
-                            .put("uri", uri)
-                            .put("status", 404)
-                            .put("message", "Resource Not Found!")
-                    ));
-        });
+                        // Enable automatic response when ValidationException is thrown
+                        RouterFactoryOptions options =
+                                new RouterFactoryOptions()
+                                        .setMountNotImplementedHandler(true)
+                                        .setMountValidationFailureHandler(true);
 
-        // Create the HTTP server and pass the "accept" method to the request handler
-        vertx.createHttpServer()
-                .requestHandler(router::accept)
-                .listen(
-                        // Retrieve the port from the configuration
-                        // default to 8087
-                        config().getInteger("http.port", 8087),
-                        next::handle);
+                        routerFactory.setOptions(options);
+
+                        // Add routes handlers
+                        routerFactory.addHandlerByOperationId("/get/:document", routingContext -> controller.getAll(routingContext));
+                        routerFactory.addHandlerByOperationId("/get/:document/:id", routingContext -> controller.getOne(routingContext));
+                        routerFactory.addHandlerByOperationId("/save/:document", routingContext -> controller.save(routingContext));
+                        routerFactory.addHandlerByOperationId("/delete/:document", routingContext -> controller.deleteAll(routingContext));
+                        routerFactory.addHandlerByOperationId("/delete/:document/:id", routingContext -> controller.deleteOne(routingContext));
+
+                        // Generate the router
+                        Router router = routerFactory.getRouter();
+                        router.route("/*").handler(StaticHandler.create());
+                        router.route().last().handler(routingContext -> {
+                            if (routingContext.response().getStatusCode() == 404) {
+                                System.out.println("Resource Not Found");
+                            }
+                            routingContext.response()
+                                    .setStatusCode(404)
+                                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                                    .end(Json.encodePrettily(new JsonObject()
+                                            .put("message", "Resource Not Found")
+                                    ));
+                        });
+
+                        HttpServer server = vertx.createHttpServer(new HttpServerOptions()
+                                .setPort(config().getInteger("http.port", 8083))
+                        );
+                        server.requestHandler(router::accept).listen();
+                        next.handle(Future.succeededFuture(server));
+                    } else {
+                        System.out.println("Failure in OpenAPI3RouterFactory");
+                        next.handle(Future.failedFuture(ar.cause()));
+                    }
+                });
 
         publishHttpEndpoint("mongodb-api",
                 config().getString("http.host", "0.0.0.0"),
@@ -75,6 +99,6 @@ public class MongoDBVerticle extends MicroServiceVerticle {
                         ar.cause().printStackTrace();
                     }
                 }
-                );
+        );
     }
 }

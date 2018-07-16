@@ -1,8 +1,6 @@
 package io.nubespark.controller;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -13,11 +11,9 @@ import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 
 public class MongoDBController {
-    private Vertx vertx;
     private MongoClient client;
 
-    public MongoDBController(Vertx vertx, MongoClient client) {
-        this.vertx = vertx;
+    public MongoDBController(MongoClient client) {
         this.client = client;
     }
 
@@ -60,31 +56,25 @@ public class MongoDBController {
     public void save(RoutingContext routingContext) {
         HttpServerRequest request = routingContext.request();
         String document = request.getParam("document");
+        JsonObject data = routingContext.getBodyAsJson();
 
-        request.bodyHandler((Buffer body) -> {
-            if (body != null) {
-                JsonObject data = new JsonObject(new String(body.getBytes()));
-                try {
-                    // Converting integer id into string;
-                    // Since we don't need the conflicting behaviour of getting values for two different string and integer ids
-                    if (data.getInteger("_id").toString().matches("\\d+")) {
-                        data.put("_id", data.getInteger("_id").toString());
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                client.save(document, data, res -> {
-                    if (res.succeeded()) {
-                        routingContext.response()
-                                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                                .setStatusCode(HttpResponseStatus.CREATED.code())
-                                .end(Json.encodePrettily(res.result()));
-                    } else {
-                        res.cause().printStackTrace();
-                        routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
-                    }
-                });
+        try {
+            // Converting integer id into string;
+            // Since we don't need the conflicting behaviour of getting values for two different string and integer ids
+            if (data.getInteger("_id").toString().matches("\\d+")) {
+                data.put("_id", data.getInteger("_id").toString());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        client.save(document, data, res -> {
+            if (res.succeeded()) {
+                routingContext.response()
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .setStatusCode(HttpResponseStatus.CREATED.code())
+                        .end(Json.encodePrettily(res.result()));
             } else {
+                res.cause().printStackTrace();
                 routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
             }
         });

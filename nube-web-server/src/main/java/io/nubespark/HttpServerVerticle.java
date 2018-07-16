@@ -213,6 +213,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
 
         router.route("/api/*").handler(ctx -> {
+            // eg: (?=/api*)(?=^((?!/mongo*$).)*$)(?=^((?!/vertx*$).)*$).*
             String authorization = ctx.request().getHeader(HttpHeaders.AUTHORIZATION);
             if (authorization != null) {
                 authorization = authorization.substring("Bearer ".length());
