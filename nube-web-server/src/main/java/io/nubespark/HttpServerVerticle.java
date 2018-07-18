@@ -212,6 +212,8 @@ public class HttpServerVerticle extends RestAPIVerticle {
             });
         });
 
+        router.route("/api/refreshToken").handler(this::refreshAccessToken);
+
         router.route("/api/*").handler(ctx -> {
             // eg: (?=/api*)(?=^((?!/mongo*$).)*$)(?=^((?!/vertx*$).)*$).*
             String authorization = ctx.request().getHeader(HttpHeaders.AUTHORIZATION);
@@ -317,6 +319,44 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 + "&client_secret=" + client_secret;
         request.putHeader("content-type", "application/x-www-form-urlencoded");
         request.putHeader("Authorization", "Bearer " + access_token);
+
+        request.write(body$).end();
+    }
+
+    private void refreshAccessToken(RoutingContext ctx) {
+        JsonObject body = ctx.getBodyAsJson();
+        String refresh_token = body.getString("refresh_token");
+        String access_token = ctx.request().getHeader("Authorization"); // Bearer {{token}}
+        JsonObject keycloakConfig = config().getJsonObject("keycloak");
+        String client_id = keycloakConfig.getString("resource");
+        String client_secret = keycloakConfig
+                .getJsonObject("credentials").getString("secret");
+        String realmName = keycloakConfig.getString("realm");
+        String uri = keycloakConfig.getString("auth-server-url")
+                + "/realms/" + realmName + "/protocol/openid-connect/token";
+        HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+
+        HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response -> {
+            response.bodyHandler(body$ -> {
+                if (response.statusCode() != 200) {
+                    ctx.response().setStatusCode(response.statusCode()).end();
+                } else {
+                    HttpServerResponse toRsp = ctx.response()
+                            .setStatusCode(response.statusCode());
+                    response.headers().forEach(header -> {
+                        toRsp.putHeader(header.getKey(), header.getValue());
+                    });
+                    // send response
+                    toRsp.end(body$);
+                }
+            });
+        });
+        request.setChunked(true);
+
+        String body$ = "refresh_token=" + refresh_token + "&client_id=" + client_id
+                + "&client_secret=" + client_secret + "&grant_type=refresh_token";
+        request.putHeader("content-type", "application/x-www-form-urlencoded");
+        request.putHeader("Authorization", access_token);
 
         request.write(body$).end();
     }
