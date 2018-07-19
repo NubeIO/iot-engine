@@ -24,6 +24,8 @@ import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +47,8 @@ public class HttpServerVerticle extends RestAPIVerticle {
         router.route().handler(BodyHandler.create());
 
         // we are here enabling CORS, for QCing things from frontend
+        loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, config().getJsonObject("keycloak"));
+
         enableCorsSupport(router);
         handleAuth(router);
         handleAuthEventBus(router);
@@ -192,7 +196,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
      * @param router for routing the URLs
      */
     private void handleAuth(Router router) {
-        loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, config().getJsonObject("keycloak"));
         router.route("/api/login/account").handler((RoutingContext ctx) -> {
             JsonObject body = ctx.getBodyAsJson();
             String username = body.getString("username");
@@ -245,8 +248,14 @@ public class HttpServerVerticle extends RestAPIVerticle {
     }
 
     private void handleAuthEventBus(Router router) {
-        router.route("/eventbus/*").handler(ctx ->
-                setAuthenticUser(ctx, ctx.request().getParam("access_token")));
+        router.route("/eventbus/*").handler((RoutingContext ctx) -> {
+            String authorization = ctx.request().getHeader(HttpHeaders.AUTHORIZATION);
+            if (authorization!=null && authorization.startsWith("Basic")) {
+                handleBasicAuth(ctx, authorization);
+            } else {
+                setAuthenticUser(ctx, ctx.request().getParam("access_token"));
+            }
+        });
     }
 
     private void handleEventBus(Router router) {
@@ -359,5 +368,25 @@ public class HttpServerVerticle extends RestAPIVerticle {
         request.putHeader("Authorization", access_token);
 
         request.write(body$).end();
+    }
+
+    private void handleBasicAuth(RoutingContext ctx, String authorization) {
+        if (authorization != null && authorization.startsWith("Basic")) {
+            authorization = authorization.substring("Basic ".length());
+            byte decodedAuthorization[] = Base64.getDecoder().decode(authorization);
+            String basicAuthString = new String(decodedAuthorization, StandardCharsets.UTF_8);
+            String username = basicAuthString.split(":")[0];
+            String password = basicAuthString.split(":")[1];
+            loginAuth.authenticate(new JsonObject().put("username", username).put("password", password), res -> {
+                if (res.failed()) {
+                    res.cause().printStackTrace();
+                    System.out.println(res.result());
+                    failAuthentication(ctx);
+                } else {
+                    System.out.println("Basic Authorization passed !!");
+                    ctx.next();
+                }
+            });
+        }
     }
 }
