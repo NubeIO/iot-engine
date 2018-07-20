@@ -1,5 +1,5 @@
 {
-  "main": "io.nubespark.RulesRestVerticle",
+  "main": "io.nubespark.SqlEngineRestVerticle",
   "options": {
     "config" : {
       "http.port": 8084,

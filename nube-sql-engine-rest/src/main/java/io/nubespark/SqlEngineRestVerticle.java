@@ -15,14 +15,14 @@ import io.vertx.ext.web.handler.BodyHandler;
 /**
  * Created by topsykretts on 4/26/18.
  */
-public class RulesRestVerticle extends MicroServiceVerticle {
+public class SqlEngineRestVerticle extends MicroServiceVerticle {
 
     RulesController controller;
 
     @Override
     public void start() {
         super.start();
-        System.out.println("Config on Rules REST engine app");
+        System.out.println("Config on sql engine rest app is:\n");
         System.out.println(Json.encodePrettily(config()));
         startWebApp(http -> {
             if (http.succeeded()) {
@@ -31,11 +31,11 @@ public class RulesRestVerticle extends MicroServiceVerticle {
                 System.out.println("Cannot start the server: " + http.cause());
             }
         });
-        publishHttpEndpoint("io.nubespark.rule.engine", "0.0.0.0", config().getInteger("http.port", 8080), ar -> {
+        publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080), ar -> {
             if (ar.failed()) {
                 ar.cause().printStackTrace();
             } else {
-                System.out.println("Rule Engine (Rest endpoint) service published : " + ar.succeeded());
+                System.out.println("SQL engine (Rest Endpoint)service published : " + ar.succeeded());
             }
         });
         controller = new RulesController(vertx);
@@ -51,7 +51,7 @@ public class RulesRestVerticle extends MicroServiceVerticle {
             response
                     .putHeader("content-type", "application/json; charset=utf-8")
                     .end(Json.encodePrettily(new JsonObject()
-                            .put("name", "nubespark rule engine")
+                            .put("name", "sql-engine-rest")
                             .put("version", "1.0")
                             .put("vert.x_version", "3.4.1")
                             .put("java_version", "8.0")
@@ -60,8 +60,7 @@ public class RulesRestVerticle extends MicroServiceVerticle {
 
         //// TODO: 4/26/18 other routing logic here
         router.route("/*").handler(BodyHandler.create());
-        router.get("/rule").handler(routingContext -> controller.getAll(routingContext));
-        router.get("/rule/:id").handler(routingContext -> controller.getOne(routingContext));
+        router.get("/tag/:id").handler(routingContext -> controller.getOne(routingContext));
         router.post("/engine").handler(routingContext -> controller.getFiloData(routingContext));
 
         // This is last handler that gives not found message

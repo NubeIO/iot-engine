@@ -16,7 +16,7 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>nube-vertx-common</module>
-        <module>nube-rule-engine</module>
+        <module>nube-sql-engine-rest</module>
         <module>nube-jdbc-engine</module>
         <module>nube-app-installer</module>
         <module>nube-app-store-rest</module>
