@@ -73,9 +73,9 @@ public class JdbcVerticle extends MicroServiceVerticle {
                         jsonObject.put("message", array);
                         message.reply(jsonObject);
                     }
+                    connection.close();
                 });
             });
-//            message.reply("Your query:\n " + query + "\n has been received.\nThis feature is under implementation.. Please have patience.");
         });
     }
 
