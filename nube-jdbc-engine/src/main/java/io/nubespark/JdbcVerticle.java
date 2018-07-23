@@ -59,6 +59,7 @@ public class JdbcVerticle extends MicroServiceVerticle {
             jdbc.getConnection(jdbcHandler -> {
                 SQLConnection connection = jdbcHandler.result();
                 connection.queryWithParams(sqlQuery, params, resultHandler -> {
+                    connection.close();
                     if(resultHandler.failed()) {
                         resultHandler.cause().printStackTrace();
                         Future.failedFuture("Failed to execute given query");
@@ -73,7 +74,6 @@ public class JdbcVerticle extends MicroServiceVerticle {
                         jsonObject.put("message", array);
                         message.reply(jsonObject);
                     }
-                    connection.close();
                 });
             });
         });
