@@ -57,6 +57,7 @@ public class RestAPIVerticle extends MicroServiceVerticle {
         allowHeaders.add("accept");
         allowHeaders.add("X-PINGARUNER");
         allowHeaders.add("Authorization");
+        allowHeaders.add("JSESSIONID");
         Set<HttpMethod> allowMethods = new HashSet<>();
         allowMethods.add(HttpMethod.GET);
         allowMethods.add(HttpMethod.PUT);

@@ -17,6 +17,8 @@ import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 import io.vertx.ext.web.handler.StaticHandler;
 
 public class MongoDBVerticle extends MicroServiceVerticle {
+    private int DEFAULT_PORT = 8083;
+
     private MongoDBController controller;
     private MongoClient client;
 
@@ -78,7 +80,7 @@ public class MongoDBVerticle extends MicroServiceVerticle {
                         });
 
                         HttpServer server = vertx.createHttpServer(new HttpServerOptions()
-                                .setPort(config().getInteger("http.port", 8083))
+                                .setPort(config().getInteger("http.port", DEFAULT_PORT))
                         );
                         server.requestHandler(router::accept).listen();
                         next.handle(Future.succeededFuture(server));
@@ -90,7 +92,7 @@ public class MongoDBVerticle extends MicroServiceVerticle {
 
         publishHttpEndpoint("mongodb-api",
                 config().getString("http.host", "0.0.0.0"),
-                config().getInteger("http.port", 8087),
+                config().getInteger("http.port", DEFAULT_PORT),
                 ar -> {
                     if (ar.succeeded()) {
                         System.out.println("MongoDB REST endpoint published successfully..");

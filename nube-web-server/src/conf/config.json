@@ -6,7 +6,7 @@
     "ssl-required": "external",
     "resource": "nube-web-api-gateway",
     "credentials": {
-      "secret": "9066fa9c-5cb7-4b34-a2aa-2b8a45632498"
+      "secret": "a3373e58-ee36-42eb-90ac-8359178c3930"
     },
     "confidential-port": 0,
     "policy-enforcer": {}

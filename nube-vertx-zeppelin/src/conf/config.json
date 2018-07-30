@@ -1,0 +1,6 @@
+{
+  "http.port": 8089,
+  "api.name": "zeppelin",
+  "server.host": "localhost",
+  "server.port": 8080
+}
