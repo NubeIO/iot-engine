@@ -166,11 +166,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
         context.request().headers().forEach(header -> {
             toReq.putHeader(header.getKey(), header.getValue());
         });
-        //todo check authentication part in client app ??
-//        if (context.user() != null) {
-//            toReq.putHeader("user-principal", context.user().principal().encode());
-//        }
-        // send request
         if (context.getBody() == null) {
             toReq.end();
         } else {
