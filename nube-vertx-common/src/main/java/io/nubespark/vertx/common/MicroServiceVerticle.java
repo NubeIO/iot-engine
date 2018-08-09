@@ -39,7 +39,7 @@ public class MicroServiceVerticle extends AbstractVerticle {
       circuitBreaker = CircuitBreaker.create(cbOptions.getString("name", "circuit-breaker"), vertx,
               new CircuitBreakerOptions()
                       .setMaxFailures(cbOptions.getInteger("max-failures", 5))
-                      .setTimeout(cbOptions.getLong("timeout", 10000L))
+                      .setTimeout(cbOptions.getLong("timeout", 20000L))
                       .setFallbackOnFailure(true)
                       .setResetTimeout(cbOptions.getLong("reset-timeout", 30000L))
       );
