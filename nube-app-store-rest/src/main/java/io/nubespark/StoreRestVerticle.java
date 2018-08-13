@@ -3,7 +3,7 @@ package io.nubespark;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import io.nubespark.utils.response.ResponseUtils;
-import io.nubespark.vertx.common.MicroServiceVerticle;
+import io.nubespark.vertx.common.RestAPIVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -20,8 +20,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.api.contract.RouterFactoryOptions;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
-import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
 import java.util.ArrayList;
@@ -33,14 +31,14 @@ import java.util.stream.Collectors;
 /**
  * Created by topsykretts on 4/28/18.
  */
-public class StoreRestVerticle extends MicroServiceVerticle {
+public class StoreRestVerticle extends RestAPIVerticle {
 
-    Map<String, JsonObject> deploymentMap = new HashMap<>();
-    Map<String, JsonObject> failedDeployments = new HashMap<>();
+    private Map<String, JsonObject> deploymentMap = new HashMap<>();
+    private Map<String, JsonObject> failedDeployments = new HashMap<>();
 
     //receiving address
     public static String ADDRESS_INSTALLER_REPORT = "io.nubespark.app.installer.report";
-    private static final String ADDRESS_BIOS_REPORT = "io.nubespark.bios.report";
+    public static final String ADDRESS_BIOS_REPORT = "io.nubespark.bios.report";
 
     //sending address
     public static String ADDRESS_EDGE_INSTALLER = "io.nubespark.app.installer";
@@ -65,8 +63,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
 
         vertx.eventBus().consumer(ADDRESS_BIOS_REPORT, this::handleReports);
 
-        //// TODO: 5/16/18 get public host name and add an API to get available services
-        publishHttpEndpoint("io.nubespark.app.store.rest", "localhost", config().getInteger("http.port", 8080), ar -> {
+        publishHttpEndpoint("io.nubespark.app.store.rest", "localhost", config().getInteger("http.port", 8086), ar -> {
             if (ar.failed()) {
                 ar.cause().printStackTrace();
             } else {
@@ -74,7 +71,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
             }
         });
 
-        publishMessageSource(ADDRESS_BIOS_REPORT, ADDRESS_BIOS_REPORT, ar->{
+        publishMessageSource(ADDRESS_BIOS_REPORT, ADDRESS_BIOS_REPORT, ar -> {
             if (ar.failed()) {
                 ar.cause().printStackTrace();
             } else {
@@ -82,7 +79,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
             }
         });
 
-        publishMessageSource(ADDRESS_INSTALLER_REPORT, ADDRESS_INSTALLER_REPORT, ar-> {
+        publishMessageSource(ADDRESS_INSTALLER_REPORT, ADDRESS_INSTALLER_REPORT, ar -> {
             if (ar.failed()) {
                 ar.cause().printStackTrace();
             } else {
@@ -95,10 +92,10 @@ public class StoreRestVerticle extends MicroServiceVerticle {
         JsonObject msg = new JsonObject(message.body().toString());
         String status = message.headers().get("status");
         String serviceName = msg.getString("serviceName");
-        if("INSTALLED".equals(status) || "UPDATED".equals(status)) {
+        if ("INSTALLED".equals(status) || "UPDATED".equals(status)) {
             logger.info("Received install success message ", Json.encodePrettily(msg));
             deploymentMap.put(serviceName, msg);
-        } else if("UNINSTALLED".equals(status)) {
+        } else if ("UNINSTALLED".equals(status)) {
             logger.info("Received uninstall success message ", serviceName);
             deploymentMap.remove(serviceName);
         } else {
@@ -134,25 +131,12 @@ public class StoreRestVerticle extends MicroServiceVerticle {
                 // router.route().handler(BodyHandler.create());
 
                 // For testing server we make CORS available
-                router.route().handler(CorsHandler.create("*")
-                        .allowedMethod(io.vertx.core.http.HttpMethod.GET)
-                        .allowedMethod(io.vertx.core.http.HttpMethod.POST)
-                        .allowedMethod(io.vertx.core.http.HttpMethod.OPTIONS)
-                        .allowedHeader("Access-Control-Request-Method")
-                        .allowedHeader("Access-Control-Allow-Credentials")
-                        .allowedHeader("Access-Control-Allow-Origin")
-                        .allowedHeader("Access-Control-Allow-Headers")
-                        .allowedHeader("Content-Type")
-                        .allowedHeader("origin")
-                        .allowedHeader("x-requested-with")
-                        .allowedHeader("accept")
-                        .allowedHeader("X-PINGARUNER")
-                );
+                enableCorsSupport(router);
 
                 router.route("/*").handler(StaticHandler.create());
 
                 router.route().last().handler(routingContext -> {
-                    if(routingContext.response().getStatusCode() == 404) {
+                    if (routingContext.response().getStatusCode() == 404) {
                         System.out.println("Resource Not Found");
                     }
                     routingContext.response()
@@ -164,8 +148,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
                 });
 
                 HttpServer server = vertx.createHttpServer(new HttpServerOptions()
-                                .setPort(config().getInteger("http.port", 3031))
-//                        .setHost(config().getString("http.host", "localhost"))
+                        .setPort(config().getInteger("http.port", 8086))
                 );
                 server.requestHandler(router::accept).listen();
                 next.handle(Future.succeededFuture(server));
@@ -179,7 +162,7 @@ public class StoreRestVerticle extends MicroServiceVerticle {
     private void getNodes(RoutingContext routingContext) {
 
         List<JsonObject> nodesInfo = new ArrayList<>();
-        for(HazelcastInstance instance:Hazelcast.getAllHazelcastInstances()) {
+        for (HazelcastInstance instance : Hazelcast.getAllHazelcastInstances()) {
             JsonObject info = new JsonObject();
             info.put("instance", instance.getName());
             List<String> members = instance.getCluster().getMembers()
@@ -224,9 +207,6 @@ public class StoreRestVerticle extends MicroServiceVerticle {
                         .put("body", reqBody)
                         .put("status", "PUBLISHED")
                 ));
-
-
-
     }
 
     private void getDeployments(RoutingContext routingContext) {

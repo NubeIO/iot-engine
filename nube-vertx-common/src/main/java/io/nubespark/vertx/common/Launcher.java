@@ -23,19 +23,19 @@ public class Launcher extends io.vertx.core.Launcher {
 
     @Override
     public void beforeStartingVertx(VertxOptions options) {
-        if(!options.isClustered()) {
+        if (!options.isClustered()) {
             options.setClustered(true);
         }
         System.out.println("Enabling vertx event bus encryption...");
         //set encryption in vertx event bus
         //todo change keystore in production
         options.setEventBusOptions(
-                        new EventBusOptions()
-                                .setSsl(true)
-                                .setKeyStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
-                                .setTrustStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
-                                .setClientAuth(ClientAuth.REQUIRED)
-                );
+                new EventBusOptions()
+                        .setSsl(true)
+                        .setKeyStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
+                        .setTrustStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
+                        .setClientAuth(ClientAuth.REQUIRED)
+        );
     }
 
     @Override

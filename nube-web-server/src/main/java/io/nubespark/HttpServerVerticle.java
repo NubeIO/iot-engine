@@ -46,7 +46,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
         // creating body handler
         router.route().handler(BodyHandler.create());
 
-        // we are here enabling CORS, for QCing things from frontend
         loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, config().getJsonObject("keycloak"));
 
         enableCorsSupport(router);

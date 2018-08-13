@@ -23,7 +23,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class RestAPIVerticle extends MicroServiceVerticle {
-
     /**
      * Create http server for the REST service.
      *

@@ -5,11 +5,8 @@ import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.asyncsql.AsyncSQLClient;
-import io.vertx.ext.asyncsql.MySQLClient;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLConnection;
-import io.vertx.servicediscovery.types.MessageSource;
 
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -80,10 +77,10 @@ public class JdbcVerticle extends MicroServiceVerticle {
     }
 
     private void initializeDatabase() {
-        System.out.println("Initializing database....");
+        System.out.println("Initializing database...");
         jdbc.getConnection(ar -> {
             if (ar.failed()) {
-                System.out.println("Cannot get connection object");
+                System.out.println("Cannot get connection object.");
                 ar.cause().printStackTrace();
                 Future.failedFuture(ar.cause());
                 return;
@@ -102,7 +99,7 @@ public class JdbcVerticle extends MicroServiceVerticle {
             String createDemoTable = "CREATE TABLE IF NOT EXISTS metadata (id int AUTO_INCREMENT, name varchar(100), tag varchar" +
                     "(100), PRIMARY KEY (id))";
             connection.execute(createDemoTable, create -> {
-                System.out.println("Creating table if not exists....");
+                System.out.println("Creating table if not exists...");
                 if(create.failed()) {
                     Future.failedFuture(create.cause());
                     connection.close();
@@ -128,12 +125,12 @@ public class JdbcVerticle extends MicroServiceVerticle {
                                         Future.failedFuture(insertHandler.cause());
                                         connection.close();
                                     }
-                                    System.out.println("Database initialized..");
+                                    System.out.println("Database initialized...");
                                     connection.close();
                                 });
                             } else {
                                 connection.close();
-                                System.out.println("Database already initialized..");
+                                System.out.println("Database already initialized...");
                             }
                         } else {
                             System.out.println("Failed to check if database has records");

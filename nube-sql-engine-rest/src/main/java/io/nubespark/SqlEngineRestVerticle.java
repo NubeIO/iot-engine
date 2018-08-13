@@ -17,7 +17,7 @@ import io.vertx.ext.web.handler.BodyHandler;
  */
 public class SqlEngineRestVerticle extends MicroServiceVerticle {
 
-    RulesController controller;
+    private RulesController controller;
 
     @Override
     public void start() {
@@ -58,7 +58,6 @@ public class SqlEngineRestVerticle extends MicroServiceVerticle {
                     ));
         });
 
-        //// TODO: 4/26/18 other routing logic here
         router.route("/*").handler(BodyHandler.create());
         router.get("/tag/:id").handler(routingContext -> controller.getOne(routingContext));
         router.post("/engine").handler(routingContext -> controller.getFiloData(routingContext));
@@ -77,8 +76,7 @@ public class SqlEngineRestVerticle extends MicroServiceVerticle {
         });
 
         // Create the HTTP server and pass the "accept" method to the request handler.
-        vertx
-                .createHttpServer()
+        vertx.createHttpServer()
                 .requestHandler(router::accept)
                 .listen(
                         // Retrieve the port from the configuration,
