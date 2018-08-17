@@ -43,7 +43,7 @@ public class RulesController {
                 .put("controller", "rules")
                 .put("action", "getAll")
                 .put("desc", "Get All Rules in system")
-        ).onErrorReturn(this::handleError);
+        );
     }
 
     public Single<JsonObject> getOne(String id) {
@@ -66,14 +66,10 @@ public class RulesController {
                     }
                     return replyJson;
 
-                }).onErrorReturn(this::handleError);
+                });
 
     }
 
-    private JsonObject handleError(Throwable throwable) {
-        logger.error("Failed to receive reply..." + throwable.getLocalizedMessage());
-        throw new ErrorCodeException(ErrorCodes.DB_ERROR);
-    }
 
     public Single<JsonObject> getFiloData(String query) {
         return Single.just(query)
@@ -102,6 +98,6 @@ public class RulesController {
                         replyJson.put("resultSet", reply);
                     }
                     return replyJson;
-                }).onErrorReturn(this::handleError);
+                });
     }
 }

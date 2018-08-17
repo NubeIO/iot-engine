@@ -119,14 +119,12 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
                             .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                             .end(Json.encodePrettily(new JsonObject().put("message", "Request must have a valid JSON body with 'query' field.")));
                     break;
-                case DB_ERROR:
-                    routingContext.response()
-                            .setStatusCode(500)
-                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(new JsonObject().put("message", "Server Error")));
             }
         } else {
-            routingContext.fail(throwable);
+            routingContext.response()
+                    .setStatusCode(500)
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(new JsonObject().put("message", "Server Error" + throwable.getMessage())));
         }
     }
 
