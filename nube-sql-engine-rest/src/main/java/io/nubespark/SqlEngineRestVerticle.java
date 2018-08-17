@@ -5,6 +5,7 @@ import io.nubespark.controller.RulesController;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
 import io.reactivex.Single;
+import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -15,6 +16,7 @@ import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import io.vertx.servicediscovery.Record;
 
 import static io.nubespark.controller.ErrorCodes.NO_QUERY_SPECIFIED;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
@@ -30,20 +32,23 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
     private Logger logger = LoggerFactory.getLogger(SqlEngineRestVerticle.class);
 
     @Override
-    public void start() {
+    public void start(Future future) {
         super.start();
         logger.info("Config on sql engine rest app is:\n");
         logger.debug(Json.encodePrettily(config()));
-        startWebApp().subscribe(
-                httpServer -> logger.info("Web server started at " + httpServer.actualPort()),
-                throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage())
-        );
 
-        publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080)).subscribe(
-                ignored -> {
-                },
-                throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage())
-        );
+        final Single<HttpServer> startWebSingle = startWebApp()
+                .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
+
+        final Single<Record> publishHttp = publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080))
+                .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
+
+        Single.zip(startWebSingle,
+                publishHttp,
+                (httpServer, record) -> {
+                    logger.info("Web server started at " + httpServer.actualPort());
+                    return record;
+                }).subscribe(ignored -> future.complete(), future::fail);
 
 
         controller = new RulesController(vertx);
