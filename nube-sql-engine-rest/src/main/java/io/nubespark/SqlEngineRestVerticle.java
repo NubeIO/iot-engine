@@ -27,17 +27,16 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
         super.start();
         logger.info("Config on sql engine rest app is:\n");
         logger.debug(Json.encodePrettily(config()));
-        startWebApp()
-                .subscribe(
-                        httpServer -> logger.info("Web server started at " + httpServer.actualPort()),
-                        throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage())
-                );
+        startWebApp().subscribe(
+                httpServer -> logger.info("Web server started at " + httpServer.actualPort()),
+                throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage())
+        );
 
-        publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080))
-                .subscribe(
-                        ignored -> {
-                        },
-                        throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
+        publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080)).subscribe(
+                ignored -> {
+                },
+                throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage())
+        );
 
 
         controller = new RulesController(vertx.getDelegate());
@@ -50,8 +49,8 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
         // Bind "/" to our hello message.
         router.route("/").handler(routingContext -> {
             HttpServerResponse response = routingContext.response();
-            response
-                    .putHeader("content-type", "application/json; charset=utf-8")
+
+            response.putHeader("content-type", "application/json; charset=utf-8")
                     .end(Json.encodePrettily(new JsonObject()
                             .put("name", "sql-engine-rest")
                             .put("version", "1.0")
