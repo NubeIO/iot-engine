@@ -48,7 +48,7 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle {
         );
     }
 
-    protected final Single<Void> publishHttpEndpoint(String name, String host, int port) {
+    protected final Single<Record> publishHttpEndpoint(String name, String host, int port) {
         Record record = HttpEndpoint.createRecord(name, host, port, "/",
                 new JsonObject().put("api.name", config().getString("api.name", ""))
         );
@@ -56,19 +56,18 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle {
     }
 
 
-    protected final Single<Void> publishMessageSource(String name, String address) {
+    protected final Single<Record> publishMessageSource(String name, String address) {
         Record record = MessageSource.createRecord(name, address);
         return publish(record);
     }
 
 
-    private Single<Void> publish(Record record) {
+    private Single<Record> publish(Record record) {
         return discovery.rxPublish(record)
                 .doOnSuccess(rec -> {
                     registeredRecords.add(rec);
-                    getLogger().info("Service <" + rec.getName() + "> published");
-                })
-                .map(r -> null);
+                    getLogger().info("Service <" + rec.getName() + "> published with " + rec.getMetadata());
+                });
     }
 
     @Override
@@ -86,7 +85,7 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle {
     protected abstract Logger getLogger();
 
 
-    protected final Single<Void> publishApiGateway(String host, int port) {
+    protected final Single<Record> publishApiGateway(String host, int port) {
         Record record = HttpEndpoint.createRecord("api-gateway", true, host, port, "/", null)
                 .setType("api-gateway");
         return publish(record);

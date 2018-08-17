@@ -125,6 +125,8 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
                             .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                             .end(Json.encodePrettily(new JsonObject().put("message", "Server Error")));
             }
+        } else {
+            routingContext.fail(throwable);
         }
     }
 
