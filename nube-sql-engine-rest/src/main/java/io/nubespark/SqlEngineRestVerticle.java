@@ -2,46 +2,48 @@ package io.nubespark;
 
 import io.nubespark.controller.RulesController;
 import io.nubespark.utils.response.ResponseUtils;
-import io.nubespark.vertx.common.MicroServiceVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerResponse;
+import io.nubespark.vertx.common.RxMicroServiceVerticle;
+import io.reactivex.Single;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.core.http.HttpServer;
+import io.vertx.reactivex.core.http.HttpServerResponse;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.handler.BodyHandler;
 
 /**
  * Created by topsykretts on 4/26/18.
  */
-public class SqlEngineRestVerticle extends MicroServiceVerticle {
+@SuppressWarnings("ResultOfMethodCallIgnored")
+public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
 
     private RulesController controller;
+    private Logger logger = LoggerFactory.getLogger(SqlEngineRestVerticle.class);
 
     @Override
     public void start() {
         super.start();
-        System.out.println("Config on sql engine rest app is:\n");
-        System.out.println(Json.encodePrettily(config()));
-        startWebApp(http -> {
-            if (http.succeeded()) {
-                System.out.println("Server started");
-            } else {
-                System.out.println("Cannot start the server: " + http.cause());
-            }
-        });
-        publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080), ar -> {
-            if (ar.failed()) {
-                ar.cause().printStackTrace();
-            } else {
-                System.out.println("SQL engine (Rest Endpoint)service published : " + ar.succeeded());
-            }
-        });
-        controller = new RulesController(vertx);
+        logger.info("Config on sql engine rest app is:\n");
+        logger.debug(Json.encodePrettily(config()));
+        startWebApp()
+                .subscribe(
+                        httpServer -> logger.info("Web server started at " + httpServer.actualPort()),
+                        throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage())
+                );
+
+        publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080))
+                .subscribe(
+                        ignored -> {
+                        },
+                        throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
+
+
+        controller = new RulesController(vertx.getDelegate());
     }
 
-    private void startWebApp(Handler<AsyncResult<HttpServer>> next) {
+    private Single<HttpServer> startWebApp() {
         // Create a router object.
         Router router = Router.router(vertx);
 
@@ -59,8 +61,8 @@ public class SqlEngineRestVerticle extends MicroServiceVerticle {
         });
 
         router.route("/*").handler(BodyHandler.create());
-        router.get("/tag/:id").handler(routingContext -> controller.getOne(routingContext));
-        router.post("/engine").handler(routingContext -> controller.getFiloData(routingContext));
+        router.get("/tag/:id").handler(routingContext -> controller.getOne(routingContext.getDelegate()));
+        router.post("/engine").handler(routingContext -> controller.getFiloData(routingContext.getDelegate()));
 
         // This is last handler that gives not found message
         router.route().last().handler(routingContext -> {
@@ -76,13 +78,17 @@ public class SqlEngineRestVerticle extends MicroServiceVerticle {
         });
 
         // Create the HTTP server and pass the "accept" method to the request handler.
-        vertx.createHttpServer()
+        return vertx.createHttpServer()
                 .requestHandler(router::accept)
-                .listen(
+                .rxListen(
                         // Retrieve the port from the configuration,
                         // default to 8080.
-                        config().getInteger("http.port", 8080),
-                        next::handle
+                        config().getInteger("http.port", 8080)
                 );
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }
