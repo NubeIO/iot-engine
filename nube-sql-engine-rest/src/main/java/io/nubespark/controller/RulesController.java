@@ -19,6 +19,8 @@ import java.util.Collections;
  * Created by topsykretts on 4/26/18.
  */
 public class RulesController {
+    private final String ENGINE_ADDRESS = "io.nubespark.jdbc.engine";
+
     private Vertx vertx;
     private ServiceDiscovery discovery;
     private Logger logger = LoggerFactory.getLogger(RulesController.class);
@@ -50,7 +52,7 @@ public class RulesController {
                 .put("query", query)
                 .put("params", new JsonArray(Collections.singletonList("m:")));
 
-        return vertx.eventBus().rxSend("io.nubespark.jdbc.engine", queryObj)
+        return vertx.eventBus().rxSend(ENGINE_ADDRESS, queryObj)
                 .map(message -> {
                     JsonObject replyJson = new JsonObject()
                             .put("controller", "rules")
@@ -88,7 +90,7 @@ public class RulesController {
                 .flatMap(statement -> {
                     JsonObject queryObj = new JsonObject();
                     queryObj.put("query", query);
-                    return vertx.eventBus().rxSend("io.nubespark.jdbc.engine", queryObj);
+                    return vertx.eventBus().rxSend(ENGINE_ADDRESS, queryObj);
                 }).map(message -> {
                     JsonObject replyJson = new JsonObject()
                             .put("controller", "rules")
