@@ -1,7 +1,7 @@
 package io.nubespark.utils;
 
 import io.nubespark.Role;
-import io.nubespark.KeycloakUserRepresentation;
+import io.nubespark.impl.models.KeycloakUserRepresentation;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -28,8 +28,6 @@ public class UserUtils {
 
         HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response ->
                 response.bodyHandler(body -> {
-                    System.out.println(response.statusCode() + "is the output status code");
-                    System.out.println(body + "is the output body");
                     handler.handle(Future.succeededFuture(new JsonObject().put("statusCode", response.statusCode())));
                 }));
 
@@ -38,8 +36,8 @@ public class UserUtils {
         request.setChunked(true);
         request.putHeader("content-type", "application/json");
         request.putHeader("Authorization", "Bearer " + access_token);
-
-        request.write(user.toJson().toString()).end();
+        System.out.println("User body is::: " + user.toJsonObject());
+        request.write(user.toJsonObject().toString()).end();
     }
 
     public static void getUser(String username, String access_token, String authServerUrl,

@@ -1,8 +1,8 @@
 package io.nubespark.impl;
 
-import io.nubespark.MongoUser;
+import io.nubespark.impl.models.MongoUser;
 import io.nubespark.Role;
-import io.nubespark.KeycloakUserRepresentation;
+import io.nubespark.impl.models.KeycloakUserRepresentation;
 import io.nubespark.utils.URN;
 import io.nubespark.utils.UserUtils;
 import io.nubespark.utils.response.ResponseUtils;
@@ -250,8 +250,8 @@ public class HttpServerVerticle extends RestAPIVerticle {
                                     logger.info("Created user is ::: " + keycloakUser.result().getJsonObject("body"));
                                     // Creating user on MongoDB
                                     MongoUser mongoUser = new MongoUser(body, user.principal(), keycloakUser.result().getJsonObject("body"));
-                                    logger.info("Mongo User::: " + mongoUser.toJson());
-                                    getResponse(HttpMethod.POST, URN.save_user, mongoUser.toJson(), mongoResponse-> {
+                                    logger.info("Mongo User::: " + mongoUser.toJsonObject());
+                                    getResponse(HttpMethod.POST, URN.save_user, mongoUser.toJsonObject(), mongoResponse-> {
                                         if (mongoResponse.succeeded()) {
                                             logger.info("User creation on MongoDB: " + mongoResponse.result());
                                             ctx.response().setStatusCode(201).end();
@@ -268,6 +268,10 @@ public class HttpServerVerticle extends RestAPIVerticle {
                     ctx.response().setStatusCode(res.result().getInteger("statusCode")).end();
                 }
             });
+        });
+
+        router.route("/api/createCompany").handler(ctx-> {
+
         });
 
         router.route("/api/currentUser").handler(ctx -> {
