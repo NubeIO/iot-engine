@@ -1,12 +1,12 @@
 {
   "http.port": 8085,
   "keycloak": {
-    "realm": "master",
+    "realm": "nube_iot",
     "auth-server-url": "http://localhost:8082/auth",
     "ssl-required": "external",
     "resource": "nube-web-api-gateway",
     "credentials": {
-      "secret": "a3373e58-ee36-42eb-90ac-8359178c3930"
+      "secret": "0cc6aaa3-761e-49a1-868b-07ac8622447d"
     },
     "confidential-port": 0,
     "policy-enforcer": {}

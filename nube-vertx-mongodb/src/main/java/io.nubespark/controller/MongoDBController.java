@@ -72,7 +72,7 @@ public class MongoDBController {
                 routingContext.response()
                         .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .setStatusCode(HttpResponseStatus.CREATED.code())
-                        .end(Json.encodePrettily(res.result()));
+                        .end(Json.encodePrettily(new JsonObject().put("result", res.result())));
             } else {
                 res.cause().printStackTrace();
                 routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();

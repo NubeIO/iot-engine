@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <main.verticle>io.nubespark.HttpServerVerticle</main.verticle>
+        <main.verticle>io.nubespark.impl.HttpServerVerticle</main.verticle>
     </properties>
 
     <artifactId>nube-web-server</artifactId>

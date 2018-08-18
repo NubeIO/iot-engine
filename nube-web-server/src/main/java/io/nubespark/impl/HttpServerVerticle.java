@@ -1,11 +1,18 @@
-package io.nubespark;
+package io.nubespark.impl;
 
+import io.nubespark.MongoUser;
+import io.nubespark.Role;
+import io.nubespark.KeycloakUserRepresentation;
+import io.nubespark.utils.URN;
+import io.nubespark.utils.UserUtils;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RestAPIVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.*;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.oauth2.AccessToken;
 import io.vertx.ext.auth.oauth2.KeycloakHelper;
@@ -37,6 +44,7 @@ import static io.nubespark.utils.Constants.SERVICE_NAME;
 public class HttpServerVerticle extends RestAPIVerticle {
 
     private OAuth2Auth loginAuth;
+    Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
 
     @Override
     public void start() {
@@ -212,7 +220,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
         router.route("/api/refreshToken").handler(this::refreshAccessToken);
 
         router.route("/api/*").handler(ctx -> {
-            // eg: (?=/api*)(?=^((?!/mongo*$).)*$)(?=^((?!/vertx*$).)*$).*
             String authorization = ctx.request().getHeader(HttpHeaders.AUTHORIZATION);
             if (authorization != null) {
                 authorization = authorization.substring("Bearer ".length());
@@ -221,6 +228,46 @@ public class HttpServerVerticle extends RestAPIVerticle {
             } else {
                 failAuthentication(ctx);
             }
+        });
+
+        router.route("/api/createUser").handler(ctx -> {
+            JsonObject body = ctx.getBodyAsJson();
+            User user = ctx.user();
+            KeycloakUserRepresentation userRepresentation = new KeycloakUserRepresentation(body);
+            String access_token = user.principal().getString("access_token");
+            JsonObject keycloakConfig = config().getJsonObject("keycloak");
+            HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+            // Create User on Keycloak
+            UserUtils.createUser(userRepresentation, access_token, keycloakConfig.getString("auth-server-url"), keycloakConfig.getString("realm"), client, res -> {
+                if (res.result().getInteger("statusCode") == 201) {
+                    logger.info("Successfully create the user.");
+                    logger.info("Username: " + body.getString("username"));
+                    // GET recently created user details from Keycloak
+                    UserUtils.getUser(body.getString("username"), access_token, keycloakConfig.getString("auth-server-url"),
+                            keycloakConfig.getString("realm"), client, keycloakUser -> {
+
+                                if (keycloakUser.result().getInteger("statusCode") == 200) {
+                                    logger.info("Created user is ::: " + keycloakUser.result().getJsonObject("body"));
+                                    // Creating user on MongoDB
+                                    MongoUser mongoUser = new MongoUser(body, user.principal(), keycloakUser.result().getJsonObject("body"));
+                                    logger.info("Mongo User::: " + mongoUser.toJson());
+                                    getResponse(HttpMethod.POST, URN.save_user, mongoUser.toJson(), mongoResponse-> {
+                                        if (mongoResponse.succeeded()) {
+                                            logger.info("User creation on MongoDB: " + mongoResponse.result());
+                                            ctx.response().setStatusCode(201).end();
+                                        } else {
+                                            ctx.fail(mongoResponse.cause());
+                                        }
+                                    });
+                                } else {
+                                    ctx.response().setStatusCode(res.result().getInteger("statusCode")).end();
+                                }
+                            });
+                } else {
+                    logger.info("Got failed...");
+                    ctx.response().setStatusCode(res.result().getInteger("statusCode")).end();
+                }
+            });
         });
 
         router.route("/api/currentUser").handler(ctx -> {
@@ -244,7 +291,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
     private void handleAuthEventBus(Router router) {
         router.route("/eventbus/*").handler((RoutingContext ctx) -> {
             String authorization = ctx.request().getHeader(HttpHeaders.AUTHORIZATION);
-            if (authorization!=null && authorization.startsWith("Basic")) {
+            if (authorization != null && authorization.startsWith("Basic")) {
                 handleBasicAuth(ctx, authorization);
             } else {
                 setAuthenticUser(ctx, ctx.request().getParam("access_token"));
@@ -288,8 +335,23 @@ public class HttpServerVerticle extends RestAPIVerticle {
             if (res.succeeded()) {
                 System.out.println("Auth Success");
                 AccessToken token = res.result();
-                ctx.setUser(token);
-                ctx.next();
+                System.out.println("Token: " + token.principal());
+
+                String user_id = token.principal().getString("sub");
+                String access_token = token.principal().getString("access_token");
+                logger.info("User id: " + user_id);
+                getResponse(HttpMethod.GET, URN.get_user + "/" + user_id, null,
+                        ar -> {
+                            if (ar.succeeded()) {
+                                logger.info("User Response: " + ar.result().toString());
+                                User user = new UserImpl(user_id, Role.SUPER_ADMIN, "1234", "", access_token); //token
+                                ctx.setUser(user);
+                                ctx.next();
+                            } else {
+                                logger.info("User Extraction failure");
+                                serviceUnavailable(ctx, "Error on user extraction.");
+                            }
+                        });
             } else {
                 System.out.println("Auth Fail");
                 res.cause().printStackTrace();
