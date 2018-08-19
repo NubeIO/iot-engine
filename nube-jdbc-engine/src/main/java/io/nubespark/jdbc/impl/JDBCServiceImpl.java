@@ -30,8 +30,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class JDBCServiceImpl implements JDBCService {
     // SQL statement
-    private static final String CREATE_DEMO_STATEMENT = "CREATE TABLE IF NOT EXISTS metadata (id int, name varchar(100), tag varchar" +
-            "(100))";
+    private static final String CREATE_DEMO_STATEMENT = "CREATE TABLE IF NOT EXISTS metadata " +
+            "(" +
+                "id int AUTO_INCREMENT, " +
+                "name varchar(100), " +
+                "tag varchar(100), " +
+                "PRIMARY KEY (id)" +
+            ")";
     private static final String GET_FIRST_DEMO = "SELECT * FROM metadata LIMIT 1";
     private static final String INSERT_DEMO = "INSERT into metadata (id, name, tag) VALUES ";
 

@@ -1,7 +1,6 @@
 package io.nubespark.jdbc;
 
 
-import io.nubespark.jdbc.JDBCServiceVertxEBProxy;
 import io.nubespark.jdbc.impl.JDBCServiceImpl;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.GenIgnore;
