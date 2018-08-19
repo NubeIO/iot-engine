@@ -1,6 +1,8 @@
-package io.nubespark;
+package io.nubespark.jdbc;
 
 
+import io.nubespark.jdbc.JDBCServiceVertxEBProxy;
+import io.nubespark.jdbc.impl.JDBCServiceImpl;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -25,8 +27,8 @@ public interface JDBCService {
     }
 
     @GenIgnore
-    static io.nubespark.reactivex.JDBCService createProxy(Vertx vertx, String address) {
-        return new io.nubespark.reactivex.JDBCService(new JDBCServiceVertxEBProxy(vertx.getDelegate(), address));
+    static io.nubespark.jdbc.reactivex.JDBCService createProxy(Vertx vertx, String address) {
+        return new io.nubespark.jdbc.reactivex.JDBCService(new JDBCServiceVertxEBProxy(vertx.getDelegate(), address));
     }
 
     @Fluent

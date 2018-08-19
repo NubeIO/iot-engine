@@ -1,6 +1,6 @@
-package io.nubespark;
+package io.nubespark.jdbc.impl;
 
-import io.nubespark.JDBCService;
+import io.nubespark.jdbc.JDBCService;
 import io.reactivex.MaybeSource;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;

@@ -11,7 +11,7 @@
 
     <artifactId>nube-jdbc-engine</artifactId>
     <properties>
-        <main.verticle>io.nubespark.JdbcVerticle</main.verticle>
+        <main.verticle>io.nubespark.jdbc.JdbcVerticle</main.verticle>
     </properties>
 
     <dependencies>

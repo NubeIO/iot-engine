@@ -1,4 +1,4 @@
-package io.nubespark;
+package io.nubespark.jdbc;
 
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
 import io.vertx.core.Future;
@@ -12,8 +12,8 @@ import io.vertx.serviceproxy.ServiceBinder;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import static io.nubespark.JDBCService.SERVICE_ADDRESS;
-import static io.nubespark.JDBCService.SERVICE_NAME;
+import static io.nubespark.jdbc.JDBCService.SERVICE_ADDRESS;
+import static io.nubespark.jdbc.JDBCService.SERVICE_NAME;
 
 /**
  * Created by topsykretts on 4/26/18.

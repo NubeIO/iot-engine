@@ -1,6 +1,6 @@
 package io.nubespark.controller;
 
-import io.nubespark.JDBCService;
+import io.nubespark.jdbc.JDBCService;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -20,7 +20,7 @@ import java.util.Collections;
  */
 public class RulesController {
 
-    private final io.nubespark.reactivex.JDBCService jdbcService;
+    private final io.nubespark.jdbc.reactivex.JDBCService jdbcService;
     private Logger logger = LoggerFactory.getLogger(RulesController.class);
 
     public RulesController(Vertx vertx) {
