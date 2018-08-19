@@ -1,6 +1,7 @@
 package io.nubespark.controller;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -22,6 +23,9 @@ public class MongoDBController {
         String document = request.getParam("document");
         // we can use this query for filtering output array
         JsonObject query = new JsonObject();
+        if (routingContext.request().method() == HttpMethod.POST) {
+            query = routingContext.getBodyAsJson();
+        }
         client.find(document, query, res -> {
             if (res.succeeded()) {
                 routingContext.response()

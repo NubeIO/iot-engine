@@ -45,6 +45,34 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "POST"
+        ],
+        "description": "GET request with MongoDB document",
+        "operationId": "/get/:document",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Document"
+                  },
+                  "example": [
+                    {
+                      "_id": "1",
+                      "value": "abc"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/get/{document}/{id}": {
