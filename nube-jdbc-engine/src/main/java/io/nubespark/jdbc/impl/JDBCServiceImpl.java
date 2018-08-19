@@ -1,6 +1,7 @@
 package io.nubespark.jdbc.impl;
 
 import io.nubespark.jdbc.JDBCService;
+import io.nubespark.vertx.common.BaseService;
 import io.reactivex.MaybeSource;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
@@ -16,7 +17,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
-import io.vertx.reactivex.SingleHelper;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
@@ -28,14 +28,14 @@ import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-public class JDBCServiceImpl implements JDBCService {
+public class JDBCServiceImpl implements JDBCService, BaseService {
     // SQL statement
     private static final String CREATE_DEMO_STATEMENT = "CREATE TABLE IF NOT EXISTS metadata " +
             "(" +
-                "id int AUTO_INCREMENT, " +
-                "name varchar(100), " +
-                "tag varchar(100), " +
-                "PRIMARY KEY (id)" +
+            "id int AUTO_INCREMENT, " +
+            "name varchar(100), " +
+            "tag varchar(100), " +
+            "PRIMARY KEY (id)" +
             ")";
     private static final String GET_FIRST_DEMO = "SELECT * FROM metadata LIMIT 1";
     private static final String INSERT_DEMO = "INSERT into metadata (id, name, tag) VALUES ";
@@ -53,12 +53,15 @@ public class JDBCServiceImpl implements JDBCService {
         put("Set Point1", "sp");
     }};
 
-    public JDBCServiceImpl(Vertx vertx, JsonObject config, Handler<AsyncResult<JDBCService>> resultHandler) {
+    public JDBCServiceImpl(Vertx vertx, JsonObject config) {
         this.client = JDBCClient.createNonShared(vertx, config);
+    }
 
-        logger.info("Initializing tags database...");
+    @Override
+    public Single<JDBCService> initializeService() {
+        logger.info("Initializing ...");
 
-//        initializeDatabase(resultHandler);
+        return Single.just(this);
     }
 
     public SingleObserver<JsonObject> toObserverFromObject(final Handler<AsyncResult<JsonObject>> handler) {
@@ -105,10 +108,9 @@ public class JDBCServiceImpl implements JDBCService {
         };
     }
 
-
     // todo Fix initialization query
-    private void initializeDatabase(Handler<AsyncResult<JDBCService>> resultHandler) {
-        getConnection()
+    private Single<JDBCService> initializeDatabase() {
+        return getConnection()
                 // Create demo table if necessary
                 .flatMap(conn -> conn.rxExecute(CREATE_DEMO_STATEMENT)
                         .doOnError(throwable -> logger.error("Failed to execute query: " + CREATE_DEMO_STATEMENT + throwable.getMessage()))
@@ -135,8 +137,7 @@ public class JDBCServiceImpl implements JDBCService {
                                     .toMaybe();
                         })
                         .toSingle())
-                .map(conn -> this)
-                .subscribe(SingleHelper.toObserver(resultHandler));
+                .map(conn -> this);
     }
 
     private Single<SQLConnection> getConnection() {
@@ -185,5 +186,4 @@ public class JDBCServiceImpl implements JDBCService {
                 .put("message", object);
 
     }
-
 }

@@ -37,21 +37,16 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
         logger.info("Config on sql engine rest app is:\n");
         logger.debug(Json.encodePrettily(config()));
 
-        final Single<HttpServer> startWebSingle = startWebApp()
-                .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
-
-        final Single<Record> publishHttp = publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080))
-                .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
-
-        Single.zip(startWebSingle,
-                publishHttp,
-                (httpServer, record) -> {
-                    logger.info("Web server started at " + httpServer.actualPort());
-                    return record;
-                }).subscribe(ignored -> future.complete(), future::fail);
-
+        startWebApp()
+                .flatMap(httpServer -> publishHttp())
+                .subscribe(ignored -> future.complete(), future::fail);
 
         controller = new RulesController(vertx);
+    }
+
+    private Single<Record> publishHttp() {
+        return publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080))
+                .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
     private Single<HttpServer> startWebApp() {
@@ -74,7 +69,9 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
                         // Retrieve the port from the configuration,
                         // default to 8080.
                         config().getInteger("http.port", 8080)
-                );
+                )
+                .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
+                .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
 
     private void handlePageNotFound(RoutingContext routingContext) {

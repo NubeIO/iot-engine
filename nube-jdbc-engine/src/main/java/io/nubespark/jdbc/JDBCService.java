@@ -2,6 +2,7 @@ package io.nubespark.jdbc;
 
 
 import io.nubespark.jdbc.impl.JDBCServiceImpl;
+import io.reactivex.Single;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -21,8 +22,8 @@ public interface JDBCService {
     String SERVICE_NAME = "jdbc-engine";
 
     @GenIgnore
-    static JDBCService create(Vertx vertx, JsonObject config, Handler<AsyncResult<JDBCService>> resultHandler) {
-        return new JDBCServiceImpl(vertx, config, resultHandler);
+    static Single<JDBCService> create(Vertx vertx, JsonObject config) {
+        return new JDBCServiceImpl(vertx, config).initializeService();
     }
 
     @GenIgnore

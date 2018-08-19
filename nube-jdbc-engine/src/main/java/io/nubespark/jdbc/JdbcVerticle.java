@@ -3,8 +3,6 @@ package io.nubespark.jdbc;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.serviceproxy.ServiceBinder;
@@ -28,28 +26,14 @@ public class JdbcVerticle extends RxMicroServiceVerticle {
         super.start();
         logServerDetails();
 
-        final JDBCService jdbcService = JDBCService.create(vertx, config(), ready -> {
-            if (ready.succeeded()) {
-                ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
-                binder.setAddress(SERVICE_ADDRESS).register(JDBCService.class, ready.result());
-                startFuture.complete();
-            } else {
-                startFuture.fail(ready.cause());
-            }
-        });
-
-        publishMessageSource(SERVICE_NAME, SERVICE_ADDRESS)
+        JDBCService.create(vertx, config())
+                .doOnSuccess(jdbcService -> {
+                    ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
+                    binder.setAddress(SERVICE_ADDRESS).register(JDBCService.class, jdbcService);
+                    logger.info("Service bound to " + binder);
+                })
+                .flatMap(ignored -> publishMessageSource(SERVICE_NAME, SERVICE_ADDRESS))
                 .subscribe(record -> startFuture.complete(), startFuture::fail);
-        vertx.eventBus().consumer(SERVICE_ADDRESS, message -> {
-            String query = message.body().toString();
-            JsonObject queryObj = new JsonObject(query);
-            String sqlQuery = queryObj.getString("query");
-            JsonArray params = queryObj.getJsonArray("params");
-            System.out.println("Received query : " + query);
-            jdbcService.executeQueryWithParams(sqlQuery, params, resultHandler -> {
-                message.reply(resultHandler.result());
-            });
-        });
     }
 
     private void logServerDetails() {
