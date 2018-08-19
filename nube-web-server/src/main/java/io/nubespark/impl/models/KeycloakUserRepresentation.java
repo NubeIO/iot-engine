@@ -8,6 +8,7 @@ public class KeycloakUserRepresentation extends Model {
     private String firstName;
     private String lastName;
     private String email;
+    private Boolean enabled;
 
     public KeycloakUserRepresentation(JsonObject body) {
         this.input.put("body", body);
@@ -18,6 +19,7 @@ public class KeycloakUserRepresentation extends Model {
         JsonObject keyCloakUserRepresentation = super.toJsonObject();
         keyCloakUserRepresentation.put("firstName", this.input.get("body").getString("first_name", ""));
         keyCloakUserRepresentation.put("lastName", this.input.get("body").getString("last_name", ""));
+        keyCloakUserRepresentation.put("enabled", true);
         return keyCloakUserRepresentation;
     }
 }

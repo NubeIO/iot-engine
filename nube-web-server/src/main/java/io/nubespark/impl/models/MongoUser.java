@@ -6,6 +6,7 @@ import io.nubespark.utils.UserUtils;
 import io.vertx.core.json.JsonObject;
 
 public class MongoUser extends Model {
+    private String _id;
     private String user_id;
     private String username;
     private String first_name;
@@ -14,8 +15,8 @@ public class MongoUser extends Model {
     private Role role;
     private String address;
     private String phone_no;
-    private String company; //TODO
-    private String group; //TODO
+    private String company_id; //TODO
+    private String group_id; //TODO
 
     public MongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser) {
         this.input.put("body", body);
@@ -31,6 +32,7 @@ public class MongoUser extends Model {
 
         JsonObject responseUser = super.toJsonObject();
 
+        responseUser.put("_id", keycloakUser.getString("id"));
         responseUser.put("user_id", keycloakUser.getString("id"));
         responseUser.put("username", keycloakUser.getString("username"));
         if (!keycloakUser.getString("firstName").equals("")) {

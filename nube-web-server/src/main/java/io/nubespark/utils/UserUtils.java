@@ -31,12 +31,9 @@ public class UserUtils {
                     handler.handle(Future.succeededFuture(new JsonObject().put("statusCode", response.statusCode())));
                 }));
 
-        System.out.println("AccessToken:::" + access_token);
-
         request.setChunked(true);
         request.putHeader("content-type", "application/json");
         request.putHeader("Authorization", "Bearer " + access_token);
-        System.out.println("User body is::: " + user.toJsonObject());
         request.write(user.toJsonObject().toString()).end();
     }
 
@@ -56,5 +53,27 @@ public class UserUtils {
         request.putHeader("content-type", "application/json");
         request.putHeader("Authorization", "Bearer " + access_token);
         request.end();
+    }
+
+    public static void resetPassword(String user_id, String password, String access_token, String authServerUrl,
+                               String realmName, HttpClient client, Handler<AsyncResult<JsonObject>> handler) {
+        String uri = authServerUrl + "/admin/realms/" + realmName + "/users/" + user_id + "/reset-password";
+
+        HttpClientRequest request = client.requestAbs(HttpMethod.PUT, uri, response ->
+                response.bodyHandler(body -> {
+                    handler.handle(Future.succeededFuture(new JsonObject()
+                            .put("statusCode", response.statusCode())
+                    ));
+                })
+        );
+
+        request.setChunked(true);
+        request.putHeader("content-type", "application/json");
+        request.putHeader("Authorization", "Bearer " + access_token);
+        JsonObject requestBody = new JsonObject()
+                .put("temporary", false)
+                .put("type", "password")
+                .put("value", password);
+        request.write(requestBody.toString()).end();
     }
 }

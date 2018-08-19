@@ -237,28 +237,39 @@ public class HttpServerVerticle extends RestAPIVerticle {
             String access_token = user.principal().getString("access_token");
             JsonObject keycloakConfig = config().getJsonObject("keycloak");
             HttpClient client = vertx.createHttpClient(new HttpClientOptions());
-            // Create User on Keycloak
+            // 1. Create User on Keycloak
             UserUtils.createUser(userRepresentation, access_token, keycloakConfig.getString("auth-server-url"), keycloakConfig.getString("realm"), client, res -> {
                 if (res.result().getInteger("statusCode") == 201) {
                     logger.info("Successfully create the user.");
                     logger.info("Username: " + body.getString("username"));
-                    // GET recently created user details from Keycloak
-                    UserUtils.getUser(body.getString("username"), access_token, keycloakConfig.getString("auth-server-url"),
+                    // 2. GET recently created user details from Keycloak
+                    String authServerUrl = keycloakConfig.getString("auth-server-url");
+                    UserUtils.getUser(body.getString("username"), access_token, authServerUrl,
                             keycloakConfig.getString("realm"), client, keycloakUser -> {
-
                                 if (keycloakUser.result().getInteger("statusCode") == 200) {
                                     logger.info("Created user is ::: " + keycloakUser.result().getJsonObject("body"));
-                                    // Creating user on MongoDB
-                                    MongoUser mongoUser = new MongoUser(body, user.principal(), keycloakUser.result().getJsonObject("body"));
-                                    logger.info("Mongo User::: " + mongoUser.toJsonObject());
-                                    getResponse(HttpMethod.POST, URN.save_user, mongoUser.toJsonObject(), mongoResponse-> {
-                                        if (mongoResponse.succeeded()) {
-                                            logger.info("User creation on MongoDB: " + mongoResponse.result());
-                                            ctx.response().setStatusCode(201).end();
-                                        } else {
-                                            ctx.fail(mongoResponse.cause());
-                                        }
-                                    });
+                                    // 3. Resetting password; by default password: 'helloworld'
+                                    UserUtils.resetPassword(keycloakUser.result().getJsonObject("body").getString("id"), body.getString("password", "helloworld"),
+                                            access_token, authServerUrl, keycloakConfig.getString("realm"), client, resetResponse -> {
+                                                logger.info("Reset Password statusCode: " + resetResponse.result().getInteger("statusCode"));
+                                                if (resetResponse.result().getInteger("statusCode") == 204) {
+                                                    // 4. Creating user on MongoDB
+                                                    MongoUser mongoUser = new MongoUser(body, user.principal(), keycloakUser.result().getJsonObject("body"));
+                                                    logger.info("Mongo User::: " + mongoUser.toJsonObject());
+                                                    getResponse(HttpMethod.POST, URN.save_user, mongoUser.toJsonObject(), mongoResponse -> {
+                                                        if (mongoResponse.succeeded()) {
+                                                            logger.info("User creation on MongoDB: " + mongoResponse.result());
+                                                            ctx.response().setStatusCode(201).end();
+                                                        } else {
+                                                            ctx.fail(mongoResponse.cause());
+                                                        }
+                                                    });
+                                                } else {
+                                                    ctx.response().setStatusCode(resetResponse.result().getInteger("statusCode")).end();
+                                                }
+                                            });
+
+
                                 } else {
                                     ctx.response().setStatusCode(res.result().getInteger("statusCode")).end();
                                 }
@@ -270,7 +281,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
             });
         });
 
-        router.route("/api/createCompany").handler(ctx-> {
+        router.route("/api/createCompany").handler(ctx -> {
 
         });
 
@@ -348,7 +359,12 @@ public class HttpServerVerticle extends RestAPIVerticle {
                         ar -> {
                             if (ar.succeeded()) {
                                 logger.info("User Response: " + ar.result().toString());
-                                User user = new UserImpl(user_id, Role.SUPER_ADMIN, "1234", "", access_token); //token
+                                User user = new UserImpl(new JsonObject()
+                                        .put("user_id", user_id)
+                                        .put("role", ar.result().getString("role"))
+                                        .put("company_id", ar.result().getString("company_id", ""))
+                                        .put("group_id", ar.result().getString("group_id", ""))
+                                        .put("access_token", access_token));
                                 ctx.setUser(user);
                                 ctx.next();
                             } else {
