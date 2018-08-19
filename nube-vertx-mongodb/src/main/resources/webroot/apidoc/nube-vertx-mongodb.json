@@ -88,7 +88,7 @@
         }
       }
     },
-    "/save/{document}": {
+    "/post/{document}": {
       "parameters": [
         {
           "in": "path",
@@ -102,10 +102,10 @@
       ],
       "post": {
         "tags": [
-          "SAVE"
+          "POST"
         ],
-        "description": "SAVE request with MongoDB document",
-        "operationId": "/save/:document",
+        "description": "POST request with MongoDB document",
+        "operationId": "/post/:document",
         "requestBody": {
           "required": true,
           "content": {
@@ -119,6 +119,41 @@
         "responses": {
           "201": {
             "description": "Successfully created."
+          }
+        }
+      }
+    },
+    "/put/{document}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "document",
+          "schema": {
+            "type": "string"
+          },
+          "required": true,
+          "description": "Document of MongoDB"
+        }
+      ],
+      "put": {
+        "tags": [
+          "PUT"
+        ],
+        "description": "PUT request with MongoDB document",
+        "operationId": "/put/:document",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Document"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully executed the statement."
           }
         }
       }

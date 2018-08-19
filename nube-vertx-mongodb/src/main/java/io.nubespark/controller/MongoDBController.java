@@ -53,7 +53,7 @@ public class MongoDBController {
         });
     }
 
-    public void save(RoutingContext routingContext) {
+    public void put(RoutingContext routingContext) {
         HttpServerRequest request = routingContext.request();
         String document = request.getParam("document");
         JsonObject data = routingContext.getBodyAsJson();
@@ -67,17 +67,35 @@ public class MongoDBController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        client.save(document, data, res -> {
-            if (res.succeeded()) {
-                routingContext.response()
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .setStatusCode(HttpResponseStatus.CREATED.code())
-                        .end(Json.encodePrettily(new JsonObject().put("result", res.result())));
-            } else {
-                res.cause().printStackTrace();
-                routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
+        saveData(document, data, routingContext);
+    }
+
+    public void post(RoutingContext routingContext) {
+        HttpServerRequest request = routingContext.request();
+        String document = request.getParam("document");
+        JsonObject data = routingContext.getBodyAsJson();
+
+        try {
+            // Converting integer id into string;
+            // Since we don't need the conflicting behaviour of getting values for two different string and integer ids
+            if (data.getInteger("_id").toString().matches("\\d+")) {
+                data.put("_id", data.getInteger("_id").toString());
             }
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (data.getString("_id") != null) {
+            client.findOne(document,  new JsonObject().put("_id", data.getString("_id")), null, res-> {
+                if (res.result() != null) {
+                    routingContext.response().setStatusCode(HttpResponseStatus.CONFLICT.code()).end();
+                } else {
+                    saveData(document, data, routingContext);
+                }
+            });
+        } else {
+            saveData(document, data, routingContext);
+        }
+
     }
 
     public void deleteAll(RoutingContext routingContext) {
@@ -107,6 +125,20 @@ public class MongoDBController {
                         .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .setStatusCode(HttpResponseStatus.NO_CONTENT.code())
                         .end(Json.encodePrettily(res.result()));
+            } else {
+                res.cause().printStackTrace();
+                routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
+            }
+        });
+    }
+
+    private void saveData(String document, JsonObject data, RoutingContext routingContext) {
+        client.save(document, data, res -> {
+            if (res.succeeded()) {
+                routingContext.response()
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .setStatusCode(HttpResponseStatus.CREATED.code())
+                        .end(Json.encodePrettily(new JsonObject().put("result", res.result())));
             } else {
                 res.cause().printStackTrace();
                 routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();

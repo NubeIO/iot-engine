@@ -60,7 +60,8 @@ public class MongoDBVerticle extends MicroServiceVerticle {
                         // Add routes handlers
                         routerFactory.addHandlerByOperationId("/get/:document", routingContext -> controller.getAll(routingContext));
                         routerFactory.addHandlerByOperationId("/get/:document/:id", routingContext -> controller.getOne(routingContext));
-                        routerFactory.addHandlerByOperationId("/save/:document", routingContext -> controller.save(routingContext));
+                        routerFactory.addHandlerByOperationId("/post/:document", routingContext -> controller.post(routingContext)); // will throw 409 status code if same id is already there
+                        routerFactory.addHandlerByOperationId("/put/:document", routingContext -> controller.put(routingContext)); // will override if same id is there
                         routerFactory.addHandlerByOperationId("/delete/:document", routingContext -> controller.deleteAll(routingContext));
                         routerFactory.addHandlerByOperationId("/delete/:document/:id", routingContext -> controller.deleteOne(routingContext));
 
