@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.impl.models.Company;
 import io.nubespark.impl.models.KeycloakUserRepresentation;
 import io.nubespark.impl.models.MongoUser;
+import io.nubespark.impl.models.SiteSettings;
 import io.nubespark.utils.URN;
 import io.nubespark.utils.UserUtils;
 import io.nubespark.utils.response.ResponseUtils;
@@ -64,6 +65,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
 
         enableCorsSupport(router);
         handleAuth(router);
+        handleAPIs(router);
         handleAuthEventBus(router);
         handleEventBus(router);
         handleGateway(router);
@@ -236,6 +238,25 @@ public class HttpServerVerticle extends RestAPIVerticle {
             }
         });
 
+        router.route("/api/currentUser").handler(ctx -> {
+            User user = ctx.user();
+            if (user != null) {
+                JsonObject accessToken = KeycloakHelper.accessToken(user.principal());
+                String name = accessToken.getString("name", accessToken.getString("preferred_username"));
+                ctx.response().putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                        .end(Json.encodePrettily(new JsonObject()
+                                .put("name", name)
+                        ));
+            } else {
+                System.out.println("Send not authorized error and user should login");
+                failAuthentication(ctx);
+            }
+        });
+
+        router.route("/api/logout").handler(this::redirectLogout);
+    }
+
+    private void handleAPIs(Router router) {
         router.post("/api/user").handler(ctx -> {
             // TODO: make only available to SUPER_ADMIN and ADMIN and MANAGER plus refactoring code
             JsonObject body = ctx.getBodyAsJson();
@@ -265,17 +286,20 @@ public class HttpServerVerticle extends RestAPIVerticle {
                                         if (resetResponse.result().getInteger("statusCode") == 204) {
 
                                             // 4. only child companies can be added by the parent
-                                            getChildCompanies(ctx.user(), responseChildCompanies -> {
+                                            getChildCompanies(user.getString("company_id"), responseChildCompanies -> {
                                                 if (responseChildCompanies.result().size() > 0) {
-                                                    body.put("company_id", UserUtils.getCompany(responseChildCompanies.result(), body.getString("company_id", "")));
+
+                                                    body
+                                                            .put("company_id", UserUtils.getCompany(responseChildCompanies.result(), body.getString("company_id", "")))
+                                                            .put("associated_company_id", user.getString("company_id"));
 
                                                     // 5.1 Creating user on MongoDB
                                                     MongoUser mongoUser = new MongoUser(body, user, keycloakUser.result().getJsonObject("body"));
                                                     logger.info("Mongo User::: " + mongoUser.toJsonObject());
-                                                    getResponse(HttpMethod.POST, URN.post_user, mongoUser.toJsonObject(), mongoResponse -> {
+                                                    dispatchRequest(HttpMethod.POST, URN.post_user, mongoUser.toJsonObject(), mongoResponse -> {
                                                         if (mongoResponse.succeeded()) {
                                                             logger.info("User creation on MongoDB: " + mongoResponse.result());
-                                                            ctx.response().setStatusCode(201).end();
+                                                            ctx.response().setStatusCode(HttpResponseStatus.CREATED.code()).end();
                                                         } else {
                                                             ctx.fail(mongoResponse.cause());
                                                         }
@@ -309,8 +333,8 @@ public class HttpServerVerticle extends RestAPIVerticle {
         router.post("/api/company").handler(ctx -> {
             // TODO: make only available to SUPER_ADMIN and ADMIN
             Company company = new Company(ctx.getBodyAsJson(), ctx.user().principal());
-            getResponse(HttpMethod.GET, URN.get_company + "/" + ctx.getBodyAsJson().getString("name"), null, getResult -> {
-                getResponse(HttpMethod.POST, URN.post_company, company.toJsonObject(), ar -> {
+            dispatchRequest(HttpMethod.GET, URN.get_company + "/" + ctx.getBodyAsJson().getString("name"), null, getResult -> {
+                dispatchRequest(HttpMethod.POST, URN.post_company, company.toJsonObject(), ar -> {
                     logger.info("Response is :::::::" + ar.result());
                     if (ar.succeeded()) {
                         JsonObject result = new JsonObject(ar.result());
@@ -335,11 +359,14 @@ public class HttpServerVerticle extends RestAPIVerticle {
 
         router.post("/api/site_settings").handler(ctx -> {
             // TODO: Only make available to Manager
+            SiteSettings siteSettings = new SiteSettings(ctx.getBodyAsJson()
+                    .put("associated_company_id", ctx.user().principal().getString("company_id")));
+//            dispatchRequest(HttpMethod.POST, );
 
         });
 
         router.get("/api/companies").handler(ctx -> {
-            getChildCompanies(ctx.user(), res -> {
+            getChildCompanies(ctx.user().principal().getString("company_id"), res -> {
                 if (res.succeeded()) {
                     ctx.response()
                             .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -352,48 +379,22 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
 
         router.get("/api/users").handler(ctx -> {
-            // 1. GET child_company_list_id from company
-            getResponse(HttpMethod.GET, URN.get_company + "/" + ctx.user().principal().getString("company_id"),
-                    null, companyResponse -> {
-                        if (companyResponse.succeeded()) {
-                            // 2. Query all available users
-                            JsonObject jsonInQuery = new JsonObject().put("$in",
-                                    new JsonObject(companyResponse.result()).getJsonArray("child_company_list_id"));
-                            JsonObject query = new JsonObject().put("company_id", jsonInQuery);
-                            logger.info("Query to be executed: " + query);
-                            getResponse(HttpMethod.POST, URN.get_user, query, usersResponse -> {
-                                if (usersResponse.succeeded()) {
-                                    logger.info("User response result::: " + usersResponse.result());
-                                    ctx.response()
-                                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                                            .setStatusCode(HttpResponseStatus.OK.code())
-                                            .end(usersResponse.result());
-                                } else {
-                                    serviceUnavailable(ctx);
-                                }
-                            });
-                        } else {
-                            serviceUnavailable(ctx);
-                        }
-                    });
+            // TODO restrict it to SUPER_ADMIN, ADMIN or MANAGER
+            // GET all users which is associated with the user's company id
+            JsonObject query = new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id"));
+            logger.info("Query to be executed: " + query);
+            dispatchRequest(HttpMethod.POST, URN.get_user, query, usersResponse -> {
+                if (usersResponse.succeeded()) {
+                    logger.info("User response result::: " + usersResponse.result());
+                    ctx.response()
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .setStatusCode(HttpResponseStatus.OK.code())
+                            .end(usersResponse.result());
+                } else {
+                    serviceUnavailable(ctx);
+                }
+            });
         });
-
-        router.route("/api/currentUser").handler(ctx -> {
-            User user = ctx.user();
-            if (user != null) {
-                JsonObject accessToken = KeycloakHelper.accessToken(user.principal());
-                String name = accessToken.getString("name", accessToken.getString("preferred_username"));
-                ctx.response().putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(new JsonObject()
-                                .put("name", name)
-                        ));
-            } else {
-                System.out.println("Send not authorized error and user should login");
-                failAuthentication(ctx);
-            }
-        });
-
-        router.route("/api/logout").handler(this::redirectLogout);
     }
 
     private void handleAuthEventBus(Router router) {
@@ -448,7 +449,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 String user_id = token.principal().getString("sub");
                 String access_token = token.principal().getString("access_token");
                 logger.info("User id: " + user_id);
-                getResponse(HttpMethod.GET, URN.get_user + "/" + user_id, null,
+                dispatchRequest(HttpMethod.GET, URN.get_user + "/" + user_id, null,
                         ar -> {
                             JsonObject result = new JsonObject(ar.result());
                             if (ar.succeeded()) {
@@ -561,13 +562,13 @@ public class HttpServerVerticle extends RestAPIVerticle {
     }
 
     private void setChildCompany(String companyId, String childCompanyId, Handler<AsyncResult<JsonObject>> handler) {
-        getResponse(HttpMethod.GET, URN.get_company + "/" + companyId, null, responseCompany -> {
+        dispatchRequest(HttpMethod.GET, URN.get_company + "/" + companyId, null, responseCompany -> {
             if (responseCompany.succeeded()) {
                 JsonObject company = new JsonObject(responseCompany.result());
                 logger.info("Company is ::: " + company);
                 company.put("child_company_list_id", company.getJsonArray("child_company_list_id").add(childCompanyId));
                 logger.info("Company " + childCompanyId + " is going to be added on company" + companyId);
-                getResponse(HttpMethod.PUT, URN.put_company, company, postHandler -> {
+                dispatchRequest(HttpMethod.PUT, URN.put_company, company, postHandler -> {
                     if (postHandler.succeeded()) {
                         handler.handle(Future.succeededFuture(
                                 new JsonObject().put("statusCode", new JsonObject(postHandler.result()).getInteger("statusCode"))));
@@ -581,8 +582,8 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
     }
 
-    private void getChildCompanies(User user, Handler<AsyncResult<JsonArray>> handler) {
-        getResponse(HttpMethod.GET, URN.get_company + "/" + user.principal().getString("company_id"), null, responseCompany -> {
+    private void getChildCompanies(String companyId, Handler<AsyncResult<JsonArray>> handler) {
+        dispatchRequest(HttpMethod.GET, URN.get_company + "/" + companyId, null, responseCompany -> {
             if (responseCompany.succeeded()) {
                 JsonObject company = new JsonObject(responseCompany.result());
                 logger.info("Company is ::: " + company);

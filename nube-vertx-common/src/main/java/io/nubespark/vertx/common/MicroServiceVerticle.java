@@ -131,7 +131,7 @@ public class MicroServiceVerticle extends AbstractVerticle {
         Future.failedFuture(handler.cause());
     }
 
-    protected void getResponse(HttpMethod method, String path, JsonObject payload, Handler<AsyncResult<Buffer>> handler) {
+    protected void dispatchRequest(HttpMethod method, String path, JsonObject payload, Handler<AsyncResult<Buffer>> handler) {
         int initialOffset = 5; // length of `/api/`
         // run with circuit breaker in order to deal with failure
         circuitBreaker.execute(future -> {
