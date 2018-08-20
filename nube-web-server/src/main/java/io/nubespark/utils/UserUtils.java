@@ -6,7 +6,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.*;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
@@ -24,21 +23,6 @@ public class UserUtils {
             default:
                 return Role.GUEST;
         }
-    }
-
-    /**
-     * @param companies: list of child companies ids, which can be set by the parent for user creation
-     * @param company: company id, user input for setting the company value
-     * @return company_id; if company have permission to set @company then it will set the @company,
-     * otherwise it will set a by default company
-     */
-    public static String getCompany(JsonArray companies, String company) {
-        for (Object companyId: companies) {
-            if (companyId.toString().equals(company)) {
-                return company;
-            }
-        }
-        return companies.getValue(0).toString();
     }
 
     public static void createUser(KeycloakUserRepresentation user, String accessToken, String authServerUrl,

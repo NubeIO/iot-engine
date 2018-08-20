@@ -267,11 +267,11 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 String accessToken = user.getString("access_token");
                 JsonObject keycloakConfig = config().getJsonObject("keycloak");
                 HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+
                 // 1. Create User on Keycloak
                 UserUtils.createUser(userRepresentation, accessToken, keycloakConfig.getString("auth-server-url"), keycloakConfig.getString("realm"), client, res -> {
                     if (res.result().getInteger("statusCode") == 201) {
-                        logger.info("Successfully create the user.");
-                        logger.info("Username: " + body.getString("username"));
+                        logger.info("Successfully create the user: " + body.getString("username") + " in keycloak.");
 
                         // 2. GET recently created user details from Keycloak
                         String authServerUrl = keycloakConfig.getString("auth-server-url");
@@ -279,7 +279,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                         UserUtils.getUser(body.getString("username"), accessToken, authServerUrl, realmName, client, keycloakUser -> {
                             if (keycloakUser.result().getInteger("statusCode") == 200) {
                                 String createdUserId = keycloakUser.result().getJsonObject("body").getString("id");
-                                logger.info("Created user is ::: " + keycloakUser.result().getJsonObject("body"));
+                                logger.info("Created user is::: " + keycloakUser.result().getJsonObject("body"));
 
                                 // 3. Resetting password; by default password: 'helloworld'
                                 UserUtils.resetPassword(createdUserId, body.getString("password", "helloworld"),
@@ -287,36 +287,41 @@ public class HttpServerVerticle extends RestAPIVerticle {
                                             logger.info("Reset Password statusCode: " + resetResponse.result().getInteger("statusCode"));
                                             if (resetResponse.result().getInteger("statusCode") == 204) {
 
-                                                // 4. only child companies can be added by the parent
-                                                getChildCompanies(user.getString("company_id"), responseChildCompanies -> {
-                                                    if (responseChildCompanies.result().size() > 0) {
+                                                if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
 
-                                                        body
-                                                                .put("company_id", UserUtils.getCompany(responseChildCompanies.result(), body.getString("company_id", "")))
-                                                                .put("associated_company_id", user.getString("company_id"));
+                                                    // 4. only child companies can be added by the parent
+                                                    getChildCompanies(user.getString("company_id"), responseChildCompanies -> {
+                                                        if (responseChildCompanies.result().size() > 0) {
 
-                                                        // 5.1 Creating user on MongoDB
-                                                        MongoUser mongoUser = new MongoUser(body, user, keycloakUser.result().getJsonObject("body"));
-                                                        logger.info("Mongo User::: " + mongoUser.toJsonObject());
-                                                        dispatchRequest(HttpMethod.POST, URN.post_user, mongoUser.toJsonObject(), mongoResponse -> {
-                                                            if (mongoResponse.succeeded()) {
-                                                                logger.info("User creation on MongoDB: " + mongoResponse.result());
-                                                                ctx.response().setStatusCode(HttpResponseStatus.CREATED.code()).end();
-                                                            } else {
-                                                                ctx.fail(mongoResponse.cause());
-                                                            }
-                                                        });
-                                                    } else {
+                                                            String[] _ids = StringUtils.getIds(responseChildCompanies.result());
+                                                            body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids))
+                                                                    .put("associated_company_id", user.getString("company_id"));
+                                                            // 5.1 Creating user on MongoDB
+                                                            createMongoUser(body, user, keycloakUser.result(), ctx);
+                                                        } else {
+                                                            // 5.2 Remove user from Keycloak
+                                                            deleteKeycloakUser(createdUserId, accessToken, authServerUrl,
+                                                                    realmName, client, ctx, "Create company at first.");
+                                                        }
+                                                    });
+                                                } else {
 
-                                                        // 5.2 Remove user from Keycloak
-                                                        UserUtils.deleteUser(createdUserId, accessToken, authServerUrl, realmName, client, deleteUserHandler -> {
-                                                            ctx.response()
-                                                                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                                                                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
-                                                                    .end((new JsonObject().put("message", "Create company at first")).toBuffer());
-                                                        });
-                                                    }
-                                                });
+                                                    // 4 Creating user on MongoDB with 'group_id'
+                                                    getChildUserGroups(user.getString("company_id"), responseChildUserGroups -> {
+                                                        if (responseChildUserGroups.result().size() > 0) {
+                                                            String[] _ids = StringUtils.getIds(responseChildUserGroups.result());
+                                                            body.put("company_id", user.getString("company_id"))
+                                                                    .put("associated_company_id", user.getString("company_id"))
+                                                                    .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), _ids));
+                                                            // 5.1 Creating user on MongoDB
+                                                            createMongoUser(body, user, keycloakUser.result(), ctx);
+                                                        } else {
+                                                            // 5.2 Remove user from Keycloak
+                                                            deleteKeycloakUser(createdUserId, accessToken, authServerUrl,
+                                                                    realmName, client, ctx, "Create User group at first.");
+                                                        }
+                                                    });
+                                                }
                                             } else {
                                                 ctx.response().setStatusCode(resetResponse.result().getInteger("statusCode")).end();
                                             }
@@ -341,21 +346,10 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 Company company = new Company(ctx.getBodyAsJson(), ctx.user().principal());
                 dispatchRequest(HttpMethod.GET, URN.get_company + "/" + ctx.getBodyAsJson().getString("name"), null, getResult -> {
                     dispatchRequest(HttpMethod.POST, URN.post_company, company.toJsonObject(), ar -> {
-                        logger.info("Response is :::::::" + ar.result());
                         if (ar.succeeded()) {
                             JsonObject result = new JsonObject(ar.result());
-                            if (result.getInteger("statusCode") == 201) {
-                                setChildCompany(ctx.user().principal().getString("company_id"), company._id, setCompanyResponse -> {
-                                    if (setCompanyResponse.succeeded()) {
-                                        ctx.response().setStatusCode(setCompanyResponse.result().getInteger("statusCode")).end();
-                                    } else {
-                                        serviceUnavailable(ctx, "Error on Company creation.");
-                                    }
-                                });
-                            } else {
-                                // e.g: company already exist
-                                ctx.response().setStatusCode(result.getInteger("statusCode")).end();
-                            }
+                            // e.g: company already exist; 409 will be returned
+                            ctx.response().setStatusCode(result.getInteger("statusCode")).end();
                         } else {
                             serviceUnavailable(ctx, "Error on Company creation.");
                         }
@@ -655,33 +649,11 @@ public class HttpServerVerticle extends RestAPIVerticle {
         }
     }
 
-    private void setChildCompany(String companyId, String childCompanyId, Handler<AsyncResult<JsonObject>> handler) {
-        dispatchRequest(HttpMethod.GET, URN.get_company + "/" + companyId, null, responseCompany -> {
-            if (responseCompany.succeeded()) {
-                JsonObject company = new JsonObject(responseCompany.result());
-                logger.info("Company is ::: " + company);
-                company.put("child_company_list_id", company.getJsonArray("child_company_list_id").add(childCompanyId));
-                logger.info("Company " + childCompanyId + " is going to be added on company" + companyId);
-                dispatchRequest(HttpMethod.PUT, URN.put_company, company, postHandler -> {
-                    if (postHandler.succeeded()) {
-                        handler.handle(Future.succeededFuture(
-                                new JsonObject().put("statusCode", new JsonObject(postHandler.result()).getInteger("statusCode"))));
-                    } else {
-                        handler.handle(Future.failedFuture(responseCompany.cause()));
-                    }
-                });
-            } else {
-                handler.handle(Future.failedFuture(responseCompany.cause()));
-            }
-        });
-    }
-
     private void getChildCompanies(String companyId, Handler<AsyncResult<JsonArray>> handler) {
-        dispatchRequest(HttpMethod.GET, URN.get_company + "/" + companyId, null, responseCompany -> {
+        JsonObject query = new JsonObject().put("associated_company_id", companyId);
+        dispatchRequest(HttpMethod.POST, URN.get_company, query, responseCompany -> {
             if (responseCompany.succeeded()) {
-                JsonObject company = new JsonObject(responseCompany.result());
-                logger.info("Company is ::: " + company);
-                handler.handle(Future.succeededFuture(company.getJsonArray("child_company_list_id")));
+                handler.handle(Future.succeededFuture(new JsonArray(responseCompany.result())));
             } else {
                 handler.handle(Future.failedFuture(responseCompany.cause()));
             }
@@ -706,6 +678,29 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 handler.handle(Future.succeededFuture(new JsonArray(childUserGroups.result())));
             } else {
                 handler.handle(Future.failedFuture(childUserGroups.cause()));
+            }
+        });
+    }
+
+    private void deleteKeycloakUser(String createdUserId, String accessToken, String authServerUrl, String realmName,
+                                    HttpClient client, RoutingContext ctx, String message) {
+        UserUtils.deleteUser(createdUserId, accessToken, authServerUrl, realmName, client, deleteUserHandler -> {
+            ctx.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+                    .end((new JsonObject().put("message", message)).toBuffer());
+        });
+    }
+
+    private void createMongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser, RoutingContext ctx) {
+        MongoUser mongoUser = new MongoUser(body, user, keycloakUser.getJsonObject("body"));
+        logger.info("Mongo User::: " + mongoUser.toJsonObject());
+        dispatchRequest(HttpMethod.POST, URN.post_user, mongoUser.toJsonObject(), mongoResponse -> {
+            if (mongoResponse.succeeded()) {
+                logger.info("User creation on MongoDB: " + mongoResponse.result());
+                ctx.response().setStatusCode(HttpResponseStatus.CREATED.code()).end();
+            } else {
+                ctx.fail(mongoResponse.cause());
             }
         });
     }
