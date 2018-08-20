@@ -91,7 +91,8 @@ public class MongoDBController {
         if (data.getString("_id") != null) {
             client.findOne(document,  new JsonObject().put("_id", data.getString("_id")), null, res-> {
                 if (res.result() != null) {
-                    routingContext.response().setStatusCode(HttpResponseStatus.CONFLICT.code()).end();
+                    routingContext.response().setStatusCode(HttpResponseStatus.CONFLICT.code())
+                            .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.CONFLICT.code())));
                 } else {
                     saveData(document, data, routingContext);
                 }
@@ -142,10 +143,11 @@ public class MongoDBController {
                 routingContext.response()
                         .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .setStatusCode(HttpResponseStatus.CREATED.code())
-                        .end(Json.encodePrettily(new JsonObject().put("result", res.result())));
+                        .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.CREATED.code())));
             } else {
                 res.cause().printStackTrace();
-                routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
+                routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end(
+                        Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
             }
         });
     }
