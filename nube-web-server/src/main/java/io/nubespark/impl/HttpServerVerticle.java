@@ -2,11 +2,9 @@ package io.nubespark.impl;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
-import io.nubespark.impl.models.Company;
-import io.nubespark.impl.models.KeycloakUserRepresentation;
-import io.nubespark.impl.models.MongoUser;
-import io.nubespark.impl.models.Site;
+import io.nubespark.impl.models.*;
 import io.nubespark.utils.SQLUtils;
+import io.nubespark.utils.StringUtils;
 import io.nubespark.utils.URN;
 import io.nubespark.utils.UserUtils;
 import io.nubespark.utils.response.ResponseUtils;
@@ -386,18 +384,32 @@ public class HttpServerVerticle extends RestAPIVerticle {
             }
         });
 
-        router.get("/api/sites").handler(ctx-> {
+        router.post("/api/user_group").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
             if (role == Role.MANAGER) {
-                JsonObject query = new JsonObject()
-                        .put("associated_company_id", ctx.user().principal().getString("company_id"));
-                dispatchRequest(HttpMethod.POST, URN.get_site, query, siteResponse -> {
-                    if (siteResponse.succeeded()) {
-                        ctx.response()
-                                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                                .setStatusCode(HttpResponseStatus.OK.code())
-                                .end(new JsonArray(siteResponse.result()).toString());
-                        siteResponse.result();
+                // Only manager's sites should make available for user_group
+                getChildSites(ctx.user().principal().getString("company_id"), childCompaniesResponse -> {
+                    if (childCompaniesResponse.succeeded()) {
+                        if (childCompaniesResponse.result().size() > 0) {
+                            String[] availableSites = StringUtils.getIds(childCompaniesResponse.result());
+                            String site_id = SQLUtils.getMatchValueOrDefaultOne(ctx.getBodyAsJson().getString("site_id", ""), availableSites);
+                            UserGroup userGroup = new UserGroup(ctx.getBodyAsJson()
+                                    .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                                    .put("site_id", site_id));
+                            dispatchRequest(HttpMethod.POST, URN.post_user_group, userGroup.toJsonObject(), userGroupResponse -> {
+                                if (userGroupResponse.succeeded()) {
+                                    ctx.response().setStatusCode(new JsonObject(userGroupResponse.result()).getInteger("statusCode")).end();
+                                    userGroupResponse.result();
+                                } else {
+                                    serviceUnavailable(ctx);
+                                }
+                            });
+                        } else {
+                            ctx.response()
+                                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+                                    .end(new JsonObject().put("message", "Create site at first").toString());
+                        }
                     } else {
                         serviceUnavailable(ctx);
                     }
@@ -433,6 +445,42 @@ public class HttpServerVerticle extends RestAPIVerticle {
                                 .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                                 .setStatusCode(HttpResponseStatus.OK.code())
                                 .end(usersResponse.result());
+                    } else {
+                        serviceUnavailable(ctx);
+                    }
+                });
+            } else {
+                forbidden(ctx);
+            }
+        });
+
+        router.get("/api/sites").handler(ctx -> {
+            Role role = Role.valueOf(ctx.user().principal().getString("role"));
+            if (role == Role.MANAGER) {
+                getChildSites(ctx.user().principal().getString("company_id"), handler -> {
+                    if (handler.succeeded()) {
+                        ctx.response()
+                                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                .setStatusCode(HttpResponseStatus.OK.code())
+                                .end(handler.result().toString());
+                    } else {
+                        serviceUnavailable(ctx);
+                    }
+                });
+            } else {
+                forbidden(ctx);
+            }
+        });
+
+        router.get("/api/user_groups").handler(ctx -> {
+            Role role = Role.valueOf(ctx.user().principal().getString("role"));
+            if (role == Role.MANAGER) {
+                getChildUserGroups(ctx.user().principal().getString("company_id"), handler -> {
+                    if (handler.succeeded()) {
+                        ctx.response()
+                                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                .setStatusCode(HttpResponseStatus.OK.code())
+                                .end(handler.result().toString());
                     } else {
                         serviceUnavailable(ctx);
                     }
@@ -636,6 +684,28 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 handler.handle(Future.succeededFuture(company.getJsonArray("child_company_list_id")));
             } else {
                 handler.handle(Future.failedFuture(responseCompany.cause()));
+            }
+        });
+    }
+
+    private void getChildSites(String companyId, Handler<AsyncResult<JsonArray>> handler) {
+        JsonObject query = new JsonObject().put("associated_company_id", companyId);
+        dispatchRequest(HttpMethod.POST, URN.get_site, query, siteResponse -> {
+            if (siteResponse.succeeded()) {
+                handler.handle(Future.succeededFuture(new JsonArray(siteResponse.result())));
+            } else {
+                handler.handle(Future.failedFuture(siteResponse.cause()));
+            }
+        });
+    }
+
+    private void getChildUserGroups(String companyId, Handler<AsyncResult<JsonArray>> handler) {
+        JsonObject query = new JsonObject().put("associated_company_id", companyId);
+        dispatchRequest(HttpMethod.POST, URN.get_user_group, query, childUserGroups -> {
+            if (childUserGroups.succeeded()) {
+                handler.handle(Future.succeededFuture(new JsonArray(childUserGroups.result())));
+            } else {
+                handler.handle(Future.failedFuture(childUserGroups.cause()));
             }
         });
     }

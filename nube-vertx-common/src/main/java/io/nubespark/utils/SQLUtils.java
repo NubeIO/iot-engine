@@ -33,4 +33,13 @@ public class SQLUtils {
                     return array[j];
         return array[0];
     }
+
+    public static String getMatchValueOrDefaultOne(String toMatch, String[] withMatch) {
+        for (String value : withMatch) {
+            if (toMatch.equals(value)) {
+                return toMatch;
+            }
+        }
+        return withMatch[0];
+    }
 }

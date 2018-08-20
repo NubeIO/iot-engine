@@ -1,6 +1,11 @@
 package io.nubespark.utils;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StringUtils {
     public static String[] removeQuotes(String[] tokens) {
@@ -174,5 +179,14 @@ public class StringUtils {
             DecimalFormat df = new DecimalFormat("0.0");
             return String.valueOf(df.format(Double.parseDouble(value)));
         }
+    }
+
+    public static String[] getIds(JsonArray jsonArray) {
+        List<String> ids = new ArrayList<>();
+        for (Object object : jsonArray) {
+            JsonObject jsonObject = new JsonObject(object.toString());
+            ids.add(jsonObject.getString("_id"));
+        }
+        return ids.toArray(new String[ids.size()]);
     }
 }
