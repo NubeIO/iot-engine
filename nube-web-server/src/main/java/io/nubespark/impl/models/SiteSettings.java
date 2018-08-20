@@ -4,6 +4,7 @@ import io.nubespark.Model;
 import io.vertx.core.json.JsonObject;
 
 public class SiteSettings extends Model {
+    private String associated_company_id;
     private String site_title;
     private String issue_address;
     private String top_bar_address;

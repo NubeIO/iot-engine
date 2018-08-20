@@ -236,7 +236,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
             }
         });
 
-        router.post("/api/createUser").handler(ctx -> {
+        router.post("/api/user").handler(ctx -> {
             // TODO: make only available to SUPER_ADMIN and ADMIN and MANAGER plus refactoring code
             JsonObject body = ctx.getBodyAsJson();
             JsonObject user = ctx.user().principal();
@@ -306,6 +306,38 @@ public class HttpServerVerticle extends RestAPIVerticle {
             });
         });
 
+        router.post("/api/company").handler(ctx -> {
+            // TODO: make only available to SUPER_ADMIN and ADMIN
+            Company company = new Company(ctx.getBodyAsJson(), ctx.user().principal());
+            getResponse(HttpMethod.GET, URN.get_company + "/" + ctx.getBodyAsJson().getString("name"), null, getResult -> {
+                getResponse(HttpMethod.POST, URN.post_company, company.toJsonObject(), ar -> {
+                    logger.info("Response is :::::::" + ar.result());
+                    if (ar.succeeded()) {
+                        JsonObject result = new JsonObject(ar.result());
+                        if (result.getInteger("statusCode") == 201) {
+                            setChildCompany(ctx.user().principal().getString("company_id"), company._id, setCompanyResponse -> {
+                                if (setCompanyResponse.succeeded()) {
+                                    ctx.response().setStatusCode(setCompanyResponse.result().getInteger("statusCode")).end();
+                                } else {
+                                    serviceUnavailable(ctx, "Error on Company creation.");
+                                }
+                            });
+                        } else {
+                            // e.g: company already exist
+                            ctx.response().setStatusCode(result.getInteger("statusCode")).end();
+                        }
+                    } else {
+                        serviceUnavailable(ctx, "Error on Company creation.");
+                    }
+                });
+            });
+        });
+
+        router.post("/api/site_settings").handler(ctx -> {
+            // TODO: Only make available to Manager
+
+        });
+
         router.get("/api/companies").handler(ctx -> {
             getChildCompanies(ctx.user(), res -> {
                 if (res.succeeded()) {
@@ -344,33 +376,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
                             serviceUnavailable(ctx);
                         }
                     });
-        });
-
-        router.post("/api/createCompany").handler(ctx -> {
-            // TODO: make only available to SUPER_ADMIN and ADMIN
-            Company company = new Company(ctx.getBodyAsJson(), ctx.user().principal());
-            getResponse(HttpMethod.GET, URN.get_company + "/" + ctx.getBodyAsJson().getString("name"), null, getResult -> {
-                getResponse(HttpMethod.POST, URN.post_company, company.toJsonObject(), ar -> {
-                    logger.info("Response is :::::::" + ar.result());
-                    if (ar.succeeded()) {
-                        JsonObject result = new JsonObject(ar.result());
-                        if (result.getInteger("statusCode") == 201) {
-                            setChildCompany(ctx.user().principal().getString("company_id"), company._id, setCompanyResponse -> {
-                                if (setCompanyResponse.succeeded()) {
-                                    ctx.response().setStatusCode(setCompanyResponse.result().getInteger("statusCode")).end();
-                                } else {
-                                    serviceUnavailable(ctx, "Error on Company creation.");
-                                }
-                            });
-                        } else {
-                            // e.g: company already exist
-                            ctx.response().setStatusCode(result.getInteger("statusCode")).end();
-                        }
-                    } else {
-                        serviceUnavailable(ctx, "Error on Company creation.");
-                    }
-                });
-            });
         });
 
         router.route("/api/currentUser").handler(ctx -> {
