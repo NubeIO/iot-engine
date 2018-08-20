@@ -15,7 +15,7 @@ public class MongoUser extends Model {
     private Role role;
     private String address;
     private String phone_no;
-    private String company_id; //TODO
+    private String company_id;
     private String group_id; //TODO
 
     public MongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser) {
@@ -53,7 +53,7 @@ public class MongoUser extends Model {
         }
         responseUser.put("role", UserUtils.getRole(userRole, setRole));
 
-        // TODO: company and group implementation
+        // TODO: group implementation
         return responseUser;
     }
 }

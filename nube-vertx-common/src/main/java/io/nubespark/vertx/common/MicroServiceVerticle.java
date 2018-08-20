@@ -3,6 +3,7 @@ package io.nubespark.vertx.common;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.*;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
@@ -130,7 +131,7 @@ public class MicroServiceVerticle extends AbstractVerticle {
         Future.failedFuture(handler.cause());
     }
 
-    protected void getResponse(HttpMethod method, String path, JsonObject payload, Handler<AsyncResult<JsonObject>> handler) {
+    protected void getResponse(HttpMethod method, String path, JsonObject payload, Handler<AsyncResult<Buffer>> handler) {
         int initialOffset = 5; // length of `/api/`
         // run with circuit breaker in order to deal with failure
         circuitBreaker.execute(future -> {
@@ -175,15 +176,15 @@ public class MicroServiceVerticle extends AbstractVerticle {
     /**
      * Dispatch the request to the downstream REST layers.
      */
-    private void doDispatch(String path, HttpMethod method, JsonObject payload, HttpClient client, Handler<AsyncResult<JsonObject>> handler, Future<Object> cbFuture) {
+    private void doDispatch(String path, HttpMethod method, JsonObject payload, HttpClient client, Handler<AsyncResult<Buffer>> handler, Future<Object> cbFuture) {
         HttpClientRequest toReq = client.request(method, path, response -> {
             response.bodyHandler(body -> {
                 if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
                     handler.handle(Future.failedFuture(response.toString()));
                     logger.info("Failed to dispatch: " + response.toString());
                 } else {
-                    handler.handle(Future.succeededFuture(new JsonObject(body.toString())));
-                    logger.info("Successfully dispatched: " + new JsonObject(body.toString()));
+                    handler.handle(Future.succeededFuture(body));
+                    logger.info("Successfully dispatched: " + body);
                 }
                 client.close();
                 cbFuture.complete();
@@ -196,7 +197,6 @@ public class MicroServiceVerticle extends AbstractVerticle {
             toReq.end();
         } else {
             toReq.write(payload.encode()).end();
-            System.out.println("Payload:::" + payload);
         }
     }
 
