@@ -1,5 +1,6 @@
 package io.nubespark.vertx.common;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.utils.response.ResponseUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -339,5 +340,11 @@ public class RestAPIVerticle extends MicroServiceVerticle {
         ctx.response().setStatusCode(401)
                 .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
                 .end(Json.encodePrettily(new JsonObject().put("message", "Unauthorized")));
+    }
+
+    protected void forbidden(RoutingContext ctx) {
+        ctx.response().setStatusCode(HttpResponseStatus.FORBIDDEN.code())
+                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                .end(Json.encodePrettily(new JsonObject().put("message", "You are not authorized to perform this action")));
     }
 }

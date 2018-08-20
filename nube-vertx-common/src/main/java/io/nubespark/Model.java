@@ -20,9 +20,7 @@ public abstract class Model {
             } else if (fieldType.equals("String"))  {
                 jsonObject.put(fieldName, input.get("body").getString(fieldName, ""));
             }
-            System.out.println(fieldType + " ::: "+ fieldName);
         }
-        System.out.println("Model is :::" + jsonObject);
         return jsonObject;
     }
 }
