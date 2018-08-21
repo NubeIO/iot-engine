@@ -1,13 +1,13 @@
 package io.nubespark.controller;
 
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
+import io.nubespark.jdbc.JDBCService;
+import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.servicediscovery.ServiceDiscovery;
-import net.sf.jsqlparser.JSQLParserException;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.ext.web.RoutingContext;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
@@ -15,124 +15,73 @@ import net.sf.jsqlparser.statement.select.Select;
 import java.io.StringReader;
 import java.util.Collections;
 
-import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
-import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
-
 /**
  * Created by topsykretts on 4/26/18.
  */
 public class RulesController {
 
-    Vertx vertx;
-    ServiceDiscovery discovery;
+    private final io.nubespark.jdbc.reactivex.JDBCService jdbcService;
+    private Logger logger = LoggerFactory.getLogger(RulesController.class);
 
     public RulesController(Vertx vertx) {
-        this.vertx = vertx;
+        jdbcService = JDBCService.createProxy(vertx, JDBCService.SERVICE_ADDRESS);
     }
 
-    public RulesController(Vertx vertx, ServiceDiscovery discovery) {
-        this.vertx = vertx;
-        this.discovery = discovery;
+    public Single<JsonObject> createRule(RoutingContext routingContext) {
+        return Single.never();
     }
 
-    public void createRule(RoutingContext routingContext) {
-
+    public Single<JsonObject> getAll() {
+        return Single.just("").map(s -> new JsonObject()
+                .put("controller", "rules")
+                .put("action", "getAll")
+                .put("desc", "Get All Rules in system")
+        );
     }
 
-    public void getAll(RoutingContext routingContext) {
-        HttpServerRequest request = routingContext.request();
-        System.out.println(request.toString());
-        routingContext.response()
-                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                .end(Json.encodePrettily(new JsonObject()
-                        .put("controller", "rules")
-                        .put("action", "getAll")
-                        .put("desc", "Get All Rules in system")
-                ));
-    }
-
-    public void getOne(RoutingContext routingContext) {
-        HttpServerRequest request = routingContext.request();
-        String id = request.getParam("id");
-        // just a test
+    public Single<JsonObject> getOne(String id) {
         String query = "SELECT * FROM metadata where " + id + " = ? ";
-        JsonObject queryObj = new JsonObject();
-        queryObj.put("query", query);
-        queryObj.put("params", new JsonArray(Collections.singletonList("m:")));
-        vertx.eventBus().send("io.nubespark.jdbc.engine", queryObj, message -> {
-            JsonObject replyJson = new JsonObject()
-                    .put("controller", "rules")
-                    .put("action", "getOne")
-                    .put("desc", "Get singe rule for given param id")
-                    .put("id", id);
-            if (message.succeeded()) {
-                Object reply = message.result().body();
-                if (reply != null) {
-                    replyJson.put("reply", reply);
-                }
-            } else {
-                message.cause().printStackTrace();
-                System.out.println(message.cause().getLocalizedMessage());
-                System.out.println("Failed to receive reply...");
-            }
-            routingContext.response()
-                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(replyJson));
-        });
-
-    }
-
-    public void getFiloData(RoutingContext routingContext) {
-
-        JsonObject body = routingContext.getBodyAsJson();
-        String query = null;
-        if (body != null) {
-            query = body.getString("query", null);
-        }
-        if (query == null) {
-            routingContext.response()
-                    .setStatusCode(400)
-                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(new JsonObject().put("message", "Request must have a valid JSON body with 'query' field.")));
-        } else {
-            Statement statement = null;
-            CCJSqlParserManager ccjSqlParserManager = new CCJSqlParserManager();
-            try {
-                statement = ccjSqlParserManager.parse(new StringReader(query));
-            } catch (JSQLParserException e) {
-                e.printStackTrace();
-            }
-            if (!(statement instanceof Select)) {
-                routingContext.response()
-                        .setStatusCode(403)
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(new JsonObject().put("message", "You do not have permission to run this query.")));
-            } else {
-                JsonObject queryObj = new JsonObject();
-                queryObj.put("query", query);
-                String finalQuery = query;
-                vertx.eventBus().send("io.nubespark.jdbc.engine", queryObj, message -> {
+        return jdbcService.rxExecuteQueryWithParams(query, new JsonArray(Collections.singletonList("m:")))
+                .map(message -> {
                     JsonObject replyJson = new JsonObject()
                             .put("controller", "rules")
-                            .put("action", "getFiloData")
-                            .put("desc", "Read data from filodb")
-                            .put("query", finalQuery);
-                    if (message.succeeded()) {
-                        Object reply = message.result().body();
-                        if (reply != null) {
-                            replyJson.put("resultSet", reply);
-                        }
-                    } else {
-                        message.cause().printStackTrace();
-                        System.out.println(message.cause().getLocalizedMessage());
-                        System.out.println("Failed to receive reply...");
+                            .put("action", "getOne")
+                            .put("desc", "Get singe rule for given param id")
+                            .put("id", id);
+                    if (message != null) {
+                        replyJson.put("reply", message);
                     }
-                    routingContext.response()
-                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(replyJson));
+                    return replyJson;
                 });
-            }
-        }
+
     }
 
+
+    public Single<JsonObject> getFiloData(String query) {
+        return Single.just(query)
+                .map(queryString -> {
+                    CCJSqlParserManager ccjSqlParserManager = new CCJSqlParserManager();
+                    final Statement statement = ccjSqlParserManager.parse(new StringReader(query));
+                    // Only handle select statements
+                    if (!(statement instanceof Select)) {
+                        throw new ErrorCodeException(ErrorCodes.BAD_ACTION);
+                    } else {
+                        return statement;
+                    }
+                })
+                .flatMap(ignored ->
+                        jdbcService.rxExecuteQuery(query)
+                                .map(message -> {
+                                    JsonObject replyJson = new JsonObject()
+                                            .put("controller", "rules")
+                                            .put("action", "getFiloData")
+                                            .put("desc", "Read data from filodb")
+                                            .put("query", query);
+                                    if (message != null) {
+                                        replyJson.put("resultSet", message);
+                                    }
+                                    return replyJson;
+                                })
+                );
+    }
 }
