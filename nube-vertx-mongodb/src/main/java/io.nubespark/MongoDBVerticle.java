@@ -14,6 +14,7 @@ import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.api.contract.RouterFactoryOptions;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
+import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
 public class MongoDBVerticle extends MicroServiceVerticle {
@@ -42,54 +43,40 @@ public class MongoDBVerticle extends MicroServiceVerticle {
     private void handleRESTfulRequest(Handler<AsyncResult<HttpServer>> next) {
         controller = new MongoDBController(client);
 
-        OpenAPI3RouterFactory.create(this.vertx, "/webroot/apidoc/nube-vertx-mongodb.json",
-                ar -> {
-                    System.out.println("Handler of OpenAPI3RouterFactory is called...");
-                    if (ar.succeeded()) {
-                        System.out.println("Success of OpenAPI3RouterFactory");
-                        OpenAPI3RouterFactory routerFactory = ar.result();
+        Router router = Router.router(vertx);
+        // creating body handler
+        router.route().handler(BodyHandler.create());
 
-                        // Enable automatic response when ValidationException is thrown
-                        RouterFactoryOptions options =
-                                new RouterFactoryOptions()
-                                        .setMountNotImplementedHandler(true)
-                                        .setMountValidationFailureHandler(true);
+        router.get("/get/:document").handler(routingContext -> controller.getAll(routingContext));
+        router.post("/get/:document").handler(routingContext -> controller.getAll(routingContext));
+        router.get("/get/:document/:id").handler(routingContext -> controller.getOne(routingContext));
+        router.post("/post/:document").handler(routingContext -> controller.post(routingContext)); // will throw 409 status code if same id is already there
+        router.post("/put/:document").handler(routingContext -> controller.put(routingContext)); // will override if same id is there
+        router.delete("/delete/:document").handler(routingContext -> controller.deleteAll(routingContext));
+        router.post("/delete/:document").handler(routingContext -> controller.deleteAll(routingContext));
+        router.delete("/delete/:document/:id").handler(routingContext -> controller.deleteOne(routingContext));
 
-                        routerFactory.setOptions(options);
+        // This is last handler that gives not found message
+        router.route().last().handler(routingContext -> {
+            String uri = routingContext.request().absoluteURI();
+            routingContext.response()
+                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                    .setStatusCode(404)
+                    .end(Json.encodePrettily(new JsonObject()
+                            .put("uri", uri)
+                            .put("status", 404)
+                            .put("message", "Resource Not Found!")
+                    ));
+        });
 
-                        // Add routes handlers
-                        routerFactory.addHandlerByOperationId("/get/:document", routingContext -> controller.getAll(routingContext));
-                        routerFactory.addHandlerByOperationId("/get/:document/:id", routingContext -> controller.getOne(routingContext));
-                        routerFactory.addHandlerByOperationId("/post/:document", routingContext -> controller.post(routingContext)); // will throw 409 status code if same id is already there
-                        routerFactory.addHandlerByOperationId("/put/:document", routingContext -> controller.put(routingContext)); // will override if same id is there
-                        routerFactory.addHandlerByOperationId("/delete/:document", routingContext -> controller.deleteAll(routingContext));
-                        routerFactory.addHandlerByOperationId("/delete/:document/:id", routingContext -> controller.deleteOne(routingContext));
-
-                        // Generate the router
-                        Router router = routerFactory.getRouter();
-                        router.route("/*").handler(StaticHandler.create());
-                        router.route().last().handler(routingContext -> {
-                            if (routingContext.response().getStatusCode() == 404) {
-                                System.out.println("Resource Not Found");
-                            }
-                            routingContext.response()
-                                    .setStatusCode(404)
-                                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                                    .end(Json.encodePrettily(new JsonObject()
-                                            .put("message", "Resource Not Found")
-                                    ));
-                        });
-
-                        HttpServer server = vertx.createHttpServer(new HttpServerOptions()
-                                .setPort(config().getInteger("http.port", DEFAULT_PORT))
-                        );
-                        server.requestHandler(router::accept).listen();
-                        next.handle(Future.succeededFuture(server));
-                    } else {
-                        System.out.println("Failure in OpenAPI3RouterFactory");
-                        next.handle(Future.failedFuture(ar.cause()));
-                    }
-                });
+        // Create the HTTP server and pass the "accept" method to the request handler
+        vertx.createHttpServer()
+                .requestHandler(router::accept)
+                .listen(
+                        // Retrieve the port from the configuration
+                        // default to 8087
+                        config().getInteger("http.port", DEFAULT_PORT),
+                        next::handle);
 
         publishHttpEndpoint("mongodb-api",
                 config().getString("http.host", "0.0.0.0"),
@@ -102,6 +89,5 @@ public class MongoDBVerticle extends MicroServiceVerticle {
                         ar.cause().printStackTrace();
                     }
                 }
-        );
-    }
+        ); }
 }

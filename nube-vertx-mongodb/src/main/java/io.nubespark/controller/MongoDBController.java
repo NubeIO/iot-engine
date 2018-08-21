@@ -106,17 +106,34 @@ public class MongoDBController {
     public void deleteAll(RoutingContext routingContext) {
         HttpServerRequest request = routingContext.request();
         String document = request.getParam("document");
-        client.dropCollection(document, res -> {
-            if (res.succeeded()) {
-                routingContext.response()
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .setStatusCode(HttpResponseStatus.NO_CONTENT.code())
-                        .end(Json.encodePrettily(res.result()));
-            } else {
-                res.cause().printStackTrace();
-                routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
-            }
-        });
+
+        // we can use this query for filtering output array
+        if (routingContext.request().method() == HttpMethod.POST) {
+            JsonObject query = routingContext.getBodyAsJson();
+            client.removeDocuments(document, query, res-> {
+                if (res.succeeded()) {
+                    routingContext.response()
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .setStatusCode(HttpResponseStatus.NO_CONTENT.code())
+                            .end(Json.encodePrettily(res.result()));
+                } else {
+                    res.cause().printStackTrace();
+                    routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
+                }
+            });
+        } else {
+            client.dropCollection(document, res -> {
+                if (res.succeeded()) {
+                    routingContext.response()
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .setStatusCode(HttpResponseStatus.NO_CONTENT.code())
+                            .end(Json.encodePrettily(res.result()));
+                } else {
+                    res.cause().printStackTrace();
+                    routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
+                }
+            });
+        }
     }
 
     public void deleteOne(RoutingContext routingContext) {
