@@ -1,5 +1,5 @@
 {
-  "main": "io.nubespark.JdbcVerticle",
+  "main": "io.nubespark.jdbc.JdbcVerticle",
   "options": {
     "config": {
       "url":"jdbc:hive2://45.77.51.155:10000/filodb",
