@@ -6,6 +6,7 @@ public class URN {
 
     public static final String get_company = "/api/mongo/get/company";
     public static final String post_company = "/api/mongo/post/company";
+    public static final String delete_company = "/api/mongo/delete/company";
     public static final String put_company = "/api/mongo/put/company";
 
     public static final String get_site = "/api/mongo/get/site";

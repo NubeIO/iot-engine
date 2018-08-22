@@ -133,7 +133,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                             .findAny(); // simple load balance
 
                     if (client.isPresent()) {
-                        System.out.println("Found client for uri " + path);
+                        System.out.println("Found client for uri: " + path);
                         doDispatch(context, newPath, discovery.getReference(client.get()).get(), future);
                     } else {
                         System.out.println("Client endpoint not found for uri " + path);
@@ -170,6 +170,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                             response.headers().forEach(header -> {
                                 toRsp.putHeader(header.getKey(), header.getValue());
                             });
+                            System.out.println("Body is=======> " + body);
                             // send response
                             toRsp.end(body);
                             cbFuture.complete();
@@ -341,7 +342,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
 
         router.post("/api/company").handler(ctx -> {
-            System.out.println(ctx.user().principal() + " IS THE=======================>");
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
             if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
                 Company company = new Company(ctx.getBodyAsJson(), ctx.user().principal());
@@ -392,7 +392,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
                             dispatchRequest(HttpMethod.POST, URN.post_user_group, userGroup.toJsonObject(), userGroupResponse -> {
                                 if (userGroupResponse.succeeded()) {
                                     ctx.response().setStatusCode(new JsonObject(userGroupResponse.result()).getInteger("statusCode")).end();
-                                    userGroupResponse.result();
                                 } else {
                                     serviceUnavailable(ctx);
                                 }
@@ -491,9 +490,44 @@ public class HttpServerVerticle extends RestAPIVerticle {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
             // Model level permission; this is limited to SUPER_ADMIN and ADMIN
             if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-                JsonArray query = ctx.getBodyAsJsonArray();
+                JsonArray queryInput = ctx.getBodyAsJsonArray();
                 // Object level permission
+                JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
+                logger.info("Query=====>" + query);
+                dispatchRequest(HttpMethod.POST, URN.get_company, query, companiesResponse -> {
+                    if (companiesResponse.succeeded()) {
+                        JsonArray companies = new JsonArray(companiesResponse.result());
+                        if (companies.size() == queryInput.size()) {
+                            String companyId = ctx.user().principal().getString("company_id");
+                            boolean objectLevelPermission = true;
+                            for (Object companyResponse : companies) {
+                                JsonObject company = (JsonObject) (companyResponse);
+                                if (!company.getString("associated_company_id").equals(companyId)) {
+                                    objectLevelPermission = false;
+                                }
+                            }
+                            if (objectLevelPermission) {
+                                // Authorized
+                                dispatchRequest(HttpMethod.POST, URN.delete_company, query, deleteCompaniesResponse -> {
+                                    if (deleteCompaniesResponse.succeeded()) {
+                                        ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
+                                    } else {
+                                        serviceUnavailable(ctx);
+                                    }
+                                });
+                            } else {
+                                forbidden(ctx);
+                            }
 
+                        } else {
+                            badRequest(ctx, new Throwable("Doesn't have those companies on Database."));
+                        }
+                    } else {
+                        serviceUnavailable(ctx);
+                    }
+                });
+            } else {
+                forbidden(ctx);
             }
         });
 
