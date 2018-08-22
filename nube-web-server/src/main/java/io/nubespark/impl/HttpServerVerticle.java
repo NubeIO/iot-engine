@@ -532,11 +532,89 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
 
         router.post("/api/delete_sites").handler(ctx -> {
-
+            Role role = Role.valueOf(ctx.user().principal().getString("role"));
+            // Model level permission; this is limited to SUPER_ADMIN and ADMIN
+            if (role == Role.MANAGER) {
+                JsonArray queryInput = ctx.getBodyAsJsonArray();
+                // Object level permission
+                JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
+                dispatchRequest(HttpMethod.POST, URN.get_site, query, sitesResponse -> {
+                    if (sitesResponse.succeeded()) {
+                        JsonArray sites = new JsonArray(sitesResponse.result());
+                        if (sites.size() == queryInput.size()) {
+                            String companyId = ctx.user().principal().getString("company_id");
+                            boolean objectLevelPermission = true;
+                            for (Object siteResponse : sites) {
+                                JsonObject site = (JsonObject) (siteResponse);
+                                if (!site.getString("associated_company_id").equals(companyId)) {
+                                    objectLevelPermission = false;
+                                }
+                            }
+                            if (objectLevelPermission) {
+                                // Authorized
+                                dispatchRequest(HttpMethod.POST, URN.delete_site, query, deleteSitesResponse -> {
+                                    if (deleteSitesResponse.succeeded()) {
+                                        ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
+                                    } else {
+                                        serviceUnavailable(ctx);
+                                    }
+                                });
+                            } else {
+                                forbidden(ctx);
+                            }
+                        } else {
+                            badRequest(ctx, new Throwable("Doesn't have those sites on Database."));
+                        }
+                    } else {
+                        serviceUnavailable(ctx);
+                    }
+                });
+            } else {
+                forbidden(ctx);
+            }
         });
 
         router.post("/api/delete_user_groups").handler(ctx -> {
-
+            Role role = Role.valueOf(ctx.user().principal().getString("role"));
+            // Model level permission; this is limited to SUPER_ADMIN and ADMIN
+            if (role == Role.MANAGER) {
+                JsonArray queryInput = ctx.getBodyAsJsonArray();
+                // Object level permission
+                JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
+                dispatchRequest(HttpMethod.POST, URN.get_user_group, query, userGroupsResponse -> {
+                    if (userGroupsResponse.succeeded()) {
+                        JsonArray userGroups = new JsonArray(userGroupsResponse.result());
+                        if (userGroups.size() == queryInput.size()) {
+                            String companyId = ctx.user().principal().getString("company_id");
+                            boolean objectLevelPermission = true;
+                            for (Object userGroupResponse : userGroups) {
+                                JsonObject userGroup = (JsonObject) (userGroupResponse);
+                                if (!userGroup.getString("associated_company_id").equals(companyId)) {
+                                    objectLevelPermission = false;
+                                }
+                            }
+                            if (objectLevelPermission) {
+                                // Authorized
+                                dispatchRequest(HttpMethod.POST, URN.delete_user_group, query, deleteUserGroupsResponse -> {
+                                    if (deleteUserGroupsResponse.succeeded()) {
+                                        ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
+                                    } else {
+                                        serviceUnavailable(ctx);
+                                    }
+                                });
+                            } else {
+                                forbidden(ctx);
+                            }
+                        } else {
+                            badRequest(ctx, new Throwable("Doesn't have those user groups on Database."));
+                        }
+                    } else {
+                        serviceUnavailable(ctx);
+                    }
+                });
+            } else {
+                forbidden(ctx);
+            }
         });
     }
 
