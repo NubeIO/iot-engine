@@ -483,6 +483,10 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 forbidden(ctx);
             }
         });
+
+        router.post("/api/delete_users").handler(ctx-> {
+
+        });
     }
 
     private void handleAuthEventBus(Router router) {
@@ -539,8 +543,8 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 logger.info("User id: " + user_id);
                 dispatchRequest(HttpMethod.GET, URN.get_user + "/" + user_id, null,
                         ar -> {
-                            JsonObject result = new JsonObject(ar.result());
                             if (ar.succeeded()) {
+                                JsonObject result = new JsonObject(ar.result());
                                 logger.info("User Response: " + ar.result().toString());
                                 User user = new UserImpl(new JsonObject()
                                         .put("user_id", user_id)
