@@ -11,7 +11,7 @@ public class KeycloakUserRepresentation extends Model {
     private Boolean enabled;
 
     public KeycloakUserRepresentation(JsonObject body) {
-        this.input.put("body", body);
+        super(body);
     }
 
     @Override

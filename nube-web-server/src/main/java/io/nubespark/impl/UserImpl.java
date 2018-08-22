@@ -17,7 +17,7 @@ public class UserImpl extends Model implements User {
     private String access_token;
 
     UserImpl(JsonObject body) {
-        this.input.put("body", body);
+        super(body);
     }
 
     @Override

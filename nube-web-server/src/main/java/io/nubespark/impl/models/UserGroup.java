@@ -1,6 +1,7 @@
 package io.nubespark.impl.models;
 
 import io.nubespark.Model;
+import io.nubespark.utils.SecurityUtils;
 import io.vertx.core.json.JsonObject;
 
 public class UserGroup extends Model {
@@ -11,15 +12,16 @@ public class UserGroup extends Model {
     private String[] access_pages;
 
     public UserGroup(JsonObject body) {
-        this.input.put("body", body);
+        super(body);
     }
 
     @Override
     public JsonObject toJsonObject() {
         JsonObject jsonObject = super.toJsonObject();
-        jsonObject.put("_id", jsonObject.getString("associated_company_id")
-                + jsonObject.getString("site_id")
-                + jsonObject.getString("name"));
+        jsonObject.put("_id", SecurityUtils.getBase64EncodedHash(
+                jsonObject.getString("associated_company_id")
+                        + jsonObject.getString("site_id")
+                        + jsonObject.getString("name")));
         return jsonObject;
     }
 }

@@ -2,8 +2,13 @@ package io.nubespark.impl.models;
 
 import io.nubespark.Role;
 import io.nubespark.Model;
+import io.nubespark.utils.SecurityUtils;
 import io.nubespark.utils.UserUtils;
 import io.vertx.core.json.JsonObject;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MongoUser extends Model {
     private String _id;
@@ -17,10 +22,10 @@ public class MongoUser extends Model {
     private String phone_no;
     private String associated_company_id;
     private String company_id;
-    private String group_id; //TODO
+    private String group_id;
 
     public MongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser) {
-        this.input.put("body", body);
+        super(body);
         this.input.put("user", user);
         this.input.put("keycloakUser", keycloakUser);
     }
@@ -54,7 +59,6 @@ public class MongoUser extends Model {
         }
         responseUser.put("role", UserUtils.getRole(userRole, setRole));
 
-        // TODO: group implementation
         return responseUser;
     }
 }

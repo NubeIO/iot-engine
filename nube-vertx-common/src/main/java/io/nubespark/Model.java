@@ -10,19 +10,30 @@ import java.util.Map;
 public abstract class Model {
     public Map<String, JsonObject> input = new HashMap<>();
 
+    public Model(JsonObject body) {
+        input.put("body", body);
+    }
+
     public JsonObject toJsonObject() {
         JsonObject jsonObject = new JsonObject();
+
         Field[] fields = this.getClass().getDeclaredFields();
-        for (Field field: fields) {
-            String fieldName  = field.getName();
-            String fieldType  = field.getType().getSimpleName();
+
+        // For setting JSON value in toJsonObject
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            String fieldType = field.getType().getSimpleName();
             System.out.println("Field type is this:::" + fieldType + " ::: " + fieldName);
-            if (fieldType.equals("int")) {
-                jsonObject.put(fieldName, input.get("body").getInteger(fieldName, 0));
-            } else if (fieldType.equals("String"))  {
-                jsonObject.put(fieldName, input.get("body").getString(fieldName, ""));
-            } else if (fieldType.equals("String[]")) {
-                jsonObject.put(fieldName, input.get("body").getJsonArray(fieldName, new JsonArray("[]")));
+            switch (fieldType) {
+                case "int":
+                    jsonObject.put(fieldName, input.get("body").getInteger(fieldName, 0));
+                    break;
+                case "String":
+                    jsonObject.put(fieldName, input.get("body").getString(fieldName, ""));
+                    break;
+                case "String[]":
+                    jsonObject.put(fieldName, input.get("body").getJsonArray(fieldName, new JsonArray("[]")));
+                    break;
             }
         }
         return jsonObject;

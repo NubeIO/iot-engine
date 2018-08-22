@@ -2,6 +2,7 @@ package io.nubespark.impl.models;
 
 import io.nubespark.Role;
 import io.nubespark.Model;
+import io.nubespark.utils.SecurityUtils;
 import io.nubespark.utils.UserUtils;
 import io.vertx.core.json.JsonObject;
 
@@ -11,9 +12,8 @@ public class Company extends Model {
     public Role role; // ADMIN or MANAGER; defining the company level
     public String associated_company_id; // for pointing parent company; we will point this on company creation
 
-
     public Company(JsonObject body, JsonObject user) {
-        this.input.put("body", body);
+        super(body);
         this.input.put("user", user);
     }
 
@@ -21,7 +21,8 @@ public class Company extends Model {
     public JsonObject toJsonObject() {
         JsonObject body = this.input.get("body");
         JsonObject user = this.input.get("user");
-        _id = body.getString("name");
+        _id = SecurityUtils.getBase64EncodedHash(body.getString("name"));
+        System.out.println("Company Id: " + _id);
         role = UserUtils.getRole(Role.valueOf(user.getString("role")), null);
         associated_company_id = user.getString("company_id");
 

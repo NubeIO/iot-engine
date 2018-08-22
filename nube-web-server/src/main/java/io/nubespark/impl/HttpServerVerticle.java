@@ -341,19 +341,18 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
 
         router.post("/api/company").handler(ctx -> {
+            System.out.println(ctx.user().principal() + " IS THE=======================>");
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
             if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
                 Company company = new Company(ctx.getBodyAsJson(), ctx.user().principal());
-                dispatchRequest(HttpMethod.GET, URN.get_company + "/" + ctx.getBodyAsJson().getString("name"), null, getResult -> {
-                    dispatchRequest(HttpMethod.POST, URN.post_company, company.toJsonObject(), ar -> {
-                        if (ar.succeeded()) {
-                            JsonObject result = new JsonObject(ar.result());
-                            // e.g: company already exist; 409 will be returned
-                            ctx.response().setStatusCode(result.getInteger("statusCode")).end();
-                        } else {
-                            serviceUnavailable(ctx, "Error on Company creation.");
-                        }
-                    });
+                dispatchRequest(HttpMethod.POST, URN.post_company, company.toJsonObject(), ar -> {
+                    if (ar.succeeded()) {
+                        JsonObject result = new JsonObject(ar.result());
+                        // e.g: company already exist; 409 will be returned
+                        ctx.response().setStatusCode(result.getInteger("statusCode")).end();
+                    } else {
+                        serviceUnavailable(ctx, "Error on Company creation.");
+                    }
                 });
             } else {
                 forbidden(ctx);
@@ -484,7 +483,25 @@ public class HttpServerVerticle extends RestAPIVerticle {
             }
         });
 
-        router.post("/api/delete_users").handler(ctx-> {
+        router.post("/api/delete_users").handler(ctx -> {
+
+        });
+
+        router.post("/api/delete_companies").handler(ctx -> {
+            Role role = Role.valueOf(ctx.user().principal().getString("role"));
+            // Model level permission; this is limited to SUPER_ADMIN and ADMIN
+            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+                JsonArray query = ctx.getBodyAsJsonArray();
+                // Object level permission
+
+            }
+        });
+
+        router.post("/api/delete_sites").handler(ctx -> {
+
+        });
+
+        router.post("/api/delete_user_groups").handler(ctx -> {
 
         });
     }
