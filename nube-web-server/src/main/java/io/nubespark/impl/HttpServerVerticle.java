@@ -483,7 +483,65 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
 
         router.post("/api/delete_users").handler(ctx -> {
-
+            Role role = Role.valueOf(ctx.user().principal().getString("role"));
+            // Model level permission; this is limited to SUPER_ADMIN and ADMIN
+            if (role == Role.MANAGER) {
+                JsonArray queryInput = ctx.getBodyAsJsonArray();
+                // Object level permission
+                JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
+                dispatchRequest(HttpMethod.POST, URN.get_user, query, usersResponse -> {
+                    if (usersResponse.succeeded()) {
+                        JsonArray userGroups = new JsonArray(usersResponse.result());
+                        if (userGroups.size() == queryInput.size()) {
+                            String companyId = ctx.user().principal().getString("company_id");
+                            boolean objectLevelPermission = true;
+                            for (Object userResponse : userGroups) {
+                                JsonObject user = (JsonObject) (userResponse);
+                                if (!user.getString("associated_company_id").equals(companyId)) {
+                                    objectLevelPermission = false;
+                                }
+                            }
+                            if (objectLevelPermission) {
+                                // Authorized
+                                // Deleting user from Keycloak
+                                for (Object userResponse : userGroups) {
+                                    JsonObject user = (JsonObject) (userResponse);
+                                    JsonObject keycloakConfig = config().getJsonObject("keycloak");
+                                    HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+                                    UserUtils.deleteUser(user.getString("_id"),
+                                            ctx.user().principal().getString("access_token"),
+                                            keycloakConfig.getString("auth-server-url"),
+                                            keycloakConfig.getString("realm"), client,
+                                            deleteUserKeycloakResponse -> {
+                                                if (deleteUserKeycloakResponse.result().getInteger("statusCode") == HttpResponseStatus.NO_CONTENT.code()) {
+                                                    // Deleting one by one from MongoDB
+                                                    JsonObject queryToDeleteOne = new JsonObject().put("_id", new JsonObject()
+                                                            .put("$in", new JsonArray().add(user.getString("_id"))));
+                                                    dispatchRequest(HttpMethod.POST, URN.delete_user, queryToDeleteOne, deleteUserResponse -> {
+                                                        if (deleteUserResponse.succeeded()) {
+                                                            ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
+                                                        } else {
+                                                            serviceUnavailable(ctx);
+                                                        }
+                                                    });
+                                                } else {
+                                                    internalError(ctx, new Throwable("<Users> are unable to deleted from the services."));
+                                                }
+                                            });
+                                }
+                            } else {
+                                forbidden(ctx);
+                            }
+                        } else {
+                            badRequest(ctx, new Throwable("Doesn't have those <Users> on Database."));
+                        }
+                    } else {
+                        serviceUnavailable(ctx);
+                    }
+                });
+            } else {
+                forbidden(ctx);
+            }
         });
 
         router.post("/api/delete_companies").handler(ctx -> {
@@ -520,7 +578,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                             }
 
                         } else {
-                            badRequest(ctx, new Throwable("Doesn't have those companies on Database."));
+                            badRequest(ctx, new Throwable("Doesn't have those <Companies> on Database."));
                         }
                     } else {
                         serviceUnavailable(ctx);
@@ -563,7 +621,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                                 forbidden(ctx);
                             }
                         } else {
-                            badRequest(ctx, new Throwable("Doesn't have those sites on Database."));
+                            badRequest(ctx, new Throwable("Doesn't have those <Sites> on Database."));
                         }
                     } else {
                         serviceUnavailable(ctx);
@@ -606,7 +664,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
                                 forbidden(ctx);
                             }
                         } else {
-                            badRequest(ctx, new Throwable("Doesn't have those user groups on Database."));
+                            badRequest(ctx, new Throwable("Doesn't have those <User Groups> on Database."));
                         }
                     } else {
                         serviceUnavailable(ctx);
