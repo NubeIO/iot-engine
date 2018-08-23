@@ -388,7 +388,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
             if (role == Role.MANAGER) {
                 // Only manager's sites should make available for user_group
-                getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user_group, childCompaniesResponse -> {
+                getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_site, childCompaniesResponse -> {
                     if (childCompaniesResponse.succeeded()) {
                         if (childCompaniesResponse.result().size() > 0) {
                             String[] availableSites = StringUtils.getIds(childCompaniesResponse.result());
@@ -419,35 +419,36 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
 
         router.get("/api/companies").handler(ctx -> {
-            getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_company, res -> {
-                if (res.succeeded()) {
-                    ctx.response()
-                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .setStatusCode(HttpResponseStatus.OK.code())
-                            .end(res.result().toBuffer());
-                } else {
-                    serviceUnavailable(ctx);
-                }
-            });
+            Role role = Role.valueOf(ctx.user().principal().getString("role"));
+            if (role == Role.SUPER_ADMIN) {
+                respondRequest(ctx, new JsonObject(), URN.get_company);
+            } else if (role == Role.ADMIN) {
+                respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_company);
+            } else {
+                forbidden(ctx);
+            }
         });
 
         router.get("/api/users").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-                // GET all users which is associated with the user's company id
-                JsonObject query = new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id"));
-                logger.info("Query to be executed: " + query);
-                dispatchRequest(HttpMethod.POST, URN.get_user, query, usersResponse -> {
-                    if (usersResponse.succeeded()) {
-                        logger.info("User response result::: " + usersResponse.result());
-                        ctx.response()
-                                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                                .setStatusCode(HttpResponseStatus.OK.code())
-                                .end(usersResponse.result());
+            if (role == Role.SUPER_ADMIN) {
+                respondRequest(ctx, new JsonObject(), URN.get_user);
+            } else if (role == Role.ADMIN) {
+                // Returning all <Users> which is branches from the ADMIN
+                getJsonArray(new JsonObject()
+                        .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                        .put("role", Role.MANAGER.toString()), URN.get_company, res -> {
+                    if (res.succeeded()) {
+                        respondRequest(ctx, new JsonObject()
+                                .put("associated_company_id", new JsonObject()
+                                        .put("$in", StringUtils.getIdsJsonArray(res.result())
+                                                .add(ctx.user().principal().getString("company_id")))), URN.get_user);
                     } else {
                         serviceUnavailable(ctx);
                     }
                 });
+            } else if (role == Role.MANAGER) {
+                respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user);
             } else {
                 forbidden(ctx);
             }
@@ -455,17 +456,24 @@ public class HttpServerVerticle extends RestAPIVerticle {
 
         router.get("/api/sites").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (role == Role.MANAGER) {
-                getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_site, handler -> {
-                    if (handler.succeeded()) {
-                        ctx.response()
-                                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                                .setStatusCode(HttpResponseStatus.OK.code())
-                                .end(handler.result().toString());
+            if (role == Role.SUPER_ADMIN) {
+                respondRequest(ctx, new JsonObject(), URN.get_site);
+            } else if (role == Role.ADMIN) {
+                // Returning all MANAGER's companies' <sites> which is associated with the ADMIN company
+                getJsonArray(new JsonObject()
+                        .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                        .put("role", Role.MANAGER.toString()), URN.get_company, res -> {
+                    if (res.succeeded()) {
+                        respondRequest(ctx, new JsonObject()
+                                .put("associated_company_id", new JsonObject()
+                                        .put("$in", StringUtils.getIdsJsonArray(res.result())
+                                                .add(ctx.user().principal().getString("company_id")))), URN.get_site);
                     } else {
                         serviceUnavailable(ctx);
                     }
                 });
+            } else if (role == Role.MANAGER) {
+                respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_site);
             } else {
                 forbidden(ctx);
             }
@@ -473,17 +481,24 @@ public class HttpServerVerticle extends RestAPIVerticle {
 
         router.get("/api/user_groups").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (role == Role.MANAGER) {
-                getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user_group, handler -> {
-                    if (handler.succeeded()) {
-                        ctx.response()
-                                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                                .setStatusCode(HttpResponseStatus.OK.code())
-                                .end(handler.result().toString());
+            if (role == Role.SUPER_ADMIN) {
+                respondRequest(ctx, new JsonObject(), URN.get_user_group);
+            } else if (role == Role.ADMIN) {
+                // Returning all MANAGER's companies' <user groups> which is associated with the ADMIN company
+                getJsonArray(new JsonObject()
+                        .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                        .put("role", Role.MANAGER.toString()), URN.get_company, res -> {
+                    if (res.succeeded()) {
+                        respondRequest(ctx, new JsonObject()
+                                .put("associated_company_id", new JsonObject()
+                                        .put("$in", StringUtils.getIdsJsonArray(res.result())
+                                                .add(ctx.user().principal().getString("company_id")))), URN.get_user_group);
                     } else {
                         serviceUnavailable(ctx);
                     }
                 });
+            } else if (role == Role.MANAGER) {
+                respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user_group);
             } else {
                 forbidden(ctx);
             }
@@ -492,7 +507,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
         router.post("/api/delete_users").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
             // Model level permission; this is limited to SUPER_ADMIN, ADMIN and MANAGER
-            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(),  Role.MANAGER.toString())) {
+            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
                 JsonArray queryInput = ctx.getBodyAsJsonArray();
                 // Object level permission
                 JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
@@ -558,7 +573,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 JsonArray queryInput = ctx.getBodyAsJsonArray();
                 // Object level permission
                 JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
-                logger.info("Query=====>" + query);
                 dispatchRequest(HttpMethod.POST, URN.get_company, query, companiesResponse -> {
                     if (companiesResponse.succeeded()) {
                         JsonArray companies = new JsonArray(companiesResponse.result());
@@ -876,6 +890,19 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 ctx.response().setStatusCode(HttpResponseStatus.CREATED.code()).end();
             } else {
                 ctx.fail(mongoResponse.cause());
+            }
+        });
+    }
+
+    private void respondRequest(RoutingContext ctx, JsonObject query, String urn) {
+        getJsonArray(query, urn, res -> {
+            if (res.succeeded()) {
+                ctx.response()
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .setStatusCode(HttpResponseStatus.OK.code())
+                        .end(res.result().toBuffer());
+            } else {
+                serviceUnavailable(ctx);
             }
         });
     }
