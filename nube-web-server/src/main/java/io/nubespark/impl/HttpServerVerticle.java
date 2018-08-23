@@ -170,7 +170,6 @@ public class HttpServerVerticle extends RestAPIVerticle {
                             response.headers().forEach(header -> {
                                 toRsp.putHeader(header.getKey(), header.getValue());
                             });
-                            System.out.println("Body is=======> " + body);
                             // send response
                             toRsp.end(body);
                             cbFuture.complete();
@@ -484,8 +483,8 @@ public class HttpServerVerticle extends RestAPIVerticle {
 
         router.post("/api/delete_users").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            // Model level permission; this is limited to SUPER_ADMIN and ADMIN
-            if (role == Role.MANAGER) {
+            // Model level permission; this is limited to SUPER_ADMIN, ADMIN and MANAGER
+            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(),  Role.MANAGER.toString())) {
                 JsonArray queryInput = ctx.getBodyAsJsonArray();
                 // Object level permission
                 JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
@@ -591,7 +590,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
 
         router.post("/api/delete_sites").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            // Model level permission; this is limited to SUPER_ADMIN and ADMIN
+            // Model level permission; this is limited to MANAGER
             if (role == Role.MANAGER) {
                 JsonArray queryInput = ctx.getBodyAsJsonArray();
                 // Object level permission
@@ -634,7 +633,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
 
         router.post("/api/delete_user_groups").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            // Model level permission; this is limited to SUPER_ADMIN and ADMIN
+            // Model level permission; this is limited to MANAGER
             if (role == Role.MANAGER) {
                 JsonArray queryInput = ctx.getBodyAsJsonArray();
                 // Object level permission

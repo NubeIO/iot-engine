@@ -21,10 +21,9 @@ public class Company extends Model {
     public JsonObject toJsonObject() {
         JsonObject body = this.input.get("body");
         JsonObject user = this.input.get("user");
-        _id = SecurityUtils.getBase64EncodedHash(body.getString("name"));
-        System.out.println("Company Id: " + _id);
         role = UserUtils.getRole(Role.valueOf(user.getString("role")), null);
         associated_company_id = user.getString("company_id");
+        _id = SecurityUtils.getBase64EncodedHash(body.getString("name") + associated_company_id);
 
         return super.toJsonObject()
                 .put("_id", _id)
