@@ -290,35 +290,43 @@ public class HttpServerVerticle extends RestAPIVerticle {
                                                 if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
 
                                                     // 4. only child companies can be added by the parent
-                                                    getChildCompanies(user.getString("company_id"), responseChildCompanies -> {
-                                                        if (responseChildCompanies.result().size() > 0) {
+                                                    getJsonArray(new JsonObject().put("associated_company_id", user.getString("company_id")), URN.get_company, responseChildCompanies -> {
+                                                        if (responseChildCompanies.succeeded()) {
+                                                            if (responseChildCompanies.result().size() > 0) {
 
-                                                            String[] _ids = StringUtils.getIds(responseChildCompanies.result());
-                                                            body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids))
-                                                                    .put("associated_company_id", user.getString("company_id"));
-                                                            // 5.1 Creating user on MongoDB
-                                                            createMongoUser(body, user, keycloakUser.result(), ctx);
+                                                                String[] _ids = StringUtils.getIds(responseChildCompanies.result());
+                                                                body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids))
+                                                                        .put("associated_company_id", user.getString("company_id"));
+                                                                // 5.1 Creating user on MongoDB
+                                                                createMongoUser(body, user, keycloakUser.result(), ctx);
+                                                            } else {
+                                                                // 5.2 Remove user from Keycloak
+                                                                deleteKeycloakUser(createdUserId, accessToken, authServerUrl,
+                                                                        realmName, client, ctx, "Create company at first.");
+                                                            }
                                                         } else {
-                                                            // 5.2 Remove user from Keycloak
-                                                            deleteKeycloakUser(createdUserId, accessToken, authServerUrl,
-                                                                    realmName, client, ctx, "Create company at first.");
+                                                            serviceUnavailable(ctx);
                                                         }
                                                     });
                                                 } else {
 
                                                     // 4 Creating user on MongoDB with 'group_id'
-                                                    getChildUserGroups(user.getString("company_id"), responseChildUserGroups -> {
-                                                        if (responseChildUserGroups.result().size() > 0) {
-                                                            String[] _ids = StringUtils.getIds(responseChildUserGroups.result());
-                                                            body.put("company_id", user.getString("company_id"))
-                                                                    .put("associated_company_id", user.getString("company_id"))
-                                                                    .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), _ids));
-                                                            // 5.1 Creating user on MongoDB
-                                                            createMongoUser(body, user, keycloakUser.result(), ctx);
+                                                    getJsonArray(new JsonObject().put("associated_company_id", user.getString("company_id")), URN.get_user_group, responseChildUserGroups -> {
+                                                        if (responseChildUserGroups.succeeded()) {
+                                                            if (responseChildUserGroups.result().size() > 0) {
+                                                                String[] _ids = StringUtils.getIds(responseChildUserGroups.result());
+                                                                body.put("company_id", user.getString("company_id"))
+                                                                        .put("associated_company_id", user.getString("company_id"))
+                                                                        .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), _ids));
+                                                                // 5.1 Creating user on MongoDB
+                                                                createMongoUser(body, user, keycloakUser.result(), ctx);
+                                                            } else {
+                                                                // 5.2 Remove user from Keycloak
+                                                                deleteKeycloakUser(createdUserId, accessToken, authServerUrl,
+                                                                        realmName, client, ctx, "Create User group at first.");
+                                                            }
                                                         } else {
-                                                            // 5.2 Remove user from Keycloak
-                                                            deleteKeycloakUser(createdUserId, accessToken, authServerUrl,
-                                                                    realmName, client, ctx, "Create User group at first.");
+                                                            serviceUnavailable(ctx);
                                                         }
                                                     });
                                                 }
@@ -380,7 +388,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
             if (role == Role.MANAGER) {
                 // Only manager's sites should make available for user_group
-                getChildSites(ctx.user().principal().getString("company_id"), childCompaniesResponse -> {
+                getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user_group, childCompaniesResponse -> {
                     if (childCompaniesResponse.succeeded()) {
                         if (childCompaniesResponse.result().size() > 0) {
                             String[] availableSites = StringUtils.getIds(childCompaniesResponse.result());
@@ -411,7 +419,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
 
         router.get("/api/companies").handler(ctx -> {
-            getChildCompanies(ctx.user().principal().getString("company_id"), res -> {
+            getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_company, res -> {
                 if (res.succeeded()) {
                     ctx.response()
                             .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -448,7 +456,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
         router.get("/api/sites").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
             if (role == Role.MANAGER) {
-                getChildSites(ctx.user().principal().getString("company_id"), handler -> {
+                getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_site, handler -> {
                     if (handler.succeeded()) {
                         ctx.response()
                                 .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -466,7 +474,7 @@ public class HttpServerVerticle extends RestAPIVerticle {
         router.get("/api/user_groups").handler(ctx -> {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
             if (role == Role.MANAGER) {
-                getChildUserGroups(ctx.user().principal().getString("company_id"), handler -> {
+                getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user_group, handler -> {
                     if (handler.succeeded()) {
                         ctx.response()
                                 .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -839,35 +847,12 @@ public class HttpServerVerticle extends RestAPIVerticle {
         }
     }
 
-    private void getChildCompanies(String companyId, Handler<AsyncResult<JsonArray>> handler) {
-        JsonObject query = new JsonObject().put("associated_company_id", companyId);
-        dispatchRequest(HttpMethod.POST, URN.get_company, query, responseCompany -> {
+    private void getJsonArray(JsonObject query, String urn, Handler<AsyncResult<JsonArray>> handler) {
+        dispatchRequest(HttpMethod.POST, urn, query, responseCompany -> {
             if (responseCompany.succeeded()) {
                 handler.handle(Future.succeededFuture(new JsonArray(responseCompany.result())));
             } else {
                 handler.handle(Future.failedFuture(responseCompany.cause()));
-            }
-        });
-    }
-
-    private void getChildSites(String companyId, Handler<AsyncResult<JsonArray>> handler) {
-        JsonObject query = new JsonObject().put("associated_company_id", companyId);
-        dispatchRequest(HttpMethod.POST, URN.get_site, query, siteResponse -> {
-            if (siteResponse.succeeded()) {
-                handler.handle(Future.succeededFuture(new JsonArray(siteResponse.result())));
-            } else {
-                handler.handle(Future.failedFuture(siteResponse.cause()));
-            }
-        });
-    }
-
-    private void getChildUserGroups(String companyId, Handler<AsyncResult<JsonArray>> handler) {
-        JsonObject query = new JsonObject().put("associated_company_id", companyId);
-        dispatchRequest(HttpMethod.POST, URN.get_user_group, query, childUserGroups -> {
-            if (childUserGroups.succeeded()) {
-                handler.handle(Future.succeededFuture(new JsonArray(childUserGroups.result())));
-            } else {
-                handler.handle(Future.failedFuture(childUserGroups.cause()));
             }
         });
     }
