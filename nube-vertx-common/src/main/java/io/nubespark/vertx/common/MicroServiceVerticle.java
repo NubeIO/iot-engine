@@ -3,15 +3,9 @@ package io.nubespark.vertx.common;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.*;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.ServiceDiscoveryOptions;
@@ -21,14 +15,12 @@ import io.vertx.servicediscovery.types.MessageSource;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
  * An implementation of {@link Verticle} taking care of the discovery and publication of services.
  */
 public class MicroServiceVerticle extends AbstractVerticle {
-    Logger logger = LoggerFactory.getLogger(MicroServiceVerticle.class);
     protected ServiceDiscovery discovery;
     protected CircuitBreaker circuitBreaker;
     protected Set<Record> registeredRecords = new ConcurrentHashSet<>();
@@ -129,81 +121,5 @@ public class MicroServiceVerticle extends AbstractVerticle {
     public void handleFailure(Logger logger, AsyncResult handler) {
         logger.error(handler.cause().getMessage());
         Future.failedFuture(handler.cause());
-    }
-
-    protected void dispatchRequest(HttpMethod method, String path, JsonObject payload, Handler<AsyncResult<Buffer>> handler) {
-        int initialOffset = 5; // length of `/api/`
-        // run with circuit breaker in order to deal with failure
-        circuitBreaker.execute(future -> {
-            getAllEndpoints().setHandler(ar -> {
-                if (ar.succeeded()) {
-                    List<Record> recordList = ar.result();
-                    if (path.length() <= initialOffset) {
-                        handler.handle(Future.failedFuture("Not Found."));
-                        return;
-                    }
-                    String prefix = (path.substring(initialOffset)
-                            .split("/"))[0];
-                    logger.info("Prefix: " + prefix);
-                    // generate new relative path
-                    String newPath = path.substring(initialOffset + prefix.length());
-                    // get one relevant HTTP client, may not exist
-                    logger.info("New path: " + newPath);
-                    Optional<Record> client = recordList.stream()
-                            .filter(record -> record.getMetadata().getString("api.name") != null)
-                            .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
-                            .findAny(); // simple load balance
-
-                    if (client.isPresent()) {
-                        logger.info("Found client for uri: " + path);
-                        doDispatch(newPath, method, payload, discovery.getReference(client.get()).get(), handler, future);
-                    } else {
-                        logger.info("Client endpoint not found for uri: " + path);
-                        handler.handle(Future.failedFuture("Not Found."));
-                        future.complete();
-                    }
-                } else {
-                    future.fail(ar.cause());
-                }
-            });
-        }).setHandler(ar -> {
-            if (ar.failed()) {
-                handler.handle(Future.failedFuture(ar.cause()));
-            }
-        });
-    }
-
-    /**
-     * Dispatch the request to the downstream REST layers.
-     */
-    private void doDispatch(String path, HttpMethod method, JsonObject payload, HttpClient client, Handler<AsyncResult<Buffer>> handler, Future<Object> cbFuture) {
-        HttpClientRequest toReq = client.request(method, path, response -> {
-            response.bodyHandler(body -> {
-                if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
-                    handler.handle(Future.failedFuture(response.toString()));
-                    logger.info("Failed to dispatch: " + response.toString());
-                } else {
-                    handler.handle(Future.succeededFuture(body));
-                    logger.info("Successfully dispatched: " + body);
-                }
-                client.close();
-                cbFuture.complete();
-                ServiceDiscovery.releaseServiceObject(discovery, client);
-            });
-        });
-        toReq.setChunked(true);
-        toReq.putHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        if (payload == null) {
-            toReq.end();
-        } else {
-            toReq.write(payload.encode()).end();
-        }
-    }
-
-    private Future<List<Record>> getAllEndpoints() {
-        Future<List<Record>> future = Future.future();
-        discovery.getRecords(record -> record.getType().equals(HttpEndpoint.TYPE),
-                future.completer());
-        return future;
     }
 }

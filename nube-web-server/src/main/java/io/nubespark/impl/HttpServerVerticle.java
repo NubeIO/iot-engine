@@ -2,39 +2,47 @@ package io.nubespark.impl;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
+import io.nubespark.controller.HttpException;
 import io.nubespark.impl.models.*;
 import io.nubespark.utils.SQLUtils;
 import io.nubespark.utils.StringUtils;
 import io.nubespark.utils.URN;
 import io.nubespark.utils.UserUtils;
-import io.nubespark.utils.response.ResponseUtils;
-import io.nubespark.vertx.common.RestAPIVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.http.*;
+import io.nubespark.vertx.common.HttpHelper;
+import io.nubespark.vertx.common.RxMicroServiceVerticle;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.auth.User;
-import io.vertx.ext.auth.oauth2.AccessToken;
-import io.vertx.ext.auth.oauth2.KeycloakHelper;
-import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2FlowType;
-import io.vertx.ext.auth.oauth2.providers.KeycloakAuth;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
-import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.reactivex.core.Future;
+import io.vertx.reactivex.core.buffer.Buffer;
+import io.vertx.reactivex.core.http.HttpClient;
+import io.vertx.reactivex.core.http.HttpClientRequest;
+import io.vertx.reactivex.core.http.HttpServer;
+import io.vertx.reactivex.core.http.HttpServerResponse;
+import io.vertx.reactivex.ext.auth.User;
+import io.vertx.reactivex.ext.auth.oauth2.AccessToken;
+import io.vertx.reactivex.ext.auth.oauth2.KeycloakHelper;
+import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
+import io.vertx.reactivex.ext.auth.oauth2.providers.KeycloakAuth;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import io.vertx.reactivex.ext.web.handler.StaticHandler;
+import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.ServiceDiscovery;
-import io.vertx.servicediscovery.types.HttpEndpoint;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -44,160 +52,68 @@ import java.util.Optional;
 import static io.nubespark.utils.Constants.SERVICE_NAME;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
+import static io.nubespark.vertx.common.HttpHelper.*;
 
 /**
  * Created by topsykretts on 5/4/18.
  */
-public class HttpServerVerticle extends RestAPIVerticle {
+public class HttpServerVerticle extends RxMicroServiceVerticle {
 
     private OAuth2Auth loginAuth;
-    Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
+    private Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
 
     @Override
-    public void start() {
-        super.start();
+    protected Logger getLogger() {
+        return logger;
+    }
 
+    @Override
+    public void start(io.vertx.core.Future<Void> future) {
+        super.start();
+        logger.info("Config on HttpWebServer is:");
+        logger.info(Json.encodePrettily(config()));
+        startWebApp().flatMap(httpServer -> publishHttp())
+            .subscribe(ignored -> future.complete(), future::fail);
+    }
+
+    private Single<HttpServer> startWebApp() {
+        loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, config().getJsonObject("keycloak"));
+
+        // Create a router object.
         Router router = Router.router(vertx);
+
         // creating body handler
         router.route().handler(BodyHandler.create());
 
-        loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, config().getJsonObject("keycloak"));
-
         enableCorsSupport(router);
         handleAuth(router);
-        handleAPIs(router);
+        handleMultiTenantSupportAPIs(router);
         handleAuthEventBus(router);
         handleEventBus(router);
         handleGateway(router);
         handleStaticResource(router);
 
-        String host = config().getString("host", "localhost");
-        int port = config().getInteger("http.port", 8085);
+        // Create the HTTP server and pass the "accept" method to the request handler.
+        return vertx.createHttpServer()
+            .requestHandler(router::accept)
+            .rxListen(
+                // Retrieve the port from the configuration,
+                // default to 8085.
+                config().getInteger("http.port", 8085)
+            )
+            .doOnSuccess(httpServer -> logger.info("Web Server started at " + httpServer.actualPort()))
+            .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
+    }
 
-        // By default index.html from webroot/ is available on "/".
-        vertx.createHttpServer()
-                .requestHandler(router::accept)
-                .listen(port,
-                        handler -> {
-                            if (handler.failed()) {
-                                handler.cause().printStackTrace();
-                                Future.failedFuture(handler.cause());
-                            } else {
-                                System.out.println("Front End server started on port: " + port);
-                                Future.succeededFuture();
-                            }
-                        }
-                );
-
-        publishHttpEndpoint(SERVICE_NAME, host, port, ar -> {
-            if (ar.failed()) {
-                ar.cause().printStackTrace();
-            } else {
-                System.out.println("Front End Server service published: " + ar.succeeded());
-            }
-        });
-
+    private Single<Record> publishHttp() {
+        return publishHttpEndpoint(SERVICE_NAME, "0.0.0.0", config().getInteger("http.port", 8085))
+            .doOnSubscribe(res -> logger.info("Publish successful HttpWebServer."))
+            .doOnError(throwable -> logger.error("Cannot publish HttpWebServer: " + throwable.getLocalizedMessage()));
     }
 
     private void handleGateway(Router router) {
         // api dispatcher
         router.route("/api/*").handler(this::dispatchRequests);
-    }
-
-    private void dispatchRequests(RoutingContext context) {
-        System.out.println("Dispatch Requests called");
-        int initialOffset = 5; // length of `/api/`
-        // run with circuit breaker in order to deal with failure
-        circuitBreaker.execute(future -> {
-            getAllEndpoints().setHandler(ar -> {
-                if (ar.succeeded()) {
-                    List<Record> recordList = ar.result();
-                    // get relative path and retrieve prefix to dispatch client
-                    String path = context.request().uri();
-
-                    if (path.length() <= initialOffset) {
-                        notFound(context);
-                        future.complete();
-                        return;
-                    }
-                    String prefix = (path.substring(initialOffset)
-                            .split("/"))[0];
-                    System.out.println("prefix = " + prefix);
-                    // generate new relative path
-                    String newPath = path.substring(initialOffset + prefix.length());
-                    // get one relevant HTTP client, may not exist
-                    System.out.println("new path = " + newPath);
-                    Optional<Record> client = recordList.stream()
-                            .filter(record -> record.getMetadata().getString("api.name") != null)
-                            .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
-                            .findAny(); // simple load balance
-
-                    if (client.isPresent()) {
-                        System.out.println("Found client for uri: " + path);
-                        doDispatch(context, newPath, discovery.getReference(client.get()).get(), future);
-                    } else {
-                        System.out.println("Client endpoint not found for uri " + path);
-                        notFound(context);
-                        future.complete();
-                    }
-                } else {
-                    future.fail(ar.cause());
-                }
-            });
-        }).setHandler(ar -> {
-            if (ar.failed()) {
-                badGateway(ar.cause(), context);
-            }
-        });
-    }
-
-    /**
-     * Dispatch the request to the downstream REST layers.
-     *
-     * @param context routing context instance
-     * @param path    relative path
-     * @param client  relevant HTTP client
-     */
-    private void doDispatch(RoutingContext context, String path, HttpClient client, Future<Object> cbFuture) {
-        HttpClientRequest toReq = client
-                .request(context.request().method(), path, response -> {
-                    response.bodyHandler(body -> {
-                        if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
-                            cbFuture.fail(response.statusCode() + ": " + body.toString());
-                        } else {
-                            HttpServerResponse toRsp = context.response()
-                                    .setStatusCode(response.statusCode());
-                            response.headers().forEach(header -> {
-                                toRsp.putHeader(header.getKey(), header.getValue());
-                            });
-                            // send response
-                            toRsp.end(body);
-                            cbFuture.complete();
-                        }
-                        ServiceDiscovery.releaseServiceObject(discovery, client);
-                    });
-                });
-        // set headers
-        context.request().headers().forEach(header -> {
-            toReq.putHeader(header.getKey(), header.getValue());
-        });
-        if (context.getBody() == null) {
-            toReq.end();
-        } else {
-            toReq.end(context.getBody());
-        }
-    }
-
-    /**
-     * Get all REST endpoints from the service discovery infrastructure.
-     *
-     * @return async result
-     */
-    private Future<List<Record>> getAllEndpoints() {
-        Future<List<Record>> future = Future.future();
-        discovery.getRecords(record -> record.getType().equals(HttpEndpoint.TYPE),
-                future.completer());
-        return future;
     }
 
     /**
@@ -206,500 +122,33 @@ public class HttpServerVerticle extends RestAPIVerticle {
      * @param router for routing the URLs
      */
     private void handleAuth(Router router) {
-        router.route("/api/login/account").handler((RoutingContext ctx) -> {
-            JsonObject body = ctx.getBodyAsJson();
-            String username = body.getString("username");
-            String password = body.getString("password");
-
-            loginAuth.authenticate(new JsonObject().put("username", username).put("password", password), res -> {
-                if (res.failed()) {
-                    res.cause().printStackTrace();
-                    System.out.println(res.result());
-                    failAuthentication(ctx);
-                } else {
-                    AccessToken token = (AccessToken) res.result();
-                    ctx.response()
-                            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(token.principal()));
-                }
-            });
-        });
-
+        router.route("/api/login/account").handler(this::handleLogin);
         router.route("/api/refreshToken").handler(this::refreshAccessToken);
-
-        router.route("/api/*").handler(ctx -> {
-            String authorization = ctx.request().getHeader(HttpHeaders.AUTHORIZATION);
-            if (authorization != null) {
-                authorization = authorization.substring("Bearer ".length());
-                System.out.println(authorization);
-                setAuthenticUser(ctx, authorization);
-            } else {
-                failAuthentication(ctx);
-            }
-        });
-
-        router.route("/api/currentUser").handler(ctx -> {
-            User user = ctx.user();
-            if (user != null) {
-                JsonObject accessToken = KeycloakHelper.accessToken(user.principal());
-                String name = accessToken.getString("name", accessToken.getString("preferred_username"));
-                ctx.response().putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(new JsonObject()
-                                .put("name", name)
-                        ));
-            } else {
-                System.out.println("Send not authorized error and user should login");
-                failAuthentication(ctx);
-            }
-        });
-
+        router.route("/api/*").handler(this::authMiddleWare);
+        router.route("/api/currentUser").handler(this::currentUser);
         router.route("/api/logout").handler(this::redirectLogout);
     }
 
-    private void handleAPIs(Router router) {
-        router.post("/api/user").handler(ctx -> {
-            // TODO: refactoring code
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-                JsonObject body = ctx.getBodyAsJson();
-                JsonObject user = ctx.user().principal();
-                KeycloakUserRepresentation userRepresentation = new KeycloakUserRepresentation(body);
-                String accessToken = user.getString("access_token");
-                JsonObject keycloakConfig = config().getJsonObject("keycloak");
-                HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+    private void handleMultiTenantSupportAPIs(Router router) {
+        router.post("/api/user").handler(this::handlePostUser);
+        router.post("/api/company").handler(this::handlePostCompany);
+        router.post("/api/site").handler(this::handlePostSite);
+        router.post("/api/user_group").handler(this::handlePostUserGroup);
 
-                // 1. Create User on Keycloak
-                UserUtils.createUser(userRepresentation, accessToken, keycloakConfig.getString("auth-server-url"), keycloakConfig.getString("realm"), client, res -> {
-                    if (res.result().getInteger("statusCode") == 201) {
-                        logger.info("Successfully create the user: " + body.getString("username") + " in keycloak.");
+        router.get("/api/companies").handler(this::handleGetCompanies);
+        router.get("/api/users").handler(this::handleGetUsers);
+        router.get("/api/sites").handler(this::handleGetSites);
+        router.get("/api/user_groups").handler(this::handleGetUserGroups);
 
-                        // 2. GET recently created user details from Keycloak
-                        String authServerUrl = keycloakConfig.getString("auth-server-url");
-                        String realmName = keycloakConfig.getString("realm");
-                        UserUtils.getUser(body.getString("username"), accessToken, authServerUrl, realmName, client, keycloakUser -> {
-                            if (keycloakUser.result().getInteger("statusCode") == 200) {
-                                String createdUserId = keycloakUser.result().getJsonObject("body").getString("id");
-                                logger.info("Created user is::: " + keycloakUser.result().getJsonObject("body"));
-
-                                // 3. Resetting password; by default password: 'helloworld'
-                                UserUtils.resetPassword(createdUserId, body.getString("password", "helloworld"),
-                                        accessToken, authServerUrl, realmName, client, resetResponse -> {
-                                            logger.info("Reset Password statusCode: " + resetResponse.result().getInteger("statusCode"));
-                                            if (resetResponse.result().getInteger("statusCode") == 204) {
-
-                                                if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-
-                                                    // 4. only child companies can be added by the parent
-                                                    getJsonArray(new JsonObject().put("associated_company_id", user.getString("company_id")), URN.get_company, responseChildCompanies -> {
-                                                        if (responseChildCompanies.succeeded()) {
-                                                            if (responseChildCompanies.result().size() > 0) {
-
-                                                                String[] _ids = StringUtils.getIds(responseChildCompanies.result());
-                                                                body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids))
-                                                                        .put("associated_company_id", user.getString("company_id"));
-                                                                // 5.1 Creating user on MongoDB
-                                                                createMongoUser(body, user, keycloakUser.result(), ctx);
-                                                            } else {
-                                                                // 5.2 Remove user from Keycloak
-                                                                deleteKeycloakUser(createdUserId, accessToken, authServerUrl,
-                                                                        realmName, client, ctx, "Create company at first.");
-                                                            }
-                                                        } else {
-                                                            serviceUnavailable(ctx);
-                                                        }
-                                                    });
-                                                } else {
-
-                                                    // 4 Creating user on MongoDB with 'group_id'
-                                                    getJsonArray(new JsonObject().put("associated_company_id", user.getString("company_id")), URN.get_user_group, responseChildUserGroups -> {
-                                                        if (responseChildUserGroups.succeeded()) {
-                                                            if (responseChildUserGroups.result().size() > 0) {
-                                                                String[] _ids = StringUtils.getIds(responseChildUserGroups.result());
-                                                                body.put("company_id", user.getString("company_id"))
-                                                                        .put("associated_company_id", user.getString("company_id"))
-                                                                        .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), _ids));
-                                                                // 5.1 Creating user on MongoDB
-                                                                createMongoUser(body, user, keycloakUser.result(), ctx);
-                                                            } else {
-                                                                // 5.2 Remove user from Keycloak
-                                                                deleteKeycloakUser(createdUserId, accessToken, authServerUrl,
-                                                                        realmName, client, ctx, "Create User group at first.");
-                                                            }
-                                                        } else {
-                                                            serviceUnavailable(ctx);
-                                                        }
-                                                    });
-                                                }
-                                            } else {
-                                                ctx.response().setStatusCode(resetResponse.result().getInteger("statusCode")).end();
-                                            }
-                                        });
-                            } else {
-                                ctx.response().setStatusCode(res.result().getInteger("statusCode")).end();
-                            }
-                        });
-                    } else {
-                        logger.info("Failed...");
-                        ctx.response().setStatusCode(res.result().getInteger("statusCode")).end();
-                    }
-                });
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.post("/api/company").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-                Company company = new Company(ctx.getBodyAsJson(), ctx.user().principal());
-                dispatchRequest(HttpMethod.POST, URN.post_company, company.toJsonObject(), ar -> {
-                    if (ar.succeeded()) {
-                        JsonObject result = new JsonObject(ar.result());
-                        // e.g: company already exist; 409 will be returned
-                        ctx.response().setStatusCode(result.getInteger("statusCode")).end();
-                    } else {
-                        serviceUnavailable(ctx, "Error on Company creation.");
-                    }
-                });
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.post("/api/site").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (role == Role.MANAGER) {
-                Site site = new Site(ctx.getBodyAsJson()
-                        .put("associated_company_id", ctx.user().principal().getString("company_id")));
-                dispatchRequest(HttpMethod.POST, URN.post_site, site.toJsonObject(), siteResponse -> {
-                    if (siteResponse.succeeded()) {
-                        ctx.response().setStatusCode(new JsonObject(siteResponse.result()).getInteger("statusCode")).end();
-                        siteResponse.result();
-                    } else {
-                        serviceUnavailable(ctx);
-                    }
-                });
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.post("/api/user_group").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (role == Role.MANAGER) {
-                // Only manager's sites should make available for user_group
-                getJsonArray(new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_site, childCompaniesResponse -> {
-                    if (childCompaniesResponse.succeeded()) {
-                        if (childCompaniesResponse.result().size() > 0) {
-                            String[] availableSites = StringUtils.getIds(childCompaniesResponse.result());
-                            String site_id = SQLUtils.getMatchValueOrDefaultOne(ctx.getBodyAsJson().getString("site_id", ""), availableSites);
-                            UserGroup userGroup = new UserGroup(ctx.getBodyAsJson()
-                                    .put("associated_company_id", ctx.user().principal().getString("company_id"))
-                                    .put("site_id", site_id));
-                            dispatchRequest(HttpMethod.POST, URN.post_user_group, userGroup.toJsonObject(), userGroupResponse -> {
-                                if (userGroupResponse.succeeded()) {
-                                    ctx.response().setStatusCode(new JsonObject(userGroupResponse.result()).getInteger("statusCode")).end();
-                                } else {
-                                    serviceUnavailable(ctx);
-                                }
-                            });
-                        } else {
-                            ctx.response()
-                                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
-                                    .end(new JsonObject().put("message", "Create site at first").toString());
-                        }
-                    } else {
-                        serviceUnavailable(ctx);
-                    }
-                });
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.get("/api/companies").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (role == Role.SUPER_ADMIN) {
-                respondRequest(ctx, new JsonObject(), URN.get_company);
-            } else if (role == Role.ADMIN) {
-                respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_company);
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.get("/api/users").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (role == Role.SUPER_ADMIN) {
-                respondRequest(ctx, new JsonObject(), URN.get_user);
-            } else if (role == Role.ADMIN) {
-                // Returning all <Users> which is branches from the ADMIN
-                getJsonArray(new JsonObject()
-                        .put("associated_company_id", ctx.user().principal().getString("company_id"))
-                        .put("role", Role.MANAGER.toString()), URN.get_company, res -> {
-                    if (res.succeeded()) {
-                        respondRequest(ctx, new JsonObject()
-                                .put("associated_company_id", new JsonObject()
-                                        .put("$in", StringUtils.getIdsJsonArray(res.result())
-                                                .add(ctx.user().principal().getString("company_id")))), URN.get_user);
-                    } else {
-                        serviceUnavailable(ctx);
-                    }
-                });
-            } else if (role == Role.MANAGER) {
-                respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user);
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.get("/api/sites").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (role == Role.SUPER_ADMIN) {
-                respondRequest(ctx, new JsonObject(), URN.get_site);
-            } else if (role == Role.ADMIN) {
-                // Returning all MANAGER's companies' <sites> which is associated with the ADMIN company
-                getJsonArray(new JsonObject()
-                        .put("associated_company_id", ctx.user().principal().getString("company_id"))
-                        .put("role", Role.MANAGER.toString()), URN.get_company, res -> {
-                    if (res.succeeded()) {
-                        respondRequest(ctx, new JsonObject()
-                                .put("associated_company_id", new JsonObject()
-                                        .put("$in", StringUtils.getIdsJsonArray(res.result())
-                                                .add(ctx.user().principal().getString("company_id")))), URN.get_site);
-                    } else {
-                        serviceUnavailable(ctx);
-                    }
-                });
-            } else if (role == Role.MANAGER) {
-                respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_site);
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.get("/api/user_groups").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (role == Role.SUPER_ADMIN) {
-                respondRequest(ctx, new JsonObject(), URN.get_user_group);
-            } else if (role == Role.ADMIN) {
-                // Returning all MANAGER's companies' <user groups> which is associated with the ADMIN company
-                getJsonArray(new JsonObject()
-                        .put("associated_company_id", ctx.user().principal().getString("company_id"))
-                        .put("role", Role.MANAGER.toString()), URN.get_company, res -> {
-                    if (res.succeeded()) {
-                        respondRequest(ctx, new JsonObject()
-                                .put("associated_company_id", new JsonObject()
-                                        .put("$in", StringUtils.getIdsJsonArray(res.result())
-                                                .add(ctx.user().principal().getString("company_id")))), URN.get_user_group);
-                    } else {
-                        serviceUnavailable(ctx);
-                    }
-                });
-            } else if (role == Role.MANAGER) {
-                respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user_group);
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.post("/api/delete_users").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            // Model level permission; this is limited to SUPER_ADMIN, ADMIN and MANAGER
-            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-                JsonArray queryInput = ctx.getBodyAsJsonArray();
-                // Object level permission
-                JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
-                dispatchRequest(HttpMethod.POST, URN.get_user, query, usersResponse -> {
-                    if (usersResponse.succeeded()) {
-                        JsonArray userGroups = new JsonArray(usersResponse.result());
-                        if (userGroups.size() == queryInput.size()) {
-                            String companyId = ctx.user().principal().getString("company_id");
-                            boolean objectLevelPermission = true;
-                            for (Object userResponse : userGroups) {
-                                JsonObject user = (JsonObject) (userResponse);
-                                if (!user.getString("associated_company_id").equals(companyId)) {
-                                    objectLevelPermission = false;
-                                }
-                            }
-                            if (objectLevelPermission) {
-                                // Authorized
-                                // Deleting user from Keycloak
-                                for (Object userResponse : userGroups) {
-                                    JsonObject user = (JsonObject) (userResponse);
-                                    JsonObject keycloakConfig = config().getJsonObject("keycloak");
-                                    HttpClient client = vertx.createHttpClient(new HttpClientOptions());
-                                    UserUtils.deleteUser(user.getString("_id"),
-                                            ctx.user().principal().getString("access_token"),
-                                            keycloakConfig.getString("auth-server-url"),
-                                            keycloakConfig.getString("realm"), client,
-                                            deleteUserKeycloakResponse -> {
-                                                if (deleteUserKeycloakResponse.result().getInteger("statusCode") == HttpResponseStatus.NO_CONTENT.code()) {
-                                                    // Deleting one by one from MongoDB
-                                                    JsonObject queryToDeleteOne = new JsonObject().put("_id", new JsonObject()
-                                                            .put("$in", new JsonArray().add(user.getString("_id"))));
-                                                    dispatchRequest(HttpMethod.POST, URN.delete_user, queryToDeleteOne, deleteUserResponse -> {
-                                                        if (deleteUserResponse.succeeded()) {
-                                                            ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
-                                                        } else {
-                                                            serviceUnavailable(ctx);
-                                                        }
-                                                    });
-                                                } else {
-                                                    internalError(ctx, new Throwable("<Users> are unable to deleted from the services."));
-                                                }
-                                            });
-                                }
-                            } else {
-                                forbidden(ctx);
-                            }
-                        } else {
-                            badRequest(ctx, new Throwable("Doesn't have those <Users> on Database."));
-                        }
-                    } else {
-                        serviceUnavailable(ctx);
-                    }
-                });
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.post("/api/delete_companies").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            // Model level permission; this is limited to SUPER_ADMIN and ADMIN
-            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-                JsonArray queryInput = ctx.getBodyAsJsonArray();
-                // Object level permission
-                JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
-                dispatchRequest(HttpMethod.POST, URN.get_company, query, companiesResponse -> {
-                    if (companiesResponse.succeeded()) {
-                        JsonArray companies = new JsonArray(companiesResponse.result());
-                        if (companies.size() == queryInput.size()) {
-                            String companyId = ctx.user().principal().getString("company_id");
-                            boolean objectLevelPermission = true;
-                            for (Object companyResponse : companies) {
-                                JsonObject company = (JsonObject) (companyResponse);
-                                if (!company.getString("associated_company_id").equals(companyId)) {
-                                    objectLevelPermission = false;
-                                }
-                            }
-                            if (objectLevelPermission) {
-                                // Authorized
-                                dispatchRequest(HttpMethod.POST, URN.delete_company, query, deleteCompaniesResponse -> {
-                                    if (deleteCompaniesResponse.succeeded()) {
-                                        ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
-                                    } else {
-                                        serviceUnavailable(ctx);
-                                    }
-                                });
-                            } else {
-                                forbidden(ctx);
-                            }
-
-                        } else {
-                            badRequest(ctx, new Throwable("Doesn't have those <Companies> on Database."));
-                        }
-                    } else {
-                        serviceUnavailable(ctx);
-                    }
-                });
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.post("/api/delete_sites").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            // Model level permission; this is limited to MANAGER
-            if (role == Role.MANAGER) {
-                JsonArray queryInput = ctx.getBodyAsJsonArray();
-                // Object level permission
-                JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
-                dispatchRequest(HttpMethod.POST, URN.get_site, query, sitesResponse -> {
-                    if (sitesResponse.succeeded()) {
-                        JsonArray sites = new JsonArray(sitesResponse.result());
-                        if (sites.size() == queryInput.size()) {
-                            String companyId = ctx.user().principal().getString("company_id");
-                            boolean objectLevelPermission = true;
-                            for (Object siteResponse : sites) {
-                                JsonObject site = (JsonObject) (siteResponse);
-                                if (!site.getString("associated_company_id").equals(companyId)) {
-                                    objectLevelPermission = false;
-                                }
-                            }
-                            if (objectLevelPermission) {
-                                // Authorized
-                                dispatchRequest(HttpMethod.POST, URN.delete_site, query, deleteSitesResponse -> {
-                                    if (deleteSitesResponse.succeeded()) {
-                                        ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
-                                    } else {
-                                        serviceUnavailable(ctx);
-                                    }
-                                });
-                            } else {
-                                forbidden(ctx);
-                            }
-                        } else {
-                            badRequest(ctx, new Throwable("Doesn't have those <Sites> on Database."));
-                        }
-                    } else {
-                        serviceUnavailable(ctx);
-                    }
-                });
-            } else {
-                forbidden(ctx);
-            }
-        });
-
-        router.post("/api/delete_user_groups").handler(ctx -> {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            // Model level permission; this is limited to MANAGER
-            if (role == Role.MANAGER) {
-                JsonArray queryInput = ctx.getBodyAsJsonArray();
-                // Object level permission
-                JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
-                dispatchRequest(HttpMethod.POST, URN.get_user_group, query, userGroupsResponse -> {
-                    if (userGroupsResponse.succeeded()) {
-                        JsonArray userGroups = new JsonArray(userGroupsResponse.result());
-                        if (userGroups.size() == queryInput.size()) {
-                            String companyId = ctx.user().principal().getString("company_id");
-                            boolean objectLevelPermission = true;
-                            for (Object userGroupResponse : userGroups) {
-                                JsonObject userGroup = (JsonObject) (userGroupResponse);
-                                if (!userGroup.getString("associated_company_id").equals(companyId)) {
-                                    objectLevelPermission = false;
-                                }
-                            }
-                            if (objectLevelPermission) {
-                                // Authorized
-                                dispatchRequest(HttpMethod.POST, URN.delete_user_group, query, deleteUserGroupsResponse -> {
-                                    if (deleteUserGroupsResponse.succeeded()) {
-                                        ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
-                                    } else {
-                                        serviceUnavailable(ctx);
-                                    }
-                                });
-                            } else {
-                                forbidden(ctx);
-                            }
-                        } else {
-                            badRequest(ctx, new Throwable("Doesn't have those <User Groups> on Database."));
-                        }
-                    } else {
-                        serviceUnavailable(ctx);
-                    }
-                });
-            } else {
-                forbidden(ctx);
-            }
-        });
+        router.post("/api/delete_users").handler(this::handleDeleteUsers);
+        router.post("/api/delete_companies").handler(this::handleDeleteCompanies);
+        router.post("/api/delete_sites").handler(this::handleDeleteSites);
+        router.post("/api/delete_user_groups").handler(this::handleDeleteUserGroups);
     }
 
     private void handleAuthEventBus(Router router) {
         router.route("/eventbus/*").handler((RoutingContext ctx) -> {
-            String authorization = ctx.request().getHeader(HttpHeaders.AUTHORIZATION);
+            String authorization = ctx.request().getDelegate().getHeader(HttpHeaders.AUTHORIZATION);
             if (authorization != null && authorization.startsWith("Basic")) {
                 handleBasicAuth(ctx, authorization);
             } else {
@@ -708,10 +157,22 @@ public class HttpServerVerticle extends RestAPIVerticle {
         });
     }
 
+    private void handleBasicAuth(RoutingContext ctx, String authorization) {
+        if (authorization != null && authorization.startsWith("Basic")) {
+            authorization = authorization.substring("Basic ".length());
+            byte decodedAuthorization[] = Base64.getDecoder().decode(authorization);
+            String basicAuthString = new String(decodedAuthorization, StandardCharsets.UTF_8);
+            String username = basicAuthString.split(":")[0];
+            String password = basicAuthString.split(":")[1];
+            loginAuth.rxGetToken(new JsonObject().put("username", username).put("password", password))
+                .subscribe(token -> ctx.next(), throwable -> failAuthentication(ctx));
+        }
+    }
+
     private void handleEventBus(Router router) {
         BridgeOptions options = new BridgeOptions()
-                .addOutboundPermitted(new PermittedOptions().setAddress("news-feed"))
-                .addOutboundPermitted(new PermittedOptions().setAddress("io.nubespark.ditto.events"));
+            .addOutboundPermitted(new PermittedOptions().setAddress("news-feed"))
+            .addOutboundPermitted(new PermittedOptions().setAddress("io.nubespark.ditto.events"));
 
         router.route("/eventbus/*").handler(SockJSHandler.create(vertx).bridge(options, event -> {
             // You can also optionally provide a handler like this which will be passed any events that occur on the bridge
@@ -749,24 +210,20 @@ public class HttpServerVerticle extends RestAPIVerticle {
                 String user_id = token.principal().getString("sub");
                 String access_token = token.principal().getString("access_token");
                 logger.info("User id: " + user_id);
-                dispatchRequest(HttpMethod.GET, URN.get_user + "/" + user_id, null,
-                        ar -> {
-                            if (ar.succeeded()) {
-                                JsonObject result = new JsonObject(ar.result());
-                                logger.info("User Response: " + ar.result().toString());
-                                User user = new UserImpl(new JsonObject()
-                                        .put("user_id", user_id)
-                                        .put("role", result.getString("role"))
-                                        .put("company_id", result.getString("company_id", ""))
-                                        .put("group_id", result.getString("group_id", ""))
-                                        .put("access_token", access_token));
-                                ctx.setUser(user);
-                                ctx.next();
-                            } else {
-                                logger.info("User Extraction failure");
-                                serviceUnavailable(ctx, "Error on user extraction.");
-                            }
-                        });
+                dispatchRequests(HttpMethod.GET, URN.get_user + "/" + user_id, null)
+                    .subscribe(buffer -> {
+                        JsonObject result = new JsonObject(buffer.getDelegate());
+                        logger.info("User Response: " + result);
+                        io.vertx.ext.auth.User user = new UserImpl(new JsonObject()
+                            .put("user_id", user_id)
+                            .put("role", result.getString("role"))
+                            .put("company_id", result.getString("company_id", ""))
+                            .put("group_id", result.getString("group_id", ""))
+                            .put("access_token", access_token));
+
+                        ctx.setUser(new User(user));
+                        ctx.next();
+                    }, throwable -> serviceUnavailable(ctx, throwable));
             } else {
                 System.out.println("Auth Fail");
                 res.cause().printStackTrace();
@@ -783,12 +240,12 @@ public class HttpServerVerticle extends RestAPIVerticle {
         JsonObject keycloakConfig = config().getJsonObject("keycloak");
         String client_id = keycloakConfig.getString("resource");
         String client_secret = keycloakConfig
-                .getJsonObject("credentials").getString("secret");
+            .getJsonObject("credentials").getString("secret");
         String realmName = keycloakConfig.getString("realm");
         String uri = keycloakConfig.getString("auth-server-url")
-                + "/realms/" + realmName + "/protocol/openid-connect/logout";
+            + "/realms/" + realmName + "/protocol/openid-connect/logout";
 
-        HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+        HttpClient client = vertx.createHttpClient();
 
         HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response -> {
             ctx.response().setStatusCode(response.statusCode()).end();
@@ -796,11 +253,50 @@ public class HttpServerVerticle extends RestAPIVerticle {
         request.setChunked(true);
 
         String body$ = "refresh_token=" + refresh_token + "&client_id=" + client_id
-                + "&client_secret=" + client_secret;
+            + "&client_secret=" + client_secret;
         request.putHeader("content-type", "application/x-www-form-urlencoded");
         request.putHeader("Authorization", "Bearer " + access_token);
 
         request.write(body$).end();
+    }
+
+    private void handleLogin(RoutingContext ctx) {
+        JsonObject body = ctx.getBodyAsJson();
+        String username = body.getString("username");
+        String password = body.getString("password");
+
+        loginAuth.rxGetToken(new JsonObject().put("username", username).put("password", password))
+            .subscribe(token -> {
+                ctx.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(token.principal()));
+            }, throwable -> failAuthentication(ctx));
+    }
+
+    private void authMiddleWare(RoutingContext ctx) {
+        String authorization = ctx.request().getDelegate().getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorization != null) {
+            authorization = authorization.substring("Bearer ".length());
+            System.out.println(authorization);
+            setAuthenticUser(ctx, authorization);
+        } else {
+            failAuthentication(ctx);
+        }
+    }
+
+    private void currentUser(RoutingContext ctx) {
+        User user = ctx.user();
+        if (user != null) {
+            JsonObject accessToken = KeycloakHelper.accessToken(user.principal());
+            String name = accessToken.getString("name", accessToken.getString("preferred_username"));
+            ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .end(Json.encodePrettily(new JsonObject()
+                    .put("name", name)
+                ));
+        } else {
+            System.out.println("Send not authorized error and user should login");
+            failAuthentication(ctx);
+        }
     }
 
     private void refreshAccessToken(RoutingContext ctx) {
@@ -810,11 +306,11 @@ public class HttpServerVerticle extends RestAPIVerticle {
         JsonObject keycloakConfig = config().getJsonObject("keycloak");
         String client_id = keycloakConfig.getString("resource");
         String client_secret = keycloakConfig
-                .getJsonObject("credentials").getString("secret");
+            .getJsonObject("credentials").getString("secret");
         String realmName = keycloakConfig.getString("realm");
         String uri = keycloakConfig.getString("auth-server-url")
-                + "/realms/" + realmName + "/protocol/openid-connect/token";
-        HttpClient client = vertx.createHttpClient(new HttpClientOptions());
+            + "/realms/" + realmName + "/protocol/openid-connect/token";
+        HttpClient client = vertx.createHttpClient();
 
         HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response -> {
             response.bodyHandler(body$ -> {
@@ -822,8 +318,8 @@ public class HttpServerVerticle extends RestAPIVerticle {
                     ctx.response().setStatusCode(response.statusCode()).end();
                 } else {
                     HttpServerResponse toRsp = ctx.response()
-                            .setStatusCode(response.statusCode());
-                    response.headers().forEach(header -> {
+                        .setStatusCode(response.statusCode());
+                    response.headers().getDelegate().forEach(header -> {
                         toRsp.putHeader(header.getKey(), header.getValue());
                     });
                     // send response
@@ -834,76 +330,602 @@ public class HttpServerVerticle extends RestAPIVerticle {
         request.setChunked(true);
 
         String body$ = "refresh_token=" + refresh_token + "&client_id=" + client_id
-                + "&client_secret=" + client_secret + "&grant_type=refresh_token";
+            + "&client_secret=" + client_secret + "&grant_type=refresh_token";
         request.putHeader("content-type", "application/x-www-form-urlencoded");
         request.putHeader("Authorization", access_token);
 
         request.write(body$).end();
     }
 
-    private void handleBasicAuth(RoutingContext ctx, String authorization) {
-        if (authorization != null && authorization.startsWith("Basic")) {
-            authorization = authorization.substring("Basic ".length());
-            byte decodedAuthorization[] = Base64.getDecoder().decode(authorization);
-            String basicAuthString = new String(decodedAuthorization, StandardCharsets.UTF_8);
-            String username = basicAuthString.split(":")[0];
-            String password = basicAuthString.split(":")[1];
-            loginAuth.authenticate(new JsonObject().put("username", username).put("password", password), res -> {
-                if (res.failed()) {
-                    res.cause().printStackTrace();
-                    System.out.println(res.result());
-                    failAuthentication(ctx);
-                } else {
-                    System.out.println("Basic Authorization passed !!");
-                    ctx.next();
-                }
-            });
+    private void handlePostUser(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+            JsonObject body = ctx.getBodyAsJson();
+            JsonObject user = ctx.user().principal();
+            KeycloakUserRepresentation userRepresentation = new KeycloakUserRepresentation(body);
+            String accessToken = user.getString("access_token");
+            JsonObject keycloakConfig = config().getJsonObject("keycloak");
+            HttpClient client = vertx.createHttpClient();
+
+            String authServerUrl = keycloakConfig.getString("auth-server-url");
+            String realmName = keycloakConfig.getString("realm");
+
+            // 1. Create User on Keycloak
+            UserUtils.createUser(userRepresentation, accessToken, keycloakConfig.getString("auth-server-url"), keycloakConfig.getString("realm"), client)
+                .map(response -> {
+                    if (response.getInteger("statusCode") == 201) {
+                        logger.info("Successfully create the user: " + body.getString("username") + " in keycloak.");
+                        return response;
+                    } else {
+                        logger.info("Failed...");
+                        throw new HttpException(response.getInteger("statusCode"), "Failed...");
+                    }
+                })
+                .flatMap(ignored -> {
+                    // 2. GET recently created user details from Keycloak
+                    return UserUtils.getUser(body.getString("username"), accessToken, authServerUrl, realmName, client)
+                        .map(keycloakUser -> {
+                            if (keycloakUser.getInteger("statusCode") == 200) {
+                                logger.info("Created user is::: " + keycloakUser.getJsonObject("body"));
+                                return keycloakUser.getJsonObject("body");
+                            } else {
+                                throw new HttpException(keycloakUser.getInteger("statusCode"), "Failed...");
+                            }
+                        });
+
+                })
+                .flatMap(keycloakUser -> {
+                    // 3. Resetting password; by default password: 'helloworld'
+                    return UserUtils.resetPassword(keycloakUser.getString("id"), body.getString("password", "helloworld"), accessToken, authServerUrl, realmName, client)
+                        .map(response -> {
+                            logger.info("Reset Password statusCode: " + response.getInteger("statusCode"));
+                            if (response.getInteger("statusCode") == 204) {
+                                return keycloakUser;
+                            } else {
+                                throw new HttpException(response.getInteger("statusCode"), "Failure on resetting password.");
+                            }
+                        });
+                })
+                .flatMap(keycloakUser -> {
+                    if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+                        // 4.1 only child companies can be added by the parent
+                        return dispatchRequests(HttpMethod.POST, URN.get_company, new JsonObject().put("associated_company_id", user.getString("company_id")))
+                            .flatMap(response -> {
+                                JsonArray responseArray = new JsonArray(response.getDelegate());
+                                if (responseArray.size() > 0) {
+
+                                    String[] _ids = StringUtils.getIds(responseArray);
+                                    body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids))
+                                        .put("associated_company_id", user.getString("company_id"));
+                                    // 5.1 Creating user on MongoDB
+                                    MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
+                                    logger.info("Mongo User::: " + mongoUser.toJsonObject());
+                                    return dispatchRequests(HttpMethod.POST, URN.post_user, mongoUser.toJsonObject())
+                                        .map(buffer -> HttpResponseStatus.CREATED.code());
+                                } else {
+                                    // 5.2 Remove user from Keycloak
+                                    return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
+                                        .map(ignored -> {
+                                            throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
+                                        });
+                                }
+                            });
+                    } else {
+                        // 4.2 Creating user on MongoDB with 'group_id'
+                        return dispatchRequests(HttpMethod.POST, URN.get_user_group, new JsonObject().put("associated_company_id", user.getString("company_id")))
+                            .flatMap(response -> {
+                                JsonArray responseArray = new JsonArray(response.getDelegate());
+                                if (responseArray.size() > 0) {
+                                    String[] _ids = StringUtils.getIds(responseArray);
+                                    body.put("company_id", user.getString("company_id"))
+                                        .put("associated_company_id", user.getString("company_id"))
+                                        .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), _ids));
+                                    // 5.1 Creating user on MongoDB
+                                    MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
+                                    logger.info("Mongo User::: " + mongoUser.toJsonObject());
+                                    return dispatchRequests(HttpMethod.POST, URN.post_user, mongoUser.toJsonObject())
+                                        .map(buffer -> HttpResponseStatus.CREATED.code());
+                                } else {
+                                    // 5.2 Remove user from Keycloak
+                                    return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
+                                        .map(ignored -> {
+                                            throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
+                                        });
+                                }
+                            });
+                    }
+                }).subscribe(statusCode -> ctx.response().setStatusCode(statusCode).end(), throwable -> handleHttpException(throwable, ctx));
         }
     }
 
-    private void getJsonArray(JsonObject query, String urn, Handler<AsyncResult<JsonArray>> handler) {
-        dispatchRequest(HttpMethod.POST, urn, query, responseCompany -> {
-            if (responseCompany.succeeded()) {
-                handler.handle(Future.succeededFuture(new JsonArray(responseCompany.result())));
-            } else {
-                handler.handle(Future.failedFuture(responseCompany.cause()));
-            }
-        });
+    private void handlePostCompany(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+            Company company = new Company(ctx.getBodyAsJson(), ctx.user().principal());
+            dispatchRequests(HttpMethod.POST, URN.post_company, company.toJsonObject())
+                .subscribe(
+                    result -> ctx.response().setStatusCode(new JsonObject(result.getDelegate()).getInteger("statusCode")).end(),
+                    throwable -> handleHttpException(throwable, ctx));
+        } else {
+            forbidden(ctx);
+        }
     }
 
-    private void deleteKeycloakUser(String createdUserId, String accessToken, String authServerUrl, String realmName,
-                                    HttpClient client, RoutingContext ctx, String message) {
-        UserUtils.deleteUser(createdUserId, accessToken, authServerUrl, realmName, client, deleteUserHandler -> {
-            ctx.response()
-                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
-                    .end((new JsonObject().put("message", message)).toBuffer());
-        });
+    private void handlePostSite(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        if (role == Role.MANAGER) {
+            Site site = new Site(ctx.getBodyAsJson().put("associated_company_id", ctx.user().principal().getString("company_id")));
+            dispatchRequests(HttpMethod.POST, URN.post_site, site.toJsonObject())
+                .subscribe(
+                    siteResponse -> ctx.response().setStatusCode(new JsonObject(siteResponse.getDelegate()).getInteger("statusCode")).end(),
+                    throwable -> handleHttpException(throwable, ctx));
+        } else {
+            forbidden(ctx);
+        }
     }
 
-    private void createMongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser, RoutingContext ctx) {
-        MongoUser mongoUser = new MongoUser(body, user, keycloakUser.getJsonObject("body"));
-        logger.info("Mongo User::: " + mongoUser.toJsonObject());
-        dispatchRequest(HttpMethod.POST, URN.post_user, mongoUser.toJsonObject(), mongoResponse -> {
-            if (mongoResponse.succeeded()) {
-                logger.info("User creation on MongoDB: " + mongoResponse.result());
-                ctx.response().setStatusCode(HttpResponseStatus.CREATED.code()).end();
-            } else {
-                ctx.fail(mongoResponse.cause());
-            }
-        });
+    private void handlePostUserGroup(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        if (role == Role.MANAGER) {
+            // Only manager's sites should make available for user_group
+            dispatchRequests(HttpMethod.POST, URN.get_site, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")))
+                .flatMap(buffer -> {
+                    JsonArray childCompaniesResponse = new JsonArray(buffer.getDelegate());
+                    if (childCompaniesResponse.size() > 0) {
+                        String[] availableSites = StringUtils.getIds(childCompaniesResponse);
+                        String site_id = SQLUtils.getMatchValueOrDefaultOne(ctx.getBodyAsJson().getString("site_id", ""), availableSites);
+                        UserGroup userGroup = new UserGroup(ctx.getBodyAsJson()
+                            .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                            .put("site_id", site_id));
+                        return Single.just(userGroup);
+                    } else {
+                        throw badRequest("Create <Site> at first.");
+                    }
+                })
+                .flatMap(userGroup -> dispatchRequests(HttpMethod.POST, URN.post_user_group, userGroup.toJsonObject()))
+                .subscribe(
+                    buffer -> ctx.response().setStatusCode(new JsonObject(buffer.getDelegate()).getInteger("statusCode")).end(),
+                    throwable -> handleHttpException(throwable, ctx));
+        } else {
+            forbidden(ctx);
+        }
+    }
+
+    private void handleGetCompanies(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        if (role == Role.SUPER_ADMIN) {
+            respondRequest(ctx, new JsonObject(), URN.get_company);
+        } else if (role == Role.ADMIN) {
+            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_company);
+        } else {
+            forbidden(ctx);
+        }
+    }
+
+    private void handleGetUsers(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        if (role == Role.SUPER_ADMIN) {
+            respondRequest(ctx, new JsonObject(), URN.get_user);
+        } else if (role == Role.ADMIN) {
+            // Returning all <Users> which is branches from the ADMIN
+            dispatchRequests(HttpMethod.POST, URN.get_company, new JsonObject()
+                .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                .put("role", Role.MANAGER.toString()))
+                .subscribe(buffer -> respondRequest(ctx, new JsonObject()
+                        .put("associated_company_id", new JsonObject()
+                            .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
+                                .add(ctx.user().principal().getString("company_id")))), URN.get_user),
+                    throwable -> handleHttpException(throwable, ctx));
+        } else if (role == Role.MANAGER) {
+            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user);
+        } else {
+            forbidden(ctx);
+        }
+    }
+
+    private void handleGetSites(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        if (role == Role.SUPER_ADMIN) {
+            respondRequest(ctx, new JsonObject(), URN.get_site);
+        } else if (role == Role.ADMIN) {
+            // Returning all MANAGER's companies' <sites> which is associated with the ADMIN company
+            dispatchRequests(HttpMethod.POST, URN.get_company, new JsonObject()
+                .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                .put("role", Role.MANAGER.toString()))
+                .subscribe(
+                    buffer -> respondRequest(ctx, new JsonObject()
+                        .put("associated_company_id", new JsonObject()
+                            .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
+                                .add(ctx.user().principal().getString("company_id")))), URN.get_site),
+                    throwable -> handleHttpException(throwable, ctx));
+        } else if (role == Role.MANAGER) {
+            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_site);
+        } else {
+            forbidden(ctx);
+        }
+    }
+
+    private void handleGetUserGroups(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        if (role == Role.SUPER_ADMIN) {
+            respondRequest(ctx, new JsonObject(), URN.get_user_group);
+        } else if (role == Role.ADMIN) {
+            // Returning all MANAGER's companies' <user groups> which is associated with the ADMIN company
+            dispatchRequests(HttpMethod.POST, URN.get_company, new JsonObject()
+                .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                .put("role", Role.MANAGER.toString()))
+                .subscribe(
+                    buffer -> respondRequest(ctx, new JsonObject()
+                        .put("associated_company_id", new JsonObject()
+                            .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
+                                .add(ctx.user().principal().getString("company_id")))), URN.get_user_group),
+                    throwable -> handleHttpException(throwable, ctx));
+        } else if (role == Role.MANAGER) {
+            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user_group);
+        } else {
+            forbidden(ctx);
+        }
+    }
+
+    private void handleDeleteUsers(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        // Model level permission; this is limited to SUPER_ADMIN, ADMIN and MANAGER
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+            JsonArray queryInput = ctx.getBodyAsJsonArray();
+            // Object level permission
+            JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
+
+            dispatchRequests(HttpMethod.POST, URN.get_user, query)
+                .map(buffer -> {
+                    JsonArray users = new JsonArray(buffer.getDelegate());
+                    if (users.size() == queryInput.size()) {
+                        String companyId = ctx.user().principal().getString("company_id");
+                        for (Object userResponse : users) {
+                            JsonObject user = (JsonObject) (userResponse);
+                            if (!user.getString("associated_company_id").equals(companyId)) {
+                                throw new HttpException(HttpResponseStatus.FORBIDDEN, "You don't have permission to perform the action.");
+                            }
+                        }
+                        return users;
+                    }
+                    throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Doesn't have those Users on Database.");
+                })
+                .flatMap(users -> Observable.fromIterable(users)
+                    .flatMapSingle(user -> deleteUserFromKeycloakAndMongo(ctx, user))
+                    .toList())
+                .subscribe(ignored -> ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end(), throwable -> handleHttpException(throwable, ctx));
+        } else {
+            forbidden(ctx);
+        }
+    }
+
+    private SingleSource<? extends Integer> deleteUserFromKeycloakAndMongo(RoutingContext ctx, Object userObject) {
+        JsonObject user = (JsonObject) (userObject);
+        JsonObject keycloakConfig = HttpServerVerticle.this.config().getJsonObject("keycloak");
+        HttpClient client = vertx.createHttpClient();
+
+        return UserUtils.deleteUser(user.getString("_id"),
+            ctx.user().principal().getString("access_token"),
+            keycloakConfig.getString("auth-server-url"),
+            keycloakConfig.getString("realm"),
+            client)
+            .flatMap(deleteUserKeycloakResponse -> {
+                if (deleteUserKeycloakResponse.getInteger("statusCode") == HttpResponseStatus.NO_CONTENT.code()) {
+                    JsonObject queryToDeleteOne = new JsonObject().put("_id", new JsonObject()
+                        .put("$in", new JsonArray().add(user.getString("_id"))));
+
+                    return dispatchRequests(HttpMethod.POST, URN.delete_user, queryToDeleteOne)
+                        .map(deleteUserResponse -> {
+                            if (StringUtils.isNotNull(deleteUserResponse.toString())) {
+                                throw new HttpException(new JsonObject(deleteUserResponse.getDelegate()).getInteger("statusCode"), "Users are unable to deleted from the services.");
+                            }
+                            return HttpResponseStatus.NO_CONTENT.code();
+                        });
+                } else {
+                    throw new HttpException(deleteUserKeycloakResponse.getInteger("statusCode"), "Users are unable to deleted from the services.");
+                }
+            });
+    }
+
+    private void handleDeleteCompanies(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        // Model level permission; this is limited to SUPER_ADMIN and ADMIN
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+            JsonArray queryInput = ctx.getBodyAsJsonArray();
+            // Object level permission
+            JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
+            dispatchRequests(HttpMethod.POST, URN.get_company, query)
+                .flatMap(buffer -> {
+                    JsonArray companies = new JsonArray(buffer.getDelegate());
+                    if (companies.size() == queryInput.size()) {
+                        String companyId = ctx.user().principal().getString("company_id");
+                        boolean objectLevelPermission = true;
+                        for (Object companyResponse : companies) {
+                            JsonObject company = (JsonObject) (companyResponse);
+                            if (!company.getString("associated_company_id").equals(companyId)) {
+                                objectLevelPermission = false;
+                            }
+                        }
+                        if (objectLevelPermission) {
+                            return dispatchRequests(HttpMethod.POST, URN.delete_company, query);
+                        } else {
+                            throw forbidden();
+                        }
+
+                    } else {
+                        throw badRequest("Doesn't have those <Companies> on Database.");
+                    }
+                })
+                .map(buffer -> {
+                    if (StringUtils.isNotNull(buffer.toString())) {
+                        throw new HttpException(new JsonObject(buffer.getDelegate()).getInteger("statusCode"));
+                    }
+                    return HttpResponseStatus.NO_CONTENT.code();
+                }).subscribe(ignored -> ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end(), throwable -> handleHttpException(throwable, ctx));
+        } else {
+            forbidden(ctx);
+        }
+    }
+
+    private void handleDeleteSites(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        // Model level permission; this is limited to MANAGER
+        if (role == Role.MANAGER) {
+            JsonArray queryInput = ctx.getBodyAsJsonArray();
+            // Object level permission
+            JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
+            dispatchRequests(HttpMethod.POST, URN.get_site, query)
+                .flatMap(buffer -> {
+                    JsonArray sites = new JsonArray(buffer.getDelegate());
+                    if (sites.size() == queryInput.size()) {
+                        String companyId = ctx.user().principal().getString("company_id");
+                        boolean objectLevelPermission = true;
+                        for (Object siteResponse : sites) {
+                            JsonObject site = (JsonObject) (siteResponse);
+                            if (!site.getString("associated_company_id").equals(companyId)) {
+                                objectLevelPermission = false;
+                            }
+                        }
+                        if (objectLevelPermission) {
+                            return dispatchRequests(HttpMethod.POST, URN.delete_site, query);
+                        } else {
+                            throw forbidden();
+                        }
+                    } else {
+                        throw badRequest("Doesn't have those <Sites> on Database.");
+                    }
+                })
+                .map(buffer -> {
+                    if (StringUtils.isNotNull(buffer.toString())) {
+                        throw new HttpException(new JsonObject(buffer.getDelegate()).getInteger("statusCode"));
+                    }
+                    return HttpResponseStatus.NO_CONTENT.code();
+                }).subscribe(ignored -> ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end(), throwable -> handleHttpException(throwable, ctx));
+        } else {
+            forbidden(ctx);
+        }
+    }
+
+    private void handleDeleteUserGroups(RoutingContext ctx) {
+        Role role = Role.valueOf(ctx.user().principal().getString("role"));
+        // Model level permission; this is limited to MANAGER
+        if (role == Role.MANAGER) {
+            JsonArray queryInput = ctx.getBodyAsJsonArray();
+            // Object level permission
+            JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
+            dispatchRequests(HttpMethod.POST, URN.get_user_group, query)
+                .flatMap(buffer -> {
+                    JsonArray userGroups = new JsonArray(buffer.getDelegate());
+                    if (userGroups.size() == queryInput.size()) {
+                        String companyId = ctx.user().principal().getString("company_id");
+                        boolean objectLevelPermission = true;
+                        for (Object userGroupResponse : userGroups) {
+                            JsonObject userGroup = (JsonObject) (userGroupResponse);
+                            if (!userGroup.getString("associated_company_id").equals(companyId)) {
+                                objectLevelPermission = false;
+                            }
+                        }
+                        if (objectLevelPermission) {
+                            return dispatchRequests(HttpMethod.POST, URN.delete_user_group, query);
+                        } else {
+                            throw forbidden();
+                        }
+                    } else {
+                        throw badRequest("Doesn't have those <User Groups> on Database.");
+                    }
+                })
+                .map(buffer -> {
+                    if (StringUtils.isNotNull(buffer.toString())) {
+                        throw new HttpException(new JsonObject(buffer.getDelegate()).getInteger("statusCode"));
+                    }
+                    return HttpResponseStatus.NO_CONTENT.code();
+                }).subscribe(ignored -> ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end(), throwable -> handleHttpException(throwable, ctx));
+        } else {
+            forbidden(ctx);
+        }
     }
 
     private void respondRequest(RoutingContext ctx, JsonObject query, String urn) {
-        getJsonArray(query, urn, res -> {
-            if (res.succeeded()) {
-                ctx.response()
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .setStatusCode(HttpResponseStatus.OK.code())
-                        .end(res.result().toBuffer());
-            } else {
-                serviceUnavailable(ctx);
+        dispatchRequests(HttpMethod.POST, urn, query)
+            .subscribe(ctx.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.OK.code())::end,
+                throwable -> handleHttpException(throwable, ctx));
+    }
+
+    private void handleHttpException(Throwable throwable, RoutingContext routingContext) {
+        HttpException exception = (HttpException) throwable;
+        routingContext.response()
+            .setStatusCode(exception.getStatusCode().code())
+            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+            .end(Json.encodePrettily(new JsonObject().put("message", exception.getMessage())));
+    }
+
+
+    protected Single<Buffer> dispatchRequests(HttpMethod method, String path, JsonObject payload) {
+        int initialOffset = 5; // length of `/api/`
+        // run with circuit breaker in order to deal with failure
+        return circuitBreaker.rxExecuteCommand(future -> {
+            getRxAllEndpoints().flatMap(recordList -> {
+                if (path.length() <= initialOffset) {
+                    return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));
+                }
+                String prefix = (path.substring(initialOffset)
+                    .split("/"))[0];
+                getLogger().info("Prefix: " + prefix);
+                // generate new relative path
+                String newPath = path.substring(initialOffset + prefix.length());
+                // get one relevant HTTP client, may not exist
+                getLogger().info("New path: " + newPath);
+                Optional<Record> client = recordList.stream()
+                    .filter(record -> record.getMetadata().getString("api.name") != null)
+                    .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
+                    .findAny(); // simple load balance
+
+                if (client.isPresent()) {
+                    getLogger().info("Found client for uri: " + path);
+                    Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery,
+                        rec -> rec.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE) && rec.getMetadata().getString("api.name").equals(prefix));
+                    return doDispatch(newPath, method, payload, httpClientSingle);
+                } else {
+                    getLogger().info("Client endpoint not found for uri: " + path);
+                    return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));
+                }
+            }).subscribe(future::complete, future::fail);
+        });
+    }
+
+    /**
+     * Dispatch the request to the downstream REST layers.
+     */
+    private Single<Buffer> doDispatch(String path, HttpMethod method, JsonObject payload, Single<HttpClient> httpClientSingle) {
+        return Single.create(source ->
+            httpClientSingle.subscribe(client -> {
+                HttpClientRequest toReq = client.request(method, path, response -> {
+                    response.bodyHandler(body -> {
+                        if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
+                            source.onError(new HttpException(HttpResponseStatus.valueOf(response.statusCode()), response.statusCode() + ": " + body.toString()));
+                            getLogger().info("Failed to dispatch: " + response.toString());
+                        } else {
+                            source.onSuccess(body);
+                            client.close();
+                            getLogger().info("Successfully dispatched: " + body);
+                        }
+                        io.vertx.servicediscovery.ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
+                    });
+                });
+                toReq.setChunked(true);
+                toReq.getDelegate().putHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+                if (payload == null) {
+                    toReq.end();
+                } else {
+                    toReq.write(payload.encode()).end();
+                }
+            })
+        );
+    }
+
+    private Single<List<Record>> getRxAllEndpoints() {
+        return discovery.rxGetRecords(record -> record.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE));
+    }
+
+    private void dispatchRequests(RoutingContext context) {
+        System.out.println("Dispatch Requests called");
+        int initialOffset = 5; // length of `/api/`
+        // run with circuit breaker in order to deal with failure
+        circuitBreaker.execute(future -> {
+            getAllEndpoints().setHandler(ar -> {
+                if (ar.succeeded()) {
+                    List<Record> recordList = ar.result();
+                    // get relative path and retrieve prefix to dispatch client
+                    String path = context.request().uri();
+
+                    if (path.length() <= initialOffset) {
+                        HttpHelper.notFound(context);
+                        future.complete();
+                        return;
+                    }
+                    String prefix = (path.substring(initialOffset)
+                        .split("/"))[0];
+                    System.out.println("prefix = " + prefix);
+                    // generate new relative path
+                    String newPath = path.substring(initialOffset + prefix.length());
+                    // get one relevant HTTP client, may not exist
+                    System.out.println("new path = " + newPath);
+                    Optional<Record> client = recordList.stream()
+                        .filter(record -> record.getMetadata().getString("api.name") != null)
+                        .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
+                        .findAny(); // simple load balance
+
+                    if (client.isPresent()) {
+                        System.out.println("Found client for uri: " + path);
+                        Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery,
+                            rec -> rec.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE) && rec.getMetadata().getString("api.name").equals(prefix));
+                        doDispatch(context, newPath, httpClientSingle, future);
+                    } else {
+                        System.out.println("Client endpoint not found for uri " + path);
+                        HttpHelper.notFound(context);
+                        future.complete();
+                    }
+                } else {
+                    future.fail(ar.cause());
+                }
+            });
+        }).setHandler(ar -> {
+            if (ar.failed()) {
+                badGateway(ar.cause(), context);
             }
         });
+    }
+
+    /**
+     * Dispatch the request to the downstream REST layers.
+     *
+     * @param context          routing context instance
+     * @param path             relative path
+     * @param httpClientSingle relevant HTTP client
+     */
+    private void doDispatch(RoutingContext context, String path, Single<HttpClient> httpClientSingle, Future<Object> cbFuture) {
+        httpClientSingle.subscribe(client -> {
+            HttpClientRequest toReq = client
+                .request(context.request().method(), path, response -> {
+                    response.bodyHandler(body -> {
+                        if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
+                            cbFuture.fail(response.statusCode() + ": " + body.toString());
+                        } else {
+                            HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
+                            response.headers().getDelegate().forEach(header -> {
+                                toRsp.putHeader(header.getKey(), header.getValue());
+                            });
+                            // send response
+                            toRsp.end(body);
+                            client.close();
+                            cbFuture.complete();
+                        }
+                        ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
+                    });
+                });
+            // set headers
+            context.request().headers().getDelegate().forEach(header -> {
+                toReq.putHeader(header.getKey(), header.getValue());
+            });
+            if (context.getBody() == null) {
+                toReq.end();
+            } else {
+                toReq.end(context.getBody());
+            }
+        });
+    }
+
+    /**
+     * Get all REST endpoints from the service discovery infrastructure.
+     *
+     * @return async result
+     */
+    private Future<List<Record>> getAllEndpoints() {
+        Future<List<Record>> future = Future.future();
+        discovery.getRecords(record -> record.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE),
+            future.completer());
+        return future;
     }
 }

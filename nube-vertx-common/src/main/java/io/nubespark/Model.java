@@ -23,7 +23,6 @@ public abstract class Model {
         for (Field field : fields) {
             String fieldName = field.getName();
             String fieldType = field.getType().getSimpleName();
-            System.out.println("Field type is this:::" + fieldType + " ::: " + fieldName);
             switch (fieldType) {
                 case "int":
                     jsonObject.put(fieldName, input.get("body").getInteger(fieldName, 0));

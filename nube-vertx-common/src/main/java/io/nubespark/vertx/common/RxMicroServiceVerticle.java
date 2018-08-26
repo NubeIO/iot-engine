@@ -8,17 +8,21 @@ import io.reactivex.annotations.NonNull;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Verticle;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
 import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.handler.CorsHandler;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.reactivex.servicediscovery.types.MessageSource;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.ServiceDiscoveryOptions;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -91,4 +95,32 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle {
         return publish(record);
     }
 
+    /**
+     * Enable CORS support.
+     *
+     * @param router router instance
+     */
+    protected void enableCorsSupport(Router router) {
+        Set<String> allowHeaders = new HashSet<>();
+        allowHeaders.add("Access-Control-Request-Method");
+        allowHeaders.add("Access-Control-Allow-Credentials");
+        allowHeaders.add("Access-Control-Allow-Origin");
+        allowHeaders.add("Access-Control-Allow-Headers");
+        allowHeaders.add("Content-Type");
+        allowHeaders.add("origin");
+        allowHeaders.add("x-requested-with");
+        allowHeaders.add("accept");
+        allowHeaders.add("X-PINGARUNER");
+        allowHeaders.add("Authorization");
+        allowHeaders.add("JSESSIONID");
+
+        router.route().handler(CorsHandler.create("*")
+                .allowedHeaders(allowHeaders)
+                .allowedMethod(HttpMethod.GET)
+                .allowedMethod(HttpMethod.PUT)
+                .allowedMethod(HttpMethod.OPTIONS)
+                .allowedMethod(HttpMethod.POST)
+                .allowedMethod(HttpMethod.DELETE)
+                .allowedMethod(HttpMethod.PATCH));
+    }
 }

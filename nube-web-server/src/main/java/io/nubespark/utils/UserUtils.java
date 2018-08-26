@@ -2,11 +2,11 @@ package io.nubespark.utils;
 
 import io.nubespark.Role;
 import io.nubespark.impl.models.KeycloakUserRepresentation;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.http.*;
+import io.reactivex.Single;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.core.http.HttpClient;
+import io.vertx.reactivex.core.http.HttpClientRequest;
 
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
@@ -25,74 +25,75 @@ public class UserUtils {
         }
     }
 
-    public static void createUser(KeycloakUserRepresentation user, String accessToken, String authServerUrl,
-                                  String realmName, HttpClient client, Handler<AsyncResult<JsonObject>> handler) {
+    public static Single<JsonObject> createUser(KeycloakUserRepresentation user, String accessToken, String authServerUrl, String realmName, HttpClient client) {
         String uri = authServerUrl + "/admin/realms/" + realmName + "/users";
 
-        HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response ->
+        return Single.create(source -> {
+            HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response -> {
                 response.bodyHandler(body -> {
-                    handler.handle(Future.succeededFuture(new JsonObject().put("statusCode", response.statusCode())));
-                }));
+                    source.onSuccess(new JsonObject().put("statusCode", response.statusCode()));
+                });
+            });
 
-        request.setChunked(true);
-        request.putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
-        request.putHeader("Authorization", "Bearer " + accessToken);
-        request.write(user.toJsonObject().toString()).end();
+            request.setChunked(true);
+            request.putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
+            request.putHeader("Authorization", "Bearer " + accessToken);
+            request.write(user.toJsonObject().toString()).end();
+        });
     }
 
-    public static void getUser(String username, String accessToken, String authServerUrl,
-                               String realmName, HttpClient client, Handler<AsyncResult<JsonObject>> handler) {
+    public static Single<JsonObject> getUser(String username, String accessToken, String authServerUrl, String realmName, HttpClient client) {
         String uri = authServerUrl + "/admin/realms/" + realmName + "/users/?username=" + username;
 
-        HttpClientRequest request = client.requestAbs(HttpMethod.GET, uri, response ->
+        return Single.create(source -> {
+            HttpClientRequest request = client.requestAbs(HttpMethod.GET, uri, response -> {
                 response.bodyHandler(body -> {
-                    handler.handle(Future.succeededFuture(new JsonObject()
+                    source.onSuccess(new JsonObject()
                             .put("body", body.toJsonArray().getValue(0))
-                            .put("statusCode", response.statusCode())
-                    ));
-                })
-        );
+                            .put("statusCode", response.statusCode()));
+                });
+            });
 
-        request.putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
-        request.putHeader("Authorization", "Bearer " + accessToken);
-        request.end();
+            request.putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
+            request.putHeader("Authorization", "Bearer " + accessToken);
+            request.end();
+        });
     }
 
-    public static void resetPassword(String userId, String password, String accessToken, String authServerUrl,
-                               String realmName, HttpClient client, Handler<AsyncResult<JsonObject>> handler) {
+    public static Single<JsonObject> resetPassword(String userId, String password, String accessToken, String authServerUrl, String realmName, HttpClient client) {
         String uri = authServerUrl + "/admin/realms/" + realmName + "/users/" + userId + "/reset-password";
 
-        HttpClientRequest request = client.requestAbs(HttpMethod.PUT, uri, response ->
+        return Single.create(source -> {
+            HttpClientRequest request = client.requestAbs(HttpMethod.PUT, uri, response -> {
                 response.bodyHandler(body -> {
-                    handler.handle(Future.succeededFuture(new JsonObject()
-                            .put("statusCode", response.statusCode())
-                    ));
-                })
-        );
+                    source.onSuccess(new JsonObject().put("statusCode", response.statusCode()));
+                });
+            });
 
-        request.setChunked(true);
-        request.putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
-        request.putHeader("Authorization", "Bearer " + accessToken);
-        JsonObject requestBody = new JsonObject()
-                .put("temporary", false)
-                .put("type", "password")
-                .put("value", password);
-        request.write(requestBody.toString()).end();
+            request.setChunked(true);
+            request.putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
+            request.putHeader("Authorization", "Bearer " + accessToken);
+            JsonObject requestBody = new JsonObject()
+                    .put("temporary", false)
+                    .put("type", "password")
+                    .put("value", password);
+            request.write(requestBody.toString()).end();
+        });
     }
 
-    public static void deleteUser(String userId, String accessToken, String authServerUrl, String realmName,
-                                  HttpClient client, Handler<AsyncResult<JsonObject>> handler) {
+    public static Single<JsonObject> deleteUser(String userId, String accessToken, String authServerUrl, String realmName,
+                                                HttpClient client) {
         String uri = authServerUrl + "/admin/realms/" + realmName + "/users/" + userId;
 
-        HttpClientRequest request = client.requestAbs(HttpMethod.DELETE, uri, response-> {
-           response.bodyHandler(body -> {
-              handler.handle(Future.succeededFuture(new JsonObject()
-                      .put("statusCode", response.statusCode())
-              ));
-           });
+        return Single.create(source -> {
+            HttpClientRequest request = client.requestAbs(HttpMethod.DELETE, uri, response -> {
+                response.bodyHandler(body -> {
+                    source.onSuccess(new JsonObject().put("statusCode", response.statusCode()));
+                });
+            });
+            request.putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
+            request.putHeader("Authorization", "Bearer " + accessToken);
+            request.end();
         });
-        request.putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
-        request.putHeader("Authorization", "Bearer " + accessToken);
-        request.end();
     }
 }

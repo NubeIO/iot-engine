@@ -112,7 +112,6 @@ public class MongoDBController {
         // we can use this query for filtering output array
         if (routingContext.request().method() == HttpMethod.POST) {
             JsonObject query = routingContext.getBodyAsJson();
-            System.out.println("Query===================> " + query);
             client.removeDocuments(document, query, res -> {
                 if (res.succeeded()) {
                     routingContext.response()
@@ -120,7 +119,8 @@ public class MongoDBController {
                 } else {
                     res.cause().printStackTrace();
                     routingContext.response()
-                            .setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
                 }
             });
         } else {
@@ -131,7 +131,9 @@ public class MongoDBController {
                 } else {
                     res.cause().printStackTrace();
                     routingContext.response()
-                            .setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+                            .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
                 }
             });
         }
@@ -144,12 +146,15 @@ public class MongoDBController {
         JsonObject searchQuery = new JsonObject().put("_id", id);
         client.findOneAndDelete(document, searchQuery, res -> {
             if (res.succeeded()) {
+                System.out.println("Delete one is being called...");
                 routingContext.response()
                         .setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
             } else {
                 res.cause().printStackTrace();
                 routingContext.response()
-                        .setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+                        .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
             }
         });
     }
