@@ -48,6 +48,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static io.nubespark.utils.Constants.SERVICE_NAME;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
@@ -144,6 +145,8 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         router.post("/api/delete_companies").handler(this::handleDeleteCompanies);
         router.post("/api/delete_sites").handler(this::handleDeleteSites);
         router.post("/api/delete_user_groups").handler(this::handleDeleteUserGroups);
+
+        router.post("/api/check_user").handler(this::handleCheckUser);
     }
 
     private void handleAuthEventBus(Router router) {
@@ -743,6 +746,42 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         } else {
             forbidden(ctx);
         }
+    }
+
+    private void handleCheckUser(RoutingContext ctx) {
+        JsonObject body = ctx.getBodyAsJson();
+        String username = body.getString("username", "");
+        String email = body.getString("email", "");
+        String query = "username=" + username + "&email=" + email;
+
+        JsonObject user = ctx.user().principal();
+        String accessToken = user.getString("access_token");
+        JsonObject keycloakConfig = config().getJsonObject("keycloak");
+        HttpClient client = vertx.createHttpClient();
+
+        String authServerUrl = keycloakConfig.getString("auth-server-url");
+        String realmName = keycloakConfig.getString("realm");
+
+        UserUtils.queryUsers(query, accessToken, authServerUrl, realmName, client)
+            .subscribe(users -> {
+                logger.info("Users: " + users);
+                int usersSize = users.stream().filter(userObject -> {
+                    JsonObject jsonUser = (JsonObject) userObject;
+                    if (StringUtils.isNull(username)) {
+                        return jsonUser.getString("email").equals(email);
+                    } else if (StringUtils.isNull(email)) {
+                        return jsonUser.getString("username").equals(username);
+                    } else {
+                        return jsonUser.getString("username").equals(username) && jsonUser.getString("email").equals(email);
+                    }
+                }).collect(Collectors.toList()).size();
+                logger.info("Size of user match: " + usersSize);
+                if (usersSize > 0) {
+                    ctx.response().setStatusCode(HttpResponseStatus.OK.code()).end();
+                } else {
+                    ctx.response().setStatusCode(HttpResponseStatus.NOT_FOUND.code()).end();
+                }
+            });
     }
 
     private void respondRequest(RoutingContext ctx, JsonObject query, String urn) {
