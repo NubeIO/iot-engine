@@ -1,6 +1,6 @@
 package io.nubespark.utils;
 
-public class URN {
+public class URL {
     public static final String get_user = "/api/mongo/get/user";
     public static final String post_user = "/api/mongo/post/user";
     public static final String delete_user = "/api/mongo/delete/user";

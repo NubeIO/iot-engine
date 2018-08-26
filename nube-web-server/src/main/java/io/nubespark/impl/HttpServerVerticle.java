@@ -6,7 +6,7 @@ import io.nubespark.controller.HttpException;
 import io.nubespark.impl.models.*;
 import io.nubespark.utils.SQLUtils;
 import io.nubespark.utils.StringUtils;
-import io.nubespark.utils.URN;
+import io.nubespark.utils.URL;
 import io.nubespark.utils.UserUtils;
 import io.nubespark.vertx.common.HttpHelper;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
@@ -210,7 +210,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                 String user_id = token.principal().getString("sub");
                 String access_token = token.principal().getString("access_token");
                 logger.info("User id: " + user_id);
-                dispatchRequests(HttpMethod.GET, URN.get_user + "/" + user_id, null)
+                dispatchRequests(HttpMethod.GET, URL.get_user + "/" + user_id, null)
                     .subscribe(buffer -> {
                         JsonObject result = new JsonObject(buffer.getDelegate());
                         logger.info("User Response: " + result);
@@ -291,7 +291,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             String name = accessToken.getString("name", accessToken.getString("preferred_username"));
             ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .end(Json.encodePrettily(new JsonObject()
-                    .put("name", name)
+                    .put("name", name).mergeIn(user.principal())
                 ));
         } else {
             System.out.println("Send not authorized error and user should login");
@@ -389,7 +389,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                 .flatMap(keycloakUser -> {
                     if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
                         // 4.1 only child companies can be added by the parent
-                        return dispatchRequests(HttpMethod.POST, URN.get_company, new JsonObject().put("associated_company_id", user.getString("company_id")))
+                        return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("associated_company_id", user.getString("company_id")))
                             .flatMap(response -> {
                                 JsonArray responseArray = new JsonArray(response.getDelegate());
                                 if (responseArray.size() > 0) {
@@ -400,7 +400,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                                     // 5.1 Creating user on MongoDB
                                     MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
                                     logger.info("Mongo User::: " + mongoUser.toJsonObject());
-                                    return dispatchRequests(HttpMethod.POST, URN.post_user, mongoUser.toJsonObject())
+                                    return dispatchRequests(HttpMethod.POST, URL.post_user, mongoUser.toJsonObject())
                                         .map(buffer -> HttpResponseStatus.CREATED.code());
                                 } else {
                                     // 5.2 Remove user from Keycloak
@@ -412,7 +412,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                             });
                     } else {
                         // 4.2 Creating user on MongoDB with 'group_id'
-                        return dispatchRequests(HttpMethod.POST, URN.get_user_group, new JsonObject().put("associated_company_id", user.getString("company_id")))
+                        return dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject().put("associated_company_id", user.getString("company_id")))
                             .flatMap(response -> {
                                 JsonArray responseArray = new JsonArray(response.getDelegate());
                                 if (responseArray.size() > 0) {
@@ -423,7 +423,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                                     // 5.1 Creating user on MongoDB
                                     MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
                                     logger.info("Mongo User::: " + mongoUser.toJsonObject());
-                                    return dispatchRequests(HttpMethod.POST, URN.post_user, mongoUser.toJsonObject())
+                                    return dispatchRequests(HttpMethod.POST, URL.post_user, mongoUser.toJsonObject())
                                         .map(buffer -> HttpResponseStatus.CREATED.code());
                                 } else {
                                     // 5.2 Remove user from Keycloak
@@ -442,7 +442,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
             Company company = new Company(ctx.getBodyAsJson(), ctx.user().principal());
-            dispatchRequests(HttpMethod.POST, URN.post_company, company.toJsonObject())
+            dispatchRequests(HttpMethod.POST, URL.post_company, company.toJsonObject())
                 .subscribe(
                     result -> ctx.response().setStatusCode(new JsonObject(result.getDelegate()).getInteger("statusCode")).end(),
                     throwable -> handleHttpException(throwable, ctx));
@@ -455,7 +455,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.MANAGER) {
             Site site = new Site(ctx.getBodyAsJson().put("associated_company_id", ctx.user().principal().getString("company_id")));
-            dispatchRequests(HttpMethod.POST, URN.post_site, site.toJsonObject())
+            dispatchRequests(HttpMethod.POST, URL.post_site, site.toJsonObject())
                 .subscribe(
                     siteResponse -> ctx.response().setStatusCode(new JsonObject(siteResponse.getDelegate()).getInteger("statusCode")).end(),
                     throwable -> handleHttpException(throwable, ctx));
@@ -468,7 +468,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.MANAGER) {
             // Only manager's sites should make available for user_group
-            dispatchRequests(HttpMethod.POST, URN.get_site, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")))
+            dispatchRequests(HttpMethod.POST, URL.get_site, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")))
                 .flatMap(buffer -> {
                     JsonArray childCompaniesResponse = new JsonArray(buffer.getDelegate());
                     if (childCompaniesResponse.size() > 0) {
@@ -482,7 +482,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                         throw badRequest("Create <Site> at first.");
                     }
                 })
-                .flatMap(userGroup -> dispatchRequests(HttpMethod.POST, URN.post_user_group, userGroup.toJsonObject()))
+                .flatMap(userGroup -> dispatchRequests(HttpMethod.POST, URL.post_user_group, userGroup.toJsonObject()))
                 .subscribe(
                     buffer -> ctx.response().setStatusCode(new JsonObject(buffer.getDelegate()).getInteger("statusCode")).end(),
                     throwable -> handleHttpException(throwable, ctx));
@@ -494,9 +494,9 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetCompanies(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequest(ctx, new JsonObject(), URN.get_company);
+            respondRequest(ctx, new JsonObject(), URL.get_company);
         } else if (role == Role.ADMIN) {
-            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_company);
+            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_company);
         } else {
             forbidden(ctx);
         }
@@ -505,19 +505,19 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetUsers(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequest(ctx, new JsonObject(), URN.get_user);
+            respondRequest(ctx, new JsonObject(), URL.get_user);
         } else if (role == Role.ADMIN) {
             // Returning all <Users> which is branches from the ADMIN
-            dispatchRequests(HttpMethod.POST, URN.get_company, new JsonObject()
+            dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", Role.MANAGER.toString()))
                 .subscribe(buffer -> respondRequest(ctx, new JsonObject()
                         .put("associated_company_id", new JsonObject()
                             .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
-                                .add(ctx.user().principal().getString("company_id")))), URN.get_user),
+                                .add(ctx.user().principal().getString("company_id")))), URL.get_user),
                     throwable -> handleHttpException(throwable, ctx));
         } else if (role == Role.MANAGER) {
-            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user);
+            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user);
         } else {
             forbidden(ctx);
         }
@@ -526,20 +526,20 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetSites(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequest(ctx, new JsonObject(), URN.get_site);
+            respondRequest(ctx, new JsonObject(), URL.get_site);
         } else if (role == Role.ADMIN) {
             // Returning all MANAGER's companies' <sites> which is associated with the ADMIN company
-            dispatchRequests(HttpMethod.POST, URN.get_company, new JsonObject()
+            dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", Role.MANAGER.toString()))
                 .subscribe(
                     buffer -> respondRequest(ctx, new JsonObject()
                         .put("associated_company_id", new JsonObject()
                             .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
-                                .add(ctx.user().principal().getString("company_id")))), URN.get_site),
+                                .add(ctx.user().principal().getString("company_id")))), URL.get_site),
                     throwable -> handleHttpException(throwable, ctx));
         } else if (role == Role.MANAGER) {
-            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_site);
+            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_site);
         } else {
             forbidden(ctx);
         }
@@ -548,20 +548,20 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetUserGroups(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequest(ctx, new JsonObject(), URN.get_user_group);
+            respondRequest(ctx, new JsonObject(), URL.get_user_group);
         } else if (role == Role.ADMIN) {
             // Returning all MANAGER's companies' <user groups> which is associated with the ADMIN company
-            dispatchRequests(HttpMethod.POST, URN.get_company, new JsonObject()
+            dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", Role.MANAGER.toString()))
                 .subscribe(
                     buffer -> respondRequest(ctx, new JsonObject()
                         .put("associated_company_id", new JsonObject()
                             .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
-                                .add(ctx.user().principal().getString("company_id")))), URN.get_user_group),
+                                .add(ctx.user().principal().getString("company_id")))), URL.get_user_group),
                     throwable -> handleHttpException(throwable, ctx));
         } else if (role == Role.MANAGER) {
-            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URN.get_user_group);
+            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user_group);
         } else {
             forbidden(ctx);
         }
@@ -575,7 +575,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
 
-            dispatchRequests(HttpMethod.POST, URN.get_user, query)
+            dispatchRequests(HttpMethod.POST, URL.get_user, query)
                 .map(buffer -> {
                     JsonArray users = new JsonArray(buffer.getDelegate());
                     if (users.size() == queryInput.size()) {
@@ -614,7 +614,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                     JsonObject queryToDeleteOne = new JsonObject().put("_id", new JsonObject()
                         .put("$in", new JsonArray().add(user.getString("_id"))));
 
-                    return dispatchRequests(HttpMethod.POST, URN.delete_user, queryToDeleteOne)
+                    return dispatchRequests(HttpMethod.POST, URL.delete_user, queryToDeleteOne)
                         .map(deleteUserResponse -> {
                             if (StringUtils.isNotNull(deleteUserResponse.toString())) {
                                 throw new HttpException(new JsonObject(deleteUserResponse.getDelegate()).getInteger("statusCode"), "Users are unable to deleted from the services.");
@@ -634,7 +634,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             JsonArray queryInput = ctx.getBodyAsJsonArray();
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
-            dispatchRequests(HttpMethod.POST, URN.get_company, query)
+            dispatchRequests(HttpMethod.POST, URL.get_company, query)
                 .flatMap(buffer -> {
                     JsonArray companies = new JsonArray(buffer.getDelegate());
                     if (companies.size() == queryInput.size()) {
@@ -647,7 +647,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                             }
                         }
                         if (objectLevelPermission) {
-                            return dispatchRequests(HttpMethod.POST, URN.delete_company, query);
+                            return dispatchRequests(HttpMethod.POST, URL.delete_company, query);
                         } else {
                             throw forbidden();
                         }
@@ -674,7 +674,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             JsonArray queryInput = ctx.getBodyAsJsonArray();
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
-            dispatchRequests(HttpMethod.POST, URN.get_site, query)
+            dispatchRequests(HttpMethod.POST, URL.get_site, query)
                 .flatMap(buffer -> {
                     JsonArray sites = new JsonArray(buffer.getDelegate());
                     if (sites.size() == queryInput.size()) {
@@ -687,7 +687,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                             }
                         }
                         if (objectLevelPermission) {
-                            return dispatchRequests(HttpMethod.POST, URN.delete_site, query);
+                            return dispatchRequests(HttpMethod.POST, URL.delete_site, query);
                         } else {
                             throw forbidden();
                         }
@@ -713,7 +713,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             JsonArray queryInput = ctx.getBodyAsJsonArray();
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
-            dispatchRequests(HttpMethod.POST, URN.get_user_group, query)
+            dispatchRequests(HttpMethod.POST, URL.get_user_group, query)
                 .flatMap(buffer -> {
                     JsonArray userGroups = new JsonArray(buffer.getDelegate());
                     if (userGroups.size() == queryInput.size()) {
@@ -726,7 +726,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                             }
                         }
                         if (objectLevelPermission) {
-                            return dispatchRequests(HttpMethod.POST, URN.delete_user_group, query);
+                            return dispatchRequests(HttpMethod.POST, URL.delete_user_group, query);
                         } else {
                             throw forbidden();
                         }
