@@ -4,18 +4,13 @@ import io.nubespark.controller.MongoDBController;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.api.contract.RouterFactoryOptions;
-import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.StaticHandler;
 
 public class MongoDBVerticle extends MicroServiceVerticle {
     private int DEFAULT_PORT = 8083;
@@ -51,7 +46,7 @@ public class MongoDBVerticle extends MicroServiceVerticle {
         router.post("/get/:document").handler(routingContext -> controller.getAll(routingContext));
         router.get("/get/:document/:id").handler(routingContext -> controller.getOne(routingContext));
         router.post("/post/:document").handler(routingContext -> controller.post(routingContext)); // will throw 409 status code if same id is already there
-        router.post("/put/:document").handler(routingContext -> controller.put(routingContext)); // will override if same id is there
+        router.put("/put/:document").handler(routingContext -> controller.put(routingContext)); // will override if same id is there
         router.delete("/delete/:document").handler(routingContext -> controller.deleteAll(routingContext));
         router.post("/delete/:document").handler(routingContext -> controller.deleteAll(routingContext));
         router.delete("/delete/:document/:id").handler(routingContext -> controller.deleteOne(routingContext));
