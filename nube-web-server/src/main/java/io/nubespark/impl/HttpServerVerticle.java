@@ -32,7 +32,6 @@ import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.auth.User;
 import io.vertx.reactivex.ext.auth.oauth2.AccessToken;
-import io.vertx.reactivex.ext.auth.oauth2.KeycloakHelper;
 import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.reactivex.ext.auth.oauth2.providers.KeycloakAuth;
 import io.vertx.reactivex.ext.web.Router;
@@ -218,16 +217,9 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                 logger.info("User id: " + user_id);
                 dispatchRequests(HttpMethod.GET, URL.get_user + "/" + user_id, null)
                     .subscribe(buffer -> {
-                        JsonObject result = new JsonObject(buffer.getDelegate());
-                        logger.info("User Response: " + result);
+                        logger.info("User Response: " + buffer.toJsonObject());
                         io.vertx.ext.auth.User user = new UserImpl(new JsonObject()
-                            .put("user_id", user_id)
-                            .put("username", result.getString("username"))
-                            .put("role", result.getString("role"))
-                            .put("company_id", result.getString("company_id", ""))
-                            .put("associated_company_id", result.getString("associated_company_id"))
-                            .put("group_id", result.getString("group_id", ""))
-                            .put("access_token", access_token));
+                            .put("access_token", access_token).mergeIn(buffer.toJsonObject()));
 
                         ctx.setUser(new User(user));
                         ctx.next();
@@ -295,12 +287,23 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void currentUser(RoutingContext ctx) {
         User user = ctx.user();
         if (user != null) {
-            JsonObject accessToken = KeycloakHelper.accessToken(user.principal());
-            String name = accessToken.getString("name", accessToken.getString("preferred_username"));
-            ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                .end(Json.encodePrettily(new JsonObject()
-                    .put("name", name).mergeIn(user.principal())
-                ));
+            Role role = Role.valueOf(ctx.user().principal().getString("role"));
+            if (SQLUtils.in(role.toString(), Role.USER.toString(), Role.GUEST.toString())) {
+                dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + ctx.user().principal().getString("group_id"), null)
+                    .flatMap(group -> {
+                        JsonObject object = group.toJsonObject();
+                        return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + group.toJsonObject().getString("site_id"), null)
+                            .map(site -> object.put("site", site.toJsonObject()));
+                    })
+                    .subscribe(userGroup -> {
+                        ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .end(Json.encodePrettily(user.principal()
+                                .put("group", userGroup)));
+                    });
+            } else {
+                ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(user.principal()));
+            }
         } else {
             System.out.println("Send not authorized error and user should login");
             failAuthentication(ctx);
@@ -515,9 +518,9 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetCompanies(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequest(ctx, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_company);
+            respondRequestWithAssociateCompanyRepresentation(ctx, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_company);
         } else if (role == Role.ADMIN) {
-            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_company);
+            respondRequestWithAssociateCompanyRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_company);
         } else {
             forbidden(ctx);
         }
@@ -526,19 +529,19 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetUsers(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequestWithCompanyRepresentation(ctx, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_user);
+            respondRequestWithCompanyAndAssociateCompanyRepresentation(ctx, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_user);
         } else if (role == Role.ADMIN) {
             // Returning all <Users> which is branches from the ADMIN
             dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", Role.MANAGER.toString()))
-                .subscribe(buffer -> respondRequestWithCompanyRepresentation(ctx, new JsonObject()
+                .subscribe(buffer -> respondRequestWithCompanyAndAssociateCompanyRepresentation(ctx, new JsonObject()
                         .put("associated_company_id", new JsonObject()
                             .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
                                 .add(ctx.user().principal().getString("company_id")))), URL.get_user),
                     throwable -> handleHttpException(throwable, ctx));
         } else if (role == Role.MANAGER) {
-            respondRequestWithCompanyRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user);
+            respondRequestWithCompanyAndAssociateCompanyRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user);
         } else {
             forbidden(ctx);
         }
@@ -547,20 +550,20 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetSites(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequest(ctx, new JsonObject(), URL.get_site);
+            respondRequestWithAssociateCompanyRepresentation(ctx, new JsonObject(), URL.get_site);
         } else if (role == Role.ADMIN) {
             // Returning all MANAGER's companies' <sites> which is associated with the ADMIN company
             dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", Role.MANAGER.toString()))
                 .subscribe(
-                    buffer -> respondRequest(ctx, new JsonObject()
+                    buffer -> respondRequestWithAssociateCompanyRepresentation(ctx, new JsonObject()
                         .put("associated_company_id", new JsonObject()
                             .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
                                 .add(ctx.user().principal().getString("company_id")))), URL.get_site),
                     throwable -> handleHttpException(throwable, ctx));
         } else if (role == Role.MANAGER) {
-            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_site);
+            respondRequestWithAssociateCompanyRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_site);
         } else {
             forbidden(ctx);
         }
@@ -569,20 +572,20 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetUserGroups(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequest(ctx, new JsonObject(), URL.get_user_group);
+            respondRequestWithSiteRepresentation(ctx, new JsonObject(), URL.get_user_group);
         } else if (role == Role.ADMIN) {
             // Returning all MANAGER's companies' <user groups> which is associated with the ADMIN company
             dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", Role.MANAGER.toString()))
                 .subscribe(
-                    buffer -> respondRequest(ctx, new JsonObject()
+                    buffer -> respondRequestWithSiteRepresentation(ctx, new JsonObject()
                         .put("associated_company_id", new JsonObject()
                             .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
                                 .add(ctx.user().principal().getString("company_id")))), URL.get_user_group),
                     throwable -> handleHttpException(throwable, ctx));
         } else if (role == Role.MANAGER) {
-            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user_group);
+            respondRequestWithSiteRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user_group);
         } else {
             forbidden(ctx);
         }
@@ -951,7 +954,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                     }
                 })
                 .flatMap(userGroup ->
-                    dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")))
+                    dispatchRequests(HttpMethod.POST, URL.get_site, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")))
                         .map(buffer -> {
                             JsonArray childCompaniesResponse = new JsonArray(buffer.getDelegate());
                             if (childCompaniesResponse.size() > 0) {
@@ -972,16 +975,57 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         }
     }
 
-    private void respondRequest(RoutingContext ctx, JsonObject query, String urn) {
+    private void respondRequestWithSiteRepresentation(RoutingContext ctx, JsonObject query, String urn) {
         dispatchRequests(HttpMethod.POST, urn, query)
-            .subscribe(response -> ctx.response()
-                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .setStatusCode(HttpResponseStatus.OK.code())
-                    .end(response),
+            .flatMap(response -> Observable.fromIterable(response.toJsonArray())
+                .flatMapSingle(res -> {
+                    JsonObject object = new JsonObject(res.toString());
+                    return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + object.getString("site_id"), null)
+                        .map(site -> {
+                            if (StringUtils.isNotNull(site.toString())) {
+                                object.put("site", site.toJsonObject());
+                            }
+                            return object;
+                        });
+                }).toList()
+            )
+            .subscribe(response -> {
+                    JsonArray array = new JsonArray();
+                    response.forEach(array::add);
+                    ctx.response()
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .setStatusCode(HttpResponseStatus.OK.code())
+                        .end(Json.encodePrettily(array));
+                },
                 throwable -> handleHttpException(throwable, ctx));
     }
 
-    private void respondRequestWithCompanyRepresentation(RoutingContext ctx, JsonObject query, String urn) {
+    private void respondRequestWithAssociateCompanyRepresentation(RoutingContext ctx, JsonObject query, String urn) {
+        // We may do optimize version of this
+        dispatchRequests(HttpMethod.POST, urn, query)
+            .flatMap(response -> Observable.fromIterable(response.toJsonArray())
+                .flatMapSingle(res -> {
+                    JsonObject object = new JsonObject(res.toString());
+                    return dispatchRequests(HttpMethod.GET, URL.get_company + "/" + object.getString("associated_company_id"), null)
+                        .map(company -> {
+                            if (StringUtils.isNotNull(company.toString())) {
+                                object.put("associated_company", company.toJsonObject());
+                            }
+                            return object;
+                        });
+                }).toList()
+            ).subscribe(response -> {
+                JsonArray array = new JsonArray();
+                response.forEach(array::add);
+                ctx.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.OK.code())
+                    .end(Json.encodePrettily(array));
+            },
+            throwable -> handleHttpException(throwable, ctx));
+    }
+
+    private void respondRequestWithCompanyAndAssociateCompanyRepresentation(RoutingContext ctx, JsonObject query, String urn) {
         // We may do optimize version of this
         dispatchRequests(HttpMethod.POST, urn, query)
             .flatMap(response -> Observable.fromIterable(response.toJsonArray())

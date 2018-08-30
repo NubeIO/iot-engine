@@ -10,12 +10,18 @@ import io.vertx.ext.auth.User;
 
 public class UserImpl extends Model implements User {
 
+    private String _id;
     private String user_id;
     private String username;
-    private Enum<Role> role;
-    private String company_id;
+    private String first_name;
+    private String last_name;
+    private String email;
+    private Role role;
+    private String address;
+    private String phone_no;
     private String associated_company_id;
-    private String group_id; // optional field, only available for the roles GUEST and USER
+    private String company_id;
+    private String group_id;
     private String access_token;
 
     UserImpl(JsonObject body) {
