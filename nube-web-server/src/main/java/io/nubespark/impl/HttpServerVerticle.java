@@ -346,7 +346,6 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     }
 
 
-
     //region Multi-Tenant handlers -------------------------------------------------------------------------------------
     private void handlePostUser(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
@@ -388,10 +387,10 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                             // 4.2 Creating user on MongoDB with 'group_id'
                             return dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject().put("associated_company_id", user.getString("company_id")))
                                 .flatMap(response -> {
-                                    JsonArray childCompanies = new JsonArray(response.getDelegate());
-                                    if (childCompanies.size() > 0) {
+                                    JsonArray childGroups = new JsonArray(response.getDelegate());
+                                    if (childGroups.size() > 0) {
                                         // 5.1 Creating user on MongoDB
-                                        return createUserLevelMongoUser(body, user, keycloakUser, childCompanies);
+                                        return createUserLevelMongoUser(body, user, keycloakUser, childGroups);
                                     } else {
                                         // 5.2 Remove user from Keycloak
                                         return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
@@ -527,19 +526,19 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetUsers(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequest(ctx, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_user);
+            respondRequestWithCompanyRepresentation(ctx, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_user);
         } else if (role == Role.ADMIN) {
             // Returning all <Users> which is branches from the ADMIN
             dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", Role.MANAGER.toString()))
-                .subscribe(buffer -> respondRequest(ctx, new JsonObject()
+                .subscribe(buffer -> respondRequestWithCompanyRepresentation(ctx, new JsonObject()
                         .put("associated_company_id", new JsonObject()
                             .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
                                 .add(ctx.user().principal().getString("company_id")))), URL.get_user),
                     throwable -> handleHttpException(throwable, ctx));
         } else if (role == Role.MANAGER) {
-            respondRequest(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user);
+            respondRequestWithCompanyRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user);
         } else {
             forbidden(ctx);
         }
@@ -975,10 +974,42 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
 
     private void respondRequest(RoutingContext ctx, JsonObject query, String urn) {
         dispatchRequests(HttpMethod.POST, urn, query)
-            .subscribe(ctx.response()
+            .subscribe(response -> ctx.response()
                     .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .setStatusCode(HttpResponseStatus.OK.code())::end,
+                    .setStatusCode(HttpResponseStatus.OK.code())
+                    .end(response),
                 throwable -> handleHttpException(throwable, ctx));
+    }
+
+    private void respondRequestWithCompanyRepresentation(RoutingContext ctx, JsonObject query, String urn) {
+        // We may do optimize version of this
+        dispatchRequests(HttpMethod.POST, urn, query)
+            .flatMap(response -> Observable.fromIterable(response.toJsonArray())
+                .flatMapSingle(res -> {
+                    JsonObject object = new JsonObject(res.toString());
+                    return dispatchRequests(HttpMethod.GET, URL.get_company + "/" + object.getString("associated_company_id"), null)
+                        .flatMap(associatedCompany -> {
+                            if (StringUtils.isNotNull(associatedCompany.toString())) {
+                                object.put("associated_company", associatedCompany.toJsonObject());
+                            }
+                            return dispatchRequests(HttpMethod.GET, URL.get_company + "/" + object.getString("company_id"), null)
+                                .map(company -> {
+                                    if (StringUtils.isNotNull(company.toString())) {
+                                        object.put("company", company.toJsonObject());
+                                    }
+                                    return object;
+                                });
+                        });
+                }).toList()
+            ).subscribe(response -> {
+                JsonArray array = new JsonArray();
+                response.forEach(array::add);
+                ctx.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.OK.code())
+                    .end(Json.encodePrettily(array));
+            },
+            throwable -> handleHttpException(throwable, ctx));
     }
 
     private void handleHttpException(Throwable throwable, RoutingContext routingContext) {
@@ -989,7 +1020,6 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             .end(Json.encodePrettily(new JsonObject().put("message", exception.getMessage())));
     }
     //endregion -------------------------------------------------------------------------------------------------------
-
 
 
     // region Dispatch requests ----------------------------------------------------------------------------------------
@@ -1040,7 +1070,6 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                         } else {
                             source.onSuccess(body);
                             client.close();
-                            getLogger().info("Successfully dispatched: " + body);
                         }
                         io.vertx.servicediscovery.ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
                     });
