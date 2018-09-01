@@ -288,7 +288,10 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         User user = ctx.user();
         if (user != null) {
             Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (SQLUtils.in(role.toString(), Role.USER.toString(), Role.GUEST.toString())) {
+            if (role == Role.SUPER_ADMIN) {
+                ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(user.principal()));
+            } else {
                 dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + ctx.user().principal().getString("group_id"), null)
                     .flatMap(group -> {
                         JsonObject object = group.toJsonObject();
@@ -300,12 +303,9 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                             .end(Json.encodePrettily(user.principal()
                                 .put("group", userGroup)));
                     });
-            } else {
-                ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(user.principal()));
             }
         } else {
-            System.out.println("Send not authorized error and user should login");
+            logger.info("Send not authorized error and user should login");
             failAuthentication(ctx);
         }
     }
@@ -371,13 +371,13 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                 .flatMap(keycloakUser -> UserUtils.resetPassword(keycloakUser.getString("id"), body.getString("password", "helloworld"), accessToken, authServerUrl, realmName, client)
                     .flatMap(ignored -> {
                         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-                            // 4.1 only child companies can be added by the parent
+                            // 4.1 only child companies can make associate with it's users
                             return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("associated_company_id", user.getString("company_id")))
                                 .flatMap(response -> {
                                     JsonArray childCompanies = new JsonArray(response.getDelegate());
                                     if (childCompanies.size() > 0) {
-                                        // 5.1 Creating user on MongoDB
-                                        return createManagerialLevelMongoUser(body, user, keycloakUser, childCompanies);
+                                        // 5.1 Proceed for creating MongoDB user
+                                        return createMongoUser(body, user, accessToken, client, authServerUrl, realmName, keycloakUser, childCompanies);
                                     } else {
                                         // 5.2 Remove user from Keycloak
                                         return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
@@ -388,66 +388,65 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                                 });
                         } else {
                             // 4.2 Creating user on MongoDB with 'group_id'
-                            return dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject().put("associated_company_id", user.getString("company_id")))
-                                .flatMap(response -> {
-                                    JsonArray childGroups = new JsonArray(response.getDelegate());
-                                    if (childGroups.size() > 0) {
-                                        // 5.1 Creating user on MongoDB
-                                        return createUserLevelMongoUser(body, user, keycloakUser, childGroups);
-                                    } else {
-                                        // 5.2 Remove user from Keycloak
-                                        return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
-                                            .map(ign -> {
-                                                throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
-                                            });
-                                    }
-                                });
+                            return createMongoUser(body, user, accessToken, client, authServerUrl, realmName, keycloakUser, null);
                         }
                     })).subscribe(statusCode -> ctx.response().setStatusCode(statusCode).end(), throwable -> handleHttpException(throwable, ctx));
 
         }
     }
 
-    private SingleSource<? extends Integer> createUserLevelMongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser, JsonArray childCompanies) {
-        String[] _ids = StringUtils.getIds(childCompanies);
-        body.put("company_id", user.getString("company_id"))
-            .put("associated_company_id", user.getString("company_id"))
-            .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), _ids));
-        MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
-        logger.info("Mongo User::: " + mongoUser.toJsonObject());
-        return dispatchRequests(HttpMethod.POST, URL.post_user, mongoUser.toJsonObject())
-            .map(buffer -> HttpResponseStatus.CREATED.code());
+    private SingleSource<? extends Integer> createMongoUser(JsonObject body, JsonObject user, String accessToken, HttpClient client, String authServerUrl,
+                                                            String realmName, JsonObject keycloakUser, JsonArray childCompanies) {
+        return dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject().put("associated_company_id", user.getString("company_id")))
+            .flatMap(response -> {
+                JsonArray childGroups = new JsonArray(response.getDelegate());
+                if (childGroups.size() > 0) {
+                    // 5.1 Creating user on MongoDB
+                    if (childCompanies != null) {
+                        String[] _ids = StringUtils.getIds(childCompanies);
+                        body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids));
+                    } else {
+                        body.put("company_id", user.getString("company_id"));
+                    }
+
+                    String[] _ids = StringUtils.getIds(childGroups);
+                    body.put("associated_company_id", user.getString("company_id"))
+                        .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), _ids));
+                    MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
+                    logger.info("Mongo User::: " + mongoUser.toJsonObject());
+                    return dispatchRequests(HttpMethod.POST, URL.post_user, mongoUser.toJsonObject())
+                        .map(buffer -> HttpResponseStatus.CREATED.code());
+                } else {
+                    // 5.2 Remove user from Keycloak
+                    return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
+                        .map(ign -> {
+                            throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
+                        });
+                }
+            });
     }
 
-    private SingleSource<? extends Integer> createManagerialLevelMongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser, JsonArray childCompanies) {
-        String[] _ids = StringUtils.getIds(childCompanies);
-        body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids))
-            .put("associated_company_id", user.getString("company_id"));
-        MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
-        logger.info("Mongo User::: " + mongoUser.toJsonObject());
-        return dispatchRequests(HttpMethod.POST, URL.post_user, mongoUser.toJsonObject())
-            .map(buffer -> HttpResponseStatus.CREATED.code());
-    }
 
-    private SingleSource<? extends Integer> updateUserLevelMongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser, JsonArray childCompanies) {
-        String[] _ids = StringUtils.getIds(childCompanies);
-        body.put("company_id", user.getString("company_id"))
-            .put("associated_company_id", user.getString("company_id"))
-            .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), _ids));
-        MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
-        logger.info("Mongo User::: " + mongoUser.toJsonObject());
-        return dispatchRequests(HttpMethod.PUT, URL.put_user, mongoUser.toJsonObject())
-            .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
-    }
-
-    private SingleSource<? extends Integer> updateManagerialLevelMongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser, JsonArray childCompanies) {
-        String[] _ids = StringUtils.getIds(childCompanies);
-        body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids))
-            .put("associated_company_id", user.getString("company_id"));
-        MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
-        logger.info("Mongo User::: " + mongoUser.toJsonObject());
-        return dispatchRequests(HttpMethod.PUT, URL.put_user, mongoUser.toJsonObject())
-            .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
+    private SingleSource<? extends Integer> updateMongoUser(JsonObject ctxUser, JsonObject body, JsonObject keycloakUser, JsonArray childGroups) {
+        return dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject().put("associated_company_id", ctxUser.getString("company_id")))
+            .flatMap(response -> {
+                JsonArray childCompanies = new JsonArray(response.getDelegate());
+                if (childCompanies.size() > 0) {
+                    {
+                        String[] _ids = StringUtils.getIds(childGroups);
+                        body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids));
+                    }
+                    String[] _ids = StringUtils.getIds(childGroups);
+                    body.put("associated_company_id", ctxUser.getString("company_id"))
+                        .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), _ids));
+                    MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
+                    logger.info("Mongo User::: " + mongoUser.toJsonObject());
+                    return dispatchRequests(HttpMethod.PUT, URL.put_user, mongoUser.toJsonObject())
+                        .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
+                } else {
+                    throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
+                }
+            });
     }
 
     private SingleSource<? extends Integer> updateOwnUser(JsonObject body, JsonObject ctxUser, JsonObject keycloakUser) {
@@ -477,8 +476,9 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
 
     private void handlePostSite(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
-        if (role == Role.MANAGER) {
-            Site site = new Site(ctx.getBodyAsJson().put("associated_company_id", ctx.user().principal().getString("company_id")));
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+            Site site = new Site(ctx.getBodyAsJson()
+                .put("associated_company_id", ctx.user().principal().getString("company_id")).put("role", UserUtils.getRole(role).toString()));
             dispatchRequests(HttpMethod.POST, URL.post_site, site.toJsonObject())
                 .subscribe(
                     siteResponse -> ctx.response().setStatusCode(new JsonObject(siteResponse.getDelegate()).getInteger("statusCode")).end(),
@@ -490,7 +490,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
 
     private void handlePostUserGroup(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
-        if (role == Role.MANAGER) {
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             // Only manager's sites should make available for user_group
             dispatchRequests(HttpMethod.POST, URL.get_site, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")))
                 .map(buffer -> {
@@ -498,10 +498,9 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                     if (childCompaniesResponse.size() > 0) {
                         String[] availableSites = StringUtils.getIds(childCompaniesResponse);
                         String site_id = SQLUtils.getMatchValueOrDefaultOne(ctx.getBodyAsJson().getString("site_id", ""), availableSites);
-                        UserGroup userGroup = new UserGroup(ctx.getBodyAsJson()
+                        return new UserGroup(ctx.getBodyAsJson()
                             .put("associated_company_id", ctx.user().principal().getString("company_id"))
                             .put("site_id", site_id));
-                        return userGroup;
                     } else {
                         throw badRequest("Create <Site> at first.");
                     }
@@ -529,19 +528,19 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetUsers(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequestWithCompanyAndAssociateCompanyRepresentation(ctx, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_user);
+            respondRequestWithCompanyAssociateCompanyAndGroupRepresentation(ctx, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_user);
         } else if (role == Role.ADMIN) {
             // Returning all <Users> which is branches from the ADMIN
             dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", Role.MANAGER.toString()))
-                .subscribe(buffer -> respondRequestWithCompanyAndAssociateCompanyRepresentation(ctx, new JsonObject()
+                .subscribe(buffer -> respondRequestWithCompanyAssociateCompanyAndGroupRepresentation(ctx, new JsonObject()
                         .put("associated_company_id", new JsonObject()
                             .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
                                 .add(ctx.user().principal().getString("company_id")))), URL.get_user),
                     throwable -> handleHttpException(throwable, ctx));
         } else if (role == Role.MANAGER) {
-            respondRequestWithCompanyAndAssociateCompanyRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user);
+            respondRequestWithCompanyAssociateCompanyAndGroupRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user);
         } else {
             forbidden(ctx);
         }
@@ -693,8 +692,8 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
 
     private void handleDeleteSites(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
-        // Model level permission; this is limited to MANAGER
-        if (role == Role.MANAGER) {
+        // Model level permission
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             JsonArray queryInput = ctx.getBodyAsJsonArray();
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
@@ -732,8 +731,8 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
 
     private void handleDeleteUserGroups(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
-        // Model level permission; this is limited to MANAGER
-        if (role == Role.MANAGER) {
+        // Model level permission
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             JsonArray queryInput = ctx.getBodyAsJsonArray();
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
@@ -892,7 +891,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                                 JsonArray childCompanies = new JsonArray(response.getDelegate());
                                 logger.info("Child companies: " + childCompanies);
                                 if (childCompanies.size() > 0) {
-                                    return updateManagerialLevelMongoUser(body, ctxUser, keycloakUser, childCompanies);
+                                    return updateMongoUser(ctxUser, body, keycloakUser, childCompanies);
                                 } else {
                                     // This case shouldn't be happened; otherwise only half operation will be successful
                                     throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <Company> at first.");
@@ -900,15 +899,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                             });
                     } else {
                         // Only child <User Groups> can be added by the parent
-                        return dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject().put("associated_company_id", ctxUser.getString("company_id")))
-                            .flatMap(response -> {
-                                JsonArray childCompanies = new JsonArray(response.getDelegate());
-                                if (childCompanies.size() > 0) {
-                                    return updateUserLevelMongoUser(body, ctxUser, keycloakUser, childCompanies);
-                                } else {
-                                    throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
-                                }
-                            });
+                        return updateMongoUser(ctxUser, body, keycloakUser, null);
                     }
                 } else {
                     return updateOwnUser(body, ctxUser, keycloakUser);
@@ -1025,7 +1016,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             throwable -> handleHttpException(throwable, ctx));
     }
 
-    private void respondRequestWithCompanyAndAssociateCompanyRepresentation(RoutingContext ctx, JsonObject query, String urn) {
+    private void respondRequestWithCompanyAssociateCompanyAndGroupRepresentation(RoutingContext ctx, JsonObject query, String urn) {
         // We may do optimize version of this
         dispatchRequests(HttpMethod.POST, urn, query)
             .flatMap(response -> Observable.fromIterable(response.toJsonArray())
@@ -1037,11 +1028,13 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                                 object.put("associated_company", associatedCompany.toJsonObject());
                             }
                             return dispatchRequests(HttpMethod.GET, URL.get_company + "/" + object.getString("company_id"), null)
-                                .map(company -> {
+                                .flatMap(company -> {
                                     if (StringUtils.isNotNull(company.toString())) {
                                         object.put("company", company.toJsonObject());
                                     }
-                                    return object;
+                                    return dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + object.getString("group_id"), null)
+                                        .flatMap(group -> dispatchRequests(HttpMethod.GET, URL.get_site + "/" + group.toJsonObject().getString("site_id"), null)
+                                            .map(site -> object.put("group", group.toJsonObject().put("site", site.toJsonObject()))));
                                 });
                         });
                 }).toList()

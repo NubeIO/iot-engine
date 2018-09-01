@@ -15,6 +15,7 @@ public class Site extends Model {
     public String content_text_color_header;
     public String selected_text_color_header;
     public String site_text_color;
+    public String role; // ADMIN or MANAGER or USER; defining the company level
 
     public Site(JsonObject body) {
         super(body);

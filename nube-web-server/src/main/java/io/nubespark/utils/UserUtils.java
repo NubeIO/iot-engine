@@ -16,6 +16,19 @@ import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 
 public class UserUtils {
+    public static Role getRole(Role userRole) {
+        switch (userRole) {
+            case SUPER_ADMIN:
+                return Role.ADMIN;
+            case ADMIN:
+                return Role.MANAGER;
+            case MANAGER:
+                return Role.USER;
+            default:
+                return Role.GUEST;
+        }
+    }
+
     public static Role getRole(Role userRole, Role setRole) {
         switch (userRole) {
             case SUPER_ADMIN:
