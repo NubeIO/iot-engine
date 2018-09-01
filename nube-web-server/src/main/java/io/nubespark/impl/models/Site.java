@@ -1,7 +1,6 @@
 package io.nubespark.impl.models;
 
 import io.nubespark.Model;
-import io.nubespark.utils.SecurityUtils;
 import io.vertx.core.json.JsonObject;
 
 public class Site extends Model {
@@ -19,16 +18,5 @@ public class Site extends Model {
 
     public Site(JsonObject body) {
         super(body);
-    }
-
-    @Override
-    public JsonObject toJsonObject() {
-        JsonObject jsonObject = super.toJsonObject();
-        // Combination of 'associated_company_id' and 'site_title' is the primary key for this site
-        jsonObject.put("_id",
-                SecurityUtils.getBase64EncodedHash(
-                        jsonObject.getString("associated_company_id")
-                                + jsonObject.getString("site_title")));
-        return jsonObject;
     }
 }

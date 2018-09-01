@@ -1,14 +1,9 @@
 package io.nubespark.impl.models;
 
-import io.nubespark.Role;
 import io.nubespark.Model;
-import io.nubespark.utils.SecurityUtils;
+import io.nubespark.Role;
 import io.nubespark.utils.UserUtils;
 import io.vertx.core.json.JsonObject;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MongoUser extends Model {
     private String _id;
@@ -23,6 +18,11 @@ public class MongoUser extends Model {
     private String associated_company_id;
     private String company_id;
     private String group_id;
+
+    @Override
+    protected  boolean uuidAsId() {
+        return false;
+    }
 
     public MongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser) {
         super(body);

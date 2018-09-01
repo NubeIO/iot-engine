@@ -10,6 +10,11 @@ public class KeycloakUserRepresentation extends Model {
     private String email;
     private Boolean enabled;
 
+    @Override
+    protected  boolean uuidAsId() {
+        return false;
+    }
+
     public KeycloakUserRepresentation(JsonObject body) {
         super(body);
     }
