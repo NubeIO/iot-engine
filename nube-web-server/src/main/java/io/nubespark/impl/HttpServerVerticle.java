@@ -911,11 +911,11 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
 
     private void handleUpdateSite(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
-        if (role == Role.MANAGER) {
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             String siteId = ctx.request().getParam("id");
             dispatchRequests(HttpMethod.GET, URL.get_site + "/" + siteId, new JsonObject())
                 .map(buffer -> {
-                    if (StringUtils.isNull(buffer.toString())) {
+                    if (StringUtils.isNull(buffer.toString()) || buffer.toJsonObject().getString("associated_company_id").equals(ctx.user().principal().getString("company_id"))) {
                         throw forbidden();
                     } else {
                         return new JsonObject(buffer.getDelegate());
@@ -935,12 +935,12 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
 
     private void handleUpdateUserGroup(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
-        if (role == Role.MANAGER) {
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             String userGroupId = ctx.request().getParam("id");
 
             dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + userGroupId, new JsonObject())
                 .map(buffer -> {
-                    if (StringUtils.isNull(buffer.toString())) {
+                    if (StringUtils.isNull(buffer.toString()) || buffer.toJsonObject().getString("associated_company_id").equals(ctx.user().principal().getString("company_id"))) {
                         throw forbidden();
                     } else {
                         return new JsonObject(buffer.getDelegate());
