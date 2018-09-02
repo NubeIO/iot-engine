@@ -922,7 +922,9 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                     }
                 })
                 .flatMap(site -> {
-                    JsonObject siteObject = new Site(ctx.getBodyAsJson().put("associated_company_id", ctx.user().principal().getString("company_id"))).toJsonObject()
+                    JsonObject siteObject = new Site(ctx.getBodyAsJson()
+                        .put("associated_company_id", ctx.user().principal().getString("company_id"))).toJsonObject()
+                        .put("role", UserUtils.getRole(role).toString())
                         .put("_id", site.getString("_id"));
                     return dispatchRequests(HttpMethod.PUT, URL.put_site, siteObject);
                 })
@@ -955,6 +957,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                                 String siteId = SQLUtils.getMatchValueOrDefaultOne(ctx.getBodyAsJson().getString("site_id", ""), availableSites);
                                 return new UserGroup(ctx.getBodyAsJson()
                                     .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                                    .put("role", UserUtils.getRole(role).toString())
                                     .put("site_id", siteId))
                                     .toJsonObject().put("_id", userGroup.getString("_id"));
                             } else {
