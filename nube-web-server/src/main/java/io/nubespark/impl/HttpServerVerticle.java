@@ -915,7 +915,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             String siteId = ctx.request().getParam("id");
             dispatchRequests(HttpMethod.GET, URL.get_site + "/" + siteId, new JsonObject())
                 .map(buffer -> {
-                    if (StringUtils.isNull(buffer.toString()) || buffer.toJsonObject().getString("associated_company_id").equals(ctx.user().principal().getString("company_id"))) {
+                    if (StringUtils.isNull(buffer.toString()) || !buffer.toJsonObject().getString("associated_company_id").equals(ctx.user().principal().getString("company_id"))) {
                         throw forbidden();
                     } else {
                         return new JsonObject(buffer.getDelegate());
@@ -940,7 +940,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
 
             dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + userGroupId, new JsonObject())
                 .map(buffer -> {
-                    if (StringUtils.isNull(buffer.toString()) || buffer.toJsonObject().getString("associated_company_id").equals(ctx.user().principal().getString("company_id"))) {
+                    if (StringUtils.isNull(buffer.toString()) || !buffer.toJsonObject().getString("associated_company_id").equals(ctx.user().principal().getString("company_id"))) {
                         throw forbidden();
                     } else {
                         return new JsonObject(buffer.getDelegate());
