@@ -478,7 +478,8 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             Site site = new Site(ctx.getBodyAsJson()
-                .put("associated_company_id", ctx.user().principal().getString("company_id")).put("role", UserUtils.getRole(role).toString()));
+                .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                .put("role", UserUtils.getRole(role).toString()));
             dispatchRequests(HttpMethod.POST, URL.post_site, site.toJsonObject())
                 .subscribe(
                     siteResponse -> ctx.response().setStatusCode(new JsonObject(siteResponse.getDelegate()).getInteger("statusCode")).end(),
@@ -500,6 +501,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                         String site_id = SQLUtils.getMatchValueOrDefaultOne(ctx.getBodyAsJson().getString("site_id", ""), availableSites);
                         return new UserGroup(ctx.getBodyAsJson()
                             .put("associated_company_id", ctx.user().principal().getString("company_id"))
+                            .put("role", UserUtils.getRole(role).toString())
                             .put("site_id", site_id));
                     } else {
                         throw badRequest("Create <Site> at first.");
@@ -571,20 +573,20 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void handleGetUserGroups(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (role == Role.SUPER_ADMIN) {
-            respondRequestWithSiteRepresentation(ctx, new JsonObject(), URL.get_user_group);
+            respondRequestWithSiteAndAssociateCompanyRepresentation(ctx, new JsonObject(), URL.get_user_group);
         } else if (role == Role.ADMIN) {
             // Returning all MANAGER's companies' <user groups> which is associated with the ADMIN company
             dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", Role.MANAGER.toString()))
                 .subscribe(
-                    buffer -> respondRequestWithSiteRepresentation(ctx, new JsonObject()
+                    buffer -> respondRequestWithSiteAndAssociateCompanyRepresentation(ctx, new JsonObject()
                         .put("associated_company_id", new JsonObject()
                             .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate()))
                                 .add(ctx.user().principal().getString("company_id")))), URL.get_user_group),
                     throwable -> handleHttpException(throwable, ctx));
         } else if (role == Role.MANAGER) {
-            respondRequestWithSiteRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user_group);
+            respondRequestWithSiteAndAssociateCompanyRepresentation(ctx, new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id")), URL.get_user_group);
         } else {
             forbidden(ctx);
         }
@@ -966,17 +968,18 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         }
     }
 
-    private void respondRequestWithSiteRepresentation(RoutingContext ctx, JsonObject query, String urn) {
+    private void respondRequestWithSiteAndAssociateCompanyRepresentation(RoutingContext ctx, JsonObject query, String urn) {
         dispatchRequests(HttpMethod.POST, urn, query)
             .flatMap(response -> Observable.fromIterable(response.toJsonArray())
                 .flatMapSingle(res -> {
                     JsonObject object = new JsonObject(res.toString());
                     return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + object.getString("site_id"), null)
-                        .map(site -> {
+                        .flatMap(site -> {
                             if (StringUtils.isNotNull(site.toString())) {
                                 object.put("site", site.toJsonObject());
                             }
-                            return object;
+                            return dispatchRequests(HttpMethod.GET, URL.get_company + "/" + object.getString("associated_company_id"), null)
+                                .map(associatedCompany -> object.put("associated_company", associatedCompany.toJsonObject()));
                         });
                 }).toList()
             )
