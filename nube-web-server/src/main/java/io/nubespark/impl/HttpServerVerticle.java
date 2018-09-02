@@ -1036,8 +1036,18 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
                                         object.put("company", company.toJsonObject());
                                     }
                                     return dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + object.getString("group_id"), null)
-                                        .flatMap(group -> dispatchRequests(HttpMethod.GET, URL.get_site + "/" + group.toJsonObject().getString("site_id"), null)
-                                            .map(site -> object.put("group", group.toJsonObject().put("site", site.toJsonObject()))));
+                                        .flatMap(group -> {
+                                            if (StringUtils.isNotNull(group.toString())) {
+                                                return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + group.toJsonObject().getString("site_id"), null)
+                                                    .map(site -> {
+                                                        if (StringUtils.isNotNull(site.toString())) {
+                                                            object.put("group", group.toJsonObject().put("site", site.toJsonObject()));
+                                                        }
+                                                        return object;
+                                                    });
+                                            }
+                                            return Single.just(object);
+                                        });
                                 });
                         });
                 }).toList()
