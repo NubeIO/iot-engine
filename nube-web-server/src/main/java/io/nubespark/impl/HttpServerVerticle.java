@@ -171,7 +171,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         } else {
             body = ctx.getBodyAsJson();
         }
-        CustomMessage message = new CustomMessage(header, body, ctx.user().principal(), 200);
+        CustomMessage<JsonObject> message = new CustomMessage<>(header, body, ctx.user().principal(), 200);
         eventBus.send(LAYOUT_GRID_ADDRESS, message, reply -> {
             if (reply.succeeded()) {
                 CustomMessage replyMessage = (CustomMessage) reply.result().body();

@@ -51,7 +51,7 @@ public class CustomMessageCodec implements MessageCodec<CustomMessage, CustomMes
         int statusCode = contentJson.getInteger("statusCode");
 
         // We can finally create custom message object
-        return new CustomMessage(header, body, user, statusCode);
+        return new CustomMessage<>(header, body, user, statusCode);
     }
 
     @Override
