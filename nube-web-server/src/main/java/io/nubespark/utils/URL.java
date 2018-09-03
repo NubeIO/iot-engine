@@ -19,4 +19,7 @@ public class URL {
     public static final String post_user_group = "/api/mongo/post/user_group";
     public static final String delete_user_group = "/api/mongo/delete/user_group";
     public static final String put_user_group = "/api/mongo/put/user_group";
+
+    public static final String get_layout_grid = "/api/mongo/get/layout_grid";
+    public static final String put_layout_grid = "/api/mongo/put/layout_grid";
 }

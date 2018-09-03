@@ -4,15 +4,12 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
 import io.nubespark.controller.HttpException;
 import io.nubespark.impl.models.*;
-import io.nubespark.utils.SQLUtils;
-import io.nubespark.utils.StringUtils;
-import io.nubespark.utils.URL;
-import io.nubespark.utils.UserUtils;
-import io.nubespark.vertx.common.HttpHelper;
+import io.nubespark.utils.*;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
@@ -24,8 +21,6 @@ import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
-import io.vertx.reactivex.core.Future;
-import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
 import io.vertx.reactivex.core.http.HttpServer;
@@ -39,16 +34,13 @@ import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.reactivex.ext.web.handler.StaticHandler;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
-import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.Record;
-import io.vertx.servicediscovery.ServiceDiscovery;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static io.nubespark.utils.Constants.LAYOUT_GRID_ADDRESS;
 import static io.nubespark.utils.Constants.SERVICE_NAME;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
@@ -61,6 +53,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
 
     private OAuth2Auth loginAuth;
     private Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
+    private EventBus eventBus;
 
     @Override
     protected Logger getLogger() {
@@ -70,9 +63,23 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     @Override
     public void start(io.vertx.core.Future<Void> future) {
         super.start();
+        eventBus = getVertx().eventBus();
+
         logger.info("Config on HttpWebServer is:");
         logger.info(Json.encodePrettily(config()));
-        startWebApp().flatMap(httpServer -> publishHttp())
+        startWebApp()
+            .flatMap(httpServer -> publishHttp())
+            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(LayoutGridVerticle.class.getName(), deployResult -> {
+                // Deploy succeed
+                if (deployResult.succeeded()) {
+                    source.onSuccess("Deployment of LayoutGridVerticle is successful.");
+                    logger.info("Deployment of LayoutGridVerticle is successful.");
+                } else {
+                    // Deploy failed
+                    source.onError(deployResult.cause());
+                    deployResult.cause().printStackTrace();
+                }
+            })))
             .subscribe(ignored -> future.complete(), future::fail);
     }
 
@@ -150,6 +157,34 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         router.patch("/api/user/:id").handler(this::handleUpdateUser);
         router.patch("/api/site/:id").handler(this::handleUpdateSite);
         router.patch("/api/user_group/:id").handler(this::handleUpdateUserGroup);
+
+        router.route("/api/layout_grid/*").handler(this::handleLayoutGrid);
+    }
+
+    private void handleLayoutGrid(RoutingContext ctx) {
+        JsonObject header = new JsonObject()
+            .put("url", ctx.normalisedPath().substring("/api/layout_grid/".length()))
+            .put("method", ctx.request().method());
+        JsonObject body;
+        if (StringUtils.isNull(ctx.getBody().toString())) {
+            body = new JsonObject();
+        } else {
+            body = ctx.getBodyAsJson();
+        }
+        CustomMessage message = new CustomMessage(header, body, ctx.user().principal(), 200);
+        eventBus.send(LAYOUT_GRID_ADDRESS, message, reply -> {
+            if (reply.succeeded()) {
+                CustomMessage replyMessage = (CustomMessage) reply.result().body();
+                logger.info("Received reply: " + replyMessage.getBody());
+                ctx.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(replyMessage.getStatusCode())
+                    .end(replyMessage.getBody().toString());
+            } else {
+                ctx.response().setStatusCode(HttpResponseStatus.SERVICE_UNAVAILABLE.code()).end();
+                logger.info("No reply from cluster receiver");
+            }
+        });
     }
 
     private void handleAuthEventBus(Router router) {
@@ -1073,173 +1108,4 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             .end(Json.encodePrettily(new JsonObject().put("message", exception.getMessage())));
     }
     //endregion -------------------------------------------------------------------------------------------------------
-
-
-    // region Dispatch requests ----------------------------------------------------------------------------------------
-    protected Single<Buffer> dispatchRequests(HttpMethod method, String path, JsonObject payload) {
-        int initialOffset = 5; // length of `/api/`
-        // run with circuit breaker in order to deal with failure
-        return circuitBreaker.rxExecuteCommand(future -> {
-            getRxAllEndpoints().flatMap(recordList -> {
-                if (path.length() <= initialOffset) {
-                    return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));
-                }
-                String prefix = (path.substring(initialOffset)
-                    .split("/"))[0];
-                getLogger().info("Prefix: " + prefix);
-                // generate new relative path
-                String newPath = path.substring(initialOffset + prefix.length());
-                // get one relevant HTTP client, may not exist
-                getLogger().info("New path: " + newPath);
-                Optional<Record> client = recordList.stream()
-                    .filter(record -> record.getMetadata().getString("api.name") != null)
-                    .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
-                    .findAny(); // simple load balance
-
-                if (client.isPresent()) {
-                    getLogger().info("Found client for uri: " + path);
-                    Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery,
-                        rec -> rec.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE) && rec.getMetadata().getString("api.name").equals(prefix));
-                    return doDispatch(newPath, method, payload, httpClientSingle);
-                } else {
-                    getLogger().info("Client endpoint not found for uri: " + path);
-                    return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));
-                }
-            }).subscribe(future::complete, future::fail);
-        });
-    }
-
-    /**
-     * Dispatch the request to the downstream REST layers.
-     */
-    private Single<Buffer> doDispatch(String path, HttpMethod method, JsonObject payload, Single<HttpClient> httpClientSingle) {
-        return Single.create(source ->
-            httpClientSingle.subscribe(client -> {
-                HttpClientRequest toReq = client.request(method, path, response -> {
-                    response.bodyHandler(body -> {
-                        if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
-                            source.onError(new HttpException(HttpResponseStatus.valueOf(response.statusCode()), response.statusCode() + ": " + body.toString()));
-                            getLogger().info("Failed to dispatch: " + response.toString());
-                        } else {
-                            source.onSuccess(body);
-                            client.close();
-                        }
-                        io.vertx.servicediscovery.ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
-                    });
-                });
-                toReq.setChunked(true);
-                toReq.getDelegate().putHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-                if (payload == null) {
-                    toReq.end();
-                } else {
-                    toReq.write(payload.encode()).end();
-                }
-            })
-        );
-    }
-
-    private Single<List<Record>> getRxAllEndpoints() {
-        return discovery.rxGetRecords(record -> record.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE));
-    }
-
-    private void dispatchRequests(RoutingContext context) {
-        System.out.println("Dispatch Requests called");
-        int initialOffset = 5; // length of `/api/`
-        // run with circuit breaker in order to deal with failure
-        circuitBreaker.execute(future -> {
-            getAllEndpoints().setHandler(ar -> {
-                if (ar.succeeded()) {
-                    List<Record> recordList = ar.result();
-                    // get relative path and retrieve prefix to dispatch client
-                    String path = context.request().uri();
-
-                    if (path.length() <= initialOffset) {
-                        HttpHelper.notFound(context);
-                        future.complete();
-                        return;
-                    }
-                    String prefix = (path.substring(initialOffset)
-                        .split("/"))[0];
-                    System.out.println("prefix = " + prefix);
-                    // generate new relative path
-                    String newPath = path.substring(initialOffset + prefix.length());
-                    // get one relevant HTTP client, may not exist
-                    System.out.println("new path = " + newPath);
-                    Optional<Record> client = recordList.stream()
-                        .filter(record -> record.getMetadata().getString("api.name") != null)
-                        .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
-                        .findAny(); // simple load balance
-
-                    if (client.isPresent()) {
-                        System.out.println("Found client for uri: " + path);
-                        Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery,
-                            rec -> rec.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE) && rec.getMetadata().getString("api.name").equals(prefix));
-                        doDispatch(context, newPath, httpClientSingle, future);
-                    } else {
-                        System.out.println("Client endpoint not found for uri " + path);
-                        HttpHelper.notFound(context);
-                        future.complete();
-                    }
-                } else {
-                    future.fail(ar.cause());
-                }
-            });
-        }).setHandler(ar -> {
-            if (ar.failed()) {
-                badGateway(ar.cause(), context);
-            }
-        });
-    }
-
-    /**
-     * Dispatch the request to the downstream REST layers.
-     *
-     * @param context          routing context instance
-     * @param path             relative path
-     * @param httpClientSingle relevant HTTP client
-     */
-    private void doDispatch(RoutingContext context, String path, Single<HttpClient> httpClientSingle, Future<Object> cbFuture) {
-        httpClientSingle.subscribe(client -> {
-            HttpClientRequest toReq = client
-                .request(context.request().method(), path, response -> {
-                    response.bodyHandler(body -> {
-                        if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
-                            cbFuture.fail(response.statusCode() + ": " + body.toString());
-                        } else {
-                            HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
-                            response.headers().getDelegate().forEach(header -> {
-                                toRsp.putHeader(header.getKey(), header.getValue());
-                            });
-                            // send response
-                            toRsp.end(body);
-                            client.close();
-                            cbFuture.complete();
-                        }
-                        ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
-                    });
-                });
-            // set headers
-            context.request().headers().getDelegate().forEach(header -> {
-                toReq.putHeader(header.getKey(), header.getValue());
-            });
-            if (context.getBody() == null) {
-                toReq.end();
-            } else {
-                toReq.end(context.getBody());
-            }
-        });
-    }
-
-    /**
-     * Get all REST endpoints from the service discovery infrastructure.
-     *
-     * @return async result
-     */
-    private Future<List<Record>> getAllEndpoints() {
-        Future<List<Record>> future = Future.future();
-        discovery.getRecords(record -> record.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE),
-            future.completer());
-        return future;
-    }
-    // endregion -------------------------------------------------------------------------------------------------------
 }

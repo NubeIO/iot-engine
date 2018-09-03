@@ -69,7 +69,6 @@ public class MongoDBVerticle extends MicroServiceVerticle {
                 .requestHandler(router::accept)
                 .listen(
                         // Retrieve the port from the configuration
-                        // default to 8087
                         config().getInteger("http.port", DEFAULT_PORT),
                         next::handle);
 
