@@ -12,7 +12,7 @@
     <artifactId>nube-app-store-rest</artifactId>
 
     <properties>
-        <main.verticle>io.nubespark.StoreRestVerticle</main.verticle>
+        <main.verticle>io.nubespark.AppStoreRestVerticle</main.verticle>
     </properties>
 
     <dependencies>

@@ -5,7 +5,7 @@ import io.nubespark.Role;
 import io.nubespark.controller.HttpException;
 import io.nubespark.impl.models.*;
 import io.nubespark.utils.*;
-import io.nubespark.vertx.common.RxMicroServiceVerticle;
+import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.stream.Collectors;
 
+import static io.nubespark.constants.Port.HTTP_WEB_SERVER_PORT;
 import static io.nubespark.utils.Constants.LAYOUT_GRID_ADDRESS;
 import static io.nubespark.utils.Constants.SERVICE_NAME;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
@@ -49,8 +50,7 @@ import static io.nubespark.vertx.common.HttpHelper.*;
 /**
  * Created by topsykretts on 5/4/18.
  */
-public class HttpServerVerticle extends RxMicroServiceVerticle {
-
+public class HttpServerVerticle extends RxRestAPIVerticle {
     private OAuth2Auth loginAuth;
     private Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
     private EventBus eventBus;
@@ -101,13 +101,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
         handleStaticResource(router);
 
         // Create the HTTP server and pass the "accept" method to the request handler.
-        return vertx.createHttpServer()
-            .requestHandler(router::accept)
-            .rxListen(
-                // Retrieve the port from the configuration,
-                // default to 8085.
-                config().getInteger("http.port", 8085)
-            )
+        return createHttpServer(router, config().getString("http.host", "0.0.0.0"), config().getInteger("http.port", HTTP_WEB_SERVER_PORT))
             .doOnSuccess(httpServer -> logger.info("Web Server started at " + httpServer.actualPort()))
             .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
@@ -220,9 +214,8 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
             // You can use this for monitoring or logging, or to change the raw messages in-flight.
             // It can also be used for fine grained access control.
             if (event.type() == BridgeEventType.SOCKET_CREATED) {
-                System.out.println("A socket was created");
+                logger.info("A socket was created");
             }
-
             // This signals that it's ok to process the event
             event.complete(true);
         }));
@@ -322,23 +315,17 @@ public class HttpServerVerticle extends RxMicroServiceVerticle {
     private void currentUser(RoutingContext ctx) {
         User user = ctx.user();
         if (user != null) {
-            Role role = Role.valueOf(ctx.user().principal().getString("role"));
-            if (role == Role.SUPER_ADMIN) {
-                ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(user.principal()));
-            } else {
-                dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + ctx.user().principal().getString("group_id"), null)
-                    .flatMap(group -> {
-                        JsonObject object = group.toJsonObject();
-                        return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + group.toJsonObject().getString("site_id"), null)
-                            .map(site -> object.put("site", site.toJsonObject()));
-                    })
-                    .subscribe(userGroup -> {
-                        ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(user.principal()
-                                .put("group", userGroup)));
-                    });
-            }
+            dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + ctx.user().principal().getString("group_id"), null)
+                .flatMap(group -> {
+                    JsonObject object = group.toJsonObject();
+                    return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + group.toJsonObject().getString("site_id"), null)
+                        .map(site -> object.put("site", site.toJsonObject()));
+                })
+                .subscribe(userGroup -> {
+                    ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .end(Json.encodePrettily(user.principal()
+                            .put("group", userGroup)));
+                });
         } else {
             logger.info("Send not authorized error and user should login");
             failAuthentication(ctx);

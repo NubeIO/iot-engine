@@ -18,6 +18,7 @@ import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
 
+import static io.nubespark.constants.Port.SQL_ENGINE_SERVER_PORT;
 import static io.nubespark.controller.ErrorCodes.NO_QUERY_SPECIFIED;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
@@ -38,15 +39,15 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
         logger.debug(Json.encodePrettily(config()));
 
         startWebApp()
-                .flatMap(httpServer -> publishHttp())
-                .subscribe(ignored -> future.complete(), future::fail);
+            .flatMap(httpServer -> publishHttp())
+            .subscribe(ignored -> future.complete(), future::fail);
 
         controller = new RulesController(vertx);
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", 8080))
-                .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
+        return publishHttpEndpoint("io.nubespark.sql.engine", "0.0.0.0", config().getInteger("http.port", SQL_ENGINE_SERVER_PORT))
+            .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
     private Single<HttpServer> startWebApp() {
@@ -64,26 +65,26 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
 
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
-                .requestHandler(router::accept)
-                .rxListen(
-                        // Retrieve the port from the configuration,
-                        // default to 8080.
-                        config().getInteger("http.port", 8080)
-                )
-                .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
-                .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
+            .requestHandler(router::accept)
+            .rxListen(
+                // Retrieve the port from the configuration,
+                // default to 8080.
+                config().getInteger("http.port", 8080)
+            )
+            .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
+            .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
 
     private void handlePageNotFound(RoutingContext routingContext) {
         String uri = routingContext.request().absoluteURI();
         routingContext.response()
-                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                .setStatusCode(404)
-                .end(Json.encodePrettily(new JsonObject()
-                        .put("uri", uri)
-                        .put("status", 404)
-                        .put("message", "Resource Not Found")
-                ));
+            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+            .setStatusCode(404)
+            .end(Json.encodePrettily(new JsonObject()
+                .put("uri", uri)
+                .put("status", 404)
+                .put("message", "Resource Not Found")
+            ));
     }
 
     private void enginePostHandler(RoutingContext routingContext) {
@@ -98,10 +99,10 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
             handleError(new ErrorCodeException(NO_QUERY_SPECIFIED), routingContext);
         } else {
             controller.getFiloData(query).subscribe(
-                    replyJson -> routingContext.response()
-                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(replyJson)),
-                    throwable -> handleError(throwable, routingContext));
+                replyJson -> routingContext.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(replyJson)),
+                throwable -> handleError(throwable, routingContext));
         }
 
     }
@@ -111,22 +112,22 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
             switch (((ErrorCodeException) throwable).getErrorCodes()) {
                 case BAD_ACTION:
                     routingContext.response()
-                            .setStatusCode(403)
-                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(new JsonObject().put("message", "You do not have permission to run this query.")));
+                        .setStatusCode(403)
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .end(Json.encodePrettily(new JsonObject().put("message", "You do not have permission to run this query.")));
                     break;
                 case NO_QUERY_SPECIFIED:
                     routingContext.response()
-                            .setStatusCode(400)
-                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(new JsonObject().put("message", "Request must have a valid JSON body with 'query' field.")));
+                        .setStatusCode(400)
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .end(Json.encodePrettily(new JsonObject().put("message", "Request must have a valid JSON body with 'query' field.")));
                     break;
             }
         } else {
             routingContext.response()
-                    .setStatusCode(500)
-                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(new JsonObject().put("message", "Server Error: " + throwable.getMessage())));
+                .setStatusCode(500)
+                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .end(Json.encodePrettily(new JsonObject().put("message", "Server Error: " + throwable.getMessage())));
         }
     }
 
@@ -135,10 +136,10 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
         HttpServerRequest request = routingContext.request();
         String id = request.getParam("id");
         controller.getOne(id).subscribe(
-                json -> routingContext.response()
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(json)),
-                throwable -> handleError(throwable, routingContext));
+            json -> routingContext.response()
+                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .end(Json.encodePrettily(json)),
+            throwable -> handleError(throwable, routingContext));
     }
 
     // Returns verticle properties in json
@@ -146,12 +147,12 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
         HttpServerResponse response = routingContext.response();
 
         response.putHeader("content-type", "application/json; charset=utf-8")
-                .end(Json.encodePrettily(new JsonObject()
-                        .put("name", "sql-engine-rest")
-                        .put("version", "1.0")
-                        .put("vert.x_version", "3.4.1")
-                        .put("java_version", "8.0")
-                ));
+            .end(Json.encodePrettily(new JsonObject()
+                .put("name", "sql-engine-rest")
+                .put("version", "1.0")
+                .put("vert.x_version", "3.4.1")
+                .put("java_version", "8.0")
+            ));
     }
 
     @Override

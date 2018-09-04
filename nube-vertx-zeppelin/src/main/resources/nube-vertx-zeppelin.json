@@ -2,7 +2,7 @@
   "main": "io.nubespark.ZeppelinVerticle",
   "options": {
     "config": {
-      "http.port": 8089,
+      "http.port": 8087,
       "api.name": "zeppelin",
       "server.host": "45.77.220.111",
       "server.port": 18080

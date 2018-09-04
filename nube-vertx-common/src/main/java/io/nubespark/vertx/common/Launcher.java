@@ -30,11 +30,11 @@ public class Launcher extends io.vertx.core.Launcher {
         //set encryption in vertx event bus
         //todo change keystore in production
         options.setEventBusOptions(
-                new EventBusOptions()
-                        .setSsl(true)
-                        .setKeyStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
-                        .setTrustStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
-                        .setClientAuth(ClientAuth.REQUIRED)
+            new EventBusOptions()
+                .setSsl(true)
+                .setKeyStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
+                .setTrustStoreOptions(new JksOptions().setPath("eventBusKeystore.jks").setPassword("nubesparkEventBus"))
+                .setClientAuth(ClientAuth.REQUIRED)
         );
     }
 
@@ -62,6 +62,7 @@ public class Launcher extends io.vertx.core.Launcher {
                 }
             } catch (FileNotFoundException e) {
                 // Ignore it.
+                e.printStackTrace();
             }
         } else {
             System.out.println("Config file not found " + config.getAbsolutePath());

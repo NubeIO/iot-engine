@@ -29,9 +29,9 @@ public class MongoDBController {
         client.find(document, query, res -> {
             if (res.succeeded()) {
                 routingContext.response()
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .setStatusCode(HttpResponseStatus.OK.code())
-                        .end(Json.encodePrettily(res.result()));
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.OK.code())
+                    .end(Json.encodePrettily(res.result()));
             } else {
                 res.cause().printStackTrace();
                 routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
@@ -47,9 +47,9 @@ public class MongoDBController {
         client.findOne(document, searchQuery, null, res -> {
             if (res.succeeded()) {
                 routingContext.response()
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .setStatusCode(HttpResponseStatus.OK.code())
-                        .end(Json.encodePrettily(res.result()));
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.OK.code())
+                    .end(Json.encodePrettily(res.result()));
             } else {
                 res.cause().printStackTrace();
                 routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
@@ -92,9 +92,9 @@ public class MongoDBController {
             client.findOne(document, new JsonObject().put("_id", data.getString("_id")), null, res -> {
                 if (res.result() != null) {
                     routingContext.response()
-                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .setStatusCode(HttpResponseStatus.CONFLICT.code())
-                            .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.CONFLICT.code())));
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .setStatusCode(HttpResponseStatus.CONFLICT.code())
+                        .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.CONFLICT.code())));
                 } else {
                     saveData(document, data, routingContext);
                 }
@@ -115,25 +115,25 @@ public class MongoDBController {
             client.removeDocuments(document, query, res -> {
                 if (res.succeeded()) {
                     routingContext.response()
-                            .setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
+                        .setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
                 } else {
                     res.cause().printStackTrace();
                     routingContext.response()
-                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
                 }
             });
         } else {
             client.dropCollection(document, res -> {
                 if (res.succeeded()) {
                     routingContext.response()
-                            .setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
+                        .setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
                 } else {
                     res.cause().printStackTrace();
                     routingContext.response()
-                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
-                            .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+                        .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
                 }
             });
         }
@@ -148,13 +148,13 @@ public class MongoDBController {
             if (res.succeeded()) {
                 System.out.println("Delete one is being called...");
                 routingContext.response()
-                        .setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
+                    .setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
             } else {
                 res.cause().printStackTrace();
                 routingContext.response()
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
-                        .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+                    .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
             }
         });
     }
@@ -163,15 +163,15 @@ public class MongoDBController {
         client.save(document, data, res -> {
             if (res.succeeded()) {
                 routingContext.response()
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .setStatusCode(HttpResponseStatus.CREATED.code())
-                        .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.CREATED.code())));
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.CREATED.code())
+                    .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.CREATED.code())));
             } else {
                 res.cause().printStackTrace();
                 routingContext.response()
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
-                        .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+                    .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
             }
         });
     }

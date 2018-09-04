@@ -28,23 +28,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.nubespark.constants.Port.APP_STORE_PORT;
+
 /**
  * Created by topsykretts on 4/28/18.
  */
-public class StoreRestVerticle extends RestAPIVerticle {
+public class AppStoreRestVerticle extends RestAPIVerticle {
 
     private Map<String, JsonObject> deploymentMap = new HashMap<>();
     private Map<String, JsonObject> failedDeployments = new HashMap<>();
 
     //receiving address
-    public static String ADDRESS_INSTALLER_REPORT = "io.nubespark.app.installer.report";
-    public static final String ADDRESS_BIOS_REPORT = "io.nubespark.bios.report";
+    private static String ADDRESS_INSTALLER_REPORT = "io.nubespark.app.installer.report";
+    private static final String ADDRESS_BIOS_REPORT = "io.nubespark.bios.report";
 
     //sending address
-    public static String ADDRESS_EDGE_INSTALLER = "io.nubespark.app.installer";
-    public static final String ADDRESS_BIOS = "io.nubespark.bios";
+    private static String ADDRESS_EDGE_INSTALLER = "io.nubespark.app.installer";
+    private static final String ADDRESS_BIOS = "io.nubespark.bios";
 
-    Logger logger = LoggerFactory.getLogger(StoreRestVerticle.class);
+    Logger logger = LoggerFactory.getLogger(AppStoreRestVerticle.class);
 
     @Override
     public void start() {
@@ -63,13 +65,14 @@ public class StoreRestVerticle extends RestAPIVerticle {
 
         vertx.eventBus().consumer(ADDRESS_BIOS_REPORT, this::handleReports);
 
-        publishHttpEndpoint("io.nubespark.app.store.rest", "localhost", config().getInteger("http.port", 8086), ar -> {
-            if (ar.failed()) {
-                ar.cause().printStackTrace();
-            } else {
-                System.out.println("Nube App Store (Rest endpoint) service published : " + ar.succeeded());
-            }
-        });
+        publishHttpEndpoint("io.nubespark.app.store.rest", config().getString("http.host", "0.0.0.0"),
+            config().getInteger("http.port", APP_STORE_PORT), ar -> {
+                if (ar.failed()) {
+                    ar.cause().printStackTrace();
+                } else {
+                    System.out.println("Nube App Store (Rest endpoint) service published : " + ar.succeeded());
+                }
+            });
 
         publishMessageSource(ADDRESS_BIOS_REPORT, ADDRESS_BIOS_REPORT, ar -> {
             if (ar.failed()) {
@@ -113,9 +116,9 @@ public class StoreRestVerticle extends RestAPIVerticle {
 
                 // Enable automatic response when ValidationException is thrown
                 RouterFactoryOptions options =
-                        new RouterFactoryOptions()
-                                .setMountNotImplementedHandler(true)
-                                .setMountValidationFailureHandler(true);
+                    new RouterFactoryOptions()
+                        .setMountNotImplementedHandler(true)
+                        .setMountValidationFailureHandler(true);
 
                 routerFactory.setOptions(options);
 
@@ -140,15 +143,15 @@ public class StoreRestVerticle extends RestAPIVerticle {
                         System.out.println("Resource Not Found");
                     }
                     routingContext.response()
-                            .setStatusCode(404)
-                            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                            .end(Json.encodePrettily(new JsonObject()
-                                    .put("message", "Resource Not Found")
-                            ));
+                        .setStatusCode(404)
+                        .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                        .end(Json.encodePrettily(new JsonObject()
+                            .put("message", "Resource Not Found")
+                        ));
                 });
 
                 HttpServer server = vertx.createHttpServer(new HttpServerOptions()
-                        .setPort(config().getInteger("http.port", 8086))
+                    .setPort(config().getInteger("http.port", 8086))
                 );
                 server.requestHandler(router::accept).listen();
                 next.handle(Future.succeededFuture(server));
@@ -166,17 +169,17 @@ public class StoreRestVerticle extends RestAPIVerticle {
             JsonObject info = new JsonObject();
             info.put("instance", instance.getName());
             List<String> members = instance.getCluster().getMembers()
-                    .stream()
-                    .map(member -> member.getAddress().getHost() + ":" + member.getAddress().getPort())
-                    .collect(Collectors.toList());
+                .stream()
+                .map(member -> member.getAddress().getHost() + ":" + member.getAddress().getPort())
+                .collect(Collectors.toList());
             info.put("members", new JsonArray(members));
             nodesInfo.add(info);
         }
 
         routingContext.response()
-                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end(Json.encodePrettily(new JsonArray(nodesInfo)));
+            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+            .putHeader("Access-Control-Allow-Origin", "*")
+            .end(Json.encodePrettily(new JsonArray(nodesInfo)));
 
     }
 
@@ -187,12 +190,12 @@ public class StoreRestVerticle extends RestAPIVerticle {
         vertx.eventBus().publish(ADDRESS_BIOS, new JsonObject().put("version", version).put("options", options));
         logger.info(Json.encodePrettily(new JsonObject().put("version", version).put("options", options)));
         routingContext.response()
-                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end(Json.encodePrettily(new JsonObject()
-                        .put("action", "update")
-                        .put("body", reqBody)
-                        .put("status", "PUBLISHED")));
+            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+            .putHeader("Access-Control-Allow-Origin", "*")
+            .end(Json.encodePrettily(new JsonObject()
+                .put("action", "update")
+                .put("body", reqBody)
+                .put("status", "PUBLISHED")));
     }
 
     private void install(RoutingContext routingContext, String action) {
@@ -200,23 +203,12 @@ public class StoreRestVerticle extends RestAPIVerticle {
         System.out.println(Json.encodePrettily(reqBody));
         vertx.eventBus().publish(ADDRESS_EDGE_INSTALLER, reqBody, new DeliveryOptions().addHeader("action", action));
         routingContext.response()
-                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end(Json.encodePrettily(new JsonObject()
-                        .put("action", action)
-                        .put("body", reqBody)
-                        .put("status", "PUBLISHED")
-                ));
-    }
-
-    private void getDeployments(RoutingContext routingContext) {
-        routingContext.response()
-                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                .end(Json.encodePrettily(deploymentMap));
-    }
-
-    private void handleFailure(AsyncResult handler) {
-        logger.error(handler.cause().getMessage());
-        Future.failedFuture(handler.cause());
+            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+            .putHeader("Access-Control-Allow-Origin", "*")
+            .end(Json.encodePrettily(new JsonObject()
+                .put("action", action)
+                .put("body", reqBody)
+                .put("status", "PUBLISHED")
+            ));
     }
 }

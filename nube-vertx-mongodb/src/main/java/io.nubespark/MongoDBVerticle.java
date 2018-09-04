@@ -12,9 +12,9 @@ import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 
-public class MongoDBVerticle extends MicroServiceVerticle {
-    private int DEFAULT_PORT = 8083;
+import static io.nubespark.constants.Port.MONGO_DB_PORT;
 
+public class MongoDBVerticle extends MicroServiceVerticle {
     private MongoDBController controller;
     private MongoClient client;
 
@@ -55,33 +55,33 @@ public class MongoDBVerticle extends MicroServiceVerticle {
         router.route().last().handler(routingContext -> {
             String uri = routingContext.request().absoluteURI();
             routingContext.response()
-                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                    .setStatusCode(404)
-                    .end(Json.encodePrettily(new JsonObject()
-                            .put("uri", uri)
-                            .put("status", 404)
-                            .put("message", "Resource Not Found!")
-                    ));
+                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                .setStatusCode(404)
+                .end(Json.encodePrettily(new JsonObject()
+                    .put("uri", uri)
+                    .put("status", 404)
+                    .put("message", "Resource Not Found!")
+                ));
         });
 
         // Create the HTTP server and pass the "accept" method to the request handler
         vertx.createHttpServer()
-                .requestHandler(router::accept)
-                .listen(
-                        // Retrieve the port from the configuration
-                        config().getInteger("http.port", DEFAULT_PORT),
-                        next::handle);
+            .requestHandler(router::accept)
+            .listen(
+                // Retrieve the port from the configuration
+                config().getInteger("http.port", MONGO_DB_PORT), next);
 
         publishHttpEndpoint("mongodb-api",
-                config().getString("http.host", "0.0.0.0"),
-                config().getInteger("http.port", DEFAULT_PORT),
-                ar -> {
-                    if (ar.succeeded()) {
-                        System.out.println("MongoDB REST endpoint published successfully..");
-                    } else {
-                        System.out.println("Failed to publish MongoDB REST endpoint");
-                        ar.cause().printStackTrace();
-                    }
+            config().getString("http.host", "0.0.0.0"),
+            config().getInteger("http.port", MONGO_DB_PORT),
+            ar -> {
+                if (ar.succeeded()) {
+                    System.out.println("MongoDB REST endpoint published successfully..");
+                } else {
+                    System.out.println("Failed to publish MongoDB REST endpoint");
+                    ar.cause().printStackTrace();
                 }
-        ); }
+            }
+        );
+    }
 }

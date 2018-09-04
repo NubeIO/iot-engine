@@ -12,10 +12,11 @@ import io.vertx.ext.web.handler.BodyHandler;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.nubespark.constants.Port.ZEPPELIN_PORT;
+
 public class ZeppelinVerticle extends MicroServiceVerticle {
 
     private HttpClient client;
-    private int DEFAULT_PORT = 8089;
     private String COOKIE_NAME = "JSESSIONID";
 
     @Override
@@ -33,21 +34,21 @@ public class ZeppelinVerticle extends MicroServiceVerticle {
         handleRoutes(router);
 
         HttpServer server = vertx.createHttpServer(new HttpServerOptions()
-                .setPort(config().getInteger("http.port", DEFAULT_PORT))
+            .setPort(config().getInteger("http.port", ZEPPELIN_PORT))
         );
         server.requestHandler(router::accept).listen();
 
         publishHttpEndpoint("zeppelin-api",
-                config().getString("http.host", "0.0.0.0"),
-                config().getInteger("http.port", DEFAULT_PORT),
-                ar -> {
-                    if (ar.succeeded()) {
-                        System.out.println("Zeppelin REST endpoint published successfully..");
-                    } else {
-                        System.out.println("Failed to publish Zeppelin REST endpoint");
-                        ar.cause().printStackTrace();
-                    }
+            config().getString("http.host", "0.0.0.0"),
+            config().getInteger("http.port", ZEPPELIN_PORT),
+            ar -> {
+                if (ar.succeeded()) {
+                    System.out.println("Zeppelin REST endpoint published successfully..");
+                } else {
+                    System.out.println("Failed to publish Zeppelin REST endpoint");
+                    ar.cause().printStackTrace();
                 }
+            }
         );
     }
 
@@ -58,21 +59,21 @@ public class ZeppelinVerticle extends MicroServiceVerticle {
 
     private void dispatchRequests(RoutingContext context) {
         HttpClientRequest toReq = client.request(context.request().method(),
-                config().getInteger("server.port"), config().getString("server.host"), context.request().uri(), response -> {
-                    response.bodyHandler(body -> {
-                        HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
-                        if (response.statusCode() < 500) {
-                            response.headers().forEach(header -> {
-                                if (!header.getKey().equalsIgnoreCase("Set-Cookie")) {
-                                    // Ignore cookies; on login it will send cookie
-                                    toRsp.putHeader(header.getKey(), header.getValue());
-                                }
-                            });
-                            body = cookieHandler(response, toRsp, body);
-                        }
-                        toRsp.end(body);
-                    });
+            config().getInteger("server.port"), config().getString("server.host"), context.request().uri(), response -> {
+                response.bodyHandler(body -> {
+                    HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
+                    if (response.statusCode() < 500) {
+                        response.headers().forEach(header -> {
+                            if (!header.getKey().equalsIgnoreCase("Set-Cookie")) {
+                                // Ignore cookies; on login it will send cookie
+                                toRsp.putHeader(header.getKey(), header.getValue());
+                            }
+                        });
+                        body = cookieHandler(response, toRsp, body);
+                    }
+                    toRsp.end(body);
                 });
+            });
         // set headers
         context.request().headers().forEach(header -> {
             if (header.getKey().equalsIgnoreCase(COOKIE_NAME)) {

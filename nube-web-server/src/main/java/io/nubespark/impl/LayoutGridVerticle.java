@@ -7,7 +7,7 @@ import io.nubespark.utils.CustomMessage;
 import io.nubespark.utils.CustomMessageCodec;
 import io.nubespark.utils.StringUtils;
 import io.nubespark.utils.URL;
-import io.nubespark.vertx.common.RxMicroServiceVerticle;
+import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpMethod;
@@ -18,7 +18,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import static io.nubespark.utils.Constants.LAYOUT_GRID_ADDRESS;
 
-public class LayoutGridVerticle extends RxMicroServiceVerticle {
+public class LayoutGridVerticle extends RxRestAPIVerticle {
     private Logger logger = LoggerFactory.getLogger(LayoutGridVerticle.class);
 
     @Override

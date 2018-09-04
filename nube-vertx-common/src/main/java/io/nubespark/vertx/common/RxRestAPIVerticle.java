@@ -1,33 +1,31 @@
 package io.nubespark.vertx.common;
 
-import io.nubespark.utils.response.ResponseUtils;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.nubespark.controller.HttpException;
 import io.reactivex.Single;
-import io.reactivex.SingleObserver;
-import io.reactivex.disposables.Disposable;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.core.buffer.Buffer;
+import io.vertx.reactivex.core.http.HttpClient;
+import io.vertx.reactivex.core.http.HttpClientRequest;
 import io.vertx.reactivex.core.http.HttpServer;
+import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
-import io.vertx.reactivex.ext.web.handler.CookieHandler;
 import io.vertx.reactivex.ext.web.handler.CorsHandler;
-import io.vertx.reactivex.ext.web.handler.SessionHandler;
-import io.vertx.reactivex.ext.web.sstore.ClusteredSessionStore;
-import io.vertx.reactivex.ext.web.sstore.LocalSessionStore;
+import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
+import io.vertx.servicediscovery.Record;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
+
+import static io.nubespark.vertx.common.HttpHelper.badGateway;
 
 public class RxRestAPIVerticle extends RxMicroServiceVerticle {
-    private final String SESSION_NAME = "shopping.user.session";
-    private Logger logger = LoggerFactory.getLogger(RxRestAPIVerticle.class);
-
     /**
      * Create http server for the REST service.
      *
@@ -40,6 +38,11 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
         return vertx.createHttpServer()
                 .requestHandler(router::accept)
                 .rxListen(port, host);
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return null;
     }
 
     /**
@@ -62,282 +65,178 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
         allowHeaders.add("JSESSIONID");
 
         router.route().handler(CorsHandler.create("*")
-                .allowedHeaders(allowHeaders)
-                .allowedMethod(HttpMethod.GET)
-                .allowedMethod(HttpMethod.POST)
-                .allowedMethod(HttpMethod.PUT)
-                .allowedMethod(HttpMethod.DELETE)
-                .allowedMethod(HttpMethod.PATCH)
-                .allowedMethod(HttpMethod.OPTIONS)
+            .allowedHeaders(allowHeaders)
+            .allowedMethod(HttpMethod.GET)
+            .allowedMethod(HttpMethod.PUT)
+            .allowedMethod(HttpMethod.OPTIONS)
+            .allowedMethod(HttpMethod.POST)
+            .allowedMethod(HttpMethod.DELETE)
+            .allowedMethod(HttpMethod.PATCH));
+    }
+
+    protected Single<Buffer> dispatchRequests(HttpMethod method, String path, JsonObject payload) {
+        int initialOffset = 5; // length of `/api/`
+        // run with circuit breaker in order to deal with failure
+        return circuitBreaker.rxExecuteCommand(future -> {
+            getRxAllEndpoints().flatMap(recordList -> {
+                if (path.length() <= initialOffset) {
+                    return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));
+                }
+                String prefix = (path.substring(initialOffset)
+                    .split("/"))[0];
+                getLogger().info("Prefix: " + prefix);
+                // generate new relative path
+                String newPath = path.substring(initialOffset + prefix.length());
+                // get one relevant HTTP client, may not exist
+                getLogger().info("New path: " + newPath);
+                Optional<Record> client = recordList.stream()
+                    .filter(record -> record.getMetadata().getString("api.name") != null)
+                    .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
+                    .findAny(); // simple load balance
+
+                if (client.isPresent()) {
+                    getLogger().info("Found client for uri: " + path);
+                    Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery,
+                        rec -> rec.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE) && rec.getMetadata().getString("api.name").equals(prefix));
+                    return doDispatch(newPath, method, payload, httpClientSingle);
+                } else {
+                    getLogger().info("Client endpoint not found for uri: " + path);
+                    return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));
+                }
+            }).subscribe(future::complete, future::fail);
+        });
+    }
+
+    /**
+     * Dispatch the request to the downstream REST layers.
+     */
+    private Single<Buffer> doDispatch(String path, HttpMethod method, JsonObject payload, Single<HttpClient> httpClientSingle) {
+        return Single.create(source ->
+            httpClientSingle.subscribe(client -> {
+                HttpClientRequest toReq = client.request(method, path, response -> {
+                    response.bodyHandler(body -> {
+                        if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
+                            source.onError(new HttpException(HttpResponseStatus.valueOf(response.statusCode()), response.statusCode() + ": " + body.toString()));
+                            getLogger().info("Failed to dispatch: " + response.toString());
+                        } else {
+                            source.onSuccess(body);
+                            client.close();
+                        }
+                        io.vertx.servicediscovery.ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
+                    });
+                });
+                toReq.setChunked(true);
+                toReq.getDelegate().putHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+                if (payload == null) {
+                    toReq.end();
+                } else {
+                    toReq.write(payload.encode()).end();
+                }
+            })
         );
-
     }
 
-    /**
-     * Enable local session storage in requests.
-     *
-     * @param router router instance
-     */
-    protected void enableLocalSession(Router router) {
-        router.route().handler(CookieHandler.create());
-        router.route().handler(SessionHandler.create(
-                LocalSessionStore.create(vertx, SESSION_NAME)));
+    private Single<List<Record>> getRxAllEndpoints() {
+        return discovery.rxGetRecords(record -> record.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE));
     }
 
-    /**
-     * Enable clustered session storage in requests.
-     *
-     * @param router router instance
-     */
-    protected void enableClusteredSession(Router router) {
-        router.route().handler(CookieHandler.create());
-        router.route().handler(SessionHandler.create(
-                ClusteredSessionStore.create(vertx, SESSION_NAME)));
-    }
+    protected void dispatchRequests(RoutingContext context) {
+        System.out.println("Dispatch Requests called");
+        int initialOffset = 5; // length of `/api/`
+        // run with circuit breaker in order to deal with failure
+        circuitBreaker.execute(future -> {
+            getAllEndpoints().setHandler(ar -> {
+                if (ar.succeeded()) {
+                    List<Record> recordList = ar.result();
+                    // get relative path and retrieve prefix to dispatch client
+                    String path = context.request().uri();
 
-    // Auth helper method
+                    if (path.length() <= initialOffset) {
+                        HttpHelper.notFound(context);
+                        future.complete();
+                        return;
+                    }
+                    String prefix = (path.substring(initialOffset)
+                        .split("/"))[0];
+                    System.out.println("prefix = " + prefix);
+                    // generate new relative path
+                    String newPath = path.substring(initialOffset + prefix.length());
+                    // get one relevant HTTP client, may not exist
+                    System.out.println("new path = " + newPath);
+                    Optional<Record> client = recordList.stream()
+                        .filter(record -> record.getMetadata().getString("api.name") != null)
+                        .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
+                        .findAny(); // simple load balance
 
-    /**
-     * Validate if a user exists in the request scope.
-     */
-    protected void requireLogin(RoutingContext context, BiConsumer<RoutingContext, JsonObject> biHandler) {
-        Optional<JsonObject> principal = Optional.ofNullable(context.request().getHeader("user-principal"))
-                .map(JsonObject::new);
-        if (principal.isPresent()) {
-            biHandler.accept(context, principal.get());
-        } else {
-            context.response()
-                    .setStatusCode(401)
-                    .end(new JsonObject().put("message", "need_auth").encode());
-        }
-    }
-
-    // helper result handler within a request context
-
-    /**
-     * This method generates handler for async methods in REST APIs.
-     * Use the result directly and invoke `toString` as the response. The content type is JSON.
-     */
-    protected <T> SingleObserver<T> resultObserver(RoutingContext context) {
-        return new DefaultSingleObserver<T>(context) {
-            @Override
-            public void onSuccess(T res) {
-                context.response()
-                        .putHeader("content-type", "application/json")
-                        .end(res == null ? "{}" : res.toString());
-            }
-        };
-    }
-
-    /**
-     * This method generates handler for async methods in REST APIs.
-     * Use the result directly and use given {@code converter} to convert result to string
-     * as the response. The content type is JSON.
-     *
-     * @param context   routing context instance
-     * @param converter a converter that converts result to a string
-     * @param <T>       result type
-     * @return generated handler
-     */
-    protected <T> SingleObserver<T> resultObserver(RoutingContext context, Function<T, String> converter) {
-        return new DefaultSingleObserver<T>(context) {
-            @Override
-            public void onSuccess(T res) {
-                if (res == null) {
-                    serviceUnavailable(context, "invalid_result");
+                    if (client.isPresent()) {
+                        System.out.println("Found client for uri: " + path);
+                        Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery,
+                            rec -> rec.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE) && rec.getMetadata().getString("api.name").equals(prefix));
+                        doDispatch(context, newPath, httpClientSingle, future);
+                    } else {
+                        System.out.println("Client endpoint not found for uri " + path);
+                        HttpHelper.notFound(context);
+                        future.complete();
+                    }
                 } else {
-                    context.response()
-                            .putHeader("content-type", "application/json")
-                            .end(converter.apply(res));
+                    future.fail(ar.cause());
                 }
+            });
+        }).setHandler(ar -> {
+            if (ar.failed()) {
+                badGateway(ar.cause(), context);
             }
-        };
+        });
     }
 
     /**
-     * This method generates handler for async methods in REST APIs.
-     * The result requires non-empty. If empty, return <em>404 Not Found</em> status.
-     * The content type is JSON.
+     * Dispatch the request to the downstream REST layers.
      *
-     * @param context routing context instance
-     * @param <T>     result type
-     * @return generated handler
+     * @param context          routing context instance
+     * @param path             relative path
+     * @param httpClientSingle relevant HTTP client
      */
-    protected <T> SingleObserver<T> resultNonEmptyObserver(RoutingContext context) {
-        return new DefaultSingleObserver<T>(context) {
-            @Override
-            public void onSuccess(T res) {
-                if (res == null) {
-                    notFound(context);
-                } else {
-                    context.response()
-                            .putHeader("content-type", "application/json")
-                            .end(res.toString());
-                }
+    private void doDispatch(RoutingContext context, String path, Single<HttpClient> httpClientSingle, io.vertx.reactivex.core.Future<Object> cbFuture) {
+        httpClientSingle.subscribe(client -> {
+            HttpClientRequest toReq = client
+                .request(context.request().method(), path, response -> {
+                    response.bodyHandler(body -> {
+                        if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
+                            cbFuture.fail(response.statusCode() + ": " + body.toString());
+                        } else {
+                            HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
+                            response.headers().getDelegate().forEach(header -> {
+                                toRsp.putHeader(header.getKey(), header.getValue());
+                            });
+                            // send response
+                            toRsp.end(body);
+                            client.close();
+                            cbFuture.complete();
+                        }
+                        io.vertx.servicediscovery.ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
+                    });
+                });
+            // set headers
+            context.request().headers().getDelegate().forEach(header -> {
+                toReq.putHeader(header.getKey(), header.getValue());
+            });
+            if (context.getBody() == null) {
+                toReq.end();
+            } else {
+                toReq.end(context.getBody());
             }
-        };
+        });
     }
 
     /**
-     * This method generates handler for async methods in REST APIs.
-     * The content type is originally raw text.
+     * Get all REST endpoints from the service discovery infrastructure.
      *
-     * @param context routing context instance
-     * @param <T>     result type
-     * @return generated handler
+     * @return async result
      */
-    protected <T> SingleObserver<T> rawResultObserver(RoutingContext context) {
-        return new DefaultSingleObserver<T>(context) {
-            @Override
-            public void onSuccess(T res) {
-                context.response()
-                        .end(res == null ? "" : res.toString());
-            }
-        };
-    }
-
-    protected <T> SingleObserver<T> resultVoidObserver(RoutingContext context, JsonObject result) {
-        return resultVoidObserver(context, result, 200);
-    }
-
-    /**
-     * This method generates handler for async methods in REST APIs.
-     * The result is not needed. Only the state of the async result is required.
-     *
-     * @param context routing context instance
-     * @param result  result content
-     * @param status  status code
-     * @return generated handler
-     */
-    protected <T> SingleObserver<T> resultVoidObserver(RoutingContext context, JsonObject result, int status) {
-        return new DefaultSingleObserver<T>(context) {
-            @Override
-            public void onSuccess(T res) {
-                context.response()
-                        .setStatusCode(status == 0 ? 200 : status)
-                        .putHeader("content-type", "application/json")
-                        .end(result.encodePrettily());
-            }
-        };
-    }
-
-    protected <T> SingleObserver<T> resultVoidObserver(RoutingContext context, int status) {
-        return new DefaultSingleObserver<T>(context) {
-            @Override
-            public void onSuccess(T res) {
-                context.response()
-                        .setStatusCode(status == 0 ? 200 : status)
-                        .putHeader("content-type", "application/json")
-                        .end();
-            }
-        };
-    }
-
-    /**
-     * This method generates handler for async methods in REST DELETE APIs.
-     * Return format in JSON (successful status = 204):
-     * <code>
-     * {"message": "delete_success"}
-     * </code>
-     *
-     * @param context routing context instance
-     * @return generated handler
-     */
-    protected <T> SingleObserver<T> deleteResultObserver(RoutingContext context) {
-        return new DefaultSingleObserver<T>(context) {
-            @Override
-            public void onSuccess(T res) {
-                context.response().setStatusCode(204)
-                        .putHeader("content-type", "application/json")
-                        .end(new JsonObject().put("message", "delete_success").encodePrettily());
-            }
-        };
-    }
-
-    // helper method dealing with failure
-    protected void badRequest(RoutingContext context, Throwable ex) {
-        context.response().setStatusCode(400)
-                .putHeader("content-type", "application/json")
-                .end(new JsonObject().put("error", ex.getMessage()).encodePrettily());
-    }
-
-    protected void notFound(RoutingContext context) {
-        context.response().setStatusCode(404)
-                .putHeader("content-type", "application/json")
-                .end(new JsonObject().put("message", "not_found").encodePrettily());
-    }
-
-    protected void internalError(RoutingContext context, Throwable ex) {
-        context.response().setStatusCode(500)
-                .putHeader("content-type", "application/json")
-                .end(new JsonObject().put("error", ex.getMessage()).encodePrettily());
-    }
-
-    protected void notImplemented(RoutingContext context) {
-        context.response().setStatusCode(501)
-                .putHeader("content-type", "application/json")
-                .end(new JsonObject().put("message", "not_implemented").encodePrettily());
-    }
-
-    protected void badGateway(Throwable ex, RoutingContext context) {
-        ex.printStackTrace();
-        context.response()
-                .setStatusCode(502)
-                .putHeader("content-type", "application/json")
-                .end(new JsonObject().put("error", "Bad Gateway")
-                        .put("message", ex.getMessage())
-                        .encodePrettily());
-    }
-
-    protected void serviceUnavailable(RoutingContext context) {
-        context.fail(503);
-    }
-
-    protected void serviceUnavailable(RoutingContext context, Throwable ex) {
-        context.response().setStatusCode(503)
-                .putHeader("content-type", "application/json")
-                .end(new JsonObject().put("error", ex.getMessage()).encodePrettily());
-    }
-
-    protected void serviceUnavailable(RoutingContext context, String cause) {
-        context.response().setStatusCode(503)
-                .putHeader("content-type", "application/json")
-                .end(new JsonObject().put("error", cause).encodePrettily());
-    }
-
-    protected void failAuthentication(RoutingContext ctx) {
-        ctx.response().setStatusCode(401)
-                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                .end(Json.encodePrettily(new JsonObject().put("message", "Unauthorized")));
-    }
-
-    @Override
-    protected Logger getLogger() {
-        return logger;
-    }
-
-    class DefaultSingleObserver<T> implements SingleObserver<T> {
-
-        private RoutingContext context;
-
-        DefaultSingleObserver(RoutingContext context) {
-            this.context = context;
-        }
-
-        @Override
-        public void onSubscribe(Disposable disposable) {
-
-        }
-
-        @Override
-        public void onSuccess(T t) {
-
-        }
-
-        @Override
-        public void onError(Throwable throwable) {
-            internalError(context, throwable);
-            getLogger().error(throwable);
-        }
+    private io.vertx.reactivex.core.Future<List<Record>> getAllEndpoints() {
+        io.vertx.reactivex.core.Future<List<Record>> future = io.vertx.reactivex.core.Future.future();
+        discovery.getRecords(record -> record.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE),
+            future.completer());
+        return future;
     }
 }
