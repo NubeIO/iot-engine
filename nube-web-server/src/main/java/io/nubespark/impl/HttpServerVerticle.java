@@ -428,6 +428,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                         String[] _ids = StringUtils.getIds(childCompanies);
                         body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids));
                     } else {
+                        // Role 'MANAGER' will assign it's own company_id as the company_id
                         body.put("company_id", user.getString("company_id"));
                     }
 
@@ -449,14 +450,17 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
     }
 
 
-    private SingleSource<? extends Integer> updateMongoUser(JsonObject ctxUser, JsonObject body, JsonObject keycloakUser, JsonArray childGroups) {
+    private SingleSource<? extends Integer> updateMongoUser(JsonObject ctxUser, JsonObject body, JsonObject keycloakUser, JsonArray childCompanies) {
         return dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject().put("associated_company_id", ctxUser.getString("company_id")))
             .flatMap(response -> {
-                JsonArray childCompanies = new JsonArray(response.getDelegate());
-                if (childCompanies.size() > 0) {
-                    {
-                        String[] _ids = StringUtils.getIds(childGroups);
+                JsonArray childGroups = new JsonArray(response.getDelegate());
+                if (childGroups.size() > 0) {
+                    if (childCompanies.size() > 0) {
+                        String[] _ids = StringUtils.getIds(childCompanies);
                         body.put("company_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids));
+                    } else {
+                        // Role 'MANAGER' will assign it's own company_id as the company_id
+                        body.put("company_id", ctxUser.getString("company_id"));
                     }
                     String[] _ids = StringUtils.getIds(childGroups);
                     body.put("associated_company_id", ctxUser.getString("company_id"))
@@ -870,7 +874,6 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
     private void handleUpdateUser(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         JsonObject ctxUser = ctx.user().principal();
-        System.out.println("User principle: " + ctxUser);
         JsonObject body = ctx.getBodyAsJson();
         String userId = ctx.request().getParam("id");
         String accessToken = ctx.user().principal().getString("access_token");
@@ -913,7 +916,6 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                         return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("associated_company_id", ctxUser.getString("company_id")))
                             .flatMap(response -> {
                                 JsonArray childCompanies = new JsonArray(response.getDelegate());
-                                logger.info("Child companies: " + childCompanies);
                                 if (childCompanies.size() > 0) {
                                     return updateMongoUser(ctxUser, body, keycloakUser, childCompanies);
                                 } else {
