@@ -36,8 +36,8 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
      */
     protected Single<HttpServer> createHttpServer(Router router, String host, int port) {
         return vertx.createHttpServer()
-                .requestHandler(router::accept)
-                .rxListen(port, host);
+            .requestHandler(router::accept)
+            .rxListen(port, host);
     }
 
     @Override

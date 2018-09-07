@@ -1,5 +1,6 @@
 package io.nubespark;
 
+import io.nubespark.utils.Runner;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -20,6 +21,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.nubespark.constants.Port.SERVER_DITTO_DRIVER_PORT;
+
 
 /**
  * Created by topsykretts on 5/11/18.
@@ -35,14 +38,20 @@ public class ServerDittoDriver extends MicroServiceVerticle {
     private HttpClient client;
     private long failedTs = new Date().getTime();
 
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+        String JAVA_DIR = "nube-server-ditto-driver/src/main/java";
+        Runner.runExample(JAVA_DIR, ServerDittoDriver.class);
+    }
+
     @Override
     public void start() {
         super.start();
 
         client = vertx.createHttpClient(new HttpClientOptions()
-                .setVerifyHost(false)
-                .setTrustAll(true)
-                .setTcpKeepAlive(true)
+            .setVerifyHost(false)
+            .setTrustAll(true)
+            .setTcpKeepAlive(true)
         );
 
         handleDittoWebSocket(client);
@@ -118,20 +127,20 @@ public class ServerDittoDriver extends MicroServiceVerticle {
                     });
                 });
             }
-        }).listen(config().getInteger("http.port", 7272), handler -> {
+        }).listen(config().getInteger("http.port", SERVER_DITTO_DRIVER_PORT), handler -> {
             if (handler.succeeded()) {
                 System.out.println("Ditto Server Driver Http Endpoint published");
                 publishHttpEndpoint("ditto-api",
-                        config().getString("http.host", "0.0.0.0"),
-                        config().getInteger("http.port", 7272),
-                        ar -> {
-                            if (ar.succeeded()) {
-                                System.out.println("Ditto Server Driver Http Endpoint published");
-                            } else {
-                                System.out.println("Failed to publish Ditto Server Driver Http Endpoint");
-                                ar.cause().printStackTrace();
-                            }
+                    config().getString("http.host", "0.0.0.0"),
+                    config().getInteger("http.port", SERVER_DITTO_DRIVER_PORT),
+                    ar -> {
+                        if (ar.succeeded()) {
+                            System.out.println("Ditto Server Driver Http Endpoint published");
+                        } else {
+                            System.out.println("Failed to publish Ditto Server Driver Http Endpoint");
+                            ar.cause().printStackTrace();
                         }
+                    }
                 );
             } else {
                 System.out.println("Failed to deploy Ditto Server Driver");
@@ -147,32 +156,32 @@ public class ServerDittoDriver extends MicroServiceVerticle {
         System.out.println("Ditto port: " + port);
         // Subscribe to ditto events and make it available to vertx event bus
         RequestOptions requestOptions = new RequestOptions()
-                .setHost(host)
-                .setPort(port)
-                .setURI("/ws/2");
+            .setHost(host)
+            .setPort(port)
+            .setURI("/ws/2");
         if (port == 443 || port == 8443 || config().getBoolean("ditto.ssl", false)) {
             requestOptions.setSsl(true);
         }
 
         client.websocket(
-                requestOptions,
-                new VertxHttpHeaders()
-                        .add(HttpHeaders.AUTHORIZATION, "Basic " + getAuthKey())
-                ,
-                this::handleWebSocketSuccess,
-                error -> {
-                    // Reconnects on every 5 seconds on failure...
-                    vertx.setTimer(5000, l -> handleDittoWebSocket(client));
-                    if (failedTs != 0) {
-                        long now = new Date().getTime();
-                        long diff = now - failedTs;
-                        System.out.println("Ditto Websocket is disconnected for: " + diff);
-                    }
-                    System.out.println("Connection to websocket failed.");
-                    System.out.println(error.getMessage());
-                    System.out.println("Retrying to connect...");
-                    error.printStackTrace();
-                });
+            requestOptions,
+            new VertxHttpHeaders()
+                .add(HttpHeaders.AUTHORIZATION, "Basic " + getAuthKey())
+            ,
+            this::handleWebSocketSuccess,
+            error -> {
+                // Reconnects on every 5 seconds on failure...
+                vertx.setTimer(5000, l -> handleDittoWebSocket(client));
+                if (failedTs != 0) {
+                    long now = new Date().getTime();
+                    long diff = now - failedTs;
+                    System.out.println("Ditto Websocket is disconnected for: " + diff);
+                }
+                System.out.println("Connection to websocket failed.");
+                System.out.println(error.getMessage());
+                System.out.println("Retrying to connect...");
+                error.printStackTrace();
+            });
     }
 
     private void handleWebSocketSuccess(WebSocket webSocket) {
@@ -206,7 +215,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
             headerMap.put(header, headers.getString(header));
         }
         req.response()
-                .headers().setAll(headerMap);
+            .headers().setAll(headerMap);
         req.response().setStatusCode(dittoRes.getInteger("statusCode"));
         byte[] responseBody = dittoRes.getBinary("body");
         if (responseBody != null) {
@@ -231,29 +240,29 @@ public class ServerDittoDriver extends MicroServiceVerticle {
         }
 
         HttpClientRequest c_req = client.request(httpMethod,
-                new RequestOptions()
-                        .setHost(host)
-                        .setPort(port)
-                        .setURI(uri)
-                        .setSsl(ssl),
-                c_res -> {
-                    System.out.println("Proxying response: " + c_res.statusCode());
-                    JsonObject response = new JsonObject();
-                    response.put("statusCode", c_res.statusCode());
-                    JsonObject headers = new JsonObject();
-                    for (Map.Entry<String, String> entry : c_res.headers().entries()) {
-                        headers.put(entry.getKey(), entry.getValue());
-                    }
-                    response.put("headers", headers);
+            new RequestOptions()
+                .setHost(host)
+                .setPort(port)
+                .setURI(uri)
+                .setSsl(ssl),
+            c_res -> {
+                System.out.println("Proxying response: " + c_res.statusCode());
+                JsonObject response = new JsonObject();
+                response.put("statusCode", c_res.statusCode());
+                JsonObject headers = new JsonObject();
+                for (Map.Entry<String, String> entry : c_res.headers().entries()) {
+                    headers.put(entry.getKey(), entry.getValue());
+                }
+                response.put("headers", headers);
 
-                    Buffer data = new BufferImpl();
-                    c_res.handler(x -> data.appendBytes(x.getBytes()));
-                    c_res.endHandler((v) -> {
-                        response.put("body", data.getBytes());
-                        System.out.println("Proxy Response Completed.");
-                        next.handle(Future.succeededFuture(response));
-                    });
+                Buffer data = new BufferImpl();
+                c_res.handler(x -> data.appendBytes(x.getBytes()));
+                c_res.endHandler((v) -> {
+                    response.put("body", data.getBytes());
+                    System.out.println("Proxy Response Completed.");
+                    next.handle(Future.succeededFuture(response));
                 });
+            });
         c_req.setChunked(true);
         //Adding ditto authorization
         c_req.putHeader(HttpHeaders.AUTHORIZATION, "Basic " + getAuthKey());

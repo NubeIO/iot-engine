@@ -1,5 +1,6 @@
 package io.nubespark.jdbc;
 
+import io.nubespark.utils.Runner;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
@@ -20,6 +21,12 @@ import static io.nubespark.jdbc.JDBCService.SERVICE_NAME;
 public class JdbcVerticle extends RxMicroServiceVerticle {
 
     private Logger logger = LoggerFactory.getLogger(JdbcVerticle.class);
+
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+        String JAVA_DIR = "nube-jdbc-engine/src/main/java";
+        Runner.runExample(JAVA_DIR, JdbcVerticle.class);
+    }
 
     @Override
     public void start(Future<Void> startFuture) {

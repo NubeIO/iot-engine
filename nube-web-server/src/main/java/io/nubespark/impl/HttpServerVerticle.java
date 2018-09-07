@@ -55,6 +55,12 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
     private Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
     private EventBus eventBus;
 
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+        String JAVA_DIR = "nube-web-server/src/main/java";
+        Runner.runExample(JAVA_DIR, HttpServerVerticle.class);
+    }
+
     @Override
     protected Logger getLogger() {
         return logger;

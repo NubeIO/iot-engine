@@ -3,6 +3,7 @@ package io.nubespark;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.nio.Address;
+import io.nubespark.utils.Runner;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.buffer.Buffer;
@@ -16,6 +17,8 @@ import io.vertx.core.json.JsonObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.nubespark.constants.Port.EDGE_DITTO_DRIVER_PORT;
+
 /**
  * Created by topsykretts on 5/12/18.
  */
@@ -23,6 +26,12 @@ public class EdgeDittoDriver extends MicroServiceVerticle {
 
     private static final String EDGE_DITTO_DRIVER = "io.nubespark.edge.ditto.driver";
     private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
+
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+        String JAVA_DIR = "nube-edge-ditto-driver/src/main/java";
+        Runner.runExample(JAVA_DIR, EdgeDittoDriver.class);
+    }
 
     @Override
     public void start() {
@@ -40,23 +49,23 @@ public class EdgeDittoDriver extends MicroServiceVerticle {
             System.out.println("Received request from server...");
 
             HttpClientRequest c_req = client.request(HttpMethod.PUT,
-                    nodeRedPort,
-                    nodeRedHost,
-                    "/device/manager",
-                    c_res -> {
-                        JsonObject response = new JsonObject();
-                        response.put("statusCode", c_res.statusCode());
-                        JsonObject headers = new JsonObject();
-                        for (Map.Entry<String, String> entry : c_res.headers().entries()) {
-                            headers.put(entry.getKey(), entry.getValue());
-                        }
-                        response.put("headers", headers);
-                        c_res.handler(data -> response.put("body", data.getBytes()));
-                        c_res.endHandler((v) -> {
-                            System.out.println("Got response from NodeRED. Sending it to server.");
-                            message.reply(response);
-                        });
+                nodeRedPort,
+                nodeRedHost,
+                "/device/manager",
+                c_res -> {
+                    JsonObject response = new JsonObject();
+                    response.put("statusCode", c_res.statusCode());
+                    JsonObject headers = new JsonObject();
+                    for (Map.Entry<String, String> entry : c_res.headers().entries()) {
+                        headers.put(entry.getKey(), entry.getValue());
+                    }
+                    response.put("headers", headers);
+                    c_res.handler(data -> response.put("body", data.getBytes()));
+                    c_res.endHandler((v) -> {
+                        System.out.println("Got response from NodeRED. Sending it to server.");
+                        message.reply(response);
                     });
+                });
             c_req.setChunked(true);
             // Adding ditto authorization
             c_req.write(Buffer.buffer(Json.encodePrettily(request)));
@@ -89,7 +98,7 @@ public class EdgeDittoDriver extends MicroServiceVerticle {
                             headerMap.put(header, headers.getString(header));
                         }
                         req.response()
-                                .headers().setAll(headerMap);
+                            .headers().setAll(headerMap);
                         req.response().setStatusCode(response.getInteger("statusCode"));
                         byte[] responseBody = response.getBinary("body");
                         if (responseBody != null) {
@@ -99,18 +108,18 @@ public class EdgeDittoDriver extends MicroServiceVerticle {
                     } else {
                         // TODO: 5/12/18 Identify cases where request fails and handle accordingly
                         req.response()
-                                .setStatusCode(500)
-                                .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                                .end(Json.encodePrettily(new JsonObject()
-                                        .put("message", "Internal Server Error")
-                                        .put("error", handler.cause().getMessage())
-                                ));
+                            .setStatusCode(500)
+                            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                            .end(Json.encodePrettily(new JsonObject()
+                                .put("message", "Internal Server Error")
+                                .put("error", handler.cause().getMessage())
+                            ));
                     }
                 });
                 System.out.println(" After sending response..");
             });
             System.out.println("Outside body handler..");
-        }).listen(config().getInteger("http.port", 7171), handler -> {
+        }).listen(config().getInteger("http.port", EDGE_DITTO_DRIVER_PORT), handler -> {
             if (handler.succeeded()) {
                 System.out.println("Ditto Edge Driver Http Endpoint published");
             } else {

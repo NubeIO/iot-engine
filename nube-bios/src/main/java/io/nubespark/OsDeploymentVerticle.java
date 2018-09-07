@@ -1,5 +1,6 @@
 package io.nubespark;
 
+import io.nubespark.utils.Runner;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -42,6 +43,12 @@ public class OsDeploymentVerticle extends MicroServiceVerticle {
     private static String SELECT_APP_INSTALLER_QUERY = "SELECT * FROM app_installer";
     private static String DELETE_APP_INSTALLER_QUERY = "DELETE FROM app_installer where deploymentId = ?";
     // =========================================
+
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+        String JAVA_DIR = "nube-bios/src/main/java";
+        Runner.runExample(JAVA_DIR, OsDeploymentVerticle.class);
+    }
 
     @Override
     public void start() {

@@ -2,6 +2,7 @@ package io.nubespark;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import io.nubespark.utils.Runner;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RestAPIVerticle;
 import io.vertx.core.AsyncResult;
@@ -47,6 +48,12 @@ public class AppStoreRestVerticle extends RestAPIVerticle {
     private static final String ADDRESS_BIOS = "io.nubespark.bios";
 
     Logger logger = LoggerFactory.getLogger(AppStoreRestVerticle.class);
+
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+        String JAVA_DIR = "nube-app-store-rest/src/main/java";
+        Runner.runExample(JAVA_DIR, AppStoreRestVerticle.class);
+    }
 
     @Override
     public void start() {

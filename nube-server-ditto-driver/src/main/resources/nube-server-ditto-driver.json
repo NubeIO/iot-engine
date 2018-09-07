@@ -2,7 +2,7 @@
   "main": "io.nubespark.ServerDittoDriver",
   "options":{
     "config": {
-      "http.port": 7272,
+      "http.port": 8088,
       "http.host": "0.0.0.0",
       "api.name": "ditto",
       "ditto.http.port": 8080,

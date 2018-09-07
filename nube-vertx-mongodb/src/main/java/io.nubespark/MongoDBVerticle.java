@@ -1,6 +1,7 @@
 package io.nubespark;
 
 import io.nubespark.controller.MongoDBController;
+import io.nubespark.utils.Runner;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.AsyncResult;
@@ -17,6 +18,12 @@ import static io.nubespark.constants.Port.MONGO_DB_PORT;
 public class MongoDBVerticle extends MicroServiceVerticle {
     private MongoDBController controller;
     private MongoClient client;
+
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+        String JAVA_DIR = "nube-vertx-mongodb/src/main/java";
+        Runner.runExample(JAVA_DIR, MongoDBVerticle.class);
+    }
 
     @Override
     public void start() {

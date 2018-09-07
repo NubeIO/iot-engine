@@ -51,6 +51,11 @@ public class Launcher extends io.vertx.core.Launcher {
 
     private JsonObject getConfiguration(File config) {
         JsonObject conf = new JsonObject();
+        conf = getEntries(config, conf);
+        return conf;
+    }
+
+    public static JsonObject getEntries(File config, JsonObject conf) {
         if (config.isFile()) {
             System.out.println("Reading config file: " + config.getAbsolutePath());
             try (Scanner scanner = new Scanner(config).useDelimiter("\\A")) {

@@ -1,5 +1,6 @@
 package io.nubespark;
 
+import io.nubespark.utils.Runner;
 import io.nubespark.vertx.common.MicroServiceVerticle;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.*;
@@ -18,6 +19,12 @@ public class ZeppelinVerticle extends MicroServiceVerticle {
 
     private HttpClient client;
     private String COOKIE_NAME = "JSESSIONID";
+
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+        String JAVA_DIR = "nube-vertx-zeppelin/src/main/java";
+        Runner.runExample(JAVA_DIR, ZeppelinVerticle.class);
+    }
 
     @Override
     public void start() {
