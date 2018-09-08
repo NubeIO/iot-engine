@@ -16,7 +16,7 @@ public class Site extends Model {
     public String text_color_secondary;
     public String heading_color;
     public String layout_body_background;
-    public String bt_primary_bg;
+    public String btn_primary_bg;
     public String layout_header_background;
     public String role; // ADMIN or MANAGER or USER; defining the company level
 
