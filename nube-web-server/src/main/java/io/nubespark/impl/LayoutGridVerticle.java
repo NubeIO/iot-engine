@@ -16,7 +16,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import static io.nubespark.utils.Constants.LAYOUT_GRID_ADDRESS;
+import static io.nubespark.constants.Address.LAYOUT_GRID_ADDRESS;
 
 public class LayoutGridVerticle extends RxRestAPIVerticle {
     private Logger logger = LoggerFactory.getLogger(LayoutGridVerticle.class);

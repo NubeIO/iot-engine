@@ -21,6 +21,7 @@ import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
+import io.vertx.reactivex.core.MultiMap;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
 import io.vertx.reactivex.core.http.HttpServer;
@@ -29,6 +30,7 @@ import io.vertx.reactivex.ext.auth.User;
 import io.vertx.reactivex.ext.auth.oauth2.AccessToken;
 import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.reactivex.ext.auth.oauth2.providers.KeycloakAuth;
+import io.vertx.reactivex.ext.web.FileUpload;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
@@ -40,17 +42,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.stream.Collectors;
 
+import static io.nubespark.constants.Address.LAYOUT_GRID_ADDRESS;
+import static io.nubespark.constants.Address.SERVICE_NAME;
+import static io.nubespark.constants.Location.MEDIA_FILE_LOCATION;
+import static io.nubespark.constants.Location.WEB_SERVER_MICRO_SERVICE_LOCATION;
 import static io.nubespark.constants.Port.HTTP_WEB_SERVER_PORT;
-import static io.nubespark.utils.Constants.LAYOUT_GRID_ADDRESS;
-import static io.nubespark.utils.Constants.SERVICE_NAME;
-import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
-import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
+import static io.nubespark.utils.FileUtils.appendRealFileNameWithExtension;
+import static io.nubespark.utils.response.ResponseUtils.*;
 import static io.nubespark.vertx.common.HttpHelper.*;
 
 /**
  * Created by topsykretts on 5/4/18.
  */
 public class HttpServerVerticle extends RxRestAPIVerticle {
+    private String ROOT_FOLDER = System.getProperty("user.dir") + WEB_SERVER_MICRO_SERVICE_LOCATION;
     private OAuth2Auth loginAuth;
     private Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
     private EventBus eventBus;
@@ -96,7 +101,8 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         Router router = Router.router(vertx);
 
         // creating body handler
-        router.route().handler(BodyHandler.create());
+        router.route().handler(BodyHandler.create().setUploadsDirectory(ROOT_FOLDER + MEDIA_FILE_LOCATION).setBodyLimit(5000000)); // limited to 5 MB
+        // handle the form
 
         enableCorsSupport(router);
         handleAuth(router);
@@ -236,8 +242,8 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
      * @param router routing the URLs
      */
     private void handleStaticResource(Router router) {
-        router.route().handler(StaticHandler.create());
-        router.route("/*").handler(ctx -> ctx.response().sendFile("webroot/index.html"));
+        router.route().handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(ROOT_FOLDER));
+        router.route("/*").handler(ctx -> ctx.response().sendFile(ROOT_FOLDER + "/index.html"));
     }
 
     private void setAuthenticUser(RoutingContext ctx, String authorization) {
@@ -509,7 +515,17 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
     private void handlePostSite(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-            Site site = new Site(ctx.getBodyAsJson()
+            JsonObject siteObject = new JsonObject();
+            if (ctx.fileUploads().size() > 0) {
+                FileUpload fileUpload = ctx.fileUploads().iterator().next();
+                siteObject.put("logo", appendRealFileNameWithExtension(fileUpload).replace(ROOT_FOLDER, ""));
+            }
+
+            MultiMap attributes = ctx.request().formAttributes();
+            for (String name : attributes.names()) {
+                siteObject.put(name, attributes.get(name));
+            }
+            Site site = new Site(siteObject
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", UserUtils.getRole(role).toString()));
             dispatchRequests(HttpMethod.POST, URL.post_site, site.toJsonObject())
@@ -951,11 +967,16 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                         return new JsonObject(buffer.getDelegate());
                     }
                 })
-                .flatMap(site -> {
-                    JsonObject siteObject = new Site(ctx.getBodyAsJson()
-                        .put("associated_company_id", ctx.user().principal().getString("company_id"))).toJsonObject()
-                        .put("role", UserUtils.getRole(role).toString())
-                        .put("_id", site.getString("_id"));
+                .flatMap(siteObject -> {
+                    if (ctx.fileUploads().size() > 0) {
+                        FileUpload fileUpload = ctx.fileUploads().iterator().next();
+                        siteObject.put("logo", appendRealFileNameWithExtension(fileUpload).replace(ROOT_FOLDER, ""));
+                    }
+
+                    MultiMap attributes = ctx.request().formAttributes();
+                    for (String name : attributes.names()) {
+                        siteObject.put(name, attributes.get(name));
+                    }
                     return dispatchRequests(HttpMethod.PUT, URL.put_site, siteObject);
                 })
                 .subscribe(ignored -> ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end(),
@@ -1043,7 +1064,9 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                 }).toList()
             ).subscribe(response -> {
                 JsonArray array = new JsonArray();
-                response.forEach(array::add);
+                response.forEach(jsonObject -> {
+                    array.add(jsonObject.put("logo", buildAbsoluteUri(ctx, jsonObject.getString("logo"))));
+                });
                 ctx.response()
                     .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                     .setStatusCode(HttpResponseStatus.OK.code())
