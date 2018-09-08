@@ -55,24 +55,22 @@ import static io.nubespark.vertx.common.HttpHelper.*;
  * Created by topsykretts on 5/4/18.
  */
 public class HttpServerVerticle extends RxRestAPIVerticle {
-    private String ROOT_FOLDER = System.getProperty("user.dir") + WEB_SERVER_MICRO_SERVICE_LOCATION;
     private OAuth2Auth loginAuth;
     private Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
     private EventBus eventBus;
-
-    // Convenience method so you can run it in your IDE
-    public static void main(String[] args) {
-        String JAVA_DIR = "nube-web-server/src/main/java";
-        Runner.runExample(JAVA_DIR, HttpServerVerticle.class);
-    }
 
     @Override
     protected Logger getLogger() {
         return logger;
     }
 
+    public String getRootFolder() {
+        return System.getProperty("user.dir") + WEB_SERVER_MICRO_SERVICE_LOCATION;
+    }
+
     @Override
     public void start(io.vertx.core.Future<Void> future) {
+        logger.info("Root Dir:::::: ====>" + System.getProperty("user.dir"));
         super.start();
         eventBus = getVertx().eventBus();
 
@@ -101,7 +99,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         Router router = Router.router(vertx);
 
         // creating body handler
-        router.route().handler(BodyHandler.create().setUploadsDirectory(ROOT_FOLDER + MEDIA_FILE_LOCATION).setBodyLimit(5000000)); // limited to 5 MB
+        router.route().handler(BodyHandler.create().setUploadsDirectory(getRootFolder() + MEDIA_FILE_LOCATION).setBodyLimit(5000000)); // limited to 5 MB
         // handle the form
 
         enableCorsSupport(router);
@@ -242,8 +240,8 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
      * @param router routing the URLs
      */
     private void handleStaticResource(Router router) {
-        router.route().handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(ROOT_FOLDER));
-        router.route("/*").handler(ctx -> ctx.response().sendFile(ROOT_FOLDER + "/index.html"));
+        router.route().handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(getRootFolder()));
+        router.route("/*").handler(ctx -> ctx.response().sendFile(getRootFolder() + "/index.html"));
     }
 
     private void setAuthenticUser(RoutingContext ctx, String authorization) {
@@ -518,7 +516,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
             JsonObject siteObject = new JsonObject();
             if (ctx.fileUploads().size() > 0) {
                 FileUpload fileUpload = ctx.fileUploads().iterator().next();
-                siteObject.put("logo", appendRealFileNameWithExtension(fileUpload).replace(ROOT_FOLDER, ""));
+                siteObject.put("logo", appendRealFileNameWithExtension(fileUpload).replace(getRootFolder(), ""));
             }
 
             MultiMap attributes = ctx.request().formAttributes();
@@ -970,7 +968,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                 .flatMap(siteObject -> {
                     if (ctx.fileUploads().size() > 0) {
                         FileUpload fileUpload = ctx.fileUploads().iterator().next();
-                        siteObject.put("logo", appendRealFileNameWithExtension(fileUpload).replace(ROOT_FOLDER, ""));
+                        siteObject.put("logo", appendRealFileNameWithExtension(fileUpload).replace(getRootFolder(), ""));
                     }
 
                     MultiMap attributes = ctx.request().formAttributes();

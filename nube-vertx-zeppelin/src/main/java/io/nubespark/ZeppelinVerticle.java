@@ -22,7 +22,7 @@ public class ZeppelinVerticle extends MicroServiceVerticle {
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
-        String JAVA_DIR = "nube-vertx-zeppelin/src/main/java";
+        String JAVA_DIR = "nube-vertx-zeppelin/src/main/java/";
         Runner.runExample(JAVA_DIR, ZeppelinVerticle.class);
     }
 

@@ -40,7 +40,7 @@ public class ServerDittoDriver extends MicroServiceVerticle {
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
-        String JAVA_DIR = "nube-server-ditto-driver/src/main/java";
+        String JAVA_DIR = "nube-server-ditto-driver/src/main/java/";
         Runner.runExample(JAVA_DIR, ServerDittoDriver.class);
     }
 

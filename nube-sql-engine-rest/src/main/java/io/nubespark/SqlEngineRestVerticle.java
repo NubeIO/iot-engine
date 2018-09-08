@@ -35,7 +35,7 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
-        String JAVA_DIR = "nube-sql-engine-rest/src/main/java";
+        String JAVA_DIR = "nube-sql-engine-rest/src/main/java/";
         Runner.runExample(JAVA_DIR, SqlEngineRestVerticle.class);
     }
 
