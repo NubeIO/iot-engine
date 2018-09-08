@@ -329,7 +329,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                 .flatMap(group -> {
                     JsonObject object = group.toJsonObject();
                     return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + group.toJsonObject().getString("site_id"), null)
-                        .map(site -> object.put("site", site.toJsonObject()));
+                        .map(site -> object.put("site", site.toJsonObject().put("logo", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo")))));
                 })
                 .subscribe(userGroup -> {
                     ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -1028,7 +1028,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                     return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + object.getString("site_id"), null)
                         .flatMap(site -> {
                             if (StringUtils.isNotNull(site.toString())) {
-                                object.put("site", site.toJsonObject());
+                                object.put("site", site.toJsonObject().put("logo", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo"))));
                             }
                             return dispatchRequests(HttpMethod.GET, URL.get_company + "/" + object.getString("associated_company_id"), null)
                                 .map(associatedCompany -> object.put("associated_company", associatedCompany.toJsonObject()));
@@ -1062,9 +1062,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                 }).toList()
             ).subscribe(response -> {
                 JsonArray array = new JsonArray();
-                response.forEach(jsonObject -> {
-                    array.add(jsonObject.put("logo", buildAbsoluteUri(ctx, jsonObject.getString("logo"))));
-                });
+                response.forEach(jsonObject -> array.add(jsonObject.put("logo", buildAbsoluteUri(ctx, jsonObject.getString("logo")))));
                 ctx.response()
                     .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                     .setStatusCode(HttpResponseStatus.OK.code())

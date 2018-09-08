@@ -19,11 +19,6 @@ public class MongoUser extends Model {
     private String company_id;
     private String group_id;
 
-    @Override
-    protected  boolean uuidAsId() {
-        return false;
-    }
-
     public MongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser) {
         super(body);
         this.input.put("user", user);

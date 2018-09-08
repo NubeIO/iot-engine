@@ -6,17 +6,12 @@ import io.vertx.core.json.JsonObject;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public abstract class Model {
     public Map<String, JsonObject> input = new HashMap<>();
 
     public Model(JsonObject body) {
         input.put("body", body);
-    }
-
-    protected  boolean uuidAsId() {
-        return true;
     }
 
     public JsonObject toJsonObject() {
@@ -39,9 +34,6 @@ public abstract class Model {
                     jsonObject.put(fieldName, input.get("body").getJsonArray(fieldName, new JsonArray("[]")));
                     break;
             }
-        }
-        if (uuidAsId()) {
-            jsonObject.put("_id", UUID.randomUUID().toString());
         }
         return jsonObject;
     }
