@@ -10,11 +10,14 @@ public class Site extends Model {
     public String issue_address;
     public String top_bar_address;
     public String site_footer;
-    public String content_background_color;
-    public String content_text_color;
-    public String content_text_color_header;
-    public String selected_text_color_header;
-    public String site_text_color;
+    public String primary_color;
+    public String secondary_color;
+    public String text_color;
+    public String text_color_secondary;
+    public String heading_color;
+    public String layout_body_background;
+    public String bt_primary_bg;
+    public String layout_header_background;
     public String role; // ADMIN or MANAGER or USER; defining the company level
 
     public Site(JsonObject body) {
