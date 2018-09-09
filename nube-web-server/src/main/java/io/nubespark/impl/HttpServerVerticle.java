@@ -21,7 +21,6 @@ import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
-import io.vertx.reactivex.core.MultiMap;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
 import io.vertx.reactivex.core.http.HttpServer;
@@ -163,6 +162,19 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         router.patch("/api/user_group/:id").handler(this::handleUpdateUserGroup);
 
         router.route("/api/layout_grid/*").handler(this::handleLayoutGrid);
+        router.post("/api/upload_image").handler(this::handleUploadImage);
+    }
+
+    private void handleUploadImage(RoutingContext ctx) {
+        if (ctx.fileUploads().size() > 0) {
+            FileUpload fileUpload = ctx.fileUploads().iterator().next();
+            ctx.response()
+                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .setStatusCode(HttpResponseStatus.CREATED.code())
+                .end(Json.encodePrettily(new JsonObject().put("path", appendRealFileNameWithExtension(fileUpload).replace(getRootFolder(), ""))));
+        } else {
+            ctx.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
+        }
     }
 
     private void handleLayoutGrid(RoutingContext ctx) {
@@ -252,10 +264,8 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
 
                 String user_id = token.principal().getString("sub");
                 String access_token = token.principal().getString("access_token");
-                logger.info("User id: " + user_id);
                 dispatchRequests(HttpMethod.GET, URL.get_user + "/" + user_id, null)
                     .subscribe(buffer -> {
-                        logger.info("User Response: " + buffer.toJsonObject());
                         io.vertx.ext.auth.User user = new UserImpl(new JsonObject()
                             .put("access_token", access_token).mergeIn(buffer.toJsonObject()));
 
@@ -329,7 +339,9 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                 .flatMap(group -> {
                     JsonObject object = group.toJsonObject();
                     return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + group.toJsonObject().getString("site_id"), null)
-                        .map(site -> object.put("site", site.toJsonObject().put("logo", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo")))));
+                        .map(site -> object.put("site", site.toJsonObject()
+                            .put("logo_sm", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_sm")))
+                            .put("logo_md", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_md")))));
                 })
                 .subscribe(userGroup -> {
                     ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -513,17 +525,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
     private void handlePostSite(RoutingContext ctx) {
         Role role = Role.valueOf(ctx.user().principal().getString("role"));
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-            JsonObject siteObject = new JsonObject();
-            if (ctx.fileUploads().size() > 0) {
-                FileUpload fileUpload = ctx.fileUploads().iterator().next();
-                siteObject.put("logo", appendRealFileNameWithExtension(fileUpload).replace(getRootFolder(), ""));
-            }
-
-            MultiMap attributes = ctx.request().formAttributes();
-            for (String name : attributes.names()) {
-                siteObject.put(name, attributes.get(name));
-            }
-            Site site = new Site(siteObject
+            Site site = new Site(ctx.getBodyAsJson()
                 .put("associated_company_id", ctx.user().principal().getString("company_id"))
                 .put("role", UserUtils.getRole(role).toString()));
             dispatchRequests(HttpMethod.POST, URL.post_site, site.toJsonObject())
@@ -965,16 +967,11 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                         return new JsonObject(buffer.getDelegate());
                     }
                 })
-                .flatMap(siteObject -> {
-                    if (ctx.fileUploads().size() > 0) {
-                        FileUpload fileUpload = ctx.fileUploads().iterator().next();
-                        siteObject.put("logo", appendRealFileNameWithExtension(fileUpload).replace(getRootFolder(), ""));
-                    }
-
-                    MultiMap attributes = ctx.request().formAttributes();
-                    for (String name : attributes.names()) {
-                        siteObject.put(name, attributes.get(name));
-                    }
+                .flatMap(site -> {
+                    JsonObject siteObject = new Site(ctx.getBodyAsJson()
+                        .put("associated_company_id", ctx.user().principal().getString("company_id"))).toJsonObject()
+                        .put("role", UserUtils.getRole(role).toString())
+                        .put("_id", site.getString("_id"));
                     return dispatchRequests(HttpMethod.PUT, URL.put_site, siteObject);
                 })
                 .subscribe(ignored -> ctx.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end(),
@@ -1028,7 +1025,9 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                     return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + object.getString("site_id"), null)
                         .flatMap(site -> {
                             if (StringUtils.isNotNull(site.toString())) {
-                                object.put("site", site.toJsonObject().put("logo", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo"))));
+                                object.put("site", site.toJsonObject()
+                                    .put("logo_sm", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_sm")))
+                                    .put("logo_md", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_md"))));
                             }
                             return dispatchRequests(HttpMethod.GET, URL.get_company + "/" + object.getString("associated_company_id"), null)
                                 .map(associatedCompany -> object.put("associated_company", associatedCompany.toJsonObject()));
@@ -1062,7 +1061,9 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                 }).toList()
             ).subscribe(response -> {
                 JsonArray array = new JsonArray();
-                response.forEach(jsonObject -> array.add(jsonObject.put("logo", buildAbsoluteUri(ctx, jsonObject.getString("logo")))));
+                response.forEach(jsonObject -> array.add(jsonObject
+                    .put("logo_sm", buildAbsoluteUri(ctx, jsonObject.getString("logo_sm")))
+                    .put("logo_md", buildAbsoluteUri(ctx, jsonObject.getString("logo_md")))));
                 ctx.response()
                     .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                     .setStatusCode(HttpResponseStatus.OK.code())

@@ -5,7 +5,8 @@ import io.vertx.core.json.JsonObject;
 
 public class Site extends Model {
     public String associated_company_id;
-    public String logo;
+    public String logo_sm;
+    public String logo_md;
     public String site_title;
     public String issue_address;
     public String top_bar_address;
