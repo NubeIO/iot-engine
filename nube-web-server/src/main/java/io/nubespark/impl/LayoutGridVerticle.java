@@ -4,7 +4,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
 import io.nubespark.controller.HttpException;
 import io.nubespark.utils.CustomMessage;
-import io.nubespark.utils.CustomMessageCodec;
 import io.nubespark.utils.StringUtils;
 import io.nubespark.utils.URL;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
@@ -17,6 +16,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import static io.nubespark.constants.Address.LAYOUT_GRID_ADDRESS;
+import static io.nubespark.utils.CustomMessageResponseHelper.*;
 
 public class LayoutGridVerticle extends RxRestAPIVerticle {
     private Logger logger = LoggerFactory.getLogger(LayoutGridVerticle.class);
@@ -31,9 +31,6 @@ public class LayoutGridVerticle extends RxRestAPIVerticle {
         super.start();
         EventBus eventBus = getVertx().eventBus();
 
-        // Register codec for custom message
-        eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
-
         // Receive message
         eventBus.consumer(LAYOUT_GRID_ADDRESS, this::handleRequest);
     }
@@ -45,7 +42,7 @@ public class LayoutGridVerticle extends RxRestAPIVerticle {
         if (validateUrl(url)) {
             this.handleValidUrl(message, customMessage);
         } else {
-            this.handleNotFoundResponse(message);
+            handleNotFoundResponse(message);
         }
     }
 
@@ -66,7 +63,7 @@ public class LayoutGridVerticle extends RxRestAPIVerticle {
 
     private void handleGetUrl(Message<Object> message, CustomMessage customMessage) {
         String layout = customMessage.getHeader().getString("url");
-        String groupId = customMessage.getUser().getString("group_id");
+        String groupId = customMessage.getHeader().getJsonObject("user").getString("group_id");
         if (StringUtils.isNotNull(groupId)) {
             dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + groupId, null)
                 .map(buffer -> {
@@ -81,7 +78,6 @@ public class LayoutGridVerticle extends RxRestAPIVerticle {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
                         this.pickOneOrNullJsonObject(buffer.toJsonArray()),
-                        null,
                         HttpResponseStatus.OK.code());
                     message.reply(replyMessage);
                 }, throwable -> {
@@ -91,7 +87,6 @@ public class LayoutGridVerticle extends RxRestAPIVerticle {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
                         new JsonObject().put("message", exception.getMessage()),
-                        null,
                         exception.getStatusCode().code());
                     message.reply(replyMessage);
                 });
@@ -101,9 +96,9 @@ public class LayoutGridVerticle extends RxRestAPIVerticle {
     }
 
     private void handlePutUrl(Message<Object> message, CustomMessage customMessage) {
-        String role = customMessage.getUser().getString("role");
+        String role = customMessage.getHeader().getJsonObject("user").getString("role");
         String layout = customMessage.getHeader().getString("url");
-        String groupId = customMessage.getUser().getString("group_id");
+        String groupId = customMessage.getHeader().getJsonObject("user").getString("group_id");
         if (StringUtils.isNull(groupId)) {
             handleBadRequestResponse(message, "User must be associated with <UserGroup> and <SiteSettings>");
         } else if (!role.equals(Role.GUEST.toString())) {
@@ -131,7 +126,6 @@ public class LayoutGridVerticle extends RxRestAPIVerticle {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
                         new JsonObject(),
-                        null,
                         HttpResponseStatus.OK.code());
                     message.reply(replyMessage);
                 }, throwable -> {
@@ -139,12 +133,11 @@ public class LayoutGridVerticle extends RxRestAPIVerticle {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
                         new JsonObject().put("message", exception.getMessage()),
-                        null,
                         exception.getStatusCode().code());
                     message.reply(replyMessage);
                 });
         } else {
-            this.handleForbiddenResponse(message);
+            handleForbiddenResponse(message);
         }
     }
 
@@ -158,32 +151,5 @@ public class LayoutGridVerticle extends RxRestAPIVerticle {
 
     private boolean validateUrl(String url) {
         return !(url.contains("/") || url.contains("?"));
-    }
-
-    private void handleNotFoundResponse(Message<Object> message) {
-        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-            null,
-            new JsonObject().put("message", "Not Implemented"),
-            null,
-            HttpResponseStatus.NOT_FOUND.code());
-        message.reply(replyMessage);
-    }
-
-    private void handleForbiddenResponse(Message<Object> message) {
-        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-            null,
-            new JsonObject(),
-            null,
-            HttpResponseStatus.FORBIDDEN.code());
-        message.reply(replyMessage);
-    }
-
-    private void handleBadRequestResponse(Message<Object> message, String msg) {
-        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-            null,
-            new JsonObject().put("message", msg),
-            null,
-            HttpResponseStatus.BAD_REQUEST.code());
-        message.reply(replyMessage);
     }
 }

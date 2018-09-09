@@ -10,13 +10,11 @@ import io.vertx.core.json.JsonObject;
 public class CustomMessage<T> {
     private final JsonObject header;
     private final T body;
-    private final JsonObject user;
     private final int statusCode;
 
-    public CustomMessage(JsonObject header, T body, JsonObject user, int statusCode) {
+    public CustomMessage(JsonObject header, T body, int statusCode) {
         this.header = header;
         this.body = body;
-        this.user = user;
         this.statusCode = statusCode;
     }
 
@@ -25,7 +23,6 @@ public class CustomMessage<T> {
         final StringBuilder sb = new StringBuilder("CustomMessage{");
         sb.append("header=").append(header);
         sb.append(" ,body=").append(body).append('\'');
-        sb.append(" ,user=").append(user).append('\'');
         sb.append(" ,statusCode=").append(statusCode).append('\'');
         sb.append('}');
         return sb.toString();
@@ -37,10 +34,6 @@ public class CustomMessage<T> {
 
     public T getBody() {
         return body;
-    }
-
-    public JsonObject getUser() {
-        return user;
     }
 
     public int getStatusCode() {

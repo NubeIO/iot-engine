@@ -17,7 +17,6 @@ public class CustomMessageCodec implements MessageCodec<CustomMessage, CustomMes
 
         jsonToEncode.put("header", customMessage.getHeader());
         jsonToEncode.put("body", customMessage.getBody());
-        jsonToEncode.put("user", customMessage.getUser());
         jsonToEncode.put("statusCode", customMessage.getStatusCode());
 
         // Encode object to string
@@ -47,11 +46,10 @@ public class CustomMessageCodec implements MessageCodec<CustomMessage, CustomMes
         // Get fields
         JsonObject header = contentJson.getJsonObject("header");
         JsonObject body = contentJson.getJsonObject("body");
-        JsonObject user = contentJson.getJsonObject("user");
         int statusCode = contentJson.getInteger("statusCode");
 
         // We can finally create custom message object
-        return new CustomMessage<>(header, body, user, statusCode);
+        return new CustomMessage<>(header, body, statusCode);
     }
 
     @Override
