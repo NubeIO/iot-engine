@@ -9,8 +9,8 @@ public class Site extends Model {
     public String logo_sm;
     public String logo_md;
     public String site_title;
-    public GeoPoint issue_address;
-    public String top_bar_address;
+    public String issue_address;
+    public GeoPoint issue_location;
     public String site_footer;
     public String primary_color;
     public String secondary_color;
