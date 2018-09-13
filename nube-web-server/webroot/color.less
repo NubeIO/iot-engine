@@ -1554,9 +1554,9 @@ this.tinycolor = tinycolor;
 @body-background: #fff;
 // Base background color for most components
 @component-background: #fff;
-@font-family-no-number: "Chinese Quote", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
-@font-family: "Monospaced Number", @font-family-no-number;
-@code-family: Consolas, Menlo, Courier, monospace;
+@font-family: "Chinese Quote", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif,
+"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+@code-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
 
 @heading-color-dark: fade(#fff, 100%);
 @text-color-dark: fade(#fff, 85%);
@@ -1998,6 +1998,10 @@ this.tinycolor = tinycolor;
 @collapse-content-padding: @padding-md;
 @collapse-content-bg: @component-background;
 
+// Message
+// ---
+@message-notice-content-padding: 10px 16px;
+
 // Menu
 @menu-dark-item-selected-bg: @menu-dark-item-active-bg;
 
@@ -2117,21 +2121,6 @@ this.tinycolor = tinycolor;
 .descriptionList.small .title {
   color: @text-color;
 }
-.chartCard .avatar img {
-  border-radius: 100%;
-}
-.chartCard .meta {
-  color: @text-color-secondary;
-}
-.chartCard .total {
-  color: @heading-color;
-}
-.chartCard .footer {
-  border-top: 1px solid #e8e8e8;
-}
-.field span:last-child {
-  color: @heading-color;
-}
 .linkGroup > a {
   color: @text-color;
 }
@@ -2188,7 +2177,6 @@ i.trigger:hover {
 }
 .right .account .avatar {
   color: rgba(255, 255, 255, 0.85);
-  background: @btn-primary-bg;
 }
 .headerSearch .input {
   background: transparent;
@@ -2274,10 +2262,9 @@ i.trigger:hover {
 }
 :global .react-grid-item {
   background: #fff;
-  color: #fff;
 }
 :global .react-grid-item.react-grid-placeholder {
-  background: #399;
+  background: #52b4fe;
 }
 :global .react-grid-item > .react-resizable-handle::after {
   border-right: 2px solid rgba(0, 0, 0, 0.4);
@@ -2300,93 +2287,42 @@ i.trigger:hover {
 :global .nube-drag-handle:hover {
   background-color: #e8eef1;
 }
-:global .nube-grid-remove {
+
+:global .widget-settings {
   color: #000;
 }
-:global .nube-grid-remove:hover {
-  color: #fff;
-  background-color: #f5222d;
-}
-:global .nube-grid-edit {
-  color: #000;
-}
-:global .nube-grid-edit:hover {
+
+:global .widget-settings:hover {
   color: #fff;
   background-color: #399;
 }
-:global .nube-form-item-remove {
+
+:global .delete-widget-menu:hover {
+  color: #fff;
+  background-color: #f1000d;
+}
+
+:global .nube-grid-copy {
   color: #000;
 }
-:global .nube-form-item-remove:hover {
+
+:global .nube-grid-copy:hover {
   color: #fff;
-  background-color: #f5222d;
-}
-:global .nube-form-item-drag-handle {
-  background-color: #fff;
-  border-bottom: 1px solid #dde4ed;
-}
-:global .nube-form-item-drag-handle:hover {
-  background-color: #e8eef1;
-}
-:global .nube-form-grid {
-  background: rgba(0, 0, 0, 0.15);
-}
-:global .nube-form-item {
-  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
-  border: 1px solid #dde4ed;
-  border-radius: 3px;
-}
-:global .nube-form-item-footer {
-  border-top: 1px solid #dde4ed;
-}
-:global .react-grid-item {
-  background: #fff;
-  color: #fff;
-}
-:global .react-grid-item.react-grid-placeholder {
-  background: #399;
-}
-:global .react-grid-item > .react-resizable-handle::after {
-  border-right: 2px solid rgba(0, 0, 0, 0.4);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
-}
-:global .react-resizable-handle {
-  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDYiIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiNmZmZmZmYwMCIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iNnB4Ij48ZyBvcGFjaXR5PSIwLjMwMiI+PHBhdGggZD0iTSA2IDYgTCAwIDYgTCAwIDQuMiBMIDQgNC4yIEwgNC4yIDQuMiBMIDQuMiAwIEwgNiAwIEwgNiA2IEwgNiA2IFoiIGZpbGw9IiMwMDAwMDAiLz48L2c+PC9zdmc+');
-  background-position: bottom right;
-  background-repeat: no-repeat;
-  background-origin: content-box;
-}
-:global .nube-grid-item {
-  background-color: #fff;
-  border: 1px solid #dde4ed;
-  border-radius: 3px;
-}
-:global .nube-drag-handle {
-  background-color: #fff;
-}
-:global .nube-drag-handle:hover {
-  background-color: #e8eef1;
-}
-:global .nube-grid-remove {
-  color: #000;
-}
-:global .nube-grid-remove:hover {
-  color: #fff;
-  background-color: #f5222d;
+  background-color: #52b4fe;
 }
 :global .nube-grid-sync {
   color: #000;
 }
 :global .nube-grid-sync:hover {
   color: #fff;
-  background-color: #399;
+  background-color: #52b4fe;
 }
 :global .nube-grid-edit {
   color: #000;
 }
 :global .nube-grid-edit:hover {
   color: #fff;
-  background-color: #399;
+  background-color: #52b4fe;
 }
 :global .nube-form-item-remove {
   color: #000;
@@ -2412,6 +2348,105 @@ i.trigger:hover {
 }
 :global .nube-form-item-footer {
   border-top: 1px solid #dde4ed;
+}
+
+:global .rangeslider {
+  background: #e6e6e6;
+}
+
+:global .rangeslider,
+:global .rangeslider .rangeslider__fill {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+:global .rangeslider .rangeslider__handle {
+  background: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 -1px 3px rgba(0, 0, 0, 0.4);
+}
+
+:global .rangeslider .rangeslider__handle-tooltip {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
+  color: white;
+}
+
+:global .rangeslider-horizontal {
+  border-radius: 10px;
+}
+
+:global .rangeslider-horizontal .rangeslider__fill {
+  background-color: #399;
+  border-radius: 10px;
+}
+
+:global .rangeslider-horizontal .rangeslider__handle {
+  border-radius: 30px;
+}
+
+:global .rangeslider-horizontal .rangeslider__handle:after {
+  border-radius: 50%;
+  background-color: #dadada;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) inset, 0 -1px 3px rgba(0, 0, 0, 0.4) inset;
+}
+
+:global .rangeslider-horizontal .rangeslider__handle-tooltip:after {
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(0, 0, 0, 0.8);
+}
+
+:global .rangeslider-vertical {
+  background-color: transparent;
+}
+
+:global .rangeslider-vertical .rangeslider__fill {
+  background-color: #399;
+  box-shadow: none;
+}
+
+:global .rangeslider-vertical .rangeslider__handle {
+  box-shadow: none;
+}
+
+:global .rangeslider-vertical .rangeslider__handle-tooltip:after {
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid rgba(0, 0, 0, 0.8);
+}
+
+:global .rangeslider-vertical .rangeslider__labels .rangeslider__label-item::before {
+  background: black;
+}
+
+.redButton {
+  color: #fff;
+  background-color: #f1000d;
+  border-color: #f1000d;
+}
+
+.redButton:hover {
+  color: #fff;
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.redButton:focus {
+  color: #fff;
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.redButton:active {
+  color: #fff;
+  background-color: #cf1322;
+  border-color: #cf1322;
+}
+
+:global .ReactTable .rt-thead.-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
 }
 .result .icon > .success {
   color: #52c41a;
@@ -2444,6 +2479,22 @@ i.trigger:hover {
 .sider.ligth .logo h1 {
   color: #002140;
 }
+
+.popup {
+  background-clip: padding-box;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  -webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.popup li {
+  color: @text-color;
+}
+
+.popup li:hover {
+  background-color: color(~`colorPalette("@{btn-primary-bg}", 1)`);
+}
 .standardFormRow {
   border-bottom: 1px dashed #e8e8e8;
 }
@@ -2466,6 +2517,65 @@ i.trigger:hover {
 .trendItem.trendItemGrey .down {
   color: @text-color;
 }
+
+.mapSidebar {
+  border-radius: 5px;
+}
+
+.sidebarTab {
+  background-color: #fff;
+}
+
+.currentTab {
+  color: #fff;
+  background-color: #399;
+}
+
+.currentTab:hover {
+  color: #fff !important;
+  background-color: #399 !important;
+}
+
+.tabList li {
+  color: #333;
+}
+
+.tabList li:hover {
+  color: #000;
+  background-color: #eee;
+}
+
+.tabList li a {
+  color: inherit;
+}
+
+.sideBarSetting li {
+  color: #333;
+}
+
+.sideBarSetting li:hover {
+  color: #000;
+  background-color: #eee;
+}
+
+.sideBarSetting li a {
+  color: inherit;
+}
+
+.sidebarHeader {
+  color: #fff;
+  background-color: #399;
+}
+
+.sidebarContainer {
+  background-color: #fff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.sidebarContent {
+  background-color: #fff;
+}
 .rangePicker a {
   color: @text-color;
 }
@@ -2474,6 +2584,14 @@ i.trigger:hover {
 }
 .rangePicker a.currentDate {
   color: @btn-primary-bg;
+}
+
+:global .extend-session-modal .ant-modal-header {
+  border-bottom: none !important;
+}
+
+:global .extend-session-modal .ant-modal-footer {
+  border-top: none !important;
 }
 .container {
   background: @layout-body-background;
@@ -2514,61 +2632,9 @@ i.trigger:hover {
 .colorPreview > div {
   border-radius: 2px;
 }
-
 .imageRemoveBtn {
   background-color: #fff;
   border-radius: 50%;
-}
-.activitiesList .username {
-  color: @text-color;
-}
-.pageHeaderContent .avatar > span {
-  border-radius: 72px;
-}
-.pageHeaderContent .content {
-  color: @text-color-secondary;
-}
-.pageHeaderContent .content .contentTitle {
-  color: @heading-color;
-}
-.extraContent .statItem > p:first-child {
-  color: @text-color-secondary;
-}
-.extraContent .statItem > p {
-  color: @heading-color;
-}
-.extraContent .statItem > p > span {
-  color: @text-color-secondary;
-}
-.extraContent .statItem:after {
-  background-color: #e8e8e8;
-}
-.members a .member {
-  color: @text-color;
-}
-.members a:hover span {
-  color: @btn-primary-bg;
-}
-.projectList :global .ant-card-meta-description {
-  color: @text-color-secondary;
-}
-.projectList .cardTitle a {
-  color: @heading-color;
-}
-.projectList .cardTitle a:hover {
-  color: @btn-primary-bg;
-}
-.projectList .projectItemContent a {
-  color: @text-color-secondary;
-}
-.projectList .projectItemContent a:hover {
-  color: @btn-primary-bg;
-}
-.projectList .projectItemContent .datetime {
-  color: rgba(0, 0, 0, 0.25);
-}
-.datetime {
-  color: rgba(0, 0, 0, 0.25);
 }
 .iconGroup i {
   color: @text-color-secondary;
@@ -2609,39 +2675,6 @@ i.trigger:hover {
 .trigger {
   background: 'red';
 }
-.desc {
-  color: @text-color-secondary;
-}
-.desc h3 {
-  color: @text-color-secondary;
-}
-.desc h4 {
-  color: @text-color-secondary;
-}
-.information .label {
-  color: @heading-color;
-}
-.errorIcon {
-  color: #f5222d;
-}
-.errorListItem {
-  border-bottom: 1px solid #e8e8e8;
-}
-.errorListItem:hover {
-  background: color(~`colorPalette("@{btn-primary-bg}", 1)`);
-}
-.errorListItem:last-child {
-  border: 0;
-}
-.errorListItem .errorIcon {
-  color: #f5222d;
-}
-.errorListItem .errorField {
-  color: @text-color-secondary;
-}
-.optional {
-  color: @text-color-secondary;
-}
 .iconGroup i {
   color: @text-color-secondary;
 }
@@ -2677,79 +2710,50 @@ i.trigger:hover {
 .trendText {
   color: @heading-color;
 }
-.filterCardList :global .ant-card-actions {
-  background: #f7f9fa;
-}
-.filterCardList .cardInfo > div p:first-child {
+
+.iconGroup i {
   color: @text-color-secondary;
 }
-.listContent .extra {
-  color: @text-color-secondary;
+
+.iconGroup i:hover {
+  color: @text-color;
 }
-.listContent .extra > em {
-  color: rgba(0, 0, 0, 0.25);
+
+.rankingList li span {
+  color: @text-color;
 }
-a.listItemMetaTitle {
-  color: @heading-color;
+
+.rankingList li span:first-child {
+  background-color: #f5f5f5;
+  border-radius: 20px;
 }
-.standardList :global .ant-card-head {
+
+.rankingList li span.active {
+  background-color: #314659;
+  color: #fff;
+}
+
+.usageDate a {
+  color: @text-color;
+}
+
+.usageDate a:hover {
+  color: @btn-primary-bg;
+}
+
+.usageDate a.currentDate {
+  color: @btn-primary-bg;
+}
+
+.offlineCard :global .ant-tabs-bar {
   border-bottom: none;
 }
-.standardList .headerInfo > span {
-  color: @text-color-secondary;
-}
-.standardList .headerInfo > p {
-  color: @heading-color;
-}
-.standardList .headerInfo > em {
-  background-color: #e8e8e8;
-}
-.standardList .listContent .listContentItem {
-  color: @text-color-secondary;
-}
-.cardList .card :global .ant-card-meta-title > a {
-  color: @heading-color;
-}
-.cardList .card :global .ant-card-actions {
-  background: #f7f9fa;
-}
-.cardList .card :global .ant-card-body:hover .ant-card-meta-title > a {
+
+.offlineCard :global(.ant-tabs-tab-active) h4 {
   color: @btn-primary-bg;
 }
-.newButton {
-  background-color: #fff;
-  border-color: #d9d9d9;
-  border-radius: 2px;
-  color: @text-color-secondary;
-}
-.cardAvatar {
-  border-radius: 48px;
-}
-.cardDescription:before {
-  background: #fff;
-}
-.cardDescription:after {
-  background: white;
-}
-.coverCardList .card :global .ant-card-meta-title > a {
-  color: @heading-color;
-}
-.coverCardList .card:hover :global .ant-card-meta-title > a {
-  color: @btn-primary-bg;
-}
-.coverCardList .cardItemContent > span {
-  color: @text-color-secondary;
-}
-.noData {
-  color: rgba(0, 0, 0, 0.25);
-}
-.heading {
-  color: @heading-color;
-}
-.textSecondary {
-  color: @text-color-secondary;
-}
-.title {
+
+.trendText {
   color: @heading-color;
 }
 .main .icon {
@@ -3447,27 +3451,60 @@ mark {
   background: #fff;
   border-radius: inherit;
 }
-.ant-btn-group-lg > .ant-btn {
-  border-radius: 4px;
+
+.ant-btn-group-lg > .ant-btn,
+.ant-btn-group-lg > span > .ant-btn {
+  border-radius: 0;
 }
-.ant-btn-group-sm > .ant-btn {
-  border-radius: 4px;
+
+.ant-btn-group-sm > .ant-btn,
+.ant-btn-group-sm > span > .ant-btn {
+  border-radius: 0;
 }
 .ant-btn-group .ant-btn-primary + .ant-btn:not(.ant-btn-primary):not([disabled]) {
   border-left-color: transparent;
 }
-.ant-btn-group .ant-btn:not(:first-child):not(:last-child) {
+
+.ant-btn-group .ant-btn {
   border-radius: 0;
+}
+
+.ant-btn-group > .ant-btn:only-child {
+  border-radius: 4px;
+}
+
+.ant-btn-group > span:only-child > .ant-btn {
+  border-radius: 4px;
 }
 .ant-btn-group > .ant-btn:first-child:not(:last-child),
 .ant-btn-group > span:first-child:not(:last-child) > .ant-btn {
-  border-bottom-right-radius: 0;
-  border-top-right-radius: 0;
+  border-bottom-left-radius: 4px;
+  border-top-left-radius: 4px;
 }
 .ant-btn-group > .ant-btn:last-child:not(:first-child),
 .ant-btn-group > span:last-child:not(:first-child) > .ant-btn {
-  border-bottom-left-radius: 0;
-  border-top-left-radius: 0;
+  border-bottom-right-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.ant-btn-group-sm > .ant-btn:only-child {
+  border-radius: 4px;
+}
+
+.ant-btn-group-sm > span:only-child > .ant-btn {
+  border-radius: 4px;
+}
+
+.ant-btn-group-sm > .ant-btn:first-child:not(:last-child),
+.ant-btn-group-sm > span:first-child:not(:last-child) > .ant-btn {
+  border-bottom-left-radius: 4px;
+  border-top-left-radius: 4px;
+}
+
+.ant-btn-group-sm > .ant-btn:last-child:not(:first-child),
+.ant-btn-group-sm > span:last-child:not(:first-child) > .ant-btn {
+  border-bottom-right-radius: 4px;
+  border-top-right-radius: 4px;
 }
 .ant-btn-group > .ant-btn-group:not(:first-child):not(:last-child) > .ant-btn {
   border-radius: 0;
@@ -4612,10 +4649,12 @@ li.ant-calendar-time-picker-select-option-disabled:hover {
 .ant-divider-horizontal.ant-divider-with-text-right.ant-divider-dashed:after {
   border-style: dashed none none;
 }
-.ant-drawer-left.ant-drawer-open .ant-drawer-wrapper {
+
+.ant-drawer-left.ant-drawer-open .ant-drawer-content-wrapper {
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
 }
-.ant-drawer-right.ant-drawer-open .ant-drawer-wrapper {
+
+.ant-drawer-right.ant-drawer-open .ant-drawer-content-wrapper {
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
 }
 .ant-drawer-title {
@@ -5555,7 +5594,7 @@ form .ant-upload {
   box-shadow: 0 2px 8px @text-color-secondary inset;
 }
 .ant-menu-dark.ant-menu-horizontal {
-  border-bottom-color: @layout-header-background;
+  border-bottom: 0;
 }
 .ant-menu-dark.ant-menu-horizontal > .ant-menu-item,
 .ant-menu-dark.ant-menu-horizontal > .ant-menu-submenu {
@@ -5959,7 +5998,6 @@ form .ant-upload {
 }
 .ant-progress-success-bg,
 .ant-progress-bg {
-  border-radius: 100px;
   background-color: @btn-primary-bg;
 }
 .ant-progress-success-bg {
@@ -6232,6 +6270,11 @@ form .ant-upload {
 }
 .ant-select-dropdown-menu-item-group-title {
   color: @text-color-secondary;
+}
+
+.ant-select-dropdown-menu-item-group-list .ant-select-dropdown-menu-item:first-child:not(:last-child),
+.ant-select-dropdown-menu-item-group:not(:last-child) .ant-select-dropdown-menu-item-group-list .ant-select-dropdown-menu-item:last-child {
+  border-radius: 0;
 }
 .ant-select-dropdown-menu-item {
   color: @text-color;
@@ -7674,6 +7717,65 @@ li.ant-tree-treenode-disabled > .ant-tree-node-content-wrapper:hover {
 }
 .ant-upload-list .ant-upload-success-icon {
   color: #52c41a;
+}
+
+.mapSidebar {
+  border-radius: 5px;
+}
+
+.sidebarTab {
+  background-color: #fff;
+}
+
+.currentTab {
+  color: #fff;
+  background-color: #399;
+}
+
+.currentTab:hover {
+  color: #fff !important;
+  background-color: #399 !important;
+}
+
+.tabList li {
+  color: #333;
+}
+
+.tabList li:hover {
+  color: #000;
+  background-color: #eee;
+}
+
+.tabList li a {
+  color: inherit;
+}
+
+.sideBarSetting li {
+  color: #333;
+}
+
+.sideBarSetting li:hover {
+  color: #000;
+  background-color: #eee;
+}
+
+.sideBarSetting li a {
+  color: inherit;
+}
+
+.sidebarHeader {
+  color: #fff;
+  background-color: #399;
+}
+
+.sidebarContainer {
+  background-color: #fff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.sidebarContent {
+  background-color: #fff;
 }
 
 
