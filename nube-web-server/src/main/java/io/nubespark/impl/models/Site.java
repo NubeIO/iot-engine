@@ -10,6 +10,8 @@ public class Site extends Model {
     public String site_title;
     public String issue_address;
     public String top_bar_address;
+    public Double latitude;
+    public Double longitude;
     public String site_footer;
     public String primary_color;
     public String secondary_color;

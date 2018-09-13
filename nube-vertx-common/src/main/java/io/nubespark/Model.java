@@ -30,6 +30,9 @@ public abstract class Model {
                 case "String":
                     jsonObject.put(fieldName, input.get("body").getString(fieldName, ""));
                     break;
+                case "Double":
+                    jsonObject.put(fieldName, input.get("body").getDouble(fieldName, 0d));
+                    break;
                 case "String[]":
                     jsonObject.put(fieldName, input.get("body").getJsonArray(fieldName, new JsonArray("[]")));
                     break;
