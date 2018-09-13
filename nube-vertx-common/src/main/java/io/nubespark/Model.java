@@ -36,6 +36,11 @@ public abstract class Model {
                 case "String[]":
                     jsonObject.put(fieldName, input.get("body").getJsonArray(fieldName, new JsonArray("[]")));
                     break;
+                case "GeoPoint":
+                    JsonObject geoPointJson = input.get("body").getJsonObject(fieldName);
+                    GeoPoint geoPoint = new GeoPoint(geoPointJson.getDouble("lng", 151.209900d), geoPointJson.getDouble("lat", -33.865143d));
+                    jsonObject.put(fieldName, geoPoint.toJsonObject());
+                    break;
             }
         }
         return jsonObject;

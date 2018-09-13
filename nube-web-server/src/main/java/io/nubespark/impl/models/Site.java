@@ -1,5 +1,6 @@
 package io.nubespark.impl.models;
 
+import io.nubespark.GeoPoint;
 import io.nubespark.Model;
 import io.vertx.core.json.JsonObject;
 
@@ -8,10 +9,8 @@ public class Site extends Model {
     public String logo_sm;
     public String logo_md;
     public String site_title;
-    public String issue_address;
+    public GeoPoint issue_address;
     public String top_bar_address;
-    public Double latitude;
-    public Double longitude;
     public String site_footer;
     public String primary_color;
     public String secondary_color;
