@@ -343,7 +343,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         Role role = CustomMessageHelper.getRole(user);
         String companyId = CustomMessageHelper.getCompanyId(user);
         if (role == Role.SUPER_ADMIN) {
-            respondRequestWithAssociateCompanyRepresentation(message, new JsonObject(), URL.get_site);
+            respondRequestWithAssociateCompanyRepresentation(message, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_site);
         } else if (role == Role.ADMIN) {
             // Returning all MANAGER's companies' <sites> which is associated with the ADMIN company
             dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
@@ -367,7 +367,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         Role role = CustomMessageHelper.getRole(user);
         String companyId = CustomMessageHelper.getCompanyId(user);
         if (role == Role.SUPER_ADMIN) {
-            respondRequestWithSiteAndAssociateCompanyRepresentation(message, new JsonObject(), URL.get_user_group);
+            respondRequestWithSiteAndAssociateCompanyRepresentation(message, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_user_group);
         } else if (role == Role.ADMIN) {
             // Returning all MANAGER's companies' <user groups> which is associated with the ADMIN company
             dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
