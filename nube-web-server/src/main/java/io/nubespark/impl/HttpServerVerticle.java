@@ -170,7 +170,12 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             body = (T) ctx.getBodyAsJsonArray();
             logger.info("Body:::::::::" + body);
         } else {
-            body = (T) ctx.getBodyAsJson();
+            try {
+                body = (T) ctx.getBodyAsJson();
+            } catch (Exception ex) {
+                ctx.next();
+                return;
+            }
         }
         logger.info("Body:::::" + body);
         CustomMessage<T> message = new CustomMessage<>(header, body, 200);
