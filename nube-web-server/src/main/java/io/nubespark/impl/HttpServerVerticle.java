@@ -83,11 +83,11 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     deployResult.cause().printStackTrace();
                 }
             })))
-            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(LayoutGridVerticle.class.getName(), deployResult -> {
+            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(DynamicSiteCollectionHandleVerticle.class.getName(), deployResult -> {
                 // Deploy succeed
                 if (deployResult.succeeded()) {
-                    source.onSuccess("Deployment of LayoutGridVerticle is successful.");
-                    logger.info("Deployment of LayoutGridVerticle is successful.");
+                    source.onSuccess("Deployment of DynamicSiteCollectionHandleVerticle is successful.");
+                    logger.info("Deployment of DynamicSiteCollectionHandleVerticle is successful.");
                 } else {
                     // Deploy failed
                     source.onError(deployResult.cause());
@@ -148,7 +148,9 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
     private void handleAPIs(Router router) {
         router.route("/api/*").handler(this::handleMultiTenantSupportAPIs);
-        router.route("/api/layout_grid/*").handler(this::handleLayoutGridAPIs);
+        router.route("/api/layout_grid/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "layout_grid"));
+        router.route("/api/menu/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "menu"));
+        router.route("/api/settings/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "settings"));
         router.post("/api/upload_image").handler(this::handleUploadImage);
     }
 
@@ -203,11 +205,12 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         }
     }
 
-    private void handleLayoutGridAPIs(RoutingContext ctx) {
+    private void handleDynamicSiteCollection(RoutingContext ctx, String collection) {
         JsonObject header = new JsonObject()
-            .put("url", ctx.normalisedPath().substring("/api/layout_grid/".length()))
+            .put("url", ctx.normalisedPath().substring(("/api/" + collection + "/").length()))
             .put("method", ctx.request().method())
-            .put("user", ctx.user().principal());
+            .put("user", ctx.user().principal())
+            .put("collection", collection);
         JsonObject body;
         if (StringUtils.isNull(ctx.getBody().toString())) {
             body = new JsonObject();
@@ -215,7 +218,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             body = ctx.getBodyAsJson();
         }
         CustomMessage<JsonObject> message = new CustomMessage<>(header, body, 200);
-        eventBus.send(LAYOUT_GRID_ADDRESS, message, reply -> {
+        eventBus.send(DYNAMIC_SITE_COLLECTION_ADDRESS, message, reply -> {
             if (reply.succeeded()) {
                 CustomMessage replyMessage = (CustomMessage) reply.result().body();
                 logger.info("Received reply: " + replyMessage.getBody());

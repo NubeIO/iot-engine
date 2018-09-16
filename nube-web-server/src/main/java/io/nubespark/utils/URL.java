@@ -20,6 +20,8 @@ public class URL {
     public static final String delete_user_group = "/api/mongo/delete/user_group";
     public static final String put_user_group = "/api/mongo/put/user_group";
 
-    public static final String get_layout_grid = "/api/mongo/get/layout_grid";
-    public static final String put_layout_grid = "/api/mongo/put/layout_grid";
+    public static final String mongo_base_get_api = "/api/mongo/get/";
+    public static final String mongo_base_post_api = "/api/mongo/post/";
+    public static final String mongo_base_put_api = "/api/mongo/put/";
+    public static final String mongo_base_delete_api = "/api/mongo/delete/";
 }
