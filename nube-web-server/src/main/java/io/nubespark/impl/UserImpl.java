@@ -21,6 +21,7 @@ public class UserImpl extends Model implements User {
     private String phone_no;
     private String associated_company_id;
     private String company_id;
+    private String site_id;
     private String group_id;
     private String access_token;
 

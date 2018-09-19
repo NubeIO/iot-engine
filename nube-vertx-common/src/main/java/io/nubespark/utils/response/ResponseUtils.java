@@ -14,6 +14,6 @@ public class ResponseUtils {
         if (StringUtils.isNull(location)) {
             return "";
         }
-        return ctx.request().host() + location;
+        return "http://" + ctx.request().host() + location;
     }
 }

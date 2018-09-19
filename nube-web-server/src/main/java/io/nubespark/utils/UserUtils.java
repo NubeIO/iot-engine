@@ -16,6 +16,21 @@ import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 
 public class UserUtils {
+    public static Role getReverseRole(Role userRole) {
+        switch (userRole) {
+            case GUEST:
+                return Role.MANAGER;
+            case USER:
+                return Role.MANAGER;
+            case MANAGER:
+                return Role.ADMIN;
+            case ADMIN:
+                return Role.SUPER_ADMIN;
+            default:
+                return Role.SUPER_ADMIN;
+        }
+    }
+
     public static Role getRole(Role userRole) {
         switch (userRole) {
             case SUPER_ADMIN:
@@ -29,12 +44,12 @@ public class UserUtils {
         }
     }
 
-    public static Role getRole(Role userRole, Role setRole) {
-        switch (userRole) {
+    public static Role getRole(Role companyRole, Role setRole) {
+        switch (companyRole) {
             case SUPER_ADMIN:
-                return Role.ADMIN;
+                return setRole;
             case ADMIN:
-                return Role.MANAGER;
+                return SQLUtils.in(setRole.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString()) ? Role.MANAGER : setRole;
             case MANAGER:
                 return (setRole == Role.USER) ? Role.USER : Role.GUEST;
             default:
@@ -184,5 +199,9 @@ public class UserUtils {
             request.putHeader("Authorization", "Bearer " + accessToken);
             request.write(keycloakUserRepresentation.toJsonObject().toString()).end();
         });
+    }
+
+    public static boolean isLastLevelUser(Role role) {
+        return (role == Role.USER) || (role == Role.GUEST);
     }
 }

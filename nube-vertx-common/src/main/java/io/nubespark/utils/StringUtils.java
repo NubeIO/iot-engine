@@ -190,6 +190,15 @@ public class StringUtils {
         return _ids.toArray(new String[_ids.size()]);
     }
 
+    public static List<String> getIdsList(JsonArray jsonArray) {
+        List<String> _ids = new ArrayList<>();
+        for (Object object : jsonArray) {
+            JsonObject jsonObject = (JsonObject) object;
+            _ids.add(jsonObject.getString("_id"));
+        }
+        return _ids;
+    }
+
     public static JsonArray getIdsJsonArray(JsonArray jsonArray) {
         JsonArray _ids = new JsonArray();
         for (Object object : jsonArray) {

@@ -1,8 +1,18 @@
 package io.nubespark.utils;
 
 
+import java.util.List;
+
 public class SQLUtils {
     public static boolean in(String field, String... str) {
+        for (String value : str) {
+            if (StringUtils.isNotNull(field) && StringUtils.isNotNull(value) && field.equals(value))
+                return true;
+        }
+        return false;
+    }
+
+    public static boolean inList(String field, List<String> str) {
         for (String value : str) {
             if (StringUtils.isNotNull(field) && StringUtils.isNotNull(value) && field.equals(value))
                 return true;
@@ -24,6 +34,13 @@ public class SQLUtils {
                 return true;
         }
         return false;
+    }
+
+    public static String getFirstNotNull(String... strings) {
+        for (int i = 0; i < strings.length; i++)
+            if (StringUtils.isNotNull(strings[i]))
+                return strings[i];
+        return strings[0];
     }
 
     public static String[] getFirstNotNullArray(String[]... array) {

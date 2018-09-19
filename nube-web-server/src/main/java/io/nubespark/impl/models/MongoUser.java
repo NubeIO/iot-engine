@@ -2,6 +2,7 @@ package io.nubespark.impl.models;
 
 import io.nubespark.Model;
 import io.nubespark.Role;
+import io.nubespark.utils.StringUtils;
 import io.nubespark.utils.UserUtils;
 import io.vertx.core.json.JsonObject;
 
@@ -17,6 +18,7 @@ public class MongoUser extends Model {
     private String phone_no;
     private String associated_company_id;
     private String company_id;
+    private String site_id;
     private String group_id;
 
     public MongoUser(JsonObject body, JsonObject user, JsonObject keycloakUser) {
@@ -46,10 +48,10 @@ public class MongoUser extends Model {
         // Role business logic
         Role userRole = Role.GUEST;
         Role setRole = null;
-        if (user.getString("role") != null) {
+        if (StringUtils.isNotNull(user.getString("role"))) {
             userRole = Role.valueOf(user.getString("role").toUpperCase());
         }
-        if (body.getString("role") != null) {
+        if (StringUtils.isNotNull(body.getString("role"))) {
             setRole = Role.valueOf(body.getString("role").toUpperCase());
         }
         responseUser.put("role", UserUtils.getRole(userRole, setRole));

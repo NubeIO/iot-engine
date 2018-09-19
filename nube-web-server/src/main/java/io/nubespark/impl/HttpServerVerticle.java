@@ -1,9 +1,11 @@
 package io.nubespark.impl;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.nubespark.Role;
 import io.nubespark.utils.*;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.reactivex.Single;
+import io.reactivex.SingleSource;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
@@ -369,24 +371,72 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
     private void currentUser(RoutingContext ctx) {
         User user = ctx.user();
+        String groupId = ctx.user().principal().getString("group_id");
+        String siteId = ctx.user().principal().getString("site_id");
         if (user != null) {
-            dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + ctx.user().principal().getString("group_id"), null)
-                .flatMap(group -> {
-                    JsonObject object = group.toJsonObject();
-                    return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + group.toJsonObject().getString("site_id"), null)
-                        .map(site -> object.put("site", site.toJsonObject()
-                            .put("logo_sm", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_sm")))
-                            .put("logo_md", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_md")))));
+            Single.just(new JsonObject())
+                .flatMap(object -> {
+                    if (StringUtils.isNotNull(groupId)) {
+                        return dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + groupId, null)
+                            .map(group -> {
+                                if (StringUtils.isNotNull(group.toString())) {
+                                    return object.put("group", group.toJsonObject());
+                                }
+                                return object;
+                            });
+                    } else {
+                        return Single.just(object);
+                    }
                 })
-                .subscribe(userGroup -> {
-                    ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(user.principal()
-                            .put("group", userGroup)));
-                });
+                .flatMap(group -> {
+                    if (StringUtils.isNotNull(siteId)) {
+                        return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + siteId, null)
+                            .flatMap(site -> {
+                                if (StringUtils.isNotNull(site.toString())) {
+                                    return Single.just(group.put("site", site.toJsonObject()
+                                        .put("logo_sm", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_sm")))
+                                        .put("logo_md", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_md")))));
+                                } else {
+                                    return assignAdminOrManagerOnASiteIfAvailable(ctx, group);
+                                }
+                            });
+                    } else {
+                        return assignAdminOrManagerOnASiteIfAvailable(ctx, group);
+                    }
+                }).subscribe(groupAndSite -> {
+                ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(user.principal()
+                        .mergeIn(groupAndSite)));
+            });
         } else {
             logger.info("Send not authorized error and user should login");
             failAuthentication(ctx);
         }
+    }
+
+    private SingleSource<? extends JsonObject> assignAdminOrManagerOnASiteIfAvailable(RoutingContext ctx, JsonObject group) {
+        String role = ctx.user().principal().getString("role");
+        if (SQLUtils.in(role, Role.ADMIN.toString(), Role.MANAGER.toString())) {
+            // If we have already a site for its respective role, then we will assign it
+            JsonObject query = new JsonObject().put("associated_company_id", ctx.user().principal().getString("associated_company_id"));
+            return dispatchRequests(HttpMethod.POST, URL.get_site, query)
+                .flatMap(sites -> {
+                    if (sites.toJsonArray().size() > 0) {
+                        JsonObject site$ = sites.toJsonArray().getJsonObject(0);
+                        String siteId$ = sites.toJsonArray().getJsonObject(0).getString("_id");
+                        return dispatchRequests(HttpMethod.POST, URL.bulk_update_user, new JsonObject().put("query", query).put("body", new JsonObject().put("$set", new JsonObject().put("site_id", siteId$))))
+                            .map(ign -> group
+                                .put("site",
+                                    site$
+                                        .put("logo_sm", buildAbsoluteUri(ctx, site$.getString("logo_sm")))
+                                        .put("logo_md", buildAbsoluteUri(ctx, site$.getString("logo_md")))
+                                ).put("site_id", siteId$));
+                    } else {
+                        return Single.just(group);
+                    }
+                });
+        }
+        return Single.just(group);
     }
 
     private void refreshAccessToken(RoutingContext ctx) {

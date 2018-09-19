@@ -5,6 +5,7 @@ public class URL {
     public static final String post_user = "/api/mongo/post/user";
     public static final String delete_user = "/api/mongo/delete/user";
     public static final String put_user = "/api/mongo/put/user";
+    public static final String bulk_update_user = "/api/mongo/bulk_update/user";
 
     public static final String get_company = "/api/mongo/get/company";
     public static final String post_company = "/api/mongo/post/company";

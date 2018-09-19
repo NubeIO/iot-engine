@@ -57,6 +57,7 @@ public class MongoDBVerticle extends MicroServiceVerticle {
         router.delete("/delete/:document").handler(routingContext -> controller.deleteAll(routingContext));
         router.post("/delete/:document").handler(routingContext -> controller.deleteAll(routingContext));
         router.delete("/delete/:document/:id").handler(routingContext -> controller.deleteOne(routingContext));
+        router.post("/bulk_update/:document").handler(routingContext -> controller.bulkUpdate(routingContext));
 
         // This is last handler that gives not found message
         router.route().last().handler(routingContext -> {

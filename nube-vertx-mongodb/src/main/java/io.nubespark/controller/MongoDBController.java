@@ -6,6 +6,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.mongo.UpdateOptions;
 import io.vertx.ext.web.RoutingContext;
 
 import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
@@ -172,6 +173,27 @@ public class MongoDBController {
                     .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                     .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                     .end(Json.encodePrettily(new JsonObject().put("result", res.result()).put("statusCode", HttpResponseStatus.BAD_REQUEST.code())));
+            }
+        });
+    }
+
+    public void bulkUpdate(RoutingContext routingContext) {
+        HttpServerRequest request = routingContext.request();
+        String document = request.getParam("document");
+        // we can use this query for filtering output array
+        JsonObject queryDictionary = routingContext.getBodyAsJson();
+        JsonObject query = queryDictionary.getJsonObject("query");
+        JsonObject body = queryDictionary.getJsonObject("body");
+
+        client.updateCollectionWithOptions(document, query, body, new UpdateOptions(false, true), res -> {
+            if (res.succeeded()) {
+                routingContext.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(HttpResponseStatus.OK.code())
+                    .end(Json.encodePrettily(new JsonObject().put("result", res.result().toJson()).put("statusCode", HttpResponseStatus.OK.code())));
+            } else {
+                res.cause().printStackTrace();
+                routingContext.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
             }
         });
     }

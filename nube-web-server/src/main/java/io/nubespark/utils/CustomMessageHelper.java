@@ -11,7 +11,7 @@ public class CustomMessageHelper {
         if (StringUtils.isNull(location)) {
             return "";
         }
-        return getHost(message) + location;
+        return "http://" + getHost(message) + location;
     }
 
     private static String getHost(Message<Object> message) {
@@ -34,6 +34,10 @@ public class CustomMessageHelper {
 
     public static String getCompanyId(JsonObject user) {
         return user.getString("company_id");
+    }
+
+    public static String getAssociatedCompanyId(JsonObject user) {
+        return user.getString("associated_company_id");
     }
 
     public static String getAccessToken(JsonObject user) {
