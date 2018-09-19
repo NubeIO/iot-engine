@@ -167,7 +167,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                             return createMongoUser(user, body, accessToken, authServerUrl, realmName, client, keycloakUser, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))));
                         } else if (role == Role.ADMIN) {
                             // 4.2 only child companies can make associate with it's users
-                            return getAdminCompanyWithAssociatedManagerCompanyQuery(companyId)
+                            return byAdminCompanyGetAdminWithManagerSelectionListQuery(companyId)
                                 .flatMap(query -> createMongoUser(user, body, accessToken, authServerUrl, realmName, client, keycloakUser, query));
                         } else {
                             // 4.3 Creating user on MongoDB with 'group_id'
@@ -314,7 +314,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                             if (role == Role.SUPER_ADMIN) {
                                 return createSite(body, associatedCompany.getString("_id"));
                             } else {
-                                return getAdminCompanyWithAssociatedManagerCompany(companyId)
+                                return byAdminCompanyGetAdminWithManagerSelectionList(companyId)
                                     .flatMap(companies -> {
                                         if (companies.contains(associatedCompany.getString("_id"))) {
                                             return createSite(body, associatedCompany.getString("_id"));
@@ -412,13 +412,29 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         JsonObject user = CustomMessageHelper.getUser(message);
         Role role = CustomMessageHelper.getRole(user);
         String companyId = CustomMessageHelper.getCompanyId(user);
-        if (role == Role.SUPER_ADMIN) {
-            respondRequestWithAssociateCompanyRepresentation(message, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))), URL.get_company);
-        } else if (role == Role.ADMIN) {
-            respondRequestWithAssociateCompanyRepresentation(message, new JsonObject().put("associated_company_id", companyId), URL.get_company);
-        } else {
-            handleForbiddenResponse(message);
-        }
+
+        Single.just(new JsonObject())
+            .flatMap(ignore -> {
+                if (role == Role.SUPER_ADMIN) {
+                    return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString())));
+                } else if (role == Role.ADMIN) {
+                    return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("associated_company_id", companyId));
+                } else {
+                    throw forbidden();
+                }
+            })
+            .flatMap(response -> Observable.fromIterable(response.toJsonArray())
+                .flatMapSingle(res -> {
+                    JsonObject object = new JsonObject(res.toString());
+                    String associatedCompanyId = object.getString("associated_company_id");
+                    return associatedCompanyRepresentation(object, associatedCompanyId);
+                }).toList()
+            )
+            .subscribe(response -> {
+                JsonArray array = new JsonArray();
+                response.forEach(jsonObject -> array.add(buildSiteWithAbsoluteImageUri(message, jsonObject)));
+                message.reply(new CustomMessage<>(null, array, HttpResponseStatus.OK.code()));
+            }, throwable -> handleHttpException(message, throwable));
     }
 
     private void handleGetUsers(Message<Object> message) {
@@ -447,46 +463,67 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         JsonObject user = CustomMessageHelper.getUser(message);
         Role role = CustomMessageHelper.getRole(user);
         String companyId = CustomMessageHelper.getCompanyId(user);
-        if (role == Role.SUPER_ADMIN) {
-            respondRequestWithAssociateCompanyRepresentation(message, new JsonObject().put("role", new JsonObject().put("$eq", Role.USER.toString())), URL.get_site);
-        } else if (role == Role.ADMIN) {
-            // Returning all MANAGER's companies' <sites> which is associated with the ADMIN company
-            dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
-                .put("associated_company_id", companyId)
-                .put("role", Role.MANAGER.toString()))
-                .subscribe(
-                    buffer -> respondRequestWithAssociateCompanyRepresentation(message, new JsonObject()
-                        .put("associated_company_id", new JsonObject()
-                            .put("$in", StringUtils.getIdsJsonArray(buffer.toJsonArray()))), URL.get_site),
-                    throwable -> handleHttpException(message, throwable));
-        } else if (role == Role.MANAGER) {
-            respondRequestWithAssociateCompanyRepresentation(message, new JsonObject().put("associated_company_id", companyId), URL.get_site);
-        } else {
-            handleForbiddenResponse(message);
-        }
+        Single.just(new JsonObject())
+            .flatMap(ignored -> {
+                if (role == Role.SUPER_ADMIN) {
+                    return dispatchRequests(HttpMethod.POST, URL.get_site, new JsonObject().put("role", new JsonObject().put("$eq", Role.USER.toString())));
+                } else if (role == Role.ADMIN) {
+                    return byAdminCompanyGetManagerSelectionListQuery(companyId)
+                        .flatMap(query -> dispatchRequests(HttpMethod.POST, URL.get_site, query));
+                } else if (role == Role.MANAGER) {
+                    return dispatchRequests(HttpMethod.POST, URL.get_site, new JsonObject().put("associated_company_id", companyId));
+                } else {
+                    throw forbidden();
+                }
+            })
+            .flatMap(response -> Observable.fromIterable(response.toJsonArray())
+                .flatMapSingle(res -> {
+                    JsonObject object = new JsonObject(res.toString());
+                    String associatedCompanyId = object.getString("associated_company_id");
+                    return associatedCompanyRepresentation(object, associatedCompanyId);
+                }).toList())
+            .subscribe(response -> {
+                JsonArray array = new JsonArray();
+                response.forEach(jsonObject -> array.add(buildSiteWithAbsoluteImageUri(message, jsonObject)));
+                message.reply(new CustomMessage<>(null, array, HttpResponseStatus.OK.code()));
+            }, throwable -> handleHttpException(message, throwable));
     }
 
     private void handleGetUserGroups(Message<Object> message) {
         JsonObject user = CustomMessageHelper.getUser(message);
         Role role = CustomMessageHelper.getRole(user);
         String companyId = CustomMessageHelper.getCompanyId(user);
-        if (role == Role.SUPER_ADMIN) {
-            respondRequestWithSiteAndAssociateCompanyRepresentation(message, new JsonObject(), URL.get_user_group);
-        } else if (role == Role.ADMIN) {
-            // Returning all MANAGER's companies' <user groups> which is associated with the ADMIN company
-            dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject()
-                .put("associated_company_id", companyId)
-                .put("role", Role.MANAGER.toString()))
-                .subscribe(
-                    buffer -> respondRequestWithSiteAndAssociateCompanyRepresentation(message, new JsonObject()
-                        .put("associated_company_id", new JsonObject()
-                            .put("$in", StringUtils.getIdsJsonArray(new JsonArray(buffer.getDelegate())))), URL.get_user_group),
-                    throwable -> handleHttpException(message, throwable));
-        } else if (role == Role.MANAGER) {
-            respondRequestWithSiteAndAssociateCompanyRepresentation(message, new JsonObject().put("associated_company_id", companyId), URL.get_user_group);
-        } else {
-            handleForbiddenResponse(message);
-        }
+        Single.just(new JsonObject())
+            .flatMap(ignore -> {
+                if (role == Role.SUPER_ADMIN) {
+                    return dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject());
+                } else if (role == Role.ADMIN) {
+                    return byAdminCompanyGetManagerSelectionListQuery(companyId)
+                        .flatMap(query -> dispatchRequests(HttpMethod.POST, URL.get_user_group, query));
+                } else if (role == Role.MANAGER) {
+                    return dispatchRequests(HttpMethod.POST, URL.get_user_group, new JsonObject().put("associated_company_id", companyId));
+                } else {
+                    throw forbidden();
+                }
+            })
+            .flatMap(response -> Observable.fromIterable(response.toJsonArray())
+                .flatMapSingle(res -> {
+                    JsonObject object = new JsonObject(res.toString());
+                    return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + object.getString("site_id"), null)
+                        .flatMap(site -> {
+                            if (StringUtils.isNotNull(site.toString())) {
+                                object.put("site", buildSiteWithAbsoluteImageUri(message, site.toJsonObject()));
+                            }
+                            String associatedCompanyId = object.getString("associated_company_id");
+                            return associatedCompanyRepresentation(object, associatedCompanyId);
+                        });
+                }).toList()
+            )
+            .subscribe(response -> {
+                JsonArray array = new JsonArray();
+                response.forEach(array::add);
+                message.reply(new CustomMessage<>(null, array, HttpResponseStatus.OK.code()));
+            }, throwable -> handleHttpException(message, throwable));
     }
 
     private void handleDeleteUsers(Message<Object> message) {
@@ -760,7 +797,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
 
                     return UserUtils.updateUser(userId, keycloakUserRepresentation, accessToken, authServerUrl, realmName, client);
                 } else if (role == Role.ADMIN) {
-                    return getAdminCompanyWithAssociatedManagerCompany(CustomMessageHelper.getCompanyId(user))
+                    return byAdminCompanyGetAdminWithManagerSelectionList(CustomMessageHelper.getCompanyId(user))
                         .flatMap(response -> {
                             if (SQLUtils.inList(CustomMessageHelper.getCompanyId(user), response)) {
                                 return UserUtils.updateUser(userId, keycloakUserRepresentation, accessToken, authServerUrl, realmName, client);
@@ -782,7 +819,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                         // Only child <Companies> can be added by the parent
                         return updateMongoUser(ctxUser, role, body, keycloakUser, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))));
                     } else if (role == Role.ADMIN) {
-                        return getAdminCompanyWithAssociatedManagerCompanyQuery(CustomMessageHelper.getCompanyId(ctxUser))
+                        return byAdminCompanyGetAdminWithManagerSelectionListQuery(CustomMessageHelper.getCompanyId(ctxUser))
                             .flatMap(query -> updateMongoUser(ctxUser, role, body, keycloakUser, query));
                     } else {
                         // Only child <User Groups> can be added by the parent
@@ -886,7 +923,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                         if (role == Role.SUPER_ADMIN) {
                                             return updateSite(body, role, associatedCompany.getString("_id"), site);
                                         } else {
-                                            return getAdminCompanyWithAssociatedManagerCompany(companyId)
+                                            return byAdminCompanyGetAdminWithManagerSelectionList(companyId)
                                                 .flatMap(companies -> {
                                                     if (companies.contains(associatedCompany.getString("_id"))) {
                                                         return updateSite(body, role, associatedCompany.getString("_id"), site);
@@ -1022,30 +1059,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private void respondRequestWithSiteAndAssociateCompanyRepresentation(Message<Object> message, JsonObject query, String urn) {
-        dispatchRequests(HttpMethod.POST, urn, query)
-            .flatMap(response -> Observable.fromIterable(response.toJsonArray())
-                .flatMapSingle(res -> {
-                    JsonObject object = new JsonObject(res.toString());
-                    return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + object.getString("site_id"), null)
-                        .flatMap(site -> {
-                            if (StringUtils.isNotNull(site.toString())) {
-                                object.put("site", buildSiteWithAbsoluteImageUri(message, site.toJsonObject()));
-                            }
-                            String associatedCompanyId = object.getString("associated_company_id");
-                            return respondAssociatedCompany(object, associatedCompanyId);
-                        });
-                }).toList()
-            )
-            .subscribe(response -> {
-                    JsonArray array = new JsonArray();
-                    response.forEach(array::add);
-                    message.reply(new CustomMessage<>(null, array, HttpResponseStatus.OK.code()));
-                },
-                throwable -> handleHttpException(message, throwable));
-    }
-
-    private SingleSource<? extends JsonObject> respondAssociatedCompany(JsonObject object, String associatedCompanyId) {
+    private SingleSource<? extends JsonObject> associatedCompanyRepresentation(JsonObject object, String associatedCompanyId) {
         if (StringUtils.isNotNull(associatedCompanyId)) {
             return dispatchRequests(HttpMethod.GET, URL.get_company + "/" + associatedCompanyId, null)
                 .map(associatedCompany -> {
@@ -1057,23 +1071,6 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         } else {
             return Single.just(object);
         }
-    }
-
-    private void respondRequestWithAssociateCompanyRepresentation(Message<Object> message, JsonObject query, String urn) {
-        // We may do optimize version of this
-        dispatchRequests(HttpMethod.POST, urn, query)
-            .flatMap(response -> Observable.fromIterable(response.toJsonArray())
-                .flatMapSingle(res -> {
-                    JsonObject object = new JsonObject(res.toString());
-                    String associatedCompanyId = object.getString("associated_company_id");
-                    return respondAssociatedCompany(object, associatedCompanyId);
-                }).toList()
-            ).subscribe(response -> {
-                JsonArray array = new JsonArray();
-                response.forEach(jsonObject -> array.add(buildSiteWithAbsoluteImageUri(message, jsonObject)));
-                message.reply(new CustomMessage<>(null, array, HttpResponseStatus.OK.code()));
-            },
-            throwable -> handleHttpException(message, throwable));
     }
 
     private void respondRequestWithCompanyAssociateCompanyGroupAndSiteRepresentation(Message<Object> message, JsonObject query, String urn) {
@@ -1138,12 +1135,17 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private Single<JsonObject> getAdminCompanyWithAssociatedManagerCompanyQuery(String companyId) {
+    private Single<JsonObject> byAdminCompanyGetManagerSelectionListQuery(String companyId) {
         return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("associated_company_id", companyId).put("role", Role.MANAGER.toString()))
             .map(response -> new JsonObject().put("associated_company_id", new JsonObject().put("$in", StringUtils.getIdsJsonArray(response.toJsonArray()).add(companyId))));
     }
 
-    private Single<List<String>> getAdminCompanyWithAssociatedManagerCompany(String companyId) {
+    private Single<JsonObject> byAdminCompanyGetAdminWithManagerSelectionListQuery(String companyId) {
+        return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("associated_company_id", companyId).put("role", Role.MANAGER.toString()))
+            .map(response -> new JsonObject().put("associated_company_id", new JsonObject().put("$in", StringUtils.getIdsJsonArray(response.toJsonArray()).add(companyId))));
+    }
+
+    private Single<List<String>> byAdminCompanyGetAdminWithManagerSelectionList(String companyId) {
         return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("associated_company_id", companyId).put("role", Role.MANAGER.toString()))
             .map(response -> {
                 List<String> companies = StringUtils.getIdsList(response.toJsonArray());
@@ -1167,7 +1169,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         if (role == Role.SUPER_ADMIN) {
             return Single.just(true);
         } else if (role == Role.ADMIN) {
-            return getAdminCompanyWithAssociatedManagerCompany(companyId).map(list -> list.contains(toCheckCompanyId));
+            return byAdminCompanyGetAdminWithManagerSelectionList(companyId).map(list -> list.contains(toCheckCompanyId));
         } else if (role == Role.MANAGER) {
             return Single.just(companyId.equals(toCheckCompanyId));
         }
