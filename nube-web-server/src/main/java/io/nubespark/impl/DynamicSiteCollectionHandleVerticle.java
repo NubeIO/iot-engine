@@ -51,17 +51,9 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
 
     private void handleGetAll(Message<Object> message, CustomMessage customMessage) {
         String collection = customMessage.getHeader().getString("collection");
-        String groupId = customMessage.getHeader().getJsonObject("user").getString("group_id");
-        if (StringUtils.isNotNull(groupId)) {
-            dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + groupId, null)
-                .map(buffer -> {
-                    if (StringUtils.isNotNull(buffer.toString())) {
-                        return buffer.toJsonObject().getString("site_id");
-                    } else {
-                        throw new HttpException(404, "May be your UserGroup is deleted from the System.");
-                    }
-                })
-                .flatMap(siteId -> dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId)))
+        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
+        if (StringUtils.isNotNull(siteId)) {
+            dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId))
                 .subscribe(buffer -> {
                     CustomMessage<JsonArray> replyMessage = new CustomMessage<>(
                         null,
@@ -70,7 +62,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
                     message.reply(replyMessage);
                 }, throwable -> handleException(message, throwable));
         } else {
-            handleBadRequestResponse(message, "User must be associated with <UserGroup> and <SiteSettings>");
+            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         }
     }
 
@@ -109,17 +101,9 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     private void handleGetUrl(Message<Object> message, CustomMessage customMessage) {
         String id = customMessage.getHeader().getString("url");
         String collection = customMessage.getHeader().getString("collection");
-        String groupId = customMessage.getHeader().getJsonObject("user").getString("group_id");
-        if (StringUtils.isNotNull(groupId)) {
-            dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + groupId, null)
-                .map(buffer -> {
-                    if (StringUtils.isNotNull(buffer.toString())) {
-                        return buffer.toJsonObject().getString("site_id");
-                    } else {
-                        throw new HttpException(HttpResponseStatus.NOT_FOUND.code(), "May be your UserGroup is deleted from the System.");
-                    }
-                })
-                .flatMap(siteId -> dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId).put("id", id)))
+        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
+        if (StringUtils.isNotNull(siteId)) {
+            dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
                 .subscribe(buffer -> {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
@@ -128,7 +112,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
                     message.reply(replyMessage);
                 }, throwable -> handleException(message, throwable));
         } else {
-            handleBadRequestResponse(message, "User must be associated with <UserGroup> and <SiteSettings>");
+            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         }
     }
 
@@ -136,28 +120,20 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         String role = customMessage.getHeader().getJsonObject("user").getString("role");
         String id = customMessage.getHeader().getString("url");
         String collection = customMessage.getHeader().getString("collection");
-        String groupId = customMessage.getHeader().getJsonObject("user").getString("group_id");
-        if (StringUtils.isNull(groupId)) {
-            handleBadRequestResponse(message, "User must be associated with <UserGroup> and <SiteSettings>");
+        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
+        if (StringUtils.isNull(siteId)) {
+            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
-            dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + groupId, null)
+            dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
                 .map(buffer -> {
-                    if (StringUtils.isNotNull(buffer.toString())) {
-                        return buffer.toJsonObject().getString("site_id");
-                    } else {
-                        throw new HttpException(HttpResponseStatus.NOT_FOUND.code(), "May be your UserGroup is deleted from the System.");
+                    JsonObject body = (JsonObject) customMessage.getBody();
+                    if (buffer.toJsonArray().size() > 0) {
+                        throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
                     }
+                    body.put("site_id", siteId);
+                    body.put("id", id);
+                    return body;
                 })
-                .flatMap(siteId -> dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
-                    .map(buffer -> {
-                        JsonObject body = (JsonObject) customMessage.getBody();
-                        if (buffer.toJsonArray().size() > 0) {
-                            throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
-                        }
-                        body.put("site_id", siteId);
-                        body.put("id", id);
-                        return body;
-                    }))
                 .flatMap(body -> dispatchRequests(HttpMethod.POST, URL.mongo_base_post_api + collection, body))
                 .subscribe(buffer -> {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
@@ -182,29 +158,21 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         String role = customMessage.getHeader().getJsonObject("user").getString("role");
         String id = customMessage.getHeader().getString("url");
         String collection = customMessage.getHeader().getString("collection");
-        String groupId = customMessage.getHeader().getJsonObject("user").getString("group_id");
-        if (StringUtils.isNull(groupId)) {
-            handleBadRequestResponse(message, "User must be associated with <UserGroup> and <SiteSettings>");
+        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
+        if (StringUtils.isNull(siteId)) {
+            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
-            dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + groupId, null)
+            dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
                 .map(buffer -> {
-                    if (StringUtils.isNotNull(buffer.toString())) {
-                        return buffer.toJsonObject().getString("site_id");
-                    } else {
-                        throw new HttpException(HttpResponseStatus.NOT_FOUND.code(), "May be your UserGroup is deleted from the System.");
+                    JsonArray jsonArray = buffer.toJsonArray();
+                    JsonObject body = (JsonObject) customMessage.getBody();
+                    if (jsonArray.size() > 0) {
+                        body.put("_id", this.pickOneOrNullJsonObject(buffer.toJsonArray()).getString("_id"));
                     }
+                    body.put("site_id", siteId);
+                    body.put("id", id);
+                    return body;
                 })
-                .flatMap(siteId -> dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
-                    .map(buffer -> {
-                        JsonArray jsonArray = buffer.toJsonArray();
-                        JsonObject body = (JsonObject) customMessage.getBody();
-                        if (jsonArray.size() > 0) {
-                            body.put("_id", this.pickOneOrNullJsonObject(buffer.toJsonArray()).getString("_id"));
-                        }
-                        body.put("site_id", siteId);
-                        body.put("id", id);
-                        return body;
-                    }))
                 .flatMap(body -> dispatchRequests(HttpMethod.PUT, URL.mongo_base_put_api + collection, body))
                 .subscribe(buffer -> {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
@@ -228,17 +196,9 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     private void handleDeleteUrl(Message<Object> message, CustomMessage customMessage) {
         String id = customMessage.getHeader().getString("url");
         String collection = customMessage.getHeader().getString("collection");
-        String groupId = customMessage.getHeader().getJsonObject("user").getString("group_id");
-        if (StringUtils.isNotNull(groupId)) {
-            dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + groupId, null)
-                .map(buffer -> {
-                    if (StringUtils.isNotNull(buffer.toString())) {
-                        return buffer.toJsonObject().getString("site_id");
-                    } else {
-                        throw new HttpException(HttpResponseStatus.NOT_FOUND.code(), "May be your UserGroup is deleted from the System.");
-                    }
-                })
-                .flatMap(siteId -> dispatchRequests(HttpMethod.POST, URL.mongo_base_delete_api + collection, new JsonObject().put("site_id", siteId).put("id", id)))
+        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
+        if (StringUtils.isNotNull(siteId)) {
+            dispatchRequests(HttpMethod.POST, URL.mongo_base_delete_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
                 .subscribe(buffer -> {
                     int statusCode = HttpResponseStatus.NO_CONTENT.code();
                     if (StringUtils.isNotNull(buffer.toString())) {
@@ -251,7 +211,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
                     message.reply(replyMessage);
                 }, throwable -> handleException(message, throwable));
         } else {
-            handleBadRequestResponse(message, "User must be associated with <UserGroup> and <SiteSettings>");
+            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         }
     }
 
