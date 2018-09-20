@@ -416,7 +416,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         Single.just(new JsonObject())
             .flatMap(ignore -> {
                 if (role == Role.SUPER_ADMIN) {
-                    return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString())));
+                    return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString()))));
                 } else if (role == Role.ADMIN) {
                     return dispatchRequests(HttpMethod.POST, URL.get_company, new JsonObject().put("associated_company_id", companyId));
                 } else {
