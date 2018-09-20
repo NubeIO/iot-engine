@@ -2,10 +2,14 @@ package io.nubespark.impl;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
-import io.nubespark.utils.*;
+import io.nubespark.utils.CustomMessage;
+import io.nubespark.utils.CustomMessageCodec;
+import io.nubespark.utils.SQLUtils;
+import io.nubespark.utils.StringUtils;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
@@ -16,6 +20,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
+import io.vertx.ext.mongo.UpdateOptions;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
@@ -25,6 +30,7 @@ import io.vertx.reactivex.ext.auth.User;
 import io.vertx.reactivex.ext.auth.oauth2.AccessToken;
 import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.reactivex.ext.auth.oauth2.providers.KeycloakAuth;
+import io.vertx.reactivex.ext.mongo.MongoClient;
 import io.vertx.reactivex.ext.web.FileUpload;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
@@ -37,10 +43,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import static io.nubespark.constants.Address.*;
+import static io.nubespark.constants.Collection.*;
 import static io.nubespark.constants.Location.MEDIA_FILE_LOCATION;
 import static io.nubespark.constants.Location.WEB_SERVER_MICRO_SERVICE_LOCATION;
 import static io.nubespark.constants.Port.HTTP_WEB_SERVER_PORT;
 import static io.nubespark.utils.FileUtils.appendRealFileNameWithExtension;
+import static io.nubespark.utils.MongoUtils.idQuery;
 import static io.nubespark.utils.response.ResponseUtils.*;
 import static io.nubespark.vertx.common.HttpHelper.failAuthentication;
 import static io.nubespark.vertx.common.HttpHelper.serviceUnavailable;
@@ -52,6 +60,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     private OAuth2Auth loginAuth;
     private Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
     private EventBus eventBus;
+    private MongoClient mongoClient;
 
     @Override
     protected Logger getLogger() {
@@ -65,6 +74,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     @Override
     public void start(io.vertx.core.Future<Void> future) {
         super.start();
+        mongoClient = MongoClient.createNonShared(vertx, config().getJsonObject("mongo").getJsonObject("config"));
         eventBus = getVertx().eventBus();
 
         // Register codec for custom message
@@ -74,7 +84,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         logger.info(Json.encodePrettily(config()));
         startWebApp()
             .flatMap(httpServer -> publishHttp())
-            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(MultiTenantVerticle.class.getName(), deployResult -> {
+            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(MultiTenantVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
                 // Deploy succeed
                 if (deployResult.succeeded()) {
                     source.onSuccess("Deployment of MultiTenantVerticle is successful.");
@@ -85,7 +95,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     deployResult.cause().printStackTrace();
                 }
             })))
-            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(DynamicSiteCollectionHandleVerticle.class.getName(), deployResult -> {
+            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(DynamicSiteCollectionHandleVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
                 // Deploy succeed
                 if (deployResult.succeeded()) {
                     source.onSuccess("Deployment of DynamicSiteCollectionHandleVerticle is successful.");
@@ -301,10 +311,10 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
                 String user_id = token.principal().getString("sub");
                 String access_token = token.principal().getString("access_token");
-                dispatchRequests(HttpMethod.GET, URL.get_user + "/" + user_id, null)
-                    .subscribe(buffer -> {
+                mongoClient.rxFindOne(USER, idQuery(user_id), null)
+                    .subscribe(response -> {
                         io.vertx.ext.auth.User user = new UserImpl(new JsonObject()
-                            .put("access_token", access_token).mergeIn(buffer.toJsonObject()));
+                            .put("access_token", access_token).mergeIn(response));
 
                         ctx.setUser(new User(user));
                         ctx.next();
@@ -377,10 +387,10 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             Single.just(new JsonObject())
                 .flatMap(object -> {
                     if (StringUtils.isNotNull(groupId)) {
-                        return dispatchRequests(HttpMethod.GET, URL.get_user_group + "/" + groupId, null)
+                        return mongoClient.rxFindOne(USER_GROUP, idQuery(groupId), null)
                             .map(group -> {
                                 if (StringUtils.isNotNull(group.toString())) {
-                                    return object.put("group", group.toJsonObject());
+                                    return object.put("group", group);
                                 }
                                 return object;
                             });
@@ -390,12 +400,12 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                 })
                 .flatMap(group -> {
                     if (StringUtils.isNotNull(siteId)) {
-                        return dispatchRequests(HttpMethod.GET, URL.get_site + "/" + siteId, null)
+                        return mongoClient.rxFindOne(SITE, idQuery(siteId), null)
                             .flatMap(site -> {
                                 if (StringUtils.isNotNull(site.toString())) {
-                                    return Single.just(group.put("site", site.toJsonObject()
-                                        .put("logo_sm", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_sm")))
-                                        .put("logo_md", buildAbsoluteUri(ctx, site.toJsonObject().getString("logo_md")))));
+                                    return Single.just(group.put("site", site
+                                        .put("logo_sm", buildAbsoluteUri(ctx, site.getString("logo_sm")))
+                                        .put("logo_md", buildAbsoluteUri(ctx, site.getString("logo_md")))));
                                 } else {
                                     return assignAdminOrManagerOnASiteIfAvailable(ctx, group);
                                 }
@@ -419,12 +429,13 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         if (SQLUtils.in(role, Role.ADMIN.toString(), Role.MANAGER.toString())) {
             // If we have already a site for its respective role, then we will assign it
             JsonObject query = new JsonObject().put("associated_company_id", ctx.user().principal().getString("associated_company_id"));
-            return dispatchRequests(HttpMethod.POST, URL.get_site, query)
+            return mongoClient.rxFind(SITE, query)
                 .flatMap(sites -> {
-                    if (sites.toJsonArray().size() > 0) {
-                        JsonObject site$ = sites.toJsonArray().getJsonObject(0);
-                        String siteId$ = sites.toJsonArray().getJsonObject(0).getString("_id");
-                        return dispatchRequests(HttpMethod.POST, URL.bulk_update_user, new JsonObject().put("query", query).put("body", new JsonObject().put("$set", new JsonObject().put("site_id", siteId$))))
+                    if (sites.size() > 0) {
+                        JsonObject site$ = sites.get(0);
+                        String siteId$ = sites.get(0).getString("_id");
+                        JsonObject update$ = new JsonObject().put("$set", new JsonObject().put("site_id", siteId$));
+                        return mongoClient.rxUpdateCollectionWithOptions(USER, query, update$, new UpdateOptions(false, true))
                             .map(ign -> group
                                 .put("site",
                                     site$

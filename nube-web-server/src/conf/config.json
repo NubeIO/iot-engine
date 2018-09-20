@@ -10,5 +10,28 @@
     },
     "confidential-port": 0,
     "policy-enforcer": {}
+  },
+  "mongo": {
+    "config": {
+      "hosts": [
+        {
+          "host": "localhost",
+          "port": 27017
+        }
+      ],
+      "db_name": "nube",
+      "username": "root",
+      "password": "root",
+      "authSource": "admin",
+      "maxPoolSize": 50,
+      "minPoolSize": 25,
+      "maxIdleTimeMS": 300000,
+      "maxLifeTimeMS": 3600000,
+      "maintenanceFrequencyMS": 2000,
+      "maintenanceInitialDelayMS": 500,
+      "waitQueueMultiple": 100,
+      "http.port": 8083,
+      "api.name": "mongo"
+    }
   }
 }

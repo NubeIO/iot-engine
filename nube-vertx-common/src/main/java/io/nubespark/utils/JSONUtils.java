@@ -1,16 +1,17 @@
 package io.nubespark.utils;
 
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public class JSONUtils {
-    public static JsonObject getMatchValueOrDefaultOne(JsonArray jsonArray, String _id) {
-        for (Object object : jsonArray) {
+    public static JsonObject getMatchValueOrDefaultOne(List<JsonObject> jsonObjectList, String _id) {
+        for (Object object : jsonObjectList) {
             JsonObject jsonObject = (JsonObject) object;
             if (jsonObject.getString("_id").equals(_id)) {
                 return jsonObject;
             }
         }
-        return jsonArray.getJsonObject(0);
+        return jsonObjectList.get(0);
     }
 }

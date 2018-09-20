@@ -181,28 +181,26 @@ public class StringUtils {
         }
     }
 
-    public static String[] getIds(JsonArray jsonArray) {
+    public static String[] getIds(List<JsonObject> jsonObjectList) {
         List<String> _ids = new ArrayList<>();
-        for (Object object : jsonArray) {
+        for (Object object : jsonObjectList) {
             JsonObject jsonObject = (JsonObject) object;
             _ids.add(jsonObject.getString("_id"));
         }
         return _ids.toArray(new String[_ids.size()]);
     }
 
-    public static List<String> getIdsList(JsonArray jsonArray) {
+    public static List<String> getIdsList(List<JsonObject> jsonObjectList) {
         List<String> _ids = new ArrayList<>();
-        for (Object object : jsonArray) {
-            JsonObject jsonObject = (JsonObject) object;
+        for (JsonObject jsonObject : jsonObjectList) {
             _ids.add(jsonObject.getString("_id"));
         }
         return _ids;
     }
 
-    public static JsonArray getIdsJsonArray(JsonArray jsonArray) {
+    public static JsonArray getIdsJsonArray(List<JsonObject> jsonObjectList) {
         JsonArray _ids = new JsonArray();
-        for (Object object : jsonArray) {
-            JsonObject jsonObject = (JsonObject) object;
+        for (JsonObject jsonObject : jsonObjectList) {
             _ids.add(jsonObject.getString("_id"));
         }
         return _ids;

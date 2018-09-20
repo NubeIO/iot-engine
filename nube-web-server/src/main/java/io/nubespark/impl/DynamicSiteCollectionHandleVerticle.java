@@ -4,22 +4,24 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
 import io.nubespark.controller.HttpException;
 import io.nubespark.utils.CustomMessage;
+import io.nubespark.utils.MongoUtils;
 import io.nubespark.utils.StringUtils;
-import io.nubespark.utils.URL;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.ext.mongo.MongoClient;
+
+import java.util.List;
 
 import static io.nubespark.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
 import static io.nubespark.utils.CustomMessageResponseHelper.*;
 
 public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     private Logger logger = LoggerFactory.getLogger(DynamicSiteCollectionHandleVerticle.class);
+    private MongoClient mongoClient;
 
     @Override
     protected Logger getLogger() {
@@ -29,6 +31,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     @Override
     public void start() {
         super.start();
+        mongoClient = MongoClient.createNonShared(vertx, config().getJsonObject("mongo").getJsonObject("config"));
         EventBus eventBus = getVertx().eventBus();
 
         // Receive message
@@ -53,11 +56,11 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         String collection = customMessage.getHeader().getString("collection");
         String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
         if (StringUtils.isNotNull(siteId)) {
-            dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId))
-                .subscribe(buffer -> {
-                    CustomMessage<JsonArray> replyMessage = new CustomMessage<>(
+            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId))
+                .subscribe(response -> {
+                    CustomMessage<List<JsonObject>> replyMessage = new CustomMessage<>(
                         null,
-                        buffer.toJsonArray(),
+                        response,
                         HttpResponseStatus.OK.code());
                     message.reply(replyMessage);
                 }, throwable -> handleException(message, throwable));
@@ -103,11 +106,11 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         String collection = customMessage.getHeader().getString("collection");
         String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
         if (StringUtils.isNotNull(siteId)) {
-            dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
-                .subscribe(buffer -> {
+            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
+                .subscribe(response -> {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
-                        this.pickOneOrNullJsonObject(buffer.toJsonArray()),
+                        this.pickOneOrNullJsonObject(response),
                         HttpResponseStatus.OK.code());
                     message.reply(replyMessage);
                 }, throwable -> handleException(message, throwable));
@@ -124,17 +127,17 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         if (StringUtils.isNull(siteId)) {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
-            dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
-                .map(buffer -> {
+            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
+                .map(response -> {
                     JsonObject body = (JsonObject) customMessage.getBody();
-                    if (buffer.toJsonArray().size() > 0) {
+                    if (response.size() > 0) {
                         throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
                     }
                     body.put("site_id", siteId);
                     body.put("id", id);
                     return body;
                 })
-                .flatMap(body -> dispatchRequests(HttpMethod.POST, URL.mongo_base_post_api + collection, body))
+                .flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body))
                 .subscribe(buffer -> {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
@@ -162,18 +165,17 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         if (StringUtils.isNull(siteId)) {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
-            dispatchRequests(HttpMethod.POST, URL.mongo_base_get_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
-                .map(buffer -> {
-                    JsonArray jsonArray = buffer.toJsonArray();
+            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
+                .map(jsonArray -> {
                     JsonObject body = (JsonObject) customMessage.getBody();
                     if (jsonArray.size() > 0) {
-                        body.put("_id", this.pickOneOrNullJsonObject(buffer.toJsonArray()).getString("_id"));
+                        body.put("_id", this.pickOneOrNullJsonObject(jsonArray).getString("_id"));
                     }
                     body.put("site_id", siteId);
                     body.put("id", id);
                     return body;
                 })
-                .flatMap(body -> dispatchRequests(HttpMethod.PUT, URL.mongo_base_put_api + collection, body))
+                .flatMap(body -> mongoClient.rxSave(collection, body))
                 .subscribe(buffer -> {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
@@ -198,16 +200,12 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         String collection = customMessage.getHeader().getString("collection");
         String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
         if (StringUtils.isNotNull(siteId)) {
-            dispatchRequests(HttpMethod.POST, URL.mongo_base_delete_api + collection, new JsonObject().put("site_id", siteId).put("id", id))
+            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
                 .subscribe(buffer -> {
-                    int statusCode = HttpResponseStatus.NO_CONTENT.code();
-                    if (StringUtils.isNotNull(buffer.toString())) {
-                        statusCode = buffer.getDelegate().toJsonObject().getInteger("statusCode");
-                    }
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
                         new JsonObject(),
-                        statusCode);
+                        HttpResponseStatus.NO_CONTENT.code());
                     message.reply(replyMessage);
                 }, throwable -> handleException(message, throwable));
         } else {
@@ -215,9 +213,9 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private JsonObject pickOneOrNullJsonObject(JsonArray jsonArray) {
-        if (jsonArray.size() > 0) {
-            return jsonArray.getJsonObject(0);
+    private JsonObject pickOneOrNullJsonObject(List<JsonObject> jsonObjectList) {
+        if (jsonObjectList.size() > 0) {
+            return jsonObjectList.get(0);
         } else {
             return new JsonObject();
         }
