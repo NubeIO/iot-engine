@@ -1,10 +1,14 @@
 {
-  "host": "localhost",
-  "port": 5432,
-  "maxPoolSize": 10,
-  "username": "root",
-  "password": "root",
-  "database": "nube",
-  "charset": "UTF-8",
-  "queryTimeout": 10000
+  "http.port": 8090,
+  "api.name": "sql-pg",
+  "pgConfig": {
+    "host": "localhost",
+    "port": 5432,
+    "maxPoolSize": 10,
+    "username": "root",
+    "password": "root",
+    "database": "nube",
+    "charset": "UTF-8",
+    "queryTimeout": 10000
+  }
 }

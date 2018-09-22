@@ -1,7 +1,8 @@
-package io.nubespark.controller;
+package io.nubespark.hive.controller;
 
 import io.nubespark.hive.HiveService;
-import io.nubespark.postgresql.PostgreSQLService;
+import io.nubespark.utils.ErrorCodeException;
+import io.nubespark.utils.ErrorCodes;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -19,11 +20,9 @@ import java.util.Collections;
 public class RulesController {
 
     private final io.nubespark.hive.reactivex.HiveService hiveService;
-    private final io.nubespark.postgresql.reactivex.PostgreSQLService postgreSQLService;
 
     public RulesController(Vertx vertx) {
         hiveService = HiveService.createProxy(vertx, HiveService.SERVICE_ADDRESS);
-        postgreSQLService = PostgreSQLService.createProxy(vertx, PostgreSQLService.SERVICE_ADDRESS);
     }
 
     public Single<JsonObject> getOne(String id) {
@@ -60,32 +59,6 @@ public class RulesController {
                     .map(message -> {
                         JsonObject replyJson = new JsonObject()
                             .put("action", "FiloDB Data")
-                            .put("query", query);
-                        if (message != null) {
-                            replyJson.put("resultSet", message);
-                        }
-                        return replyJson;
-                    })
-            );
-    }
-
-    public Single<JsonObject> getPostgreSQLData(String query) {
-        return Single.just(query)
-            .map(queryString -> {
-                CCJSqlParserManager ccjSqlParserManager = new CCJSqlParserManager();
-                final Statement statement = ccjSqlParserManager.parse(new StringReader(query));
-                // Only handle select statements
-                if (!(statement instanceof Select)) {
-                    throw new ErrorCodeException(ErrorCodes.BAD_ACTION);
-                } else {
-                    return statement;
-                }
-            })
-            .flatMap(ignored ->
-                postgreSQLService.rxExecuteQuery(query)
-                    .map(message -> {
-                        JsonObject replyJson = new JsonObject()
-                            .put("action", "PostgreSQL Data")
                             .put("query", query);
                         if (message != null) {
                             replyJson.put("resultSet", message);

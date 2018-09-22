@@ -1,9 +1,0 @@
-{
-  "main": "io.nubespark.SqlEngineRestVerticle",
-  "options": {
-    "config" : {
-      "http.port": 8084,
-      "api.name":"sql"
-    }
-  }
-}

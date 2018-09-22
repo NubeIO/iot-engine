@@ -281,10 +281,3 @@ Response:
     "status": "PUBLISHED"
 }
 ```
-
-### REST MicroServices starting default ports
-- nube-vertx-mongo: 8083
-- nube-sql-engine-reset: 8084
-- nube-web-server: 8085
-- nube-app-installer: 8086
-- nube-vertx-zeppelin: 8087

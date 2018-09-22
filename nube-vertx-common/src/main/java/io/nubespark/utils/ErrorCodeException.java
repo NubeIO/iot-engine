@@ -1,4 +1,4 @@
-package io.nubespark.controller;
+package io.nubespark.utils;
 
 public class ErrorCodeException extends RuntimeException {
     private ErrorCodes errorCodes;

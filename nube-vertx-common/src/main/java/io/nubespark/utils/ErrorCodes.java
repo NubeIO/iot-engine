@@ -1,4 +1,4 @@
-package io.nubespark.controller;
+package io.nubespark.utils;
 
 public enum ErrorCodes {
   NO_QUERY_SPECIFIED,
