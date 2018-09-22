@@ -1,7 +1,6 @@
 package io.nubespark.utils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.nubespark.controller.HttpException;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 

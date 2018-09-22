@@ -2,8 +2,8 @@ package io.nubespark.impl;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
-import io.nubespark.controller.HttpException;
 import io.nubespark.utils.CustomMessage;
+import io.nubespark.utils.HttpException;
 import io.nubespark.utils.MongoUtils;
 import io.nubespark.utils.StringUtils;
 import io.nubespark.vertx.common.RxRestAPIVerticle;

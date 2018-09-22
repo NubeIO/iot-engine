@@ -1,4 +1,4 @@
-package io.nubespark.controller;
+package io.nubespark.utils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 

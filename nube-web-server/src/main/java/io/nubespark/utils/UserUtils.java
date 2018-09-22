@@ -2,7 +2,6 @@ package io.nubespark.utils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
-import io.nubespark.controller.HttpException;
 import io.nubespark.impl.models.KeycloakUserRepresentation;
 import io.reactivex.Single;
 import io.vertx.core.http.HttpMethod;

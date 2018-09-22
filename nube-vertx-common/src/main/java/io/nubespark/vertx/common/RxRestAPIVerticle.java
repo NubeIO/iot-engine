@@ -1,7 +1,7 @@
 package io.nubespark.vertx.common;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.nubespark.controller.HttpException;
+import io.nubespark.utils.HttpException;
 import io.reactivex.Single;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;

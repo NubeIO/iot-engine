@@ -1,7 +1,6 @@
 package io.nubespark.utils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.nubespark.controller.HttpException;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.mongo.MongoClient;

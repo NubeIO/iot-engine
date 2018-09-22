@@ -2,7 +2,6 @@ package io.nubespark.impl;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
-import io.nubespark.controller.HttpException;
 import io.nubespark.impl.models.*;
 import io.nubespark.utils.*;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
