@@ -1,0 +1,63 @@
+package io.nubespark.postgresql;
+
+import io.nubespark.utils.Runner;
+import io.nubespark.vertx.common.RxMicroServiceVerticle;
+import io.vertx.core.Future;
+import io.vertx.core.json.Json;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.serviceproxy.ServiceBinder;
+
+import java.net.URL;
+import java.net.URLClassLoader;
+
+import static io.nubespark.postgresql.PostgreSQLService.SERVICE_ADDRESS;
+import static io.nubespark.postgresql.PostgreSQLService.SERVICE_NAME;
+
+/**
+ * Created by topsykretts on 4/26/18.
+ */
+@SuppressWarnings("ResultOfMethodCallIgnored")
+public class PostgreSQLVerticle extends RxMicroServiceVerticle {
+
+    private Logger logger = LoggerFactory.getLogger(PostgreSQLVerticle.class);
+
+    // Convenience method so you can run it in your IDE
+    public static void main(String[] args) {
+        String JAVA_DIR = "nube-vertx-postgresql/src/main/java/";
+        Runner.runExample(JAVA_DIR, PostgreSQLVerticle.class);
+    }
+
+    @Override
+    public void start(Future<Void> startFuture) {
+        super.start();
+        logServerDetails();
+
+        PostgreSQLService.create(vertx, config())
+            .doOnSuccess(pgService -> {
+                ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
+                binder.setAddress(SERVICE_ADDRESS).register(PostgreSQLService.class, pgService);
+                logger.info("Service bound to " + binder);
+            })
+            .flatMap(ignored -> publishMessageSource(SERVICE_NAME, SERVICE_ADDRESS))
+            .subscribe(record -> startFuture.complete(), startFuture::fail);
+    }
+
+    private void logServerDetails() {
+        logger.info("Config on PostgreSQL Engine app");
+        logger.info(Json.encodePrettily(config()));
+
+        logger.info("Classpath of PostgreSQL Engine app = " + System.getProperty("java.class.path"));
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        URL[] urls = ((URLClassLoader) cl).getURLs();
+        for (URL url : urls) {
+            logger.info(url.getFile());
+        }
+        logger.info("Current thread loader = " + Thread.currentThread().getContextClassLoader());
+        logger.info(PostgreSQLVerticle.class.getClassLoader());
+    }
+
+    protected Logger getLogger() {
+        return logger;
+    }
+}

@@ -1,4 +1,4 @@
-package io.nubespark.jdbc;
+package io.nubespark.hive;
 
 import io.nubespark.utils.Runner;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
@@ -11,21 +11,21 @@ import io.vertx.serviceproxy.ServiceBinder;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import static io.nubespark.jdbc.JDBCService.SERVICE_ADDRESS;
-import static io.nubespark.jdbc.JDBCService.SERVICE_NAME;
+import static io.nubespark.hive.HiveService.SERVICE_ADDRESS;
+import static io.nubespark.hive.HiveService.SERVICE_NAME;
 
 /**
  * Created by topsykretts on 4/26/18.
  */
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class JdbcVerticle extends RxMicroServiceVerticle {
+public class HiveVerticle extends RxMicroServiceVerticle {
 
-    private Logger logger = LoggerFactory.getLogger(JdbcVerticle.class);
+    private Logger logger = LoggerFactory.getLogger(HiveVerticle.class);
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
-        String JAVA_DIR = "nube-jdbc-engine/src/main/java/";
-        Runner.runExample(JAVA_DIR, JdbcVerticle.class);
+        String JAVA_DIR = "nube-vertx-hive/src/main/java/";
+        Runner.runExample(JAVA_DIR, HiveVerticle.class);
     }
 
     @Override
@@ -33,10 +33,10 @@ public class JdbcVerticle extends RxMicroServiceVerticle {
         super.start();
         logServerDetails();
 
-        JDBCService.create(vertx, config())
+        HiveService.create(vertx, config())
                 .doOnSuccess(jdbcService -> {
                     ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
-                    binder.setAddress(SERVICE_ADDRESS).register(JDBCService.class, jdbcService);
+                    binder.setAddress(SERVICE_ADDRESS).register(HiveService.class, jdbcService);
                     logger.info("Service bound to " + binder);
                 })
                 .flatMap(ignored -> publishMessageSource(SERVICE_NAME, SERVICE_ADDRESS))
@@ -44,17 +44,17 @@ public class JdbcVerticle extends RxMicroServiceVerticle {
     }
 
     private void logServerDetails() {
-        logger.info("Config on JDBC Engine app");
+        logger.info("Config on Hive Engine app");
         logger.info(Json.encodePrettily(config()));
 
-        logger.info("Classpath of JDBC Engine app = " + System.getProperty("java.class.path"));
+        logger.info("Classpath of Hive Engine app = " + System.getProperty("java.class.path"));
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         URL[] urls = ((URLClassLoader) cl).getURLs();
         for (URL url : urls) {
             logger.info(url.getFile());
         }
         logger.info("Current thread loader = " + Thread.currentThread().getContextClassLoader());
-        logger.info(JdbcVerticle.class.getClassLoader());
+        logger.info(HiveVerticle.class.getClassLoader());
     }
 
     protected Logger getLogger() {

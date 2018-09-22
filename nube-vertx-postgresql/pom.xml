@@ -9,9 +9,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>nube-jdbc-engine</artifactId>
+    <artifactId>nube-vertx-postgresql</artifactId>
+
     <properties>
-        <main.verticle>io.nubespark.jdbc.JdbcVerticle</main.verticle>
+        <nube.version>1.0-SNAPSHOT</nube.version>
     </properties>
 
     <dependencies>
@@ -20,18 +21,12 @@
             <artifactId>nube-vertx-common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <!--jdbc-->
+
         <dependency>
             <groupId>io.vertx</groupId>
-            <artifactId>vertx-jdbc-client</artifactId>
+            <artifactId>vertx-mysql-postgresql-client</artifactId>
+            <version>3.5.3</version>
         </dependency>
-
-        <dependency>
-            <groupId>io.nubespark</groupId>
-            <artifactId>nube-vertx-hive</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -44,11 +39,10 @@
                 <artifactId>maven-shade-plugin</artifactId>
             </plugin>
             <!--<plugin>-->
-                <!--&lt;!&ndash; copy the cluster configuration &ndash;&gt;-->
-                <!--<artifactId>maven-dependency-plugin</artifactId>-->
+            <!--&lt;!&ndash; copy the cluster configuration &ndash;&gt;-->
+            <!--<artifactId>maven-dependency-plugin</artifactId>-->
             <!--</plugin>-->
         </plugins>
     </build>
-
 
 </project>

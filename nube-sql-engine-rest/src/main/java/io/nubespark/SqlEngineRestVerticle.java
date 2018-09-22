@@ -65,7 +65,8 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
 
         router.route("/*").handler(BodyHandler.create());
         router.get("/tag/:id").handler(this::tagGetHandler);
-        router.post("/engine").handler(this::enginePostHandler);
+        router.post("/engine-hive").handler(this::engineHivePostHandler);
+        router.post("/engine-pg").handler(this::enginePostgreSQLPostHandler);
 
         // This is last handler that gives not found message
         router.route().last().handler(this::handlePageNotFound);
@@ -94,7 +95,7 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
             ));
     }
 
-    private void enginePostHandler(RoutingContext routingContext) {
+    private void engineHivePostHandler(RoutingContext routingContext) {
         // Check if we have a query in body
         JsonObject body = routingContext.getBodyAsJson();
         String query = null;
@@ -106,6 +107,26 @@ public class SqlEngineRestVerticle extends RxMicroServiceVerticle {
             handleError(new ErrorCodeException(NO_QUERY_SPECIFIED), routingContext);
         } else {
             controller.getFiloData(query).subscribe(
+                replyJson -> routingContext.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(replyJson)),
+                throwable -> handleError(throwable, routingContext));
+        }
+
+    }
+
+    private void enginePostgreSQLPostHandler(RoutingContext routingContext) {
+        // Check if we have a query in body
+        JsonObject body = routingContext.getBodyAsJson();
+        String query = null;
+        if (body != null) {
+            query = body.getString("query", null);
+        }
+        if (query == null) {
+            // Return query not specified error
+            handleError(new ErrorCodeException(NO_QUERY_SPECIFIED), routingContext);
+        } else {
+            controller.getPostgreSQLData(query).subscribe(
                 replyJson -> routingContext.response()
                     .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                     .end(Json.encodePrettily(replyJson)),

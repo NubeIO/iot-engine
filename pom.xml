@@ -17,7 +17,6 @@
     <modules>
         <module>nube-vertx-common</module>
         <module>nube-sql-engine-rest</module>
-        <module>nube-jdbc-engine</module>
         <module>nube-app-installer</module>
         <module>nube-app-store-rest</module>
         <module>nube-bios</module>
@@ -27,6 +26,7 @@
         <module>nube-vertx-hive</module>
         <module>nube-vertx-mongodb</module>
         <module>nube-vertx-zeppelin</module>
+        <module>nube-vertx-postgresql</module>
     </modules>
 
     <parent>

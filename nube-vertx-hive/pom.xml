@@ -16,6 +16,17 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>io.nubespark</groupId>
+            <artifactId>nube-vertx-common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <!--jdbc-->
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-jdbc-client</artifactId>
+        </dependency>
+
         <!--hive-->
         <dependency>
             <groupId>org.spark-project.hive</groupId>
@@ -29,5 +40,21 @@
             <version>1.2.1</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <!-- plugin to create a `fat-jar` -->
+                <artifactId>maven-shade-plugin</artifactId>
+            </plugin>
+            <!--<plugin>-->
+            <!--&lt;!&ndash; copy the cluster configuration &ndash;&gt;-->
+            <!--<artifactId>maven-dependency-plugin</artifactId>-->
+            <!--</plugin>-->
+        </plugins>
+    </build>
 
 </project>
