@@ -181,7 +181,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private SingleSource<? extends Integer> createMongoUser(JsonObject user, JsonObject body, String accessToken, String authServerUrl, String realmName, HttpClient client, JsonObject keycloakUser, JsonObject query) {
-        return mongoClient.rxFind(USER, query)
+        return mongoClient.rxFind(COMPANY, query)
             .flatMap(childCompanies -> {
                 if (childCompanies.size() > 0) {
                     // 5.1 Proceed for creating MongoDB user
