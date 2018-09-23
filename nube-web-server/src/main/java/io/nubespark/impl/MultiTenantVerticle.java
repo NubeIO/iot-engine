@@ -311,14 +311,12 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     if (StringUtils.isNotNull(associatedCompany.toString())) {
                         if (associatedCompany.getString("role").equals(Role.MANAGER.toString())) {
                             if (role == Role.SUPER_ADMIN) {
-                                return MongoUtils.postDocument(mongoClient, SITE,
-                                    new Site(body.put("associated_company_id", associatedCompany.getString("_id")).put("role", Role.USER.toString())).toJsonObject());
+                                return mongoClient.rxSave(SITE, new Site(body.put("associated_company_id", associatedCompany.getString("_id")).put("role", Role.USER.toString())).toJsonObject());
                             } else {
                                 return byAdminCompanyGetAdminWithManagerSelectionList(companyId)
                                     .flatMap(companies -> {
                                         if (companies.contains(associatedCompany.getString("_id"))) {
-                                            return MongoUtils.postDocument(mongoClient, SITE,
-                                                new Site(body.put("associated_company_id", associatedCompany.getString("_id")).put("role", Role.USER.toString())).toJsonObject());
+                                            return mongoClient.rxSave(SITE, new Site(body.put("associated_company_id", associatedCompany.getString("_id")).put("role", Role.USER.toString())).toJsonObject());
                                         } else {
                                             throw forbidden();
                                         }
@@ -335,7 +333,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.CREATED.code())),
                     throwable -> handleHttpException(message, throwable));
         } else if (role == Role.MANAGER) {
-            MongoUtils.postDocument(mongoClient, SITE,
+            mongoClient.rxSave(SITE,
                 new Site(body.put("associated_company_id", companyId).put("role", Role.USER.toString())).toJsonObject())
                 .subscribe(
                     ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.CREATED.code())),
@@ -392,7 +390,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                             throw badRequest("Create <Site> at first.");
                         }
                     }))
-                .flatMap(userGroup -> MongoUtils.postDocument(mongoClient, USER_GROUP, userGroup.toJsonObject()))
+                .flatMap(userGroup -> mongoClient.rxSave(USER_GROUP, userGroup.toJsonObject()))
                 .subscribe(
                     ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.CREATED.code())),
                     throwable -> handleHttpException(message, throwable));
