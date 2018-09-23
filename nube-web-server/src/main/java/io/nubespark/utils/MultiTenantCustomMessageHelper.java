@@ -6,7 +6,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class CustomMessageHelper {
+public class MultiTenantCustomMessageHelper {
     public static String buildAbsoluteUri(Message<Object> message, String location) {
         if (StringUtils.isNull(location)) {
             return "";
