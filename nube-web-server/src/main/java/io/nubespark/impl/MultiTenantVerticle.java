@@ -272,14 +272,14 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                             throw new HttpException(HttpResponseStatus.BAD_REQUEST.code(), "Failed to get the associated_company");
                         } else {
                             Company company = new Company(body.put("role", UserUtils.getRole(Role.valueOf(companyResponse.getString("role")))));
-                            return MongoUtils.postDocument(mongoClient, COMPANY, company.toJsonObject());
+                            return mongoClient.rxSave(COMPANY, company.toJsonObject());
                         }
                     }).subscribe(ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.OK.code())), throwable -> handleHttpException(message, throwable));
             } else {
                 Company company = new Company(CustomMessageHelper.getBodyAsJson(message)
                     .put("associated_company_id", CustomMessageHelper.getAssociatedCompanyId(user))
                     .put("role", Role.ADMIN.toString()));
-                MongoUtils.postDocument(mongoClient, COMPANY, company.toJsonObject())
+                mongoClient.rxSave(COMPANY, company.toJsonObject())
                     .subscribe(
                         ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.OK.code())),
                         throwable -> handleHttpException(message, throwable));
@@ -289,7 +289,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 .put("associated_company_id", CustomMessageHelper.getAssociatedCompanyId(user))
                 .put("role", Role.MANAGER.toString()));
 
-            MongoUtils.postDocument(mongoClient, COMPANY, company.toJsonObject())
+            mongoClient.rxSave(COMPANY, company.toJsonObject())
                 .subscribe(
                     ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.OK.code())),
                     throwable -> handleHttpException(message, throwable));
