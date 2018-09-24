@@ -2,52 +2,43 @@ package io.nubespark;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.nubespark.utils.CustomMessage;
+import io.nubespark.utils.CustomMessageCodec;
 import io.nubespark.utils.Runner;
 import io.nubespark.utils.response.ResponseUtils;
-import io.nubespark.vertx.common.RestAPIVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.Message;
-import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerOptions;
+import io.nubespark.vertx.common.RxRestAPIVerticle;
+import io.reactivex.Single;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.api.contract.RouterFactoryOptions;
-import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
-import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.reactivex.core.http.HttpServer;
+import io.vertx.reactivex.core.http.HttpServerResponse;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import io.vertx.servicediscovery.Record;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.nubespark.constants.Port.APP_STORE_PORT;
+import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
+import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 
 /**
  * Created by topsykretts on 4/28/18.
  */
-public class AppStoreRestVerticle extends RestAPIVerticle {
+public class AppStoreRestVerticle extends RxRestAPIVerticle {
+    // sending address
+    private static String ADDRESS_APP_INSTALLER = "io.nubespark.app.installer";
 
-    private Map<String, JsonObject> deploymentMap = new HashMap<>();
-    private Map<String, JsonObject> failedDeployments = new HashMap<>();
-
-    //receiving address
-    private static String ADDRESS_INSTALLER_REPORT = "io.nubespark.app.installer.report";
-    private static final String ADDRESS_BIOS_REPORT = "io.nubespark.bios.report";
-
-    //sending address
-    private static String ADDRESS_EDGE_INSTALLER = "io.nubespark.app.installer";
-    private static final String ADDRESS_BIOS = "io.nubespark.bios";
-
-    Logger logger = LoggerFactory.getLogger(AppStoreRestVerticle.class);
+    private Logger logger = LoggerFactory.getLogger(AppStoreRestVerticle.class);
+    private EventBus eventBus;
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
@@ -56,121 +47,46 @@ public class AppStoreRestVerticle extends RestAPIVerticle {
     }
 
     @Override
-    public void start() {
+    public void start(io.vertx.core.Future<Void> future) {
         super.start();
-        System.out.println("Config on app store REST");
-        System.out.println(Json.encodePrettily(config()));
-        startWebApp(http -> {
-            if (http.succeeded()) {
-                System.out.println("Server started");
-            } else {
-                System.out.println("Cannot start the server: " + http.cause());
-            }
-        });
 
-        vertx.eventBus().consumer(ADDRESS_INSTALLER_REPORT, this::handleReports);
+        eventBus = getVertx().eventBus();
+        // Register codec for custom message
+        eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
 
-        vertx.eventBus().consumer(ADDRESS_BIOS_REPORT, this::handleReports);
+        logger.info("Config on app store REST");
+        logger.info(Json.encodePrettily(config()));
 
-        publishHttpEndpoint("io.nubespark.app.store.rest", config().getString("http.host", "0.0.0.0"),
-            config().getInteger("http.port", APP_STORE_PORT), ar -> {
-                if (ar.failed()) {
-                    ar.cause().printStackTrace();
-                } else {
-                    System.out.println("Nube App Store (Rest endpoint) service published : " + ar.succeeded());
-                }
-            });
-
-        publishMessageSource(ADDRESS_BIOS_REPORT, ADDRESS_BIOS_REPORT, ar -> {
-            if (ar.failed()) {
-                ar.cause().printStackTrace();
-            } else {
-                System.out.println("Nube Bios Report (Message source) published : " + ar.succeeded());
-            }
-        });
-
-        publishMessageSource(ADDRESS_INSTALLER_REPORT, ADDRESS_INSTALLER_REPORT, ar -> {
-            if (ar.failed()) {
-                ar.cause().printStackTrace();
-            } else {
-                System.out.println("Nube App Installer Report (Message source) published : " + ar.succeeded());
-            }
-        });
+        startWebApp()
+            .flatMap(httpServer -> publishHttp())
+            .subscribe(ignored -> future.complete(), future::fail);
     }
 
-    private void handleReports(Message<Object> message) {
-        JsonObject msg = new JsonObject(message.body().toString());
-        String status = message.headers().get("status");
-        String serviceName = msg.getString("serviceName");
-        if ("INSTALLED".equals(status) || "UPDATED".equals(status)) {
-            logger.info("Received install success message ", Json.encodePrettily(msg));
-            deploymentMap.put(serviceName, msg);
-        } else if ("UNINSTALLED".equals(status)) {
-            logger.info("Received uninstall success message ", serviceName);
-            deploymentMap.remove(serviceName);
-        } else {
-            failedDeployments.put(serviceName, msg);
-        }
+    private Single<Record> publishHttp() {
+        return publishHttpEndpoint("io.nubespark.sql-hive.engine", "0.0.0.0", config().getInteger("http.port", APP_STORE_PORT))
+            .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
-    private void startWebApp(Handler<AsyncResult<HttpServer>> next) {
-        System.out.println("Starting web app from Open API 3 Specification..");
-        OpenAPI3RouterFactory.create(this.vertx, "/webroot/apidoc/nube-app-store.json", openAPI3RouterFactoryAsyncResult -> {
-            System.out.println("Handler of openAPI3RouterFactory called...");
-            if (openAPI3RouterFactoryAsyncResult.succeeded()) {
-                System.out.println("Success of OpenAPI3RouterFactory");
-                OpenAPI3RouterFactory routerFactory = openAPI3RouterFactoryAsyncResult.result();
+    private Single<HttpServer> startWebApp() {
+        // Create a router object.
+        Router router = Router.router(vertx);
 
-                // Enable automatic response when ValidationException is thrown
-                RouterFactoryOptions options =
-                    new RouterFactoryOptions()
-                        .setMountNotImplementedHandler(true)
-                        .setMountValidationFailureHandler(true);
+        // creating body handler
+        router.route("/").handler(this::indexHandler);
+        router.route().handler(BodyHandler.create());
+        router.post("/install").handler(ctx -> install(ctx, "install"));
+        router.post("/uninstall").handler(ctx -> install(ctx, "uninstall"));
+        router.get("/nodes").handler(this::getNodes);
+        // This is last handler that gives not found message
+        router.route().last().handler(this::handlePageNotFound);
 
-                routerFactory.setOptions(options);
-
-
-                // Add routes handlers
-                routerFactory.addHandlerByOperationId("installApp", routingContext -> install(routingContext, "install"));
-                routerFactory.addHandlerByOperationId("uninstallApp", routingContext -> install(routingContext, "uninstall"));
-                routerFactory.addHandlerByOperationId("upgradeOs", this::installOS);
-                routerFactory.addHandlerByOperationId("getNodes", this::getNodes);
-
-                // Generate the router
-                Router router = routerFactory.getRouter();
-                // router.route().handler(BodyHandler.create());
-
-                // For testing server we make CORS available
-                enableCorsSupport(router);
-
-                router.route("/*").handler(StaticHandler.create());
-
-                router.route().last().handler(routingContext -> {
-                    if (routingContext.response().getStatusCode() == 404) {
-                        System.out.println("Resource Not Found");
-                    }
-                    routingContext.response()
-                        .setStatusCode(404)
-                        .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(new JsonObject()
-                            .put("message", "Resource Not Found")
-                        ));
-                });
-
-                HttpServer server = vertx.createHttpServer(new HttpServerOptions()
-                    .setPort(config().getInteger("http.port", 8086))
-                );
-                server.requestHandler(router::accept).listen();
-                next.handle(Future.succeededFuture(server));
-            } else {
-                System.out.println("Failure in OpenAPI3RouterFactory");
-                next.handle(Future.failedFuture(openAPI3RouterFactoryAsyncResult.cause()));
-            }
-        });
+        // Create the HTTP server and pass the "accept" method to the request handler.
+        return createHttpServer(router, config().getString("http.host", "0.0.0.0"), config().getInteger("http.port", APP_STORE_PORT))
+            .doOnSuccess(httpServer -> logger.info("Web Server started at " + httpServer.actualPort()))
+            .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
 
-    private void getNodes(RoutingContext routingContext) {
-
+    private void getNodes(RoutingContext ctx) {
         List<JsonObject> nodesInfo = new ArrayList<>();
         for (HazelcastInstance instance : Hazelcast.getAllHazelcastInstances()) {
             JsonObject info = new JsonObject();
@@ -183,39 +99,61 @@ public class AppStoreRestVerticle extends RestAPIVerticle {
             nodesInfo.add(info);
         }
 
-        routingContext.response()
+        ctx.response()
             .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
             .putHeader("Access-Control-Allow-Origin", "*")
             .end(Json.encodePrettily(new JsonArray(nodesInfo)));
-
     }
 
-    private void installOS(RoutingContext routingContext) {
-        JsonObject reqBody = routingContext.getBodyAsJson();
-        String version = reqBody.getString("version");
-        JsonObject options = reqBody.getJsonObject("options", new JsonObject());
-        vertx.eventBus().publish(ADDRESS_BIOS, new JsonObject().put("version", version).put("options", options));
-        logger.info(Json.encodePrettily(new JsonObject().put("version", version).put("options", options)));
-        routingContext.response()
-            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-            .putHeader("Access-Control-Allow-Origin", "*")
-            .end(Json.encodePrettily(new JsonObject()
-                .put("action", "update")
-                .put("body", reqBody)
-                .put("status", "PUBLISHED")));
+
+    private void install(RoutingContext ctx, String action) {
+        JsonObject body = ctx.getBodyAsJson();
+        JsonObject header = new JsonObject().put("action", action);
+        logger.info(Json.encodePrettily(body));
+        CustomMessage<JsonObject> message = new CustomMessage<>(header, body, 200);
+
+        eventBus.send(ADDRESS_APP_INSTALLER, message, reply -> {
+            if (reply.succeeded()) {
+                CustomMessage replyMessage = (CustomMessage) reply.result().body();
+                logger.info("Received reply: " + replyMessage.getBody());
+                ctx.response()
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .setStatusCode(replyMessage.getStatusCode())
+                    .end(replyMessage.getBody().toString());
+            } else {
+                ctx.response().setStatusCode(HttpResponseStatus.SERVICE_UNAVAILABLE.code()).end();
+                logger.info("No reply from cluster receiver");
+            }
+        });
     }
 
-    private void install(RoutingContext routingContext, String action) {
-        JsonObject reqBody = routingContext.getBodyAsJson();
-        System.out.println(Json.encodePrettily(reqBody));
-        vertx.eventBus().publish(ADDRESS_EDGE_INSTALLER, reqBody, new DeliveryOptions().addHeader("action", action));
+    private void handlePageNotFound(RoutingContext routingContext) {
+        String uri = routingContext.request().absoluteURI();
         routingContext.response()
             .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-            .putHeader("Access-Control-Allow-Origin", "*")
+            .setStatusCode(404)
             .end(Json.encodePrettily(new JsonObject()
-                .put("action", action)
-                .put("body", reqBody)
-                .put("status", "PUBLISHED")
+                .put("uri", uri)
+                .put("status", 404)
+                .put("message", "Resource Not Found")
             ));
+    }
+
+    // Returns verticle properties in json
+    private void indexHandler(RoutingContext routingContext) {
+        HttpServerResponse response = routingContext.response();
+
+        response.putHeader("content-type", "application/json; charset=utf-8")
+            .end(Json.encodePrettily(new JsonObject()
+                .put("name", "app-store-rest")
+                .put("version", "1.0")
+                .put("vert.x_version", "3.4.1")
+                .put("java_version", "8.0")
+            ));
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }

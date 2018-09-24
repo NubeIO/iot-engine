@@ -1,21 +1,21 @@
 package io.nubespark;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.nubespark.utils.HttpException;
 import io.nubespark.utils.Runner;
-import io.nubespark.vertx.common.MicroServiceVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.Message;
+import io.nubespark.utils.StringUtils;
+import io.nubespark.vertx.common.RxMicroServiceVerticle;
+import io.reactivex.Single;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.jdbc.JDBCClient;
-import io.vertx.ext.sql.SQLConnection;
 import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
+import io.vertx.reactivex.ext.jdbc.JDBCClient;
+import io.vertx.reactivex.ext.sql.SQLClient;
+import io.vertx.reactivex.ext.sql.SQLConnection;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,25 +24,20 @@ import java.util.List;
 /**
  * Created by topsykretts on 4/30/18.
  */
-public class OsDeploymentVerticle extends MicroServiceVerticle {
+public class OsDeploymentVerticle extends RxMicroServiceVerticle {
 
-    JDBCClient jdbc;
-    Logger logger = LoggerFactory.getLogger(OsDeploymentVerticle.class);
+    private Logger logger = LoggerFactory.getLogger(OsDeploymentVerticle.class);
 
     // Conventions for our OS
     private static final String groupId = "io.nubespark";
     private static final String artifactId = "nube-app-installer";
     private static final String service = "nube-app-installer";
 
-    private static final String ADDRESS_BIOS_REPORT = "io.nubespark.bios.report";
-    private static final String ADDRESS_BIOS = "io.nubespark.bios";
-
     // Database Queries ========================
     private static String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS app_installer (deploymentId varchar(255), version varchar(255), optionsJson varchar(2000))";
     private static String INSERT_APP_INSTALLER_QUERY = "INSERT INTO app_installer (deploymentId, version, optionsJson) VALUES (?, ?, ?)";
     private static String SELECT_APP_INSTALLER_QUERY = "SELECT * FROM app_installer";
     private static String DELETE_APP_INSTALLER_QUERY = "DELETE FROM app_installer where deploymentId = ?";
-    // =========================================
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
@@ -57,232 +52,117 @@ public class OsDeploymentVerticle extends MicroServiceVerticle {
         System.out.println("Current thread loader = " + Thread.currentThread().getContextClassLoader());
         System.out.println("Config on nube bios");
         System.out.println(Json.encodePrettily(config()));
-        initializeJDBCClient(
-                void1 -> initializeDB(
-                        void2 -> setupMavenRepos(
-                                void3 -> loadOsFromMaven(
-                                        void4 -> {
-                                            if (void4.succeeded()) {
-                                                logger.info("Finished OS startup..");
-                                            } else {
-                                                logger.error("Error on OS startup");
-                                                void4.cause().printStackTrace();
-                                            }
-                                        }
-                                )
-                        )
-                ));
-        vertx.eventBus().consumer(ADDRESS_BIOS, this::installer);
-        publishMessageSource(ADDRESS_BIOS, ADDRESS_BIOS, ar -> {
-            if (ar.failed()) {
-                ar.cause().printStackTrace();
-            } else {
-                System.out.println("Nube App Bios (Message source) published : " + ar.succeeded());
-            }
-        });
+
+        initializeJDBCClient()
+            .flatMap(jdbcClient -> getConnection(jdbcClient)
+                .map(conn -> conn.rxExecute(CREATE_TABLE))
+                .flatMap(ignored -> setupMavenRepos())
+                .flatMap(ignore -> loadOsFromMaven(jdbcClient)))
+            .subscribe(
+                ignore -> logger.info("Finished OS startup ..."),
+                throwable -> logger.error("Error on OS startup ... \n" + throwable.getCause().getMessage()));
     }
 
-    private void initializeJDBCClient(Handler<AsyncResult<Void>> next) {
+    private Single<JDBCClient> initializeJDBCClient() {
         logger.info("Initializing JDBC client for local sqlite db");
         JsonObject jdbcConfig = new JsonObject();
         jdbcConfig.put("url", "jdbc:sqlite:nube-bios.db");
         jdbcConfig.put("driver_class", "org.sqlite.JDBC");
-        jdbc = JDBCClient.createNonShared(vertx, jdbcConfig);
-        next.handle(Future.succeededFuture());
+        return Single.just(JDBCClient.createNonShared(vertx, jdbcConfig));
     }
 
-    private void setupMavenRepos(Handler<AsyncResult<Void>> next) {
+    private Single<SQLConnection> getConnection(SQLClient jdbcClient) {
+        return jdbcClient.rxGetConnection()
+            .flatMap(conn -> Single.just(conn)
+                .doOnError(throwable -> logger.error("Cannot get connection object."))
+                .doFinally(conn::close));
+    }
+
+    private Single<String> setupMavenRepos() {
         logger.info("Setting up maven local and remote repo");
         String local = System.getProperty("user.home") + "/.m2/repository";
-        List<String> remotes = config().getJsonArray("remotes", new JsonArray(Arrays.asList(
-                "http://192.168.1.68:8081/repository/maven-releases/",
-                "http://192.168.1.68:8081/repository/maven-snapshots/",
-                "http://192.168.1.68:8081/repository/maven-central/"
-        ))).getList();
+        List<String> remotes = config().getJsonArray("remotes",
+            new JsonArray()
+                .add("http://192.168.1.68:8081/repository/maven-releases/")
+                .add("http://192.168.1.68:8081/repository/maven-snapshots/")
+                .add("http://192.168.1.68:8081/repository/maven-central/"))
+            .getList();
 
-        vertx.registerVerticleFactory(new MavenVerticleFactory(
-                new ResolverOptions()
-                        .setLocalRepository(local)
-                        .setRemoteRepositories(remotes))
+        vertx.getDelegate().registerVerticleFactory(new MavenVerticleFactory(
+            new ResolverOptions()
+                .setLocalRepository(local)
+                .setRemoteRepositories(remotes))
         );
-        next.handle(Future.succeededFuture());
+        return Single.just("");
     }
 
-    private void initializeDB(Handler<AsyncResult<Void>> next) {
-        logger.info("Initializing SQLite db with table schema");
-        jdbc.getConnection(handler -> {
-            if (handler.failed()) {
-                handleFailure(logger, handler);
-            } else {
-                SQLConnection connection = handler.result();
-                connection.execute(CREATE_TABLE, createHandler -> {
-                    if (createHandler.failed()) {
-                        connection.close();
-                        handleFailure(logger, createHandler);
-                    } else {
-                        connection.close();
-                        next.handle(Future.succeededFuture());
-                    }
-                });
-            }
+    private Single<String> loadOsFromMaven(SQLClient jdbcClient) {
+        // For us OS is the NubeAppInstaller, where we can find core logic
+        logger.info("Loading Nube App Installer OS ...");
 
-        });
-    }
-
-    private void loadOsFromMaven(Handler<AsyncResult<Void>> next) {
-        logger.info("Loading Nube App Installer OS...");
-        jdbc.getConnection(handler -> {
-            if (handler.failed()) {
-                handleFailure(logger, handler);
-            } else {
-                SQLConnection connection = handler.result();
-                getInstalledOs(connection, installedOs -> {
-                            List<JsonObject> records = installedOs.result();
-                            boolean autoInstall = config().getBoolean("autoInstall", true);
-                            if (records.size() == 0 && autoInstall) {
-                                String version = "1.0-SNAPSHOT";
-                                JsonObject options = new JsonObject();
-                                handleInstall(version, options, success -> {
-                                    if (success.succeeded()) {
-                                        next.handle(Future.succeededFuture());
-                                    } else {
-                                        next.handle(Future.failedFuture(success.cause()));
-                                    }
-                                });
-
-                            } else {
-                                JsonObject record = records.get(0);
-                                String version = record.getString("version");
-                                String optionsJson = record.getString("optionsJson");
-                                String deploymentId = record.getString("deploymentId");
-                                JsonObject options = new JsonObject(optionsJson);
-                                handleInstall(version, options, success -> {
-                                    if (success.succeeded()) {
-                                        JsonArray params = new JsonArray(Collections.singletonList(deploymentId));
-                                        connection.updateWithParams(DELETE_APP_INSTALLER_QUERY, params, deleteHandler -> {
-                                            if (deleteHandler.failed()) {
-                                                handleFailure(logger, deleteHandler);
-                                            } else {
-                                                logger.info("Clearing earlier deploymentId ", deploymentId, " success.");
-                                                next.handle(Future.succeededFuture());
-                                            }
-                                        });
-                                    } else {
-                                        next.handle(Future.failedFuture(success.cause()));
-                                    }
-                                });
-                            }
-                        }
-                );
-            }
-        });
-    }
-
-    private void handleInstall(String version, JsonObject options, Handler<AsyncResult<Void>> next) {
-        String serviceName = getServiceName(version);
-        vertx.deployVerticle(serviceName, handler -> {
-            if (handler.succeeded()) {
-                logger.info("Successfully deployed ", serviceName);
-                String deploymentId = handler.result();
-                saveData(deploymentId, version, options); //persisting deployment info
-                JsonObject report = new JsonObject(); //reporting deployment back to store
-                report.put("serverId", "localhost-app-installer");
-                report.put("deploymentId", deploymentId);
-                report.put("serviceName", serviceName);
-                vertx.eventBus().publish(ADDRESS_BIOS_REPORT, report, new DeliveryOptions()
-                        .addHeader("status", "INSTALLED"));
-                next.handle(Future.succeededFuture());
-            } else {
-                logger.error("Failed to deploy verticle ", serviceName);
-                JsonObject report = new JsonObject(); //reporting failure
-                report.put("serverId", "localhost-app-installer");
-                report.put("cause", handler.cause().getMessage());
-                report.put("serviceName", serviceName);
-                vertx.eventBus().publish(ADDRESS_BIOS_REPORT, report, new DeliveryOptions()
-                        .addHeader("status", "FAILED"));
-                next.handle(Future.failedFuture(handler.cause()));
-            }
-        });
-    }
-
-    private void saveData(String deploymentID, String version, JsonObject optionsJson) {
-        JsonArray params = new JsonArray(Arrays.asList(deploymentID, version, Json.encode(optionsJson)));
-        jdbc.getConnection(handler -> {
-            if (handler.failed()) {
-                handleFailure(logger, handler);
-            }
-            SQLConnection connection = handler.result();
-            connection.updateWithParams(INSERT_APP_INSTALLER_QUERY, params, insertHandler -> {
-                if (insertHandler.failed()) {
-                    handleFailure(logger, insertHandler);
+        return getConnection(jdbcClient)
+            .flatMap(this::getInstalledOs)
+            .flatMap(records -> {
+                boolean autoInstall = config().getBoolean("autoInstall", true);
+                if (records.size() == 0 && autoInstall) {
+                    String version = "1.0-SNAPSHOT";
+                    JsonObject options = new JsonObject();
+                    return handleInstall(version, options, jdbcClient);
                 } else {
-                    logger.info("Persisting ", deploymentID, " for OS version ", version, "in database with config ", optionsJson);
+                    JsonObject record = records.get(0);
+                    String version = record.getString("version");
+                    String optionsJson = record.getString("optionsJson");
+                    String deploymentId = record.getString("deploymentId");
+                    JsonObject options = new JsonObject(optionsJson);
+                    return handleInstall(version, options, jdbcClient)
+                        .flatMap(ignored -> getConnection(jdbcClient))
+                        .flatMap(conn -> {
+                            JsonArray params = new JsonArray(Collections.singletonList(deploymentId));
+                            return conn.rxUpdateWithParams(DELETE_APP_INSTALLER_QUERY, params)
+                                .map(ignored -> "");
+                        });
                 }
             });
+    }
 
-        });
+    private Single<String> handleInstall(String version, JsonObject options, SQLClient jdbcClient) {
+        String serviceName = getServiceName(version);
+        return vertx.rxDeployVerticle(serviceName)
+            .flatMap(deploymentId -> {
+                if (StringUtils.isNotNull(deploymentId)) {
+                    logger.info("Successfully deployed the Nube App Installer.");
+                    return saveData(deploymentId, version, options, jdbcClient); //persisting deployment info
+                } else {
+                    logger.info("Failed to deploy the Nube App Installer.");
+                    throw new HttpException(HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), "");
+                }
+            });
+    }
+
+    private Single<String> saveData(String deploymentID, String version, JsonObject optionsJson, SQLClient jdbcClient) {
+        JsonArray params = new JsonArray(Arrays.asList(deploymentID, version, Json.encode(optionsJson)));
+        return getConnection(jdbcClient)
+            .flatMap(conn -> conn.rxUpdateWithParams(INSERT_APP_INSTALLER_QUERY, params)
+                .map(ignore -> {
+                    logger.info("Persisting ", deploymentID, " for OS version ", version, "in database with config ", optionsJson);
+                    return deploymentID;
+                }));
     }
 
     private String getServiceName(String version) {
         return "maven:" + groupId + ":" + artifactId + ":" + version + "::" + service;
     }
 
-    private void getInstalledOs(SQLConnection connection, Handler<AsyncResult<List<JsonObject>>> next) {
-        connection.query(SELECT_APP_INSTALLER_QUERY, selectHandler -> {
-            if (selectHandler.failed()) {
-                handleFailure(logger, selectHandler);
-            } else {
-                logger.info("Installed OS: ", Json.encodePrettily(selectHandler.result().getRows()));
-                next.handle(Future.succeededFuture(selectHandler.result().getRows()));
-            }
-        });
+    private Single<List<JsonObject>> getInstalledOs(SQLConnection conn) {
+        return conn.rxQuery(SELECT_APP_INSTALLER_QUERY)
+            .map(resultSet -> {
+                logger.info("Installed OS: ", Json.encodePrettily(resultSet.getRows()));
+                return resultSet.getRows();
+            });
     }
 
-    private void installer(Message<Object> message) {
-        String where = message.headers().get("where"); //where to deploy the verticle?
-        logger.info("Host Name = ", System.getProperty("host.name"));
-        if (where == null || where.equals("all") || where.equals(System.getProperty("host.name"))) {
-            String msg = message.body().toString();
-            JsonObject info = new JsonObject(msg);
-            logger.info("Message = ", Json.encodePrettily(info));
-            String version = info.getString("version");
-            JsonObject options = info.getJsonObject("options");
-            jdbc.getConnection(handler -> {
-                if (handler.failed()) {
-                    handleFailure(logger, handler);
-                } else {
-                    SQLConnection connection = handler.result();
-                    getInstalledOs(connection, installedOs -> {
-                        List<JsonObject> records = installedOs.result();
-                        if (records.size() == 0) {
-                            handleInstall(version, options, next -> {
-                                if (next.failed()) {
-                                    Future.failedFuture(next.cause());
-                                } else {
-                                    Future.succeededFuture();
-                                }
-                            });
-                        } else {
-                            JsonObject record = records.get(0);
-                            String deploymentId = record.getString("deploymentId");
-                            handleInstall(version, options, next -> {
-                                if (next.succeeded()) {
-                                    JsonArray params = new JsonArray(Collections.singletonList(deploymentId));
-                                    connection.updateWithParams(DELETE_APP_INSTALLER_QUERY, params, deleteHandler -> {
-                                        if (deleteHandler.failed()) {
-                                            handleFailure(logger, deleteHandler);
-                                        } else {
-                                            logger.info("Clearing earlier deploymentId ", deploymentId, " success.");
-                                            vertx.undeploy(deploymentId);
-                                            logger.info("Deployments = ", vertx.deploymentIDs().toString());
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        }
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }

@@ -5,10 +5,10 @@
       "http.port": 8088,
       "http.host": "0.0.0.0",
       "api.name": "ditto",
-      "ditto.http.port": 8080,
-      "ditto.http.host": "localhost",
-      "ditto.http.username": "ditto",
-      "ditto.http.password": "ditto"
+      "ditto.http.port": 443,
+      "ditto.http.host": "ditto.nube-io.com",
+      "ditto.http.username": "nubeio",
+      "ditto.http.password": "nub3i0"
     }
   }
 }

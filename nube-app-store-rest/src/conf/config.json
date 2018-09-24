@@ -1,3 +1,4 @@
 {
-  "http.port": 8086
+  "http.port": 8086,
+  "api.name": "app-store"
 }

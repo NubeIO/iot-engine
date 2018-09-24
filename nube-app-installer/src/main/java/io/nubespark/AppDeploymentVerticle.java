@@ -1,32 +1,34 @@
 package io.nubespark;
 
-import io.nubespark.vertx.common.MicroServiceVerticle;
-import io.vertx.core.AsyncResult;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.nubespark.utils.CustomMessage;
+import io.nubespark.utils.CustomMessageCodec;
+import io.nubespark.utils.CustomMessageResponseHelper;
+import io.nubespark.utils.HttpException;
+import io.nubespark.vertx.common.RxMicroServiceVerticle;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.jdbc.JDBCClient;
-import io.vertx.ext.sql.SQLConnection;
-import io.vertx.servicediscovery.types.MessageSource;
+import io.vertx.ext.sql.ResultSet;
+import io.vertx.reactivex.ext.jdbc.JDBCClient;
+import io.vertx.reactivex.ext.sql.SQLConnection;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 
 /**
  * Created by topsykretts on 4/28/18.
  */
-public class AppDeploymentVerticle extends MicroServiceVerticle {
-    public static String ADDRESS_EDGE_INSTALLER = "io.nubespark.app.installer"; //receiving address
-    public static String ADDRESS_INSTALLER_REPORT = "io.nubespark.app.installer.report"; //sending address
+public class AppDeploymentVerticle extends RxMicroServiceVerticle {
+    private static String ADDRESS_APP_INSTALLER = "io.nubespark.app.installer"; // receiving address
 
     // Database Queries ========================
     private static String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS deployed_verticles (deploymentId varchar(255), serviceName varchar(500), config varchar(5000))";
@@ -34,314 +36,191 @@ public class AppDeploymentVerticle extends MicroServiceVerticle {
     private static String SELECT_VERTICLE_QUERY = "SELECT * FROM deployed_verticles where serviceName = ?";
     private static String SELECT_VERTICLES_QUERY = "SELECT * FROM deployed_verticles";
     private static String DELETE_VERTICLE_QUERY = "DELETE FROM deployed_verticles where deploymentId = ?";
-    // =========================================
 
     private Logger logger = LoggerFactory.getLogger(AppDeploymentVerticle.class);
-    private JDBCClient jdbc;
+    private JDBCClient jdbcClient;
 
     @Override
     public void start() {
         super.start();
-        jdbc = JDBCClient.createNonShared(vertx, config());
-        System.out.println(this.getClass().getCanonicalName() + " Loader = " + AppDeploymentVerticle.class.getClassLoader());
-        System.out.println("Current thread loader = " + Thread.currentThread().getContextClassLoader());
-        System.out.println("Config on app installer");
-        System.out.println(Json.encodePrettily(config()));
-
-        initializeDB((nothing) -> loadDeploymentsOnStartup(next -> {
-            if (next.succeeded()) {
-                logger.info("Nube App Installer Started Up...");
-            } else {
-                logger.error("Nube App Installer Startup failed...");
-                next.cause().printStackTrace();
-            }
-        }));
-
-
-        publishMessageSource(ADDRESS_EDGE_INSTALLER, ADDRESS_EDGE_INSTALLER, ar -> {
-            if (ar.failed()) {
-                ar.cause().printStackTrace();
-            } else {
-                System.out.println("Nube App Installer (Message source) published: " + ar.succeeded());
-            }
-        });
-
-        MessageSource.getConsumer(discovery, new JsonObject().put("name", ADDRESS_EDGE_INSTALLER), message -> {
-            if (message.failed()) {
-                logger.error(message.cause().getMessage());
-                message.cause().printStackTrace();
-            } else {
-                message.result().handler(this::installer);
-            }
-        });
+        jdbcClient = JDBCClient.createNonShared(vertx, config());
+        logger.info(this.getClass().getCanonicalName() + " Loader = " + AppDeploymentVerticle.class.getClassLoader());
+        logger.info("Current thread loader = " + Thread.currentThread().getContextClassLoader());
+        logger.info("Config on app installer");
+        logger.info(Json.encodePrettily(config()));
+        getConnection()
+            .map(conn -> conn.rxExecute(CREATE_TABLE))
+            .flatMap(nothing -> loadDeploymentsOnStartup())
+            .doOnSuccess(ignored -> logger.info("Successfully installed the verticles"))
+            .doOnError(ignored -> logger.info("Failed to installed the verticles"))
+            .map(ignored -> {
+                EventBus eventBus = getVertx().eventBus();
+                // Register codec for custom message
+                eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
+                return eventBus.consumer(ADDRESS_APP_INSTALLER, this::installer);
+            })
+            .subscribe(
+                ignored -> logger.info("Successfully started Nube AppDeploymentVerticle"),
+                throwable -> logger.error("Failed due to: " + throwable.getCause().getMessage()));
     }
 
-    private void initializeDB(Handler<AsyncResult<Void>> next) {
-        logger.info("Initializing the SQLite database");
-        jdbc.getConnection(handler -> {
-            if (handler.failed()) {
-                handleFailure(handler);
-            } else {
-                SQLConnection connection = handler.result();
-                connection.execute(CREATE_TABLE, createHandler -> {
-                    if (createHandler.failed()) {
-                        connection.close();
-                        handleFailure(createHandler);
-                    } else {
-                        connection.close();
-                        next.handle(Future.succeededFuture());
-                    }
-                });
-            }
-        });
+    private Single<SQLConnection> getConnection() {
+        return jdbcClient.rxGetConnection()
+            .flatMap(conn -> Single.just(conn)
+                .doOnError(throwable -> logger.error("Cannot get connection object."))
+                .doFinally(conn::close));
     }
 
-    private void loadDeploymentsOnStartup(Handler<AsyncResult<Void>> step) {
+    private Single<String> loadDeploymentsOnStartup() {
         logger.info("Loading deployed verticles on startup if any.");
-        jdbc.getConnection(handler -> {
-            if (handler.failed()) {
-                handleFailure(handler);
-            } else {
-                SQLConnection connection = handler.result();
-                getAllDeployments(connection, allDeployments -> {
-                    List<JsonObject> records = allDeployments.result();
-                    for (int i = 0; i < records.size(); i++) {
-                        logger.info("Starting installed deployments...");
-                        JsonObject record = records.get(i);
-                        String deploymentId = record.getString("deploymentId");
-                        String verticleName = record.getString("serviceName");
-                        String configString = record.getString("config");
-                        JsonObject config;
-                        if (configString != null) {
-                            config = new JsonObject(configString);
-                        } else {
-                            config = null;
-                        }
-                        // TODO: 5/22/18 change in swagger
-                        final int finalI1 = i;
-                        handleInstall(verticleName, config, next -> {
-                            if (next.succeeded()) {
-                                JsonArray params = new JsonArray(Collections.singletonList(deploymentId));
-                                connection.updateWithParams(DELETE_VERTICLE_QUERY, params, deleteHandler -> {
-                                    if (deleteHandler.failed()) {
-                                        handleFailure(deleteHandler);
-                                        if (finalI1 == records.size() - 1) {
-                                            connection.close();
-                                        }
-                                        step.handle(Future.failedFuture(next.cause()));
-                                    } else {
-                                        logger.info("Clearing earlier deploymentId ", deploymentId, " success.");
-                                        if (finalI1 == records.size() - 1) {
-                                            connection.close();
-                                        }
-                                        step.handle(Future.succeededFuture());
-                                    }
-                                });
-                            } else {
-                                step.handle(Future.failedFuture(next.cause()));
-                            }
-                        });
-                    }
-                });
-            }
-        });
+        return getConnection()
+            .flatMap(conn -> conn.rxQuery(SELECT_VERTICLES_QUERY))
+            .map(ResultSet::getRows)
+            .flatMap(records -> Observable.fromIterable(records).flatMapSingle(record -> {
+                logger.info("Starting installed deployments...");
+                String deploymentId = record.getString("deploymentId");
+                String serviceName = record.getString("serviceName");
+                String configString = record.getString("config");
+                JsonObject config;
+                if (configString != null) {
+                    config = new JsonObject(configString);
+                } else {
+                    config = null;
+                }
+
+                return handleInstall(serviceName, config)
+                    .flatMap(ignored -> getConnection())
+                    .flatMap(conn -> {
+                        JsonArray params = new JsonArray(Collections.singletonList(deploymentId));
+                        return conn.rxUpdateWithParams(DELETE_VERTICLE_QUERY, params);
+                    });
+            }).toList())
+            .map(ignored -> "");
     }
 
 
     private void installer(Message<Object> message) {
-        String where = message.headers().get("where"); //where to deploy the verticle?
-        String action = message.headers().get("action"); //action can be "install"/"uninstall"/"update"
+        CustomMessage customMessage = (CustomMessage) message.body();
+        String action = customMessage.getHeader().getString("action"); // action can be "install"/"uninstall"/"update"
+        JsonObject body = (JsonObject) customMessage.getBody();
+
         if (action == null) {
             action = "install";
         }
-        logger.info("Host Name = ", System.getProperty("host.name"));
-        if (where == null || where.equals("all") || where.equals(System.getProperty("host.name"))) {
-            logger.info("Executing action " + action);
-            String msg = message.body().toString();
-            JsonObject info = new JsonObject(msg);
-            String groupId = info.getString("groupId", "io.nubespark");
-            String artifactId = info.getString("artifactId");
-            String version = info.getString("version", "1.0-SNAPSHOT");
-            JsonObject config = info.getJsonObject("config", null);
 
-            if (artifactId != null) {
-                String service = info.getString("service", artifactId);
-                String verticleName = "maven:" + groupId + ":" + artifactId + ":" + version + "::" + service;
-                final String finalAction = action;
-                checkIfServiceRunning(verticleName, isRunning -> {
-                    logger.info("Finished checking service..");
-                    JsonObject jsonObject = isRunning.result();
-                    Boolean isVerticleRunning = jsonObject.getBoolean("isRunning");
-                    if (!isVerticleRunning) {
-                        //service not running
-                        if ("install".equals(finalAction) || "update".equals(finalAction)) {
-                            handleInstall(verticleName, config, next -> {
-                                if (next.succeeded()) {
-                                    Future.succeededFuture();
-                                } else {
-                                    Future.failedFuture(next.cause());
-                                }
-                            });
-                        } else if ("uninstall".equals(finalAction)) {
-                            logger.warn("Service is not installed ::", verticleName);
-                        }
-                    } else {
-                        //service running
+        String actionFinal = action;
+
+        logger.info("Executing action " + action);
+        String groupId = body.getString("groupId", "io.nubespark");
+        String artifactId = body.getString("artifactId");
+        String version = body.getString("version", "1.0-SNAPSHOT");
+        JsonObject config = body.getJsonObject("config", new JsonObject());
+
+        if (artifactId != null) {
+            String service = body.getString("service", artifactId);
+            String verticleName = "maven:" + groupId + ":" + artifactId + ":" + version + "::" + service;
+            final String finalAction = action;
+
+            checkIfServiceRunning(verticleName)
+                .flatMap(status -> {
+                    Boolean isRunning = status.getBoolean("isRunning");
+                    if (isRunning) {
                         if ("uninstall".equals(finalAction)) {
-                            String deploymentId = jsonObject.getString("deploymentId");
-                            handleUnInstall(deploymentId, verticleName);
+                            String deploymentId = status.getString("deploymentId");
+                            return handleUnInstall(deploymentId);
                         }
-                        // TODO: 4/28/18 update logic: check version, install new, uninstall old
+                        throw new HttpException(HttpResponseStatus.BAD_REQUEST.code(), "Service is running, you only can uninstall!");
+                    } else {
+                        if ("install".equals(finalAction) || "update".equals(finalAction)) {
+                            return handleInstall(verticleName, config);
+                        } else if ("uninstall".equals(finalAction)) {
+                            logger.warn("Service is not installed: ", verticleName);
+                            throw new HttpException(HttpResponseStatus.BAD_REQUEST.code(), "Service is not installed!");
+                        }
+                        throw new HttpException(HttpResponseStatus.BAD_REQUEST.code(), "You are limited to install/uninstall/update!");
                     }
-                });
-            } else {
-                logger.warn("artifactId is null. Cannot " + action);
-            }
+                })
+                .subscribe(
+                    ignored -> message.reply(new CustomMessage<>(null,
+                        new JsonObject().put("message", "Successful " + actionFinal), HttpResponseStatus.CREATED.code())),
+                    throwable -> CustomMessageResponseHelper.handleHttpException(message, throwable));
+        } else {
+            logger.warn("ArtifactId is null. Cannot " + action);
+            message.reply(new CustomMessage<>(null,
+                new JsonObject().put("message", "ArtifactId is null. Cannot " + action), HttpResponseStatus.BAD_REQUEST.code()));
         }
     }
 
-    private void handleUnInstall(String deploymentId, String verticleName) {
-        logger.info("Handling uninstall");
-        vertx.undeploy(deploymentId, unInstallHandler -> jdbc.getConnection(handler -> {
-            if (handler.failed()) {
-                handleFailure(handler);
-            } else {
-                SQLConnection connection = handler.result();
+    private Single<Boolean> handleUnInstall(String deploymentId) {
+        logger.info("Handling un-installation ...");
+        vertx.rxUndeploy(deploymentId).subscribe();
+        return getConnection()
+            .flatMap(conn -> {
                 JsonArray params = new JsonArray(Collections.singletonList(deploymentId));
-                connection.updateWithParams(DELETE_VERTICLE_QUERY, params, deleteHandler -> {
-                    if (deleteHandler.failed()) {
-                        JsonObject report = new JsonObject(); //reporting failure
-                        report.put("serverId", "localhost-app-installer");
-                        report.put("cause", deleteHandler.cause().getMessage());
-                        report.put("serviceName", verticleName);
-                        vertx.eventBus().publish(ADDRESS_INSTALLER_REPORT, report, new DeliveryOptions()
-                                .addHeader("status", "FAILED"));
-
-                        handleFailure(deleteHandler);
-                    } else {
-                        JsonObject report = new JsonObject(); //reporting deployment back to store
-                        report.put("serverId", "localhost-app-installer");
-                        report.put("deploymentId", deploymentId);
-                        report.put("serviceName", verticleName);
-                        vertx.eventBus().publish(ADDRESS_INSTALLER_REPORT, report, new DeliveryOptions()
-                                .addHeader("status", "UNINSTALLED"));
-                        Future.succeededFuture();
-
-                    }
-                });
-            }
-        }));
+                return conn.rxUpdateWithParams(DELETE_VERTICLE_QUERY, params);
+            })
+            .map(ignored -> true);
     }
 
-    private void handleInstall(String verticleName, JsonObject config, Handler<AsyncResult<Void>> next) {
-        logger.info("handling install");
+    private Single<Boolean> handleInstall(String serviceName, JsonObject config) {
+        logger.info("Handling installation ... \n");
+        logger.info("Config: " + config);
         DeploymentOptions options = new DeploymentOptions();
         String configString = null;
         if (config != null) {
-            logger.info("Loading config in deployment options:: ", Json.encodePrettily(config));
+            logger.info("Loading config in deployment options: ", Json.encodePrettily(config));
             options.setConfig(config);
             configString = config.toString();
         }
         String finalConfigString = configString;
-        vertx.deployVerticle(verticleName,
-                options,
-                ar -> {
-                    if (ar.succeeded()) {
-                        logger.info("Successfully deployed ", verticleName);
-                        String deploymentId = ar.result();
-                        saveData(deploymentId, verticleName, finalConfigString); //persisting deployment info
 
-                        JsonObject report = new JsonObject(); //reporting deployment back to store
-                        report.put("serverId", "localhost-app-installer");
-                        report.put("deploymentId", deploymentId);
-                        report.put("serviceName", verticleName);
-                        vertx.eventBus().publish(ADDRESS_INSTALLER_REPORT, report, new DeliveryOptions()
-                                .addHeader("status", "INSTALLED"));
-                        next.handle(Future.succeededFuture());
-                    } else {
-                        logger.error("Failed to deploy verticle ", verticleName);
-
-                        JsonObject report = new JsonObject(); //reporting failure
-                        report.put("serverId", "localhost-app-installer");
-                        report.put("cause", ar.cause().getMessage());
-                        report.put("serviceName", verticleName);
-                        vertx.eventBus().publish(ADDRESS_INSTALLER_REPORT, report, new DeliveryOptions()
-                                .addHeader("status", "FAILED"));
-                        handleFailure(ar);
-                        next.handle(Future.failedFuture(ar.cause()));
-                    }
-                });
+        return Single.create(source -> vertx.deployVerticle(serviceName, options, ar -> {
+            if (ar.failed()) {
+                logger.warn("Doesn't match the installation details.");
+                source.onError(new HttpException(HttpResponseStatus.SERVICE_UNAVAILABLE.code(), "Doesn't match the installation details."));
+            } else {
+                saveData(ar.result(), serviceName, finalConfigString)
+                    .map(aBoolean -> {
+                        source.onSuccess(true);// persisting deployment info
+                        return true;
+                    }).subscribe();
+            }
+        }));
     }
 
-    private void saveData(String deploymentID, String serviceName, String config) {
+    private Single<Boolean> saveData(String deploymentID, String serviceName, String config) {
         JsonArray params = new JsonArray(Arrays.asList(deploymentID, serviceName, config));
-        jdbc.getConnection(handler -> {
-            if (handler.failed()) {
-                handleFailure(handler);
-            }
-            SQLConnection connection = handler.result();
-            connection.updateWithParams(INSERT_VERTICLE_QUERY, params, insertHandler -> {
-                if (insertHandler.failed()) {
-                    handleFailure(insertHandler);
-                    connection.close();
-                } else {
+        return getConnection()
+            .flatMap(conn -> conn.rxUpdateWithParams(INSERT_VERTICLE_QUERY, params)
+                .map(ignore -> {
                     logger.info("Persisting ", deploymentID, " and ", serviceName, "in database");
-                    connection.close();
-                }
-            });
-        });
+                    return true;
+                }));
     }
 
-    private void checkIfServiceRunning(String serviceName, Handler<AsyncResult<JsonObject>> next) {
+
+    private Single<JsonObject> checkIfServiceRunning(String serviceName) {
         logger.info("Checking if service is running: " + serviceName);
-        jdbc.getConnection(handler -> {
-            if (handler.failed()) {
-                logger.error("JDBC connection Failed. ", handler.cause().getMessage());
-                handleFailure(handler);
-            } else {
-                SQLConnection connection = handler.result();
+        return getConnection()
+            .flatMap(conn -> {
                 JsonArray params = new JsonArray(Collections.singletonList(serviceName));
-                connection.queryWithParams(SELECT_VERTICLE_QUERY, params, selectHandler -> {
-                    if (selectHandler.failed()) {
-                        logger.error("SQL execution failed. ", selectHandler.cause().getMessage());
-                        handleFailure(selectHandler);
-                        connection.close();
-                    } else {
-                        if (selectHandler.result().getNumRows() > 0) {
-                            logger.info("Already running Service: ", serviceName);
-                            JsonObject jsonObject = new JsonObject();
-                            jsonObject.put("isRunning", true);
-                            jsonObject.put("deploymentId", selectHandler.result().getRows().get(0).getValue("deploymentId"));
-                            logger.debug("return value = ", jsonObject);
-                            connection.close();
-                            next.handle(Future.succeededFuture(jsonObject));
-                        } else {
-                            logger.info("Not running Service: ", serviceName);
-                            JsonObject jsonObject = new JsonObject();
-                            jsonObject.put("isRunning", false);
-                            connection.close();
-                            next.handle(Future.succeededFuture(jsonObject));
-                        }
-                    }
-                });
-            }
-        });
+                return conn.rxQueryWithParams(SELECT_VERTICLE_QUERY, params);
+            })
+            .map(ResultSet::getRows)
+            .map(results -> {
+                JsonObject status = new JsonObject();
+                if (results.size() > 0) {
+                    status.put("isRunning", true);
+                    status.put("deploymentId", results.get(0).getValue("deploymentId"));
+                } else {
+                    status.put("isRunning", false);
+                }
+                return status;
+            });
     }
 
-    private void getAllDeployments(SQLConnection connection, Handler<AsyncResult<List<JsonObject>>> next) {
-        logger.info("Getting previous deployments if any...");
-        connection.query(SELECT_VERTICLES_QUERY, selectHandler -> {
-            if (selectHandler.failed()) {
-                handleFailure(selectHandler);
-            } else {
-                System.out.println(Json.encodePrettily(selectHandler.result().getRows()));
-                next.handle(Future.succeededFuture(selectHandler.result().getRows()));
-            }
-        });
-    }
-
-    private void handleFailure(AsyncResult handler) {
-        logger.error(handler.cause().getMessage());
-        Future.failedFuture(handler.cause());
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }
