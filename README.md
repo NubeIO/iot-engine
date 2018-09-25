@@ -49,11 +49,25 @@ Following is the rough architecture.
 - Developed by developers according to business logic and requirement.
 - Deployed in central maven repository after development and testing.
 
-### nube-rule-engine (Demo Module)
-- A demo module demonstrating REST API and message transfer using vert.x event Bus.
+### nube-vertx-hive
+- A module for connecting FiloDB server and executing SQL operations on it.
+- We have given a sql-hive/engine POST service available for sending SQL command.
 
-### nube-jdbc-engine (Demo Module)
-- A demo module demonstrating mysql database connection and querying and message transfer using vert.x event Bus.
+### nube-vertx-hive
+- A module for connecting PostgreSQL server and executing SQL operations on it.
+- We have given a sql-pg/engine POST service available for sending SQL command.
+
+### nube-vertx-mongo
+- It makes the services available of MongoDB as the REST request.
+
+### nube-vertx-zeppelin
+- Facilitates the hive connection from our Gateway.
+
+### nube-server-ditto-driver
+- Connects to the ditto-server and listens its web-socket and published that into our EventBus.
+
+### nube-edge-ditto-driver (Demo)
+- Just a demo for edge devices 
 
 
 ## Running in localhost cluster
@@ -67,12 +81,13 @@ Following is the rough architecture.
  
  ```
  <join>
-       <multicast enabled="false"/>
-       <tcp-ip enabled="true">
-         <interface>127.0.0.1</interface>
-       </tcp-ip></join>
- <interfaces enabled="false">
-       <interface>192.168.1.*</interface>
+   <multicast enabled="false"/>
+   <tcp-ip enabled="true">
+     <interface>127.0.0.1</interface>
+   </tcp-ip>
+ </join>
+   <interfaces enabled="false">
+   <interface>192.168.1.*</interface>
  </interfaces>
  ```
  
@@ -95,7 +110,7 @@ java -jar target/nube-bios-1.0-SNAPSHOT-fat.jar -cluster -cluster-host 127.0.0.1
 ```
 
 4. Check Logs and verify if both services are started correctly. Also, check if Nube App Store REST API is working.
-`GET http://localhost:3031`
+`GET http://localhost:8086`
 
 Response:
 ```
@@ -119,12 +134,13 @@ Response:
  
  ```
  <join>
-       <multicast enabled="true"/>
-       <tcp-ip enabled="false">
-         <interface>127.0.0.1</interface>
-       </tcp-ip></join>
+   <multicast enabled="true"/>
+   <tcp-ip enabled="false">
+     <interface>127.0.0.1</interface>
+   </tcp-ip>
+ </join>
  <interfaces enabled="true">
-       <interface>192.168.1.*</interface>
+   <interface>192.168.1.*</interface>
  </interfaces>
  ```
  > [Note: Interfaces (192.168.1.*) should be changed according to your network]
@@ -157,7 +173,7 @@ A `settings.xml` should be added to `~/.m2/` in development environment
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
       </repositories>
-     <pluginRepositories>
+      <pluginRepositories>
         <pluginRepository>
           <id>central</id>
           <url>http://central</url>
@@ -190,6 +206,7 @@ cd nube-app-store-rest
 java -jar target/nube-app-store-rest-1.0-SNAPSHOT-fat.jar -conf src/conf/config.json -cluster -cluster-host 192.168.1.68
 ```
 > [Note: By default cluster.xml in nube-vertx-common project will be used but a custom cluster.xml can be added to classpath using argument `-cp /path/to/cluster.xml`]
+
 3. Run Nube BIOS
 ```
 cd nube-bios
@@ -198,45 +215,7 @@ java -jar target/nube-bios-1.0-SNAPSHOT-fat.jar -cluster -cluster-host 192.168.1
 > [Note: cluster-host for bios is 192.168.1.70 whereas Nube App Store REST is 192.168.1.68 i.e. these are running on different nodes]
 
 4. Check Logs and verify if both services are started correctly. Also, check if Nube App Store REST API is working.
-`GET http://192.168.1.68:3031`
-
-Response:
-```
-{
-"name": "nubespark app store REST API",
-"version": "1.0",
-"vert.x_version": "3.4.1",
-"java_version": "8.0"
-}
-```
-
-
-
-## Nube App Store REST API Usage
-
-### Upgrade OS
-By default Nube BIOS install default version of Nube App Installer (OS).
-OS can be upgraded when new version is released.
-Example: (As an analogy Andriod Nugget can be upgraded to Android Oreo)
-```
-POST /api/store/os
-{
-  "version":"1.0-SNAPSHOT"
-}
-```
-
-
-Response:
-```
-{
-    "action": "update",
-    "body": {
-        "version": "1.0-SNAPSHOT"
-    },
-    "status": "PUBLISHED"
-}
-```
-
+`GET http://192.168.1.68:8086`
 
 ### Install App
 
@@ -249,35 +228,10 @@ POST /api/store/install
 }
 ```
 
-Response:
-```
-{
-    "action": "install",
-    "body": {
-        "groupId": "io.nubespark",
-        "artifactId": "nube-jdbc-engine",
-        "version": "1.0-SNAPSHOT"
-    },
-    "status": "PUBLISHED"
-}
-```
-
-
 ### Uninstall App
 ```
 POST /api/store/uninstall
 {
  "artifactId":"nube-jdbc-engine"
-}
-```
-
-Response:
-```
-{
-    "action": "uninstall",
-    "body": {
-        "artifactId": "nube-jdbc-engine"
-    },
-    "status": "PUBLISHED"
 }
 ```
