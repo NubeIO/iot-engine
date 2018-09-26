@@ -399,6 +399,20 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     }
                 })
                 .flatMap(group -> {
+                    String associatedCompanyId = group.getString("associated_company_id", "");
+                    if (StringUtils.isNotNull(associatedCompanyId)) {
+                        return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
+                            .map(response -> {
+                                if (StringUtils.isNotNull(group.toString())) {
+                                    return group.put("associated_company", response);
+                                }
+                                return group;
+                            });
+                    } else {
+                        return Single.just(group);
+                    }
+                })
+                .flatMap(group -> {
                     if (StringUtils.isNotNull(siteId)) {
                         return mongoClient.rxFindOne(SITE, idQuery(siteId), null)
                             .flatMap(site -> {
