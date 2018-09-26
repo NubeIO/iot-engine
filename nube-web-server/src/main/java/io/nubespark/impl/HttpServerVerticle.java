@@ -415,12 +415,12 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     }
                 })
                 .flatMap(groupAndSite -> {
-                    String associatedCompanyId = user.principal().getString("associated_company_id", "");
+                    String associatedCompanyId = user.principal().getString("company_id", "");
                     if (StringUtils.isNotNull(associatedCompanyId)) {
                         return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
                             .map(response -> {
                                 if (StringUtils.isNotNull(groupAndSite.toString())) {
-                                    return groupAndSite.put("associated_company", response);
+                                    return groupAndSite.put("company", response);
                                 }
                                 return groupAndSite;
                             });
@@ -428,10 +428,10 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                         return Single.just(groupAndSite);
                     }
                 })
-                .subscribe(groupAndSiteAndAssociatedCompany -> {
+                .subscribe(groupAndSiteAndCompany -> {
                 ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                     .end(Json.encodePrettily(user.principal()
-                        .mergeIn(groupAndSiteAndAssociatedCompany)));
+                        .mergeIn(groupAndSiteAndCompany)));
             });
         } else {
             logger.info("Send not authorized error and user should login");
