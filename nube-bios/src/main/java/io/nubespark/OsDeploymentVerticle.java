@@ -48,10 +48,10 @@ public class OsDeploymentVerticle extends RxMicroServiceVerticle {
     @Override
     public void start() {
         super.start();
-        System.out.println(this.getClass().getCanonicalName() + " Loader = " + OsDeploymentVerticle.class.getClassLoader());
-        System.out.println("Current thread loader = " + Thread.currentThread().getContextClassLoader());
-        System.out.println("Config on nube bios");
-        System.out.println(Json.encodePrettily(config()));
+        logger.info(this.getClass().getCanonicalName() + " Loader = " + OsDeploymentVerticle.class.getClassLoader());
+        logger.info("Current thread loader = " + Thread.currentThread().getContextClassLoader());
+        logger.info("Config on nube bios");
+        logger.info(Json.encodePrettily(config()));
 
         initializeJDBCClient()
             .flatMap(jdbcClient -> getConnection(jdbcClient)

@@ -1,9 +1,4 @@
 {
   "url":"jdbc:sqlite:nube-app-installer.db",
-  "driver_class":"org.sqlite.JDBC",
-  "remotes":[
-    "http://localhost:9099/repository/maven-releases/",
-    "http://localhost:9099/repository/maven-snapshots/",
-    "http://localhost:9099/repository/maven-central/"
-  ]
+  "driver_class": "org.sqlite.JDBC"
 }

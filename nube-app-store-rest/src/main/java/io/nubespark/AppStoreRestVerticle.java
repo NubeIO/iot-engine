@@ -4,7 +4,6 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.utils.CustomMessage;
-import io.nubespark.utils.CustomMessageCodec;
 import io.nubespark.utils.Runner;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
@@ -51,8 +50,6 @@ public class AppStoreRestVerticle extends RxRestAPIVerticle {
         super.start();
 
         eventBus = getVertx().eventBus();
-        // Register codec for custom message
-        eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
 
         logger.info("Config on app store REST");
         logger.info(Json.encodePrettily(config()));
