@@ -497,7 +497,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 }
             })
             .flatMap(userGroups -> Observable.fromIterable(userGroups)
-                .flatMapSingle(object -> mongoClient.rxFindOne(USER_GROUP, idQuery(object.getString("site_id")), null)
+                .flatMapSingle(object -> mongoClient.rxFindOne(SITE, idQuery(object.getString("site_id")), null)
                     .flatMap(site -> {
                         if (StringUtils.isNotNull(site.toString())) {
                             object.put("site", buildSiteWithAbsoluteImageUri(message, site));
