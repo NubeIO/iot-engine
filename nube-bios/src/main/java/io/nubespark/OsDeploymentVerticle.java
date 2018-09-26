@@ -55,7 +55,13 @@ public class OsDeploymentVerticle extends RxMicroServiceVerticle {
 
         initializeJDBCClient()
             .flatMap(jdbcClient -> getConnection(jdbcClient)
-                .map(conn -> conn.rxExecute(CREATE_TABLE))
+                .flatMap(conn -> Single.create(source -> conn.execute(CREATE_TABLE, handler -> {
+                    if (handler.failed()) {
+                        source.onError(new HttpException(HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), "Unable to create table"));
+                    } else {
+                        source.onSuccess(true);
+                    }
+                })))
                 .flatMap(ignored -> setupMavenRepos())
                 .flatMap(ignore -> loadOsFromMaven(jdbcClient)))
             .subscribe(

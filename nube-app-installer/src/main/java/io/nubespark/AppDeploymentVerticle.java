@@ -49,7 +49,13 @@ public class AppDeploymentVerticle extends RxMicroServiceVerticle {
         logger.info("Config on app installer");
         logger.info(Json.encodePrettily(config()));
         getConnection()
-            .map(conn -> conn.rxExecute(CREATE_TABLE))
+            .flatMap(conn -> Single.create(source -> conn.execute(CREATE_TABLE, handler -> {
+                if (handler.failed()) {
+                    source.onError(new HttpException(HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), "Unable to create table"));
+                } else {
+                    source.onSuccess(true);
+                }
+            })))
             .flatMap(nothing -> loadDeploymentsOnStartup())
             .doOnSuccess(ignored -> logger.info("Successfully installed the verticles"))
             .doOnError(ignored -> logger.info("Failed to installed the verticles"))
