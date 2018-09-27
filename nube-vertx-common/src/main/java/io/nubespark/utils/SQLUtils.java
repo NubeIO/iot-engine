@@ -51,6 +51,15 @@ public class SQLUtils {
         return array[0];
     }
 
+    public static String getMatchValue(String toMatch, String[] withMatch) {
+        for (String value : withMatch) {
+            if (toMatch.equals(value)) {
+                return toMatch;
+            }
+        }
+        return null;
+    }
+
     public static String getMatchValueOrDefaultOne(String toMatch, String[] withMatch) {
         for (String value : withMatch) {
             if (toMatch.equals(value)) {

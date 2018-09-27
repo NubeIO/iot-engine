@@ -389,7 +389,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     if (StringUtils.isNotNull(groupId)) {
                         return mongoClient.rxFindOne(USER_GROUP, idQuery(groupId), null)
                             .map(group -> {
-                                if (StringUtils.isNotNull(group.toString())) {
+                                if (group != null) {
                                     return object.put("group", group);
                                 }
                                 return object;
@@ -402,16 +402,16 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     if (StringUtils.isNotNull(siteId)) {
                         return mongoClient.rxFindOne(SITE, idQuery(siteId), null)
                             .flatMap(site -> {
-                                if (StringUtils.isNotNull(site.toString())) {
+                                if (site != null) {
                                     return Single.just(group.put("site", site
                                         .put("logo_sm", buildAbsoluteUri(ctx, site.getString("logo_sm")))
                                         .put("logo_md", buildAbsoluteUri(ctx, site.getString("logo_md")))));
                                 } else {
-                                    return assignAdminOrManagerOnASiteIfAvailable(ctx, group);
+                                    return assignAdminIfAvailable(ctx, group);
                                 }
                             });
                     } else {
-                        return assignAdminOrManagerOnASiteIfAvailable(ctx, group);
+                        return assignAdminIfAvailable(ctx, group);
                     }
                 })
                 .flatMap(groupAndSite -> {
@@ -419,7 +419,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     if (StringUtils.isNotNull(associatedCompanyId)) {
                         return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
                             .map(response -> {
-                                if (StringUtils.isNotNull(groupAndSite.toString())) {
+                                if (response != null) {
                                     return groupAndSite.put("company", response);
                                 }
                                 return groupAndSite;
@@ -439,7 +439,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         }
     }
 
-    private SingleSource<? extends JsonObject> assignAdminOrManagerOnASiteIfAvailable(RoutingContext ctx, JsonObject group) {
+    private SingleSource<? extends JsonObject> assignAdminIfAvailable(RoutingContext ctx, JsonObject group) {
         String role = ctx.user().principal().getString("role");
         if (SQLUtils.in(role, Role.ADMIN.toString(), Role.MANAGER.toString())) {
             // If we have already a site for its respective role, then we will assign it

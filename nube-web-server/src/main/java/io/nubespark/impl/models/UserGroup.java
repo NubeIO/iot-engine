@@ -8,7 +8,6 @@ public class UserGroup extends Model {
     private String site_id;
     private String name;
     private String[] access_pages;
-    public String role; // ADMIN or MANAGER or USER; defining the company level
 
     public UserGroup(JsonObject body) {
         super(body);

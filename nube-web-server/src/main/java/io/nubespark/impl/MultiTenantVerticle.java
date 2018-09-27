@@ -180,7 +180,8 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private SingleSource<? extends Integer> createMongoUser(JsonObject user, JsonObject body, String accessToken, String authServerUrl, String realmName, HttpClient client, JsonObject keycloakUser, JsonObject query) {
+    private SingleSource<? extends Integer> createMongoUser(JsonObject user, JsonObject body, String accessToken, String authServerUrl, String realmName,
+                                                            HttpClient client, JsonObject keycloakUser, JsonObject query) {
         return mongoClient.rxFind(COMPANY, query)
             .flatMap(childCompanies -> {
                 if (childCompanies.size() > 0) {
@@ -190,17 +191,83 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     JsonObject companyJsonObject = JSONUtils.getMatchValueOrDefaultOne(childCompanies, companyId);
 
                     body.put("company_id", companyJsonObject.getString("_id"));
-                    if (companyJsonObject.getString("role").equals(Role.MANAGER.toString()) && SQLUtils.in(body.getString("role", ""), Role.USER.toString(), Role.GUEST.toString())) {
-                        return createMongoUserByManager(body, user, accessToken, client, authServerUrl, realmName, keycloakUser, companyJsonObject.getString("_id"));
-                    } else {
-                        body.put("associated_company_id", companyJsonObject.getString("associated_company_id"))
+                    if (companyJsonObject.getString("role").equals(Role.MANAGER.toString())
+                        && SQLUtils.in(body.getString("role", ""), Role.MANAGER.toString(), Role.USER.toString(), Role.GUEST.toString(), "")) {
+
+                        String siteId = body.getString("site_id");
+                        if (siteId == null) {
+                            return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
+                                .map(ign -> {
+                                    throw badRequest("You must include site_id on the request data.");
+                                });
+                        }
+
+                        return mongoClient
+                            .rxFindOne(SITE, new JsonObject().put("_id", siteId), null)
+                            .flatMap(childSite -> {
+                                if (childSite != null) {
+                                    if (childSite.getString("associated_company_id").equals(companyJsonObject.getString("_id"))) {
+                                        return Single.just(body
+                                            .put("role", body.getString("role", Role.MANAGER.toString()))); // if nothing then it should be MANAGER
+                                    } else {
+                                        return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
+                                            .map(ign -> {
+                                                throw forbidden();
+                                            });
+                                    }
+                                } else {
+                                    return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
+                                        .map(ign -> {
+                                            throw badRequest("Site doesn't exist.");
+                                        });
+                                }
+                            })
+                            .flatMap(siteEditedBody -> {
+                                if (SQLUtils.in(body.getString("role", ""), Role.USER.toString(), Role.GUEST.toString())) {
+                                    String groupId = body.getString("group_id");
+                                    if (groupId == null) {
+                                        return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
+                                            .map(ign -> {
+                                                throw badRequest("You must include group_in on the request data.");
+                                            });
+                                    }
+
+                                    return mongoClient.rxFind(USER_GROUP, new JsonObject().put("site_id", siteId))
+                                        .flatMap(childUserGroups -> {
+                                            if (childUserGroups.size() > 0) {
+                                                if (StringUtils.getIdsList(childUserGroups).contains(groupId)) {
+                                                    return Single.just(siteEditedBody
+                                                        .put("group_id", groupId)
+                                                        .put("associated_company_id", companyJsonObject.getString("_id"))); // For USER and GUEST company_id and associated_company_id be same
+                                                } else {
+                                                    return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
+                                                        .map(ign -> {
+                                                            throw badRequest("<UserGroup> doesn't exist on that <Site>.");
+                                                        });
+                                                }
+                                            } else {
+                                                return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client) // For ADMIN company
+                                                    .map(ign -> {
+                                                        throw badRequest("<Site> doesn't have any <UserGroup>.");
+                                                    });
+                                            }
+                                        });
+                                } else {
+                                    return Single.just(siteEditedBody
+                                        .put("group_id", "")
+                                        .put("associated_company_id", companyJsonObject.getString("associated_company_id")));
+                                }
+                            });
+                    } else if (companyJsonObject.getString("role").equals(Role.ADMIN.toString())) {
+                        return Single.just(body.put("associated_company_id", companyJsonObject.getString("associated_company_id"))
                             .put("role", companyJsonObject.getString("role"))
                             .put("site_id", "")
-                            .put("group_id", "");
-
-                        MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
-                        return mongoClient.rxSave(USER, mongoUser.toJsonObject())
-                            .map(ignore -> HttpResponseStatus.CREATED.code());
+                            .put("group_id", ""));
+                    } else {
+                        return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
+                            .map(ign -> {
+                                throw badRequest("Condition doesn't match up.");
+                            });
                     }
                 } else {
                     // 5.2 Remove user from Keycloak
@@ -209,53 +276,36 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                             throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <Company> at first.");
                         });
                 }
+            })
+            .flatMap(editedBody -> {
+                MongoUser mongoUser = new MongoUser(editedBody, user, keycloakUser);
+                return mongoClient.rxSave(USER, mongoUser.toJsonObject())
+                    .map(ignore -> HttpResponseStatus.CREATED.code());
             });
     }
 
     private SingleSource<? extends Integer> createMongoUserByManager(JsonObject body, JsonObject user, String accessToken, HttpClient client, String authServerUrl,
                                                                      String realmName, JsonObject keycloakUser, String companyId) {
         JsonObject query = new JsonObject().put("associated_company_id", companyId);
-        return mongoClient.rxFind(SITE, query)
-            .flatMap(childSites -> {
-                if (childSites.size() > 0) {
-                    return mongoClient.rxFind(USER_GROUP, query)
-                        .flatMap(childGroups -> {
-                            if (childGroups.size() > 0) {
-                                // 5.1 Creating user on MongoDB
-                                body.put("company_id", companyId)
-                                    .put("associated_company_id", companyId)
-                                    .put("site_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("site_id", ""), StringUtils.getIds(childSites)))
-                                    .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), StringUtils.getIds(childGroups)));
-                                MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
-                                return mongoClient.rxSave(USER, mongoUser.toJsonObject())
-                                    .map(ignore -> HttpResponseStatus.CREATED.code());
-                            } else {
-                                // 5.2 Remove user from Keycloak
-                                return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
-                                    .map(ign -> {
-                                        throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
-                                    });
-                            }
-                        });
+        return mongoClient.rxFind(USER_GROUP, query)
+            .flatMap(childGroups -> {
+                if (childGroups.size() > 0) {
+                    // 5.1 Creating user on MongoDB
+                    body.put("company_id", companyId)
+                        .put("associated_company_id", companyId)
+                        .put("site_id", MultiTenantCustomMessageHelper.getSiteId(user))
+                        .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), StringUtils.getIds(childGroups)));
+                    MongoUser mongoUser = new MongoUser(body, user, keycloakUser);
+                    return mongoClient.rxSave(USER, mongoUser.toJsonObject())
+                        .map(ignore -> HttpResponseStatus.CREATED.code());
                 } else {
                     // 5.2 Remove user from Keycloak
                     return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
                         .map(ign -> {
-                            throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <Site> at first.");
+                            throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
                         });
                 }
             });
-    }
-
-    private SingleSource<? extends Integer> updateOwnUser(JsonObject body, JsonObject ctxUser, JsonObject keycloakUser) {
-        // User doesn't have the authority to update own company_id, associated_company_id, and group_id
-        body.put("company_id", ctxUser.getString("company_id"))
-            .put("associated_company_id", ctxUser.getString("associated_company_id"))
-            .put("group_id", ctxUser.getString("group_id"));
-        MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
-        JsonObject mongoUserObject = mongoUser.toJsonObject().put("role", ctxUser.getString("role")); // Role shouldn't be overridden
-        return mongoClient.rxSave(USER, mongoUserObject)
-            .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
     }
 
     private void handlePostCompany(Message<Object> message) {
@@ -268,16 +318,17 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             if (StringUtils.isNotNull(associatedCompanyId)) {
                 mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
                     .flatMap(companyResponse -> {
-                        if (StringUtils.isNull(companyResponse.toString())) {
+                        if (companyResponse == null) {
                             throw new HttpException(HttpResponseStatus.BAD_REQUEST.code(), "Failed to get the associated_company");
                         } else {
-                            Company company = new Company(body.put("role", UserUtils.getRole(Role.valueOf(companyResponse.getString("role")))));
+                            Company company = new Company(body
+                                .put("role", UserUtils.getRole(Role.valueOf(companyResponse.getString("role")))));
                             return mongoClient.rxSave(COMPANY, company.toJsonObject());
                         }
                     }).subscribe(ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.OK.code())), throwable -> handleHttpException(message, throwable));
             } else {
                 Company company = new Company(MultiTenantCustomMessageHelper.getBodyAsJson(message)
-                    .put("associated_company_id", MultiTenantCustomMessageHelper.getAssociatedCompanyId(user))
+                    .put("associated_company_id", MultiTenantCustomMessageHelper.getCompanyId(user))
                     .put("role", Role.ADMIN.toString()));
                 mongoClient.rxSave(COMPANY, company.toJsonObject())
                     .subscribe(
@@ -286,7 +337,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             }
         } else if (role == Role.ADMIN) {
             Company company = new Company(MultiTenantCustomMessageHelper.getBodyAsJson(message)
-                .put("associated_company_id", MultiTenantCustomMessageHelper.getAssociatedCompanyId(user))
+                .put("associated_company_id", MultiTenantCustomMessageHelper.getCompanyId(user))
                 .put("role", Role.MANAGER.toString()));
 
             mongoClient.rxSave(COMPANY, company.toJsonObject())
@@ -307,34 +358,31 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         if (role == Role.SUPER_ADMIN || role == Role.ADMIN) {
             String associatedCompanyId = body.getString("associated_company_id");
             mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
-                .flatMap(associatedCompany -> {
-                    if (StringUtils.isNotNull(associatedCompany.toString())) {
+                .map(associatedCompany -> {
+                    if (associatedCompany != null) {
                         if (associatedCompany.getString("role").equals(Role.MANAGER.toString())) {
-                            if (role == Role.SUPER_ADMIN) {
-                                return mongoClient.rxSave(SITE, new Site(body.put("associated_company_id", associatedCompany.getString("_id")).put("role", Role.USER.toString())).toJsonObject());
-                            } else {
-                                return byAdminCompanyGetAdminWithManagerSelectionList(companyId)
-                                    .flatMap(companies -> {
-                                        if (companies.contains(associatedCompany.getString("_id"))) {
-                                            return mongoClient.rxSave(SITE, new Site(body.put("associated_company_id", associatedCompany.getString("_id")).put("role", Role.USER.toString())).toJsonObject());
-                                        } else {
-                                            throw forbidden();
-                                        }
-                                    });
-                            }
+                            return associatedCompany;
                         } else {
-                            throw forbidden();
+                            throw badRequest("You must associate Manager level company.");
                         }
                     } else {
-                        throw badRequest("Failed to get the associated_company");
+                        throw badRequest("Failed to get the associated_company!");
                     }
                 })
-                .subscribe(
-                    ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.CREATED.code())),
-                    throwable -> handleHttpException(message, throwable));
-        } else if (role == Role.MANAGER) {
-            mongoClient.rxSave(SITE,
-                new Site(body.put("associated_company_id", companyId).put("role", Role.USER.toString())).toJsonObject())
+                .flatMap(associatedCompany -> {
+                    if (role == Role.SUPER_ADMIN) {
+                        return mongoClient.rxSave(SITE, new Site(body.put("associated_company_id", associatedCompany.getString("_id")).put("role", Role.MANAGER.toString())).toJsonObject());
+                    } else {
+                        return byAdminCompanyGetManagerSelectionList(companyId)
+                            .flatMap(companies -> {
+                                if (companies.contains(associatedCompany.getString("_id"))) {
+                                    return mongoClient.rxSave(SITE, new Site(body.put("associated_company_id", associatedCompany.getString("_id")).put("role", Role.MANAGER.toString())).toJsonObject());
+                                } else {
+                                    throw forbidden();
+                                }
+                            });
+                    }
+                })
                 .subscribe(
                     ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.CREATED.code())),
                     throwable -> handleHttpException(message, throwable));
@@ -350,47 +398,50 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         String userCompanyId = MultiTenantCustomMessageHelper.getCompanyId(user);
 
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-            getManagerSiteQuery(role, userCompanyId)
-                .flatMap(managerSiteQuery -> mongoClient.rxFind(SITE, managerSiteQuery)
-                    .flatMap(childCompaniesResponse -> {
-                        if (childCompaniesResponse.size() > 0) {
-                            String[] availableSites = StringUtils.getIds(childCompaniesResponse);
-                            String site_id = SQLUtils.getMatchValueOrDefaultOne(MultiTenantCustomMessageHelper.getBodyAsJson(message).getString("site_id", ""), availableSites);
-                            if (role == Role.MANAGER) {
-                                return Single.just(new UserGroup(body
-                                    .put("associated_company_id", userCompanyId)
-                                    .put("role", Role.USER.toString())
-                                    .put("site_id", site_id)));
-                            } else {
-                                String associatedCompanyId = body.getString("associated_company_id", "");
-                                if (StringUtils.isNotNull(associatedCompanyId)) {
-                                    return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
-                                        .map(response -> {
-                                            if (StringUtils.isNotNull(response.toString())) {
-                                                if (response.getString("role").equals(Role.MANAGER.toString())
-                                                    && (role == Role.SUPER_ADMIN
-                                                    || (role == Role.ADMIN && managerSiteQuery.getJsonObject("associated_company_id").getJsonArray("$in").contains(associatedCompanyId))
-                                                )) {
-                                                    return new UserGroup(body
-                                                        .put("associated_company_id", associatedCompanyId)
-                                                        .put("role", Role.USER.toString())
-                                                        .put("site_id", site_id));
+            Single.create(
+                source -> {
+                    if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+                        getManagerSiteQuery(role, userCompanyId).flatMap(managerSiteQuery -> mongoClient.rxFind(SITE, managerSiteQuery)
+                            .flatMap(childSitesResponse -> {
+                                if (childSitesResponse.size() > 0) {
+                                    String[] availableSites = StringUtils.getIds(childSitesResponse);
+                                    String siteId = SQLUtils.getMatchValue(MultiTenantCustomMessageHelper.getBodyAsJson(message).getString("site_id", ""), availableSites);
+                                    if (siteId == null) {
+                                        throw badRequest("Site doesn't match up Exception!");
+                                    }
+                                    String associatedCompanyId = body.getString("associated_company_id", "");
+                                    if (StringUtils.isNotNull(associatedCompanyId)) {
+                                        return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
+                                            .map(response -> {
+                                                if (response != null) {
+                                                    if (response.getString("role").equals(Role.MANAGER.toString())
+                                                        && (role == Role.SUPER_ADMIN
+                                                        || (role == Role.ADMIN && managerSiteQuery.getJsonObject("associated_company_id").getJsonArray("$in").contains(associatedCompanyId)))) {
+                                                        return new UserGroup(body
+                                                            .put("associated_company_id", associatedCompanyId)
+                                                            .put("site_id", siteId));
+                                                    } else {
+                                                        throw badRequest("We should assign Manager level company");
+                                                    }
                                                 } else {
-                                                    throw forbidden();
+                                                    throw badRequest("We don't have the associated_company_id");
                                                 }
-                                            } else {
-                                                throw badRequest("We don't have the associated_company_id");
-                                            }
-                                        });
+                                            });
+
+                                    } else {
+                                        throw badRequest("No associated_company_id value is requested.");
+                                    }
                                 } else {
-                                    throw badRequest("No associated_company_id value is requested.");
+                                    throw badRequest("Create <Site> at first.");
                                 }
-                            }
-                        } else {
-                            throw badRequest("Create <Site> at first.");
-                        }
-                    }))
-                .flatMap(userGroup -> mongoClient.rxSave(USER_GROUP, userGroup.toJsonObject()))
+                            })).subscribe(source::onSuccess, source::onError);
+                    } else {
+                        source.onSuccess(new UserGroup(body
+                            .put("associated_company_id", userCompanyId)
+                            .put("site_id", MultiTenantCustomMessageHelper.getSiteId(user))));
+                    }
+                })
+                .flatMap(userGroup -> mongoClient.rxSave(USER_GROUP, ((UserGroup) userGroup).toJsonObject()))
                 .subscribe(
                     ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.CREATED.code())),
                     throwable -> handleHttpException(message, throwable));
@@ -456,12 +507,10 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         Single.just(new JsonObject())
             .flatMap(ignored -> {
                 if (role == Role.SUPER_ADMIN) {
-                    return mongoClient.rxFind(SITE, new JsonObject().put("role", new JsonObject().put("$eq", Role.USER.toString())));
+                    return mongoClient.rxFind(SITE, new JsonObject().put("role", Role.MANAGER.toString()));
                 } else if (role == Role.ADMIN) {
                     return byAdminCompanyGetManagerSelectionListQuery(companyId)
                         .flatMap(query -> mongoClient.rxFind(SITE, query));
-                } else if (role == Role.MANAGER) {
-                    return mongoClient.rxFind(SITE, new JsonObject().put("associated_company_id", companyId));
                 } else {
                     throw forbidden();
                 }
@@ -499,7 +548,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             .flatMap(userGroups -> Observable.fromIterable(userGroups)
                 .flatMapSingle(object -> mongoClient.rxFindOne(SITE, idQuery(object.getString("site_id")), null)
                     .flatMap(site -> {
-                        if (StringUtils.isNotNull(site.toString())) {
+                        if (site != null) {
                             object.put("site", buildSiteWithAbsoluteImageUri(message, site));
                         }
                         String associatedCompanyId = object.getString("associated_company_id");
@@ -610,7 +659,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
 
         // Model level permission
-        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
             JsonArray queryInput = MultiTenantCustomMessageHelper.getBodyAsJsonArray(message);
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
@@ -705,7 +754,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         if (StringUtils.isNotNull(password)) {
             mongoClient.rxFindOne(USER, idQuery(userId), null)
                 .map(response -> {
-                    if (StringUtils.isNull(response.toString())) {
+                    if (response == null) {
                         throw new HttpException(HttpResponseStatus.BAD_REQUEST);
                     } else {
                         return response;
@@ -746,7 +795,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
 
         mongoClient.rxFindOne(USER, idQuery(userId), null)
             .map(response -> {
-                if (StringUtils.isNull(response.toString())) {
+                if (response == null) {
                     throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Invalid user_id.");
                 } else {
                     return response;
@@ -805,48 +854,103 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
 
                     body.put("company_id", companyJsonObject.getString("_id"));
 
-                    if (companyJsonObject.getString("role").equals(Role.MANAGER.toString()) && SQLUtils.in(body.getString("role", ""), Role.USER.toString(), Role.GUEST.toString())) {
-                        return updateMongoUserByManager(ctxUser, body, keycloakUser, companyJsonObject.getString("_id"));
-                    } else {
-                        body.put("associated_company_id", companyJsonObject.getString("associated_company_id"))
+                    if (companyJsonObject.getString("role").equals(Role.MANAGER.toString())
+                        && SQLUtils.in(body.getString("role", ""), Role.MANAGER.toString(), Role.USER.toString(), Role.GUEST.toString(), "")) {
+                        String siteId = body.getString("site_id");
+
+                        if (siteId == null) {
+                            throw badRequest("You must include site_id on the request data.");
+                        }
+
+                        return mongoClient
+                            .rxFindOne(SITE, new JsonObject().put("_id", siteId), null)
+                            .flatMap(childSite -> {
+                                if (childSite != null) {
+                                    if (childSite.getString("associated_company_id").equals(companyJsonObject.getString("_id"))) {
+                                        return Single.just(body.put("role", body.getString("role", Role.MANAGER.toString()))); // if nothing then it should be MANAGER
+                                    } else {
+                                        throw forbidden();
+                                    }
+                                } else {
+                                    throw badRequest("Site doesn't exist.");
+                                }
+                            })
+                            .flatMap(siteEditedBody -> {
+                                if (SQLUtils.in(body.getString("role", ""), Role.USER.toString(), Role.GUEST.toString())) {
+                                    String groupId = body.getString("group_id");
+                                    if (groupId == null) {
+                                        throw badRequest("You must include group_in on the request data.");
+                                    }
+
+                                    return mongoClient.rxFind(USER_GROUP, new JsonObject().put("site_id", siteId))
+                                        .flatMap(childUserGroups -> {
+                                            if (childUserGroups.size() > 0) {
+                                                if (StringUtils.getIdsList(childUserGroups).contains(groupId)) {
+                                                    return Single.just(siteEditedBody
+                                                        .put("group_id", groupId)
+                                                        .put("associated_company_id", companyJsonObject.getString("_id"))); // For USER and GUEST company_id and associated_company_id be same
+                                                } else {
+                                                    throw badRequest("<UserGroup> doesn't exist on that <Site>.");
+                                                }
+                                            } else {
+                                                throw badRequest("<Site> doesn't have any <UserGroup>.");
+                                            }
+                                        });
+                                } else {
+                                    return Single.just(siteEditedBody
+                                        .put("group_id", "")
+                                        .put("associated_company_id", companyJsonObject.getString("associated_company_id"))); // For ADMIN company
+                                }
+                            });
+                    } else if (companyJsonObject.getString("role").equals(Role.ADMIN.toString())) {
+                        return Single.just(body
+                            .put("associated_company_id", companyJsonObject.getString("associated_company_id"))
                             .put("role", companyJsonObject.getString("role"))
                             .put("site_id", "")
-                            .put("group_id", "");
-
-                        MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
-                        return mongoClient.rxSave(USER, mongoUser.toJsonObject())
-                            .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
+                            .put("group_id", ""));
+                    } else {
+                        throw badRequest("Condition doesn't match up.");
                     }
                 } else {
                     // This case shouldn't be happened; otherwise only half operation will be successful
                     throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <Company> at first.");
                 }
+            })
+            .flatMap(response -> {
+                MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
+                return mongoClient.rxSave(USER, mongoUser.toJsonObject())
+                    .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
             });
     }
 
     private SingleSource<? extends Integer> updateMongoUserByManager(JsonObject ctxUser, JsonObject body, JsonObject keycloakUser, String companyId) {
         JsonObject query = new JsonObject().put("associated_company_id", companyId);
-        return mongoClient.rxFind(SITE, query)
-            .flatMap(childSites -> {
-                if (childSites.size() > 0) {
-                    return mongoClient.rxFind(USER, query)
-                        .flatMap(childGroups -> {
-                            if (childGroups.size() > 0) {
-                                body.put("company_id", companyId)
-                                    .put("associated_company_id", companyId)
-                                    .put("site_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("site_id", ""), StringUtils.getIds(childSites)))
-                                    .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), StringUtils.getIds(childGroups)));
-                                MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
-                                return mongoClient.rxSave(USER, mongoUser.toJsonObject())
-                                    .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
-                            } else {
-                                throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
-                            }
-                        });
+
+        return mongoClient.rxFind(USER, query)
+            .flatMap(childGroups -> {
+                if (childGroups.size() > 0) {
+                    body.put("company_id", companyId)
+                        .put("associated_company_id", companyId)
+                        .put("site_id", MultiTenantCustomMessageHelper.getSiteId(ctxUser))
+                        .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""), StringUtils.getIds(childGroups)));
+                    MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
+                    return mongoClient.rxSave(USER, mongoUser.toJsonObject())
+                        .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
                 } else {
-                    throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <Site> at first.");
+                    throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Create <User Group> at first.");
                 }
             });
+    }
+
+    private SingleSource<? extends Integer> updateOwnUser(JsonObject body, JsonObject ctxUser, JsonObject keycloakUser) {
+        // User doesn't have the authority to update own company_id, associated_company_id, and group_id
+        body.put("company_id", ctxUser.getString("company_id"))
+            .put("associated_company_id", ctxUser.getString("associated_company_id"))
+            .put("group_id", ctxUser.getString("group_id", ""));
+        MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
+        JsonObject mongoUserObject = mongoUser.toJsonObject().put("role", ctxUser.getString("role")); // Role shouldn't be overridden
+        return mongoClient.rxSave(USER, mongoUserObject)
+            .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
     }
 
     private void handleUpdateSite(Message<Object> message) {
@@ -855,11 +959,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         Role role = MultiTenantCustomMessageHelper.getRole(user);
         String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
 
-        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
             String siteId = MultiTenantCustomMessageHelper.getParamsId(message);
             mongoClient.rxFindOne(SITE, idQuery(siteId), null)
                 .flatMap(site -> {
-                    if (StringUtils.isNotNull(site.toString())) {
+                    if (site != null) {
                         return objectLevelPermission(role, site.getString("associated_company_id"), companyId)
                             .map(permitted -> {
                                 if (permitted) {
@@ -873,34 +977,33 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     }
                 })
                 .flatMap(site -> {
-                    if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-                        String associatedCompanyId = body.getString("associated_company_id");
-                        return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
-                            .flatMap(associatedCompany -> {
-                                if (StringUtils.isNotNull(associatedCompany.toString())) {
-                                    if (associatedCompany.getString("role").equals(Role.MANAGER.toString())) {
-                                        if (role == Role.SUPER_ADMIN) {
-                                            return updateSite(body, role, associatedCompany.getString("_id"), site);
-                                        } else {
-                                            return byAdminCompanyGetAdminWithManagerSelectionList(companyId)
-                                                .flatMap(companies -> {
-                                                    if (companies.contains(associatedCompany.getString("_id"))) {
-                                                        return updateSite(body, role, associatedCompany.getString("_id"), site);
-                                                    } else {
-                                                        throw forbidden();
-                                                    }
-                                                });
-                                        }
-                                    } else {
-                                        throw forbidden();
-                                    }
+                    String associatedCompanyId = body.getString("associated_company_id");
+                    return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
+                        .map(associatedCompany -> {
+                            if (associatedCompany != null) {
+                                return associatedCompany;
+                            } else {
+                                throw badRequest("Requested company doesn't exist on Database.");
+                            }
+                        })
+                        .flatMap(associatedCompany -> {
+                            if (associatedCompany.getString("role").equals(Role.MANAGER.toString())) {
+                                if (role == Role.SUPER_ADMIN) {
+                                    return updateSite(body, role, associatedCompany.getString("_id"), site);
                                 } else {
-                                    throw badRequest("Requested company doesn't exist on Database.");
+                                    return byAdminCompanyGetManagerSelectionList(companyId)
+                                        .flatMap(companies -> {
+                                            if (companies.contains(associatedCompany.getString("_id"))) {
+                                                return updateSite(body, role, associatedCompany.getString("_id"), site);
+                                            } else {
+                                                throw forbidden();
+                                            }
+                                        });
                                 }
-                            });
-                    } else {
-                        return updateSite(body, role, companyId, site);
-                    }
+                            } else {
+                                throw badRequest("You must associate Manager level company.");
+                            }
+                        });
                 })
                 .subscribe(ignored -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.NO_CONTENT.code())),
                     throwable -> handleHttpException(message, throwable));
@@ -912,7 +1015,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     private SingleSource<?> updateSite(JsonObject body, Role role, String companyId, JsonObject site) {
         JsonObject siteObject = new Site(body
             .put("associated_company_id", companyId)).toJsonObject()
-            .put("role", UserUtils.getRole(role).toString())
+            .put("role", Role.MANAGER.toString())
             .put("_id", site.getString("_id"));
         return mongoClient.rxSave(SITE, siteObject);
     }
@@ -924,60 +1027,73 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         String userCompanyId = MultiTenantCustomMessageHelper.getCompanyId(user);
 
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-            String userGroupId = MultiTenantCustomMessageHelper.getParamsId(message);
-
-            mongoClient.rxFindOne(USER_GROUP, idQuery(userGroupId), null)
-                .flatMap(userObject -> objectLevelPermission(role, userObject.getString("associated_company_id"), userCompanyId)
-                    .map(permitted -> {
-                        if (permitted) {
-                            return userObject;
-                        } else {
-                            throw forbidden();
-                        }
-                    }))
-                .flatMap(userGroup -> getManagerSiteQuery(role, userCompanyId)
-                    .flatMap(managerSiteQuery -> mongoClient.rxFind(SITE, managerSiteQuery)
-                        .flatMap(childCompaniesResponse -> {
-                            if (childCompaniesResponse.size() > 0) {
-                                String[] availableSites = StringUtils.getIds(childCompaniesResponse);
-                                String siteId = SQLUtils.getMatchValueOrDefaultOne(body.getString("site_id", ""), availableSites);
-                                if (role == Role.MANAGER) {
-                                    return Single.just(new UserGroup(body
-                                        .put("associated_company_id", userCompanyId)
-                                        .put("role", Role.USER.toString())
-                                        .put("site_id", siteId))
-                                        .toJsonObject().put("_id", userGroup.getString("_id")));
-                                } else {
-                                    String associatedCompanyId = body.getString("associated_company_id", "");
-                                    if (StringUtils.isNotNull(associatedCompanyId)) {
-                                        return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
-                                            .map(company -> {
-                                                if (StringUtils.isNotNull(company.toString())) {
-                                                    if (company.getString("role").equals(Role.MANAGER.toString())
-                                                        && (role == Role.SUPER_ADMIN
-                                                        || (role == Role.ADMIN && managerSiteQuery.getJsonObject("associated_company_id").getJsonArray("$in").contains(associatedCompanyId))
-                                                    )) {
-                                                        return new UserGroup(body
-                                                            .put("associated_company_id", associatedCompanyId)
-                                                            .put("role", Role.USER.toString())
-                                                            .put("site_id", siteId))
-                                                            .toJsonObject().put("_id", userGroup.getString("_id"));
-                                                    } else {
-                                                        throw forbidden();
-                                                    }
-                                                } else {
-                                                    throw badRequest("We don't have the associated_company_id.");
-                                                }
-                                            });
-                                    } else {
-                                        throw badRequest("No associated_company_id value is requested.");
-                                    }
-                                }
+            Single.create(
+                source -> {
+                    String userGroupId = MultiTenantCustomMessageHelper.getParamsId(message);
+                    mongoClient.rxFindOne(USER_GROUP, idQuery(userGroupId), null)
+                        .map(userGroup -> {
+                            if (userGroup != null) {
+                                return userGroup;
                             } else {
-                                throw badRequest("Create <Site> at first.");
+                                throw badRequest("User Group doesn't exist");
                             }
-                        })))
-                .flatMap(userGroupObject -> mongoClient.rxSave(USER_GROUP, userGroupObject))
+                        })
+                        .flatMap(userGroup -> objectLevelPermission(role, userGroup.getString("associated_company_id"), userCompanyId)
+                            .map(permitted -> {
+                                if (permitted) {
+                                    return userGroup;
+                                } else {
+                                    throw forbidden();
+                                }
+                            }))
+                        .flatMap(userGroup -> {
+                            if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+                                return getManagerSiteQuery(role, userCompanyId)
+                                    .flatMap(managerSiteQuery -> mongoClient.rxFind(SITE, managerSiteQuery)
+                                        .flatMap(childSitesResponse -> {
+                                            if (childSitesResponse.size() > 0) {
+                                                String[] availableSites = StringUtils.getIds(childSitesResponse);
+                                                String siteId = SQLUtils.getMatchValue(body.getString("site_id", ""), availableSites);
+                                                if (siteId == null) {
+                                                    throw badRequest("Site doesn't match up Exception!");
+                                                }
+                                                String associatedCompanyId = body.getString("associated_company_id", "");
+                                                if (StringUtils.isNotNull(associatedCompanyId)) {
+                                                    return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
+                                                        .map(company -> {
+                                                            if (company != null) {
+                                                                if (company.getString("role").equals(Role.MANAGER.toString())
+                                                                    && (role == Role.SUPER_ADMIN
+                                                                    || (role == Role.ADMIN && managerSiteQuery.getJsonObject("associated_company_id").getJsonArray("$in").contains(associatedCompanyId)))) {
+                                                                    return new UserGroup(body
+                                                                        .put("associated_company_id", associatedCompanyId)
+                                                                        .put("role", Role.USER.toString())
+                                                                        .put("site_id", siteId))
+                                                                        .toJsonObject().put("_id", userGroup.getString("_id"));
+                                                                } else {
+                                                                    throw badRequest("We should assign Manager level company");
+                                                                }
+                                                            } else {
+                                                                throw badRequest("We don't have the associated_company_id.");
+                                                            }
+                                                        });
+                                                } else {
+                                                    throw badRequest("No associated_company_id value is requested.");
+                                                }
+                                            } else {
+                                                throw badRequest("Create <Site> at first.");
+                                            }
+                                        }));
+                            } else {
+                                return Single.just(new UserGroup(body
+                                    .put("associated_company_id", userCompanyId)
+                                    .put("site_id", MultiTenantCustomMessageHelper.getSiteId(user)))
+                                    .toJsonObject().put("_id", userGroup.getString("_id")));
+                            }
+                        })
+                        .subscribe(source::onSuccess, source::onError);
+                })
+                .flatMap(userGroup -> mongoClient.rxSave(USER_GROUP, (JsonObject) userGroup))
                 .subscribe(ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.NO_CONTENT.code())), throwable -> handleHttpException(message, throwable));
         } else {
             handleForbiddenResponse(message);
@@ -990,7 +1106,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         Role role = MultiTenantCustomMessageHelper.getRole(user);
         String associatedCompanyId = MultiTenantCustomMessageHelper.getAssociatedCompanyId(user);
 
-        if (SQLUtils.in(role.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
             JsonObject query = new JsonObject().put("associated_company_id", associatedCompanyId);
             mongoClient.rxFind(SITE, query)
                 .flatMap(getSites -> {
@@ -1020,7 +1136,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         if (StringUtils.isNotNull(associatedCompanyId)) {
             return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
                 .map(associatedCompany -> {
-                    if (StringUtils.isNotNull(associatedCompany.toString())) {
+                    if (associatedCompany != null) {
                         return object.put("associated_company", associatedCompany);
                     }
                     return object;
@@ -1038,18 +1154,18 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     JsonObject object = new JsonObject(res.toString());
                     return mongoClient.rxFindOne(COMPANY, idQuery(object.getString("associated_company_id")), null)
                         .flatMap(associatedCompany -> {
-                            if (StringUtils.isNotNull(associatedCompany.toString())) {
+                            if (associatedCompany != null) {
                                 object.put("associated_company", associatedCompany);
                             }
                             return mongoClient.rxFindOne(COMPANY, idQuery(object.getString("company_id")), null)
                                 .flatMap(company -> {
-                                    if (StringUtils.isNotNull(company.toString())) {
+                                    if (company != null) {
                                         object.put("company", company);
                                     }
                                     if (StringUtils.isNotNull(object.getString("group_id"))) {
                                         return mongoClient.rxFindOne(USER_GROUP, idQuery(object.getString("group_id")), null)
                                             .flatMap(group -> {
-                                                if (StringUtils.isNotNull(group.toString())) {
+                                                if (group != null) {
                                                     object.put("group", group);
                                                 }
                                                 return respondSiteWithAbsolutePath(message, object);
@@ -1072,7 +1188,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         if (StringUtils.isNotNull(object.getString("site_id"))) {
             return mongoClient.rxFindOne(SITE, idQuery(object.getString("site_id")), null)
                 .map(site -> {
-                    if (StringUtils.isNotNull(site.toString())) {
+                    if (site != null) {
                         object.put("site", buildSiteWithAbsoluteImageUri(message, site));
                     }
                     return object;
@@ -1097,6 +1213,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             .map(response -> new JsonObject().put("associated_company_id", new JsonObject().put("$in", StringUtils.getIdsJsonArray(response).add(companyId))));
     }
 
+    private Single<List<String>> byAdminCompanyGetManagerSelectionList(String companyId) {
+        return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", companyId).put("role", Role.MANAGER.toString()))
+            .map(StringUtils::getIdsList);
+    }
+
     private Single<JsonObject> byAdminCompanyGetAdminWithManagerSelectionListQuery(String companyId) {
         return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", companyId).put("role", Role.MANAGER.toString()))
             .map(response -> new JsonObject().put("associated_company_id", new JsonObject().put("$in", StringUtils.getIdsJsonArray(response).add(companyId))));
@@ -1113,12 +1234,10 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
 
     private Single<JsonObject> getManagerSiteQuery(Role role, String userCompanyId) {
         if (role == Role.SUPER_ADMIN) {
-            return Single.just(new JsonObject().put("role", Role.USER));
-        } else if (role == Role.ADMIN) {
+            return Single.just(new JsonObject().put("role", Role.MANAGER));
+        } else {
             return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", userCompanyId).put("role", Role.MANAGER.toString()))
                 .map(response -> new JsonObject().put("associated_company_id", new JsonObject().put("$in", StringUtils.getIdsJsonArray(response))));
-        } else {
-            return Single.just(new JsonObject().put("associated_company_id", userCompanyId));
         }
     }
 

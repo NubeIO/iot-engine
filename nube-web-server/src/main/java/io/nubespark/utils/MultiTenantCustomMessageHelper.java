@@ -28,16 +28,16 @@ public class MultiTenantCustomMessageHelper {
         return Role.valueOf(user.getString("role"));
     }
 
-    public static String getRoleString(JsonObject user) {
-        return user.getString("role");
-    }
-
     public static String getCompanyId(JsonObject user) {
         return user.getString("company_id");
     }
 
     public static String getAssociatedCompanyId(JsonObject user) {
         return user.getString("associated_company_id");
+    }
+
+    public static String getSiteId(JsonObject user) {
+        return user.getString("site_id");
     }
 
     public static String getAccessToken(JsonObject user) {
