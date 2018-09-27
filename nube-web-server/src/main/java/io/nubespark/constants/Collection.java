@@ -7,4 +7,5 @@ public class Collection {
     public static String USER = "user";
     public static String GRID_LAYOUT = "grid_layout";
     public static String SETTINGS = "settings";
+    public static String MENU = "menu";
 }

@@ -164,6 +164,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         router.route("/api/menu/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "menu"));
         router.route("/api/settings/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "settings"));
         router.post("/api/upload_image").handler(this::handleUploadImage);
+        router.get("/api/menu_for_user_group/*").handler(this::handleMenuForUserGroup);
     }
 
     private void handleMultiTenantSupportAPIs(RoutingContext ctx) {
@@ -219,6 +220,28 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                 .end(Json.encodePrettily(new JsonObject().put("path", appendRealFileNameWithExtension(fileUpload).replace(getRootFolder(), ""))));
         } else {
             ctx.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
+        }
+    }
+
+    private void handleMenuForUserGroup(RoutingContext ctx) {
+        if (SQLUtils.in(ctx.user().principal().getString("role"), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+            String siteId = ctx.normalisedPath().substring(("/api/menu_for_user_group/").length());
+            mongoClient.rxFindOne(MENU, new JsonObject().put("site_id", siteId), null)
+                .subscribe(menu -> {
+                    if (menu != null) {
+                        ctx.response()
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .setStatusCode(HttpResponseStatus.OK.code())
+                            .end(menu.toString());
+                    } else {
+                        ctx.response()
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
+                            .end();
+                    }
+                });
+        } else {
+            ctx.response().setStatusCode(HttpResponseStatus.FORBIDDEN.code());
         }
     }
 
@@ -429,10 +452,10 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     }
                 })
                 .subscribe(groupAndSiteAndCompany -> {
-                ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(user.principal()
-                        .mergeIn(groupAndSiteAndCompany)));
-            });
+                    ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .end(Json.encodePrettily(user.principal()
+                            .mergeIn(groupAndSiteAndCompany)));
+                });
         } else {
             logger.info("Send not authorized error and user should login");
             failAuthentication(ctx);
