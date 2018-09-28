@@ -123,6 +123,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     case "user_group":
                         handleUpdateUserGroup(message);
                         break;
+                    case "company":
+                        handleUpdateCompany(message);
+                        break;
                     default:
                         handleNotFoundResponse(message);
                         break;
@@ -989,12 +992,12 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                         .flatMap(associatedCompany -> {
                             if (associatedCompany.getString("role").equals(Role.MANAGER.toString())) {
                                 if (role == Role.SUPER_ADMIN) {
-                                    return updateSite(body, role, associatedCompany.getString("_id"), site);
+                                    return updateSite(body, associatedCompany.getString("_id"), site);
                                 } else {
                                     return byAdminCompanyGetManagerSelectionList(companyId)
                                         .flatMap(companies -> {
                                             if (companies.contains(associatedCompany.getString("_id"))) {
-                                                return updateSite(body, role, associatedCompany.getString("_id"), site);
+                                                return updateSite(body, associatedCompany.getString("_id"), site);
                                             } else {
                                                 throw forbidden();
                                             }
@@ -1012,7 +1015,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private SingleSource<?> updateSite(JsonObject body, Role role, String companyId, JsonObject site) {
+    private SingleSource<?> updateSite(JsonObject body, String companyId, JsonObject site) {
         JsonObject siteObject = new Site(body
             .put("associated_company_id", companyId)).toJsonObject()
             .put("role", Role.MANAGER.toString())
@@ -1095,6 +1098,64 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 })
                 .flatMap(userGroup -> mongoClient.rxSave(USER_GROUP, (JsonObject) userGroup))
                 .subscribe(ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.NO_CONTENT.code())), throwable -> handleHttpException(message, throwable));
+        } else {
+            handleForbiddenResponse(message);
+        }
+    }
+
+    private void handleUpdateCompany(Message<Object> message) {
+        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
+        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
+        Role role = MultiTenantCustomMessageHelper.getRole(user);
+
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+            String companyId = MultiTenantCustomMessageHelper.getParamsId(message);
+            Single.create(
+                source -> {
+                    if (role == Role.SUPER_ADMIN) {
+                        mongoClient.rxFindOne(COMPANY, idQuery(companyId), null)
+                            .flatMap(company -> {
+                                if (company != null) {
+                                    if (company.getString("role").equals(Role.ADMIN.toString())) {
+                                        return Single.just(new Company(body
+                                            .put("role", company.getString("role"))
+                                            .put("associated_company_id", company.getString("associated_company_id"))));
+                                    } else {
+                                        return mongoClient.rxFindOne(COMPANY, idQuery(body.getString("associated_company_id", "")), null)
+                                            .map(associatedCompany -> {
+                                                if (associatedCompany != null
+                                                    && UserUtils.getRole(Role.valueOf(associatedCompany.getString("role"))).toString().equals(company.getString("role"))) {
+
+                                                    return new Company(body.put("role", company.getString("role")));
+                                                } else {
+                                                    throw badRequest("You can't associated that <Company>!");
+                                                }
+                                            });
+                                    }
+                                } else {
+                                    throw badRequest("Requested <Company> doesn't exist!");
+                                }
+                            }).subscribe(source::onSuccess, source::onError);
+                    } else {
+                        mongoClient.rxFindOne(COMPANY, idQuery(companyId), null)
+                            .map(company -> {
+                                if (company != null && company.getString("role").equals(Role.MANAGER.toString())
+                                    && company.getString("associated_company_id").equals(MultiTenantCustomMessageHelper.getCompanyId(user))) {
+
+                                    return new Company(body
+                                        .put("role", company.getString("role"))
+                                        .put("associated_company_id", company.getString("associated_company_id")));
+                                } else {
+                                    throw forbidden();
+                                }
+                            })
+                            .subscribe(source::onSuccess, source::onError);
+                    }
+                })
+                .flatMap(company -> mongoClient.rxSave(COMPANY, ((Company) company).toJsonObject().put("_id", companyId)))
+                .subscribe(
+                    ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.NO_CONTENT.code())),
+                    throwable -> handleHttpException(message, throwable));
         } else {
             handleForbiddenResponse(message);
         }
