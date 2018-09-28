@@ -236,8 +236,8 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     } else {
                         ctx.response()
                             .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                            .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
-                            .end();
+                            .setStatusCode(HttpResponseStatus.OK.code())
+                            .end(new JsonObject().toString());
                     }
                 });
         } else {
