@@ -949,6 +949,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         // User doesn't have the authority to update own company_id, associated_company_id, and group_id
         body.put("company_id", ctxUser.getString("company_id"))
             .put("associated_company_id", ctxUser.getString("associated_company_id"))
+            .put("site_id", ctxUser.getString("site_id", ""))
             .put("group_id", ctxUser.getString("group_id", ""));
         MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
         JsonObject mongoUserObject = mongoUser.toJsonObject().put("role", ctxUser.getString("role")); // Role shouldn't be overridden
