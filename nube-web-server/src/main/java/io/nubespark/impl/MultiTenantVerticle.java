@@ -545,7 +545,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 } else if (role == Role.MANAGER) {
                     return mongoClient.rxFind(USER_GROUP, new JsonObject().put("associated_company_id", companyId));
                 } else {
-                    throw forbidden();
+                    return mongoClient.rxFind(USER_GROUP, new JsonObject().put("_id", user.getString("group_id")));
                 }
             })
             .flatMap(userGroups -> Observable.fromIterable(userGroups)
