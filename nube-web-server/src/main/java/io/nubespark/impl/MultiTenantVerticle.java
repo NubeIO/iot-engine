@@ -950,7 +950,8 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         body.put("company_id", ctxUser.getString("company_id"))
             .put("associated_company_id", ctxUser.getString("associated_company_id"))
             .put("site_id", ctxUser.getString("site_id", ""))
-            .put("group_id", ctxUser.getString("group_id", ""));
+            .put("group_id", ctxUser.getString("group_id", ""))
+            .put("role", ctxUser.getString("role"));
         MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
         JsonObject mongoUserObject = mongoUser.toJsonObject().put("role", ctxUser.getString("role")); // Role shouldn't be overridden
         return mongoClient.rxSave(USER, mongoUserObject)
