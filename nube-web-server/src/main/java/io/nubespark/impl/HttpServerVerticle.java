@@ -164,6 +164,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         router.route("/api/menu/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "menu"));
         router.route("/api/settings/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "settings"));
         router.post("/api/upload_image").handler(this::handleUploadImage);
+        router.get("/api/menu_for_user_group/*").handler(this::handleMenuForUserGroup);
     }
 
     private void handleMultiTenantSupportAPIs(RoutingContext ctx) {
@@ -219,6 +220,28 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                 .end(Json.encodePrettily(new JsonObject().put("path", appendRealFileNameWithExtension(fileUpload).replace(getRootFolder(), ""))));
         } else {
             ctx.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
+        }
+    }
+
+    private void handleMenuForUserGroup(RoutingContext ctx) {
+        if (SQLUtils.in(ctx.user().principal().getString("role"), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+            String siteId = ctx.normalisedPath().substring(("/api/menu_for_user_group/").length());
+            mongoClient.rxFindOne(MENU, new JsonObject().put("site_id", siteId), null)
+                .subscribe(menu -> {
+                    if (menu != null) {
+                        ctx.response()
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .setStatusCode(HttpResponseStatus.OK.code())
+                            .end(menu.toString());
+                    } else {
+                        ctx.response()
+                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                            .setStatusCode(HttpResponseStatus.OK.code())
+                            .end(new JsonObject().toString());
+                    }
+                });
+        } else {
+            ctx.response().setStatusCode(HttpResponseStatus.FORBIDDEN.code());
         }
     }
 
@@ -389,7 +412,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     if (StringUtils.isNotNull(groupId)) {
                         return mongoClient.rxFindOne(USER_GROUP, idQuery(groupId), null)
                             .map(group -> {
-                                if (StringUtils.isNotNull(group.toString())) {
+                                if (group != null) {
                                     return object.put("group", group);
                                 }
                                 return object;
@@ -402,29 +425,44 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     if (StringUtils.isNotNull(siteId)) {
                         return mongoClient.rxFindOne(SITE, idQuery(siteId), null)
                             .flatMap(site -> {
-                                if (StringUtils.isNotNull(site.toString())) {
+                                if (site != null) {
                                     return Single.just(group.put("site", site
                                         .put("logo_sm", buildAbsoluteUri(ctx, site.getString("logo_sm")))
                                         .put("logo_md", buildAbsoluteUri(ctx, site.getString("logo_md")))));
                                 } else {
-                                    return assignAdminOrManagerOnASiteIfAvailable(ctx, group);
+                                    return assignAdminIfAvailable(ctx, group);
                                 }
                             });
                     } else {
-                        return assignAdminOrManagerOnASiteIfAvailable(ctx, group);
+                        return assignAdminIfAvailable(ctx, group);
                     }
-                }).subscribe(groupAndSite -> {
-                ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(user.principal()
-                        .mergeIn(groupAndSite)));
-            });
+                })
+                .flatMap(groupAndSite -> {
+                    String associatedCompanyId = user.principal().getString("company_id", "");
+                    if (StringUtils.isNotNull(associatedCompanyId)) {
+                        return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
+                            .map(response -> {
+                                if (response != null) {
+                                    return groupAndSite.put("company", response);
+                                }
+                                return groupAndSite;
+                            });
+                    } else {
+                        return Single.just(groupAndSite);
+                    }
+                })
+                .subscribe(groupAndSiteAndCompany -> {
+                    ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                        .end(Json.encodePrettily(user.principal()
+                            .mergeIn(groupAndSiteAndCompany)));
+                });
         } else {
             logger.info("Send not authorized error and user should login");
             failAuthentication(ctx);
         }
     }
 
-    private SingleSource<? extends JsonObject> assignAdminOrManagerOnASiteIfAvailable(RoutingContext ctx, JsonObject group) {
+    private SingleSource<? extends JsonObject> assignAdminIfAvailable(RoutingContext ctx, JsonObject group) {
         String role = ctx.user().principal().getString("role");
         if (SQLUtils.in(role, Role.ADMIN.toString(), Role.MANAGER.toString())) {
             // If we have already a site for its respective role, then we will assign it
