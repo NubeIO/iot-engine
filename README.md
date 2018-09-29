@@ -205,7 +205,7 @@ A `settings.xml` should be added to `~/.m2/` in development environment
 cd nube-app-store-rest
 java -jar target/nube-app-store-rest-1.0-SNAPSHOT-fat.jar -conf src/conf/config.json -cluster -cluster-host 192.168.1.68
 ```
-> [Note: By default cluster.xml in nube-vertx-common project will be used but a custom cluster.xml can be added to classpath using argument `-cp /path/to/cluster.xml`]
+> [Note: By default cluster.xml in nube-vertx-common project will be used but a custom cluster.xml can be added to classpath using argument `-cp ./your-directory-cluster` or `-Dvertx.hazelcast.config=./your-directory-cluster/cluster.xml`]
 
 3. Run Nube BIOS
 ```
