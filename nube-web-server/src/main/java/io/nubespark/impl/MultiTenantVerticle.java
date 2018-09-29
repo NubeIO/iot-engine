@@ -1169,26 +1169,45 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         Role role = MultiTenantCustomMessageHelper.getRole(user);
         String associatedCompanyId = MultiTenantCustomMessageHelper.getAssociatedCompanyId(user);
 
-        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-            JsonObject query = new JsonObject().put("associated_company_id", associatedCompanyId);
-            mongoClient.rxFind(SITE, query)
-                .flatMap(getSites -> {
-                    Site site = new Site(MultiTenantCustomMessageHelper.getBodyAsJson(message)
-                        .put("associated_company_id", associatedCompanyId)
-                        .put("role", role.toString()));
-                    if (getSites.size() > 0) {
-                        return mongoClient.rxSave(SITE, site.toJsonObject().put("_id", getSites.get(0).getString("_id")));
+        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+            Single.create(
+                source -> {
+                    if (role != Role.MANAGER) {
+                        JsonObject query = new JsonObject().put("associated_company_id", associatedCompanyId);
+                        mongoClient.rxFind(SITE, query)
+                            .flatMap(getSites -> {
+                                Site site = new Site(MultiTenantCustomMessageHelper.getBodyAsJson(message)
+                                    .put("associated_company_id", associatedCompanyId)
+                                    .put("role", role.toString()));
+                                if (getSites.size() > 0) {
+                                    return mongoClient.rxSave(SITE, site.toJsonObject().put("_id", getSites.get(0).getString("_id")));
+                                } else {
+                                    return mongoClient.rxSave(SITE, site.toJsonObject())
+                                        .flatMap(siteResponse -> mongoClient.rxFind(SITE, query)
+                                            .flatMap(sites -> {
+                                                String respondSiteId = sites.get(0).getString("_id");
+                                                return mongoClient.rxUpdateCollectionWithOptions(USER, query, new JsonObject().put("$set", new JsonObject().put("site_id", respondSiteId)), new UpdateOptions(false, true));
+                                            }));
+                                }
+                            }).subscribe(ignore -> source.onSuccess(""), source::onError);
                     } else {
-                        return mongoClient.rxSave(SITE, site.toJsonObject())
-                            .flatMap(siteResponse -> mongoClient.rxFind(SITE, query)
-                                .flatMap(sites -> {
-                                    String siteId = sites.get(0).getString("_id");
-                                    return mongoClient.rxUpdateCollectionWithOptions(USER, query, new JsonObject().put("$set", new JsonObject().put("site_id", siteId)), new UpdateOptions(false, true));
-                                }));
+                        String siteId = MultiTenantCustomMessageHelper.getSiteId(user);
+                        JsonObject query = new JsonObject().put("_id", siteId);
+                        mongoClient.rxFindOne(SITE, query, null)
+                            .flatMap(respondSite -> {
+                                if (respondSite != null) {
+                                    Site site = new Site(MultiTenantCustomMessageHelper.getBodyAsJson(message)
+                                        .put("associated_company_id", respondSite.getString("associated_company_id"))
+                                        .put("role", respondSite.getString("role")));
+                                    return mongoClient.rxSave(SITE, site.toJsonObject().put("_id", siteId));
+                                } else {
+                                    throw new HttpException(HttpResponseStatus.NOT_FOUND.code(), "<Site> doesn't exist!");
+                                }
+                            }).subscribe(ignore -> source.onSuccess(""), source::onError);
                     }
                 })
-                .subscribe(ignored ->
-                        message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.OK.code())),
+                .subscribe(
+                    ignored -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.OK.code())),
                     throwable -> handleHttpException(message, throwable));
         } else {
             handleForbiddenResponse(message);
