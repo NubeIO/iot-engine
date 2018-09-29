@@ -8,9 +8,14 @@ import io.vertx.core.json.JsonObject;
  * @author Junbong
  */
 public class CustomMessage<T> {
+
     private final JsonObject header;
     private final T body;
     private final int statusCode;
+
+    public CustomMessage(T body, int statusCode) {
+        this(null, body, statusCode);
+    }
 
     public CustomMessage(JsonObject header, T body, int statusCode) {
         this.header = header;
@@ -39,4 +44,5 @@ public class CustomMessage<T> {
     public int getStatusCode() {
         return statusCode;
     }
+
 }
