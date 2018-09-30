@@ -298,7 +298,6 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
     private void handleEventBus(Router router) {
         BridgeOptions options = new BridgeOptions()
-            .addOutboundPermitted(new PermittedOptions().setAddress("news-feed"))
             .addOutboundPermitted(new PermittedOptions().setAddress("io.nubespark.ditto.events"));
 
         router.route("/eventbus/*").handler(SockJSHandler.create(vertx).bridge(options, event -> {

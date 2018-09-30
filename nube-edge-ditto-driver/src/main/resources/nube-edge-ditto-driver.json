@@ -1,3 +1,10 @@
 {
-  "main": "io.nubespark.EdgeDittoDriver"
+  "main": "io.nubespark.EdgeDittoDriver",
+  "options": {
+    "config": {
+      "http.port": 8089,
+      "http.host": "0.0.0.0",
+      "api.name": "ditto-edge"
+    }
+  }
 }
