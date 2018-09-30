@@ -5,3 +5,4 @@
 *.vertx*
 *.db
 *generated*
+!*nube-app-installer*.*db
