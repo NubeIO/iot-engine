@@ -108,7 +108,7 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
         // Create a router object.
         Router router = Router.router(vertx);
         router.route("/").handler(this::indexHandler);
-        router.route("/").handler(BodyHandler.create());
+        router.route().handler(BodyHandler.create());
         router.route("/*").handler(this::handleWebServer);
         // This is last handler that gives not found message
         router.route().last().handler(this::handlePageNotFound);
@@ -127,7 +127,7 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
         request.put("method", ctx.request().method().toString());
         request.put("uri", ctx.request().uri());
         if (ctx.getBody() != null) {
-            request.put("body", ctx.getBody().getDelegate());
+            request.put("body", ctx.getBody().toString());
         }
 
         logger.info(Json.encodePrettily(request));

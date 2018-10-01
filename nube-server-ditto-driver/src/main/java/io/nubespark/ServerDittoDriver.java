@@ -96,7 +96,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         // Create a router object.
         Router router = Router.router(vertx);
         router.route("/").handler(this::indexHandler);
-        router.route("/").handler(BodyHandler.create());
+        router.route().handler(BodyHandler.create());
         router.route("/*").handler(this::handleWebServer);
         // This is last handler that gives not found message
         router.route().last().handler(this::handlePageNotFound);
@@ -118,6 +118,9 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         JsonObject request = new JsonObject();
         request.put("method", ctx.request().method());
         request.put("uri", ctx.request().uri());
+        if (ctx.getBody() != null) {
+            request.put("body", ctx.getBody().toString());
+        }
 
         logger.info("Proxying request: " + ctx.request().uri());
         requestDittoServer(client, request, dittoResHandler -> {
@@ -213,7 +216,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         }
         Buffer body = null;
         if (message.fieldNames().contains("body")) {
-            body = Buffer.buffer(message.getBinary("body"));
+            body = Buffer.buffer(message.getString("body"));
         }
 
         HttpClientRequest req = client.request(httpMethod,
