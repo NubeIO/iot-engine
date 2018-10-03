@@ -1,8 +1,8 @@
 {
   "autoInstall": true,
   "remotes": [
-    "http://45.76.112.85:9099/repository/maven-releases/",
-    "http://45.76.112.85:9099/repository/maven-snapshots/",
-    "http://45.76.112.85:9099/repository/maven-central/"
+    "http://127.0.0.1:9099/repository/maven-releases/",
+    "http://127.0.0.1:9099/repository/maven-snapshots/",
+    "http://127.0.0.1:9099/repository/maven-central/"
   ]
 }
