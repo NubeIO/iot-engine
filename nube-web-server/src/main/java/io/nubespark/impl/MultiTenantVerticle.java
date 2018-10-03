@@ -514,6 +514,8 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 } else if (role == Role.ADMIN) {
                     return byAdminCompanyGetManagerSelectionListQuery(companyId)
                         .flatMap(query -> mongoClient.rxFind(SITE, query));
+                } else if (role == Role.MANAGER) {
+                    return mongoClient.rxFind(SITE, new JsonObject().put("associated_company_id", companyId));
                 } else {
                     throw forbidden();
                 }
