@@ -181,7 +181,6 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             body = (T) new JsonObject();
         } else if (SQLUtils.in(url.split("/")[0], "delete_users", "delete_companies", "delete_sites", "delete_user_groups")) {
             body = (T) ctx.getBodyAsJsonArray();
-            logger.info("Body:::::::::" + body);
         } else {
             try {
                 body = (T) ctx.getBodyAsJson();
@@ -190,7 +189,6 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                 return;
             }
         }
-        logger.info("Body:::::" + body);
         CustomMessage<T> message = new CustomMessage<>(header, body, 200);
         eventBus.send(MULTI_TENANT_ADDRESS, message, reply -> {
             if (reply.succeeded()) {
@@ -298,7 +296,6 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
     private void handleEventBus(Router router) {
         BridgeOptions options = new BridgeOptions()
-            .addOutboundPermitted(new PermittedOptions().setAddress("news-feed"))
             .addOutboundPermitted(new PermittedOptions().setAddress("io.nubespark.ditto.events"));
 
         router.route("/eventbus/*").handler(SockJSHandler.create(vertx).bridge(options, event -> {

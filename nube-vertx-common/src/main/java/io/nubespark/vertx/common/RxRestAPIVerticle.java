@@ -10,7 +10,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
-import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
@@ -26,20 +25,6 @@ import java.util.Set;
 import static io.nubespark.vertx.common.HttpHelper.badGateway;
 
 public class RxRestAPIVerticle extends RxMicroServiceVerticle {
-    /**
-     * Create http server for the REST service.
-     *
-     * @param router router instance
-     * @param host   http host
-     * @param port   http port
-     * @return async result of the procedure
-     */
-    protected Single<HttpServer> createHttpServer(Router router, String host, int port) {
-        return vertx.createHttpServer()
-            .requestHandler(router::accept)
-            .rxListen(port, host);
-    }
-
     @Override
     protected Logger getLogger() {
         return null;
