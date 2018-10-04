@@ -14,7 +14,7 @@ public class MongoUtils {
     public static Single<String> postDocument(MongoClient mongoClient, String collection, JsonObject document) {
         return mongoClient.rxFindOne(collection, new JsonObject().put("_id", document.getString("_id", "")), null)
             .flatMap(response -> {
-                if (StringUtils.isNull(response.toString())) {
+                if (response == null) {
                     return mongoClient.rxSave(collection, document);
                 } else {
                     throw new HttpException(HttpResponseStatus.CONFLICT, "Same value existence on our Database.");

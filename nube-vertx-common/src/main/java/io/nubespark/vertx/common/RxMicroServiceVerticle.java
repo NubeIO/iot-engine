@@ -13,6 +13,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
 import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.core.http.HttpServer;
+import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.reactivex.servicediscovery.types.MessageSource;
@@ -46,6 +48,20 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle {
                         .setFallbackOnFailure(true)
                         .setResetTimeout(cbOptions.getLong("reset-timeout", 30000L))
         );
+    }
+
+    /**
+     * Create http server for the REST service.
+     *
+     * @param router router instance
+     * @param host   http host
+     * @param port   http port
+     * @return async result of the procedure
+     */
+    protected Single<HttpServer> createHttpServer(Router router, String host, int port) {
+        return vertx.createHttpServer()
+            .requestHandler(router::accept)
+            .rxListen(port, host);
     }
 
     protected final Single<Record> publishHttpEndpoint(String name, String host, int port) {
