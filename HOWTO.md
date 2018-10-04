@@ -71,25 +71,30 @@ Only run 1 of 2 commands:
 Will be part of `Swagger UI` soon
 
 - Node status
+
   - `GET::localhost:8086/nodes`
 
 - Module manipulates
+
   - `POST::localhost:8086/api/module/`
 
     Request
+
     ```json
     {
-      "groupId":"io.nubespark",
-      "artifactId":"nube-edge-ditto-driver",
-      "version":"1.0-SNAPSHOT"
+      "groupId": "io.nubespark",
+      "artifactId": "nube-edge-ditto-driver",
+      "version": "1.0-SNAPSHOT"
     }
     ```
+
   - `DELETE::localhost:8086/api/module/`
 
     Request
+
     ```json
     {
-      "artifactId":"nube-edge-ditto-driver"
+      "artifactId": "nube-edge-ditto-driver"
     }
     ```
 

@@ -174,7 +174,6 @@ public class AppDeploymentVerticle extends RxMicroServiceVerticle {
         DeploymentOptions options = new DeploymentOptions().setConfig(config);
         return vertx.rxDeployVerticle(serviceName, options)
                     .doOnError(throwable -> {
-                        logger.error("what the fuck", throwable);
                         throw new EngineException(throwable);
                     })
                     .flatMap(deploymentId -> saveData(deploymentId, serviceName, config.encode(), conn).flatMap(
