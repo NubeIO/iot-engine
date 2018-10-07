@@ -389,6 +389,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     }
 
     private void authMiddleWare(RoutingContext ctx) {
+        logger.info("Auth middleware is being called...");
         String authorization = ctx.request().getDelegate().getHeader(HttpHeaders.AUTHORIZATION);
         if (authorization != null) {
             authorization = authorization.substring("Bearer ".length());
@@ -449,7 +450,9 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     }
                 })
                 .subscribe(groupAndSiteAndCompany -> {
-                    ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    ctx.response()
+                        .putHeader("username", user.principal().getString("username"))
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encodePrettily(user.principal()
                             .mergeIn(groupAndSiteAndCompany)));
                 });
