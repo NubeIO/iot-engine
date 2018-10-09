@@ -12,7 +12,7 @@
     <artifactId>nube-vertx-postgresql</artifactId>
 
     <properties>
-        <nube.version>1.0-SNAPSHOT</nube.version>
+        <main.verticle>io.nubespark.postgresql.PostgreSQLVerticle</main.verticle>
     </properties>
 
     <dependencies>
