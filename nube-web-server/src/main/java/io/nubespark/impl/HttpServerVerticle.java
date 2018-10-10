@@ -465,9 +465,9 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
     private SingleSource<? extends JsonObject> assignAdminIfAvailable(RoutingContext ctx, JsonObject group) {
         String role = ctx.user().principal().getString("role");
-        if (SQLUtils.in(role, Role.ADMIN.toString(), Role.MANAGER.toString())) {
+        if (SQLUtils.in(role, Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
             // If we have already a site for its respective role, then we will assign it
-            JsonObject query = new JsonObject().put("associated_company_id", ctx.user().principal().getString("associated_company_id"));
+            JsonObject query = new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id"));
             return mongoClient.rxFind(SITE, query)
                 .flatMap(sites -> {
                     if (sites.size() > 0) {
