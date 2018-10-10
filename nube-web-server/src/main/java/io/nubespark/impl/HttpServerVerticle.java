@@ -172,6 +172,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         JsonObject header = new JsonObject()
             .put("url", url)
             .put("method", ctx.request().method())
+            .put(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()))
             .put("user", ctx.user().principal())
             .put("host", ctx.request().host())
             .put("keycloakConfig", config().getJsonObject("keycloak"));
