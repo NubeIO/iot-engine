@@ -320,7 +320,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
      * @param router routing the URLs
      */
     private void handleStaticResource(Router router) {
-        router.route().handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(getRootFolder()));
+        router.route().handler(StaticHandler.create().setCachingEnabled(false).setAllowRootFileSystemAccess(true).setWebRoot(getRootFolder()));
         router.route("/*").handler(ctx -> ctx.response().sendFile(getRootFolder() + "/index.html"));
     }
 
