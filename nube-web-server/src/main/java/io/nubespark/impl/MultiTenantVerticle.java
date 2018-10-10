@@ -737,9 +737,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 }).collect(Collectors.toList()).size();
                 logger.info("Size of user match: " + usersSize);
                 if (usersSize > 0) {
-                    message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.FOUND.code()));
+                    message.reply(new CustomMessage<>(null, new JsonObject().put("exist", true), HttpResponseStatus.OK.code()));
                 } else {
-                    message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.NOT_FOUND.code()));
+                    message.reply(new CustomMessage<>(null, new JsonObject().put("exist", false), HttpResponseStatus.OK.code()));
                 }
             }, throwable -> handleHttpException(message, throwable));
     }
