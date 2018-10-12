@@ -1,6 +1,8 @@
 package io.nubespark;
 
+import io.nubespark.constants.Services;
 import io.nubespark.utils.Runner;
+import io.nubespark.utils.StringUtils;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
 import io.reactivex.Single;
@@ -157,8 +159,15 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         //Adding ditto authorization
         req.putHeader(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
         if (ctx.getBody() != null) {
-            logger.info("Body ::: " + ctx.getBody());
-            req.write(ctx.getBody());
+            if (StringUtils.isNull(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
+                // This means we are we are PUTing device value for the first time or going to updated whole data
+                JsonObject body = ctx.getBodyAsJson();
+                body.put("policyId", Services.POLICY_NAMESPACE_PREFIX + ":" + new JsonObject(ctx.request().headers().getDelegate().get("user")).getString("site_id"));
+                logger.info("Body ::: " + body);
+                req.write(body.toString());
+            } else {
+                req.write(ctx.getBody());
+            }
         }
         req.end();
     }

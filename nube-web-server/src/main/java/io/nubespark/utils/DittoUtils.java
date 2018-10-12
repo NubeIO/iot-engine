@@ -32,7 +32,8 @@ public class DittoUtils {
         "      \"resources\": {\n" +
         "        \"thing:/\": {\n" +
         "          \"grant\": [\n" +
-        "            \"READ\"\n" +
+        "            \"READ\",\n" +
+        "            \"WRITE\"\n" +
         "          ],\n" +
         "          \"revoke\": []\n" +
         "        },\n" +
@@ -57,7 +58,8 @@ public class DittoUtils {
         "      \"resources\": {\n" +
         "        \"thing:/\": {\n" +
         "          \"grant\": [\n" +
-        "            \"READ\"\n" +
+        "            \"READ\",\n" +
+        "            \"WRITE\"\n" +
         "          ],\n" +
         "          \"revoke\": []\n" +
         "        },\n" +

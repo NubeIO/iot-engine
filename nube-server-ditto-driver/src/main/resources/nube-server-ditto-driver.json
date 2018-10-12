@@ -6,9 +6,7 @@
       "http.host": "0.0.0.0",
       "api.name": "ditto",
       "ditto.http.port": 8080,
-      "ditto.http.host": "localhost",
-      "ditto.http.username": "ditto",
-      "ditto.http.password": "ditto"
+      "ditto.http.host": "localhost"
     }
   }
 }

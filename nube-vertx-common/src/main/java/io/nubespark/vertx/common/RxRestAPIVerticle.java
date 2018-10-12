@@ -134,6 +134,7 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
             context.request().headers().getDelegate().forEach(header -> {
                 toReq.putHeader(header.getKey(), header.getValue());
             });
+            toReq.putHeader("user", context.user().principal().toString());
             if (context.getBody() == null) {
                 toReq.end();
             } else {
