@@ -397,7 +397,15 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             System.out.println(authorization);
             setAuthenticUser(ctx, authorization);
         } else {
-            failAuthentication(ctx);
+            String[] contents = ctx.request().getDelegate().getHeader("X-Original-URI").split("access_token=");
+            if (contents.length == 2) {
+                logger.info("Params Access token: " + contents[1]);
+                authorization = contents[1].substring("Bearer%20".length()); // authorization.substring("Basic ".length());
+                logger.info("Access Token: " + authorization);
+                setAuthenticUser(ctx, authorization);
+            } else {
+                failAuthentication(ctx);
+            }
         }
     }
 
