@@ -397,14 +397,27 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             System.out.println(authorization);
             setAuthenticUser(ctx, authorization);
         } else {
+            // Web pages WebSocket authentication
             String[] contents = ctx.request().getDelegate().getHeader("X-Original-URI").split("access_token=");
             if (contents.length == 2) {
                 logger.info("Params Access token: " + contents[1]);
-                authorization = contents[1].substring("Bearer%20".length()); // authorization.substring("Basic ".length());
+                authorization = contents[1].substring("Bearer%20".length());
                 logger.info("Access Token: " + authorization);
                 setAuthenticUser(ctx, authorization);
             } else {
-                failAuthentication(ctx);
+                String[] credentials = ctx.request().getDelegate().getHeader("X-Original-URI").replaceFirst("/ws/[^?]*(\\?)?", "").split(":::");
+                // NodeRED WebSocket authentication
+                if (credentials.length == 2) {
+                    loginAuth.rxGetToken(new JsonObject().put("username", credentials[0]).put("password", credentials[1]))
+                        .subscribe(token -> {
+                            ctx.response()
+                                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                .putHeader("username", credentials[0])
+                                .end(Json.encodePrettily(token.principal()));
+                        }, throwable -> failAuthentication(ctx));
+                } else {
+                    failAuthentication(ctx);
+                }
             }
         }
     }
