@@ -1,6 +1,7 @@
 package io.nubespark.vertx.common;
 
 import io.reactivex.Single;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.logging.Logger;
 import io.vertx.reactivex.core.http.HttpClient;
@@ -120,7 +121,9 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
                         } else {
                             HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
                             response.headers().getDelegate().forEach(header -> {
-                                toRsp.putHeader(header.getKey(), header.getValue());
+                                if (!header.getKey().equals(HttpHeaders.TRANSFER_ENCODING.toString())) {
+                                    toRsp.putHeader(header.getKey(), header.getValue());
+                                }
                             });
                             // send response
                             toRsp.end(body);
