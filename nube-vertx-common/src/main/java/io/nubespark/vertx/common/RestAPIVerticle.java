@@ -152,7 +152,7 @@ public class RestAPIVerticle extends MicroServiceVerticle {
      * @param context   routing context instance
      * @param converter a converter that converts result to a string
      * @param <T>       result type
-     * @return generated handler
+     * @return gen handler
      */
     protected <T> Handler<AsyncResult<T>> resultHandler(RoutingContext context, Function<T, String> converter) {
         return ar -> {
@@ -179,7 +179,7 @@ public class RestAPIVerticle extends MicroServiceVerticle {
      *
      * @param context routing context instance
      * @param <T>     result type
-     * @return generated handler
+     * @return gen handler
      */
     protected <T> Handler<AsyncResult<T>> resultHandlerNonEmpty(RoutingContext context) {
         return ar -> {
@@ -205,7 +205,7 @@ public class RestAPIVerticle extends MicroServiceVerticle {
      *
      * @param context routing context instance
      * @param <T>     result type
-     * @return generated handler
+     * @return gen handler
      */
     protected <T> Handler<AsyncResult<T>> rawResultHandler(RoutingContext context) {
         return ar -> {
@@ -231,7 +231,7 @@ public class RestAPIVerticle extends MicroServiceVerticle {
      * @param context routing context instance
      * @param result  result content
      * @param status  status code
-     * @return generated handler
+     * @return gen handler
      */
     protected Handler<AsyncResult<Void>> resultVoidHandler(RoutingContext context, JsonObject result, int status) {
         return ar -> {
@@ -269,7 +269,7 @@ public class RestAPIVerticle extends MicroServiceVerticle {
      * </code>
      *
      * @param context routing context instance
-     * @return generated handler
+     * @return gen handler
      */
     protected Handler<AsyncResult<Void>> deleteResultHandler(RoutingContext context) {
         return res -> {

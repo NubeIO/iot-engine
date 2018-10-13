@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>vertx-engine</artifactId>
+        <groupId>io.nubespark</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.nubeio.iot.edge</groupId>
+    <artifactId>common-edge</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.nubeio.iot.share</groupId>
+            <artifactId>common-event</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nubeio.iot.share</groupId>
+            <artifactId>common-cluster</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-jdbc-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.23.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>3.10.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq-meta</artifactId>
+            <version>3.10.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq-codegen</artifactId>
+            <version>3.10.8</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.jklingsporn</groupId>
+            <artifactId>vertx-jooq-rx</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.jklingsporn</groupId>
+            <artifactId>vertx-jooq-rx-jdbc</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>javax.persistence-api</artifactId>
+            <version>2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.jklingsporn</groupId>
+            <artifactId>vertx-jooq-generate</artifactId>
+            <version>3.0.2</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>jooq-gen</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <id>add-source</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/buildscript</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <includes>
+                                        <include>**/edge/model/buildscript/*.java</include>
+                                        <include>**/edge/model/converter/*.java</include>
+                                        <include>**/edge/loader/**/*.java</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- Specify the maven code generator plugin -->
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-codegen-maven</artifactId>
+                        <version>3.10.8</version>
+
+                        <!-- The plugin should hook into the generate goal -->
+                        <executions>
+                            <execution>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+
+                        <dependencies>
+                            <dependency>
+                                <groupId>io.github.jklingsporn</groupId>
+                                <artifactId>vertx-jooq-generate</artifactId>
+                                <version>3.0.2</version>
+                            </dependency>
+                        </dependencies>
+
+                        <!-- Specify the plugin configuration.
+                             The configuration format is the same as for the standalone code generator -->
+                        <configuration>
+                            <!-- JDBC connection parameters -->
+                            <jdbc>
+                                <driver>org.sqlite.JDBC</driver>
+                                <url>jdbc:sqlite:${project.basedir}/app-installer.db</url>
+                                <user/>
+                                <password/>
+                            </jdbc>
+
+                            <!-- Generator parameters -->
+                            <generator>
+                                <name>com.nubeio.iot.edge.model.buildscript.CustomVertxGenerator</name>
+                                <database>
+                                    <name>org.jooq.util.sqlite.SQLiteDatabase</name>
+                                    <includes>.*</includes>
+                                    <inputSchema/>
+                                    <outputSchema/>
+                                    <unsignedTypes>false</unsignedTypes>
+                                    <forcedTypes>
+                                        <!-- Convert tinyint to boolean -->
+                                        <forcedType>
+                                            <name>BOOLEAN</name>
+                                            <types>(?i:BIT)</types>
+                                        </forcedType>
+                                        <forcedType>
+                                            <userType>java.util.Date</userType>
+                                            <converter>com.nubeio.iot.edge.model.converter.DateConverter</converter>
+                                            <types>(?i:TIMESTAMP)</types>
+                                        </forcedType>
+                                        <forcedType>
+                                            <userType>com.nubeio.iot.share.enums.State</userType>
+                                            <expression>state</expression>
+                                            <enumConverter>true</enumConverter>
+                                            <types>(?i:VARCHAR)</types>
+                                        </forcedType>
+                                        <forcedType>
+                                            <userType>com.nubeio.iot.share.enums.Status</userType>
+                                            <expression>status</expression>
+                                            <enumConverter>true</enumConverter>
+                                            <types>(?i:VARCHAR)</types>
+                                        </forcedType>
+                                        <forcedType>
+                                            <userType>com.nubeio.iot.share.event.EventType</userType>
+                                            <expression>event</expression>
+                                            <enumConverter>true</enumConverter>
+                                            <types>(?i:VARCHAR)</types>
+                                        </forcedType>
+                                        <forcedType>
+                                            <userType>com.nubeio.iot.edge.loader.ModuleType</userType>
+                                            <converter>com.nubeio.iot.edge.model.converter.ModuleTypeConverter
+                                            </converter>
+                                            <expression>service_type</expression>
+                                            <types>(?i:VARCHAR)</types>
+
+                                        </forcedType>
+                                        <!-- Convert varchar column with name 'someJsonObject' to a io.vertx.core.json.JsonObject-->
+                                        <forcedType>
+                                            <userType>io.vertx.core.json.JsonObject</userType>
+                                            <converter>io.github.jklingsporn.vertx.jooq.shared.JsonObjectConverter
+                                            </converter>
+                                            <expression>.+_json</expression>
+                                            <types>TEXT</types>
+                                        </forcedType>
+                                        <!-- Convert varchar column with name 'someJsonArray' to a io.vertx.core.json.JsonArray-->
+                                        <forcedType>
+                                            <userType>io.vertx.core.json.JsonArray</userType>
+                                            <converter>io.github.jklingsporn.vertx.jooq.shared.JsonArrayConverter
+                                            </converter>
+                                            <expression>.+_json_array</expression>
+                                            <types>TEXT</types>
+                                        </forcedType>
+                                    </forcedTypes>
+                                </database>
+                                <target>
+                                    <!-- This is where jOOQ will put your files -->
+                                    <packageName>com.nubeio.iot.edge.model.gen</packageName>
+                                    <directory>src/main/java</directory>
+                                </target>
+                                <generate>
+                                    <interfaces>true</interfaces>
+                                    <daos>true</daos>
+                                    <fluentSetters>true</fluentSetters>
+                                    <jpaAnnotations>true</jpaAnnotations>
+                                </generate>
+
+                                <strategy>
+                                    <name>io.github.jklingsporn.vertx.jooq.generate.rx.JDBCRXVertxGeneratorStrategy
+                                    </name>
+                                </strategy>
+                            </generator>
+
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

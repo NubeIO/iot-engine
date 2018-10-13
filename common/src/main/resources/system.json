@@ -1,0 +1,14 @@
+{
+  "system": {
+    "eventBus": {
+      "clientAuth": "REQUIRED",
+      "ssl": false
+      //      "keyStoreOptions": {},
+      //      "trustStoreOptions": {
+      //        "path": "",
+      //        "value": "",
+      //        "password": ""
+      //      },
+    }
+  }
+}

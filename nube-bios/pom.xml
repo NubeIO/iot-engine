@@ -20,31 +20,51 @@
             <artifactId>vertx-maven-service-factory</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.nubespark</groupId>
-            <artifactId>nube-vertx-common</artifactId>
+            <groupId>com.nubeio.iot.edge</groupId>
+            <artifactId>common-edge</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <!--jdbc-->
         <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-jdbc-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.xerial</groupId>
-            <artifactId>sqlite-jdbc</artifactId>
-            <version>3.19.3</version>
+            <groupId>com.nubeio.iot.share</groupId>
+            <artifactId>common-event</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>
         <plugins>
             <plugin>
-                <!-- plugin to create a `fat-jar` -->
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Main-Class>com.nubeio.iot.share.NubeLauncher</Main-Class>
+                                        <Main-Verticle>${main.verticle}</Main-Verticle>
+                                    </manifestEntries>
+                                </transformer>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/io.vertx.core.spi.VerticleFactory</resource>
+                                </transformer>
+                            </transformers>
+                            <artifactSet>
+                            </artifactSet>
+                            <outputFile>
+                                ${project.build.directory}/${project.artifactId}-${project.version}-fat.jar
+                            </outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
-            <!--<plugin>-->
-                <!--&lt;!&ndash; copy the cluster configuration &ndash;&gt;-->
-                <!--<artifactId>maven-dependency-plugin</artifactId>-->
-            <!--</plugin>-->
         </plugins>
     </build>
 </project>

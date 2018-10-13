@@ -6,11 +6,11 @@ import java.util.stream.Collectors;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.nubeio.iot.share.event.EventMessage;
+import com.nubeio.iot.share.event.EventModel;
+import com.nubeio.iot.share.exceptions.HttpStatusMapping;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.nubespark.events.Event;
-import io.nubespark.events.EventMessage;
-import io.nubespark.exceptions.HttpStatusMapping;
 import io.nubespark.utils.Runner;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
@@ -62,11 +62,11 @@ public class AppStoreRestVerticle extends RxRestAPIVerticle {
         // creating body handler
         router.route("/").handler(this::indexHandler);
         router.route().handler(BodyHandler.create());
-        Event.CONTROL_MODULE.getEventMap()
-                            .values()
-                            .parallelStream()
-                            .forEach(metadata -> router.route(metadata.getMethod(), metadata.getEndpoint())
-                                                       .handler(ctx -> registerModuleControl(ctx, metadata)));
+        EventModel.MODULE_INSTALLER.getEventMap()
+                                   .values()
+                                   .parallelStream()
+                                   .forEach(metadata -> router.route(metadata.getMethod(), metadata.getEndpoint())
+                                                              .handler(ctx -> registerModuleControl(ctx, metadata)));
         router.get("/nodes").handler(this::getNodes);
         // This is last handler that gives not found message
         router.route().last().handler(this::handlePageNotFound);
@@ -99,19 +99,20 @@ public class AppStoreRestVerticle extends RxRestAPIVerticle {
                                              .collect(Collectors.toList()));
     }
 
-    private void registerModuleControl(RoutingContext ctx, Event.Metadata metadata) {
+    private void registerModuleControl(RoutingContext ctx, EventModel.Metadata metadata) {
         EventMessage msg = EventMessage.success(metadata.getAction(), ctx.getBodyAsJson());
         logger.info("Receive message from endpoint: {}", msg.toJson().encode());
         getVertx().eventBus()
-                  .send(Event.CONTROL_MODULE.getAddress(), msg.toJson(), reply -> handleReply(ctx, metadata, reply));
+                  .send(EventModel.MODULE_INSTALLER.getAddress(), msg.toJson(),
+                        reply -> handleReply(ctx, metadata, reply));
     }
 
-    private void handleReply(RoutingContext ctx, Event.Metadata metadata, AsyncResult<Message<Object>> reply) {
+    private void handleReply(RoutingContext ctx, EventModel.Metadata metadata, AsyncResult<Message<Object>> reply) {
         if (reply.succeeded()) {
             EventMessage replyMsg = EventMessage.from(reply.result().body());
             logger.info("Receive message from backend: {}", replyMsg.toJson().encode());
             ctx.response().putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON);
-            if (replyMsg.isOk()) {
+            if (replyMsg.isSuccess()) {
                 ctx.response()
                    .setStatusCode(HttpStatusMapping.success(metadata.getMethod()).code())
                    .end(replyMsg.getData().encodePrettily());
@@ -122,8 +123,8 @@ public class AppStoreRestVerticle extends RxRestAPIVerticle {
             }
         } else {
             ctx.response().setStatusCode(HttpResponseStatus.SERVICE_UNAVAILABLE.code()).end();
-            logger.error("No reply from cluster receiver. Address: {} - Action: {}", Event.CONTROL_MODULE.getAddress(),
-                         metadata.getAction());
+            logger.error("No reply from cluster receiver. Address: {} - Action: {}",
+                         EventModel.MODULE_INSTALLER.getAddress(), metadata.getAction());
         }
     }
 
