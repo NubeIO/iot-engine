@@ -7,12 +7,14 @@ import java.util.function.Consumer;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.json.JsonObject;
 
-public class DevRunner {
+public final class DevRunner {
 
     public static void run(String javaDir, Class clazz) {
-        DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(NubeLauncher.loadDefaultConfig());
-        run(javaDir, clazz, new VertxOptions().setClustered(true), deploymentOptions);
+        JsonObject config = NubeLauncher.defaultConfig();
+        DeploymentOptions deployOptions = new DeploymentOptions(NubeLauncher.getDeployCfg(config));
+        run(javaDir, clazz, NubeLauncher.defaultVertxOption(config), deployOptions);
     }
 
     private static void run(String javaDir, Class clazz, VertxOptions options, DeploymentOptions deploymentOptions) {

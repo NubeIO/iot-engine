@@ -9,6 +9,10 @@
       //        "value": "",
       //        "password": ""
       //      },
+    },
+    "cluster": {
+      "active": true,
+      "ha_enabled": true
     }
   }
 }

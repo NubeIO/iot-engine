@@ -89,7 +89,7 @@ public class TblModule extends TableImpl<TblModuleRecord> {
     /**
      * The column <code>tbl_module.state</code>.
      */
-    public final TableField<TblModuleRecord, State> STATE = createField("state", org.jooq.impl.SQLDataType.VARCHAR(15).nullable(false), this, "", new org.jooq.impl.EnumConverter<java.lang.String, com.nubeio.iot.share.enums.State>(java.lang.String.class, com.nubeio.iot.share.enums.State.class));
+    public final TableField<TblModuleRecord, State> STATE = createField("state", org.jooq.impl.SQLDataType.VARCHAR(15).nullable(false), this, "", new org.jooq.impl.EnumConverter<java.lang.String, State>(java.lang.String.class, State.class));
 
     /**
      * The column <code>tbl_module.created_at</code>.

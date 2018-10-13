@@ -16,10 +16,6 @@
     <artifactId>nube-bios</artifactId>
     <dependencies>
         <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-maven-service-factory</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.nubeio.iot.edge</groupId>
             <artifactId>common-edge</artifactId>
             <version>1.0-SNAPSHOT</version>

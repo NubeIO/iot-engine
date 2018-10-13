@@ -20,8 +20,12 @@
         </dependency>
         <dependency>
             <groupId>com.nubeio.iot.share</groupId>
-            <artifactId>common-cluster</artifactId>
+            <artifactId>common-micro</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-maven-service-factory</artifactId>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

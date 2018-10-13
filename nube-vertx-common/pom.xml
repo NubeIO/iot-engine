@@ -16,13 +16,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web</artifactId>
+            <groupId>com.nubeio.iot.share</groupId>
+            <artifactId>common-micro</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
-            <artifactId>vertx-rx-java2</artifactId>
-            <version>3.5.3</version>
+            <artifactId>vertx-web</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>

@@ -20,8 +20,6 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.web.Router;
@@ -33,8 +31,6 @@ import io.vertx.servicediscovery.Record;
  * Created by topsykretts on 4/28/18.
  */
 public class AppStoreRestVerticle extends RxRestAPIVerticle {
-
-    private static final Logger logger = LoggerFactory.getLogger(AppStoreRestVerticle.class);
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
@@ -146,11 +142,6 @@ public class AppStoreRestVerticle extends RxRestAPIVerticle {
                                                          .put("version", "1.0")
                                                          .put("vert.x_version", "3.4.1")
                                                          .put("java_version", "8.0")));
-    }
-
-    @Override
-    protected Logger getLogger() {
-        return logger;
     }
 
 }

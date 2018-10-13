@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -39,6 +40,23 @@ public final class FileUtils {
     private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
 
     /**
+     * To URL.
+     *
+     * @param urlString url string
+     * @return url Return {@code null} if given input is invalid {@code URI} syntax or {@code blank} value.
+     */
+    public static URL toUrl(String urlString) {
+        if (Strings.isNotBlank(urlString)) {
+            try {
+                return new URL(urlString);
+            } catch (MalformedURLException e) {
+                logger.debug("Invalid parse URL from {}", e, urlString);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Read file to text.
      *
      * @param filePath Given file path
@@ -59,6 +77,37 @@ public final class FileUtils {
             return Paths.get(Objects.requireNonNull(fileUrl).toURI()).getFileName().toString();
         } catch (FileSystemNotFoundException | URISyntaxException e) {
             throw new NubeException("File URL is wrong syntax", e);
+        }
+    }
+
+    /**
+     * Convert file path from String to {@link Path}.
+     *
+     * @param filePath      Given file path
+     * @param classpathFile Classpath file name if filePath is blank
+     * @return File path object
+     * @throws IllegalArgumentException if {@code filePath} and {@code classpathFile} is blank
+     * @throws NubeException            if error when parsing file path or reading file
+     */
+    public static Path toPath(String filePath, String classpathFile) {
+        return Strings.isBlank(filePath) ? getClasspathFile(classpathFile) : toPath(filePath);
+    }
+
+    private static Path getClasspathFile(String classpathFile) {
+        final Path fileInWorkingDir = Paths.get(".", classpathFile);
+        if (fileInWorkingDir.toFile().exists()) {
+            return fileInWorkingDir;
+        }
+        logger.warn("Not found in working dir. Try to get file {} in classloader", classpathFile);
+        final URL resource = FileUtils.class.getClassLoader().getResource(Strings.requireNotBlank(classpathFile));
+        if (Objects.isNull(resource)) {
+            logger.warn("File not found {}", classpathFile);
+            return null;
+        }
+        try {
+            return Paths.get(resource.toURI());
+        } catch (URISyntaxException ex) {
+            throw new NubeException(ex);
         }
     }
 

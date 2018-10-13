@@ -182,7 +182,7 @@ public interface ITblModule extends VertxPojo, Serializable {
         setServiceType(json.getString("service_type")==null?null:com.nubeio.iot.edge.loader.ModuleTypeFactory.factory(json.getString("service_type")));
         setVersion(json.getString("version"));
         setPublishedBy(json.getString("published_by"));
-        setState(json.getString("state")==null?null:com.nubeio.iot.share.enums.State.valueOf(json.getString("state")));
+        setState(json.getString("state")==null? null: State.valueOf(json.getString("state")));
         setCreatedAt(json.getLong("created_at")==null?null:Date.from(java.time.Instant.ofEpochMilli(json.getLong("created_at"))));
         setModifiedAt(json.getLong("modified_at")==null?null:Date.from(java.time.Instant.ofEpochMilli(json.getLong("modified_at"))));
         setDeployId(json.getString("deploy_id"));

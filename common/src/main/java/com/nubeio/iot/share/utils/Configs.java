@@ -2,11 +2,16 @@ package com.nubeio.iot.share.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Scanner;
 
+import com.hazelcast.config.ConfigBuilder;
+import com.hazelcast.config.XmlConfigBuilder;
 import com.nubeio.iot.share.NubeLauncher;
+import com.nubeio.iot.share.exceptions.NubeException;
 
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
@@ -49,6 +54,21 @@ public final class Configs {
             FileUtils.silentClose(resourceAsStream);
         }
         return properties;
+    }
+
+    public static ConfigBuilder parseClusterConfig(JsonObject clusterOption) {
+        URL url = FileUtils.toUrl(clusterOption.getString("url", null));
+        try {
+            if (Objects.nonNull(url)) {
+                return new XmlConfigBuilder(url);
+            } else {
+                Path path = FileUtils.toPath(clusterOption.getString("file"), "cluster.xml");
+                return new XmlConfigBuilder(path.toAbsolutePath().toString());
+            }
+        } catch (IOException | NubeException | IllegalArgumentException ex) {
+            logger.info("Fallback to default", ex);
+            return new XmlConfigBuilder();
+        }
     }
 
 }

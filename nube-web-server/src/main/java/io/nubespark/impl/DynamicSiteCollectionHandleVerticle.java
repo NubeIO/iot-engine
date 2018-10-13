@@ -1,5 +1,12 @@
 package io.nubespark.impl;
 
+import static io.nubespark.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
+import static io.nubespark.utils.CustomMessageResponseHelper.handleBadRequestResponse;
+import static io.nubespark.utils.CustomMessageResponseHelper.handleForbiddenResponse;
+import static io.nubespark.utils.CustomMessageResponseHelper.handleNotFoundResponse;
+
+import java.util.List;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
 import io.nubespark.utils.CustomMessage;
@@ -10,23 +17,11 @@ import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
-import java.util.List;
-
-import static io.nubespark.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
-import static io.nubespark.utils.CustomMessageResponseHelper.*;
-
 public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
-    private Logger logger = LoggerFactory.getLogger(DynamicSiteCollectionHandleVerticle.class);
-    private MongoClient mongoClient;
 
-    @Override
-    protected Logger getLogger() {
-        return logger;
-    }
+    private MongoClient mongoClient;
 
     @Override
     public void start() {

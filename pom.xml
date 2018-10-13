@@ -19,9 +19,10 @@
     <artifactId>vertx-engine</artifactId>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>common-edge</module>
-        <module>common-event</module>
         <module>common</module>
+        <module>common-event</module>
+        <module>common-micro</module>
+        <module>common-edge</module>
         <module>nube-vertx-common</module>
         <module>nube-app-installer</module>
         <module>nube-app-store-rest</module>
@@ -33,7 +34,6 @@
         <module>nube-vertx-mongodb</module>
         <module>nube-vertx-zeppelin</module>
         <module>nube-vertx-postgresql</module>
-        <module>common-cluster</module>
         <!--<module>rxjava</module>-->
     </modules>
 
@@ -74,11 +74,6 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-hazelcast</artifactId>
         </dependency>
 
         <dependency>

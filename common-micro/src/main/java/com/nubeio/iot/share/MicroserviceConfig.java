@@ -23,9 +23,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class ClusterConfig {
+public class MicroserviceConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(ClusterConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(MicroserviceConfig.class);
 
     private final Vertx vertx;
     private final JsonObject config;
@@ -35,15 +35,19 @@ public class ClusterConfig {
     @Getter
     private CircuitBreaker circuitBreaker;
 
-    public ClusterConfig onStart() {
-        final JsonObject config = Configs.loadDefaultConfig("cluster.json").mergeIn(this.config, true);
+    public MicroserviceConfig onStart() {
+        final JsonObject config = Configs.loadDefaultConfig("micro.json").mergeIn(this.config, true);
+        clusterMicroService(config);
+        return this;
+    }
+
+    private void clusterMicroService(JsonObject config) {
         logger.info("Setup cluster with config {}", config);
         discovery = ServiceDiscovery.create(vertx, new ServiceDiscoveryOptions().setBackendConfiguration(config));
         JsonObject cfg = config.getJsonObject("system", new JsonObject())
                                .getJsonObject("circuitBreaker", new JsonObject());
         logger.info("Circuit Breaker Options {}", cfg);
         circuitBreaker = CircuitBreaker.create(cfg.getString("name"), vertx, new CircuitBreakerOptions(cfg));
-        return this;
     }
 
     public Single<Record> publish(Record record) {

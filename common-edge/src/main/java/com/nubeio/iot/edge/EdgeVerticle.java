@@ -1,5 +1,6 @@
 package com.nubeio.iot.edge;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,8 +15,8 @@ import com.nubeio.iot.edge.loader.ModuleLoader;
 import com.nubeio.iot.edge.model.gen.tables.daos.TblModuleDao;
 import com.nubeio.iot.edge.model.gen.tables.daos.TblTransactionDao;
 import com.nubeio.iot.edge.model.gen.tables.pojos.TblModule;
-import com.nubeio.iot.share.ClusterConfig;
-import com.nubeio.iot.share.IClusterVerticle;
+import com.nubeio.iot.share.MicroserviceConfig;
+import com.nubeio.iot.share.IMicroVerticle;
 import com.nubeio.iot.share.enums.Status;
 import com.nubeio.iot.share.event.EventType;
 import com.nubeio.iot.share.exceptions.DatabaseException;
@@ -42,19 +43,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class EdgeVerticle extends AbstractVerticle implements IClusterVerticle {
+public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVerticle {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Getter
-    private ClusterConfig clusterConfig;
+    private MicroserviceConfig microserviceConfig;
     private ModuleLoader moduleLoader;
+    private DataSource dataSource;
     private Configuration jooqConfig;
     protected EntityHandler entityHandler;
 
     @Override
     public final void start() throws Exception {
         super.start();
-        this.clusterConfig = IClusterVerticle.initConfig(vertx, config()).onStart();
+        this.microserviceConfig = IMicroVerticle.initConfig(vertx, config()).onStart();
         this.moduleLoader = new ModuleLoader(() -> vertx);
         initDBConnection().flatMap(client -> this.createDatabase(client).flatMap(ignores -> initData()))
                           .subscribe(logger::info, throwable -> {
@@ -65,12 +67,16 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IClusterV
 
     @Override
     public final void stop() {
-        //        getConnection().flatMap(this::haltModule);
+        try {
+            this.dataSource.unwrap(HikariDataSource.class).close();
+        } catch (SQLException e) {
+            logger.debug("Unable to close datasource", e);
+        }
     }
 
     @Override
     public void stop(Future<Void> future) {
-        this.clusterConfig.onStop(future);
+        this.microserviceConfig.onStop(future);
     }
 
     protected abstract String getDBName();
@@ -91,7 +97,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IClusterV
         config.setJdbcUrl(String.format("jdbc:sqlite:%s.db", getDBName()));
         config.addDataSourceProperty("databaseName", getDBName());
         config.setPoolName(getDBName() + "_pool");
-        DataSource dataSource = new HikariDataSource(config);
+        this.dataSource = new HikariDataSource(config);
         this.jooqConfig = new DefaultConfiguration().set(SQLDialect.SQLITE).set(new HikariDataSource(config));
         this.entityHandler = new EntityHandler(() -> new TblModuleDao(jooqConfig, vertx),
                                                () -> new TblTransactionDao(jooqConfig, vertx),

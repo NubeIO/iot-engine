@@ -1,5 +1,14 @@
 package io.nubespark.postgresql;
 
+import static io.nubespark.constants.Port.POSTGRESQL_SERVER_PORT;
+import static io.nubespark.postgresql.PostgreSQLService.SERVICE_ADDRESS;
+import static io.nubespark.utils.ErrorCodes.NO_QUERY_SPECIFIED;
+import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
+import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
+
+import java.net.URL;
+import java.net.URLClassLoader;
+
 import io.nubespark.postgresql.controller.RulesController;
 import io.nubespark.utils.ErrorCodeException;
 import io.nubespark.utils.ErrorHandler;
@@ -10,8 +19,6 @@ import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.web.Router;
@@ -20,22 +27,12 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
 import io.vertx.serviceproxy.ServiceBinder;
 
-import java.net.URL;
-import java.net.URLClassLoader;
-
-import static io.nubespark.constants.Port.POSTGRESQL_SERVER_PORT;
-import static io.nubespark.postgresql.PostgreSQLService.SERVICE_ADDRESS;
-import static io.nubespark.utils.ErrorCodes.NO_QUERY_SPECIFIED;
-import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
-import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
-
 /**
  * Created by topsykretts on 4/26/18.
  */
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class PostgreSQLVerticle extends RxMicroServiceVerticle {
 
-    private Logger logger = LoggerFactory.getLogger(PostgreSQLVerticle.class);
     private RulesController controller;
 
     // Convenience method so you can run it in your IDE
@@ -142,7 +139,4 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
         logger.info(PostgreSQLVerticle.class.getClassLoader());
     }
 
-    protected Logger getLogger() {
-        return logger;
-    }
 }
