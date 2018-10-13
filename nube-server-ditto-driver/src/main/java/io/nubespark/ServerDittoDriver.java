@@ -158,7 +158,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         req.setChunked(true);
         //Adding ditto authorization
         req.putHeader(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
-        if (ctx.getBody() != null) {
+        if (StringUtils.isNotNull(ctx.getBody().toString())) {
             if (StringUtils.isNull(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
                 // This means we are we are PUTing device value for the first time or going to updated whole data
                 JsonObject body = ctx.getBodyAsJson();
