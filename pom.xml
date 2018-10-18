@@ -20,9 +20,9 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>common</module>
-        <module>common-event</module>
         <module>common-micro</module>
         <module>common-edge</module>
+        <module>common-rest</module>
         <module>nube-vertx-common</module>
         <module>nube-app-installer</module>
         <module>nube-app-store-rest</module>
@@ -195,7 +195,8 @@
                         <target>1.8</target>
                         <annotationProcessors>
                             <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
-                            <annotationProcessor>lombok.launch.AnnotationProcessorHider$AnnotationProcessor</annotationProcessor>
+                            <annotationProcessor>lombok.launch.AnnotationProcessorHider$AnnotationProcessor
+                            </annotationProcessor>
                         </annotationProcessors>
                         <generatedSourcesDirectory>${project.basedir}/src/main/generated</generatedSourcesDirectory>
                         <compilerArgs>

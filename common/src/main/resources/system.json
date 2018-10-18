@@ -1,6 +1,6 @@
 {
-  "system": {
-    "eventBus": {
+  "__system__": {
+    "__eventBus__": {
       "clientAuth": "REQUIRED",
       "ssl": false
       //      "keyStoreOptions": {},
@@ -10,9 +10,22 @@
       //        "password": ""
       //      },
     },
-    "cluster": {
+    "__cluster__": {
       "active": true,
-      "ha_enabled": true
+      "ha": true
     }
-  }
+  },
+  "__deploy__": {
+    "ha": false,
+    "instances": 1,
+    "multiThreaded": false,
+    "worker": false,
+    "workerPoolName": null,
+    "workerPoolSize": 20,
+    "maxWorkerExecuteTime": 60000000000,
+    "extraClasspath": [],
+    "isolationGroup": null,
+    "isolatedClasses": []
+  },
+  "__app__": {}
 }

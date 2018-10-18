@@ -3,8 +3,6 @@ package com.nubeio.iot.share;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.nubeio.iot.share.utils.Configs;
-
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
 import io.reactivex.Single;
@@ -19,16 +17,21 @@ import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.ServiceDiscoveryOptions;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
-public class MicroserviceConfig {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+public final class MicroserviceConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(MicroserviceConfig.class);
+    public static final String MICRO_CFG_NAME = "__micro__";
+    public static final String CIRCUIT_BREAKER_CFG_NAME = "__circuitBreaker__";
+    public static final String SERVICE_DISCOVERY_CFG_NAME = "__serviceDiscovery__";
 
     private final Vertx vertx;
-    private final JsonObject config;
+    @Getter
+    private final JsonObject microConfig;
     private final Set<Record> registeredRecords = new ConcurrentHashSet<>();
     @Getter
     private ServiceDiscovery discovery;
@@ -36,18 +39,19 @@ public class MicroserviceConfig {
     private CircuitBreaker circuitBreaker;
 
     public MicroserviceConfig onStart() {
-        final JsonObject config = Configs.loadDefaultConfig("micro.json").mergeIn(this.config, true);
-        clusterMicroService(config);
+        logger.info("Setup micro-service...", microConfig);
+        JsonObject discoveryCfg = microConfig.getJsonObject(SERVICE_DISCOVERY_CFG_NAME, new JsonObject());
+        JsonObject breakerCfg = microConfig.getJsonObject(CIRCUIT_BREAKER_CFG_NAME, new JsonObject());
+        ServiceDiscoveryOptions discoveryOptions = new ServiceDiscoveryOptions().setBackendConfiguration(discoveryCfg);
+        CircuitBreakerOptions breakerOptions = new CircuitBreakerOptions(breakerCfg);
+        logger.debug("Service Discovery Config : {}", discoveryCfg.encode());
+        logger.info("Service Discovery Options: {}", discoveryOptions.toJson().encode());
+        logger.debug("Circuit Breaker Config : {}", breakerCfg.encode());
+        logger.info("Circuit Breaker Options: {}", breakerOptions.toJson().encode());
+        discovery = ServiceDiscovery.create(vertx, discoveryOptions);
+        circuitBreaker = CircuitBreaker.create(breakerCfg.getString("name", "nubeio-circuit-breaker"), vertx,
+                                               breakerOptions);
         return this;
-    }
-
-    private void clusterMicroService(JsonObject config) {
-        logger.info("Setup cluster with config {}", config);
-        discovery = ServiceDiscovery.create(vertx, new ServiceDiscoveryOptions().setBackendConfiguration(config));
-        JsonObject cfg = config.getJsonObject("system", new JsonObject())
-                               .getJsonObject("circuitBreaker", new JsonObject());
-        logger.info("Circuit Breaker Options {}", cfg);
-        circuitBreaker = CircuitBreaker.create(cfg.getString("name"), vertx, new CircuitBreakerOptions(cfg));
     }
 
     public Single<Record> publish(Record record) {

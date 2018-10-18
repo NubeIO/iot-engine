@@ -10,9 +10,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.nubeio.iot.share</groupId>
-    <artifactId>common-event</artifactId>
+    <artifactId>common-rest</artifactId>
+
 
     <dependencies>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.nubeio.iot.share</groupId>
             <artifactId>common</artifactId>

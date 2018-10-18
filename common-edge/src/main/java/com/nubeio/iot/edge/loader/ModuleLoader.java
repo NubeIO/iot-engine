@@ -14,7 +14,7 @@ import io.vertx.reactivex.core.Vertx;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class ModuleLoader {
+public final class ModuleLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(ModuleLoader.class);
     private final Supplier<Vertx> context;

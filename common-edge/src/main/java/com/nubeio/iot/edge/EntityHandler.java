@@ -14,7 +14,6 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 
 import com.nubeio.iot.edge.loader.ModuleType;
-import com.nubeio.iot.edge.loader.StateMachine;
 import com.nubeio.iot.edge.model.gen.Tables;
 import com.nubeio.iot.edge.model.gen.tables.daos.TblModuleDao;
 import com.nubeio.iot.edge.model.gen.tables.daos.TblTransactionDao;
@@ -25,6 +24,7 @@ import com.nubeio.iot.share.enums.Status;
 import com.nubeio.iot.share.event.EventType;
 import com.nubeio.iot.share.exceptions.ErrorMessage;
 import com.nubeio.iot.share.exceptions.StateException;
+import com.nubeio.iot.share.statemachine.StateMachine;
 import com.nubeio.iot.share.utils.DateTimes;
 
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
@@ -33,17 +33,19 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@Getter
 @RequiredArgsConstructor(access = AccessLevel.MODULE)
-public class EntityHandler {
+public final class EntityHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(EntityHandler.class);
     private final Supplier<TblModuleDao> moduleDaoSupplier;
     private final Supplier<TblTransactionDao> transDaoSupplier;
     private final Supplier<JDBCRXGenericQueryExecutor> executorSupplier;
 
-    public Single<List<TblModule>> findModulesInBootstrap() {
+    public Single<List<TblModule>> getModulesWhenBootstrap() {
         return moduleDaoSupplier.get().findManyByState(Collections.singletonList(State.ENABLED));
     }
 
@@ -97,7 +99,7 @@ public class EntityHandler {
     public void succeedPostDeployment(String serviceId, String transId, EventType eventType, String deployId) {
         logger.info("Handle entities after success deployment...");
         final Status status = Status.SUCCESS;
-        final State state = StateMachine.transition(eventType, status);
+        final State state = StateMachine.instance().transition(eventType, status);
         if (State.UNAVAILABLE == state) {
             logger.info("Remove module id {} and its transactions", serviceId);
             transDaoSupplier.get()
@@ -163,8 +165,9 @@ public class EntityHandler {
 
     private Optional<TblModule> validateModuleState(Optional<TblModule> findModule, EventType eventType) {
         logger.info("Validate module state...");
-        StateMachine.validate(findModule, eventType, "module");
-        findModule.ifPresent(module -> StateMachine.validateConflict(module.getState(), eventType,
+        StateMachine.instance().validate(findModule, eventType, "module");
+        findModule.ifPresent(module -> StateMachine.instance()
+                                                   .validateConflict(module.getState(), eventType,
                                                                      "module " + module.getServiceId()));
         return findModule;
     }

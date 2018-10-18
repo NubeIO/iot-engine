@@ -1,7 +1,8 @@
 package io.nubespark.vertx.common;
 
-import com.nubeio.iot.share.MicroserviceConfig;
 import com.nubeio.iot.share.IMicroVerticle;
+import com.nubeio.iot.share.MicroserviceConfig;
+import com.nubeio.iot.share.utils.Configs;
 
 import io.reactivex.Single;
 import io.vertx.core.Future;
@@ -29,12 +30,20 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle implements
     protected ServiceDiscovery discovery;
     protected CircuitBreaker circuitBreaker;
     @Getter
-    protected MicroserviceConfig microserviceConfig;
+    private MicroserviceConfig microserviceConfig;
+    protected JsonObject appConfig;
 
+    @Override
     public void start() {
+        this.appConfig = Configs.getApplicationCfg(config());
         this.microserviceConfig = IMicroVerticle.initConfig(vertx, config()).onStart();
         this.discovery = this.microserviceConfig.getDiscovery();
         this.circuitBreaker = this.microserviceConfig.getCircuitBreaker();
+    }
+
+    @Override
+    public void stop(Future<Void> future) {
+        this.microserviceConfig.onStop(future);
     }
 
     /**
@@ -49,19 +58,15 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle implements
         return vertx.createHttpServer().requestHandler(router::accept).rxListen(port, host);
     }
 
+    //TODO: CHECK CONFIG FOR OTHER MAVEN MODULE
     protected final Single<Record> publishHttpEndpoint(String name, String host, int port) {
-        Record record = HttpEndpoint.createRecord(name, host, port, "/",
-                                                  new JsonObject().put("api.name", config().getString("api.name", "")));
+        String apiName = this.appConfig.getString("api.name", "");
+        Record record = HttpEndpoint.createRecord(name, host, port, "/", new JsonObject().put("api.name", apiName));
         return this.microserviceConfig.publish(record);
     }
 
     protected final Single<Record> publishMessageSource(String name, String address) {
         return this.microserviceConfig.publish(MessageSource.createRecord(name, address));
-    }
-
-    @Override
-    public void stop(Future<Void> future) {
-        this.microserviceConfig.onStop(future);
     }
 
 }

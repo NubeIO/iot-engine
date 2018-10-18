@@ -24,6 +24,11 @@ import lombok.NoArgsConstructor;
 public final class Configs {
 
     private static final Logger logger = LoggerFactory.getLogger(Configs.class);
+    public static final String SYSTEM_CFG_KEY = "__system__";
+    public static final String DEPLOY_CFG_KEY = "__deploy__";
+    public static final String APP_CFG_KEY = "__app__";
+    public static final String EVENT_BUS_CFG_KEY = "__eventBus__";
+    public static final String CLUSTER_CFG_KEY = "__cluster__";
 
     public static JsonObject loadDefaultConfig(String file) {
         final InputStream resourceAsStream = NubeLauncher.class.getClassLoader().getResourceAsStream(file);
@@ -37,6 +42,18 @@ public final class Configs {
             logger.warn("Config file is not valid JSON object", e);
             return new JsonObject();
         }
+    }
+
+    public static JsonObject getSystemCfg(JsonObject config) {
+        return config.getJsonObject(SYSTEM_CFG_KEY, new JsonObject());
+    }
+
+    public static JsonObject getDeployCfg(JsonObject config) {
+        return config.getJsonObject(DEPLOY_CFG_KEY, new JsonObject());
+    }
+
+    public static JsonObject getApplicationCfg(JsonObject config) {
+        return config.getJsonObject(APP_CFG_KEY, new JsonObject());
     }
 
     public static Properties loadPropsConfig(String file) {

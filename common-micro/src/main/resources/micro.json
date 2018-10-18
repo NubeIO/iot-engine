@@ -1,11 +1,14 @@
 {
-  "system": {
-    "circuitBreaker": {
-      "name": "circuit-breaker",
-      "maxFailures": 5,
-      "fallbackOnFailure": false,
-      "timeout": 20000,
-      "resetTimeout": 30000
+  "__system__": {
+    "__micro__": {
+      "__serviceDiscovery__": {},
+      "__circuitBreaker__": {
+        "name": "nubeio-circuit-breaker",
+        "maxFailures": 5,
+        "fallbackOnFailure": false,
+        "timeout": 20000,
+        "resetTimeout": 30000
+      }
     }
   }
 }

@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import com.nubeio.iot.share.utils.Configs;
+
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -13,7 +15,7 @@ public final class DevRunner {
 
     public static void run(String javaDir, Class clazz) {
         JsonObject config = NubeLauncher.defaultConfig();
-        DeploymentOptions deployOptions = new DeploymentOptions(NubeLauncher.getDeployCfg(config));
+        DeploymentOptions deployOptions = new DeploymentOptions(Configs.getDeployCfg(config));
         run(javaDir, clazz, NubeLauncher.defaultVertxOption(config), deployOptions);
     }
 

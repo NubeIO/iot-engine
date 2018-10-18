@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>com.nubeio.iot.share</groupId>
-            <artifactId>common-event</artifactId>
+            <artifactId>common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
