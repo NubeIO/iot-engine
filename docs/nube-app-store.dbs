@@ -11,7 +11,7 @@
 			<column name="created_at" type="timestamp" length="2000000000" decimal="10" jt="93" mandatory="y" >
 				<defo>CURRENT_TIMESTAMP</defo>
 			</column>
-			<column name="modified_at" type="timestamp" jt="93" mandatory="y" >
+			<column name="modified_at" type="timestamp" length="2000000000" decimal="10" jt="93" mandatory="y" >
 				<defo>1</defo>
 			</column>
 			<column name="deploy_id" type="varchar" length="255" jt="12" />
@@ -80,106 +80,10 @@
 			</fk>
 		</table>
 	</schema>
-	<connector name="Sqlite" database="Sqlite" driver_class="org.sqlite.JDBC" driver_jar="sqlite-jdbc-3.23.1.jar" driver_desc="Standard" host="localhost" port="7210" instance="/home/zero/projects/nubeio/nube-vertx-engine/common-edge/app-installer.db" />
-	<layout name="Parsed Script Layout" id="Layout_367a7f4" show_relation="columns" >
-		<entity schema="Default" name="tbl_remove_history" color="3986C1" x="608" y="48" />
-		<entity schema="Default" name="tbl_module" color="BED3F4" x="48" y="48" />
-		<entity schema="Default" name="tbl_transaction" color="BED3F4" x="336" y="48" />
-		<script name="Sql_Editor_001" id="Editor_12d22ce" language="SQL" >
-			<string><![CDATA[BEGIN TRANSACTION;
-
-PRAGMA writable_schema = 1;
-
-UPDATE SQLITE_MASTER SET SQL = 'CREATE TABLE tbl_transaction ( 
-	transaction_id       varchar(31) NOT NULL  ,
-	module_id            varchar(127) NOT NULL  ,
-	event                varchar(15) NOT NULL  ,
-	status               varchar(15) NOT NULL  ,
-	issued_at            timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-	issued_by            varchar(127)   ,
-	issued_from          varchar(63)   ,
-	prev_state_json      text   ,
-	last_error_json      text   ,
-	CONSTRAINT Pk_tbl_operation_transaction_transaction_id PRIMARY KEY ( transaction_id ),
-	FOREIGN KEY ( module_id ) REFERENCES tbl_module( service_id )  
- ) ' WHERE NAME='tbl_transaction';
-
-PRAGMA writable_schema = 1;
-
-END TRANSACTION;
-
-ALTER TABLE tbl_transaction ADD retry_nb integer   NOT NULL DEFAULT 0;
-]]></string>
-		</script>
-		<script name="Sql_Editor_002" id="Editor_3aced53" language="SQL" >
-			<string><![CDATA[DROP INDEX Pk_tbl_module_service_id;
-
-DROP INDEX Pk_tbl_operation_transaction_transaction_id;
-
-CREATE UNIQUE INDEX Pk_tbl_module_service_id ON tbl_module ( service_id ) ;
-
-CREATE UNIQUE INDEX Pk_tbl_operation_transaction_transaction_id ON tbl_transaction ( transaction_id ) ;
-]]></string>
-		</script>
-		<script name="Sql_Editor_003" id="Editor_55dacd6" language="SQL" >
-			<string><![CDATA[DROP INDEX Pk_tbl_module_service_id;
-
-DROP INDEX Pk_tbl_operation_transaction_transaction_id;
-
-CREATE UNIQUE INDEX Pk_tbl_module_service_id ON tbl_module ( service_id ) ;
-
-CREATE UNIQUE INDEX Pk_tbl_operation_transaction_transaction_id ON tbl_transaction ( transaction_id ) ;
-]]></string>
-		</script>
-		<script name="Sql_Editor_004" id="Editor_4881276" language="SQL" >
-			<string><![CDATA[DROP INDEX Pk_tbl_module_service_id;
-
-DROP INDEX Pk_tbl_operation_transaction_transaction_id;
-
-CREATE UNIQUE INDEX Pk_tbl_module_service_id ON tbl_module ( service_id ) ;
-
-CREATE UNIQUE INDEX Pk_tbl_operation_transaction_transaction_id ON tbl_transaction ( transaction_id ) ;
-]]></string>
-		</script>
-		<script name="model.sql" id="Editor_cfe3c9" language="SQL" >
-			<string><![CDATA[CREATE TABLE IF NOT EXISTS tbl_module (
-	service_id           varchar(127) NOT NULL  ,
-	service_name         varchar(127) NOT NULL  ,
-	service_type         varchar(15)  NOT NULL  ,
-	version              varchar(31) NOT NULL  ,
-	published_by         varchar(255)   ,
-	state                varchar(15) NOT NULL  ,
-	created_at           timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-	deploy_id            varchar(255)   ,
-	deploy_config_json   text   ,
-	deploy_location      varchar(500)   ,
-	CONSTRAINT Pk_tbl_module_service_id PRIMARY KEY ( service_id )
- );
-
-CREATE TABLE IF NOT EXISTS tbl_transaction (
-	transaction_id       varchar(31) NOT NULL  ,
-	module_id            varchar(127) NOT NULL ,
-	event                varchar(15) NOT NULL  ,
-	status               varchar(15) NOT NULL  ,
-	issued_at            timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-	issued_by            varchar(127)   ,
-	issued_from          varchar(63)   ,
-	retry                integer NOT NULL DEFAULT 0 ,
-	prev_state_json      text   ,
-	last_error_json      text   ,
-	CONSTRAINT Pk_tbl_operation_transaction_transaction_id PRIMARY KEY ( transaction_id ),
-	FOREIGN KEY ( module_id ) REFERENCES tbl_module( service_id )
- );
-
-DROP INDEX IF EXISTS Idx_tbl_transaction_module_id;
-DROP INDEX IF EXISTS Idx_tbl_transaction_module_lifetime;
-DROP INDEX IF EXISTS Unique_tbl_module;
-
-CREATE INDEX Idx_tbl_transaction_module_id ON tbl_transaction ( module_id );
-
-CREATE INDEX Idx_tbl_transaction_module_lifetime ON tbl_transaction ( module_id, issued_at );
-
-CREATE UNIQUE INDEX Unique_tbl_module ON tbl_module ( service_name, service_type )]]></string>
-		</script>
+	<connector name="Sqlite" database="Sqlite" driver_class="org.sqlite.JDBC" driver_jar="sqlite-jdbc-3.23.1.jar" driver_desc="Standard" host="localhost" port="7210" />
+	<layout name="Layout" id="Layout_595aed2" joined_routing="y" show_column_type="y" show_relation="columns" >
+		<entity schema="Default" name="tbl_remove_history" color="3986C1" x="704" y="48" />
+		<entity schema="Default" name="tbl_transaction" color="3986C1" x="400" y="48" />
+		<entity schema="Default" name="tbl_module" color="3986C1" x="48" y="48" />
 	</layout>
 </project>

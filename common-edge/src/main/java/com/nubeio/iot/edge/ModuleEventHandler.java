@@ -1,10 +1,9 @@
-package io.nubespark;
+package com.nubeio.iot.edge;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.nubeio.iot.edge.EdgeVerticle;
 import com.nubeio.iot.edge.loader.ModuleType;
 import com.nubeio.iot.edge.loader.ModuleTypeFactory;
 import com.nubeio.iot.edge.model.gen.Tables;
@@ -26,11 +25,9 @@ public final class ModuleEventHandler implements IEventHandler {
     private final EdgeVerticle verticle;
     private final Map<EventType, Function<RequestData, Single<JsonObject>>> mapping = new HashMap<>();
 
-    public ModuleEventHandler(EdgeVerticle verticle) {
+    public ModuleEventHandler(EdgeVerticle verticle, EventModel eventModel) {
         this.verticle = verticle;
-        EventModel.EDGE_APP_INSTALLER.getEvents()
-                                     .forEach(eventType -> mapping.put(eventType,
-                                                                       data -> this.factory(eventType, data)));
+        eventModel.getEvents().forEach(eventType -> mapping.put(eventType, data -> this.factory(eventType, data)));
     }
 
     public Single<JsonObject> handle(EventType eventType, RequestData data) throws NubeException {
@@ -49,7 +46,7 @@ public final class ModuleEventHandler implements IEventHandler {
                             .flattenAsObservable(records -> records)
                             .flatMapSingle(record -> Single.just(record.toJson()))
                             .collect(JsonArray::new, JsonArray::add)
-                            .map(results -> new JsonObject().put("apps", results));
+                            .map(results -> new JsonObject().put("services", results));
     }
 
     private Single<JsonObject> getOne(RequestData data) {

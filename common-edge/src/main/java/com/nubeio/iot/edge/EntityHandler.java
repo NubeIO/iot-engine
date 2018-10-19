@@ -70,34 +70,38 @@ public final class EntityHandler {
                                                     : this.findHistoryTransactionById(transactionId));
     }
 
-    public Single<JsonObject> handlePreDeployment(TblModule module, EventType eventType) {
+    Single<PreDeploymentResult> handlePreDeployment(TblModule module, EventType event) {
         logger.info("Handle entities before do deployment...");
-        return validateModuleState(module.getServiceId(), eventType).flatMap(oldOne -> {
-            if (EventType.INIT == eventType || EventType.CREATE == eventType) {
-                return markModuleInsert(module).flatMap(
-                        key -> createTransaction(key.getServiceId(), eventType, module.setState(State.NONE).toJson()))
-                                               .map(transId -> new JsonObject().put("tid", transId)
-                                                                               .put("state", State.NONE));
+        return validateModuleState(module.getServiceId(), event).flatMap(o -> {
+            if (EventType.INIT == event || EventType.CREATE == event) {
+                module.setState(State.NONE);
+                return markModuleInsert(new TblModule(module)).flatMap(
+                        key -> createTransaction(key.getServiceId(), event, module.toJson()).map(
+                                transId -> createPreDeployResult(module, transId, event, module.getState())));
             }
-            final TblModule service = oldOne.orElseThrow(() -> new NotFoundException(""));
-            final JsonObject oldJson = service.toJson();
-            final State oldState = service.getState();
-            logger.debug("Previous module state: {}", oldJson.encode());
-            final boolean isUpdated = EventType.UPDATE == eventType;
-            if (isUpdated || EventType.HALT == eventType) {
-                return markModuleModify(module, service, isUpdated).flatMap(
-                        key -> createTransaction(key.getServiceId(), eventType, oldJson))
-                                                                   .map(id -> new JsonObject().put("state", oldState)
-                                                                                              .put("tid", id));
+            final TblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
+            final boolean isUpdated = EventType.UPDATE == event;
+            if (isUpdated || EventType.HALT == event) {
+                return markModuleModify(module, new TblModule(oldOne), isUpdated).flatMap(
+                        key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
+                                transId -> createPreDeployResult(key, transId, event, oldOne.getState())));
             }
-            if (EventType.REMOVE == eventType) {
-                return markModuleDelete(service).flatMap(
-                        key -> createTransaction(key.getServiceId(), eventType, oldJson))
-                                                .map(transId -> new JsonObject().put("state", oldState)
-                                                                                .put("tid", transId));
+            if (EventType.REMOVE == event) {
+                return markModuleDelete(new TblModule(oldOne)).flatMap(
+                        key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
+                                transId -> createPreDeployResult(key, transId, event, oldOne.getState())));
             }
-            throw new UnsupportedOperationException("Unsupported event " + eventType);
+            throw new UnsupportedOperationException("Unsupported event " + event);
         });
+    }
+
+    private PreDeploymentResult createPreDeployResult(TblModule module, String transactionId, EventType event,
+                                                      State prevState) {
+        Map<String, Object> deployCfg = Objects.isNull(module.getDeployConfigJson())
+                                        ? null
+                                        : module.getDeployConfigJson().getMap();
+        return new PreDeploymentResult(transactionId, event, prevState, module.getServiceId(), module.getDeployId(),
+                                       deployCfg);
     }
 
     private Single<Optional<TblModule>> validateModuleState(String serviceId, EventType eventType) {
@@ -150,6 +154,7 @@ public final class EntityHandler {
 
     private Single<String> createTransaction(String moduleId, EventType eventType, JsonObject prevState) {
         logger.debug("Create new transaction for {}::::{}...", moduleId, eventType);
+        logger.debug("Previous module state: {}", prevState.encode());
         final Date now = DateTimes.now();
         final String transactionId = UUID.randomUUID().toString();
         final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)

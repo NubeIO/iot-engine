@@ -32,11 +32,11 @@ class AppStoreRouter {
     }
 
     AppStoreRouter init() {
-        addRouter(EventModel.EDGE_BIOS_TRANSACTION, "/module/transaction");
-        addRouter(EventModel.EDGE_BIOS_INSTALLER, "/module");
+        addRouter(EventModel.EDGE_BIOS_TRANSACTION, "/module/transaction", "transaction_id");
+        addRouter(EventModel.EDGE_BIOS_INSTALLER, "/module", "service_id");
         addRouter(EventModel.EDGE_BIOS_STATUS, "/status");
-        addRouter(EventModel.EDGE_APP_INSTALLER, "/app", "service_id");
-        addRouter(EventModel.EDGE_APP_TRANSACTION, "/app/transaction", "transaction_id");
+        addRouter(EventModel.EDGE_APP_INSTALLER, "/service", "service_id");
+        addRouter(EventModel.EDGE_APP_TRANSACTION, "/service/transaction", "transaction_id");
         return this;
     }
 

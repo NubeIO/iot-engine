@@ -1,10 +1,9 @@
-package io.nubespark;
+package com.nubeio.iot.edge;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.nubeio.iot.edge.EdgeVerticle;
 import com.nubeio.iot.edge.model.gen.Tables;
 import com.nubeio.iot.share.event.EventModel;
 import com.nubeio.iot.share.event.EventType;
@@ -22,11 +21,9 @@ public final class TransactionEventHandler implements IEventHandler {
     private final EdgeVerticle verticle;
     private final Map<EventType, Function<RequestData, Single<JsonObject>>> mapping = new HashMap<>();
 
-    public TransactionEventHandler(EdgeVerticle verticle) {
+    public TransactionEventHandler(EdgeVerticle verticle, EventModel eventModel) {
         this.verticle = verticle;
-        EventModel.EDGE_APP_TRANSACTION.getEvents()
-                                       .forEach(eventType -> mapping.put(eventType,
-                                                                         data -> this.factory(eventType, data)));
+        eventModel.getEvents().forEach(eventType -> mapping.put(eventType, data -> this.factory(eventType, data)));
     }
 
     public Single<JsonObject> handle(EventType eventType, RequestData data) throws NubeException {

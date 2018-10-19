@@ -3,23 +3,27 @@ package io.nubespark;
 import java.util.Map;
 
 import com.nubeio.iot.edge.EdgeVerticle;
+import com.nubeio.iot.edge.ModuleEventHandler;
+import com.nubeio.iot.edge.TransactionEventHandler;
 import com.nubeio.iot.edge.loader.ModuleType;
 import com.nubeio.iot.edge.loader.ModuleTypeFactory;
 import com.nubeio.iot.edge.model.gen.tables.interfaces.ITblModule;
 import com.nubeio.iot.edge.model.gen.tables.pojos.TblModule;
 import com.nubeio.iot.share.DevRunner;
 import com.nubeio.iot.share.enums.Status;
+import com.nubeio.iot.share.event.EventModel;
 import com.nubeio.iot.share.event.EventType;
 import com.nubeio.iot.share.utils.Configs;
 import com.nubeio.iot.share.utils.FileUtils;
 
 import io.reactivex.Single;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
 
-public class OsDeploymentVerticle extends EdgeVerticle {
+public final class OsDeploymentVerticle extends EdgeVerticle {
 
     public static void main(String[] args) {
         DevRunner.run("nube-bios/src/main/java/", OsDeploymentVerticle.class);
@@ -28,6 +32,15 @@ public class OsDeploymentVerticle extends EdgeVerticle {
     @Override
     protected String getDBName() {
         return "nube-bios";
+    }
+
+    @Override
+    protected void registerEventHandler() {
+        final EventBus bus = getVertx().eventBus();
+        bus.consumer(EventModel.EDGE_BIOS_INSTALLER.getAddress(),
+                     m -> this.handleEvent(m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
+        bus.consumer(EventModel.EDGE_BIOS_TRANSACTION.getAddress(),
+                     m -> this.handleEvent(m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
     }
 
     @SuppressWarnings("unchecked")

@@ -20,10 +20,13 @@ import com.nubeio.iot.share.IMicroVerticle;
 import com.nubeio.iot.share.MicroserviceConfig;
 import com.nubeio.iot.share.enums.State;
 import com.nubeio.iot.share.enums.Status;
+import com.nubeio.iot.share.event.EventMessage;
 import com.nubeio.iot.share.event.EventType;
+import com.nubeio.iot.share.event.IEventHandler;
 import com.nubeio.iot.share.event.RequestData;
 import com.nubeio.iot.share.exceptions.DatabaseException;
 import com.nubeio.iot.share.exceptions.ErrorMessage;
+import com.nubeio.iot.share.exceptions.NubeException;
 import com.nubeio.iot.share.utils.Configs;
 import com.nubeio.iot.share.utils.Strings;
 import com.zaxxer.hikari.HikariConfig;
@@ -32,6 +35,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
 import io.reactivex.Single;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -64,6 +68,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
         this.appConfig = Configs.getApplicationCfg(config());
         this.microserviceConfig = IMicroVerticle.initConfig(vertx, config()).onStart();
         this.moduleLoader = new ModuleLoader(() -> vertx);
+        registerEventHandler();
         initDBConnection().flatMap(client -> this.createDatabase(client).flatMap(ignores -> initData()))
                           .subscribe(logger::info, throwable -> {
                               logger.error("Failed to startup application", throwable);
@@ -87,44 +92,12 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
 
     protected abstract String getDBName();
 
+    protected abstract void registerEventHandler();
+
     protected abstract Single<JsonObject> initData();
 
     String genJdbcUrl() {
         return String.format("jdbc:sqlite:%s.db", getDBName());
-    }
-
-    protected Single<JsonObject> startupModules() {
-        return this.entityHandler.getModulesWhenBootstrap()
-                                 .flattenAsObservable(tblModules -> tblModules)
-                                 .flatMapSingle(module -> this.handleModule(module, EventType.UPDATE))
-                                 .collect(JsonArray::new, JsonArray::add)
-                                 .map(results -> new JsonObject().put("results", results));
-    }
-
-    public Single<JsonObject> handleModule(TblModule module, EventType eventType) {
-        logger.info("{} module with data {}", eventType, module.toJson().encode());
-        return this.entityHandler.handlePreDeployment(module, eventType)
-                                 .doAfterSuccess(result -> deployModule(module, eventType, result.getString("tid"),
-                                                                        State.valueOf(result.getString("state"))))
-                                 .map(result -> new JsonObject().put("transaction_id", result.getString("tid"))
-                                                                .put("message", "Work in progress")
-                                                                .put("status", Status.WIP));
-    }
-
-    private void deployModule(TblModule module, EventType event, String transId, State oldState) {
-        logger.info("Execute transaction: {}", transId);
-        final String serviceId = module.getServiceId();
-        final RequestData data = RequestData.builder()
-                                            .body(new JsonObject().put("service_id", serviceId)
-                                                                  .put("deploy_id", module.getDeployId())
-                                                                  .put("deploy_cfg", module.getDeployConfigJson())
-                                                                  .put("silent", EventType.REMOVE == event &&
-                                                                                 State.DISABLED == oldState))
-                                            .build();
-        moduleLoader.handle(event, data)
-                    .subscribe(r -> entityHandler.succeedPostDeployment(serviceId, transId, event,
-                                                                        r.getString("deploy_id")),
-                               t -> entityHandler.handleErrorPostDeployment(serviceId, transId, event, t));
     }
 
     private Single<SQLClient> initDBConnection() {
@@ -165,6 +138,52 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
                        throw new DatabaseException("Cannot create database", throwable);
                    })
                    .doFinally(conn::close);
+    }
+
+    protected Single<JsonObject> startupModules() {
+        return this.entityHandler.getModulesWhenBootstrap()
+                                 .flattenAsObservable(tblModules -> tblModules)
+                                 .flatMapSingle(module -> this.handleModule(module, EventType.UPDATE))
+                                 .collect(JsonArray::new, JsonArray::add)
+                                 .map(results -> new JsonObject().put("results", results));
+    }
+
+    protected void handleEvent(Message<Object> message, IEventHandler eventHandler) {
+        EventMessage msg = EventMessage.from(message.body());
+        logger.info("Executing action: {} with data: {}", msg.getAction(), msg.toJson().encode());
+        try {
+            eventHandler.handle(msg.getAction(), msg.getData().mapTo(RequestData.class))
+                        .subscribe(data -> message.reply(EventMessage.success(msg.getAction(), data).toJson()),
+                                   throwable -> {
+                                       logger.error("Failed when handle event", throwable);
+                                       message.reply(EventMessage.error(msg.getAction(), throwable).toJson());
+                                   });
+        } catch (NubeException ex) {
+            logger.error("Failed when handle event", ex);
+            message.reply(EventMessage.error(msg.getAction(), ex).toJson());
+        }
+    }
+
+    public Single<JsonObject> handleModule(TblModule module, EventType eventType) {
+        logger.info("{} module with data {}", eventType, module.toJson().encode());
+        return this.entityHandler.handlePreDeployment(module, eventType)
+                                 .doAfterSuccess(this::deployModule)
+                                 .map(result -> result.toJson()
+                                                      .put("message", "Work in progress")
+                                                      .put("status", Status.WIP));
+    }
+
+    private void deployModule(PreDeploymentResult preDeployResult) {
+        final String transactionId = preDeployResult.getTransactionId();
+        final String serviceId = preDeployResult.getServiceId();
+        final EventType event = preDeployResult.getEvent();
+        logger.info("Execute transaction: {}", transactionId);
+        boolean isSilent = EventType.REMOVE == event && State.DISABLED == preDeployResult.getPrevState();
+        final RequestData data = RequestData.builder().body(preDeployResult.toJson().put("silent", isSilent)).build();
+        moduleLoader.handle(event, data)
+                    .subscribe(r -> entityHandler.succeedPostDeployment(serviceId, transactionId, event,
+                                                                        r.getString("deploy_id")),
+                               t -> entityHandler.handleErrorPostDeployment(serviceId, transactionId, event, t));
     }
 
 }
