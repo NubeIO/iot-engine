@@ -1,5 +1,15 @@
 package io.nubespark.hive;
 
+import static io.nubespark.constants.Port.HIVE_SERVER_PORT;
+import static io.nubespark.hive.HiveService.SERVICE_ADDRESS;
+import static io.nubespark.hive.HiveService.SERVICE_NAME;
+import static io.nubespark.utils.ErrorCodes.NO_QUERY_SPECIFIED;
+import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
+import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
+
+import java.net.URL;
+import java.net.URLClassLoader;
+
 import io.nubespark.hive.controller.RulesController;
 import io.nubespark.utils.ErrorCodeException;
 import io.nubespark.utils.ErrorHandler;
@@ -10,8 +20,6 @@ import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.core.http.HttpServerRequest;
 import io.vertx.reactivex.core.http.HttpServerResponse;
@@ -21,23 +29,12 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
 import io.vertx.serviceproxy.ServiceBinder;
 
-import java.net.URL;
-import java.net.URLClassLoader;
-
-import static io.nubespark.constants.Port.HIVE_SERVER_PORT;
-import static io.nubespark.hive.HiveService.SERVICE_ADDRESS;
-import static io.nubespark.hive.HiveService.SERVICE_NAME;
-import static io.nubespark.utils.ErrorCodes.NO_QUERY_SPECIFIED;
-import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
-import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
-
 /**
  * Created by topsykretts on 4/26/18.
  */
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class HiveVerticle extends RxMicroServiceVerticle {
 
-    private Logger logger = LoggerFactory.getLogger(HiveVerticle.class);
     private RulesController controller;
 
     // Convenience method so you can run it in your IDE
@@ -158,7 +155,4 @@ public class HiveVerticle extends RxMicroServiceVerticle {
         logger.info(HiveVerticle.class.getClassLoader());
     }
 
-    protected Logger getLogger() {
-        return logger;
-    }
 }

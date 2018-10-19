@@ -2,41 +2,39 @@ package io.nubespark;
 
 import static io.nubespark.constants.Port.APP_STORE_PORT;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.nubeio.iot.share.event.EventMessage;
+import com.nubeio.iot.share.exceptions.ErrorMessage;
+import com.nubeio.iot.share.exceptions.HttpStatusMapping;
+import com.nubeio.iot.share.exceptions.NubeException;
+import com.nubeio.iot.share.http.RestUtils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.nubespark.events.Event;
-import io.nubespark.events.EventMessage;
-import io.nubespark.exceptions.HttpStatusMapping;
 import io.nubespark.utils.Runner;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
-import io.vertx.servicediscovery.Record;
 
-/**
- * Created by topsykretts on 4/28/18.
- */
 public class AppStoreRestVerticle extends RxRestAPIVerticle {
 
-    private static final Logger logger = LoggerFactory.getLogger(AppStoreRestVerticle.class);
+    //Should from config
+    private static final String ROOT_API_ENDPOINT = "/api";
+    private static final String HIVE_ENGINE_SERVICE = "io.nubespark.sql-hive.engine";
+    private static final String PUBLIC_HOST = "0.0.0.0";
 
-    // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
         String JAVA_DIR = "nube-app-store-rest/src/main/java/";
         Runner.runExample(JAVA_DIR, AppStoreRestVerticle.class);
@@ -45,47 +43,47 @@ public class AppStoreRestVerticle extends RxRestAPIVerticle {
     @Override
     public void start(io.vertx.core.Future<Void> future) {
         super.start();
-        logger.info("Config on app store REST {}", config());
-        startWebApp().flatMap(httpServer -> publishHttp()).subscribe(ignored -> future.complete(), future::fail);
+        logger.info("Config on app store REST {}", this.appConfig);
+        String host = this.appConfig.getString("http.host", PUBLIC_HOST);
+        int port = this.appConfig.getInteger("http.port", APP_STORE_PORT);
+        startWebApp(host, port).flatMap(httpServer -> publishHttpEndpoint(HIVE_ENGINE_SERVICE, host, port))
+                               .subscribe(ignored -> future.complete(), future::fail);
     }
 
-    private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.sql-hive.engine", "0.0.0.0",
-                                   config().getInteger("http.port", APP_STORE_PORT)).doOnError(
-                throwable -> logger.error("Cannot publish endpoint", throwable));
-    }
-
-    private Single<HttpServer> startWebApp() {
-        // Create a router object.
-        Router router = Router.router(vertx);
-
-        // creating body handler
-        router.route("/").handler(this::indexHandler);
-        router.route().handler(BodyHandler.create());
-        Event.CONTROL_MODULE.getEventMap()
-                            .values()
-                            .parallelStream()
-                            .forEach(metadata -> router.route(metadata.getMethod(), metadata.getEndpoint())
-                                                       .handler(ctx -> registerModuleControl(ctx, metadata)));
-        router.get("/nodes").handler(this::getNodes);
-        // This is last handler that gives not found message
-        router.route().last().handler(this::handlePageNotFound);
-
-        // Create the HTTP server and pass the "accept" method to the request handler.
-        Single<HttpServer> server = createHttpServer(router, config().getString("http.host", "0.0.0.0"),
-                                                     config().getInteger("http.port", APP_STORE_PORT));
+    private Single<HttpServer> startWebApp(String host, int port) {
+        Single<HttpServer> server = createHttpServer(initRouter(), host, port);
         return server.doOnSuccess(httpServer -> logger.info("Web Server started at {}", httpServer.actualPort()))
                      .doOnError(throwable -> logger.error("Cannot start server", throwable));
     }
 
-    private void getNodes(RoutingContext ctx) {
+    private Router initRouter() {
+        Router router = Router.router(vertx);
+        router.route().handler(BodyHandler.create());
+        router.route(ROOT_API_ENDPOINT).handler(this::registerIndexHandler);
+        final List<AppStoreRouter.Metadata> appRouters = new AppStoreRouter().init().getRouters();
+        appRouters.parallelStream()
+                  .forEach(metadata -> router.route(metadata.getMethod(), ROOT_API_ENDPOINT + metadata.getPath())
+                                             .handler(ctx -> registerAppControllerHandler(ctx, metadata)));
+        router.get(ROOT_API_ENDPOINT + "/nodes").handler(this::registerClusterNodesHandler);
+        router.get(ROOT_API_ENDPOINT + "/status").handler(this::registerBiosStatusHandler);
+        router.route().last().handler(this::registerNotFoundHandler);
+        return router;
+    }
+
+    private void registerBiosStatusHandler(RoutingContext ctx) {
+        ctx.response()
+           .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+           .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
+           .end(new ErrorMessage(NubeException.ErrorCode.SERVICE_ERROR, "Show BIOS status").toJson().encodePrettily());
+    }
+
+    private void registerClusterNodesHandler(RoutingContext ctx) {
         JsonArray nodesInfo = Hazelcast.getAllHazelcastInstances()
                                        .parallelStream()
                                        .map(this::getNodeInfo)
                                        .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
         ctx.response()
            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-           .putHeader("Access-Control-Allow-Origin", "*")
            .end(nodesInfo.encodePrettily());
     }
 
@@ -99,19 +97,18 @@ public class AppStoreRestVerticle extends RxRestAPIVerticle {
                                              .collect(Collectors.toList()));
     }
 
-    private void registerModuleControl(RoutingContext ctx, Event.Metadata metadata) {
-        EventMessage msg = EventMessage.success(metadata.getAction(), ctx.getBodyAsJson());
+    private void registerAppControllerHandler(RoutingContext ctx, AppStoreRouter.Metadata metadata) {
+        EventMessage msg = EventMessage.success(metadata.getAction(), RestUtils.convertToRequestData(ctx));
         logger.info("Receive message from endpoint: {}", msg.toJson().encode());
-        getVertx().eventBus()
-                  .send(Event.CONTROL_MODULE.getAddress(), msg.toJson(), reply -> handleReply(ctx, metadata, reply));
+        getVertx().eventBus().send(metadata.getAddress(), msg.toJson(), reply -> handleReply(ctx, metadata, reply));
     }
 
-    private void handleReply(RoutingContext ctx, Event.Metadata metadata, AsyncResult<Message<Object>> reply) {
+    private void handleReply(RoutingContext ctx, AppStoreRouter.Metadata metadata, AsyncResult<Message<Object>> reply) {
         if (reply.succeeded()) {
             EventMessage replyMsg = EventMessage.from(reply.result().body());
             logger.info("Receive message from backend: {}", replyMsg.toJson().encode());
             ctx.response().putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON);
-            if (replyMsg.isOk()) {
+            if (replyMsg.isSuccess()) {
                 ctx.response()
                    .setStatusCode(HttpStatusMapping.success(metadata.getMethod()).code())
                    .end(replyMsg.getData().encodePrettily());
@@ -122,34 +119,28 @@ public class AppStoreRestVerticle extends RxRestAPIVerticle {
             }
         } else {
             ctx.response().setStatusCode(HttpResponseStatus.SERVICE_UNAVAILABLE.code()).end();
-            logger.error("No reply from cluster receiver. Address: {} - Action: {}", Event.CONTROL_MODULE.getAddress(),
+            logger.error("No reply from cluster receiver. Address: {} - Action: {}", metadata.getAddress(),
                          metadata.getAction());
         }
     }
 
-    private void handlePageNotFound(RoutingContext routingContext) {
+    private void registerNotFoundHandler(RoutingContext routingContext) {
         String uri = routingContext.request().absoluteURI();
         routingContext.response()
                       .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                      .setStatusCode(404)
-                      .end(Json.encodePrettily(new JsonObject().put("uri", uri)
-                                                               .put("status", 404)
-                                                               .put("message", "Resource Not Found")));
+                      .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
+                      .end(new JsonObject().put("uri", uri).put("message", "Resource Not Found").encodePrettily());
     }
 
-    // Returns verticle properties in json
-    private void indexHandler(RoutingContext routingContext) {
+    private void registerIndexHandler(RoutingContext routingContext) {
         HttpServerResponse response = routingContext.response();
         response.putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                .end(Json.encodePrettily(new JsonObject().put("name", "app-store-rest")
-                                                         .put("version", "1.0")
-                                                         .put("vert.x_version", "3.4.1")
-                                                         .put("java_version", "8.0")));
-    }
-
-    @Override
-    protected Logger getLogger() {
-        return logger;
+                .setStatusCode(HttpResponseStatus.OK.code())
+                .end(new JsonObject().put("name", "app-store-rest")
+                                     .put("version", "1.0")
+                                     .put("vert.x_version", "3.4.1")
+                                     .put("java_version", "8.0")
+                                     .encodePrettily());
     }
 
 }

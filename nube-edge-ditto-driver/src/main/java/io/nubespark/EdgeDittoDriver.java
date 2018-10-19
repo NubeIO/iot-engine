@@ -1,8 +1,14 @@
 package io.nubespark;
 
+import static io.nubespark.constants.Port.EDGE_DITTO_DRIVER_PORT;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.nio.Address;
+
 import io.nubespark.utils.Runner;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
@@ -14,8 +20,6 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.impl.headers.VertxHttpHeaders;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.MultiMap;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
@@ -25,11 +29,6 @@ import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static io.nubespark.constants.Port.EDGE_DITTO_DRIVER_PORT;
 
 /**
  * This EdgeDittoDriver resides on Edge Devices, and have following functionalities:
@@ -43,8 +42,6 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
 
     private static final String EDGE_DITTO_DRIVER = "io.nubespark.edge.ditto.driver";
     private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
-
-    private Logger logger = LoggerFactory.getLogger(EdgeDittoDriver.class);
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
@@ -189,11 +186,6 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
             ));
     }
 
-
-    @Override
-    protected Logger getLogger() {
-        return logger;
-    }
 
     private String getDeviceAddress() {
         for (HazelcastInstance instance : Hazelcast.getAllHazelcastInstances()) {

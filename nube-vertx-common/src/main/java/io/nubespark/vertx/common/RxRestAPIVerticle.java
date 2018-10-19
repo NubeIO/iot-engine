@@ -1,12 +1,18 @@
 package io.nubespark.vertx.common;
 
+import static io.nubespark.vertx.common.HttpHelper.badGateway;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.utils.HttpException;
 import io.reactivex.Single;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
@@ -17,18 +23,7 @@ import io.vertx.reactivex.ext.web.handler.CorsHandler;
 import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.Record;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import static io.nubespark.vertx.common.HttpHelper.badGateway;
-
 public class RxRestAPIVerticle extends RxMicroServiceVerticle {
-    @Override
-    protected Logger getLogger() {
-        return null;
-    }
 
     /**
      * Enable CORS support.
@@ -62,7 +57,7 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
     protected Single<Buffer> dispatchRequests(HttpMethod method, String path, JsonObject payload) {
         int initialOffset = 5; // length of `/api/`
         // run with circuit breaker in order to deal with failure
-        return circuitBreaker.rxExecuteCommand(future -> {
+        return this.circuitBreaker.rxExecuteCommand(future -> {
             getRxAllEndpoints().flatMap(recordList -> {
                 if (path.length() <= initialOffset) {
                     return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));

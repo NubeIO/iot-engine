@@ -1,5 +1,27 @@
 package io.nubespark.impl;
 
+import static io.nubespark.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
+import static io.nubespark.constants.Address.MULTI_TENANT_ADDRESS;
+import static io.nubespark.constants.Address.SERVICE_NAME;
+import static io.nubespark.constants.Collection.COMPANY;
+import static io.nubespark.constants.Collection.MENU;
+import static io.nubespark.constants.Collection.SITE;
+import static io.nubespark.constants.Collection.USER;
+import static io.nubespark.constants.Collection.USER_GROUP;
+import static io.nubespark.constants.Location.MEDIA_FILE_LOCATION;
+import static io.nubespark.constants.Location.WEB_SERVER_MICRO_SERVICE_LOCATION;
+import static io.nubespark.constants.Port.HTTP_WEB_SERVER_PORT;
+import static io.nubespark.utils.FileUtils.appendRealFileNameWithExtension;
+import static io.nubespark.utils.MongoUtils.idQuery;
+import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE;
+import static io.nubespark.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
+import static io.nubespark.utils.response.ResponseUtils.buildAbsoluteUri;
+import static io.nubespark.vertx.common.HttpHelper.failAuthentication;
+import static io.nubespark.vertx.common.HttpHelper.serviceUnavailable;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
 import io.nubespark.utils.CustomMessage;
@@ -15,8 +37,6 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
@@ -39,33 +59,14 @@ import io.vertx.reactivex.ext.web.handler.StaticHandler;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.servicediscovery.Record;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-
-import static io.nubespark.constants.Address.*;
-import static io.nubespark.constants.Collection.*;
-import static io.nubespark.constants.Location.MEDIA_FILE_LOCATION;
-import static io.nubespark.constants.Location.WEB_SERVER_MICRO_SERVICE_LOCATION;
-import static io.nubespark.constants.Port.HTTP_WEB_SERVER_PORT;
-import static io.nubespark.utils.FileUtils.appendRealFileNameWithExtension;
-import static io.nubespark.utils.MongoUtils.idQuery;
-import static io.nubespark.utils.response.ResponseUtils.*;
-import static io.nubespark.vertx.common.HttpHelper.failAuthentication;
-import static io.nubespark.vertx.common.HttpHelper.serviceUnavailable;
-
 /**
  * Created by topsykretts on 5/4/18.
  */
 public class HttpServerVerticle<T> extends RxRestAPIVerticle {
+
     private OAuth2Auth loginAuth;
-    private Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
     private EventBus eventBus;
     private MongoClient mongoClient;
-
-    @Override
-    protected Logger getLogger() {
-        return logger;
-    }
 
     public String getRootFolder() {
         return System.getProperty("user.dir") + WEB_SERVER_MICRO_SERVICE_LOCATION;

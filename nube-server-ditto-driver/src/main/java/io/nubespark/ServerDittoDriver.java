@@ -1,5 +1,13 @@
 package io.nubespark;
 
+import static io.nubespark.constants.Port.SERVER_DITTO_DRIVER_PORT;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import io.nubespark.utils.Runner;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
@@ -16,24 +24,18 @@ import io.vertx.core.http.RequestOptions;
 import io.vertx.core.http.impl.headers.VertxHttpHeaders;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.MultiMap;
 import io.vertx.reactivex.core.eventbus.MessageConsumer;
-import io.vertx.reactivex.core.http.*;
+import io.vertx.reactivex.core.http.HttpClient;
+import io.vertx.reactivex.core.http.HttpClientRequest;
+import io.vertx.reactivex.core.http.HttpServer;
+import io.vertx.reactivex.core.http.HttpServerResponse;
+import io.vertx.reactivex.core.http.WebSocket;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.reactivex.servicediscovery.types.MessageSource;
 import io.vertx.servicediscovery.Record;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import static io.nubespark.constants.Port.SERVER_DITTO_DRIVER_PORT;
 
 
 /**
@@ -43,8 +45,6 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
 
     private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
     private static final String DITTO_EVENTS = "io.nubespark.ditto.events";
-
-    private Logger logger = LoggerFactory.getLogger(ServerDittoDriver.class);
 
     private WebSocket dittoWebSocket;
     private HttpClient client;
@@ -299,8 +299,4 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         }
     }
 
-    @Override
-    protected Logger getLogger() {
-        return logger;
-    }
 }

@@ -1,9 +1,34 @@
 package io.nubespark.impl;
 
+import static io.nubespark.constants.Address.MULTI_TENANT_ADDRESS;
+import static io.nubespark.constants.Collection.COMPANY;
+import static io.nubespark.constants.Collection.SITE;
+import static io.nubespark.constants.Collection.USER;
+import static io.nubespark.constants.Collection.USER_GROUP;
+import static io.nubespark.utils.CustomMessageResponseHelper.handleForbiddenResponse;
+import static io.nubespark.utils.CustomMessageResponseHelper.handleHttpException;
+import static io.nubespark.utils.CustomMessageResponseHelper.handleNotFoundResponse;
+import static io.nubespark.utils.MongoUtils.idQuery;
+import static io.nubespark.vertx.common.HttpHelper.badRequest;
+import static io.nubespark.vertx.common.HttpHelper.forbidden;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
-import io.nubespark.impl.models.*;
-import io.nubespark.utils.*;
+import io.nubespark.impl.models.Company;
+import io.nubespark.impl.models.KeycloakUserRepresentation;
+import io.nubespark.impl.models.MongoUser;
+import io.nubespark.impl.models.Site;
+import io.nubespark.impl.models.UserGroup;
+import io.nubespark.utils.CustomMessage;
+import io.nubespark.utils.HttpException;
+import io.nubespark.utils.JSONUtils;
+import io.nubespark.utils.MultiTenantCustomMessageHelper;
+import io.nubespark.utils.SQLUtils;
+import io.nubespark.utils.StringUtils;
+import io.nubespark.utils.UserUtils;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -12,31 +37,13 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.mongo.UpdateOptions;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static io.nubespark.constants.Address.MULTI_TENANT_ADDRESS;
-import static io.nubespark.constants.Collection.*;
-import static io.nubespark.utils.CustomMessageResponseHelper.*;
-import static io.nubespark.utils.MongoUtils.idQuery;
-import static io.nubespark.vertx.common.HttpHelper.badRequest;
-import static io.nubespark.vertx.common.HttpHelper.forbidden;
-
 public class MultiTenantVerticle extends RxRestAPIVerticle {
     private MongoClient mongoClient;
     private static final String DEFAULT_PASSWORD = "helloworld";
-    private Logger logger = LoggerFactory.getLogger(MultiTenantVerticle.class);
-
-    @Override
-    protected Logger getLogger() {
-        return logger;
-    }
 
     @Override
     public void start() {

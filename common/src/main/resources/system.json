@@ -1,0 +1,31 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "REQUIRED",
+      "ssl": false
+      //      "keyStoreOptions": {},
+      //      "trustStoreOptions": {
+      //        "path": "",
+      //        "value": "",
+      //        "password": ""
+      //      },
+    },
+    "__cluster__": {
+      "active": false,
+      "ha": true
+    }
+  },
+  "__deploy__": {
+    "ha": false,
+    "instances": 1,
+    "multiThreaded": false,
+    "worker": false,
+    "workerPoolName": null,
+    "workerPoolSize": 20,
+    "maxWorkerExecuteTime": 60000000000,
+    "extraClasspath": [],
+    "isolationGroup": null,
+    "isolatedClasses": []
+  },
+  "__app__": {}
+}
