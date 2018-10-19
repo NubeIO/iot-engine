@@ -3,6 +3,13 @@
 */
 package com.nubeio.iot.edge.model.gen.tables.pojos;
 
+import java.util.Date;
+import javax.annotation.Generated;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 import com.nubeio.iot.edge.loader.ModuleType;
 import com.nubeio.iot.edge.model.gen.tables.interfaces.ITblModule;
@@ -10,15 +17,6 @@ import com.nubeio.iot.share.enums.State;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
-
-import java.util.Date;
-
-import javax.annotation.Generated;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
 
 
 /**
@@ -34,12 +32,12 @@ import javax.persistence.Table;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 @Entity
 @Table(name = "tbl_module", indexes = {
-    @Index(name = "Unique_tbl_module", unique = true, columnList = "service_name ASC, service_type ASC"),
-    @Index(name = "sqlite_autoindex_tbl_module_1", unique = true, columnList = "service_id ASC")
+    @Index(name = "sqlite_autoindex_tbl_module_1", unique = true, columnList = "service_id ASC"),
+    @Index(name = "sqlite_autoindex_tbl_module_2", unique = true, columnList = "service_name ASC, service_type ASC")
 })
 public class TblModule implements VertxPojo, ITblModule {
 
-    private static final long serialVersionUID = 1996451129;
+    private static final long serialVersionUID = -1629070075;
 
     private String     serviceId;
     private String     serviceName;

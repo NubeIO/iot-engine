@@ -11,7 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
 
-import com.nubeio.iot.edge.model.gen.tables.interfaces.ITblTransaction;
+import com.nubeio.iot.edge.model.gen.tables.interfaces.ITblRemoveHistory;
 import com.nubeio.iot.share.enums.Status;
 import com.nubeio.iot.share.event.EventType;
 
@@ -31,14 +31,12 @@ import io.vertx.core.json.JsonObject;
 )
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 @Entity
-@Table(name = "tbl_transaction", indexes = {
-    @Index(name = "Idx_tbl_transaction_module_id", columnList = "module_id ASC"),
-    @Index(name = "Idx_tbl_transaction_module_lifetime", columnList = "module_id ASC, issued_at ASC"),
-    @Index(name = "sqlite_autoindex_tbl_transaction_1", unique = true, columnList = "transaction_id ASC")
+@Table(name = "tbl_remove_history", indexes = {
+    @Index(name = "sqlite_autoindex_tbl_remove_history_1", unique = true, columnList = "transaction_id ASC")
 })
-public class TblTransaction implements VertxPojo, ITblTransaction {
+public class TblRemoveHistory implements VertxPojo, ITblRemoveHistory {
 
-    private static final long serialVersionUID = 1587063076;
+    private static final long serialVersionUID = 1489337490;
 
     private String     transactionId;
     private String     moduleId;
@@ -52,9 +50,9 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     private JsonObject lastErrorJson;
     private Integer    retry;
 
-    public TblTransaction() {}
+    public TblRemoveHistory() {}
 
-    public TblTransaction(TblTransaction value) {
+    public TblRemoveHistory(TblRemoveHistory value) {
         this.transactionId = value.transactionId;
         this.moduleId = value.moduleId;
         this.event = value.event;
@@ -68,7 +66,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
         this.retry = value.retry;
     }
 
-    public TblTransaction(
+    public TblRemoveHistory(
         String     transactionId,
         String     moduleId,
         EventType  event,
@@ -102,7 +100,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setTransactionId(String transactionId) {
+    public TblRemoveHistory setTransactionId(String transactionId) {
         this.transactionId = transactionId;
         return this;
     }
@@ -114,7 +112,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setModuleId(String moduleId) {
+    public TblRemoveHistory setModuleId(String moduleId) {
         this.moduleId = moduleId;
         return this;
     }
@@ -126,7 +124,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setEvent(EventType event) {
+    public TblRemoveHistory setEvent(EventType event) {
         this.event = event;
         return this;
     }
@@ -138,7 +136,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setStatus(Status status) {
+    public TblRemoveHistory setStatus(Status status) {
         this.status = status;
         return this;
     }
@@ -150,7 +148,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setIssuedAt(Date issuedAt) {
+    public TblRemoveHistory setIssuedAt(Date issuedAt) {
         this.issuedAt = issuedAt;
         return this;
     }
@@ -162,7 +160,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setIssuedBy(String issuedBy) {
+    public TblRemoveHistory setIssuedBy(String issuedBy) {
         this.issuedBy = issuedBy;
         return this;
     }
@@ -174,7 +172,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setIssuedFrom(String issuedFrom) {
+    public TblRemoveHistory setIssuedFrom(String issuedFrom) {
         this.issuedFrom = issuedFrom;
         return this;
     }
@@ -186,7 +184,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setModifiedAt(Date modifiedAt) {
+    public TblRemoveHistory setModifiedAt(Date modifiedAt) {
         this.modifiedAt = modifiedAt;
         return this;
     }
@@ -198,7 +196,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setPrevStateJson(JsonObject prevStateJson) {
+    public TblRemoveHistory setPrevStateJson(JsonObject prevStateJson) {
         this.prevStateJson = prevStateJson;
         return this;
     }
@@ -210,7 +208,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setLastErrorJson(JsonObject lastErrorJson) {
+    public TblRemoveHistory setLastErrorJson(JsonObject lastErrorJson) {
         this.lastErrorJson = lastErrorJson;
         return this;
     }
@@ -222,14 +220,14 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
     }
 
     @Override
-    public TblTransaction setRetry(Integer retry) {
+    public TblRemoveHistory setRetry(Integer retry) {
         this.retry = retry;
         return this;
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("TblTransaction (");
+        StringBuilder sb = new StringBuilder("TblRemoveHistory (");
 
         sb.append(transactionId);
         sb.append(", ").append(moduleId);
@@ -255,7 +253,7 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
      * {@inheritDoc}
      */
     @Override
-    public void from(ITblTransaction from) {
+    public void from(ITblRemoveHistory from) {
         setTransactionId(from.getTransactionId());
         setModuleId(from.getModuleId());
         setEvent(from.getEvent());
@@ -273,12 +271,12 @@ public class TblTransaction implements VertxPojo, ITblTransaction {
      * {@inheritDoc}
      */
     @Override
-    public <E extends ITblTransaction> E into(E into) {
+    public <E extends ITblRemoveHistory> E into(E into) {
         into.from(this);
         return into;
     }
 
-    public TblTransaction(io.vertx.core.json.JsonObject json) {
+    public TblRemoveHistory(io.vertx.core.json.JsonObject json) {
         this();
         fromJson(json);
     }

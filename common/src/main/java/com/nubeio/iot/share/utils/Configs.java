@@ -31,7 +31,11 @@ public final class Configs {
     public static final String CLUSTER_CFG_KEY = "__cluster__";
 
     public static JsonObject loadDefaultConfig(String file) {
-        final InputStream resourceAsStream = NubeLauncher.class.getClassLoader().getResourceAsStream(file);
+        return loadDefaultConfig(NubeLauncher.class, file);
+    }
+
+    public static JsonObject loadDefaultConfig(Class clazz, String file) {
+        final InputStream resourceAsStream = clazz.getClassLoader().getResourceAsStream(file);
         if (Objects.isNull(resourceAsStream)) {
             logger.warn("File not found");
             return new JsonObject();

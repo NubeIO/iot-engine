@@ -3,22 +3,20 @@
 */
 package com.nubeio.iot.edge.model.gen.tables.interfaces;
 
-
-import com.nubeio.iot.edge.loader.ModuleType;
-import com.nubeio.iot.share.enums.State;
-
-import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.vertx.core.json.JsonObject;
-
 import java.io.Serializable;
 import java.util.Date;
-
 import javax.annotation.Generated;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
+
+import com.nubeio.iot.edge.loader.ModuleType;
+import com.nubeio.iot.share.enums.State;
+
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.vertx.core.json.JsonObject;
 
 
 /**
@@ -34,8 +32,8 @@ import javax.persistence.Table;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 @Entity
 @Table(name = "tbl_module", indexes = {
-    @Index(name = "Unique_tbl_module", unique = true, columnList = "service_name ASC, service_type ASC"),
-    @Index(name = "sqlite_autoindex_tbl_module_1", unique = true, columnList = "service_id ASC")
+    @Index(name = "sqlite_autoindex_tbl_module_1", unique = true, columnList = "service_id ASC"),
+    @Index(name = "sqlite_autoindex_tbl_module_2", unique = true, columnList = "service_name ASC, service_type ASC")
 })
 public interface ITblModule extends VertxPojo, Serializable {
 
@@ -182,7 +180,7 @@ public interface ITblModule extends VertxPojo, Serializable {
         setServiceType(json.getString("service_type")==null?null:com.nubeio.iot.edge.loader.ModuleTypeFactory.factory(json.getString("service_type")));
         setVersion(json.getString("version"));
         setPublishedBy(json.getString("published_by"));
-        setState(json.getString("state")==null? null: State.valueOf(json.getString("state")));
+        setState(json.getString("state")==null?null:com.nubeio.iot.share.enums.State.valueOf(json.getString("state")));
         setCreatedAt(json.getLong("created_at")==null?null:Date.from(java.time.Instant.ofEpochMilli(json.getLong("created_at"))));
         setModifiedAt(json.getLong("modified_at")==null?null:Date.from(java.time.Instant.ofEpochMilli(json.getLong("modified_at"))));
         setDeployId(json.getString("deploy_id"));

@@ -14,9 +14,11 @@ import io.vertx.core.json.JsonObject;
 public final class DevRunner {
 
     public static void run(String javaDir, Class clazz) {
-        JsonObject config = NubeLauncher.defaultConfig();
-        DeploymentOptions deployOptions = new DeploymentOptions(Configs.getDeployCfg(config));
-        run(javaDir, clazz, NubeLauncher.defaultVertxOption(config), deployOptions);
+        final JsonObject launcherCfg = NubeLauncher.defaultConfig();
+        final JsonObject appCfg = Configs.loadDefaultConfig(clazz, "config.json");
+        JsonObject config = launcherCfg.mergeIn(appCfg);
+        run(javaDir, clazz, NubeLauncher.defaultVertxOption(Configs.getSystemCfg(config)),
+            new DeploymentOptions(Configs.getDeployCfg(config)).setConfig(Configs.getApplicationCfg(config)));
     }
 
     private static void run(String javaDir, Class clazz, VertxOptions options, DeploymentOptions deploymentOptions) {

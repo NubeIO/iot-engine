@@ -3,7 +3,6 @@
 */
 package com.nubeio.iot.edge.model.gen.tables;
 
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -73,12 +72,12 @@ public class TblTransaction extends TableImpl<TblTransactionRecord> {
     /**
      * The column <code>tbl_transaction.event</code>.
      */
-    public final TableField<TblTransactionRecord, EventType> EVENT = createField("event", org.jooq.impl.SQLDataType.VARCHAR(15).nullable(false), this, "", new org.jooq.impl.EnumConverter<java.lang.String, EventType>(java.lang.String.class, EventType.class));
+    public final TableField<TblTransactionRecord, EventType> EVENT = createField("event", org.jooq.impl.SQLDataType.VARCHAR(15).nullable(false), this, "", new org.jooq.impl.EnumConverter<java.lang.String, com.nubeio.iot.share.event.EventType>(java.lang.String.class, com.nubeio.iot.share.event.EventType.class));
 
     /**
      * The column <code>tbl_transaction.status</code>.
      */
-    public final TableField<TblTransactionRecord, Status> STATUS = createField("status", org.jooq.impl.SQLDataType.VARCHAR(15).nullable(false), this, "", new org.jooq.impl.EnumConverter<java.lang.String, Status>(java.lang.String.class, Status.class));
+    public final TableField<TblTransactionRecord, Status> STATUS = createField("status", org.jooq.impl.SQLDataType.VARCHAR(15).nullable(false), this, "", new org.jooq.impl.EnumConverter<java.lang.String, com.nubeio.iot.share.enums.Status>(java.lang.String.class, com.nubeio.iot.share.enums.Status.class));
 
     /**
      * The column <code>tbl_transaction.issued_at</code>.

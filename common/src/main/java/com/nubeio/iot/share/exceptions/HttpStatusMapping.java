@@ -27,10 +27,19 @@ public final class HttpStatusMapping {
         if (NubeException.ErrorCode.INVALID_ARGUMENT == errorCode || NubeException.ErrorCode.HTTP_ERROR == errorCode) {
             return HttpResponseStatus.BAD_REQUEST;
         }
-        if (NubeException.ErrorCode.SECURITY_ERROR == errorCode || NubeException.ErrorCode.AUTHENTICATION_ERROR == errorCode) {
+        if (NubeException.ErrorCode.NOT_FOUND == errorCode) {
+            if (HttpMethod.GET == method) {
+                return HttpResponseStatus.NOT_FOUND;
+            }
+            return HttpResponseStatus.GONE;
+        }
+        if (NubeException.ErrorCode.ALREADY_EXIST == errorCode) {
+            return HttpResponseStatus.CONFLICT;
+        }
+        if (NubeException.ErrorCode.AUTHENTICATION_ERROR == errorCode) {
             return HttpResponseStatus.UNAUTHORIZED;
         }
-        if (NubeException.ErrorCode.PERMISSION_ERROR == errorCode) {
+        if (NubeException.ErrorCode.INSUFFICIENT_PERMISSION_ERROR == errorCode) {
             return HttpResponseStatus.FORBIDDEN;
         }
         if (NubeException.ErrorCode.STATE_ERROR == errorCode) {

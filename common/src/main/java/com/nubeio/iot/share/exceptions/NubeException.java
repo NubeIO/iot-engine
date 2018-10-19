@@ -33,10 +33,11 @@ public class NubeException extends RuntimeException {
     public enum ErrorCode implements Serializable {
 
         INVALID_ARGUMENT,
+        ALREADY_EXIST,
         NOT_FOUND,
         SECURITY_ERROR,
         AUTHENTICATION_ERROR,
-        PERMISSION_ERROR,
+        INSUFFICIENT_PERMISSION_ERROR,
         HTTP_ERROR,
         SERVICE_ERROR,
         ENGINE_ERROR,

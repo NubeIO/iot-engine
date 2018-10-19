@@ -17,8 +17,8 @@ import org.jooq.Record11;
 import org.jooq.Row11;
 import org.jooq.impl.UpdatableRecordImpl;
 
-import com.nubeio.iot.edge.model.gen.tables.TblTransaction;
-import com.nubeio.iot.edge.model.gen.tables.interfaces.ITblTransaction;
+import com.nubeio.iot.edge.model.gen.tables.TblRemoveHistory;
+import com.nubeio.iot.edge.model.gen.tables.interfaces.ITblRemoveHistory;
 import com.nubeio.iot.share.enums.Status;
 import com.nubeio.iot.share.event.EventType;
 
@@ -38,26 +38,24 @@ import io.vertx.core.json.JsonObject;
 )
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 @Entity
-@Table(name = "tbl_transaction", indexes = {
-    @Index(name = "Idx_tbl_transaction_module_id", columnList = "module_id ASC"),
-    @Index(name = "Idx_tbl_transaction_module_lifetime", columnList = "module_id ASC, issued_at ASC"),
-    @Index(name = "sqlite_autoindex_tbl_transaction_1", unique = true, columnList = "transaction_id ASC")
+@Table(name = "tbl_remove_history", indexes = {
+    @Index(name = "sqlite_autoindex_tbl_remove_history_1", unique = true, columnList = "transaction_id ASC")
 })
-public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionRecord> implements VertxPojo, Record11<String, String, EventType, Status, Date, String, String, Date, JsonObject, JsonObject, Integer>, ITblTransaction {
+public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistoryRecord> implements VertxPojo, Record11<String, String, EventType, Status, Date, String, String, Date, JsonObject, JsonObject, Integer>, ITblRemoveHistory {
 
-    private static final long serialVersionUID = 415663572;
+    private static final long serialVersionUID = -365194657;
 
     /**
-     * Setter for <code>tbl_transaction.transaction_id</code>.
+     * Setter for <code>tbl_remove_history.transaction_id</code>.
      */
     @Override
-    public TblTransactionRecord setTransactionId(String value) {
+    public TblRemoveHistoryRecord setTransactionId(String value) {
         set(0, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.transaction_id</code>.
+     * Getter for <code>tbl_remove_history.transaction_id</code>.
      */
     @Id
     @Column(name = "transaction_id", unique = true, nullable = false, length = 31)
@@ -67,16 +65,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.module_id</code>.
+     * Setter for <code>tbl_remove_history.module_id</code>.
      */
     @Override
-    public TblTransactionRecord setModuleId(String value) {
+    public TblRemoveHistoryRecord setModuleId(String value) {
         set(1, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.module_id</code>.
+     * Getter for <code>tbl_remove_history.module_id</code>.
      */
     @Column(name = "module_id", nullable = false, length = 127)
     @Override
@@ -85,16 +83,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.event</code>.
+     * Setter for <code>tbl_remove_history.event</code>.
      */
     @Override
-    public TblTransactionRecord setEvent(EventType value) {
+    public TblRemoveHistoryRecord setEvent(EventType value) {
         set(2, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.event</code>.
+     * Getter for <code>tbl_remove_history.event</code>.
      */
     @Column(name = "event", nullable = false, length = 15)
     @Override
@@ -103,16 +101,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.status</code>.
+     * Setter for <code>tbl_remove_history.status</code>.
      */
     @Override
-    public TblTransactionRecord setStatus(Status value) {
+    public TblRemoveHistoryRecord setStatus(Status value) {
         set(3, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.status</code>.
+     * Getter for <code>tbl_remove_history.status</code>.
      */
     @Column(name = "status", nullable = false, length = 15)
     @Override
@@ -121,16 +119,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.issued_at</code>.
+     * Setter for <code>tbl_remove_history.issued_at</code>.
      */
     @Override
-    public TblTransactionRecord setIssuedAt(Date value) {
+    public TblRemoveHistoryRecord setIssuedAt(Date value) {
         set(4, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.issued_at</code>.
+     * Getter for <code>tbl_remove_history.issued_at</code>.
      */
     @Column(name = "issued_at", nullable = false)
     @Override
@@ -139,16 +137,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.issued_by</code>.
+     * Setter for <code>tbl_remove_history.issued_by</code>.
      */
     @Override
-    public TblTransactionRecord setIssuedBy(String value) {
+    public TblRemoveHistoryRecord setIssuedBy(String value) {
         set(5, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.issued_by</code>.
+     * Getter for <code>tbl_remove_history.issued_by</code>.
      */
     @Column(name = "issued_by", length = 127)
     @Override
@@ -157,16 +155,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.issued_from</code>.
+     * Setter for <code>tbl_remove_history.issued_from</code>.
      */
     @Override
-    public TblTransactionRecord setIssuedFrom(String value) {
+    public TblRemoveHistoryRecord setIssuedFrom(String value) {
         set(6, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.issued_from</code>.
+     * Getter for <code>tbl_remove_history.issued_from</code>.
      */
     @Column(name = "issued_from", length = 63)
     @Override
@@ -175,16 +173,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.modified_at</code>.
+     * Setter for <code>tbl_remove_history.modified_at</code>.
      */
     @Override
-    public TblTransactionRecord setModifiedAt(Date value) {
+    public TblRemoveHistoryRecord setModifiedAt(Date value) {
         set(7, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.modified_at</code>.
+     * Getter for <code>tbl_remove_history.modified_at</code>.
      */
     @Column(name = "modified_at", nullable = false)
     @Override
@@ -193,16 +191,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.prev_state_json</code>.
+     * Setter for <code>tbl_remove_history.prev_state_json</code>.
      */
     @Override
-    public TblTransactionRecord setPrevStateJson(JsonObject value) {
+    public TblRemoveHistoryRecord setPrevStateJson(JsonObject value) {
         set(8, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.prev_state_json</code>.
+     * Getter for <code>tbl_remove_history.prev_state_json</code>.
      */
     @Column(name = "prev_state_json")
     @Override
@@ -211,16 +209,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.last_error_json</code>.
+     * Setter for <code>tbl_remove_history.last_error_json</code>.
      */
     @Override
-    public TblTransactionRecord setLastErrorJson(JsonObject value) {
+    public TblRemoveHistoryRecord setLastErrorJson(JsonObject value) {
         set(9, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.last_error_json</code>.
+     * Getter for <code>tbl_remove_history.last_error_json</code>.
      */
     @Column(name = "last_error_json")
     @Override
@@ -229,16 +227,16 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     }
 
     /**
-     * Setter for <code>tbl_transaction.retry</code>.
+     * Setter for <code>tbl_remove_history.retry</code>.
      */
     @Override
-    public TblTransactionRecord setRetry(Integer value) {
+    public TblRemoveHistoryRecord setRetry(Integer value) {
         set(10, value);
         return this;
     }
 
     /**
-     * Getter for <code>tbl_transaction.retry</code>.
+     * Getter for <code>tbl_remove_history.retry</code>.
      */
     @Column(name = "retry", nullable = false)
     @Override
@@ -283,7 +281,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<String> field1() {
-        return TblTransaction.TBL_TRANSACTION.TRANSACTION_ID;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.TRANSACTION_ID;
     }
 
     /**
@@ -291,7 +289,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<String> field2() {
-        return TblTransaction.TBL_TRANSACTION.MODULE_ID;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.MODULE_ID;
     }
 
     /**
@@ -299,7 +297,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<EventType> field3() {
-        return TblTransaction.TBL_TRANSACTION.EVENT;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.EVENT;
     }
 
     /**
@@ -307,7 +305,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<Status> field4() {
-        return TblTransaction.TBL_TRANSACTION.STATUS;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.STATUS;
     }
 
     /**
@@ -315,7 +313,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<Date> field5() {
-        return TblTransaction.TBL_TRANSACTION.ISSUED_AT;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.ISSUED_AT;
     }
 
     /**
@@ -323,7 +321,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<String> field6() {
-        return TblTransaction.TBL_TRANSACTION.ISSUED_BY;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.ISSUED_BY;
     }
 
     /**
@@ -331,7 +329,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<String> field7() {
-        return TblTransaction.TBL_TRANSACTION.ISSUED_FROM;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.ISSUED_FROM;
     }
 
     /**
@@ -339,7 +337,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<Date> field8() {
-        return TblTransaction.TBL_TRANSACTION.MODIFIED_AT;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.MODIFIED_AT;
     }
 
     /**
@@ -347,7 +345,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<JsonObject> field9() {
-        return TblTransaction.TBL_TRANSACTION.PREV_STATE_JSON;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.PREV_STATE_JSON;
     }
 
     /**
@@ -355,7 +353,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<JsonObject> field10() {
-        return TblTransaction.TBL_TRANSACTION.LAST_ERROR_JSON;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.LAST_ERROR_JSON;
     }
 
     /**
@@ -363,7 +361,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Override
     public Field<Integer> field11() {
-        return TblTransaction.TBL_TRANSACTION.RETRY;
+        return TblRemoveHistory.TBL_REMOVE_HISTORY.RETRY;
     }
 
     /**
@@ -546,7 +544,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value1(String value) {
+    public TblRemoveHistoryRecord value1(String value) {
         setTransactionId(value);
         return this;
     }
@@ -555,7 +553,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value2(String value) {
+    public TblRemoveHistoryRecord value2(String value) {
         setModuleId(value);
         return this;
     }
@@ -564,7 +562,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value3(EventType value) {
+    public TblRemoveHistoryRecord value3(EventType value) {
         setEvent(value);
         return this;
     }
@@ -573,7 +571,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value4(Status value) {
+    public TblRemoveHistoryRecord value4(Status value) {
         setStatus(value);
         return this;
     }
@@ -582,7 +580,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value5(Date value) {
+    public TblRemoveHistoryRecord value5(Date value) {
         setIssuedAt(value);
         return this;
     }
@@ -591,7 +589,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value6(String value) {
+    public TblRemoveHistoryRecord value6(String value) {
         setIssuedBy(value);
         return this;
     }
@@ -600,7 +598,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value7(String value) {
+    public TblRemoveHistoryRecord value7(String value) {
         setIssuedFrom(value);
         return this;
     }
@@ -609,7 +607,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value8(Date value) {
+    public TblRemoveHistoryRecord value8(Date value) {
         setModifiedAt(value);
         return this;
     }
@@ -618,7 +616,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value9(JsonObject value) {
+    public TblRemoveHistoryRecord value9(JsonObject value) {
         setPrevStateJson(value);
         return this;
     }
@@ -627,7 +625,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value10(JsonObject value) {
+    public TblRemoveHistoryRecord value10(JsonObject value) {
         setLastErrorJson(value);
         return this;
     }
@@ -636,7 +634,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value11(Integer value) {
+    public TblRemoveHistoryRecord value11(Integer value) {
         setRetry(value);
         return this;
     }
@@ -645,7 +643,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord values(String value1, String value2, EventType value3, Status value4, Date value5, String value6, String value7, Date value8, JsonObject value9, JsonObject value10, Integer value11) {
+    public TblRemoveHistoryRecord values(String value1, String value2, EventType value3, Status value4, Date value5, String value6, String value7, Date value8, JsonObject value9, JsonObject value10, Integer value11) {
         value1(value1);
         value2(value2);
         value3(value3);
@@ -668,7 +666,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public void from(ITblTransaction from) {
+    public void from(ITblRemoveHistory from) {
         setTransactionId(from.getTransactionId());
         setModuleId(from.getModuleId());
         setEvent(from.getEvent());
@@ -686,7 +684,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public <E extends ITblTransaction> E into(E into) {
+    public <E extends ITblRemoveHistory> E into(E into) {
         into.from(this);
         return into;
     }
@@ -696,17 +694,17 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     // -------------------------------------------------------------------------
 
     /**
-     * Create a detached TblTransactionRecord
+     * Create a detached TblRemoveHistoryRecord
      */
-    public TblTransactionRecord() {
-        super(TblTransaction.TBL_TRANSACTION);
+    public TblRemoveHistoryRecord() {
+        super(TblRemoveHistory.TBL_REMOVE_HISTORY);
     }
 
     /**
-     * Create a detached, initialised TblTransactionRecord
+     * Create a detached, initialised TblRemoveHistoryRecord
      */
-    public TblTransactionRecord(String transactionId, String moduleId, EventType event, Status status, Date issuedAt, String issuedBy, String issuedFrom, Date modifiedAt, JsonObject prevStateJson, JsonObject lastErrorJson, Integer retry) {
-        super(TblTransaction.TBL_TRANSACTION);
+    public TblRemoveHistoryRecord(String transactionId, String moduleId, EventType event, Status status, Date issuedAt, String issuedBy, String issuedFrom, Date modifiedAt, JsonObject prevStateJson, JsonObject lastErrorJson, Integer retry) {
+        super(TblRemoveHistory.TBL_REMOVE_HISTORY);
 
         set(0, transactionId);
         set(1, moduleId);
@@ -721,7 +719,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
         set(10, retry);
     }
 
-    public TblTransactionRecord(io.vertx.core.json.JsonObject json) {
+    public TblRemoveHistoryRecord(io.vertx.core.json.JsonObject json) {
         this();
         fromJson(json);
     }

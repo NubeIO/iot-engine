@@ -42,7 +42,6 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         JsonObject cfg = Configs.getSystemCfg(allConfig);
         logger.info("System Config: {}", cfg.encode());
         this.options = loadVertxOption(options, cfg);
-        StateMachine.init();
         super.beforeStartingVertx(this.options);
     }
 
@@ -78,6 +77,7 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     }
 
     private static VertxOptions loadVertxOption(VertxOptions vertxOptions, JsonObject systemCfg) {
+        StateMachine.init();
         configEventBus(vertxOptions, systemCfg.getJsonObject(Configs.EVENT_BUS_CFG_KEY, new JsonObject()));
         configCluster(vertxOptions, systemCfg.getJsonObject(Configs.CLUSTER_CFG_KEY, new JsonObject()));
         return vertxOptions;

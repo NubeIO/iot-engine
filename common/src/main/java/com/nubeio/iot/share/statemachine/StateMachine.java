@@ -5,13 +5,14 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.nubeio.iot.share.enums.State;
 import com.nubeio.iot.share.enums.Status;
 import com.nubeio.iot.share.event.EventType;
+import com.nubeio.iot.share.exceptions.AlreadyExistException;
+import com.nubeio.iot.share.exceptions.NotFoundException;
 import com.nubeio.iot.share.exceptions.StateException;
 
 import lombok.AccessLevel;
@@ -88,18 +89,9 @@ public final class StateMachine {
     public <T> void validate(T obj, EventType eventType, String objName) {
         Set<State> from = getLifeCycle(eventType).getFrom();
         if (Objects.isNull(obj) && !from.isEmpty()) {
-            throw new StateException(errorExistStateMsg(objName, eventType, false));
+            throw new NotFoundException(errorExistStateMsg(objName, eventType, false));
         } else if (Objects.nonNull(obj) && from.isEmpty()) {
-            throw new StateException(errorExistStateMsg(objName, eventType, true));
-        }
-    }
-
-    public <T> void validate(Optional<T> obj, EventType eventType, String objName) {
-        Set<State> from = getLifeCycle(eventType).getFrom();
-        if (Objects.isNull(obj) && !from.isEmpty()) {
-            throw new StateException(errorExistStateMsg(objName, eventType, false));
-        } else if (obj.isPresent() && from.isEmpty()) {
-            throw new StateException(errorExistStateMsg(objName, eventType, true));
+            throw new AlreadyExistException(errorExistStateMsg(objName, eventType, true));
         }
     }
 

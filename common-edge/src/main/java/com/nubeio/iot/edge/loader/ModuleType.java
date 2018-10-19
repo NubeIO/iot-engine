@@ -11,7 +11,14 @@ public interface ModuleType {
 
     JsonObject serialize(JsonObject input) throws InvalidModuleType;
 
-    JsonObject deserialize(String serviceId) throws InvalidModuleType;
+    /**
+     * Deserialize Service Id to Vertx Module Id.
+     *
+     * @param serviceId Given service id
+     * @return Vertx module Id
+     * @throws InvalidModuleType if any reason invalid with Module type format
+     */
+    String deserialize(String serviceId) throws InvalidModuleType;
 
     @EqualsAndHashCode
     abstract class AbstractModuleType implements ModuleType {
@@ -52,8 +59,12 @@ public interface ModuleType {
         }
 
         @Override
-        public JsonObject deserialize(String serviceId) throws InvalidModuleType {
-            return null;
+        public String deserialize(String serviceId) throws InvalidModuleType {
+            final String[] parts = Strings.requireNotBlank(serviceId).split(":");
+            if (parts.length < 5 || !"maven".equals(parts[0])) {
+                throw new InvalidModuleType("Service id " + serviceId + " is not conformed with module type " + name());
+            }
+            return String.format("%s:%s:%s:%s", parts[0], parts[1], parts[2], parts[3]);
         }
     };
 
@@ -69,7 +80,7 @@ public interface ModuleType {
         }
 
         @Override
-        public JsonObject deserialize(String serviceId) throws InvalidModuleType {
+        public String deserialize(String serviceId) throws InvalidModuleType {
             return null;
         }
     };

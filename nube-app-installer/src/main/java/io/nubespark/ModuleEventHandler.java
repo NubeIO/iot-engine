@@ -59,9 +59,8 @@ public final class ModuleEventHandler implements IEventHandler {
         }
         return this.verticle.getEntityHandler()
                             .findModuleById(serviceId)
-                            .map(o -> o.orElseThrow(
-                                    () -> new NotFoundException(String.format("Not found service id '%s'", serviceId)))
-                                       .toJson());
+                            .map(o -> o.orElseThrow(() -> new NotFoundException(
+                                    String.format("Not found service id '%s'", serviceId))));
     }
 
     private Single<JsonObject> halt(RequestData data) {

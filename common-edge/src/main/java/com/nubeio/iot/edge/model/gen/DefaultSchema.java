@@ -4,18 +4,18 @@
 package com.nubeio.iot.edge.model.gen;
 
 
-import com.nubeio.iot.edge.model.gen.tables.TblModule;
-import com.nubeio.iot.edge.model.gen.tables.TblTransaction;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import javax.annotation.Generated;
 
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
+
+import com.nubeio.iot.edge.model.gen.tables.TblModule;
+import com.nubeio.iot.edge.model.gen.tables.TblRemoveHistory;
+import com.nubeio.iot.edge.model.gen.tables.TblTransaction;
 
 
 /**
@@ -31,7 +31,7 @@ import org.jooq.impl.SchemaImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class DefaultSchema extends SchemaImpl {
 
-    private static final long serialVersionUID = -1464779261;
+    private static final long serialVersionUID = -1223692744;
 
     /**
      * The reference instance of <code></code>
@@ -42,6 +42,11 @@ public class DefaultSchema extends SchemaImpl {
      * The table <code>tbl_module</code>.
      */
     public final TblModule TBL_MODULE = com.nubeio.iot.edge.model.gen.tables.TblModule.TBL_MODULE;
+
+    /**
+     * The table <code>tbl_remove_history</code>.
+     */
+    public final TblRemoveHistory TBL_REMOVE_HISTORY = com.nubeio.iot.edge.model.gen.tables.TblRemoveHistory.TBL_REMOVE_HISTORY;
 
     /**
      * The table <code>tbl_transaction</code>.
@@ -74,6 +79,7 @@ public class DefaultSchema extends SchemaImpl {
     private final List<Table<?>> getTables0() {
         return Arrays.<Table<?>>asList(
             TblModule.TBL_MODULE,
+            TblRemoveHistory.TBL_REMOVE_HISTORY,
             TblTransaction.TBL_TRANSACTION);
     }
 }

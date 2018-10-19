@@ -27,15 +27,15 @@ public class SecurityException extends NubeException {
     }
 
 
-    public static final class PermissionException extends SecurityException {
+    public static final class InsufficientPermissionError extends SecurityException {
 
-        public PermissionException(String message, Throwable e) {
-            super(ErrorCode.PERMISSION_ERROR, message, e);
+        public InsufficientPermissionError(String message, Throwable e) {
+            super(ErrorCode.INSUFFICIENT_PERMISSION_ERROR, message, e);
         }
 
-        public PermissionException(String message) { this(message, null); }
+        public InsufficientPermissionError(String message) { this(message, null); }
 
-        public PermissionException(Throwable e)    { this(null, e); }
+        public InsufficientPermissionError(Throwable e)    { this(null, e); }
 
     }
 

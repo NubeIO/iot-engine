@@ -36,8 +36,12 @@ public final class AppDeploymentVerticle extends EdgeVerticle {
         try {
             eventHandler.handle(msg.getAction(), msg.getData().mapTo(RequestData.class))
                         .subscribe(data -> message.reply(EventMessage.success(msg.getAction(), data).toJson()),
-                                   throwable -> message.reply(EventMessage.error(msg.getAction(), throwable).toJson()));
+                                   throwable -> {
+                                       logger.error("Failed when handle event", throwable);
+                                       message.reply(EventMessage.error(msg.getAction(), throwable).toJson());
+                                   });
         } catch (NubeException ex) {
+            logger.error("Failed when handle event", ex);
             message.reply(EventMessage.error(msg.getAction(), ex).toJson());
         }
     }

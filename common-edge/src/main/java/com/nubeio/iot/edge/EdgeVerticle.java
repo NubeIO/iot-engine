@@ -13,6 +13,7 @@ import org.jooq.impl.DefaultConfiguration;
 
 import com.nubeio.iot.edge.loader.ModuleLoader;
 import com.nubeio.iot.edge.model.gen.tables.daos.TblModuleDao;
+import com.nubeio.iot.edge.model.gen.tables.daos.TblRemoveHistoryDao;
 import com.nubeio.iot.edge.model.gen.tables.daos.TblTransactionDao;
 import com.nubeio.iot.edge.model.gen.tables.pojos.TblModule;
 import com.nubeio.iot.share.IMicroVerticle;
@@ -20,9 +21,9 @@ import com.nubeio.iot.share.MicroserviceConfig;
 import com.nubeio.iot.share.enums.State;
 import com.nubeio.iot.share.enums.Status;
 import com.nubeio.iot.share.event.EventType;
+import com.nubeio.iot.share.event.RequestData;
 import com.nubeio.iot.share.exceptions.DatabaseException;
 import com.nubeio.iot.share.exceptions.ErrorMessage;
-import com.nubeio.iot.share.exceptions.NubeException;
 import com.nubeio.iot.share.utils.Configs;
 import com.nubeio.iot.share.utils.Strings;
 import com.zaxxer.hikari.HikariConfig;
@@ -103,9 +104,8 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
     public Single<JsonObject> handleModule(TblModule module, EventType eventType) {
         logger.info("{} module with data {}", eventType, module.toJson().encode());
         return this.entityHandler.handlePreDeployment(module, eventType)
-                                 .doAfterSuccess(
-                                         result -> deployModule(module, eventType, result.getString("transaction_id"),
-                                                                (State) result.getValue("state")))
+                                 .doAfterSuccess(result -> deployModule(module, eventType, result.getString("tid"),
+                                                                        State.valueOf(result.getString("state"))))
                                  .map(result -> new JsonObject().put("transaction_id", result.getString("tid"))
                                                                 .put("message", "Work in progress")
                                                                 .put("status", Status.WIP));
@@ -114,27 +114,17 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
     private void deployModule(TblModule module, EventType event, String transId, State oldState) {
         logger.info("Execute transaction: {}", transId);
         final String serviceId = module.getServiceId();
-        vertxInteractWithModule(serviceId, module.getDeployConfigJson(), event, oldState).subscribe(
-                id -> entityHandler.succeedPostDeployment(serviceId, transId, event, id),
-                t -> entityHandler.handleErrorPostDeployment(serviceId, transId, event, t));
-    }
-
-    private Single<String> vertxInteractWithModule(String serviceId, JsonObject deployConfig, EventType action,
-                                                   State oldState) {
-        if (EventType.CREATE == action || EventType.INIT == action) {
-            logger.info("Install module {} in physical...", serviceId);
-            return moduleLoader.installModule(serviceId, deployConfig);
-        }
-        if (EventType.UPDATE == action) {
-            logger.info("Reload module {} in physical...", serviceId);
-            return moduleLoader.reloadModule(serviceId, deployConfig);
-        }
-        if (EventType.REMOVE == action || EventType.HALT == action) {
-            logger.info("Remove module {} in physical...", serviceId);
-            return moduleLoader.removeModule(serviceId, EventType.REMOVE == action && State.DISABLED == oldState);
-        }
-        throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT,
-                                "Unsupported action " + action + " when interact physical module");
+        final RequestData data = RequestData.builder()
+                                            .body(new JsonObject().put("service_id", serviceId)
+                                                                  .put("deploy_id", module.getDeployId())
+                                                                  .put("deploy_cfg", module.getDeployConfigJson())
+                                                                  .put("silent", EventType.REMOVE == event &&
+                                                                                 State.DISABLED == oldState))
+                                            .build();
+        moduleLoader.handle(event, data)
+                    .subscribe(r -> entityHandler.succeedPostDeployment(serviceId, transId, event,
+                                                                        r.getString("deploy_id")),
+                               t -> entityHandler.handleErrorPostDeployment(serviceId, transId, event, t));
     }
 
     private Single<SQLClient> initDBConnection() {
@@ -147,6 +137,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
         this.jooqConfig = new DefaultConfiguration().set(SQLDialect.SQLITE).set(new HikariDataSource(config));
         this.entityHandler = new EntityHandler(() -> new TblModuleDao(jooqConfig, vertx),
                                                () -> new TblTransactionDao(jooqConfig, vertx),
+                                               () -> new TblRemoveHistoryDao(jooqConfig, vertx),
                                                () -> new JDBCRXGenericQueryExecutor(jooqConfig, vertx));
         return Single.just(
                 JDBCClient.newInstance(io.vertx.ext.jdbc.JDBCClient.create(vertx.getDelegate(), dataSource)));

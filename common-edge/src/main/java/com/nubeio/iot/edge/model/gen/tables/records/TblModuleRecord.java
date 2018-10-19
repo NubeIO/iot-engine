@@ -3,17 +3,7 @@
 */
 package com.nubeio.iot.edge.model.gen.tables.records;
 
-
-import com.nubeio.iot.edge.loader.ModuleType;
-import com.nubeio.iot.edge.model.gen.tables.TblModule;
-import com.nubeio.iot.edge.model.gen.tables.interfaces.ITblModule;
-import com.nubeio.iot.share.enums.State;
-
-import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.vertx.core.json.JsonObject;
-
 import java.util.Date;
-
 import javax.annotation.Generated;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -26,6 +16,14 @@ import org.jooq.Record1;
 import org.jooq.Record11;
 import org.jooq.Row11;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import com.nubeio.iot.edge.loader.ModuleType;
+import com.nubeio.iot.edge.model.gen.tables.TblModule;
+import com.nubeio.iot.edge.model.gen.tables.interfaces.ITblModule;
+import com.nubeio.iot.share.enums.State;
+
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.vertx.core.json.JsonObject;
 
 
 /**
@@ -41,12 +39,12 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 @Entity
 @Table(name = "tbl_module", indexes = {
-    @Index(name = "Unique_tbl_module", unique = true, columnList = "service_name ASC, service_type ASC"),
-    @Index(name = "sqlite_autoindex_tbl_module_1", unique = true, columnList = "service_id ASC")
+    @Index(name = "sqlite_autoindex_tbl_module_1", unique = true, columnList = "service_id ASC"),
+    @Index(name = "sqlite_autoindex_tbl_module_2", unique = true, columnList = "service_name ASC, service_type ASC")
 })
 public class TblModuleRecord extends UpdatableRecordImpl<TblModuleRecord> implements VertxPojo, Record11<String, String, ModuleType, String, String, State, Date, Date, String, JsonObject, String>, ITblModule {
 
-    private static final long serialVersionUID = 859345377;
+    private static final long serialVersionUID = 1446857365;
 
     /**
      * Setter for <code>tbl_module.service_id</code>.

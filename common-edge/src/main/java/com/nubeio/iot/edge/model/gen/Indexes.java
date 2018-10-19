@@ -3,15 +3,15 @@
 */
 package com.nubeio.iot.edge.model.gen;
 
-
-import com.nubeio.iot.edge.model.gen.tables.TblModule;
-import com.nubeio.iot.edge.model.gen.tables.TblTransaction;
-
 import javax.annotation.Generated;
 
 import org.jooq.Index;
 import org.jooq.OrderField;
 import org.jooq.impl.Internal;
+
+import com.nubeio.iot.edge.model.gen.tables.TblModule;
+import com.nubeio.iot.edge.model.gen.tables.TblRemoveHistory;
+import com.nubeio.iot.edge.model.gen.tables.TblTransaction;
 
 
 /**
@@ -31,8 +31,9 @@ public class Indexes {
     // INDEX definitions
     // -------------------------------------------------------------------------
 
-    public static final Index UNIQUE_TBL_MODULE = Indexes0.UNIQUE_TBL_MODULE;
     public static final Index SQLITE_AUTOINDEX_TBL_MODULE_1 = Indexes0.SQLITE_AUTOINDEX_TBL_MODULE_1;
+    public static final Index SQLITE_AUTOINDEX_TBL_MODULE_2 = Indexes0.SQLITE_AUTOINDEX_TBL_MODULE_2;
+    public static final Index SQLITE_AUTOINDEX_TBL_REMOVE_HISTORY_1 = Indexes0.SQLITE_AUTOINDEX_TBL_REMOVE_HISTORY_1;
     public static final Index IDX_TBL_TRANSACTION_MODULE_ID = Indexes0.IDX_TBL_TRANSACTION_MODULE_ID;
     public static final Index IDX_TBL_TRANSACTION_MODULE_LIFETIME = Indexes0.IDX_TBL_TRANSACTION_MODULE_LIFETIME;
     public static final Index SQLITE_AUTOINDEX_TBL_TRANSACTION_1 = Indexes0.SQLITE_AUTOINDEX_TBL_TRANSACTION_1;
@@ -42,8 +43,9 @@ public class Indexes {
     // -------------------------------------------------------------------------
 
     private static class Indexes0 {
-        public static Index UNIQUE_TBL_MODULE = Internal.createIndex("Unique_tbl_module", TblModule.TBL_MODULE, new OrderField[] { TblModule.TBL_MODULE.SERVICE_NAME, TblModule.TBL_MODULE.SERVICE_TYPE }, true);
         public static Index SQLITE_AUTOINDEX_TBL_MODULE_1 = Internal.createIndex("sqlite_autoindex_tbl_module_1", TblModule.TBL_MODULE, new OrderField[] { TblModule.TBL_MODULE.SERVICE_ID }, true);
+        public static Index SQLITE_AUTOINDEX_TBL_MODULE_2 = Internal.createIndex("sqlite_autoindex_tbl_module_2", TblModule.TBL_MODULE, new OrderField[] { TblModule.TBL_MODULE.SERVICE_NAME, TblModule.TBL_MODULE.SERVICE_TYPE }, true);
+        public static Index SQLITE_AUTOINDEX_TBL_REMOVE_HISTORY_1 = Internal.createIndex("sqlite_autoindex_tbl_remove_history_1", TblRemoveHistory.TBL_REMOVE_HISTORY, new OrderField[] { TblRemoveHistory.TBL_REMOVE_HISTORY.TRANSACTION_ID }, true);
         public static Index IDX_TBL_TRANSACTION_MODULE_ID = Internal.createIndex("Idx_tbl_transaction_module_id", TblTransaction.TBL_TRANSACTION, new OrderField[] { TblTransaction.TBL_TRANSACTION.MODULE_ID }, false);
         public static Index IDX_TBL_TRANSACTION_MODULE_LIFETIME = Internal.createIndex("Idx_tbl_transaction_module_lifetime", TblTransaction.TBL_TRANSACTION, new OrderField[] { TblTransaction.TBL_TRANSACTION.MODULE_ID, TblTransaction.TBL_TRANSACTION.ISSUED_AT }, false);
         public static Index SQLITE_AUTOINDEX_TBL_TRANSACTION_1 = Internal.createIndex("sqlite_autoindex_tbl_transaction_1", TblTransaction.TBL_TRANSACTION, new OrderField[] { TblTransaction.TBL_TRANSACTION.TRANSACTION_ID }, true);

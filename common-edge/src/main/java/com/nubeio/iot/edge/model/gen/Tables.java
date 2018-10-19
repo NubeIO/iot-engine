@@ -3,11 +3,11 @@
 */
 package com.nubeio.iot.edge.model.gen;
 
+import javax.annotation.Generated;
 
 import com.nubeio.iot.edge.model.gen.tables.TblModule;
+import com.nubeio.iot.edge.model.gen.tables.TblRemoveHistory;
 import com.nubeio.iot.edge.model.gen.tables.TblTransaction;
-
-import javax.annotation.Generated;
 
 
 /**
@@ -27,6 +27,11 @@ public class Tables {
      * The table <code>tbl_module</code>.
      */
     public static final TblModule TBL_MODULE = com.nubeio.iot.edge.model.gen.tables.TblModule.TBL_MODULE;
+
+    /**
+     * The table <code>tbl_remove_history</code>.
+     */
+    public static final TblRemoveHistory TBL_REMOVE_HISTORY = com.nubeio.iot.edge.model.gen.tables.TblRemoveHistory.TBL_REMOVE_HISTORY;
 
     /**
      * The table <code>tbl_transaction</code>.

@@ -3,17 +3,18 @@
 */
 package com.nubeio.iot.edge.model.gen;
 
-
-import com.nubeio.iot.edge.model.gen.tables.TblModule;
-import com.nubeio.iot.edge.model.gen.tables.TblTransaction;
-import com.nubeio.iot.edge.model.gen.tables.records.TblModuleRecord;
-import com.nubeio.iot.edge.model.gen.tables.records.TblTransactionRecord;
-
 import javax.annotation.Generated;
 
 import org.jooq.ForeignKey;
 import org.jooq.UniqueKey;
 import org.jooq.impl.Internal;
+
+import com.nubeio.iot.edge.model.gen.tables.TblModule;
+import com.nubeio.iot.edge.model.gen.tables.TblRemoveHistory;
+import com.nubeio.iot.edge.model.gen.tables.TblTransaction;
+import com.nubeio.iot.edge.model.gen.tables.records.TblModuleRecord;
+import com.nubeio.iot.edge.model.gen.tables.records.TblRemoveHistoryRecord;
+import com.nubeio.iot.edge.model.gen.tables.records.TblTransactionRecord;
 
 
 /**
@@ -40,6 +41,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<TblModuleRecord> PK_TBL_MODULE = UniqueKeys0.PK_TBL_MODULE;
+    public static final UniqueKey<TblRemoveHistoryRecord> PK_TBL_REMOVE_HISTORY = UniqueKeys0.PK_TBL_REMOVE_HISTORY;
     public static final UniqueKey<TblTransactionRecord> PK_TBL_TRANSACTION = UniqueKeys0.PK_TBL_TRANSACTION;
 
     // -------------------------------------------------------------------------
@@ -54,6 +56,7 @@ public class Keys {
 
     private static class UniqueKeys0 {
         public static final UniqueKey<TblModuleRecord> PK_TBL_MODULE = Internal.createUniqueKey(TblModule.TBL_MODULE, "pk_tbl_module", TblModule.TBL_MODULE.SERVICE_ID);
+        public static final UniqueKey<TblRemoveHistoryRecord> PK_TBL_REMOVE_HISTORY = Internal.createUniqueKey(TblRemoveHistory.TBL_REMOVE_HISTORY, "pk_tbl_remove_history", TblRemoveHistory.TBL_REMOVE_HISTORY.TRANSACTION_ID);
         public static final UniqueKey<TblTransactionRecord> PK_TBL_TRANSACTION = Internal.createUniqueKey(TblTransaction.TBL_TRANSACTION, "pk_tbl_transaction", TblTransaction.TBL_TRANSACTION.TRANSACTION_ID);
     }
 

@@ -3,6 +3,20 @@
 */
 package com.nubeio.iot.edge.model.gen.tables;
 
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import javax.annotation.Generated;
+
+import org.jooq.Field;
+import org.jooq.Index;
+import org.jooq.Name;
+import org.jooq.Schema;
+import org.jooq.Table;
+import org.jooq.TableField;
+import org.jooq.UniqueKey;
+import org.jooq.impl.DSL;
+import org.jooq.impl.TableImpl;
 
 import com.nubeio.iot.edge.loader.ModuleType;
 import com.nubeio.iot.edge.model.converter.DateConverter;
@@ -15,22 +29,6 @@ import com.nubeio.iot.share.enums.State;
 
 import io.github.jklingsporn.vertx.jooq.shared.JsonObjectConverter;
 import io.vertx.core.json.JsonObject;
-
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-
-import javax.annotation.Generated;
-
-import org.jooq.Field;
-import org.jooq.Index;
-import org.jooq.Name;
-import org.jooq.Schema;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.UniqueKey;
-import org.jooq.impl.DSL;
-import org.jooq.impl.TableImpl;
 
 
 /**
@@ -46,7 +44,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class TblModule extends TableImpl<TblModuleRecord> {
 
-    private static final long serialVersionUID = 1376197233;
+    private static final long serialVersionUID = -898417313;
 
     /**
      * The reference instance of <code>tbl_module</code>
@@ -89,7 +87,7 @@ public class TblModule extends TableImpl<TblModuleRecord> {
     /**
      * The column <code>tbl_module.state</code>.
      */
-    public final TableField<TblModuleRecord, State> STATE = createField("state", org.jooq.impl.SQLDataType.VARCHAR(15).nullable(false), this, "", new org.jooq.impl.EnumConverter<java.lang.String, State>(java.lang.String.class, State.class));
+    public final TableField<TblModuleRecord, State> STATE = createField("state", org.jooq.impl.SQLDataType.VARCHAR(15).nullable(false), this, "", new org.jooq.impl.EnumConverter<java.lang.String, com.nubeio.iot.share.enums.State>(java.lang.String.class, com.nubeio.iot.share.enums.State.class));
 
     /**
      * The column <code>tbl_module.created_at</code>.
@@ -158,7 +156,7 @@ public class TblModule extends TableImpl<TblModuleRecord> {
      */
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.UNIQUE_TBL_MODULE, Indexes.SQLITE_AUTOINDEX_TBL_MODULE_1);
+        return Arrays.<Index>asList(Indexes.SQLITE_AUTOINDEX_TBL_MODULE_1, Indexes.SQLITE_AUTOINDEX_TBL_MODULE_2);
     }
 
     /**

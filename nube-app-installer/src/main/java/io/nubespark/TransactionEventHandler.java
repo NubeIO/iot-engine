@@ -39,12 +39,9 @@ public final class TransactionEventHandler implements IEventHandler {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");
         }
         return this.verticle.getEntityHandler()
-                            .getTransDaoSupplier()
-                            .get()
-                            .findOneById(transId)
-                            .map(o -> o.orElseThrow(
-                                    () -> new NotFoundException(String.format("Not found service id '%s'", transId)))
-                                       .toJson());
+                            .findTransactionById(transId)
+                            .map(o -> o.orElseThrow(() -> new NotFoundException(
+                                    String.format("Not found transaction id '%s'", transId))));
     }
 
     //TODO To be removed. Use reflection

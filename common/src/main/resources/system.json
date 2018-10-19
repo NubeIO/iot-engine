@@ -11,7 +11,7 @@
       //      },
     },
     "__cluster__": {
-      "active": true,
+      "active": false,
       "ha": true
     }
   },

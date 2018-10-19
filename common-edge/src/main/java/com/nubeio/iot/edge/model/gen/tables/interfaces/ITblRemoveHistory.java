@@ -31,131 +31,129 @@ import io.vertx.core.json.JsonObject;
 )
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 @Entity
-@Table(name = "tbl_transaction", indexes = {
-    @Index(name = "Idx_tbl_transaction_module_id", columnList = "module_id ASC"),
-    @Index(name = "Idx_tbl_transaction_module_lifetime", columnList = "module_id ASC, issued_at ASC"),
-    @Index(name = "sqlite_autoindex_tbl_transaction_1", unique = true, columnList = "transaction_id ASC")
+@Table(name = "tbl_remove_history", indexes = {
+    @Index(name = "sqlite_autoindex_tbl_remove_history_1", unique = true, columnList = "transaction_id ASC")
 })
-public interface ITblTransaction extends VertxPojo, Serializable {
+public interface ITblRemoveHistory extends VertxPojo, Serializable {
 
     /**
-     * Setter for <code>tbl_transaction.transaction_id</code>.
+     * Setter for <code>tbl_remove_history.transaction_id</code>.
      */
-    public ITblTransaction setTransactionId(String value);
+    public ITblRemoveHistory setTransactionId(String value);
 
     /**
-     * Getter for <code>tbl_transaction.transaction_id</code>.
+     * Getter for <code>tbl_remove_history.transaction_id</code>.
      */
     @Id
     @Column(name = "transaction_id", unique = true, nullable = false, length = 31)
     public String getTransactionId();
 
     /**
-     * Setter for <code>tbl_transaction.module_id</code>.
+     * Setter for <code>tbl_remove_history.module_id</code>.
      */
-    public ITblTransaction setModuleId(String value);
+    public ITblRemoveHistory setModuleId(String value);
 
     /**
-     * Getter for <code>tbl_transaction.module_id</code>.
+     * Getter for <code>tbl_remove_history.module_id</code>.
      */
     @Column(name = "module_id", nullable = false, length = 127)
     public String getModuleId();
 
     /**
-     * Setter for <code>tbl_transaction.event</code>.
+     * Setter for <code>tbl_remove_history.event</code>.
      */
-    public ITblTransaction setEvent(EventType value);
+    public ITblRemoveHistory setEvent(EventType value);
 
     /**
-     * Getter for <code>tbl_transaction.event</code>.
+     * Getter for <code>tbl_remove_history.event</code>.
      */
     @Column(name = "event", nullable = false, length = 15)
     public EventType getEvent();
 
     /**
-     * Setter for <code>tbl_transaction.status</code>.
+     * Setter for <code>tbl_remove_history.status</code>.
      */
-    public ITblTransaction setStatus(Status value);
+    public ITblRemoveHistory setStatus(Status value);
 
     /**
-     * Getter for <code>tbl_transaction.status</code>.
+     * Getter for <code>tbl_remove_history.status</code>.
      */
     @Column(name = "status", nullable = false, length = 15)
     public Status getStatus();
 
     /**
-     * Setter for <code>tbl_transaction.issued_at</code>.
+     * Setter for <code>tbl_remove_history.issued_at</code>.
      */
-    public ITblTransaction setIssuedAt(Date value);
+    public ITblRemoveHistory setIssuedAt(Date value);
 
     /**
-     * Getter for <code>tbl_transaction.issued_at</code>.
+     * Getter for <code>tbl_remove_history.issued_at</code>.
      */
     @Column(name = "issued_at", nullable = false)
     public Date getIssuedAt();
 
     /**
-     * Setter for <code>tbl_transaction.issued_by</code>.
+     * Setter for <code>tbl_remove_history.issued_by</code>.
      */
-    public ITblTransaction setIssuedBy(String value);
+    public ITblRemoveHistory setIssuedBy(String value);
 
     /**
-     * Getter for <code>tbl_transaction.issued_by</code>.
+     * Getter for <code>tbl_remove_history.issued_by</code>.
      */
     @Column(name = "issued_by", length = 127)
     public String getIssuedBy();
 
     /**
-     * Setter for <code>tbl_transaction.issued_from</code>.
+     * Setter for <code>tbl_remove_history.issued_from</code>.
      */
-    public ITblTransaction setIssuedFrom(String value);
+    public ITblRemoveHistory setIssuedFrom(String value);
 
     /**
-     * Getter for <code>tbl_transaction.issued_from</code>.
+     * Getter for <code>tbl_remove_history.issued_from</code>.
      */
     @Column(name = "issued_from", length = 63)
     public String getIssuedFrom();
 
     /**
-     * Setter for <code>tbl_transaction.modified_at</code>.
+     * Setter for <code>tbl_remove_history.modified_at</code>.
      */
-    public ITblTransaction setModifiedAt(Date value);
+    public ITblRemoveHistory setModifiedAt(Date value);
 
     /**
-     * Getter for <code>tbl_transaction.modified_at</code>.
+     * Getter for <code>tbl_remove_history.modified_at</code>.
      */
     @Column(name = "modified_at", nullable = false)
     public Date getModifiedAt();
 
     /**
-     * Setter for <code>tbl_transaction.prev_state_json</code>.
+     * Setter for <code>tbl_remove_history.prev_state_json</code>.
      */
-    public ITblTransaction setPrevStateJson(JsonObject value);
+    public ITblRemoveHistory setPrevStateJson(JsonObject value);
 
     /**
-     * Getter for <code>tbl_transaction.prev_state_json</code>.
+     * Getter for <code>tbl_remove_history.prev_state_json</code>.
      */
     @Column(name = "prev_state_json")
     public JsonObject getPrevStateJson();
 
     /**
-     * Setter for <code>tbl_transaction.last_error_json</code>.
+     * Setter for <code>tbl_remove_history.last_error_json</code>.
      */
-    public ITblTransaction setLastErrorJson(JsonObject value);
+    public ITblRemoveHistory setLastErrorJson(JsonObject value);
 
     /**
-     * Getter for <code>tbl_transaction.last_error_json</code>.
+     * Getter for <code>tbl_remove_history.last_error_json</code>.
      */
     @Column(name = "last_error_json")
     public JsonObject getLastErrorJson();
 
     /**
-     * Setter for <code>tbl_transaction.retry</code>.
+     * Setter for <code>tbl_remove_history.retry</code>.
      */
-    public ITblTransaction setRetry(Integer value);
+    public ITblRemoveHistory setRetry(Integer value);
 
     /**
-     * Getter for <code>tbl_transaction.retry</code>.
+     * Getter for <code>tbl_remove_history.retry</code>.
      */
     @Column(name = "retry", nullable = false)
     public Integer getRetry();
@@ -165,17 +163,17 @@ public interface ITblTransaction extends VertxPojo, Serializable {
     // -------------------------------------------------------------------------
 
     /**
-     * Load data from another generated Record/POJO implementing the common interface ITblTransaction
+     * Load data from another generated Record/POJO implementing the common interface ITblRemoveHistory
      */
-    public void from(com.nubeio.iot.edge.model.gen.tables.interfaces.ITblTransaction from);
+    public void from(com.nubeio.iot.edge.model.gen.tables.interfaces.ITblRemoveHistory from);
 
     /**
-     * Copy data into another generated Record/POJO implementing the common interface ITblTransaction
+     * Copy data into another generated Record/POJO implementing the common interface ITblRemoveHistory
      */
-    public <E extends com.nubeio.iot.edge.model.gen.tables.interfaces.ITblTransaction> E into(E into);
+    public <E extends com.nubeio.iot.edge.model.gen.tables.interfaces.ITblRemoveHistory> E into(E into);
 
     @Override
-    public default ITblTransaction fromJson(io.vertx.core.json.JsonObject json) {
+    public default ITblRemoveHistory fromJson(io.vertx.core.json.JsonObject json) {
         setTransactionId(json.getString("transaction_id"));
         setModuleId(json.getString("module_id"));
         setEvent(json.getString("event")==null?null:com.nubeio.iot.share.event.EventType.valueOf(json.getString("event")));
