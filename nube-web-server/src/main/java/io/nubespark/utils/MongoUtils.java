@@ -5,6 +5,8 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
+import java.util.List;
+
 
 public class MongoUtils {
     public static JsonObject idQuery(String _id) {
@@ -20,5 +22,13 @@ public class MongoUtils {
                     throw new HttpException(HttpResponseStatus.CONFLICT, "Same value existence on our Database.");
                 }
             });
+    }
+
+    public static JsonObject pickOneOrNullJsonObject(List<JsonObject> jsonObjectList) {
+        if (jsonObjectList.size() > 0) {
+            return jsonObjectList.get(0);
+        } else {
+            return new JsonObject();
+        }
     }
 }

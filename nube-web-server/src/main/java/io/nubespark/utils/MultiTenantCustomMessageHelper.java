@@ -24,6 +24,11 @@ public class MultiTenantCustomMessageHelper {
         return customMessage.getHeader().getJsonObject("user");
     }
 
+    public static JsonObject getHeaders(Message<Object> message) {
+        CustomMessage customMessage = (CustomMessage) message.body();
+        return customMessage.getHeader();
+    }
+
     public static Role getRole(JsonObject user) {
         return Role.valueOf(user.getString("role"));
     }

@@ -33,5 +33,6 @@
       "http.port": 8083,
       "api.name": "mongo"
     }
-  }
+  },
+  "ditto-policy": true
 }

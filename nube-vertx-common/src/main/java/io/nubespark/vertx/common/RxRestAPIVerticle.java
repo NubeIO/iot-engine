@@ -57,7 +57,7 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
     protected Single<Buffer> dispatchRequests(HttpMethod method, String path, JsonObject payload) {
         int initialOffset = 5; // length of `/api/`
         // run with circuit breaker in order to deal with failure
-        return this.circuitBreaker.rxExecuteCommand(future -> {
+        return circuitBreaker.rxExecuteCommand(future -> {
             getRxAllEndpoints().flatMap(recordList -> {
                 if (path.length() <= initialOffset) {
                     return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));

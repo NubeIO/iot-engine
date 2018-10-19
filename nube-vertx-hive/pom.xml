@@ -12,7 +12,7 @@
     <artifactId>nube-vertx-hive</artifactId>
 
     <properties>
-        <nube.version>1.0-SNAPSHOT</nube.version>
+        <main.verticle>io.nubespark.hive.HiveVerticle</main.verticle>
     </properties>
 
     <dependencies>
