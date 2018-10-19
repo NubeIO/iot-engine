@@ -3,12 +3,6 @@
     "__eventBus__": {
       "clientAuth": "REQUIRED",
       "ssl": false
-      //      "keyStoreOptions": {},
-      //      "trustStoreOptions": {
-      //        "path": "",
-      //        "value": "",
-      //        "password": ""
-      //      },
     },
     "__cluster__": {
       "active": false,

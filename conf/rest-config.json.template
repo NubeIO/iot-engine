@@ -1,0 +1,23 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "ssl": true,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "demo"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "demo"
+      }
+    },
+    "__cluster__": {
+      "active": true,
+      "ha": true
+    }
+  },
+  "__app__": {
+    "http.port": 8086,
+    "api.name": "app-store"
+  }
+}

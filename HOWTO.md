@@ -33,72 +33,22 @@ Only run 1 of 2 commands:
 
 - Copy theses artifacts to `build` (or whatever) folder: (will be removed when I standardize build and bundle script)
   - `cp -rf nube-bios/target/nube-bios-1.0-SNAPSHOT-fat.jar build/`
-  - `cp -rf nube-bios/src/conf/config.json build/bios-config.json`
   - `cp -rf nube-app-store-rest/target/nube-app-store-rest-1.0-SNAPSHOT-fat.jar build/`
-  - `cp -rf nube-app-store-rest/src/conf/config.json build/appstore-config.json`
-  - `cp -rf cluster-<your-name>.xml logback.xml build/`
-- Edit `build/bios-config.json` with `remotes` as your nexus server
+  - All `*.template` files and remember to edit any variables start with `${your-`
 
-  ```json
-  "remotes": [
-    "http://${your-nexus-server}/repository/maven-releases/",
-    "http://${your-nexus-server}/repository/maven-snapshots/",
-    "http://${your-nexus-server}/repository/maven-central/"
-  ]
-  ```
-
-- Edit `build/appstore-config.json` with desired port
-
-  ```json
-  {
-    "http.port": 8086,
-    "api.name": "app-store"
-  }
-  ```
-
-- Start services (replace `cluster-${your-name}.xml` and `${your-ip}`)
+- Start services (replace `${your-ip}`)
 
   ```bash
-  java -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory -Dvertx.hazelcast.config=cluster-${your-name}.xml -Dhazelcast.logging.type=slf4j -jar nube-app-store-rest-1.0-SNAPSHOT-fat.jar -conf appstore-config.json -cluster -cluster-host ${your-ip}
+  java -Dlogback.configurationFile=logback-rest.xml -jar nube-app-store-rest-1.0-SNAPSHOT-fat.jar -conf rest-config.json -cluster -cluster-host ${your-ip}
   ```
 
   ```bash
-  java -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory -Dvertx.hazelcast.config=cluster-${your-name}.xml -Dhazelcast.logging.type=slf4j -jar nube-bios-1.0-SNAPSHOT-fat.jar -conf bios-config.json -cluster -cluster-host ${your-ip}
+  java -Dlogback.configurationFile=logback.xml -jar nube-bios-1.0-SNAPSHOT-fat.jar -conf bios-config.json -cluster -cluster-host ${your-ip}
   ```
 
 ## Interact REST API
 
-Will be part of `Swagger UI` soon
-
-- Node status
-
-  - `GET::localhost:8086/nodes`
-
-- Module manipulates
-
-  - `POST::localhost:8086/api/module/`
-
-    Request
-
-    ```json
-    {
-      "groupId": "io.nubespark",
-      "artifactId": "nube-edge-ditto-driver",
-      "version": "1.0-SNAPSHOT"
-    }
-    ```
-
-  - `DELETE::localhost:8086/api/module/`
-
-    Request
-
-    ```json
-    {
-      "artifactId": "nube-edge-ditto-driver"
-    }
-    ```
-
-  - `PUT::localhost:8086/api/module/`
+Will be part of `Swagger UI` soon.
 
 ## Development
 
