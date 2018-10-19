@@ -173,6 +173,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         JsonObject header = new JsonObject()
             .put("url", url)
             .put("method", ctx.request().method())
+            .put(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()))
             .put("user", ctx.user().principal())
             .put("host", ctx.request().host())
             .put("keycloakConfig", config().getJsonObject("keycloak"));
@@ -320,7 +321,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
      * @param router routing the URLs
      */
     private void handleStaticResource(Router router) {
-        router.route().handler(StaticHandler.create().setAllowRootFileSystemAccess(true).setWebRoot(getRootFolder()));
+        router.route().handler(StaticHandler.create().setCachingEnabled(false).setAllowRootFileSystemAccess(true).setWebRoot(getRootFolder()));
         router.route("/*").handler(ctx -> ctx.response().sendFile(getRootFolder() + "/index.html"));
     }
 
@@ -390,13 +391,35 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     }
 
     private void authMiddleWare(RoutingContext ctx) {
+        logger.info("Auth middleware is being called...");
         String authorization = ctx.request().getDelegate().getHeader(HttpHeaders.AUTHORIZATION);
         if (authorization != null) {
             authorization = authorization.substring("Bearer ".length());
             System.out.println(authorization);
             setAuthenticUser(ctx, authorization);
         } else {
-            failAuthentication(ctx);
+            // Web pages WebSocket authentication
+            String[] contents = ctx.request().getDelegate().getHeader("X-Original-URI").split("access_token=");
+            if (contents.length == 2) {
+                logger.info("Params Access token: " + contents[1]);
+                authorization = contents[1].substring("Bearer%20".length());
+                logger.info("Access Token: " + authorization);
+                setAuthenticUser(ctx, authorization);
+            } else {
+                String[] credentials = ctx.request().getDelegate().getHeader("X-Original-URI").replaceFirst("/ws/[^?]*(\\?)?", "").split(":::");
+                // NodeRED WebSocket authentication
+                if (credentials.length == 2) {
+                    loginAuth.rxGetToken(new JsonObject().put("username", credentials[0]).put("password", credentials[1]))
+                        .subscribe(token -> {
+                            ctx.response()
+                                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                .putHeader("username", credentials[0])
+                                .end(Json.encodePrettily(token.principal()));
+                        }, throwable -> failAuthentication(ctx));
+                } else {
+                    failAuthentication(ctx);
+                }
+            }
         }
     }
 
@@ -450,7 +473,9 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     }
                 })
                 .subscribe(groupAndSiteAndCompany -> {
-                    ctx.response().putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    ctx.response()
+                        .putHeader("username", user.principal().getString("username"))
+                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                         .end(Json.encodePrettily(user.principal()
                             .mergeIn(groupAndSiteAndCompany)));
                 });
@@ -462,9 +487,9 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
     private SingleSource<? extends JsonObject> assignAdminIfAvailable(RoutingContext ctx, JsonObject group) {
         String role = ctx.user().principal().getString("role");
-        if (SQLUtils.in(role, Role.ADMIN.toString(), Role.MANAGER.toString())) {
+        if (SQLUtils.in(role, Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
             // If we have already a site for its respective role, then we will assign it
-            JsonObject query = new JsonObject().put("associated_company_id", ctx.user().principal().getString("associated_company_id"));
+            JsonObject query = new JsonObject().put("associated_company_id", ctx.user().principal().getString("company_id"));
             return mongoClient.rxFind(SITE, query)
                 .flatMap(sites -> {
                     if (sites.size() > 0) {

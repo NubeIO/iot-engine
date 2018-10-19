@@ -105,7 +105,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
                 .subscribe(response -> {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                         null,
-                        this.pickOneOrNullJsonObject(response),
+                        MongoUtils.pickOneOrNullJsonObject(response),
                         HttpResponseStatus.OK.code());
                     message.reply(replyMessage);
                 }, throwable -> handleException(message, throwable));
@@ -164,7 +164,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
                 .map(jsonArray -> {
                     JsonObject body = (JsonObject) customMessage.getBody();
                     if (jsonArray.size() > 0) {
-                        body.put("_id", this.pickOneOrNullJsonObject(jsonArray).getString("_id"));
+                        body.put("_id", MongoUtils.pickOneOrNullJsonObject(jsonArray).getString("_id"));
                     }
                     body.put("site_id", siteId);
                     body.put("id", id);
@@ -205,14 +205,6 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
                 }, throwable -> handleException(message, throwable));
         } else {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
-        }
-    }
-
-    private JsonObject pickOneOrNullJsonObject(List<JsonObject> jsonObjectList) {
-        if (jsonObjectList.size() > 0) {
-            return jsonObjectList.get(0);
-        } else {
-            return new JsonObject();
         }
     }
 

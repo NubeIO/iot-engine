@@ -37,7 +37,6 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.reactivex.servicediscovery.types.MessageSource;
 import io.vertx.servicediscovery.Record;
 
-
 /**
  * Created by topsykretts on 5/11/18.
  */
