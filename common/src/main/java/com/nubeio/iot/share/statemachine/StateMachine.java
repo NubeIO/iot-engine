@@ -23,12 +23,12 @@ public final class StateMachine {
 
     private final EnumMap<EventType, StateLifeCycle> eventLifeCycles = new EnumMap<>(EventType.class);
 
-    StateMachine addLifeCycle(EventType event, StateLifeCycle lifeCycle) {
+    private StateMachine addLifeCycle(EventType event, StateLifeCycle lifeCycle) {
         this.eventLifeCycles.put(Objects.requireNonNull(event), Objects.requireNonNull(lifeCycle));
         return this;
     }
 
-    StateLifeCycle getLifeCycle(EventType eventType) {
+    private StateLifeCycle getLifeCycle(EventType eventType) {
         StateLifeCycle lifeCycle = eventLifeCycles.get(eventType);
         return Objects.requireNonNull(lifeCycle, "State Machine does not support event " + eventType);
     }

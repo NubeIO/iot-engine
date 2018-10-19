@@ -5,6 +5,7 @@ import com.nubeio.iot.share.event.EventMessage;
 import com.nubeio.iot.share.event.EventModel;
 import com.nubeio.iot.share.event.IEventHandler;
 import com.nubeio.iot.share.event.RequestData;
+import com.nubeio.iot.share.exceptions.NubeException;
 
 import io.reactivex.Single;
 import io.vertx.core.eventbus.Message;
@@ -32,9 +33,13 @@ public final class AppDeploymentVerticle extends EdgeVerticle {
     private void handleEvent(Message<Object> message, IEventHandler eventHandler) {
         EventMessage msg = EventMessage.from(message.body());
         logger.info("Executing action: {} with data: {}", msg.getAction(), msg.toJson().encode());
-        eventHandler.handle(msg.getAction(), msg.getData().mapTo(RequestData.class))
-                    .subscribe(message::reply,
-                               throwable -> message.reply(EventMessage.error(msg.getAction(), throwable).toJson()));
+        try {
+            eventHandler.handle(msg.getAction(), msg.getData().mapTo(RequestData.class))
+                        .subscribe(data -> message.reply(EventMessage.success(msg.getAction(), data).toJson()),
+                                   throwable -> message.reply(EventMessage.error(msg.getAction(), throwable).toJson()));
+        } catch (NubeException ex) {
+            message.reply(EventMessage.error(msg.getAction(), ex).toJson());
+        }
     }
 
 }

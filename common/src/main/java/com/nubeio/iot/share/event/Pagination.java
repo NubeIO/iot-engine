@@ -1,22 +1,22 @@
 package com.nubeio.iot.share.event;
 
+import java.io.Serializable;
+
 import com.nubeio.iot.share.utils.Strings;
 
 import io.vertx.core.json.JsonObject;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-public final class Pagination {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public final class Pagination implements Serializable {
 
-    private final int page;
-    private final int perPage;
-
-    private Pagination(int page, int perPage) {
-        this.page = page;
-        this.perPage = perPage;
-    }
+    private int page;
+    private int perPage;
 
     public JsonObject toJson() {
         return JsonObject.mapFrom(this);

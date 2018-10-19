@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import io.vertx.core.json.JsonObject;
+
 public class PaginationTest {
 
     @Test
@@ -39,6 +41,14 @@ public class PaginationTest {
         Pagination pagination = Pagination.builder().page(0).build();
         assertEquals(1, pagination.getPage());
         assertEquals(20, pagination.getPerPage());
+    }
+
+    @Test
+    public void test_from_json() {
+        final JsonObject init = new JsonObject().put("page", 5).put("perPage", 10);
+        final Pagination pagination = init.mapTo(Pagination.class);
+        assertEquals(5, pagination.getPage());
+        assertEquals(10, pagination.getPerPage());
     }
 
 }

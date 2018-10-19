@@ -41,11 +41,14 @@ public interface ModuleType {
             final String artifactId = input.getString("artifact_id");
             final String serviceName = input.getString("service_name", artifactId);
             if (Strings.isBlank(artifactId)) {
-                throw new InvalidModuleType("Missing artifact id");
+                throw new InvalidModuleType("Missing artifact_id");
             }
             String serviceId = String.format("maven:%s:%s:%s::%s", input.getString("group_id", DEFAULT_GROUP_ID),
                                              artifactId, input.getString("version", DEFAULT_VERSION), serviceName);
-            return input.mergeIn(new JsonObject(), true).put("service_id", serviceId).put("service_type", name());
+            return input.mergeIn(new JsonObject(), true)
+                        .put("service_id", serviceId)
+                        .put("service_name", serviceName)
+                        .put("service_type", name());
         }
 
         @Override

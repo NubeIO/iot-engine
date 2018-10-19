@@ -1,27 +1,36 @@
 package com.nubeio.iot.share.event;
 
+import java.io.Serializable;
+import java.util.Map;
 import java.util.Objects;
 
 import io.vertx.core.json.JsonObject;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Getter
-public class RequestData {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public final class RequestData implements Serializable {
 
-    private final JsonObject body;
-    private final JsonObject filter;
-    private final Pagination pagination;
-
-    RequestData(JsonObject body, JsonObject filter, Pagination pagination) {
-        this.body = body;
-        this.filter = filter;
-        this.pagination = pagination;
-    }
+    private Map<String, Object> body;
+    private Map<String, Object> filter;
+    @Getter
+    private Pagination pagination;
 
     public static Builder builder() {return new Builder();}
 
     public JsonObject toJson() {
         return JsonObject.mapFrom(this);
+    }
+
+    public JsonObject getBody() {
+        return Objects.isNull(this.body) ? new JsonObject() : JsonObject.mapFrom(this.body);
+    }
+
+    public JsonObject getFilter() {
+        return Objects.isNull(this.filter) ? new JsonObject() : JsonObject.mapFrom(this.filter);
     }
 
     public static class Builder {
@@ -46,7 +55,8 @@ public class RequestData {
         }
 
         public RequestData build() {
-            return new RequestData(body, filter, pagination);
+            return new RequestData(Objects.isNull(body) ? null : body.getMap(),
+                                   Objects.isNull(filter) ? null : filter.getMap(), pagination);
         }
 
     }

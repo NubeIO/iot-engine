@@ -17,6 +17,7 @@ import com.nubeio.iot.edge.model.gen.tables.daos.TblTransactionDao;
 import com.nubeio.iot.edge.model.gen.tables.pojos.TblModule;
 import com.nubeio.iot.share.IMicroVerticle;
 import com.nubeio.iot.share.MicroserviceConfig;
+import com.nubeio.iot.share.enums.State;
 import com.nubeio.iot.share.enums.Status;
 import com.nubeio.iot.share.event.EventType;
 import com.nubeio.iot.share.exceptions.DatabaseException;
@@ -87,6 +88,10 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
 
     protected abstract Single<JsonObject> initData();
 
+    String genJdbcUrl() {
+        return String.format("jdbc:sqlite:%s.db", getDBName());
+    }
+
     protected Single<JsonObject> startupModules() {
         return this.entityHandler.getModulesWhenBootstrap()
                                  .flattenAsObservable(tblModules -> tblModules)
@@ -98,20 +103,24 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
     public Single<JsonObject> handleModule(TblModule module, EventType eventType) {
         logger.info("{} module with data {}", eventType, module.toJson().encode());
         return this.entityHandler.handlePreDeployment(module, eventType)
-                                 .map(tranId -> new JsonObject().put("transaction", tranId)
+                                 .doAfterSuccess(
+                                         result -> deployModule(module, eventType, result.getString("transaction_id"),
+                                                                (State) result.getValue("state")))
+                                 .map(result -> new JsonObject().put("transaction_id", result.getString("tid"))
                                                                 .put("message", "Work in progress")
-                                                                .put("status", Status.WIP))
-                                 .doOnSuccess(r -> deployModule(module, eventType, r.getString("transaction")));
+                                                                .put("status", Status.WIP));
     }
 
-    private void deployModule(TblModule module, EventType event, String transId) {
+    private void deployModule(TblModule module, EventType event, String transId, State oldState) {
+        logger.info("Execute transaction: {}", transId);
         final String serviceId = module.getServiceId();
-        vertxInteractWithModule(serviceId, module.getDeployConfigJson(), event).subscribe(
+        vertxInteractWithModule(serviceId, module.getDeployConfigJson(), event, oldState).subscribe(
                 id -> entityHandler.succeedPostDeployment(serviceId, transId, event, id),
                 t -> entityHandler.handleErrorPostDeployment(serviceId, transId, event, t));
     }
 
-    private Single<String> vertxInteractWithModule(String serviceId, JsonObject deployConfig, EventType action) {
+    private Single<String> vertxInteractWithModule(String serviceId, JsonObject deployConfig, EventType action,
+                                                   State oldState) {
         if (EventType.CREATE == action || EventType.INIT == action) {
             logger.info("Install module {} in physical...", serviceId);
             return moduleLoader.installModule(serviceId, deployConfig);
@@ -122,7 +131,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
         }
         if (EventType.REMOVE == action || EventType.HALT == action) {
             logger.info("Remove module {} in physical...", serviceId);
-            return moduleLoader.removeModule(serviceId);
+            return moduleLoader.removeModule(serviceId, EventType.REMOVE == action && State.DISABLED == oldState);
         }
         throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT,
                                 "Unsupported action " + action + " when interact physical module");
@@ -131,7 +140,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
     private Single<SQLClient> initDBConnection() {
         logger.info("Create Hikari datasource");
         HikariConfig config = new HikariConfig(Configs.loadPropsConfig("hikari.properties"));
-        config.setJdbcUrl(String.format("jdbc:sqlite:%s.db", getDBName()));
+        config.setJdbcUrl(genJdbcUrl());
         config.addDataSourceProperty("databaseName", getDBName());
         config.setPoolName(getDBName() + "_pool");
         this.dataSource = new HikariDataSource(config);
@@ -147,7 +156,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
         logger.info("Create database...");
         String fileContent = Strings.convertToString(
                 this.getClass().getClassLoader().getResourceAsStream("sql/model.sql"));
-        logger.debug("SQL::{}", fileContent);
+        logger.trace("SQL::{}", fileContent);
         return sqlClient.rxGetConnection().doOnError(throwable -> {
             throw new DatabaseException("Cannot open database connection", throwable);
         }).flatMap(conn -> executeCreateDDL(conn, fileContent));
@@ -160,7 +169,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
                                              .filter(Strings::isNotBlank)
                                              .collect(Collectors.toList());
         return conn.rxBatch(sqlStatements)
-                   .doOnSuccess(result -> logger.info("Create Database success: {}", result))
+                   .doAfterSuccess(result -> logger.info("Create Database success: {}", result))
                    .doOnError(throwable -> {
                        throw new DatabaseException("Cannot create database", throwable);
                    })

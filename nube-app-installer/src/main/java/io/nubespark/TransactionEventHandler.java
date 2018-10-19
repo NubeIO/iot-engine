@@ -2,7 +2,6 @@ package io.nubespark;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
 import com.nubeio.iot.edge.EdgeVerticle;
@@ -30,12 +29,8 @@ public final class TransactionEventHandler implements IEventHandler {
                                                                          data -> this.factory(eventType, data)));
     }
 
-    public Single<JsonObject> handle(EventType eventType, RequestData data) {
-        final Function<RequestData, Single<JsonObject>> func = mapping.get(eventType);
-        if (Objects.isNull(func)) {
-            throw new UnsupportedOperationException("Unsupported action " + eventType);
-        }
-        return func.apply(data);
+    public Single<JsonObject> handle(EventType eventType, RequestData data) throws NubeException {
+        return mapping.get(eventType).apply(data);
     }
 
     private Single<JsonObject> getOne(RequestData data) {
@@ -57,7 +52,7 @@ public final class TransactionEventHandler implements IEventHandler {
         if (EventType.GET_ONE == event) {
             return getOne(data);
         }
-        return null;
+        throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Unsupported action " + event);
     }
 
 }

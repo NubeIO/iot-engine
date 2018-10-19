@@ -27,10 +27,13 @@ public final class ModuleLoader {
         });
     }
 
-    public Single<String> removeModule(String moduleId) {
+    public Single<String> removeModule(String moduleId, boolean silent) {
         logger.info("Vertx unload module {}...", moduleId);
         return context.get().rxUndeploy(moduleId).doOnError(throwable -> {
-            throw new EngineException(throwable);
+            if (!silent) {
+                throw new EngineException(throwable);
+            }
+            logger.warn("Module {} may not installed", throwable, moduleId);
         }).andThen(Single.just(moduleId));
     }
 
