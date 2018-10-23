@@ -1,4 +1,4 @@
-package com.nubeio.iot.share.event;
+package com.nubeio.iot.share.dto;
 
 import java.io.Serializable;
 

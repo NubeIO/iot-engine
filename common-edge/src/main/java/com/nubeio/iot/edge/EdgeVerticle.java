@@ -23,7 +23,7 @@ import com.nubeio.iot.share.enums.Status;
 import com.nubeio.iot.share.event.EventMessage;
 import com.nubeio.iot.share.event.EventType;
 import com.nubeio.iot.share.event.IEventHandler;
-import com.nubeio.iot.share.event.RequestData;
+import com.nubeio.iot.share.dto.RequestData;
 import com.nubeio.iot.share.exceptions.DatabaseException;
 import com.nubeio.iot.share.exceptions.ErrorMessage;
 import com.nubeio.iot.share.exceptions.NubeException;
@@ -67,7 +67,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
         super.start();
         this.appConfig = Configs.getApplicationCfg(config());
         this.microserviceConfig = IMicroVerticle.initConfig(vertx, config()).onStart();
-        this.moduleLoader = new ModuleLoader(() -> vertx);
+        this.moduleLoader = new ModuleLoader(vertx);
         registerEventHandler();
         initDBConnection().flatMap(client -> this.createDatabase(client).flatMap(ignores -> initData()))
                           .subscribe(logger::info, throwable -> {

@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import com.nubeio.iot.share.event.Pagination;
-import com.nubeio.iot.share.event.RequestData;
+import com.nubeio.iot.share.dto.Pagination;
+import com.nubeio.iot.share.dto.RequestData;
 import com.nubeio.iot.share.utils.Strings;
 
 import io.vertx.core.json.JsonObject;

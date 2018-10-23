@@ -1,12 +1,12 @@
 package com.nubeio.iot.edge.loader;
 
-import java.util.function.Supplier;
+import java.util.Arrays;
+import java.util.List;
 
+import com.nubeio.iot.share.event.EventContractor;
+import com.nubeio.iot.share.event.EventHandler;
 import com.nubeio.iot.share.event.EventType;
-import com.nubeio.iot.share.event.IEventHandler;
-import com.nubeio.iot.share.event.RequestData;
 import com.nubeio.iot.share.exceptions.EngineException;
-import com.nubeio.iot.share.exceptions.NubeException;
 
 import io.reactivex.CompletableObserver;
 import io.reactivex.Single;
@@ -18,41 +18,28 @@ import io.vertx.reactivex.core.Vertx;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class ModuleLoader implements IEventHandler {
+public final class ModuleLoader extends EventHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ModuleLoader.class);
-    private final Supplier<Vertx> context;
+    private final Vertx context;
 
-    public Single<JsonObject> handle(EventType action, RequestData requestData) {
-        JsonObject body = requestData.getBody();
-        if (EventType.CREATE == action || EventType.INIT == action) {
-            return installModule(body);
-        }
-        if (EventType.UPDATE == action) {
-            return reloadModule(body);
-        }
-        if (EventType.REMOVE == action || EventType.HALT == action) {
-            return removeModule(body);
-        }
-        throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT,
-                                "Unsupported action " + action + " when interact physical module");
-    }
-
+    @EventContractor(values = {EventType.CREATE, EventType.INIT})
     private Single<JsonObject> installModule(JsonObject data) {
         String serviceId = data.getString("service_id");
         JsonObject deployCfg = data.getJsonObject("deploy_cfg");
         logger.info("Vertx install module {} with config {}...", serviceId, deployCfg);
         DeploymentOptions options = new DeploymentOptions().setConfig(deployCfg);
-        return context.get().rxDeployVerticle(serviceId, options).doOnError(throwable -> {
+        return context.rxDeployVerticle(serviceId, options).doOnError(throwable -> {
             throw new EngineException(throwable);
         }).map(id -> new JsonObject().put("deploy_id", id));
     }
 
+    @EventContractor(values = {EventType.REMOVE, EventType.HALT})
     private Single<JsonObject> removeModule(JsonObject data) {
         String deployId = data.getString("deploy_id");
         boolean isSilent = data.getBoolean("silent");
         logger.info("Vertx unload module {}...", deployId);
-        return context.get().rxUndeploy(deployId).onErrorResumeNext(throwable -> {
+        return context.rxUndeploy(deployId).onErrorResumeNext(throwable -> {
             if (!isSilent) {
                 throw new EngineException(throwable);
             }
@@ -61,14 +48,20 @@ public final class ModuleLoader implements IEventHandler {
         }).andThen(Single.just(new JsonObject().put("deploy_id", deployId)));
     }
 
+    @EventContractor(values = EventType.UPDATE)
     private Single<JsonObject> reloadModule(JsonObject data) {
         String deployId = data.getString("deploy_id");
         JsonObject deployCfg = data.getJsonObject("deploy_cfg");
         logger.info("Vertx reload module {} with config {}...", deployId, deployCfg);
-        return context.get().rxUndeploy(deployId).onErrorResumeNext(throwable -> {
+        return context.rxUndeploy(deployId).onErrorResumeNext(throwable -> {
             logger.debug("Module {} is gone in Vertx. Just installing...", throwable, deployId);
             return CompletableObserver::onComplete;
         }).andThen(installModule(data));
+    }
+
+    @Override
+    protected List<EventType> getAvailableEvents() {
+        return Arrays.asList(EventType.INIT, EventType.CREATE, EventType.UPDATE, EventType.HALT, EventType.REMOVE);
     }
 
 }
