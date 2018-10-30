@@ -134,6 +134,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     case "company":
                         handleUpdateCompany(message);
                         break;
+                    case "change_default_site":
+                        handleChangeDefaultSite(message);
+                        break;
                     default:
                         handleNotFoundResponse(message);
                         break;
@@ -1276,6 +1279,27 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 .subscribe(
                     ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.NO_CONTENT.code())),
                     throwable -> handleHttpException(message, throwable));
+        } else {
+            handleForbiddenResponse(message);
+        }
+    }
+
+    private void handleChangeDefaultSite(Message<Object> message) {
+        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
+        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
+        Role role = MultiTenantCustomMessageHelper.getRole(user);
+
+        if (role == Role.MANAGER) {
+            String siteId = body.getString("site_id");
+            if (user.getJsonArray("sites_ids").contains(siteId)) {
+                mongoClient.rxFindOne(USER, idQuery(user.getString("_id")), null)
+                    .flatMap(respondUser -> mongoClient.rxSave(USER, respondUser.put("site_id", siteId)))
+                    .subscribe(
+                        ignore -> message.reply(new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.NO_CONTENT.code())),
+                        throwable -> handleHttpException(message, throwable));
+            } else {
+                handleForbiddenResponse(message);
+            }
         } else {
             handleForbiddenResponse(message);
         }
