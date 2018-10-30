@@ -209,7 +209,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                         JsonArray sitesIds = body.getJsonArray("sites_ids", new JsonArray());
                         if (sitesIds.size() == 0 && StringUtils.isNotNull(body.getString("site_id"))) {
                             sitesIds = new JsonArray().add(body.getString("site_id"));
-                        } else {
+                        } else if (sitesIds.size() == 0) {
                             return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
                                 .map(ign -> {
                                     throw badRequest("You must include valid sites_ids on the request data.");
@@ -970,7 +970,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                         JsonArray sitesIds = body.getJsonArray("sites_ids", new JsonArray());
                         if (sitesIds.size() == 0 && StringUtils.isNotNull(body.getString("site_id"))) {
                             sitesIds = new JsonArray().add(body.getString("site_id"));
-                        } else {
+                        } else if (sitesIds.size() == 0) {
                             throw badRequest("You must include site_id on the request data.");
                         }
                         JsonArray sitesIds$ = sitesIds;
