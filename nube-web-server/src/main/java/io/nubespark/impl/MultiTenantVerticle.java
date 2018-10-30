@@ -140,7 +140,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 }
                 break;
             case "PUT":
-                switch (url) {
+                switch (url.split("/")[0]) {
                     case "site":
                         handlePutSite(message);
                         break;
@@ -206,19 +206,30 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     if (companyJsonObject.getString("role").equals(Role.MANAGER.toString())
                         && SQLUtils.in(body.getString("role", ""), Role.MANAGER.toString(), Role.USER.toString(), Role.GUEST.toString(), "")) {
 
-                        String siteId = body.getString("site_id");
-                        if (siteId == null) {
+                        JsonArray sitesIds = body.getJsonArray("sites_ids", new JsonArray());
+                        if (sitesIds.size() == 0 && StringUtils.isNotNull(body.getString("site_id"))) {
+                            sitesIds = new JsonArray().add(body.getString("site_id"));
+                        } else {
                             return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
                                 .map(ign -> {
-                                    throw badRequest("You must include site_id on the request data.");
+                                    throw badRequest("You must include valid sites_ids on the request data.");
                                 });
                         }
+                        JsonArray sitesIds$ = sitesIds;
 
                         return mongoClient
-                            .rxFindOne(SITE, new JsonObject().put("_id", siteId), null)
-                            .flatMap(childSite -> {
-                                if (childSite != null) {
-                                    if (childSite.getString("associated_company_id").equals(companyJsonObject.getString("_id"))) {
+                            .rxFind(SITE, new JsonObject().put("_id", new JsonObject().put("$in", sitesIds)))
+                            .flatMap(childSites -> {
+                                String siteId = body.getString("site_id");
+                                if (childSites != null) {
+                                    boolean isSiteAssociated = true;
+                                    for (JsonObject childSite : childSites) {
+                                        if (!childSite.getString("associated_company_id").equals(companyJsonObject.getString("_id"))) {
+                                            isSiteAssociated = false;
+                                            break;
+                                        }
+                                    }
+                                    if (isSiteAssociated && sitesIds$.contains(siteId)) {
                                         return Single.just(body
                                             .put("role", body.getString("role", Role.MANAGER.toString()))); // if nothing then it should be MANAGER
                                     } else {
@@ -240,11 +251,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                     if (groupId == null) {
                                         return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName, client)
                                             .map(ign -> {
-                                                throw badRequest("You must include group_in on the request data.");
+                                                throw badRequest("You must include group_id on the request data.");
                                             });
                                     }
 
-                                    return mongoClient.rxFind(USER_GROUP, new JsonObject().put("site_id", siteId))
+                                    return mongoClient.rxFind(USER_GROUP, new JsonObject().put("site_id", body.getString("site_id")))
                                         .flatMap(childUserGroups -> {
                                             if (childUserGroups.size() > 0) {
                                                 if (StringUtils.getIdsList(childUserGroups).contains(groupId)) {
@@ -738,7 +749,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             .flatMapSingle(jsonObject -> objectLevelPermission(role, jsonObject.getString("associated_company_id"), companyId)
                 .map(permitted -> {
                     if (!permitted) {
-                        throw new HttpException(HttpResponseStatus.FORBIDDEN, "You don't have permission to perform the action.");
+                        throw forbidden();
                     }
                     return jsonObject;
                 })).toList();
@@ -956,17 +967,27 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
 
                     if (companyJsonObject.getString("role").equals(Role.MANAGER.toString())
                         && SQLUtils.in(body.getString("role", ""), Role.MANAGER.toString(), Role.USER.toString(), Role.GUEST.toString(), "")) {
-                        String siteId = body.getString("site_id");
-
-                        if (siteId == null) {
+                        JsonArray sitesIds = body.getJsonArray("sites_ids", new JsonArray());
+                        if (sitesIds.size() == 0 && StringUtils.isNotNull(body.getString("site_id"))) {
+                            sitesIds = new JsonArray().add(body.getString("site_id"));
+                        } else {
                             throw badRequest("You must include site_id on the request data.");
                         }
+                        JsonArray sitesIds$ = sitesIds;
 
                         return mongoClient
-                            .rxFindOne(SITE, new JsonObject().put("_id", siteId), null)
-                            .flatMap(childSite -> {
-                                if (childSite != null) {
-                                    if (childSite.getString("associated_company_id").equals(companyJsonObject.getString("_id"))) {
+                            .rxFind(SITE, new JsonObject().put("_id", new JsonObject().put("$in", sitesIds)))
+                            .flatMap(childSites -> {
+                                if (childSites != null) {
+                                    String siteId = body.getString("site_id");
+                                    boolean isSiteAssociated = true;
+                                    for (JsonObject childSite : childSites) {
+                                        if (!childSite.getString("associated_company_id").equals(companyJsonObject.getString("_id"))) {
+                                            isSiteAssociated = false;
+                                            break;
+                                        }
+                                    }
+                                    if (isSiteAssociated && sitesIds$.contains(siteId)) {
                                         return Single.just(body.put("role", body.getString("role", Role.MANAGER.toString()))); // if nothing then it should be MANAGER
                                     } else {
                                         throw forbidden();
@@ -979,10 +1000,10 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                 if (SQLUtils.in(body.getString("role", ""), Role.USER.toString(), Role.GUEST.toString())) {
                                     String groupId = body.getString("group_id");
                                     if (groupId == null) {
-                                        throw badRequest("You must include group_in on the request data.");
+                                        throw badRequest("You must include group_id on the request data.");
                                     }
 
-                                    return mongoClient.rxFind(USER_GROUP, new JsonObject().put("site_id", siteId))
+                                    return mongoClient.rxFind(USER_GROUP, new JsonObject().put("site_id", body.getString("site_id")))
                                         .flatMap(childUserGroups -> {
                                             if (childUserGroups.size() > 0) {
                                                 if (StringUtils.getIdsList(childUserGroups).contains(groupId)) {
@@ -1265,20 +1286,22 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
         Role role = MultiTenantCustomMessageHelper.getRole(user);
         String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        String paramsSiteId = MultiTenantCustomMessageHelper.getParamsId(message);
         JsonObject headers = MultiTenantCustomMessageHelper.getHeaders(message);
 
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             Single.create(
                 source -> {
                     if (role != Role.MANAGER) {
+                        // Create or Update by SUPER_ADMIN/ADMIN
                         JsonObject query = new JsonObject().put("associated_company_id", companyId);
                         mongoClient.rxFind(SITE, query)
-                            .flatMap(getSites -> {
+                            .flatMap(respondSites -> {
                                 Site site = new Site(MultiTenantCustomMessageHelper.getBodyAsJson(message)
                                     .put("associated_company_id", companyId)
                                     .put("role", role.toString()));
-                                if (getSites.size() > 0) {
-                                    return mongoClient.rxSave(SITE, site.toJsonObject().put("_id", getSites.get(0).getString("_id")));
+                                if (respondSites.size() > 0) {
+                                    return mongoClient.rxSave(SITE, site.toJsonObject().put("_id", respondSites.get(0).getString("_id")));
                                 } else {
                                     // First time site initialization
                                     return mongoClient.rxSave(SITE, site.toJsonObject())
@@ -1305,17 +1328,21 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                 }
                             }).subscribe(ignore -> source.onSuccess(""), source::onError);
                     } else {
-                        String siteId = MultiTenantCustomMessageHelper.getSiteId(user);
-                        JsonObject query = new JsonObject().put("_id", siteId);
+                        // Update Site by MANAGER
+                        JsonObject query = new JsonObject().put("_id", paramsSiteId);
                         mongoClient.rxFindOne(SITE, query, null)
                             .flatMap(respondSite -> {
                                 if (respondSite != null) {
-                                    Site site = new Site(MultiTenantCustomMessageHelper.getBodyAsJson(message)
-                                        .put("associated_company_id", respondSite.getString("associated_company_id"))
-                                        .put("role", respondSite.getString("role")));
-                                    return mongoClient.rxSave(SITE, site.toJsonObject().put("_id", siteId));
+                                    if (respondSite.getString("associated_company_id").equals(companyId)) {
+                                        Site site = new Site(MultiTenantCustomMessageHelper.getBodyAsJson(message)
+                                            .put("associated_company_id", respondSite.getString("associated_company_id"))
+                                            .put("role", respondSite.getString("role")));
+                                        return mongoClient.rxSave(SITE, site.toJsonObject().put("_id", paramsSiteId));
+                                    } else {
+                                        throw forbidden();
+                                    }
                                 } else {
-                                    throw new HttpException(HttpResponseStatus.NOT_FOUND.code(), "<Site> doesn't exist, please request Admin for associate on a <Site>!");
+                                    throw new HttpException(HttpResponseStatus.NOT_FOUND.code(), "<Site> doesn't exist!");
                                 }
                             }).subscribe(ignore -> source.onSuccess(""), source::onError);
                     }

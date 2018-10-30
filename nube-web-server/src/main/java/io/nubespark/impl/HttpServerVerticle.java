@@ -14,6 +14,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -240,7 +241,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     }
                 });
         } else {
-            ctx.response().setStatusCode(HttpResponseStatus.FORBIDDEN.code());
+            ctx.response().setStatusCode(HttpResponseStatus.FORBIDDEN.code()).end();
         }
     }
 
@@ -426,62 +427,77 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         User user = ctx.user();
         String groupId = ctx.user().principal().getString("group_id");
         String siteId = ctx.user().principal().getString("site_id");
-        if (user != null) {
-            Single.just(new JsonObject())
-                .flatMap(object -> {
-                    if (StringUtils.isNotNull(groupId)) {
-                        return mongoClient.rxFindOne(USER_GROUP, idQuery(groupId), null)
-                            .map(group -> {
-                                if (group != null) {
-                                    return object.put("group", group);
-                                }
-                                return object;
-                            });
-                    } else {
-                        return Single.just(object);
-                    }
-                })
-                .flatMap(group -> {
-                    if (StringUtils.isNotNull(siteId)) {
-                        return mongoClient.rxFindOne(SITE, idQuery(siteId), null)
-                            .flatMap(site -> {
-                                if (site != null) {
-                                    return Single.just(group.put("site", site
+        JsonArray sitesIds = user.principal().getJsonArray("sites_ids", new JsonArray());
+        Single.just(new JsonObject())
+            .flatMap(object -> {
+                if (StringUtils.isNotNull(groupId)) {
+                    return mongoClient.rxFindOne(USER_GROUP, idQuery(groupId), null)
+                        .map(group -> {
+                            if (group != null) {
+                                return object.put("group", group);
+                            }
+                            return object;
+                        });
+                } else {
+                    return Single.just(object);
+                }
+            })
+            .flatMap(group -> {
+                if (StringUtils.isNotNull(siteId)) {
+                    return mongoClient.rxFindOne(SITE, idQuery(siteId), null)
+                        .flatMap(site -> {
+                            if (site != null) {
+                                return Single.just(group.put("site", site
+                                    .put("logo_sm", buildAbsoluteUri(ctx, site.getString("logo_sm")))
+                                    .put("logo_md", buildAbsoluteUri(ctx, site.getString("logo_md")))));
+                            } else {
+                                return assignAdminIfAvailable(ctx, group);
+                            }
+                        });
+                } else {
+                    return assignAdminIfAvailable(ctx, group);
+                }
+            })
+            .flatMap(groupAndSite -> {
+                if (sitesIds.size() > 0) {
+                    return mongoClient.rxFind(SITE, new JsonObject().put("_id", new JsonObject().put("$in", sitesIds)))
+                        .flatMap(respondSites -> {
+                            if (respondSites != null) {
+                                JsonArray sitesWithAbsolutePaths = new JsonArray();
+                                for (JsonObject site : respondSites) {
+                                    sitesWithAbsolutePaths.add(site
                                         .put("logo_sm", buildAbsoluteUri(ctx, site.getString("logo_sm")))
-                                        .put("logo_md", buildAbsoluteUri(ctx, site.getString("logo_md")))));
-                                } else {
-                                    return assignAdminIfAvailable(ctx, group);
+                                        .put("logo_md", buildAbsoluteUri(ctx, site.getString("logo_md"))));
                                 }
-                            });
-                    } else {
-                        return assignAdminIfAvailable(ctx, group);
-                    }
-                })
-                .flatMap(groupAndSite -> {
-                    String associatedCompanyId = user.principal().getString("company_id", "");
-                    if (StringUtils.isNotNull(associatedCompanyId)) {
-                        return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
-                            .map(response -> {
-                                if (response != null) {
-                                    return groupAndSite.put("company", response);
-                                }
-                                return groupAndSite;
-                            });
-                    } else {
-                        return Single.just(groupAndSite);
-                    }
-                })
-                .subscribe(groupAndSiteAndCompany -> {
-                    ctx.response()
-                        .putHeader("username", user.principal().getString("username"))
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(user.principal()
-                            .mergeIn(groupAndSiteAndCompany)));
-                });
-        } else {
-            logger.info("Send not authorized error and user should login");
-            failAuthentication(ctx);
-        }
+                                groupAndSite.put("sites", sitesWithAbsolutePaths);
+                            }
+                            return Single.just(groupAndSite);
+                        });
+                } else {
+                    return Single.just(groupAndSite);
+                }
+            })
+            .flatMap(groupAndSite -> {
+                String associatedCompanyId = user.principal().getString("company_id", "");
+                if (StringUtils.isNotNull(associatedCompanyId)) {
+                    return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
+                        .map(response -> {
+                            if (response != null) {
+                                return groupAndSite.put("company", response);
+                            }
+                            return groupAndSite;
+                        });
+                } else {
+                    return Single.just(groupAndSite);
+                }
+            })
+            .subscribe(groupAndSiteAndCompany -> {
+                ctx.response()
+                    .putHeader("username", user.principal().getString("username"))
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(user.principal()
+                        .mergeIn(groupAndSiteAndCompany)));
+            });
     }
 
     private SingleSource<? extends JsonObject> assignAdminIfAvailable(RoutingContext ctx, JsonObject group) {

@@ -9,6 +9,7 @@ import io.nubespark.utils.StringUtils;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -42,9 +43,9 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         CustomMessage customMessage = (CustomMessage) message.body();
         String url = customMessage.getHeader().getString("url");
 
-        if (url.equals("") && customMessage.getHeader().getString("method").equalsIgnoreCase("GET")) {
+        if (StringUtils.isNotNull(url) && !url.contains("/") && customMessage.getHeader().getString("method").equalsIgnoreCase("GET")) {
             // Getting all values; for example when we need to display all settings
-            handleGetAll(message, customMessage);
+            handleGetAll(message, customMessage, url);
         } else if (validateUrl(url)) {
             this.handleValidUrl(message, customMessage);
         } else {
@@ -52,21 +53,35 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private void handleGetAll(Message<Object> message, CustomMessage customMessage) {
+    private void handleGetAll(Message<Object> message, CustomMessage customMessage, String siteId) {
         String collection = customMessage.getHeader().getString("collection");
-        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
-        if (StringUtils.isNotNull(siteId)) {
-            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId))
-                .subscribe(response -> {
-                    CustomMessage<List<JsonObject>> replyMessage = new CustomMessage<>(
-                        null,
-                        response,
-                        HttpResponseStatus.OK.code());
-                    message.reply(replyMessage);
-                }, throwable -> handleException(message, throwable));
+        JsonArray sitesIds = getSitesIds(customMessage);
+
+        if (sitesIds.size() > 0) {
+            if (sitesIds.contains(siteId)) {
+                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId))
+                    .subscribe(response -> {
+                        CustomMessage<List<JsonObject>> replyMessage = new CustomMessage<>(
+                            null,
+                            response,
+                            HttpResponseStatus.OK.code());
+                        message.reply(replyMessage);
+                    }, throwable -> handleException(message, throwable));
+            } else {
+                handleForbiddenResponse(message);
+            }
         } else {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         }
+    }
+
+    private JsonArray getSitesIds(CustomMessage customMessage) {
+        JsonObject user = customMessage.getHeader().getJsonObject("user");
+        JsonArray sitesIds = user.getJsonArray("sites_ids", new JsonArray());
+        if (sitesIds.size() == 0 && StringUtils.isNotNull(user.getString("site_id"))) {
+            sitesIds = new JsonArray().add(user.getString("site_id"));
+        }
+        return sitesIds;
     }
 
     private void handleException(Message<Object> message, Throwable throwable) {
@@ -102,118 +117,167 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     }
 
     private void handleGetUrl(Message<Object> message, CustomMessage customMessage) {
-        String id = customMessage.getHeader().getString("url");
+        URLParser urlParser = new URLParser(customMessage.getHeader().getString("url"));
         String collection = customMessage.getHeader().getString("collection");
-        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
-        if (StringUtils.isNotNull(siteId)) {
-            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                .subscribe(response -> {
-                    CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                        null,
-                        MongoUtils.pickOneOrNullJsonObject(response),
-                        HttpResponseStatus.OK.code());
-                    message.reply(replyMessage);
-                }, throwable -> handleException(message, throwable));
+        JsonArray sitesIds = getSitesIds(customMessage);
+        if (sitesIds.size() > 0) {
+            if (sitesIds.contains(urlParser.getSiteId())) {
+                mongoClient.rxFind(collection, new JsonObject().put("site_id", urlParser.getSiteId()).put("id", urlParser.getId()))
+                    .subscribe(response -> {
+                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
+                            null,
+                            this.pickOneOrNullJsonObject(response),
+                            HttpResponseStatus.OK.code());
+                        message.reply(replyMessage);
+                    }, throwable -> handleException(message, throwable));
+            } else {
+                handleForbiddenResponse(message);
+            }
         } else {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         }
     }
 
     private void handlePostUrl(Message<Object> message, CustomMessage customMessage) {
+        URLParser urlParser = new URLParser(customMessage.getHeader().getString("url"));
         String role = customMessage.getHeader().getJsonObject("user").getString("role");
-        String id = customMessage.getHeader().getString("url");
         String collection = customMessage.getHeader().getString("collection");
-        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
-        if (StringUtils.isNull(siteId)) {
+        JsonArray sitesIds = getSitesIds(customMessage);
+        if (sitesIds.size() == 0) {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
-            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                .map(response -> {
-                    JsonObject body = (JsonObject) customMessage.getBody();
-                    if (response.size() > 0) {
-                        throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
-                    }
-                    body.put("site_id", siteId);
-                    body.put("id", id);
-                    return body;
-                })
-                .flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body))
-                .subscribe(buffer -> {
-                    CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                        null,
-                        new JsonObject(),
-                        HttpResponseStatus.OK.code());
-                    message.reply(replyMessage);
-                }, throwable -> {
-                    HttpException exception = (HttpException) throwable;
-                    CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                        null,
-                        new JsonObject().put("message", exception.getMessage()),
-                        exception.getStatusCode().code());
-                    message.reply(replyMessage);
-                });
+            if (sitesIds.contains(urlParser.getSiteId())) {
+                mongoClient.rxFind(collection, new JsonObject().put("site_id", urlParser.getSiteId()).put("id", urlParser.getId()))
+                    .map(response -> {
+                        JsonObject body = (JsonObject) customMessage.getBody();
+                        if (response.size() > 0) {
+                            throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
+                        }
+                        body.put("site_id", urlParser.getSiteId());
+                        body.put("id", urlParser.getId());
+                        return body;
+                    })
+                    .flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body))
+                    .subscribe(buffer -> {
+                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
+                            null,
+                            new JsonObject(),
+                            HttpResponseStatus.OK.code());
+                        message.reply(replyMessage);
+                    }, throwable -> {
+                        HttpException exception = (HttpException) throwable;
+                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
+                            null,
+                            new JsonObject().put("message", exception.getMessage()),
+                            exception.getStatusCode().code());
+                        message.reply(replyMessage);
+                    });
+            } else {
+                handleForbiddenResponse(message);
+            }
         } else {
             handleForbiddenResponse(message);
         }
     }
 
     private void handlePutUrl(Message<Object> message, CustomMessage customMessage) {
+        URLParser urlParser = new URLParser(customMessage.getHeader().getString("url"));
         String role = customMessage.getHeader().getJsonObject("user").getString("role");
-        String id = customMessage.getHeader().getString("url");
         String collection = customMessage.getHeader().getString("collection");
-        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
-        if (StringUtils.isNull(siteId)) {
+        JsonArray sitesIds = getSitesIds(customMessage);
+        if (sitesIds.size() == 0) {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
-            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                .map(jsonArray -> {
-                    JsonObject body = (JsonObject) customMessage.getBody();
-                    if (jsonArray.size() > 0) {
-                        body.put("_id", MongoUtils.pickOneOrNullJsonObject(jsonArray).getString("_id"));
-                    }
-                    body.put("site_id", siteId);
-                    body.put("id", id);
-                    return body;
-                })
-                .flatMap(body -> mongoClient.rxSave(collection, body))
-                .subscribe(buffer -> {
-                    CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                        null,
-                        new JsonObject(),
-                        HttpResponseStatus.OK.code());
-                    message.reply(replyMessage);
-                }, throwable -> {
-                    HttpException exception = (HttpException) throwable;
-                    CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                        null,
-                        new JsonObject().put("message", exception.getMessage()),
-                        exception.getStatusCode().code());
-                    message.reply(replyMessage);
-                });
+            if (sitesIds.contains(urlParser.getSiteId())) {
+                mongoClient.rxFind(collection, new JsonObject().put("site_id", urlParser.getSiteId()).put("id", urlParser.getId()))
+                    .map(jsonArray -> {
+                        JsonObject body = (JsonObject) customMessage.getBody();
+                        if (jsonArray.size() > 0) {
+                            body.put("_id", this.pickOneOrNullJsonObject(jsonArray).getString("_id"));
+                        }
+                        body.put("site_id", urlParser.getSiteId());
+                        body.put("id", urlParser.getId());
+                        return body;
+                    })
+                    .flatMap(body -> mongoClient.rxSave(collection, body))
+                    .subscribe(buffer -> {
+                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
+                            null,
+                            new JsonObject(),
+                            HttpResponseStatus.OK.code());
+                        message.reply(replyMessage);
+                    }, throwable -> {
+                        HttpException exception = (HttpException) throwable;
+                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
+                            null,
+                            new JsonObject().put("message", exception.getMessage()),
+                            exception.getStatusCode().code());
+                        message.reply(replyMessage);
+                    });
+            } else {
+                handleForbiddenResponse(message);
+            }
         } else {
             handleForbiddenResponse(message);
         }
     }
 
     private void handleDeleteUrl(Message<Object> message, CustomMessage customMessage) {
-        String id = customMessage.getHeader().getString("url");
+        URLParser urlParser = new URLParser(customMessage.getHeader().getString("url"));
         String collection = customMessage.getHeader().getString("collection");
-        String siteId = customMessage.getHeader().getJsonObject("user").getString("site_id");
-        if (StringUtils.isNotNull(siteId)) {
-            mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                .subscribe(buffer -> {
-                    CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                        null,
-                        new JsonObject(),
-                        HttpResponseStatus.NO_CONTENT.code());
-                    message.reply(replyMessage);
-                }, throwable -> handleException(message, throwable));
+        JsonArray sitesIds = getSitesIds(customMessage);
+        if (sitesIds.size() > 0) {
+            if (sitesIds.contains(urlParser.getSiteId())) {
+                mongoClient.rxRemoveDocuments(collection, new JsonObject().put("site_id", urlParser.getSiteId()).put("id", urlParser.getId()))
+                    .subscribe(buffer -> {
+                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
+                            null,
+                            new JsonObject(),
+                            HttpResponseStatus.NO_CONTENT.code());
+                        message.reply(replyMessage);
+                    }, throwable -> handleException(message, throwable));
+            } else {
+                handleForbiddenResponse(message);
+            }
         } else {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         }
     }
 
+    private JsonObject pickOneOrNullJsonObject(List<JsonObject> jsonObjectList) {
+        if (jsonObjectList.size() > 0) {
+            return jsonObjectList.get(0);
+        } else {
+            return new JsonObject();
+        }
+    }
+
     private boolean validateUrl(String url) {
-        return !(url.contains("/") || url.contains("?"));
+        // We must need to have '<site_id>/<id>'
+        return url.contains("/") && !url.contains("?");
+    }
+
+
+    class URLParser {
+        private String siteId;
+        private String id;
+
+        URLParser(String url) {
+            String[] values = url.split("/");
+            siteId = values[0];
+            if (values.length > 1) {
+                id = values[1];
+            } else {
+                id = "";
+            }
+        }
+
+        public String getSiteId() {
+            return siteId;
+        }
+
+        public String getId() {
+            return id;
+        }
     }
 }
