@@ -20,20 +20,26 @@ import io.vertx.reactivex.ext.sql.SQLClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
     private final Logger logger = LoggerFactory.getLogger(PostgreSQLService.class);
-    private final SQLClient client;
+    private Vertx vertx;
+    private JsonObject config;
+    private Map<String, SQLClient> clients;
 
     public PostgreSQLServiceImpl(Vertx vertx, JsonObject config) {
-        this.client = PostgreSQLClient.createNonShared(vertx, config);
+        this.vertx = vertx;
+        this.config = config;
     }
 
     @Override
     public Single<PostgreSQLService> initializeService() {
         logger.info("Initializing ...");
+        clients = new HashMap<>();
 
         return Single.just(this);
     }
@@ -58,7 +64,19 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
         };
     }
 
-    private Single<SQLConnection> getConnection() {
+    private Single<SQLConnection> getConnection(JsonObject settings) {
+        SQLClient client;
+        JsonObject pgConfig = new JsonObject(config.toString()).put("database", settings.getString("database", config.getString("database")));
+        String key = pgConfig.getString("host") + ":" + pgConfig.getInteger("port") + ":" + pgConfig.getString("username") + ":" +
+            pgConfig.getString("password") + ":" + pgConfig.getString("database");
+
+        if (clients.containsKey(key)) {
+            client = clients.get(key);
+        } else {
+            client = PostgreSQLClient.createNonShared(vertx, pgConfig);
+            clients.put(key, client);
+        }
+
         return client.rxGetConnection()
             .flatMap(conn -> Single.just(conn)
                 .doOnError(throwable -> logger.error("Cannot get connection object."))
@@ -66,9 +84,10 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
     }
 
     @Override
-    public PostgreSQLService executeQueryWithParams(String sqlQuery, @Nullable JsonArray params, Handler<AsyncResult<JsonObject>> resultHandler) {
-        getConnection()
+    public PostgreSQLService executeQueryWithParams(String sqlQuery, @Nullable JsonArray params, JsonObject settings, Handler<AsyncResult<JsonObject>> resultHandler) {
+        getConnection(settings)
             .flatMap(conn -> {
+                // conn.rxSetAutoCommit(false);
                 if (params == null) {
                     return conn.rxQuery(sqlQuery);
                 }
@@ -81,8 +100,8 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
     }
 
     @Override
-    public PostgreSQLService executeQuery(String query, Handler<AsyncResult<JsonObject>> resultHandler) {
-        return executeQueryWithParams(query, null, resultHandler);
+    public PostgreSQLService executeQuery(String query, JsonObject settings, Handler<AsyncResult<JsonObject>> resultHandler) {
+        return executeQueryWithParams(query, null, settings, resultHandler);
     }
 
     private JsonObject failureMessage(Throwable t) {

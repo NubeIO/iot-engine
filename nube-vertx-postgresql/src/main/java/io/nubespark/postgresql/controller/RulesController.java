@@ -23,7 +23,7 @@ public class RulesController {
         postgreSQLService = PostgreSQLService.createProxy(vertx, PostgreSQLService.SERVICE_ADDRESS);
     }
 
-    public Single<JsonObject> getPostgreSQLData(String query) {
+    public Single<JsonObject> getPostgreSQLData(String query, JsonObject settings) {
         return Single.just(query)
             .map(queryString -> {
                 CCJSqlParserManager ccjSqlParserManager = new CCJSqlParserManager();
@@ -36,7 +36,7 @@ public class RulesController {
                 }
             })
             .flatMap(ignored ->
-                postgreSQLService.rxExecuteQuery(query)
+                postgreSQLService.rxExecuteQuery(query, settings)
                     .map(message -> {
                         JsonObject replyJson = new JsonObject()
                             .put("action", "PostgreSQL Data")

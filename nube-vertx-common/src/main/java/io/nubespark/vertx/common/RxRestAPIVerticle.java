@@ -3,6 +3,7 @@ package io.nubespark.vertx.common;
 import io.reactivex.Single;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
@@ -55,7 +56,7 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
             .allowedMethod(HttpMethod.PATCH));
     }
 
-    protected void dispatchRequests(RoutingContext context) {
+    protected void dispatchRequests(RoutingContext context, JsonObject settings) {
         System.out.println("Dispatch Requests called");
         int initialOffset = 5; // length of `/api/`
         // run with circuit breaker in order to deal with failure
@@ -87,7 +88,7 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
                         System.out.println("Found client for uri: " + path);
                         Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery,
                             rec -> rec.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE) && rec.getMetadata().getString("api.name").equals(prefix));
-                        doDispatch(context, newPath, httpClientSingle, future);
+                        doDispatch(context, settings, newPath, httpClientSingle, future);
                     } else {
                         System.out.println("Client endpoint not found for uri " + path);
                         HttpHelper.notFound(context);
@@ -111,7 +112,7 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
      * @param path             relative path
      * @param httpClientSingle relevant HTTP client
      */
-    private void doDispatch(RoutingContext context, String path, Single<HttpClient> httpClientSingle, io.vertx.reactivex.core.Future<Object> cbFuture) {
+    private void doDispatch(RoutingContext context, JsonObject settings, String path, Single<HttpClient> httpClientSingle, io.vertx.reactivex.core.Future<Object> cbFuture) {
         httpClientSingle.subscribe(client -> {
             HttpClientRequest toReq = client
                 .request(context.request().method(), path, response -> {
@@ -138,6 +139,7 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
                 toReq.putHeader(header.getKey(), header.getValue());
             });
             toReq.putHeader("user", context.user().principal().toString());
+            toReq.putHeader("settings", settings.toString());
             if (context.getBody() == null) {
                 toReq.end();
             } else {

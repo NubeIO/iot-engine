@@ -142,7 +142,22 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
     private void handleGateway(Router router) {
         // api dispatcher
-        router.route("/api/*").handler(this::dispatchRequests);
+        router.route("/api/*").handler(ctx -> {
+            String[] values = ctx.normalisedPath().split("/");
+            String gatewayAPIPrefix = "";
+            if (values.length > 2) {
+                gatewayAPIPrefix = "/" + values[1] + "/" + values[2] + ".*";
+            }
+            logger.info("Query: " + new JsonObject().put("gatewayAPIPrefix", new JsonObject().put("$regex", gatewayAPIPrefix)).put("site_id", ctx.request().headers().getDelegate().get("site_id")));
+            mongoClient.rxFindOne(SETTINGS, new JsonObject().put("gatewayAPIPrefix", new JsonObject().put("$regex", gatewayAPIPrefix)).put("site_id", ctx.request().headers().getDelegate().get("site_id")), null)
+                .subscribe(settings -> {
+                    if (settings != null) {
+                        this.dispatchRequests(ctx, settings);
+                    } else {
+                        this.dispatchRequests(ctx, new JsonObject());
+                    }
+                });
+        });
     }
 
     /**

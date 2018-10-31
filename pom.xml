@@ -6,7 +6,7 @@
 
     <properties>
         <nube.version>1.0-SNAPSHOT</nube.version>
-        <stack.version>3.5.1</stack.version>
+        <stack.version>3.5.3</stack.version>
         <!--overridden in each project packaged as a fat jar -->
         <main.verticle/>
     </properties>
