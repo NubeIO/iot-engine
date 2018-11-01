@@ -1,6 +1,7 @@
 package io.nubespark.postgresql.impl;
 
 import io.nubespark.postgresql.PostgreSQLService;
+import io.nubespark.utils.StringUtils;
 import io.nubespark.vertx.common.BaseService;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
@@ -66,7 +67,17 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
 
     private Single<SQLConnection> getConnection(JsonObject settings) {
         SQLClient client;
-        JsonObject pgConfig = new JsonObject(config.toString()).put("database", settings.getString("database", config.getString("database")));
+        JsonObject pgConfig = new JsonObject(config.toString());
+        if (StringUtils.isNotNull(settings.getString("database"))) {
+            URL url = new URL(settings.getString("url"));
+            pgConfig
+                .put("host", url.getHost())
+                .put("port", url.getPort())
+                .put("database", url.getDatabase())
+                .put("username", settings.getString("username"))
+                .put("password", settings.getString("password"));
+        }
+
         String key = pgConfig.getString("host") + ":" + pgConfig.getInteger("port") + ":" + pgConfig.getString("username") + ":" +
             pgConfig.getString("password") + ":" + pgConfig.getString("database");
 
@@ -114,5 +125,39 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
         return new JsonObject()
             .put("status", "OK")
             .put("message", jsonArray);
+    }
+
+    private class URL {
+        private String host;
+        private int port = 5432;
+        private String database = "test";
+
+        URL(String url) {
+            String[] values = url.split(":");
+            host = values[0];
+            if (values.length > 1) {
+                String[] values$ = values[1].split("/");
+                try {
+                    port = Integer.parseInt(values$[0]);
+                } catch (Exception ignored) {
+                }
+
+                if (values$.length > 1) {
+                    database = values$[1];
+                }
+            }
+        }
+
+        String getHost() {
+            return host;
+        }
+
+        int getPort() {
+            return port;
+        }
+
+        String getDatabase() {
+            return database;
+        }
     }
 }
