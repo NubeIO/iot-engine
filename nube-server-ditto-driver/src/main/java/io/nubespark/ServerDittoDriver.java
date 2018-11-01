@@ -159,11 +159,6 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         req.setChunked(true);
         //Adding ditto authorization
         if (config().getBoolean("ditto-policy")) {
-            req.putHeader(HttpHeaders.AUTHORIZATION.toString(), "Basic " + getAuthKey());
-            if (StringUtils.isNotNull(ctx.getBody().toString())) {
-                req.write(ctx.getBody());
-            }
-        } else {
             req.putHeader(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
             if (StringUtils.isNotNull(ctx.getBody().toString())) {
                 if (StringUtils.isNull(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
@@ -175,6 +170,11 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
                 } else {
                     req.write(ctx.getBody());
                 }
+            }
+        } else {
+            req.putHeader(HttpHeaders.AUTHORIZATION.toString(), "Basic " + getAuthKey());
+            if (StringUtils.isNotNull(ctx.getBody().toString())) {
+                req.write(ctx.getBody());
             }
         }
         req.end();
