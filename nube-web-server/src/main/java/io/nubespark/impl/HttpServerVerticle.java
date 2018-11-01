@@ -148,8 +148,8 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             if (values.length > 2) {
                 gatewayAPIPrefix = "/" + values[1] + "/" + values[2] + ".*";
             }
-            logger.info("Query: " + new JsonObject().put("gatewayAPIPrefix", new JsonObject().put("$regex", gatewayAPIPrefix)).put("site_id", ctx.request().headers().getDelegate().get("site_id")));
-            mongoClient.rxFindOne(SETTINGS, new JsonObject().put("gatewayAPIPrefix", new JsonObject().put("$regex", gatewayAPIPrefix)).put("site_id", ctx.request().headers().getDelegate().get("site_id")), null)
+            logger.info("Query: " + new JsonObject().put("gatewayAPIPrefix", new JsonObject().put("$regex", gatewayAPIPrefix)).put("site_id", ctx.request().headers().getDelegate().get("Site-Id")));
+            mongoClient.rxFindOne(SETTINGS, new JsonObject().put("gatewayAPIPrefix", new JsonObject().put("$regex", gatewayAPIPrefix)).put("site_id", ctx.request().headers().getDelegate().get("Site-Id")), null)
                 .subscribe(settings -> {
                     if (settings != null) {
                         this.dispatchRequests(ctx, settings);
@@ -191,6 +191,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             .put(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()))
             .put("user", ctx.user().principal())
             .put("host", ctx.request().host())
+            .put("Site-Id", ctx.request().headers().get("Site-Id"))
             .put("keycloakConfig", config().getJsonObject("keycloak"));
 
         T body;
@@ -265,6 +266,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             .put("url", ctx.normalisedPath().substring(("/api/" + collection + "/").length()))
             .put("method", ctx.request().method())
             .put("user", ctx.user().principal())
+            .put("Site-Id", ctx.request().headers().get("Site-Id"))
             .put("collection", collection);
         JsonObject body;
         if (StringUtils.isNull(ctx.getBody().toString())) {

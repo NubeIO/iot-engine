@@ -43,19 +43,24 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         CustomMessage customMessage = (CustomMessage) message.body();
         String url = customMessage.getHeader().getString("url");
 
-        if (StringUtils.isNotNull(url) && !url.contains("/") && customMessage.getHeader().getString("method").equalsIgnoreCase("GET")) {
+        if (url.equals("") && customMessage.getHeader().getString("method").equalsIgnoreCase("GET")) {
             // Getting all values; for example when we need to display all settings
-            handleGetAll(message, customMessage, url);
+            handleGetAll(message, customMessage);
         } else if (validateUrl(url)) {
-            this.handleValidUrl(message, customMessage);
+            if (validateData(customMessage)) {
+                this.handleValidUrl(message, customMessage);
+            } else {
+                handleForbiddenResponse(message);
+            }
         } else {
             handleNotFoundResponse(message);
         }
     }
 
-    private void handleGetAll(Message<Object> message, CustomMessage customMessage, String siteId) {
+    private void handleGetAll(Message<Object> message, CustomMessage customMessage) {
         String collection = customMessage.getHeader().getString("collection");
         JsonArray sitesIds = getSitesIds(customMessage);
+        String siteId = customMessage.getHeader().getString("Site-Id");
 
         if (sitesIds.size() > 0) {
             if (sitesIds.contains(siteId)) {
@@ -117,12 +122,13 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     }
 
     private void handleGetUrl(Message<Object> message, CustomMessage customMessage) {
-        URLParser urlParser = new URLParser(customMessage.getHeader().getString("url"));
         String collection = customMessage.getHeader().getString("collection");
+        String siteId = customMessage.getHeader().getString("Site-Id");
+        String id = customMessage.getHeader().getString("url");
         JsonArray sitesIds = getSitesIds(customMessage);
         if (sitesIds.size() > 0) {
-            if (sitesIds.contains(urlParser.getSiteId())) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", urlParser.getSiteId()).put("id", urlParser.getId()))
+            if (sitesIds.contains(siteId)) {
+                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
                     .subscribe(response -> {
                         CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                             null,
@@ -139,22 +145,23 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     }
 
     private void handlePostUrl(Message<Object> message, CustomMessage customMessage) {
-        URLParser urlParser = new URLParser(customMessage.getHeader().getString("url"));
         String role = customMessage.getHeader().getJsonObject("user").getString("role");
         String collection = customMessage.getHeader().getString("collection");
+        String id = customMessage.getHeader().getString("url");
+        String siteId = customMessage.getHeader().getString("Site-Id");
         JsonArray sitesIds = getSitesIds(customMessage);
         if (sitesIds.size() == 0) {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
-            if (sitesIds.contains(urlParser.getSiteId())) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", urlParser.getSiteId()).put("id", urlParser.getId()))
+            if (sitesIds.contains(siteId)) {
+                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
                     .map(response -> {
                         JsonObject body = (JsonObject) customMessage.getBody();
                         if (response.size() > 0) {
                             throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
                         }
-                        body.put("site_id", urlParser.getSiteId());
-                        body.put("id", urlParser.getId());
+                        body.put("site_id", siteId);
+                        body.put("id", id);
                         return body;
                     })
                     .flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body))
@@ -181,22 +188,23 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     }
 
     private void handlePutUrl(Message<Object> message, CustomMessage customMessage) {
-        URLParser urlParser = new URLParser(customMessage.getHeader().getString("url"));
         String role = customMessage.getHeader().getJsonObject("user").getString("role");
         String collection = customMessage.getHeader().getString("collection");
+        String id = customMessage.getHeader().getString("url");
+        String siteId = customMessage.getHeader().getString("Site-Id");
         JsonArray sitesIds = getSitesIds(customMessage);
         if (sitesIds.size() == 0) {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
-            if (sitesIds.contains(urlParser.getSiteId())) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", urlParser.getSiteId()).put("id", urlParser.getId()))
+            if (sitesIds.contains(siteId)) {
+                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
                     .map(jsonArray -> {
                         JsonObject body = (JsonObject) customMessage.getBody();
                         if (jsonArray.size() > 0) {
                             body.put("_id", this.pickOneOrNullJsonObject(jsonArray).getString("_id"));
                         }
-                        body.put("site_id", urlParser.getSiteId());
-                        body.put("id", urlParser.getId());
+                        body.put("site_id", siteId);
+                        body.put("id", id);
                         return body;
                     })
                     .flatMap(body -> mongoClient.rxSave(collection, body))
@@ -223,12 +231,13 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     }
 
     private void handleDeleteUrl(Message<Object> message, CustomMessage customMessage) {
-        URLParser urlParser = new URLParser(customMessage.getHeader().getString("url"));
         String collection = customMessage.getHeader().getString("collection");
+        String id = customMessage.getHeader().getString("url");
+        String siteId = customMessage.getHeader().getString("Site-Id");
         JsonArray sitesIds = getSitesIds(customMessage);
         if (sitesIds.size() > 0) {
-            if (sitesIds.contains(urlParser.getSiteId())) {
-                mongoClient.rxRemoveDocuments(collection, new JsonObject().put("site_id", urlParser.getSiteId()).put("id", urlParser.getId()))
+            if (sitesIds.contains(siteId)) {
+                mongoClient.rxRemoveDocuments(collection, new JsonObject().put("site_id", siteId).put("id", id))
                     .subscribe(buffer -> {
                         CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                             null,
@@ -253,31 +262,10 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
     }
 
     private boolean validateUrl(String url) {
-        // We must need to have '<site_id>/<id>'
-        return url.contains("/") && !url.contains("?");
+        return !(url.contains("/") || url.contains("?"));
     }
 
-
-    class URLParser {
-        private String siteId;
-        private String id;
-
-        URLParser(String url) {
-            String[] values = url.split("/");
-            siteId = values[0];
-            if (values.length > 1) {
-                id = values[1];
-            } else {
-                id = "";
-            }
-        }
-
-        public String getSiteId() {
-            return siteId;
-        }
-
-        public String getId() {
-            return id;
-        }
+    private boolean validateData(CustomMessage customMessage) {
+        return StringUtils.isNotNull(customMessage.getHeader().getString("Site-Id"));
     }
 }
