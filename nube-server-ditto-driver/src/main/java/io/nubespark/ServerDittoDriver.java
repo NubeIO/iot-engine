@@ -31,6 +31,7 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -157,19 +158,33 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
 
         req.setChunked(true);
         //Adding ditto authorization
-        req.putHeader(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
-        if (StringUtils.isNotNull(ctx.getBody().toString())) {
-            if (StringUtils.isNull(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
-                // This means we are we are PUTing device value for the first time or going to updated whole data
-                JsonObject body = ctx.getBodyAsJson();
-                body.put("policyId", Services.POLICY_NAMESPACE_PREFIX + ":" + new JsonObject(ctx.request().headers().getDelegate().get("user")).getString("site_id"));
-                logger.info("Body ::: " + body);
-                req.write(body.toString());
-            } else {
+        if (config().getBoolean("ditto-policy")) {
+            req.putHeader(HttpHeaders.AUTHORIZATION.toString(), "Basic " + getAuthKey());
+            if (StringUtils.isNotNull(ctx.getBody().toString())) {
                 req.write(ctx.getBody());
+            }
+        } else {
+            req.putHeader(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
+            if (StringUtils.isNotNull(ctx.getBody().toString())) {
+                if (StringUtils.isNull(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
+                    // This means we are we are PUTing device value for the first time or going to updated whole data
+                    JsonObject body = ctx.getBodyAsJson();
+                    body.put("policyId", Services.POLICY_NAMESPACE_PREFIX + ":" + new JsonObject(ctx.request().headers().getDelegate().get("user")).getString("site_id"));
+                    logger.info("Body ::: " + body);
+                    req.write(body.toString());
+                } else {
+                    req.write(ctx.getBody());
+                }
             }
         }
         req.end();
+    }
+
+    private String getAuthKey() {
+        String apiKey = config().getString("ditto.http.username", "ditto");
+        String secretKey = config().getString("ditto.http.password", "ditto");
+        String auth = apiKey + ":" + secretKey;
+        return Base64.getEncoder().encodeToString(auth.getBytes());
     }
 
     private void handlePageNotFound(RoutingContext routingContext) {
