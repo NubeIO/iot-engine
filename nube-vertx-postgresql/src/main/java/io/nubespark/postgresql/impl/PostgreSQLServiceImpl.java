@@ -1,7 +1,6 @@
 package io.nubespark.postgresql.impl;
 
 import io.nubespark.postgresql.PostgreSQLService;
-import io.nubespark.utils.StringUtils;
 import io.nubespark.vertx.common.BaseService;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
@@ -68,13 +67,13 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
     private Single<SQLConnection> getConnection(JsonObject settings) {
         SQLClient client;
         JsonObject pgConfig = new JsonObject(config.toString());
-        if (StringUtils.isNotNull(settings.getString("database"))) {
+        if (!settings.toString().equals("{}")) {
             URL url = new URL(settings.getString("url"));
             pgConfig
                 .put("host", url.getHost())
                 .put("port", url.getPort())
                 .put("database", url.getDatabase())
-                .put("username", settings.getString("username"))
+                .put("username", settings.getString("userName"))
                 .put("password", settings.getString("password"));
         }
 
