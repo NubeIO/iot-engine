@@ -43,6 +43,7 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
         allowHeaders.add("x-requested-with");
         allowHeaders.add("accept");
         allowHeaders.add("X-PINGARUNER");
+        allowHeaders.add("Site-Id");
         allowHeaders.add("Authorization");
         allowHeaders.add("JSESSIONID");
 
