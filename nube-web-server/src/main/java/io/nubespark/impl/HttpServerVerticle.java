@@ -107,6 +107,17 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     deployResult.cause().printStackTrace();
                 }
             })))
+            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(SiteCollectionHandleVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
+                // Deploy succeed
+                if (deployResult.succeeded()) {
+                    source.onSuccess("Deployment of SiteCollectionHandleVerticle is successful.");
+                    logger.info("Deployment of SiteCollectionHandleVerticle is successful.");
+                } else {
+                    // Deploy failed
+                    source.onError(deployResult.cause());
+                    deployResult.cause().printStackTrace();
+                }
+            })))
             .subscribe(ignored -> future.complete(), future::fail);
     }
 
@@ -179,6 +190,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         router.route("/api/layout_grid/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "layout_grid"));
         router.route("/api/menu/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "menu"));
         router.route("/api/settings/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "settings"));
+        router.route("/api/query/*").handler(ctx -> this.handleSiteCollection(ctx, "query"));
         router.post("/api/upload_image").handler(this::handleUploadImage);
         router.get("/api/menu_for_user_group/*").handler(this::handleMenuForUserGroup);
     }
@@ -262,6 +274,14 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     }
 
     private void handleDynamicSiteCollection(RoutingContext ctx, String collection) {
+        handleCollectionAPIs(ctx, collection, DYNAMIC_SITE_COLLECTION_ADDRESS);
+    }
+
+    private void handleSiteCollection(RoutingContext ctx, String collection) {
+        handleCollectionAPIs(ctx, collection, SITE_COLLECTION_ADDRESS);
+    }
+
+    private void handleCollectionAPIs(RoutingContext ctx, String collection, String address) {
         JsonObject header = new JsonObject()
             .put("url", ctx.normalisedPath().substring(("/api/" + collection + "/").length()))
             .put("method", ctx.request().method())
@@ -275,7 +295,8 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             body = ctx.getBodyAsJson();
         }
         CustomMessage<JsonObject> message = new CustomMessage<>(header, body, 200);
-        eventBus.send(DYNAMIC_SITE_COLLECTION_ADDRESS, message, reply -> {
+        // noinspection Duplicates
+        eventBus.send(address, message, reply -> {
             if (reply.succeeded()) {
                 CustomMessage replyMessage = (CustomMessage) reply.result().body();
                 logger.info("Received reply: " + replyMessage.getBody());
