@@ -14,6 +14,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.sql.ResultSet;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.asyncsql.PostgreSQLClient;
 import io.vertx.reactivex.ext.sql.SQLClient;
@@ -22,6 +23,7 @@ import io.vertx.reactivex.ext.sql.SQLConnection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -95,18 +97,30 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
 
     @Override
     public PostgreSQLService executeQueryWithParams(String sqlQuery, @Nullable JsonArray params, JsonObject settings, Handler<AsyncResult<JsonObject>> resultHandler) {
-        getConnection(settings)
+        executeQueryWithParams(sqlQuery, params, settings)
+            .map(result -> new JsonArray(result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()))
+            .subscribe(toObserverFromArray(resultHandler));
+        return this;
+    }
+
+    private Single<ResultSet> executeQueryWithParams(String sqlQuery, @Nullable JsonArray params, JsonObject settings) {
+        return getConnection(settings)
             .flatMap(conn -> {
-                // conn.rxSetAutoCommit(false);
                 if (params == null) {
                     return conn.rxQuery(sqlQuery);
                 }
                 return conn.rxQueryWithParams(sqlQuery, params);
             })
-            .map(result -> new JsonArray(result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()))
-            .subscribe(toObserverFromArray(resultHandler));
-
-        return this;
+            .onErrorResumeNext(throwable -> {
+                if (throwable.getMessage().contains("race -> false")) {
+                    return Single.timer(100, TimeUnit.MILLISECONDS)
+                        .flatMap(ignore -> executeQueryWithParams(sqlQuery, params, settings))
+                        .map(result -> result);
+                } else {
+                    return Single.error(throwable);
+                }
+            })
+            .map(result -> result);
     }
 
     @Override
