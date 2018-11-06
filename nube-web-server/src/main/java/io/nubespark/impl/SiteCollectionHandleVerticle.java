@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
 import io.nubespark.utils.CustomMessage;
 import io.nubespark.utils.HttpException;
+import io.nubespark.utils.SQLUtils;
 import io.nubespark.utils.StringUtils;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.vertx.core.eventbus.EventBus;
@@ -126,7 +127,7 @@ public class SiteCollectionHandleVerticle extends RxRestAPIVerticle {
                     .subscribe(response -> {
                         CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                             null,
-                            response,
+                            SQLUtils.getFirstNotNull(response, new JsonObject()),
                             HttpResponseStatus.OK.code());
                         message.reply(replyMessage);
                     }, throwable -> handleException(message, throwable));

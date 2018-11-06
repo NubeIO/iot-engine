@@ -190,7 +190,8 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         router.route("/api/layout_grid/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "layout_grid"));
         router.route("/api/menu/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "menu"));
         router.route("/api/settings/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "settings"));
-        router.route("/api/query/*").handler(ctx -> this.handleSiteCollection(ctx, "query"));
+        router.route("/api/query_pg/*").handler(ctx -> this.handleSiteCollection(ctx, "query_pg"));
+        router.route("/api/query_hive/*").handler(ctx -> this.handleSiteCollection(ctx, "query_hive"));
         router.post("/api/upload_image").handler(this::handleUploadImage);
         router.get("/api/menu_for_user_group/*").handler(this::handleMenuForUserGroup);
     }
