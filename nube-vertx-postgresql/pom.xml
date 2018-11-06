@@ -27,12 +27,6 @@
             <artifactId>vertx-mysql-postgresql-client</artifactId>
             <version>3.5.3</version>
         </dependency>
-
-        <dependency>
-            <groupId>com.github.jsqlparser</groupId>
-            <artifactId>jsqlparser</artifactId>
-            <version>0.9</version>
-        </dependency>
     </dependencies>
 
     <build>
