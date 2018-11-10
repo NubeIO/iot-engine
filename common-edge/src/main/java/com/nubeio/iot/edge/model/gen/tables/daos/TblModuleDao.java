@@ -32,6 +32,11 @@ import io.vertx.core.json.JsonObject;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class TblModuleDao extends AbstractVertxDAO<TblModuleRecord, com.nubeio.iot.edge.model.gen.tables.pojos.TblModule, String, Single<List<com.nubeio.iot.edge.model.gen.tables.pojos.TblModule>>, Single<Optional<com.nubeio.iot.edge.model.gen.tables.pojos.TblModule>>, Single<Integer>, Single<String>> implements io.github.jklingsporn.vertx.jooq.rx.VertxDAO<TblModuleRecord,com.nubeio.iot.edge.model.gen.tables.pojos.TblModule,String> {
 
+    @Override
+    public Single<Integer> insert(com.nubeio.iot.edge.model.gen.tables.pojos.TblModule pojo) {
+        return super.insert(pojo);
+    }
+
     /**
      * @param configuration The Configuration used for rendering and query execution.
      * @param vertx the vertx instance

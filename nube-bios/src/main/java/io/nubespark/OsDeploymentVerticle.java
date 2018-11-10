@@ -7,6 +7,7 @@ import com.nubeio.iot.edge.ModuleEventHandler;
 import com.nubeio.iot.edge.TransactionEventHandler;
 import com.nubeio.iot.edge.loader.ModuleType;
 import com.nubeio.iot.edge.loader.ModuleTypeFactory;
+import com.nubeio.iot.edge.loader.ModuleTypeRule;
 import com.nubeio.iot.edge.model.gen.tables.interfaces.ITblModule;
 import com.nubeio.iot.edge.model.gen.tables.pojos.TblModule;
 import com.nubeio.iot.share.DevRunner;
@@ -35,12 +36,18 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     }
 
     @Override
-    protected void registerEventHandler() {
+    protected void registerEventBus() {
         final EventBus bus = getVertx().eventBus();
         bus.consumer(EventModel.EDGE_BIOS_INSTALLER.getAddress(),
                      m -> this.handleEvent(m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
         bus.consumer(EventModel.EDGE_BIOS_TRANSACTION.getAddress(),
                      m -> this.handleEvent(m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
+    }
+
+    @Override
+    protected ModuleTypeRule registerModuleRule() {
+        return new ModuleTypeRule().registerRule(ModuleType.JAVA, "com.nubeio.iot.edge.module",
+                                                 artifactId -> artifactId.startsWith("com.nubeio.iot.edge.module"));
     }
 
     @SuppressWarnings("unchecked")
@@ -63,10 +70,11 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
 
     private Single<JsonObject> initApp(JsonObject repositoryCfg, JsonObject appCfg) {
         ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
-                                              .fromJson(ModuleTypeFactory.getDefault().serialize(appCfg))
+                                              .fromJson(ModuleTypeFactory.getDefault()
+                                                                         .serialize(appCfg, this.getModuleRule()))
                                               .setDeployConfigJson(
                                                       repositoryCfg.mergeIn(Configs.getApplicationCfg(appCfg)));
-        return handleModule((TblModule) tblModule, EventType.INIT);
+        return processDeploymentTransaction((TblModule) tblModule, EventType.INIT);
     }
 
     private JsonObject setupMavenRepos(JsonObject repositoryCfg) {

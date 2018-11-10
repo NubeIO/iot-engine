@@ -32,7 +32,7 @@ public final class EventMessage {
     private EventMessage(Status status, EventType action, JsonObject data, ErrorMessage error) {
         this.status = Objects.requireNonNull(status);
         this.action = Objects.requireNonNull(action);
-        this.data = Objects.isNull(data) ? new HashMap<>() : data.mapTo(Map.class);
+        this.data = Objects.isNull(data) ? new HashMap<>() : data.getMap();
         this.error = error;
     }
 

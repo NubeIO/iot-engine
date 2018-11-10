@@ -22,7 +22,7 @@ public final class EventModel {
             EventType.GET_ONE);
 
     public static final EventModel EDGE_BIOS_INSTALLER = new EventModel("nubeio.edge.bios.installer").add(
-            EventType.UPDATE, EventType.GET_ONE, EventType.GET_LIST);
+            EventType.UPDATE, EventType.GET_ONE, EventType.GET_LIST, EventType.UPDATE);
     public static final EventModel EDGE_BIOS_TRANSACTION = new EventModel("nubeio.edge.bios.installer.transaction").add(
             EventType.GET_ONE);
     public static final EventModel EDGE_BIOS_STATUS = new EventModel("nubeio.edge.bios.status").add(EventType.GET_ONE);

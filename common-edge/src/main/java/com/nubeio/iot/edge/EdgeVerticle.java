@@ -12,18 +12,19 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DefaultConfiguration;
 
 import com.nubeio.iot.edge.loader.ModuleLoader;
+import com.nubeio.iot.edge.loader.ModuleTypeRule;
 import com.nubeio.iot.edge.model.gen.tables.daos.TblModuleDao;
 import com.nubeio.iot.edge.model.gen.tables.daos.TblRemoveHistoryDao;
 import com.nubeio.iot.edge.model.gen.tables.daos.TblTransactionDao;
 import com.nubeio.iot.edge.model.gen.tables.pojos.TblModule;
 import com.nubeio.iot.share.IMicroVerticle;
 import com.nubeio.iot.share.MicroserviceConfig;
+import com.nubeio.iot.share.dto.RequestData;
 import com.nubeio.iot.share.enums.State;
 import com.nubeio.iot.share.enums.Status;
 import com.nubeio.iot.share.event.EventMessage;
 import com.nubeio.iot.share.event.EventType;
 import com.nubeio.iot.share.event.IEventHandler;
-import com.nubeio.iot.share.dto.RequestData;
 import com.nubeio.iot.share.exceptions.DatabaseException;
 import com.nubeio.iot.share.exceptions.ErrorMessage;
 import com.nubeio.iot.share.exceptions.NubeException;
@@ -54,9 +55,10 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Getter
     private MicroserviceConfig microserviceConfig;
+    @Getter
+    private ModuleTypeRule moduleRule;
     private ModuleLoader moduleLoader;
     private DataSource dataSource;
-    private Configuration jooqConfig;
     @Getter
     protected EntityHandler entityHandler;
     @Getter
@@ -64,16 +66,17 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
 
     @Override
     public final void start() throws Exception {
-        super.start();
         this.appConfig = Configs.getApplicationCfg(config());
         this.microserviceConfig = IMicroVerticle.initConfig(vertx, config()).onStart();
         this.moduleLoader = new ModuleLoader(vertx);
-        registerEventHandler();
+        this.moduleRule = this.registerModuleRule();
+        registerEventBus();
         initDBConnection().flatMap(client -> this.createDatabase(client).flatMap(ignores -> initData()))
                           .subscribe(logger::info, throwable -> {
                               logger.error("Failed to startup application", throwable);
                               throw new IllegalStateException(ErrorMessage.parse(throwable).toJson().encode());
                           });
+        super.start();
     }
 
     @Override
@@ -92,7 +95,9 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
 
     protected abstract String getDBName();
 
-    protected abstract void registerEventHandler();
+    protected abstract void registerEventBus();
+
+    protected abstract ModuleTypeRule registerModuleRule();
 
     protected abstract Single<JsonObject> initData();
 
@@ -107,7 +112,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
         config.addDataSourceProperty("databaseName", getDBName());
         config.setPoolName(getDBName() + "_pool");
         this.dataSource = new HikariDataSource(config);
-        this.jooqConfig = new DefaultConfiguration().set(SQLDialect.SQLITE).set(new HikariDataSource(config));
+        Configuration jooqConfig = new DefaultConfiguration().set(SQLDialect.SQLITE).set(new HikariDataSource(config));
         this.entityHandler = new EntityHandler(() -> new TblModuleDao(jooqConfig, vertx),
                                                () -> new TblTransactionDao(jooqConfig, vertx),
                                                () -> new TblRemoveHistoryDao(jooqConfig, vertx),
@@ -143,7 +148,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
     protected Single<JsonObject> startupModules() {
         return this.entityHandler.getModulesWhenBootstrap()
                                  .flattenAsObservable(tblModules -> tblModules)
-                                 .flatMapSingle(module -> this.handleModule(module, EventType.UPDATE))
+                                 .flatMapSingle(module -> this.processDeploymentTransaction(module, EventType.UPDATE))
                                  .collect(JsonArray::new, JsonArray::add)
                                  .map(results -> new JsonObject().put("results", results));
     }
@@ -159,12 +164,12 @@ public abstract class EdgeVerticle extends AbstractVerticle implements IMicroVer
                                        message.reply(EventMessage.error(msg.getAction(), throwable).toJson());
                                    });
         } catch (NubeException ex) {
-            logger.error("Failed when handle event", ex);
+            logger.error("Failed when handling event", ex);
             message.reply(EventMessage.error(msg.getAction(), ex).toJson());
         }
     }
 
-    public Single<JsonObject> handleModule(TblModule module, EventType eventType) {
+    public Single<JsonObject> processDeploymentTransaction(TblModule module, EventType eventType) {
         logger.info("{} module with data {}", eventType, module.toJson().encode());
         return this.entityHandler.handlePreDeployment(module, eventType)
                                  .doAfterSuccess(this::deployModule)

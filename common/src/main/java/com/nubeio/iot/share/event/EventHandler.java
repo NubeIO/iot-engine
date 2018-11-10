@@ -13,10 +13,11 @@ import com.nubeio.iot.share.utils.Reflections;
 
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
+import lombok.NonNull;
 
 public abstract class EventHandler implements IEventHandler {
 
-    static Method getMethodByAnnotation(Class<?> clazz, EventType event) {
+    static Method getMethodByAnnotation(@NonNull Class<?> clazz, @NonNull EventType event) {
         Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
             if (!Modifier.isPrivate(method.getModifiers())) {
