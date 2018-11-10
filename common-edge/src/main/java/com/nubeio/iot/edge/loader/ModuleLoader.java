@@ -3,6 +3,7 @@ package com.nubeio.iot.edge.loader;
 import java.util.Arrays;
 import java.util.List;
 
+import com.nubeio.iot.share.dto.RequestData;
 import com.nubeio.iot.share.event.EventContractor;
 import com.nubeio.iot.share.event.EventHandler;
 import com.nubeio.iot.share.event.EventType;
@@ -24,9 +25,9 @@ public final class ModuleLoader extends EventHandler {
     private final Vertx context;
 
     @EventContractor(values = {EventType.CREATE, EventType.INIT})
-    private Single<JsonObject> installModule(JsonObject data) {
-        String serviceId = data.getString("service_id");
-        JsonObject deployCfg = data.getJsonObject("deploy_cfg");
+    private Single<JsonObject> installModule(RequestData data) {
+        String serviceId = data.getBody().getString("service_id");
+        JsonObject deployCfg = data.getBody().getJsonObject("deploy_cfg");
         logger.info("Vertx install module {} with config {}...", serviceId, deployCfg);
         DeploymentOptions options = new DeploymentOptions().setConfig(deployCfg);
         return context.rxDeployVerticle(serviceId, options).doOnError(throwable -> {
@@ -35,9 +36,9 @@ public final class ModuleLoader extends EventHandler {
     }
 
     @EventContractor(values = {EventType.REMOVE, EventType.HALT})
-    private Single<JsonObject> removeModule(JsonObject data) {
-        String deployId = data.getString("deploy_id");
-        boolean isSilent = data.getBoolean("silent");
+    private Single<JsonObject> removeModule(RequestData data) {
+        String deployId = data.getBody().getString("deploy_id");
+        boolean isSilent = data.getBody().getBoolean("silent");
         logger.info("Vertx unload module {}...", deployId);
         return context.rxUndeploy(deployId).onErrorResumeNext(throwable -> {
             if (!isSilent) {
@@ -49,9 +50,9 @@ public final class ModuleLoader extends EventHandler {
     }
 
     @EventContractor(values = EventType.UPDATE)
-    private Single<JsonObject> reloadModule(JsonObject data) {
-        String deployId = data.getString("deploy_id");
-        JsonObject deployCfg = data.getJsonObject("deploy_cfg");
+    private Single<JsonObject> reloadModule(RequestData data) {
+        String deployId = data.getBody().getString("deploy_id");
+        JsonObject deployCfg = data.getBody().getJsonObject("deploy_cfg");
         logger.info("Vertx reload module {} with config {}...", deployId, deployCfg);
         return context.rxUndeploy(deployId).onErrorResumeNext(throwable -> {
             logger.debug("Module {} is gone in Vertx. Just installing...", throwable, deployId);
