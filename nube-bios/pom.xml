@@ -21,11 +21,6 @@
             <artifactId>common-edge</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.nubeio.iot.share</groupId>
-            <artifactId>common-event</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
