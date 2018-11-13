@@ -20,6 +20,8 @@ public class Site extends Model {
     public String layout_body_background;
     public String btn_primary_bg;
     public String layout_header_background;
+    public String rating_query;
+    public int rating_label;
     public String role; // ADMIN or MANAGER or USER; defining the company level
 
     public Site(JsonObject body) {
