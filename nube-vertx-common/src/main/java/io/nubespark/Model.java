@@ -34,7 +34,7 @@ public abstract class Model {
                     jsonObject.put(fieldName, input.get("body").getDouble(fieldName, 0d));
                     break;
                 case "String[]":
-                    jsonObject.put(fieldName, input.get("body").getJsonArray(fieldName, new JsonArray("[]")));
+                    jsonObject.put(fieldName, input.get("body").getJsonArray(fieldName, new JsonArray()));
                     break;
                 case "GeoPoint":
                     JsonObject geoPointJson = input.get("body").getJsonObject(fieldName, new JsonObject());

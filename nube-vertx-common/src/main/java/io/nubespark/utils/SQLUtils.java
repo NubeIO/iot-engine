@@ -1,6 +1,8 @@
 package io.nubespark.utils;
 
 
+import io.vertx.core.json.JsonObject;
+
 import java.util.List;
 
 public class SQLUtils {
@@ -67,5 +69,13 @@ public class SQLUtils {
             }
         }
         return withMatch[0];
+    }
+
+    public static JsonObject getFirstNotNull(JsonObject... jsonObjects) {
+        for (JsonObject jsonObject : jsonObjects) {
+            if (jsonObject != null)
+                return jsonObject;
+        }
+        return jsonObjects[0];
     }
 }

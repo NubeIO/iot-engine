@@ -8,7 +8,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.nubespark.constants.Services;
 import io.nubespark.utils.Runner;
+import io.nubespark.utils.StringUtils;
 import io.nubespark.utils.response.ResponseUtils;
 import io.nubespark.vertx.common.RxMicroServiceVerticle;
 import io.reactivex.Single;
@@ -25,16 +27,13 @@ import io.vertx.core.http.impl.headers.VertxHttpHeaders;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.MultiMap;
-import io.vertx.reactivex.core.eventbus.MessageConsumer;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
 import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.core.http.HttpServerResponse;
-import io.vertx.reactivex.core.http.WebSocket;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
-import io.vertx.reactivex.servicediscovery.types.MessageSource;
 import io.vertx.servicediscovery.Record;
 
 /**
@@ -43,11 +42,8 @@ import io.vertx.servicediscovery.Record;
 public class ServerDittoDriver extends RxMicroServiceVerticle {
 
     private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
-    private static final String DITTO_EVENTS = "io.nubespark.ditto.events";
 
-    private WebSocket dittoWebSocket;
     private HttpClient client;
-    private long failedTs = new Date().getTime();
 
     // Convenience method so you can run it in your IDE
     public static void main(String[] args) {
@@ -62,7 +58,6 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         startWebApp()
             .flatMap(httpServer -> publishHttp())
             .flatMap(ignored -> publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER))
-            .flatMap(ignored -> publishMessageSource(DITTO_EVENTS, DITTO_EVENTS))
             .subscribe(record -> startFuture.complete(), startFuture::fail);
 
 
@@ -70,25 +65,6 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
             .setVerifyHost(false)
             .setTrustAll(true)
             .setTcpKeepAlive(true));
-
-        handleDittoWebSocket(client);
-
-        // This is message received from Edge ditto driver
-        MessageSource.<JsonObject>getConsumer(discovery, new JsonObject().put("name", SERVER_DITTO_DRIVER), ar -> {
-            if (ar.failed()) {
-                logger.error("Message source {} is not discovered.", SERVER_DITTO_DRIVER);
-            } else {
-                MessageConsumer<JsonObject> consumer = ar.result();
-                consumer.handler(message -> {
-                    logger.info("Received message:: " + Json.encodePrettily(message.body()));
-                    // Request ditto server and send response ...
-                    requestDittoServer(client, message.body(), dittoResHandler -> {
-                        JsonObject dittoResponse = dittoResHandler.result();
-                        message.reply(dittoResponse);
-                    });
-                });
-            }
-        });
     }
 
     private Single<HttpServer> startWebApp() {
@@ -114,75 +90,10 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
     }
 
     private void handleWebServer(RoutingContext ctx) {
-        JsonObject request = new JsonObject();
-        request.put("method", ctx.request().method());
-        request.put("uri", ctx.request().uri());
-        if (ctx.getBody() != null) {
-            request.put("body", ctx.getBody().toString());
-        }
-
         logger.info("Proxying request: " + ctx.request().uri());
-        requestDittoServer(client, request, dittoResHandler -> {
+        requestDittoServer(client, ctx, dittoResHandler -> {
             JsonObject dittoRes = dittoResHandler.result();
             proxyDittoResponse(dittoRes, ctx);
-        });
-    }
-
-    private void handleDittoWebSocket(HttpClient client) {
-        String host = config().getString("ditto.http.host", "localhost");
-        Integer port = config().getInteger("ditto.http.port", SERVER_DITTO_DRIVER_PORT);
-
-        // Subscribe to ditto events and make it available to vertx event bus
-        RequestOptions requestOptions = new RequestOptions()
-            .setHost(host)
-            .setPort(port)
-            .setURI("/ws/2");
-        if (port == 443 || port == 8443 || config().getBoolean("ditto.ssl", false)) {
-            requestOptions.setSsl(true);
-        }
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put(HttpHeaders.AUTHORIZATION.toString(), "Basic " + getAuthKey());
-
-        client.websocket(
-            requestOptions,
-            new MultiMap(new VertxHttpHeaders().addAll(headers)),
-            this::handleWebSocketSuccess,
-            error -> {
-                // Reconnects on every 5 seconds on failure...
-                vertx.setTimer(5000, l -> handleDittoWebSocket(client));
-                if (failedTs != 0) {
-                    long now = new Date().getTime();
-                    long diff = now - failedTs;
-                    logger.info("Ditto WebSocket is disconnected for: " + diff);
-                }
-                logger.info("Connection to webSocket failed.");
-                logger.info(error.getMessage());
-                logger.info("Retrying to connect...");
-                error.printStackTrace();
-            });
-    }
-
-    private void handleWebSocketSuccess(WebSocket webSocket) {
-        logger.info("WebSocket connection established");
-        dittoWebSocket = webSocket;
-        dittoWebSocket.handler(data -> {
-            if (data.toString("ISO-8859-1").endsWith("ACK")) {
-                logger.info("Received ack ditto::: " + data.toString("ISO-8859-1"));
-            } else if (!data.toString("ISO-8859-1").equals("")) {
-                vertx.eventBus().publish(DITTO_EVENTS, data.toJsonObject());
-            }
-        });
-
-        dittoWebSocket.writeTextMessage("START-SEND-EVENTS");
-
-        dittoWebSocket.exceptionHandler(handler -> logger.error(handler.getMessage()));
-
-        dittoWebSocket.closeHandler(handler -> {
-            logger.warn("Websocket connection has been closed...");
-            failedTs = new Date().getTime();
-            // Reconnects on every 5 seconds on Websocket close...
-            vertx.setTimer(5000, l -> handleDittoWebSocket(client));
         });
     }
 
@@ -203,19 +114,14 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         ctx.response().end();
     }
 
-    private void requestDittoServer(HttpClient client, JsonObject message, Handler<AsyncResult<JsonObject>> next) {
-        String uri = message.getString("uri"); // resource of ditto
-        String method = message.getString("method"); // request method Eg: GET, PUT, POST, DELETE, etc.
-        HttpMethod httpMethod = HttpMethod.valueOf(method);
+    private void requestDittoServer(HttpClient client, RoutingContext ctx, Handler<AsyncResult<JsonObject>> next) {
+        String uri = ctx.request().uri();
+        HttpMethod httpMethod = ctx.request().method();
         String host = config().getString("ditto.http.host", "localhost");
         Integer port = config().getInteger("ditto.http.port", 8080);
         boolean ssl = false;
         if (port == 443 || port == 8443) {
             ssl = true;
-        }
-        Buffer body = null;
-        if (message.fieldNames().contains("body")) {
-            body = Buffer.buffer(message.getString("body"));
         }
 
         HttpClientRequest req = client.request(httpMethod,
@@ -237,7 +143,6 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
                 }
                 response.put("headers", headers);
 
-
                 Buffer data = new BufferImpl();
                 res.handler(x -> data.appendBytes(x.getDelegate().getBytes()));
                 res.endHandler((v) -> {
@@ -249,9 +154,24 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
 
         req.setChunked(true);
         //Adding ditto authorization
-        req.putHeader(HttpHeaders.AUTHORIZATION.toString(), "Basic " + getAuthKey());
-        if (body != null) {
-            req.write(body.toString());
+        if (config().getBoolean("ditto-policy")) {
+            req.putHeader(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
+            if (StringUtils.isNotNull(ctx.getBody().toString())) {
+                if (StringUtils.isNull(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
+                    // This means we are we are PUTing device value for the first time or going to updated whole data
+                    JsonObject body = ctx.getBodyAsJson();
+                    body.put("policyId", Services.POLICY_NAMESPACE_PREFIX + ":" + new JsonObject(ctx.request().headers().getDelegate().get("user")).getString("site_id"));
+                    logger.info("Body ::: " + body);
+                    req.write(body.toString());
+                } else {
+                    req.write(ctx.getBody());
+                }
+            }
+        } else {
+            req.putHeader(HttpHeaders.AUTHORIZATION.toString(), "Basic " + getAuthKey());
+            if (StringUtils.isNotNull(ctx.getBody().toString())) {
+                req.write(ctx.getBody());
+            }
         }
         req.end();
     }
@@ -284,18 +204,6 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
                 .put("vert.x_version", "3.4.1")
                 .put("java_version", "8.0")
             ));
-    }
-
-    @Override
-    public void stop(Future<Void> future) {
-        super.stop(future);
-        if (dittoWebSocket != null) {
-            logger.info("Verticle is stopping... Un-subscribing from ditto events");
-            dittoWebSocket.writeTextMessage("STOP-SEND-EVENTS");
-            dittoWebSocket.close();
-        } else {
-            logger.info("Ditto WebSocket it null. Fix it");
-        }
     }
 
 }

@@ -32,8 +32,8 @@ public interface PostgreSQLService {
     }
 
     @Fluent
-    PostgreSQLService executeQueryWithParams(String query, JsonArray params, Handler<AsyncResult<JsonObject>> resultHandler);
+    PostgreSQLService executeQueryWithParams(String query, JsonArray params, JsonObject settings, Handler<AsyncResult<JsonObject>> resultHandler);
 
     @Fluent
-    PostgreSQLService executeQuery(String query, Handler<AsyncResult<JsonObject>> resultHandler);
+    PostgreSQLService executeQuery(String query, JsonObject settings, Handler<AsyncResult<JsonObject>> resultHandler);
 }

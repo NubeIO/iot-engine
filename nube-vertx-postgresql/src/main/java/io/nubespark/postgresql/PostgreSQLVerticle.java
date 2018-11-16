@@ -92,7 +92,7 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
             // Return query not specified error
             ErrorHandler.handleError(new ErrorCodeException(NO_QUERY_SPECIFIED), routingContext);
         } else {
-            controller.getPostgreSQLData(query).subscribe(
+            controller.getPostgreSQLData(query, new JsonObject(routingContext.request().headers().get("settings"))).subscribe(
                 replyJson -> routingContext.response()
                     .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                     .end(Json.encodePrettily(replyJson)),

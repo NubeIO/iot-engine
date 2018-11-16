@@ -18,6 +18,7 @@ public class MongoUser extends Model {
     private String phone_no;
     private String associated_company_id;
     private String company_id;
+    private String[] sites_ids;
     private String site_id;
     private String group_id;
 
