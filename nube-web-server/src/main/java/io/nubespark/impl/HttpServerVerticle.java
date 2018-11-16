@@ -3,8 +3,10 @@ package io.nubespark.impl;
 import static io.nubespark.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
 import static io.nubespark.constants.Address.MULTI_TENANT_ADDRESS;
 import static io.nubespark.constants.Address.SERVICE_NAME;
+import static io.nubespark.constants.Address.SITE_COLLECTION_ADDRESS;
 import static io.nubespark.constants.Collection.COMPANY;
 import static io.nubespark.constants.Collection.MENU;
+import static io.nubespark.constants.Collection.SETTINGS;
 import static io.nubespark.constants.Collection.SITE;
 import static io.nubespark.constants.Collection.USER;
 import static io.nubespark.constants.Collection.USER_GROUP;
@@ -36,6 +38,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.bridge.BridgeEventType;
@@ -107,6 +110,17 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     deployResult.cause().printStackTrace();
                 }
             })))
+            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(SiteCollectionHandleVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
+                // Deploy succeed
+                if (deployResult.succeeded()) {
+                    source.onSuccess("Deployment of SiteCollectionHandleVerticle is successful.");
+                    logger.info("Deployment of SiteCollectionHandleVerticle is successful.");
+                } else {
+                    // Deploy failed
+                    source.onError(deployResult.cause());
+                    deployResult.cause().printStackTrace();
+                }
+            })))
             .subscribe(ignored -> future.complete(), future::fail);
     }
 
@@ -142,7 +156,22 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
     private void handleGateway(Router router) {
         // api dispatcher
-        router.route("/api/*").handler(this::dispatchRequests);
+        router.route("/api/*").handler(ctx -> {
+            String[] values = ctx.normalisedPath().split("/");
+            String gatewayAPIPrefix = "";
+            if (values.length > 2) {
+                gatewayAPIPrefix = "/" + values[1] + "/" + values[2] + ".*";
+            }
+            logger.info("Query: " + new JsonObject().put("gatewayAPIPrefix", new JsonObject().put("$regex", gatewayAPIPrefix)).put("site_id", ctx.request().headers().getDelegate().get("Site-Id")));
+            mongoClient.rxFindOne(SETTINGS, new JsonObject().put("gatewayAPIPrefix", new JsonObject().put("$regex", gatewayAPIPrefix)).put("site_id", ctx.request().headers().getDelegate().get("Site-Id")), null)
+                .subscribe(settings -> {
+                    if (settings != null) {
+                        this.dispatchRequests(ctx, settings);
+                    } else {
+                        this.dispatchRequests(ctx, new JsonObject());
+                    }
+                });
+        });
     }
 
     /**
@@ -164,6 +193,8 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         router.route("/api/layout_grid/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "layout_grid"));
         router.route("/api/menu/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "menu"));
         router.route("/api/settings/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "settings"));
+        router.route("/api/query_pg/*").handler(ctx -> this.handleSiteCollection(ctx, "query_pg"));
+        router.route("/api/query_hive/*").handler(ctx -> this.handleSiteCollection(ctx, "query_hive"));
         router.post("/api/upload_image").handler(this::handleUploadImage);
         router.get("/api/menu_for_user_group/*").handler(this::handleMenuForUserGroup);
     }
@@ -176,6 +207,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             .put(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()))
             .put("user", ctx.user().principal())
             .put("host", ctx.request().host())
+            .put("Site-Id", ctx.request().headers().get("Site-Id"))
             .put("keycloakConfig", config().getJsonObject("keycloak"));
 
         T body;
@@ -241,15 +273,24 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     }
                 });
         } else {
-            ctx.response().setStatusCode(HttpResponseStatus.FORBIDDEN.code());
+            ctx.response().setStatusCode(HttpResponseStatus.FORBIDDEN.code()).end();
         }
     }
 
     private void handleDynamicSiteCollection(RoutingContext ctx, String collection) {
+        handleCollectionAPIs(ctx, collection, DYNAMIC_SITE_COLLECTION_ADDRESS);
+    }
+
+    private void handleSiteCollection(RoutingContext ctx, String collection) {
+        handleCollectionAPIs(ctx, collection, SITE_COLLECTION_ADDRESS);
+    }
+
+    private void handleCollectionAPIs(RoutingContext ctx, String collection, String address) {
         JsonObject header = new JsonObject()
             .put("url", ctx.normalisedPath().substring(("/api/" + collection + "/").length()))
             .put("method", ctx.request().method())
             .put("user", ctx.user().principal())
+            .put("Site-Id", ctx.request().headers().get("Site-Id"))
             .put("collection", collection);
         JsonObject body;
         if (StringUtils.isNull(ctx.getBody().toString())) {
@@ -258,7 +299,8 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             body = ctx.getBodyAsJson();
         }
         CustomMessage<JsonObject> message = new CustomMessage<>(header, body, 200);
-        eventBus.send(DYNAMIC_SITE_COLLECTION_ADDRESS, message, reply -> {
+        // noinspection Duplicates
+        eventBus.send(address, message, reply -> {
             if (reply.succeeded()) {
                 CustomMessage replyMessage = (CustomMessage) reply.result().body();
                 logger.info("Received reply: " + replyMessage.getBody());
@@ -427,62 +469,77 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         User user = ctx.user();
         String groupId = ctx.user().principal().getString("group_id");
         String siteId = ctx.user().principal().getString("site_id");
-        if (user != null) {
-            Single.just(new JsonObject())
-                .flatMap(object -> {
-                    if (StringUtils.isNotNull(groupId)) {
-                        return mongoClient.rxFindOne(USER_GROUP, idQuery(groupId), null)
-                            .map(group -> {
-                                if (group != null) {
-                                    return object.put("group", group);
-                                }
-                                return object;
-                            });
-                    } else {
-                        return Single.just(object);
-                    }
-                })
-                .flatMap(group -> {
-                    if (StringUtils.isNotNull(siteId)) {
-                        return mongoClient.rxFindOne(SITE, idQuery(siteId), null)
-                            .flatMap(site -> {
-                                if (site != null) {
-                                    return Single.just(group.put("site", site
+        JsonArray sitesIds = user.principal().getJsonArray("sites_ids", new JsonArray());
+        Single.just(new JsonObject())
+            .flatMap(object -> {
+                if (StringUtils.isNotNull(groupId)) {
+                    return mongoClient.rxFindOne(USER_GROUP, idQuery(groupId), null)
+                        .map(group -> {
+                            if (group != null) {
+                                return object.put("group", group);
+                            }
+                            return object;
+                        });
+                } else {
+                    return Single.just(object);
+                }
+            })
+            .flatMap(group -> {
+                if (StringUtils.isNotNull(siteId)) {
+                    return mongoClient.rxFindOne(SITE, idQuery(siteId), null)
+                        .flatMap(site -> {
+                            if (site != null) {
+                                return Single.just(group.put("site", site
+                                    .put("logo_sm", buildAbsoluteUri(ctx, site.getString("logo_sm")))
+                                    .put("logo_md", buildAbsoluteUri(ctx, site.getString("logo_md")))));
+                            } else {
+                                return assignAdminIfAvailable(ctx, group);
+                            }
+                        });
+                } else {
+                    return assignAdminIfAvailable(ctx, group);
+                }
+            })
+            .flatMap(groupAndSite -> {
+                if (sitesIds.size() > 0) {
+                    return mongoClient.rxFind(SITE, new JsonObject().put("_id", new JsonObject().put("$in", sitesIds)))
+                        .flatMap(respondSites -> {
+                            if (respondSites != null) {
+                                JsonArray sitesWithAbsolutePaths = new JsonArray();
+                                for (JsonObject site : respondSites) {
+                                    sitesWithAbsolutePaths.add(site
                                         .put("logo_sm", buildAbsoluteUri(ctx, site.getString("logo_sm")))
-                                        .put("logo_md", buildAbsoluteUri(ctx, site.getString("logo_md")))));
-                                } else {
-                                    return assignAdminIfAvailable(ctx, group);
+                                        .put("logo_md", buildAbsoluteUri(ctx, site.getString("logo_md"))));
                                 }
-                            });
-                    } else {
-                        return assignAdminIfAvailable(ctx, group);
-                    }
-                })
-                .flatMap(groupAndSite -> {
-                    String associatedCompanyId = user.principal().getString("company_id", "");
-                    if (StringUtils.isNotNull(associatedCompanyId)) {
-                        return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
-                            .map(response -> {
-                                if (response != null) {
-                                    return groupAndSite.put("company", response);
-                                }
-                                return groupAndSite;
-                            });
-                    } else {
-                        return Single.just(groupAndSite);
-                    }
-                })
-                .subscribe(groupAndSiteAndCompany -> {
-                    ctx.response()
-                        .putHeader("username", user.principal().getString("username"))
-                        .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                        .end(Json.encodePrettily(user.principal()
-                            .mergeIn(groupAndSiteAndCompany)));
-                });
-        } else {
-            logger.info("Send not authorized error and user should login");
-            failAuthentication(ctx);
-        }
+                                groupAndSite.put("sites", sitesWithAbsolutePaths);
+                            }
+                            return Single.just(groupAndSite);
+                        });
+                } else {
+                    return Single.just(groupAndSite);
+                }
+            })
+            .flatMap(groupAndSite -> {
+                String associatedCompanyId = user.principal().getString("company_id", "");
+                if (StringUtils.isNotNull(associatedCompanyId)) {
+                    return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
+                        .map(response -> {
+                            if (response != null) {
+                                return groupAndSite.put("company", response);
+                            }
+                            return groupAndSite;
+                        });
+                } else {
+                    return Single.just(groupAndSite);
+                }
+            })
+            .subscribe(groupAndSiteAndCompany -> {
+                ctx.response()
+                    .putHeader("username", user.principal().getString("username"))
+                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                    .end(Json.encodePrettily(user.principal()
+                        .mergeIn(groupAndSiteAndCompany)));
+            });
     }
 
     private SingleSource<? extends JsonObject> assignAdminIfAvailable(RoutingContext ctx, JsonObject group) {

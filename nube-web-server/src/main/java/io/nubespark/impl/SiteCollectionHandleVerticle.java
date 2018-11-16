@@ -1,6 +1,6 @@
 package io.nubespark.impl;
 
-import static io.nubespark.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
+import static io.nubespark.constants.Address.SITE_COLLECTION_ADDRESS;
 import static io.nubespark.utils.CustomMessageResponseHelper.handleBadRequestResponse;
 import static io.nubespark.utils.CustomMessageResponseHelper.handleForbiddenResponse;
 import static io.nubespark.utils.CustomMessageResponseHelper.handleNotFoundResponse;
@@ -11,17 +11,19 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.nubespark.Role;
 import io.nubespark.utils.CustomMessage;
 import io.nubespark.utils.HttpException;
-import io.nubespark.utils.MongoUtils;
+import io.nubespark.utils.SQLUtils;
 import io.nubespark.utils.StringUtils;
 import io.nubespark.vertx.common.RxRestAPIVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
-public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
-
+public class SiteCollectionHandleVerticle extends RxRestAPIVerticle {
+    private Logger logger = LoggerFactory.getLogger(SiteCollectionHandleVerticle.class);
     private MongoClient mongoClient;
 
     @Override
@@ -31,25 +33,60 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         EventBus eventBus = getVertx().eventBus();
 
         // Receive message
-        eventBus.consumer(DYNAMIC_SITE_COLLECTION_ADDRESS, this::handleRequest);
+        eventBus.consumer(SITE_COLLECTION_ADDRESS, this::handleRequest);
     }
 
     private void handleRequest(Message<Object> message) {
         CustomMessage customMessage = (CustomMessage) message.body();
         String url = customMessage.getHeader().getString("url");
 
-        if (url.equals("") && customMessage.getHeader().getString("method").equalsIgnoreCase("GET")) {
-            // Getting all values; for example when we need to display all settings
-            handleGetAll(message, customMessage);
-        } else if (validateUrl(url)) {
-            if (validateData(customMessage)) {
-                this.handleValidUrl(message, customMessage);
-            } else {
-                handleForbiddenResponse(message);
-            }
-        } else {
-            handleNotFoundResponse(message);
+        if (!validateData(customMessage)) {
+            handleForbiddenResponse(message);
         }
+
+        String method = customMessage.getHeader().getString("method");
+        switch (method.toUpperCase()) {
+            case "GET":
+                if (StringUtils.isNull(url)) {
+                    this.handleGetAll(message, customMessage);
+                } else {
+                    this.handleGetId(message, customMessage);
+                }
+                break;
+            case "POST":
+                this.handlePost(message, customMessage);
+                break;
+            case "PATCH":
+                this.handlePatch(message, customMessage);
+                break;
+            case "DELETE":
+                this.handleDeleteUrl(message, customMessage);
+                break;
+            default:
+                handleNotFoundResponse(message);
+                break;
+        }
+    }
+
+    private JsonArray getSitesIds(CustomMessage customMessage) {
+        JsonObject user = customMessage.getHeader().getJsonObject("user");
+        JsonArray sitesIds = user.getJsonArray("sites_ids", new JsonArray());
+        if (sitesIds.size() == 0 && StringUtils.isNotNull(user.getString("site_id"))) {
+            sitesIds = new JsonArray().add(user.getString("site_id"));
+        }
+        return sitesIds;
+    }
+
+    @SuppressWarnings("Duplicates")
+    private void handleException(Message<Object> message, Throwable throwable) {
+        logger.info("Cause: " + throwable.getCause());
+        logger.info("Message: " + throwable.getMessage());
+        HttpException exception = (HttpException) throwable;
+        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
+            null,
+            new JsonObject().put("message", exception.getMessage()),
+            exception.getStatusCode().code());
+        message.reply(replyMessage);
     }
 
     private void handleGetAll(Message<Object> message, CustomMessage customMessage) {
@@ -57,6 +94,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         JsonArray sitesIds = getSitesIds(customMessage);
         String siteId = customMessage.getHeader().getString("Site-Id");
 
+        // noinspection Duplicates
         if (sitesIds.size() > 0) {
             if (sitesIds.contains(siteId)) {
                 mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId))
@@ -75,59 +113,18 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private JsonArray getSitesIds(CustomMessage customMessage) {
-        JsonObject user = customMessage.getHeader().getJsonObject("user");
-        JsonArray sitesIds = user.getJsonArray("sites_ids", new JsonArray());
-        if (sitesIds.size() == 0 && StringUtils.isNotNull(user.getString("site_id"))) {
-            sitesIds = new JsonArray().add(user.getString("site_id"));
-        }
-        return sitesIds;
-    }
-
-    private void handleException(Message<Object> message, Throwable throwable) {
-        logger.info("Cause: " + throwable.getCause());
-        logger.info("Message: " + throwable.getMessage());
-        HttpException exception = (HttpException) throwable;
-        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-            null,
-            new JsonObject().put("message", exception.getMessage()),
-            exception.getStatusCode().code());
-        message.reply(replyMessage);
-    }
-
-    private void handleValidUrl(Message<Object> message, CustomMessage customMessage) {
-        String method = customMessage.getHeader().getString("method");
-        switch (method.toUpperCase()) {
-            case "GET":
-                this.handleGetUrl(message, customMessage);
-                break;
-            case "POST":
-                this.handlePostUrl(message, customMessage);
-                break;
-            case "PUT":
-                this.handlePutUrl(message, customMessage);
-                break;
-            case "DELETE":
-                this.handleDeleteUrl(message, customMessage);
-                break;
-            default:
-                handleNotFoundResponse(message);
-                break;
-        }
-    }
-
-    private void handleGetUrl(Message<Object> message, CustomMessage customMessage) {
+    private void handleGetId(Message<Object> message, CustomMessage customMessage) {
         String collection = customMessage.getHeader().getString("collection");
         String siteId = customMessage.getHeader().getString("Site-Id");
         String id = customMessage.getHeader().getString("url");
         JsonArray sitesIds = getSitesIds(customMessage);
         if (sitesIds.size() > 0) {
             if (sitesIds.contains(siteId)) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
+                mongoClient.rxFindOne(collection, new JsonObject().put("_id", id), null)
                     .subscribe(response -> {
                         CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                             null,
-                            this.pickOneOrNullJsonObject(response),
+                            SQLUtils.getFirstNotNull(response, new JsonObject()),
                             HttpResponseStatus.OK.code());
                         message.reply(replyMessage);
                     }, throwable -> handleException(message, throwable));
@@ -139,27 +136,24 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private void handlePostUrl(Message<Object> message, CustomMessage customMessage) {
+    private void handlePost(Message<Object> message, CustomMessage customMessage) {
         String role = customMessage.getHeader().getJsonObject("user").getString("role");
         String collection = customMessage.getHeader().getString("collection");
-        String id = customMessage.getHeader().getString("url");
+        String url = customMessage.getHeader().getString("url");
         String siteId = customMessage.getHeader().getString("Site-Id");
+
+        if (StringUtils.isNotNull(url)) {
+            handleNotFoundResponse(message);
+        }
+
         JsonArray sitesIds = getSitesIds(customMessage);
         if (sitesIds.size() == 0) {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
             if (sitesIds.contains(siteId)) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                    .map(response -> {
-                        JsonObject body = (JsonObject) customMessage.getBody();
-                        if (response.size() > 0) {
-                            throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
-                        }
-                        body.put("site_id", siteId);
-                        body.put("id", id);
-                        return body;
-                    })
-                    .flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body))
+                JsonObject body = (JsonObject) customMessage.getBody();
+                body.put("site_id", siteId);
+                mongoClient.rxSave(collection, body)
                     .subscribe(buffer -> {
                         CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                             null,
@@ -182,24 +176,23 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private void handlePutUrl(Message<Object> message, CustomMessage customMessage) {
+    private void handlePatch(Message<Object> message, CustomMessage customMessage) {
         String role = customMessage.getHeader().getJsonObject("user").getString("role");
         String collection = customMessage.getHeader().getString("collection");
         String id = customMessage.getHeader().getString("url");
         String siteId = customMessage.getHeader().getString("Site-Id");
         JsonArray sitesIds = getSitesIds(customMessage);
+
+
         if (sitesIds.size() == 0) {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         } else if (!role.equals(Role.GUEST.toString())) {
             if (sitesIds.contains(siteId)) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                    .map(jsonArray -> {
+                mongoClient.rxFindOne(collection, new JsonObject().put("site_id", siteId).put("_id", id), null)
+                    .map(jsonObject -> {
                         JsonObject body = (JsonObject) customMessage.getBody();
-                        if (jsonArray.size() > 0) {
-                            body.put("_id", this.pickOneOrNullJsonObject(jsonArray).getString("_id"));
-                        }
                         body.put("site_id", siteId);
-                        body.put("id", id);
+                        body.put("_id", id);
                         return body;
                     })
                     .flatMap(body -> mongoClient.rxSave(collection, body))
@@ -232,7 +225,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         JsonArray sitesIds = getSitesIds(customMessage);
         if (sitesIds.size() > 0) {
             if (sitesIds.contains(siteId)) {
-                mongoClient.rxRemoveDocuments(collection, new JsonObject().put("site_id", siteId).put("id", id))
+                mongoClient.rxRemoveDocuments(collection, new JsonObject().put("site_id", siteId).put("_id", id))
                     .subscribe(buffer -> {
                         CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
                             null,
@@ -246,18 +239,6 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         } else {
             handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         }
-    }
-
-    private JsonObject pickOneOrNullJsonObject(List<JsonObject> jsonObjectList) {
-        if (jsonObjectList.size() > 0) {
-            return jsonObjectList.get(0);
-        } else {
-            return new JsonObject();
-        }
-    }
-
-    private boolean validateUrl(String url) {
-        return !(url.contains("/") || url.contains("?"));
     }
 
     private boolean validateData(CustomMessage customMessage) {
