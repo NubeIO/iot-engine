@@ -20,7 +20,7 @@ Only run 1 of 2 commands:
 - Build local: compile and build to `jar` file, then push artifact to `local maven` repository.
 
   ```bash
-  mvn clean install -s settings-<your-name>.xml
+  mvn clean install
   ```
 
 - Share artifacts to `Nexus` server: it contains `build` step above and push to `remote maven` repository.
@@ -29,26 +29,25 @@ Only run 1 of 2 commands:
   mvn clean deploy -s settings-<your-name>.xml
   ```
 
-### Run
+### Run Demo
 
-- Copy theses artifacts to `build` (or whatever) folder: (will be removed when I standardize build and bundle script)
-  - `cp -rf nube-bios/target/nube-bios-1.0-SNAPSHOT-fat.jar build/`
-  - `cp -rf nube-app-store-rest/target/nube-app-store-rest-1.0-SNAPSHOT-fat.jar build/`
-  - All `*.template` files and remember to edit any variables start with `${your-`
+- Copy theses artifacts to `demo` folder: (will be removed when I standardize build and bundle script)
+
+  - `cp -rf dashboard-connector-edge/target/edge-1.0.0-SNAPSHOT-fat.jar demo/`
+  - `cp -rf edge-bios/target/bios-1.0.0-SNAPSHOT-fat.jar demo/`
+  - `cp -rf conf/cluster.xml.template demo/cluster.xml` files and remember to update any variables with placeholder `${your-`
 
 - Start services (replace `${your-ip}`)
 
   ```bash
-  java -Dlogback.configurationFile=logback-rest.xml -jar nube-app-store-rest-1.0-SNAPSHOT-fat.jar -conf rest-config.json -cluster -cluster-host ${your-ip}
-  ```
+  java -Dlogback.configurationFile=logback-rest.xml -jar edge-1.0.0-SNAPSHOT-fat.jar -conf rest-config.json -cluster -cluster-host ${your-ip}
 
-  ```bash
-  java -Dlogback.configurationFile=logback.xml -jar nube-bios-1.0-SNAPSHOT-fat.jar -conf bios-config.json -cluster -cluster-host ${your-ip}
+  java -Dlogback.configurationFile=logback.xml -jar bios-1.0.0-SNAPSHOT-fat.jar -conf bios-config.json -cluster -cluster-host ${your-ip}
   ```
 
 ## Interact REST API
 
-Will be part of `Swagger UI` soon.
+Will be part of `Swagger UI` soon. Try [`Postman`](https://web.postman.co/collections/670606-552e7446-ec7e-496f-a437-541f782583a1?workspace=48db9612-bb94-4180-8ae6-cfdde440c9a9#8815e2c8-feab-4012-9a5e-48a17e6f9159) version first.
 
 ## Development
 

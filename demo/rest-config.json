@@ -4,11 +4,11 @@
       "ssl": true,
       "keyStoreOptions": {
         "path": "eventBusKeystore.jks",
-        "password": "demo"
+        "password": "nubesparkEventBus"
       },
       "trustStoreOptions": {
         "path": "eventBusKeystore.jks",
-        "password": "demo"
+        "password": "nubesparkEventBus"
       }
     },
     "__cluster__": {

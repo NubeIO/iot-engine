@@ -4,11 +4,11 @@
       "ssl": true,
       "keyStoreOptions": {
         "path": "eventBusKeystore.jks",
-        "password": "demo"
+        "password": "nubesparkEventBus"
       },
       "trustStoreOptions": {
         "path": "eventBusKeystore.jks",
-        "password": "demo"
+        "password": "nubesparkEventBus"
       }
     },
     "__cluster__": {
@@ -24,9 +24,9 @@
         "java": {
           "credentials": {},
           "urls": [
-            "${your-nexus-server}/repository/maven-releases/",
-            "${your-nexus-server}/repository/maven-snapshots/",
-            "${your-nexus-server}/repository/maven-central/"
+            "http://127.0.0.1:8081/repository/maven-releases/",
+            "http://127.0.0.1:8081/repository/maven-snapshots/",
+            "http://127.0.0.1:8081/repository/maven-central/"
           ]
         }
       }
