@@ -56,7 +56,14 @@ public final class Reflections {
             return (O) method.invoke(instance, inputData);
         } catch (IllegalAccessException | InvocationTargetException e) {
             logger.debug("Cannot execute method {}", e, method.getName());
-            return null;
+            if (e instanceof InvocationTargetException) {
+                Throwable targetException = ((InvocationTargetException) e).getTargetException();
+                if (targetException instanceof NubeException) {
+                    throw (NubeException) targetException;
+                }
+                throw new NubeException(targetException);
+            }
+            throw new NubeException(e);
         }
     }
 
