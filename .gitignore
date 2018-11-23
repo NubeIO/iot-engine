@@ -12,4 +12,5 @@ target/
 settings*.xml
 cluster*.xml
 build/
-rxjava/
+demo/
+.gradle/

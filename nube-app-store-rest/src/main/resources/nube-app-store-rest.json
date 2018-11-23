@@ -1,9 +1,0 @@
-{
-  "main": "io.nubespark.AppStoreRestVerticle",
-  "options": {
-    "config": {
-      "http.port": 8086,
-      "api.name": "app-store"
-    }
-  }
-}
