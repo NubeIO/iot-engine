@@ -2,13 +2,16 @@
 .idea/
 target/
 .vertx/
+**/bin/
 **/*.db
 **/*.bak
 **/generated/
-**/logs
+**/logs/
+**/out/
 **/.project
 **/.classpath
 **/.settings/
+**/.factorypath
 settings*.xml
 cluster*.xml
 build/

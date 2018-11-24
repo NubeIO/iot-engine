@@ -1,0 +1,5 @@
+description = ''
+dependencies {
+    compile project(':core:common')
+    compile group: 'io.vertx', name: 'vertx-mysql-postgresql-client', version: '3.5.3'
+}
