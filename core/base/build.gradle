@@ -1,3 +1,5 @@
+group = 'com.nubeiot.core'
+
 dependencies {
     compile group: 'io.vertx', name: 'vertx-rx-java2', version: "$project.vertxVersion"
     compile group: 'io.vertx', name: 'vertx-config', version: "$project.vertxVersion"

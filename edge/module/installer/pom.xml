@@ -10,7 +10,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nubeiot.edge.module</groupId>
-    <artifactId>bios-installer</artifactId>
+    <artifactId>installer</artifactId>
 
     <properties>
         <main.class>com.nubeiot.core.NubeLauncher</main.class>

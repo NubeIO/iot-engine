@@ -1,0 +1,62 @@
+apply plugin: "java"
+apply plugin: "jacoco"
+
+def testFailures = []
+
+task testReport(type: TestReport, group: "verification") {
+    destinationDir = file(project.testReportDir)
+    reportOn subprojects.tasks.test
+    doLast {
+        if (!testFailures.isEmpty()) {
+            def errors = testFailures.inject("There were failing tests. " +
+                    "See the report at: " + destinationDir.toPath().resolve("index.html").toUri()) {
+                acc, val -> acc + "\n" + "-" * 20 + "\n" + val
+            }
+            throw new TaskExecutionException(project.tasks.test, new Exception(errors))
+        }
+    }
+}
+
+test {
+    def numProc = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    maxParallelForks = numProc.intValue()
+    ignoreFailures = true
+    finalizedBy("testReport")
+    subprojects {
+        test {
+            maxParallelForks = numProc.intValue()
+            ignoreFailures = true
+            finalizedBy("copyTestResult")
+            afterTest { descriptor, result ->
+                if (descriptor.parent && result.getResultType() == TestResult.ResultType.FAILURE) {
+                    testFailures += "$descriptor.parent.name > $descriptor.name $result.resultType\n\t$result.exception"
+                }
+            }
+        }
+        task copyTestResult(type: Copy, group: "verification") {
+            into project.parent.testResultsDir
+            from testResultsDir
+            include "**/*.xml"
+            includeEmptyDirs = false
+        }
+    }
+}
+
+task jacocoMerge(type: JacocoMerge, group: "verification") {
+    dependsOn(subprojects.tasks.jacocoTestReport)
+    mustRunAfter(subprojects.tasks.jacocoTestReport)
+    destinationFile = file("${buildDir}/jacoco/test.exec")
+    executionData = files(subprojects.tasks.jacocoTestReport.executionData).filter { f -> f.exists() }
+}
+
+jacocoTestReport {
+    dependsOn(jacocoMerge)
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+    additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories = files(subprojects.sourceSets.main.output)
+}
+

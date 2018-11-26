@@ -1,6 +1,6 @@
-description = ''
+group = 'com.nubeiot.core'
 dependencies {
     compile project(':core:micro')
-    compile group: 'io.vertx', name: 'vertx-web', version: '3.5.3'
+    compile group: 'io.vertx', name: 'vertx-web', version: "$project.vertxVersion"
     compile group: 'commons-codec', name: 'commons-codec', version: '1.9'
 }

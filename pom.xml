@@ -162,9 +162,9 @@
                             <annotationProcessor>lombok.launch.AnnotationProcessorHider$AnnotationProcessor
                             </annotationProcessor>
                         </annotationProcessors>
-                        <generatedSourcesDirectory>${project.basedir}/src/main/generated</generatedSourcesDirectory>
+                        <generatedSourcesDirectory>${project.basedir}/src/generated/java</generatedSourcesDirectory>
                         <compilerArgs>
-                            <arg>-AoutputDirectory=${project.basedir}/src/main</arg>
+                            <arg>-AoutputDirectory=${project.basedir}/src/generated</arg>
                         </compilerArgs>
                     </configuration>
                 </plugin>
@@ -189,7 +189,7 @@
                     <configuration>
                         <filesets>
                             <fileset>
-                                <directory>${project.basedir}/src/main/generated</directory>
+                                <directory>${project.basedir}/src/generated/java</directory>
                             </fileset>
                         </filesets>
                     </configuration>

@@ -15,6 +15,6 @@ include ':dashboard:connector:postgresql'
 
 include 'edge:core'
 include 'edge:bios'
-include 'edge:bios-installer'
+include 'edge:module:installer'
 include 'edge:connector:ditto'
 include 'edge:rule:sample'

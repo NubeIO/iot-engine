@@ -1,0 +1,41 @@
+apply plugin: "java"
+
+task annotationProcessing(type: JavaCompile, group: 'build') {
+    onlyIf {
+        project.hasProperty('generated') && project.generated == "true"
+    }
+    source = sourceSets.main.java
+    classpath = configurations.compile + configurations.compileOnly
+    destinationDir = project.file(project.genJavaSrcFolder)
+    options.compilerArgs = [
+            "-proc:only",
+            "-processor", "io.vertx.codegen.CodeGenProcessor",
+            "-AoutputDirectory=${project.genSrcFolder}"
+    ]
+}
+
+task generateServiceDescriptor(group: 'build') {
+    onlyIf {
+        project.hasProperty('serviceDescriptor')
+    }
+    doLast {
+        if (project.serviceDescriptor.trim() == "" || project.mainVerticle.trim() == "") {
+            throw new TaskExecutionException(project.tasks.processResources,
+                    new RuntimeException("Missing mainVerticle or serviceDescriptor"))
+        }
+        def resourcesDir = sourceSets.main.output.resourcesDir
+        resourcesDir.mkdirs()
+        def contents = "{ \"main\": \"$project.mainVerticle\" }"
+        new File(resourcesDir, project.serviceDescriptor + ".json").text = contents
+    }
+}
+
+processResources.dependsOn(generateServiceDescriptor)
+
+sourceSets {
+    main {
+        java {
+            srcDirs += project.genJavaSrcFolder
+        }
+    }
+}

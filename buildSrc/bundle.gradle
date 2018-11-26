@@ -1,0 +1,67 @@
+import java.time.Instant
+
+jar {
+    baseName = compute(project)
+    doFirst {
+        def classPath = configurations.runtime.isEmpty() ? "" : configurations.runtime.files.collect {
+            it.getName()
+        }.join(' ')
+        def javaVersion = System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')'
+
+        println '- Project Name:     ' + baseName
+        println '- Project Title:    ' + project.title
+        println '- Project Version:  ' + project.version
+        println '- Semantic Version: ' + project.semanticVersion
+        println '- Build Number:     ' + project.buildNumber
+        println '- Java Version:     ' + javaVersion
+
+        def manifestMap = [
+                (java.util.jar.Attributes.Name.MANIFEST_VERSION.toString())      : '1.0',
+                (java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE.toString())  : "${baseName}",
+                (java.util.jar.Attributes.Name.IMPLEMENTATION_VENDOR.toString()) : "${project.vendor}",
+                (java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION.toString()): "${project.buildNumber}",
+                (java.util.jar.Attributes.Name.SIGNATURE_VERSION.toString())     : "${project.buildHash}",
+                (java.util.jar.Attributes.Name.SPECIFICATION_TITLE.toString())   : "${project.title}",
+                (java.util.jar.Attributes.Name.SPECIFICATION_VENDOR.toString())  : "${project.vendor}",
+                (java.util.jar.Attributes.Name.SPECIFICATION_VERSION.toString()) : "${project.version}",
+                'Build-Date'                                                     : Instant.now(),
+                'Build-By'                                                       : "${project.buildBy}",
+                'Java-Version'                                                   : "${javaVersion}",
+                'Class-Path'                                                     : "${classPath}"
+        ]
+        if (project.hasProperty("executable") && project.executable == "true") {
+            if (project.mainClass.trim() == "" || project.mainVerticle.trim() == "") {
+                throw new TaskExecutionException(project.tasks.jar, new RuntimeException("Missing mainClass or " +
+                        "mainVerticle"))
+            }
+            manifestMap << ['Main-Class': "${project.mainClass}", 'Main-Verticle': "${project.mainVerticle}"]
+        }
+        manifest {
+            attributes(manifestMap)
+        }
+    }
+}
+
+distZip {
+    baseName = compute(project)
+}
+
+distTar {
+    baseName = compute(project)
+}
+
+task sourcesJar(type: Jar, dependsOn: classes, group: 'distribution') {
+    baseName = compute(project)
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task testsJar(type: Jar, group: 'distribution') {
+    baseName = compute(project)
+    from sourceSets.test.output
+    classifier = 'tests'
+}
+
+task dist(group: 'distribution') {
+    dependsOn(build, sourcesJar, testsJar, javadoc)
+}

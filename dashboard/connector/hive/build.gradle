@@ -1,7 +1,7 @@
-description = ''
+group = 'com.nubeiot.dashboard.connector'
 dependencies {
     compile project(':core:common')
-    compile group: 'io.vertx', name: 'vertx-jdbc-client', version: '3.5.3'
+    compile group: 'io.vertx', name: 'vertx-jdbc-client', version: "$project.vertxVersion"
     compile group: 'org.spark-project.hive', name: 'hive-jdbc', version: '1.2.1.spark2'
     compile group: 'org.apache.hadoop', name: 'hadoop-core', version: '1.2.1'
     compile group: 'com.github.jsqlparser', name: 'jsqlparser', version: '0.9'

@@ -15,10 +15,10 @@
       }
     },
     "default_app": {
-      "group_id": "io.nubespark",
-      "artifact_id": "nube-app-installer",
-      "version": "1.0-SNAPSHOT",
-      "service_name": "app-installer"
+      "group_id": "com.nubeiot.edge.module",
+      "artifact_id": "bios-installer",
+      "version": "1.0.0-SNAPSHOT",
+      "service_name": "bios-installer"
     }
   }
 }

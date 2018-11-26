@@ -1,4 +1,4 @@
-description = ''
+group = 'com.nubeiot.dashboard.connector'
 dependencies {
     compile project(':core:common')
     compile project(':core:httpserver')

@@ -1,5 +1,5 @@
-group = 'com.nubeiot.edge.module'
-description = ''
+group 'com.nubeiot.edge.module'
+
 dependencies {
     compile project(':edge:core')
 }

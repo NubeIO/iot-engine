@@ -6,8 +6,10 @@ plugins {
 }
 
 ext {
-    vertxVersion = "3.5.3"
+    vertxVersion = "3.5.4"
     lombokVersion = "1.18.4"
+    genSrcFolder = "src/generated"
+    genJavaSrcFolder = "$project.genSrcFolder/java"
 }
 
 sonarqube {
@@ -17,47 +19,33 @@ sonarqube {
     }
 }
 
-configurations {
-    providedRuntime
-}
-
 allprojects {
     group = 'com.nubeiot'
+    version = project.version + "-" + project.semanticVersion
+
+    configurations {
+        providedRuntime
+    }
+}
+
+def static compute(project) {
+    def p = project
+    def fqn = p.name
+    while (p.parent != null) {
+        fqn = p.parent.name + '-' + fqn
+        p = p.parent
+    }
+    return fqn
 }
 
 subprojects {
-//    onlyIf {
-//        !project.hasProperty("container") || !project.getProperties().get("container") == "true"
-//    }
-    apply plugin: 'maven'
+    apply plugin: "maven"
     apply plugin: "java-library-distribution"
     apply plugin: "jacoco"
     apply plugin: "net.ltgt.apt"
-    apply from: "$rootDir/buildSrc/bundle.gradle"
-    apply from: "$rootDir/buildSrc/nexus.gradle"
-    apply from: "$rootDir/buildSrc/misc.gradle"
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
-
-    task annotationProcessing(type: JavaCompile, group: 'build') { // codegen
-        source = sourceSets.main.java
-        classpath = configurations.compile + configurations.compileOnly
-        destinationDir = project.file('src/main/generated')
-        options.compilerArgs = [
-                "-proc:only",
-                "-processor", "io.vertx.codegen.CodeGenProcessor",
-                "-AoutputDirectory=${project.projectDir}/src/main"
-        ]
-    }
-
-    sourceSets {
-        main {
-            java {
-                srcDirs += 'src/main/generated'
-            }
-        }
-    }
 
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
@@ -87,8 +75,12 @@ subprojects {
         testAnnotationProcessor "org.projectlombok:lombok:$project.lombokVersion"
     }
 
+    apply from: "$rootDir/buildSrc/generated.gradle"
+    apply from: "$rootDir/buildSrc/javadoc.gradle"
+    apply from: "$rootDir/buildSrc/bundle.gradle"
+    apply from: "$rootDir/buildSrc/nexus.gradle"
+    apply from: "$rootDir/buildSrc/misc.gradle"
 }
 
 apply from: "buildSrc/verification.gradle"
-apply from: "buildSrc/javadoc.gradle"
 apply from: "buildSrc/dist.gradle"

@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventType;
-import com.nubeiot.edge.core.PreDeploymentResult;
 
 import io.vertx.core.json.JsonObject;
 

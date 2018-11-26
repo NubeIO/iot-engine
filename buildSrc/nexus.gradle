@@ -1,0 +1,40 @@
+apply plugin: "java-library"
+apply plugin: "maven-publish"
+apply plugin: "signing"
+
+def nexusFile = file("$rootDir/nexus.properties")
+if (nexusFile.exists()) {
+    def props = new Properties()
+    nexusFile.withInputStream { props.load(it) }
+    props.each { k, v -> project.ext.set(k, v) }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            println project.group + "." + project.name
+            groupId = project.group
+            artifactId = project.name
+            from components.java
+//            artifact sourcesJar
+//            artifact javadocJar
+            pom {
+                name = project.title
+                description = project.description
+            }
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username project.nexusUsername
+                password project.nexusPassword
+            }
+            url = project.semanticVersion.endsWith('SNAPSHOT') ? project.nexusSnapshotUrl : project.nexusReleaseUrl
+        }
+    }
+}
+
+//signing {
+//    sign publishing.publications.mavenJava
+//}
