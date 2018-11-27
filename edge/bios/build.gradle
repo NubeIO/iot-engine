@@ -1,4 +1,4 @@
-group = 'com.nubeiot.edge'
+
 dependencies {
     compile project(':edge:core')
 }

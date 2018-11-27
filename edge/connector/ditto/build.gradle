@@ -1,4 +1,4 @@
-group = 'com.nubeiot.edge.connector'
+
 dependencies {
     compile project(':core:common')
     compile project(':core:httpserver')

@@ -1,4 +1,3 @@
-group = 'com.nubeiot.core'
 dependencies {
     compile project(':core:micro')
     compile group: 'io.vertx', name: 'vertx-web', version: "$project.vertxVersion"

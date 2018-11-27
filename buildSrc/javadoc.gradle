@@ -1,12 +1,12 @@
 task javadocJar(type: Jar, group: 'distribution', dependsOn: "javadoc") {
-    baseName = compute(project)
+    baseName = computeName(project)
     from javadoc
     classifier = 'javadoc'
 }
 
 task zipDoc(type: Zip, group: "documentation", dependsOn: "javadoc") {
     classifier = "javadoc"
-    baseName = compute(project)
+    baseName = computeName(project)
     from project.tasks.javadoc.outputs
     destinationDir = file("${project.docsDir}")
 }

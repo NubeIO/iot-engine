@@ -19,8 +19,9 @@ sonarqube {
     }
 }
 
+group = 'com.nubeiot'
+
 allprojects {
-    group = 'com.nubeiot'
     version = project.version + "-" + project.semanticVersion
 
     configurations {
@@ -28,14 +29,18 @@ allprojects {
     }
 }
 
-def static compute(project) {
-    def p = project
-    def fqn = p.name
-    while (p.parent != null) {
-        fqn = p.parent.name + '-' + fqn
-        p = p.parent
+def static computeGroup(project) {
+    if (project.parent == null) {
+        return project.group
     }
-    return fqn
+    return computeGroup(project.parent) + "." + project.parent.name
+}
+
+def static computeName(project) {
+    if (project.parent == null) {
+        return project.name
+    }
+    return computeName(project.parent) + "-" + project.name
 }
 
 subprojects {
@@ -43,6 +48,8 @@ subprojects {
     apply plugin: "java-library-distribution"
     apply plugin: "jacoco"
     apply plugin: "net.ltgt.apt"
+
+    group = computeGroup(project)
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8

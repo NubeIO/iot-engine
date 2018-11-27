@@ -1,4 +1,4 @@
-group = 'com.nubeiot.edge'
+
 
 ext {
     jooq_version = '3.10.8'

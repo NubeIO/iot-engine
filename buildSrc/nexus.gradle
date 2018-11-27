@@ -12,12 +12,12 @@ if (nexusFile.exists()) {
 publishing {
     publications {
         maven(MavenPublication) {
-            println project.group + "." + project.name
             groupId = project.group
             artifactId = project.name
             from components.java
-//            artifact sourcesJar
-//            artifact javadocJar
+            artifact sourcesJar
+            artifact javadocJar
+            artifact testsJar
             pom {
                 name = project.title
                 description = project.description

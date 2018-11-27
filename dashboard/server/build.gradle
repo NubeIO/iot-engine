@@ -1,4 +1,4 @@
-group = 'com.nubeiot.dashboard'
+
 
 dependencies {
     compile project(':core:common')

@@ -1,16 +1,20 @@
+import java.nio.file.Paths
+
 apply plugin: "java"
 
 task annotationProcessing(type: JavaCompile, group: 'build') {
     onlyIf {
         project.hasProperty('generated') && project.generated == "true"
     }
+    def outputDir = file(Paths.get(project.projectDir.absolutePath, project.genSrcFolder))
+    outputDir.mkdirs()
     source = sourceSets.main.java
     classpath = configurations.compile + configurations.compileOnly
     destinationDir = project.file(project.genJavaSrcFolder)
     options.compilerArgs = [
             "-proc:only",
             "-processor", "io.vertx.codegen.CodeGenProcessor",
-            "-AoutputDirectory=${project.genSrcFolder}"
+            "-AoutputDirectory=${outputDir.absolutePath}"
     ]
 }
 
@@ -31,6 +35,7 @@ task generateServiceDescriptor(group: 'build') {
 }
 
 processResources.dependsOn(generateServiceDescriptor)
+compileJava.dependsOn(annotationProcessing)
 
 sourceSets {
     main {
