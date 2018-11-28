@@ -10,6 +10,8 @@ ext {
     lombokVersion = "1.18.4"
     genSrcFolder = "src/generated"
     genJavaSrcFolder = "$project.genSrcFolder/java"
+    watchForChange = 'src/**/*'
+    doOnChange = './gradlew classes'
 }
 
 sonarqube {
@@ -87,6 +89,7 @@ subprojects {
     apply from: "$rootDir/buildSrc/bundle.gradle"
     apply from: "$rootDir/buildSrc/nexus.gradle"
     apply from: "$rootDir/buildSrc/misc.gradle"
+    apply from: "$rootDir/buildSrc/run.gradle"
 }
 
 apply from: "buildSrc/verification.gradle"

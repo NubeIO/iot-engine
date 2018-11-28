@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.nubeiot.core.DevRunner;
 import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.ErrorMessage;
@@ -37,7 +38,7 @@ public final class EdgeConnectorVerticle extends RxRestAPIVerticle {
 
     public static void main(String[] args) {
         String JAVA_DIR = "nube-app-store-rest/src/main/java/";
-        Runner.runExample(JAVA_DIR, EdgeConnectorVerticle.class);
+        DevRunner.run(JAVA_DIR, EdgeConnectorVerticle.class);
     }
 
     @Override

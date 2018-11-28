@@ -65,3 +65,13 @@ task testsJar(type: Jar, group: 'distribution') {
 task dist(group: 'distribution') {
     dependsOn(build, sourcesJar, testsJar, javadoc)
 }
+
+task uberJar(type: Jar) {
+    classifier = 'fat'
+    baseName = computeName(project)
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
+}
