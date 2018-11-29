@@ -12,6 +12,7 @@ import com.nubeiot.core.event.EventType;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.core.loader.LocalServiceSearch;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeFactory;
 import com.nubeiot.edge.core.model.gen.Tables;
@@ -40,14 +41,7 @@ public final class ModuleEventHandler extends EventHandler {
         if (filter.getBoolean("available", Boolean.FALSE)) {
             return Single.just(new JsonObject());
         }
-        return this.verticle.getEntityHandler()
-                            .getExecutorSupplier()
-                            .get()
-                            .execute(context -> context.fetch(Tables.TBL_MODULE))
-                            .flattenAsObservable(records -> records)
-                            .flatMapSingle(record -> Single.just(record.toJson()))
-                            .collect(JsonArray::new, JsonArray::add)
-                            .map(results -> new JsonObject().put("services", results));
+        return new LocalServiceSearch(this.verticle.getEntityHandler()).search(data);
     }
 
     @EventContractor(values = EventType.GET_ONE)
