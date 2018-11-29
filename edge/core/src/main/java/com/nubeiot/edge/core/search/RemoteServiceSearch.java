@@ -1,4 +1,4 @@
-package com.nubeiot.edge.core.loader;
+package com.nubeiot.edge.core.search;
 
 
 import com.nubeiot.core.dto.RequestData;

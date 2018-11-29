@@ -12,14 +12,13 @@ import com.nubeiot.core.event.EventType;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.loader.LocalServiceSearch;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeFactory;
 import com.nubeiot.edge.core.model.gen.Tables;
 import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
+import com.nubeiot.edge.core.search.LocalServiceSearch;
 
 import io.reactivex.Single;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.NonNull;
