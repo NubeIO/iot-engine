@@ -1,7 +1,7 @@
 import java.time.Instant
 
 jar {
-    baseName = computeName(project)
+    baseName = computeBaseName(project)
     doFirst {
         def classPath = configurations.runtime.isEmpty() ? "" : configurations.runtime.files.collect {
             it.getName()
@@ -43,21 +43,21 @@ jar {
 }
 
 distZip {
-    baseName = computeName(project)
+    baseName = computeBaseName(project)
 }
 
 distTar {
-    baseName = computeName(project)
+    baseName = computeBaseName(project)
 }
 
 task sourcesJar(type: Jar, dependsOn: classes, group: 'distribution') {
-    baseName = computeName(project)
+    baseName = computeBaseName(project)
     from sourceSets.main.allSource
     classifier = 'sources'
 }
 
 task testsJar(type: Jar, group: 'distribution') {
-    baseName = computeName(project)
+    baseName = computeBaseName(project)
     from sourceSets.test.output
     classifier = 'tests'
 }
@@ -68,7 +68,7 @@ task dist(group: 'distribution') {
 
 task uberJar(type: Jar) {
     classifier = 'fat'
-    baseName = computeName(project)
+    baseName = computeBaseName(project)
     from sourceSets.main.output
     dependsOn configurations.runtimeClasspath
     from {

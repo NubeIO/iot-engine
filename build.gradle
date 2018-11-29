@@ -10,8 +10,7 @@ ext {
     lombokVersion = "1.18.4"
     genSrcFolder = "src/generated"
     genJavaSrcFolder = "$project.genSrcFolder/java"
-    watchForChange = 'src/**/*'
-    doOnChange = './gradlew classes'
+    baseName = "nube"
 }
 
 sonarqube {
@@ -29,6 +28,11 @@ allprojects {
     configurations {
         providedRuntime
     }
+    apply plugin: "eclipse"
+    apply plugin: "idea"
+//    if (project != rootProject) {
+//        eclipse.project.name = ("iot" + project.path).replaceAll(":", "-")
+//    }
 }
 
 def static computeGroup(project) {
@@ -38,11 +42,11 @@ def static computeGroup(project) {
     return computeGroup(project.parent) + "." + project.parent.name
 }
 
-def static computeName(project) {
+def static computeBaseName(project) {
     if (project.parent == null) {
-        return project.name
+        return project.ext.baseName
     }
-    return computeName(project.parent) + "-" + project.name
+    return computeBaseName(project.parent) + "-" + project.name
 }
 
 subprojects {
@@ -89,7 +93,7 @@ subprojects {
     apply from: "$rootDir/buildSrc/bundle.gradle"
     apply from: "$rootDir/buildSrc/nexus.gradle"
     apply from: "$rootDir/buildSrc/misc.gradle"
-    apply from: "$rootDir/buildSrc/run.gradle"
+//    apply from: "$rootDir/buildSrc/run.gradle"
 }
 
 apply from: "buildSrc/verification.gradle"

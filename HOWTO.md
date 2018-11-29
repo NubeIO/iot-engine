@@ -2,47 +2,46 @@
 
 ## Run-Local
 
-### Prequisitance
+### Prerequisites
 
 - Java 8
-- [Maven](https://maven.apache.org/)
-- Clone `settings.xml.template` to `settings-<your-name>.xml`, and update xml variable properties with prefix `your-`.
-  - `${your-nexus-server}`: `Nexus` server url
-  - `${your-nexus-user}`: `Nexus` username
-  - `${your-nexus-password}`: `Nexus` password
-- Clone `cluster.xml.template` to `cluster-<your-name>.xml`, and update xml variable properties with prefix `your-`.
-  - `${your-network-interface}`: Your network interface that allow access internet. For example: `192.168.1.5` is your computer IP, gateway almost is `192.168.1.1`, so you can set network interface is `192.168.1.*`
+- [Gradle](https://gradle.org/)
+- Create `nexus.secret.properties` with content:
+
+	```properties
+	nexusSnapshotUrl=http://<your-nexus-server>/repository/maven-snapshots/
+	nexusReleaseURL=http://<your-nexus-server>/repository/maven-releases/
+	nexusUsername=<your-nexus-user>
+	nexusPassword=<your-nexus-password>
+	```
 
 ### Build
-
-Only run 1 of 2 commands:
 
 - Build local: compile and build to `jar` file, then push artifact to `local maven` repository.
 
   ```bash
-  mvn clean install
+  gradle clean build uberJar
   ```
 
-- Share artifacts to `Nexus` server: it contains `build` step above and push to `remote maven` repository.
+- Publish artifacts to `Nexus` server:
 
   ```bash
-  mvn clean deploy -s settings-<your-name>.xml
+  gradle publish
   ```
 
 ### Run Demo
 
 - Copy theses artifacts to `demo` folder: (will be removed when I standardize build and bundle script)
 
-  - `cp -rf dashboard-connector-edge/target/edge-1.0.0-SNAPSHOT-fat.jar demo/`
-  - `cp -rf edge-bios/target/bios-1.0.0-SNAPSHOT-fat.jar demo/`
-  - `cp -rf conf/cluster.xml.template demo/cluster.xml` files and remember to update any variables with placeholder `${your-`
+  - `cp -rf dashboard/connector/edge/build/libs/nube-dashboard-connector-edge-1.0.0-SNAPSHOT-fat.jar demo/bios-connector.jar`
+  - `cp -rf edge/bios/build/libs/nube-edge-bios-1.0.0-SNAPSHOT-fat.jar demo/bios.jar`
 
 - Start services (replace `${your-ip}`)
 
   ```bash
-  java -Dlogback.configurationFile=logback-rest.xml -jar edge-1.0.0-SNAPSHOT-fat.jar -conf rest-config.json -cluster -cluster-host ${your-ip}
+  java -Dlogback.configurationFile=logback-bios-connector.xml -jar bios-connector.jar -conf bios-connector.json -cluster
 
-  java -Dlogback.configurationFile=logback.xml -jar bios-1.0.0-SNAPSHOT-fat.jar -conf bios-config.json -cluster -cluster-host ${your-ip}
+  java -Dlogback.configurationFile=logback-bios.xml -jar bios.jar -conf bios-config.json -cluster
   ```
 
 ## Interact REST API
@@ -51,10 +50,27 @@ Will be part of `Swagger UI` soon. Try [`Postman`](https://web.postman.co/collec
 
 ## Development
 
-### Prequisitance
+Start application in `IDE` for debug purpose
 
-- Same as [Prequisitance](#Run-Local#Prequisitance)
-- IDE: Eclipse or IntelliJ
+### Eclipse
+
+- Install [`BuildShip`](https://projects.eclipse.org/projects/tools.buildship)
+- Run:
+
+	```bash
+	gradle eclipse
+	```
+
+- Import Gradle project into Eclipse
+- Use `launcher` script in same directory name to start application. The configuration is in `demo` folder
+	- `BIOS.launch`: For `edge > bios`
+	- `BIOS-Connector.launch`: For `dashboard > connector > edge`
+	- `Dashboard.launch`: For `dashboard > server`
+
+
+### IntelliJ
+
+TBD
 
 ## Deployment
 

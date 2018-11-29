@@ -5,19 +5,16 @@ import java.util.stream.Collectors;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.nubeiot.core.DevRunner;
+import com.nubeiot.core.common.RxRestAPIVerticle;
 import com.nubeiot.core.common.constants.Port;
+import com.nubeiot.core.common.utils.response.ResponseUtils;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.RestUtils;
-import com.nubeiot.core.common.RxRestAPIVerticle;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import com.nubeiot.core.common.utils.Runner;
-import com.nubeiot.core.common.utils.response.ResponseUtils;
-
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.Message;
@@ -35,11 +32,6 @@ public final class EdgeConnectorVerticle extends RxRestAPIVerticle {
     private static final String ROOT_API_ENDPOINT = "/api";
     private static final String HIVE_ENGINE_SERVICE = "io.nubespark.sql-hive.engine";
     private static final String PUBLIC_HOST = "0.0.0.0";
-
-    public static void main(String[] args) {
-        String JAVA_DIR = "nube-app-store-rest/src/main/java/";
-        DevRunner.run(JAVA_DIR, EdgeConnectorVerticle.class);
-    }
 
     @Override
     public void start(io.vertx.core.Future<Void> future) {
@@ -139,7 +131,7 @@ public final class EdgeConnectorVerticle extends RxRestAPIVerticle {
                 .setStatusCode(HttpResponseStatus.OK.code())
                 .end(new JsonObject().put("name", "edge-connector-rest")
                                      .put("version", "1.0.0-SNAPSHOT")
-                                     .put("vert.x_version", "3.4.1")
+                                     .put("vert.x_version", "3.5.4")
                                      .put("java_version", "8.0")
                                      .encodePrettily());
     }

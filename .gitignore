@@ -19,4 +19,4 @@ demo/*.jar
 demo/*.md
 .gradle/
 #!**/src/generated/
-nexus.properties
+*.secret.properties

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/common/src/main/java/com/nubeiot/core/common/Launcher.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.ui.favoriteGroups">
+<listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
+<listEntry value="org.eclipse.eclemma.ui.launchGroup.coverage"/>
+<listEntry value="org.eclipse.debug.ui.launchGroup.run"/>
+</listAttribute>
+<booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
+<stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.buildship.core.classpathprovider"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.nubeiot.core.common.Launcher"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="run com.nubeiot.dashboard.impl.HttpServerVerticle -conf ${workspace_loc:/iot-engine}/demo/dashboard.json -cluster --redeploy=&quot;${workspace_loc:server}/src/**/*.java&quot; --launcher-class=com.nubeiot.core.common.Launcher"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="server"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dlogback.configurationFile=${workspace_loc:/iot-engine}/demo/logback-dashboard.xml"/>
+<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:/iot-engine}/demo"/>
+</launchConfiguration>

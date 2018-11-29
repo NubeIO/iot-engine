@@ -102,7 +102,7 @@ public final class FileUtils {
         final URL resource = FileUtils.class.getClassLoader().getResource(Strings.requireNotBlank(classpathFile));
         if (Objects.isNull(resource)) {
             logger.warn("File not found {}", classpathFile);
-            return null;
+            throw new NubeException("File not found " + classpathFile);
         }
         try {
             return Paths.get(resource.toURI());

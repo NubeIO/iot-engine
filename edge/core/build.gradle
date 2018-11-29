@@ -55,7 +55,7 @@ dependencies {
 //                url("jdbc:sqlite:${project.basedir}/app-installer.db")
 //            }
 //            generator {
-//                name('com.nubeio.iot.edge.model.buildscript.CustomVertxGenerator')
+//                name('com.nubeiot.edge.model.buildscript.CustomVertxGenerator')
 //                database {
 //                    name('org.jooq.util.sqlite.SQLiteDatabase')
 //                    include('.*')
@@ -76,7 +76,7 @@ dependencies {
 //                    daos(true)
 //                }
 //                target() {
-//                    packageName('com.nubeio.iot.edge.model.gen')
+//                    packageName('com.nubeiot.edge.model.gen')
 //                    directory("$projectDir/src/main/java")
 //                }
 //                strategy {

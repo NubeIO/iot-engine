@@ -2,6 +2,11 @@ package com.nubeiot.edge.bios;
 
 import java.util.Map;
 
+import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.EventType;
+import com.nubeiot.core.utils.Configs;
+import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.ModuleEventHandler;
 import com.nubeiot.edge.core.TransactionEventHandler;
@@ -10,12 +15,6 @@ import com.nubeiot.edge.core.loader.ModuleTypeFactory;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
-import com.nubeiot.core.DevRunner;
-import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventType;
-import com.nubeiot.core.utils.Configs;
-import com.nubeiot.core.utils.FileUtils;
 
 import io.reactivex.Single;
 import io.vertx.core.eventbus.EventBus;
@@ -25,10 +24,6 @@ import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
 
 public final class OsDeploymentVerticle extends EdgeVerticle {
-
-    public static void main(String[] args) {
-        DevRunner.run("nube-bios/src/main/java/", OsDeploymentVerticle.class);
-    }
 
     @Override
     protected String getDBName() {
@@ -50,7 +45,6 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
                                                  artifactId -> artifactId.startsWith("com.nubeiot.edge.module"));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Single<JsonObject> initData() {
         logger.info("Setup NubeIO Bios with config {}", getAppConfig().encode());

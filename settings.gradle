@@ -1,4 +1,4 @@
-rootProject.name = 'iot'
+rootProject.name = 'iot-engine'
 // https://docs.gradle.org/4.10/userguide/publishing_maven.html#publishing_maven:deferred_configuration
 enableFeaturePreview('STABLE_PUBLISHING')
 
@@ -16,8 +16,8 @@ include ':dashboard:connector:mongodb'
 include ':dashboard:connector:zeppelin'
 include ':dashboard:connector:postgresql'
 
-include 'edge:core'
-include 'edge:bios'
-include 'edge:module:installer'
-include 'edge:connector:ditto'
-include 'edge:rule:sample'
+include ':edge:core'
+include ':edge:bios'
+include ':edge:module:installer'
+include ':edge:connector:ditto'
+include ':edge:rule:sample'
