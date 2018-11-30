@@ -12,11 +12,33 @@ target/
 **/.classpath
 **/.settings/
 **/.factorypath
+
+# Package Files #
+**/*.jar
+**/*.war
+**/*.nar
+**/*.ear
+**/*.zip
+**/*.tar.gz
+**/*.rar
+
+# virtual machine crash logs, see com.zero.oauth.client.http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+**/.gradle
+**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+
 settings*.xml
 cluster*.xml
-build/
-demo/*.jar
 demo/*.md
-.gradle/
-#!**/src/generated/
+!demo/cluster.xml
 *.secret.properties
