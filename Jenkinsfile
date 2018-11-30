@@ -39,8 +39,9 @@ pipeline {
             }
         }
 
-//        stage("Analysis") {
-//            steps {
+        stage("Analysis") {
+            steps {
+                echo "Update Sonar Server"
 //                script {
 //                    withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
 //                        sh "set +x"
@@ -48,8 +49,8 @@ pipeline {
 //                                "-Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${SONAR_TOKEN}"
 //                    }
 //                }
-//            }
-//        }
+            }
+        }
 
         stage("Publish") {
             when { tag "v*" }
@@ -65,7 +66,7 @@ pipeline {
         always {
             sh "apk add git"
             githubHookStatus()
-            emailNotifications VERSION
+            emailNotifications(VERSION)
         }
     }
 }
