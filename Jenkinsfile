@@ -1,19 +1,20 @@
-library identifier: 'notifications@master', retriever: modernSCM(
+library identifier: 'shared@master', retriever: modernSCM(
         [$class: 'GitSCMSource',
          remote: 'https://github.com/zero-88/jenkins-pipeline-shared.git'])
 
 pipeline {
     agent {
-        docker "gradle:jdk8-alpine"
+        docker "gradle:4.10.2-jdk8-alpine"
     }
     environment {
-        BUILD_AGENT = "jenkins:${JENKINS_VERSION}-gradle:jdk8-alpine"
+        BUILD_AGENT = "jenkins:${JENKINS_VERSION}-gradle:4.10.2-jdk8-alpine"
     }
     stages {
 
         stage("Build") {
             steps {
-                sh "gradle dist -PbuildBy=${BUILD_AGENT} -PbuildNumber=${BUILD_NUMBER} -PbuildHash=${GIT_COMMIT}"
+                sh "gradle clean dist -x test -PbuildBy=${BUILD_AGENT} -PbuildNumber=${BUILD_NUMBER} " +
+                        "-PbuildHash=${GIT_COMMIT}"
                 script {
                     VERSION = sh(script: "gradle properties | grep 'version:' | awk '{print \$2}'", returnStdout: true).trim()
                 }
@@ -62,6 +63,8 @@ pipeline {
 
     post {
         always {
+            sh "apk add git"
+            githubHookStatus()
             emailNotifications VERSION
         }
     }

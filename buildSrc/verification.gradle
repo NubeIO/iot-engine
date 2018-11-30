@@ -2,8 +2,26 @@ apply plugin: "java"
 apply plugin: "jacoco"
 
 def testFailures = []
+def numProc = (Runtime.runtime.availableProcessors().intdiv(2) ?: 1).intValue()
+
+jacoco {
+    toolVersion = "0.8.2"
+}
+
+task copyTestResult(type: Copy, group: "verification") {
+    dependsOn test
+    def tests = []
+    subprojects.each {
+        tests += it.testResultsDir
+    }
+    from tests
+    include "**/*.xml"
+    includeEmptyDirs = false
+    into project.testResultsDir
+}
 
 task testReport(type: TestReport, group: "verification") {
+    dependsOn copyTestResult
     destinationDir = file(project.testReportDir)
     reportOn subprojects.tasks.test
     doLast {
@@ -18,39 +36,31 @@ task testReport(type: TestReport, group: "verification") {
 }
 
 test {
-    def numProc = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    maxParallelForks = numProc.intValue()
     ignoreFailures = true
-    finalizedBy("testReport")
+    dependsOn subprojects.tasks.test
+    finalizedBy testReport
     subprojects {
         test {
-            maxParallelForks = numProc.intValue()
+            maxParallelForks = numProc
             ignoreFailures = true
-            finalizedBy("copyTestResult")
             afterTest { descriptor, result ->
                 if (descriptor.parent && result.getResultType() == TestResult.ResultType.FAILURE) {
                     testFailures += "$descriptor.parent.name > $descriptor.name $result.resultType\n\t$result.exception"
                 }
             }
         }
-        task copyTestResult(type: Copy, group: "verification") {
-            into project.parent.testResultsDir
-            from testResultsDir
-            include "**/*.xml"
-            includeEmptyDirs = false
-        }
     }
 }
 
 task jacocoMerge(type: JacocoMerge, group: "verification") {
-    dependsOn(subprojects.tasks.jacocoTestReport)
-    mustRunAfter(subprojects.tasks.jacocoTestReport)
+    dependsOn subprojects.tasks.jacocoTestReport
+    mustRunAfter subprojects.tasks.jacocoTestReport
     destinationFile = file("${buildDir}/jacoco/test.exec")
     executionData = files(subprojects.tasks.jacocoTestReport.executionData).filter { f -> f.exists() }
 }
 
 jacocoTestReport {
-    dependsOn(jacocoMerge)
+    dependsOn jacocoMerge
     reports {
         xml.enabled = true
         html.enabled = true

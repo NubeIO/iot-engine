@@ -9,6 +9,7 @@ task copyJar(type: Copy, group: 'distribution', description: 'Distribute jars to
 }
 
 task copyZip(type: Copy, group: 'distribution', description: 'Distribute artifacts to root project') {
+    dependsOn build
     def zips = []
     subprojects.each {
         zips += it.distsDir
@@ -18,12 +19,13 @@ task copyZip(type: Copy, group: 'distribution', description: 'Distribute artifac
 }
 
 task copyDoc(type: Copy, group: 'distribution', description: 'Distribute docs to root project') {
+    dependsOn javadoc
     def docZips = []
     subprojects.each {
         docZips += it.docsDir
     }
     from docZips
-    include "**/*.zip"
+    include "*.zip"
     includeEmptyDirs false
     into project.docsDir
 }
@@ -41,4 +43,9 @@ jar {
 build {
     finalizedBy(copyZip)
     mustRunAfter(subprojects.tasks.build)
+}
+
+javadoc {
+    finalizedBy(copyDoc)
+    mustRunAfter(subprojects.tasks.javadoc)
 }

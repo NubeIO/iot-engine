@@ -28,11 +28,15 @@ allprojects {
     configurations {
         providedRuntime
     }
+
+    repositories {
+        mavenLocal()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+        mavenCentral()
+    }
+    
     apply plugin: "eclipse"
     apply plugin: "idea"
-//    if (project != rootProject) {
-//        eclipse.project.name = ("iot" + project.path).replaceAll(":", "-")
-//    }
 }
 
 def static computeGroup(project) {
@@ -64,18 +68,12 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
-    repositories {
-        mavenLocal()
-        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-        mavenCentral()
-    }
-
     dependencies {
         compile group: 'io.vertx', name: 'vertx-core', version: "$project.vertxVersion"
         compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
         compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 
-        compileOnly group: 'io.vertx', name: 'vertx-codegen', version: "$project.vertxVersion"
+        compileOnly "io.vertx:vertx-codegen:$project.vertxVersion"
         compileOnly "org.projectlombok:lombok:$project.lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$project.lombokVersion"
 
@@ -93,7 +91,6 @@ subprojects {
     apply from: "$rootDir/buildSrc/bundle.gradle"
     apply from: "$rootDir/buildSrc/nexus.gradle"
     apply from: "$rootDir/buildSrc/misc.gradle"
-//    apply from: "$rootDir/buildSrc/run.gradle"
 }
 
 apply from: "buildSrc/verification.gradle"

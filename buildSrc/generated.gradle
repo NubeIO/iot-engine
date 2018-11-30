@@ -1,12 +1,10 @@
 import java.nio.file.Paths
 
-apply plugin: "java"
-
 task annotationProcessing(type: JavaCompile, group: 'build') {
     onlyIf {
         project.hasProperty('generated') && project.generated == "true"
     }
-    def outputDir = file(Paths.get(project.projectDir.absolutePath, project.genSrcFolder))
+    def outputDir = file Paths.get(project.projectDir.absolutePath, project.genSrcFolder)
     outputDir.mkdirs()
     source = sourceSets.main.java
     classpath = configurations.compile + configurations.compileOnly
@@ -14,9 +12,10 @@ task annotationProcessing(type: JavaCompile, group: 'build') {
     options.compilerArgs = [
             "-proc:only",
             "-processor", "io.vertx.codegen.CodeGenProcessor",
-            "-AoutputDirectory=${outputDir.absolutePath}"
+            "-Acodegen.output=${outputDir.absolutePath}"
     ]
 }
+compileJava.dependsOn(annotationProcessing)
 
 task generateServiceDescriptor(group: 'build') {
     onlyIf {
@@ -35,7 +34,6 @@ task generateServiceDescriptor(group: 'build') {
 }
 
 processResources.dependsOn(generateServiceDescriptor)
-compileJava.dependsOn(annotationProcessing)
 
 sourceSets {
     main {
