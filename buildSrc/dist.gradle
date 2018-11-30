@@ -36,16 +36,16 @@ task dist(group: 'distribution') {
 }
 
 jar {
-    finalizedBy(copyJar)
-    mustRunAfter(subprojects.tasks.jar)
+    finalizedBy copyJar
+    mustRunAfter subprojects.tasks.jar, subprojects.tasks.uberJar
 }
 
 build {
-    finalizedBy(copyZip)
-    mustRunAfter(subprojects.tasks.build)
+    finalizedBy copyZip
+    mustRunAfter subprojects.tasks.build
 }
 
 javadoc {
-    finalizedBy(copyDoc)
-    mustRunAfter(subprojects.tasks.javadoc)
+    finalizedBy copyDoc
+    mustRunAfter subprojects.tasks.javadoc
 }

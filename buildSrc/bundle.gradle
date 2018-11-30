@@ -67,11 +67,23 @@ task dist(group: 'distribution') {
 }
 
 task uberJar(type: Jar) {
+    onlyIf {
+        project.hasProperty("executable") && project.executable == "true"
+    }
     classifier = 'fat'
     baseName = computeBaseName(project)
     from sourceSets.main.output
     dependsOn configurations.runtimeClasspath
     from {
         configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
+    doFirst {
+        manifest {
+            if (project.mainClass.trim() == "" || project.mainVerticle.trim() == "") {
+                throw new TaskExecutionException(project.tasks.jar, new RuntimeException("Missing mainClass or " +
+                        "mainVerticle"))
+            }
+            attributes(['Main-Class': "${project.mainClass}", 'Main-Verticle': "${project.mainVerticle}"])
+        }
     }
 }
