@@ -8,10 +8,13 @@
             </Pattern>
         </layout>
     </appender>
-    <!-- <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/${your-service}.log</file>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/bios.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/${your-service}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- daily rollover -->
+            <fileNamePattern>logs/bios.%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- keep 30 days' worth of history capped at 3GB total size -->
             <maxHistory>30</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
 
@@ -19,11 +22,11 @@
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
-    </appender> -->
+    </appender>
 
     <root level="info">
-        <appender-ref ref="STDOUT" level="info" />
-        <!-- <appender-ref ref="FILE" level="debug"/> -->
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE"/>
     </root>
     <logger name="com.hazelcast" level="info"/>
     <logger name="com.zaxxer.hikari.pool" level="info"/>
@@ -32,4 +35,3 @@
     <logger name="com.nubeiot" level="info"/>
 
 </configuration>
-

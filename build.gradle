@@ -1,0 +1,97 @@
+plugins {
+    id "eclipse"
+    id "idea"
+    id "org.sonarqube" version "2.6"
+    id "net.ltgt.apt" version "0.19" apply false
+}
+
+ext {
+    vertxVersion = "3.5.4"
+    lombokVersion = "1.18.4"
+    genSrcFolder = "src/generated"
+    genJavaSrcFolder = "$project.genSrcFolder/java"
+    baseName = "nube"
+}
+
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.projectKey", project.name
+    }
+}
+
+group = 'com.nubeiot'
+
+allprojects {
+    version = project.version + "-" + project.semanticVersion
+
+    configurations {
+        providedRuntime
+    }
+
+    repositories {
+        mavenLocal()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+        mavenCentral()
+    }
+    
+    apply plugin: "eclipse"
+    apply plugin: "idea"
+}
+
+def static computeGroup(project) {
+    if (project.parent == null) {
+        return project.group
+    }
+    return computeGroup(project.parent) + "." + project.parent.name
+}
+
+def static computeBaseName(project) {
+    if (project.parent == null) {
+        return project.ext.baseName
+    }
+    return computeBaseName(project.parent) + "-" + project.name
+}
+
+subprojects {
+    apply plugin: "maven"
+    apply plugin: "java-library-distribution"
+    apply plugin: "jacoco"
+    apply plugin: "net.ltgt.apt"
+
+    group = computeGroup(project)
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    dependencies {
+        compile group: 'io.vertx', name: 'vertx-core', version: "$project.vertxVersion"
+        compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+        compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+        compileOnly "io.vertx:vertx-codegen:$project.vertxVersion"
+        compileOnly "org.projectlombok:lombok:$project.lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$project.lombokVersion"
+
+        testCompile group: 'io.vertx', name: 'vertx-unit', version: "$project.vertxVersion"
+        testCompile group: 'junit', name: 'junit', version: '4.12'
+        testCompile group: 'org.assertj', name: 'assertj-core', version: '3.5.2'
+        testCompile group: 'com.jayway.awaitility', name: 'awaitility', version: '1.7.0'
+        testCompile group: 'com.jayway.restassured', name: 'rest-assured', version: '2.9.0'
+        testCompileOnly "org.projectlombok:lombok:$project.lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$project.lombokVersion"
+    }
+
+    apply from: "$rootDir/buildSrc/generated.gradle"
+    apply from: "$rootDir/buildSrc/javadoc.gradle"
+    apply from: "$rootDir/buildSrc/bundle.gradle"
+    apply from: "$rootDir/buildSrc/nexus.gradle"
+    apply from: "$rootDir/buildSrc/misc.gradle"
+}
+
+apply from: "buildSrc/verification.gradle"
+apply from: "buildSrc/dist.gradle"

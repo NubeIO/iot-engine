@@ -22,21 +22,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>core-base</module>
-        <module>core-micro</module>
-        <module>core-httpserver</module>
-        <module>core-common</module>
-        <module>edge-core</module>
-        <module>edge-bios</module>
-        <module>edge-bios-installer</module>
-        <module>edge-connector-ditto</module>
-        <module>dashboard-server</module>
-        <module>dashboard-connector-edge</module>
-        <module>dashboard-connector-ditto</module>
-        <module>dashboard-connector-hive</module>
-        <module>dashboard-connector-mongo</module>
-        <module>dashboard-connector-postgresql</module>
-        <module>dashboard-connector-zeppelin</module>
+        <module>core</module>
+        <module>dashboard</module>
+        <module>edge</module>
     </modules>
 
     <parent>
@@ -174,9 +162,9 @@
                             <annotationProcessor>lombok.launch.AnnotationProcessorHider$AnnotationProcessor
                             </annotationProcessor>
                         </annotationProcessors>
-                        <generatedSourcesDirectory>${project.basedir}/src/main/generated</generatedSourcesDirectory>
+                        <generatedSourcesDirectory>${project.basedir}/src/generated/java</generatedSourcesDirectory>
                         <compilerArgs>
-                            <arg>-AoutputDirectory=${project.basedir}/src/main</arg>
+                            <arg>-AoutputDirectory=${project.basedir}/src/generated</arg>
                         </compilerArgs>
                     </configuration>
                 </plugin>
@@ -201,7 +189,7 @@
                     <configuration>
                         <filesets>
                             <fileset>
-                                <directory>${project.basedir}/src/main/generated</directory>
+                                <directory>${project.basedir}/src/generated/java</directory>
                             </fileset>
                         </filesets>
                     </configuration>

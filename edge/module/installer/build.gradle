@@ -1,0 +1,5 @@
+group 'com.nubeiot.edge.module'
+
+dependencies {
+    compile project(':edge:core')
+}

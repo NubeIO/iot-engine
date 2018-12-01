@@ -1,0 +1,51 @@
+task copyJar(type: Copy, group: 'distribution', description: 'Distribute jars to root project') {
+    dependsOn jar
+    def jars = []
+    subprojects.each {
+        jars += it.libsDir
+    }
+    from jars
+    into project.libsDir
+}
+
+task copyZip(type: Copy, group: 'distribution', description: 'Distribute artifacts to root project') {
+    dependsOn build
+    def zips = []
+    subprojects.each {
+        zips += it.distsDir
+    }
+    from zips
+    into project.distsDir
+}
+
+task copyDoc(type: Copy, group: 'distribution', description: 'Distribute docs to root project') {
+    dependsOn javadoc
+    def docZips = []
+    subprojects.each {
+        docZips += it.docsDir
+    }
+    from docZips
+    include "*.zip"
+    includeEmptyDirs false
+    into project.docsDir
+}
+
+task dist(group: 'distribution') {
+    dependsOn(copyJar, copyZip, copyDoc)
+    mustRunAfter(subprojects.tasks.dist)
+}
+
+jar {
+    finalizedBy copyJar
+    mustRunAfter subprojects.tasks.jar, subprojects.tasks.uberJar
+}
+
+build {
+    finalizedBy copyZip
+    mustRunAfter subprojects.tasks.build
+}
+
+javadoc {
+    finalizedBy copyDoc
+    mustRunAfter subprojects.tasks.javadoc
+}

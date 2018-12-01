@@ -1,9 +1,0 @@
-{
-  "main": "com.nubeiot.edge.bios.installer.AppDeploymentVerticle",
-  "options": {
-    "config": {
-      "url":"jdbc:sqlite:nube-app-installer.db",
-      "driver_class": "org.sqlite.JDBC"
-    }
-  }
-}

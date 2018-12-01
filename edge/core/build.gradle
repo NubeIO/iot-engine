@@ -1,0 +1,91 @@
+
+
+ext {
+    jooq_version = '3.10.8'
+    vertx_jooq_version = '3.1.0'
+    sqlite_version = '3.23.1'
+    hikari_version = '3.2.0'
+    jpa_version = '2.2'
+}
+
+//buildscript {
+//    sourceSets {
+//        java {
+//            srcDir file('src/buildscript/java/')
+//            include '**/edge/model/buildscript/*.java'
+//            include '**/edge/model/converter/*.java'
+//            include '**/edge/loader/*.java'
+//        }
+//    }
+//    dependencies {
+//        classpath project(':core')
+//        classpath "org.jooq:jooq-codegen:$project.jooq_version"
+//        classpath "org.jooq:jooq-meta:$project.jooq_version"
+//        classpath "io.github.jklingsporn:vertx-jooq-generate:$project.vertx_jooq_version"
+//        classpath "org.xerial:sqlite-jdbc:$project.sqlite_version"
+//    }
+//}
+
+dependencies {
+    compile project(':core:base')
+    compile group: 'io.vertx', name: 'vertx-maven-service-factory', version: "$project.vertxVersion"
+    compile group: 'io.vertx', name: 'vertx-jdbc-client', version: "$project.vertxVersion"
+    compile group: 'com.zaxxer', name: 'HikariCP', version: "$project.hikari_version"
+    compile group: 'org.xerial', name: 'sqlite-jdbc', version: "$project.sqlite_version"
+    compile group: 'org.jooq', name: 'jooq', version: "$project.jooq_version"
+    compile group: 'org.jooq', name: 'jooq-meta', version: "$project.jooq_version"
+    compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx', version: "$project.vertx_jooq_version"
+    compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx-jdbc', version: "$project.vertx_jooq_version"
+    compile group: 'javax.persistence', name: 'javax.persistence-api', version: "$project.jpa_version"
+}
+
+
+//import groovy.xml.MarkupBuilder
+//import org.jooq.util.GenerationTool
+//
+//import javax.xml.bind.JAXB
+//
+//task jooqGenerate {
+//    doLast() {
+//        def writer = new StringWriter()
+//        new MarkupBuilder(writer)
+//                .configuration("xmlns": "http://www.jooq.org/xsd/jooq-codegen-$project.jooq_version"+".xsd") {
+//            jdbc {
+//                driver('org.sqlite.JDBC')
+//                url("jdbc:sqlite:${project.basedir}/app-installer.db")
+//            }
+//            generator {
+//                name('com.nubeiot.edge.model.buildscript.CustomVertxGenerator')
+//                database {
+//                    name('org.jooq.util.sqlite.SQLiteDatabase')
+//                    include('.*')
+//                    unsignedTypes(false)
+//                    includeTables(true)
+//                    includeRoutines(true)
+//                    includePackages(false)
+//                    includeUDTs(true)
+//                    includeSequences(true)
+//                }
+//                generate([:]) {
+//                    deprecated(false)
+//                    records(false)
+//                    interfaces(true)
+//                    fluentSetters(true)
+//                    jpaAnnotations(true)
+//                    pojos(true)
+//                    daos(true)
+//                }
+//                target() {
+//                    packageName('com.nubeiot.edge.model.gen')
+//                    directory("$projectDir/src/main/java")
+//                }
+//                strategy {
+//                    name('io.github.jklingsporn.vertx.jooq.generate.rx.JDBCRXVertxGeneratorStrategy')
+//                }
+//            }
+//        }
+//        GenerationTool.generate(
+//                JAXB.unmarshal(new StringReader(writer.toString()), org.jooq.meta.jaxb.Configuration.class)
+//        )
+//    }
+//}

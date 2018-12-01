@@ -1,5 +1,0 @@
-{
-  "http.port": 8089,
-  "http.host": "0.0.0.0",
-  "api.name": "ditto-edge"
-}

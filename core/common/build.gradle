@@ -1,0 +1,5 @@
+dependencies {
+    compile project(':core:micro')
+    compile group: 'io.vertx', name: 'vertx-web', version: "$project.vertxVersion"
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.9'
+}

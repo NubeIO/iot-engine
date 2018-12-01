@@ -1,0 +1,6 @@
+{
+  "__app__": {
+    "http.port": 8086,
+    "api.name": "edge-connector"
+  }
+}
