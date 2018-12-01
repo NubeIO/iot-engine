@@ -31,71 +31,66 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import lombok.NonNull;
 
 public final class LocalServiceSearch implements IServiceSearch {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private EntityHandler entityHandler;
+    private final EntityHandler entityHandler;
 
-    public LocalServiceSearch(@NonNull EntityHandler entityHandler) {
+    public LocalServiceSearch(EntityHandler entityHandler) {
         this.entityHandler = entityHandler;
     }
 
     @Override
     public Single<JsonObject> search(RequestData requestData) throws NubeException {
+        if (this.entityHandler == null) {
+            throw new NubeException("Entity handler cannot be null");
+        }
+
         logger.info("Start executing local service searching  {}", requestData.getFilter());
-        return this.entityHandler.getExecutorSupplier()
-                                 .get()
-                                 .execute(context -> filter(validateFilter(requestData.getFilter()), requestData.getPagination(), context))
-                                 .flattenAsObservable(records -> records)
-                                 .flatMapSingle(record -> Single.just(record.toJson()))
-                                 .collect(JsonArray::new, JsonArray::add)
-                                 .map(results -> new JsonObject().put("services", results));
+        return this.entityHandler
+                .getExecutorSupplier().get().execute(
+                        context -> filter(validateFilter(requestData.getFilter()), requestData.getPagination(), context))
+                .flattenAsObservable(records -> records).flatMapSingle(record -> Single.just(record.toJson())).collect(
+                        JsonArray::new, JsonArray::add).map(results -> new JsonObject().put("services", results));
     }
 
     JsonObject validateFilter(JsonObject filter) {
-        //TODO fields name, depends object -> validate method
-    	JsonObject sqlData = new JsonObject(filter.getMap());
+        // TODO fields name, depends object -> validate method
+        JsonObject sqlData = new JsonObject(filter.getMap());
         String state = filter.getString(Tables.TBL_MODULE.STATE.getName());
         if (Strings.isNotBlank(state)) {
             try {
-            	sqlData.put(Tables.TBL_MODULE.STATE.getName(), State.valueOf(state));
+                sqlData.put(Tables.TBL_MODULE.STATE.getName(), State.valueOf(state));
             } catch (IllegalArgumentException e) {
                 throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid state", e);
             }
         }
 
-        //TODO from/to + "_" + table fields name
+        // TODO from/to + "_" + table fields name
         String from = filter.getString("from");
         String to = filter.getString("to");
         if (Strings.isNotBlank(from)) {
-        	sqlData.put("from", DateTimes.parseISO8601(from));
+            sqlData.put("from", DateTimes.parseISO8601(from));
         }
         if (Strings.isNotBlank(to)) {
-        	sqlData.put("to", DateTimes.parseISO8601(to));
+            sqlData.put("to", DateTimes.parseISO8601(to));
         }
         return sqlData;
     }
 
     @SuppressWarnings("unchecked")
     private List<TblModuleRecord> filter(JsonObject filter, Pagination pagination, DSLContext context) {
-        final SelectConditionStep<Record> sql = context.select()
-                                                       .from(Tables.TBL_MODULE)
-                                                       .where(DSL.field(Tables.TBL_MODULE.SERVICE_TYPE)
-                                                                 .eq(ModuleType.JAVA));
-        Set<String> fieldNames = Arrays.stream(Tables.TBL_MODULE.fields())
-                                       .map(Field::getName)
-                                       .collect(Collectors.toSet());
-        filter.getMap()
-              .entrySet()
-              .parallelStream()
-              .filter(entry -> fieldNames.contains(entry.getKey()))
-              .forEach(entry -> {
-                  Field field = Tables.TBL_MODULE.field(entry.getKey());
-                  sql.and(field.eq(entry.getValue()));
-              });
+        final SelectConditionStep<Record> sql = context.select().from(Tables.TBL_MODULE).where(
+                DSL.field(Tables.TBL_MODULE.SERVICE_TYPE).eq(ModuleType.JAVA));
+        Set<String> fieldNames = Arrays.stream(Tables.TBL_MODULE.fields()).map(Field::getName).collect(
+                Collectors.toSet());
+        filter.getMap().entrySet().parallelStream().filter(entry -> fieldNames.contains(entry.getKey())).forEach(
+                entry -> {
+                    Field field = Tables.TBL_MODULE.field(entry.getKey());
+                    sql.and(field.eq(entry.getValue()));
+                });
         final Instant from = filter.getInstant("from");
         if (Objects.nonNull(from)) {
             sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(Date.from(from)));
@@ -106,9 +101,9 @@ public final class LocalServiceSearch implements IServiceSearch {
             sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(Date.from(to)));
         }
 
-        return sql.limit(pagination.getPerPage())
-                  .offset(((pagination.getPage() - 1) * pagination.getPerPage()))
-                  .fetchInto(TblModuleRecord.class);
+        return sql
+                .limit(pagination.getPerPage()).offset(((pagination.getPage() - 1) * pagination.getPerPage())).fetchInto(
+                        TblModuleRecord.class);
     }
 
 }
