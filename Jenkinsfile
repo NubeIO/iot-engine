@@ -65,6 +65,9 @@ pipeline {
     post {
         always {
             sh "apk add git"
+            script {
+                currentBuild.result = currentBuild.currentResult
+            }           
             githubHookStatus()
             emailNotifications(VERSION)
         }
