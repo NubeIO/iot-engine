@@ -1,5 +1,7 @@
 package com.nubeiot.edge.bios;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import com.nubeiot.core.enums.Status;
@@ -28,16 +30,17 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     @Override
     protected void registerEventBus() {
         final EventBus bus = getVertx().eventBus();
-        bus.consumer(EventModel.EDGE_BIOS_INSTALLER.getAddress(),
-                     m -> this.handleEvent(m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
-        bus.consumer(EventModel.EDGE_BIOS_TRANSACTION.getAddress(),
-                     m -> this.handleEvent(m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
+        bus.consumer(
+            EventModel.EDGE_BIOS_INSTALLER.getAddress(), m -> this.handleEvent(
+                m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
+        bus.consumer(
+            EventModel.EDGE_BIOS_TRANSACTION.getAddress(), m -> this.handleEvent(
+                m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
     }
 
     @Override
     protected ModuleTypeRule registerModuleRule() {
-        return new ModuleTypeRule().registerRule(ModuleType.JAVA, "com.nubeiot.edge.module",
-                                                 artifactId -> artifactId.startsWith("com.nubeiot.edge.module"));
+        return new ModuleTypeRule().registerRule(ModuleType.JAVA, "com.nubeiot.edge.module", this.validateGroup(ModuleType.JAVA));
     }
 
     @Override
@@ -59,14 +62,14 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
 
     private Single<JsonObject> initApp(JsonObject repositoryCfg, JsonObject appCfg) {
         JsonObject deployCfg = appCfg.getJsonObject(
-                com.nubeiot.edge.core.model.gen.tables.TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(),
-                new JsonObject());
-        JsonObject deployAppCfg = Configs.toApplicationCfg(repositoryCfg.mergeIn(Configs.getApplicationCfg(deployCfg)));
-        ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
-                                              .fromJson(ModuleTypeFactory.getDefault()
-                                                                         .serialize(appCfg, this.getModuleRule()))
-                                              .setDeployConfigJson(deployAppCfg);
-        return processDeploymentTransaction((TblModule) tblModule, EventType.INIT);
+            com.nubeiot.edge.core.model.gen.tables.TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(),
+            new JsonObject());
+    JsonObject deployAppCfg = Configs.toApplicationCfg(repositoryCfg.mergeIn(Configs.getApplicationCfg(deployCfg)));
+    ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
+                                          .fromJson(ModuleTypeFactory.getDefault()
+                                                                     .serialize(appCfg, this.getModuleRule()))
+                                          .setDeployConfigJson(deployAppCfg);
+    return processDeploymentTransaction((TblModule) tblModule, EventType.INIT);
     }
 
     private JsonObject setupMavenRepos(JsonObject repositoryCfg) {
@@ -84,10 +87,16 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
             JsonObject remoteCfg = (JsonObject) entry.getValue();
             logger.info("Maven local repositories: {}", local);
             logger.info("Maven remote repositories: {}", remoteCfg);
-            ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
-                    remoteCfg.getJsonArray("urls", new JsonArray()).getList()).setLocalRepository(local);
+            ResolverOptions resolver = new ResolverOptions()
+                .setRemoteRepositories(remoteCfg.getJsonArray("urls", new JsonArray()).getList()).setLocalRepository(
+                    local);
             vertx.getDelegate().registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
+    }
+
+    @Override
+    protected List<String> getSupportGroups(ModuleType moduleType) {
+        return Arrays.asList("com.nubeiot.edge.module");
     }
 
 }

@@ -1,5 +1,11 @@
 package com.nubeiot.edge.core;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Predicate;
+
 import org.jooq.Configuration;
 
 import com.nubeiot.core.dto.RequestData;
@@ -13,6 +19,7 @@ import com.nubeiot.core.sql.ISqlProvider;
 import com.nubeiot.core.sql.SQLWrapper;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.core.loader.ModuleLoader;
+import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.gen.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.gen.tables.daos.TblRemoveHistoryDao;
@@ -70,6 +77,14 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
     protected abstract ModuleTypeRule registerModuleRule();
 
     protected abstract Single<JsonObject> initData();
+    
+    protected abstract List<String> getSupportGroups(ModuleType moduleType);
+    
+    protected Predicate<String> validateGroup(ModuleType moduleType) {
+        return artifact -> {
+            return this.getSupportGroups(moduleType).stream().anyMatch(item -> artifact.contains(item));
+        };
+    }
 
     protected Single<JsonObject> startupModules() {
         return this.entityHandler.getModulesWhenBootstrap()
@@ -116,5 +131,5 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
                                                                         r.getString("deploy_id")),
                                t -> entityHandler.handleErrorPostDeployment(serviceId, transactionId, event, t));
     }
-
+    
 }
