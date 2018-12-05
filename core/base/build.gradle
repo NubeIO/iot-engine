@@ -1,6 +1,6 @@
-
 dependencies {
-    compile group: 'io.vertx', name: 'vertx-rx-java2', version: "$project.vertxVersion"
-    compile group: 'io.vertx', name: 'vertx-config', version: "$project.vertxVersion"
-    compile group: 'io.vertx', name: 'vertx-hazelcast', version: "$project.vertxVersion"
+    compile "io.github.classgraph:classgraph:4.6.2"
+    compile "io.vertx:vertx-rx-java2:$project.vertxVersion"
+    compile "io.vertx:vertx-config:$project.vertxVersion"
+    testCompile project(":core:cluster:hazelcast")
 }

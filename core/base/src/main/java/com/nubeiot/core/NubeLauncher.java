@@ -1,8 +1,14 @@
 package com.nubeiot.core;
 
-import com.hazelcast.config.Config;
+import java.util.Objects;
+
+import com.nubeiot.core.cluster.ClusterNodeListener;
+import com.nubeiot.core.cluster.ClusterRegistry;
+import com.nubeiot.core.cluster.IClusterDelegate;
+import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.Configs;
+import com.nubeiot.core.utils.Strings;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -11,7 +17,7 @@ import io.vertx.core.eventbus.EventBusOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
+import io.vertx.reactivex.core.eventbus.EventBus;
 
 public final class NubeLauncher extends io.vertx.core.Launcher {
 
@@ -41,8 +47,22 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         logger.info("Before starting Vertx instance...");
         JsonObject cfg = Configs.getSystemCfg(allConfig);
         logger.info("System Config: {}", cfg.encode());
-        this.options = loadVertxOption(options, cfg);
+        this.options = reloadVertxOptions(options, cfg);
         super.beforeStartingVertx(this.options);
+    }
+
+    @Override
+    public void afterStartingVertx(Vertx vertx) {
+        if (vertx.isClustered()) {
+            final String address = Configs.getSystemCfg(allConfig)
+                                          .getJsonObject(Configs.CLUSTER_CFG_KEY, new JsonObject())
+                                          .getString("address");
+            if (Strings.isNotBlank(address)) {
+                this.options.getClusterManager()
+                            .nodeListener(new ClusterNodeListener(new EventBus(vertx.eventBus()), address));
+            }
+        }
+        super.afterStartingVertx(vertx);
     }
 
     @Override
@@ -59,31 +79,28 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     }
 
     @Override
-    public void beforeStoppingVertx(Vertx vertx) {
+    public void afterStoppingVertx() {
         this.options.getClusterManager().leave(event -> {
             if (event.failed()) {
                 logger.error("Failed to leave cluster", event.cause());
             }
         });
-        super.beforeStoppingVertx(vertx);
+        super.afterStoppingVertx();
     }
 
-    static JsonObject defaultConfig() {
+    private static JsonObject defaultConfig() {
         return Configs.loadDefaultConfig("system.json");
     }
 
-    static VertxOptions defaultVertxOption(JsonObject config) {
-        return loadVertxOption(new VertxOptions(), config);
-    }
-
-    private static VertxOptions loadVertxOption(VertxOptions vertxOptions, JsonObject systemCfg) {
+    private VertxOptions reloadVertxOptions(VertxOptions vertxOptions, JsonObject systemCfg) {
         StateMachine.init();
+        ClusterRegistry.init();
         configEventBus(vertxOptions, systemCfg.getJsonObject(Configs.EVENT_BUS_CFG_KEY, new JsonObject()));
         configCluster(vertxOptions, systemCfg.getJsonObject(Configs.CLUSTER_CFG_KEY, new JsonObject()));
         return vertxOptions;
     }
 
-    private static void configEventBus(VertxOptions options, JsonObject eventBusCfg) {
+    private void configEventBus(VertxOptions options, JsonObject eventBusCfg) {
         logger.info("Setup EventBus...");
         EventBusOptions option = new EventBusOptions(eventBusCfg);
         logger.debug("Event Bus Config: {}", eventBusCfg.encode());
@@ -91,18 +108,19 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         options.setEventBusOptions(option);
     }
 
-    private static void configCluster(VertxOptions options, JsonObject clusterConfig) {
+    private void configCluster(VertxOptions options, JsonObject clusterConfig) {
         if (clusterConfig.isEmpty() || !clusterConfig.getBoolean("active", Boolean.FALSE)) {
             return;
         }
         logger.info("Setup Cluster...");
         options.setClustered(true);
         options.setHAEnabled(clusterConfig.getBoolean("ha", Boolean.FALSE));
-        logger.info("Cluster Configuration: {}", clusterConfig);
-        Config clusterCfg = Configs.parseClusterConfig(clusterConfig)
-                                   .build()
-                                   .setProperty("hazelcast.logging.type", "slf4j");
-        options.setClusterManager(new HazelcastClusterManager(clusterCfg));
+        final String delegateType = clusterConfig.getString("type", "hazelcast");
+        final IClusterDelegate delegate = ClusterRegistry.instance().getClusterDelegate(delegateType);
+        if (Objects.isNull(delegate)) {
+            throw new EngineException("Cannot load cluster config: " + delegateType);
+        }
+        options.setClusterManager(delegate.initClusterManager(clusterConfig));
     }
 
 }
