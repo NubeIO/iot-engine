@@ -27,6 +27,7 @@ jar {
                 'Build-Date'                                                     : Instant.now(),
                 'Build-By'                                                       : "${project.buildBy}",
                 'Java-Version'                                                   : "${javaVersion}",
+                'Vertx-Version'                                                  : "${project.vertxVersion}",
                 'Class-Path'                                                     : "${classPath}"
         ]
         if (project.hasProperty("executable") && project.executable == "true") {
