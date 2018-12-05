@@ -3,10 +3,16 @@ package com.nubeiot.core.common;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import com.nubeiot.core.common.utils.HttpException;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
+import com.nubeiot.core.exceptions.HttpStatusMapping;
+
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.web.RoutingContext;
 
+/**
+ * @deprecated Use {@link HttpStatusMapping}
+ */
+@Deprecated
 public class HttpHelper {
     public static void badRequest(RoutingContext context, Throwable ex) {
         context.response().setStatusCode(400)

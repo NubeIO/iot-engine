@@ -79,7 +79,7 @@ public final class LocalServiceSearch implements IServiceSearch {
         return sqlData;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private List<TblModuleRecord> filter(JsonObject filter, Pagination pagination, DSLContext context) {
         final SelectConditionStep<Record> sql = context.select()
                                                        .from(Tables.TBL_MODULE)

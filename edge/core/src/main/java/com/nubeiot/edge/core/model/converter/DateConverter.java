@@ -1,11 +1,9 @@
 package com.nubeiot.edge.core.model.converter;
 
 import java.sql.Timestamp;
-import java.time.ZoneOffset;
-import java.util.Calendar;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
-import java.util.TimeZone;
 
 import org.jooq.Converter;
 
@@ -16,9 +14,7 @@ public final class DateConverter implements Converter<Timestamp, Date> {
         if (Objects.isNull(databaseObject)) {
             return null;
         }
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC));
-        calendar.setTimeInMillis(databaseObject.getTime());
-        return calendar.getTime();
+        return Date.from(Instant.ofEpochMilli(databaseObject.getTime()));
     }
 
     @Override

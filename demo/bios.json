@@ -17,6 +17,11 @@
     }
   },
   "__app__": {
+    "__sql__": {
+      "hikari": {
+        "jdbcUrl": "jdbc:h2:file:./bios;database_to_upper=false"
+      }
+    },
     "auto_install": true,
     "repository": {
       "local": "",
@@ -35,7 +40,16 @@
       "group_id": "com.nubeiot.edge.module",
       "artifact_id": "bios-installer",
       "version": "1.0.0-SNAPSHOT",
-      "service_name": "bios-installer"
+      "service_name": "bios-installer",
+      "deploy_config_json": {
+        "__app__": {
+          "__sql__": {
+            "hikari": {
+              "jdbcUrl": "jdbc:h2:file:./bios-installer;database_to_upper=false"
+            }
+          }
+        }
+      }
     }
   }
 }

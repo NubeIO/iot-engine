@@ -1,11 +1,6 @@
 
-
 ext {
-    jooq_version = '3.10.8'
-    vertx_jooq_version = '3.1.0'
-    sqlite_version = '3.23.1'
-    hikari_version = '3.2.0'
-    jpa_version = '2.2'
+    h2_version = '1.4.197'
 }
 
 //buildscript {
@@ -28,15 +23,9 @@ ext {
 
 dependencies {
     compile project(':core:base')
-    compile group: 'io.vertx', name: 'vertx-maven-service-factory', version: "$project.vertxVersion"
-    compile group: 'io.vertx', name: 'vertx-jdbc-client', version: "$project.vertxVersion"
-    compile group: 'com.zaxxer', name: 'HikariCP', version: "$project.hikari_version"
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: "$project.sqlite_version"
-    compile group: 'org.jooq', name: 'jooq', version: "$project.jooq_version"
-    compile group: 'org.jooq', name: 'jooq-meta', version: "$project.jooq_version"
-    compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx', version: "$project.vertx_jooq_version"
-    compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx-jdbc', version: "$project.vertx_jooq_version"
-    compile group: 'javax.persistence', name: 'javax.persistence-api', version: "$project.jpa_version"
+    compile project(':core:sql')
+    compile "com.h2database:h2:$project.h2_version"
+    compile "io.vertx:vertx-maven-service-factory:$project.vertxVersion"
 }
 
 

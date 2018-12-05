@@ -8,6 +8,7 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventType;
 import com.nubeiot.core.exceptions.EngineException;
+import com.nubeiot.edge.core.PreDeploymentResult;
 
 import io.reactivex.CompletableObserver;
 import io.reactivex.Single;
@@ -26,22 +27,21 @@ public final class ModuleLoader extends EventHandler {
 
     @EventContractor(values = {EventType.CREATE, EventType.INIT})
     private Single<JsonObject> installModule(RequestData data) {
-        String serviceId = data.getBody().getString("service_id");
-        JsonObject deployCfg = data.getBody().getJsonObject("deploy_cfg");
-        logger.info("Vertx install module {} with config {}...", serviceId, deployCfg);
-        DeploymentOptions options = new DeploymentOptions().setConfig(deployCfg);
-        return context.rxDeployVerticle(serviceId, options).doOnError(throwable -> {
+        PreDeploymentResult preResult = PreDeploymentResult.fromJson(data.getBody());
+        logger.info("Vertx install module {} with config {}...", preResult.getServiceId(), preResult.getDeployCfg());
+        DeploymentOptions options = new DeploymentOptions().setConfig(preResult.getDeployCfg());
+        return context.rxDeployVerticle(preResult.getServiceId(), options).doOnError(throwable -> {
             throw new EngineException(throwable);
         }).map(id -> new JsonObject().put("deploy_id", id));
     }
 
     @EventContractor(values = {EventType.REMOVE, EventType.HALT})
     private Single<JsonObject> removeModule(RequestData data) {
-        String deployId = data.getBody().getString("deploy_id");
-        boolean isSilent = data.getBody().getBoolean("silent");
+        PreDeploymentResult preResult = PreDeploymentResult.fromJson(data.getBody());
+        String deployId = preResult.getDeployId();
         logger.info("Vertx unload module {}...", deployId);
         return context.rxUndeploy(deployId).onErrorResumeNext(throwable -> {
-            if (!isSilent) {
+            if (!preResult.isSilent()) {
                 throw new EngineException(throwable);
             }
             logger.warn("Module {} is gone in Vertx. Keep silent...", throwable, deployId);
@@ -51,11 +51,10 @@ public final class ModuleLoader extends EventHandler {
 
     @EventContractor(values = EventType.UPDATE)
     private Single<JsonObject> reloadModule(RequestData data) {
-        String deployId = data.getBody().getString("deploy_id");
-        JsonObject deployCfg = data.getBody().getJsonObject("deploy_cfg");
-        logger.info("Vertx reload module {} with config {}...", deployId, deployCfg);
-        return context.rxUndeploy(deployId).onErrorResumeNext(throwable -> {
-            logger.debug("Module {} is gone in Vertx. Just installing...", throwable, deployId);
+        PreDeploymentResult preResult = PreDeploymentResult.fromJson(data.getBody());
+        logger.info("Vertx reload module {} with config {}...", preResult.getDeployId(), preResult.getDeployCfg());
+        return context.rxUndeploy(preResult.getDeployId()).onErrorResumeNext(throwable -> {
+            logger.debug("Module {} is gone in Vertx. Just installing...", throwable, preResult.getDeployId());
             return CompletableObserver::onComplete;
         }).andThen(installModule(data));
     }

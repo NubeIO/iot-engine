@@ -18,6 +18,7 @@ import io.vertx.reactivex.ext.web.handler.CorsHandler;
 import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.Record;
 
+@Deprecated
 public class RxRestAPIVerticle extends RxMicroServiceVerticle {
 
     /**

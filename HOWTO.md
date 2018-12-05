@@ -8,12 +8,12 @@
 - [Gradle](https://gradle.org/)
 - Create `nexus.secret.properties` with content:
 
-	```properties
-	nexusSnapshotUrl=http://<your-nexus-server>/repository/maven-snapshots/
-	nexusReleaseURL=http://<your-nexus-server>/repository/maven-releases/
-	nexusUsername=<your-nexus-user>
-	nexusPassword=<your-nexus-password>
-	```
+  ```properties
+  nexusSnapshotUrl=http://<your-nexus-server>/repository/maven-snapshots/
+  nexusReleaseURL=http://<your-nexus-server>/repository/maven-releases/
+  nexusUsername=<your-nexus-user>
+  nexusPassword=<your-nexus-password>
+  ```
 
 ### Build
 
@@ -41,7 +41,7 @@
   ```bash
   java -Dlogback.configurationFile=logback-bios-connector.xml -jar bios-connector.jar -conf bios-connector.json -cluster
 
-  java -Dlogback.configurationFile=logback-bios.xml -jar bios.jar -conf bios-config.json -cluster
+  java -Dlogback.configurationFile=logback-bios.xml -jar bios.jar -conf bios.json -cluster
   ```
 
 ## Interact REST API

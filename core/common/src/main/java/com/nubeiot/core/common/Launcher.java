@@ -12,9 +12,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
+import com.nubeiot.core.NubeLauncher;
+
 /**
- * Created by topsykretts on 4/26/18.
+ * @deprecated Use {@link NubeLauncher}
  */
+@Deprecated
 public class Launcher extends io.vertx.core.Launcher {
 
     public static void main(String[] args) {

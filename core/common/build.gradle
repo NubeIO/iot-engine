@@ -1,5 +1,6 @@
 dependencies {
     compile project(':core:micro')
-    compile group: 'io.vertx', name: 'vertx-web', version: "$project.vertxVersion"
+    compile project(':core:httpserver')
+    compile project(':core:cluster:hazelcast')
     compile group: 'commons-codec', name: 'commons-codec', version: '1.9'
 }

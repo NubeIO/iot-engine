@@ -1,17 +1,16 @@
 package com.nubeiot.core.utils;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.nubeiot.core.cluster.ClusterDelegate;
+import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.exceptions.ServiceException;
 
 import io.vertx.core.json.JsonObject;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 
 public class ReflectionsTest {
 
@@ -27,14 +26,14 @@ public class ReflectionsTest {
 
     @Test(expected = NullPointerException.class)
     public void test_execute_method_output_null() throws NoSuchMethodException {
-        final MockReflection mock = new MockReflection("abc");
+        final ReflectionMockObjects.MockReflection mock = new ReflectionMockObjects.MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("getId");
         Reflections.executeMethod(mock, method, new JsonObject(), null);
     }
 
     @Test
     public void test_execute_method() throws NoSuchMethodException {
-        final MockReflection mock = new MockReflection("abc");
+        final ReflectionMockObjects.MockReflection mock = new ReflectionMockObjects.MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("setName", String.class);
         Reflections.executeMethod(mock, method, "xxx", Void.class);
         Assert.assertEquals("xxx", mock.getName());
@@ -42,14 +41,14 @@ public class ReflectionsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void test_execute_method_noArgument() throws NoSuchMethodException {
-        final MockReflection mock = new MockReflection("abc");
+        final ReflectionMockObjects.MockReflection mock = new ReflectionMockObjects.MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("methodNoArgument");
         Reflections.executeMethod(mock, method, "xxx", Void.class);
     }
 
     @Test(expected = NubeException.class)
     public void test_execute_method_throwNubeException() throws NoSuchMethodException {
-        final MockReflection mock = new MockReflection("abc");
+        final ReflectionMockObjects.MockReflection mock = new ReflectionMockObjects.MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("throwNubeException", String.class);
         try {
             Reflections.executeMethod(mock, method, "hey", Void.class);
@@ -63,7 +62,7 @@ public class ReflectionsTest {
 
     @Test(expected = RuntimeException.class)
     public void test_execute_method_throwUnknownException() throws Throwable {
-        final MockReflection mock = new MockReflection("abc");
+        final ReflectionMockObjects.MockReflection mock = new ReflectionMockObjects.MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("throwUnknownException", String.class);
         try {
             Reflections.executeMethod(mock, method, "hey", Void.class);
@@ -75,26 +74,25 @@ public class ReflectionsTest {
         }
     }
 
-    @Getter
-    @RequiredArgsConstructor
-    private static class MockReflection {
-
-        private final String id;
-        @Setter
-        private String name;
-
-        public int methodNoArgument() {
-            return 1;
-        }
-
-        public void throwNubeException(String hey) {
-            throw new ServiceException(hey);
-        }
-
-        public void throwUnknownException(String hey) {
-            throw new RuntimeException(hey);
-        }
-
+    @Test
+    public void test_get_mock_classes_by_annotation() {
+        List<Class<IClusterDelegate>> classes = Reflections.scanClassesInPackage("com.nubeiot.core.utils",
+                                                                                 ClusterDelegate.class,
+                                                                                 IClusterDelegate.class);
+        Assert.assertEquals(1, classes.size());
+        final IClusterDelegate delegate = Reflections.createObject(classes.get(0));
+        Assert.assertNotNull(delegate);
+        Assert.assertEquals("mock", delegate.getTypeName());
     }
 
+    @Test
+    public void test_get_classes_by_annotation() {
+        List<Class<IClusterDelegate>> classes = Reflections.scanClassesInPackage("com.nubeiot.core.cluster",
+                                                                                 ClusterDelegate.class,
+                                                                                 IClusterDelegate.class);
+        Assert.assertEquals(1, classes.size());
+        final IClusterDelegate delegate = Reflections.createObject(classes.get(0));
+        Assert.assertNotNull(delegate);
+        Assert.assertEquals("hazelcast", delegate.getTypeName());
+    }
 }
