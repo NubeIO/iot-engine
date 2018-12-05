@@ -17,9 +17,10 @@ import com.nubeiot.core.exceptions.StateException;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class StateMachine {
 
     private final EnumMap<EventType, StateLifeCycle> eventLifeCycles = new EnumMap<>(EventType.class);

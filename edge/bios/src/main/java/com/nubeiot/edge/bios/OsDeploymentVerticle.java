@@ -26,11 +26,6 @@ import io.vertx.maven.ResolverOptions;
 public final class OsDeploymentVerticle extends EdgeVerticle {
 
     @Override
-    protected String getDBName() {
-        return "nube-bios";
-    }
-
-    @Override
     protected void registerEventBus() {
         final EventBus bus = getVertx().eventBus();
         bus.consumer(EventModel.EDGE_BIOS_INSTALLER.getAddress(),
@@ -63,11 +58,14 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     }
 
     private Single<JsonObject> initApp(JsonObject repositoryCfg, JsonObject appCfg) {
+        JsonObject deployCfg = appCfg.getJsonObject(
+                com.nubeiot.edge.core.model.gen.tables.TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(),
+                new JsonObject());
+        JsonObject deployAppCfg = Configs.toApplicationCfg(repositoryCfg.mergeIn(Configs.getApplicationCfg(deployCfg)));
         ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
                                               .fromJson(ModuleTypeFactory.getDefault()
                                                                          .serialize(appCfg, this.getModuleRule()))
-                                              .setDeployConfigJson(
-                                                      repositoryCfg.mergeIn(Configs.getApplicationCfg(appCfg)));
+                                              .setDeployConfigJson(deployAppCfg);
         return processDeploymentTransaction((TblModule) tblModule, EventType.INIT);
     }
 

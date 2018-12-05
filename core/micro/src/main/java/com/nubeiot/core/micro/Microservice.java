@@ -3,6 +3,8 @@ package com.nubeiot.core.micro;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.nubeiot.core.component.IComponent;
+
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
 import io.reactivex.Single;
@@ -22,12 +24,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class MicroserviceConfig {
+public final class Microservice implements IComponent {
 
-    private static final Logger logger = LoggerFactory.getLogger(MicroserviceConfig.class);
-    public static final String MICRO_CFG_NAME = "__micro__";
-    public static final String CIRCUIT_BREAKER_CFG_NAME = "__circuitBreaker__";
-    public static final String SERVICE_DISCOVERY_CFG_NAME = "__serviceDiscovery__";
+    private static final Logger logger = LoggerFactory.getLogger(Microservice.class);
+    static final String MICRO_CFG_NAME = "__micro__";
+    private static final String CIRCUIT_BREAKER_CFG_NAME = "__circuitBreaker__";
+    private static final String SERVICE_DISCOVERY_CFG_NAME = "__serviceDiscovery__";
 
     private final Vertx vertx;
     @Getter
@@ -38,7 +40,20 @@ public final class MicroserviceConfig {
     @Getter
     private CircuitBreaker circuitBreaker;
 
-    public MicroserviceConfig onStart() {
+    public Single<Record> publish(Record record) {
+        return discovery.rxPublish(record).doOnSuccess(rec -> {
+            registeredRecords.add(rec);
+            logger.info("Service <{}> published with {}", rec.getName(), rec.getMetadata());
+        });
+    }
+
+    @Override
+    public void start(Future<Void> startFuture) {
+
+    }
+
+    @Override
+    public void start() {
         logger.info("Setup micro-service...", microConfig);
         JsonObject discoveryCfg = microConfig.getJsonObject(SERVICE_DISCOVERY_CFG_NAME, new JsonObject());
         JsonObject breakerCfg = microConfig.getJsonObject(CIRCUIT_BREAKER_CFG_NAME, new JsonObject());
@@ -51,17 +66,15 @@ public final class MicroserviceConfig {
         discovery = ServiceDiscovery.create(vertx, discoveryOptions);
         circuitBreaker = CircuitBreaker.create(breakerCfg.getString("name", "nubeio-circuit-breaker"), vertx,
                                                breakerOptions);
-        return this;
     }
 
-    public Single<Record> publish(Record record) {
-        return discovery.rxPublish(record).doOnSuccess(rec -> {
-            registeredRecords.add(rec);
-            logger.info("Service <{}> published with {}", rec.getName(), rec.getMetadata());
-        });
+    @Override
+    public void stop() {
+
     }
 
-    public void onStop(Future<Void> future) {
+    @Override
+    public void stop(Future<Void> future) {
         final Iterable<CompletableSource> unPublishSources = registeredRecords.stream()
                                                                               .map(record -> discovery.rxUnpublish(
                                                                                       record.getRegistration()))

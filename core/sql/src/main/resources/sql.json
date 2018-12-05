@@ -1,0 +1,20 @@
+{
+  "__app__": {
+    "__sql__": {
+      "hikari": {
+        "minimumIdle": 3,
+        "maximumPoolSize": 10,
+        "connectionTimeout": 60000,
+        "idleTimeout": 600000,
+        "maxLifetime": 1800000,
+        "connectionTestQuery": "SELECT 1"
+        //        "dataSourceClassName": "org.postgresql.ds.PGSimpleDataSource",
+        //        "dataSource.user": "test",
+        //        "dataSource.password": "test",
+        //        "dataSource.databaseName": "mydb",
+        //        "dataSource.portNumber": 5432,
+        //        "dataSource.serverName": "localhost"
+      }
+    }
+  }
+}

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS tbl_module (
  );
 
 CREATE TABLE IF NOT EXISTS tbl_transaction (
-	transaction_id       varchar(31) NOT NULL  ,
+	transaction_id       varchar(63) NOT NULL  ,
 	module_id            varchar(127) NOT NULL  ,
 	event                varchar(15) NOT NULL  ,
 	status               varchar(15) NOT NULL  ,
@@ -35,7 +35,7 @@ CREATE INDEX IF NOT EXISTS Idx_tbl_transaction_module_id ON tbl_transaction ( mo
 CREATE INDEX IF NOT EXISTS Idx_tbl_transaction_module_lifetime ON tbl_transaction ( module_id, issued_at );
 
 CREATE TABLE IF NOT EXISTS tbl_remove_history (
-	transaction_id       varchar(31) NOT NULL  ,
+	transaction_id       varchar(63) NOT NULL  ,
 	module_id            varchar(127) NOT NULL  ,
 	event                varchar(15) NOT NULL  ,
 	status               varchar(15) NOT NULL  ,

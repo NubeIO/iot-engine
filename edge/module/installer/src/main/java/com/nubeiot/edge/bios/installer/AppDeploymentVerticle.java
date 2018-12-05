@@ -14,11 +14,6 @@ import io.vertx.core.json.JsonObject;
 public final class AppDeploymentVerticle extends EdgeVerticle {
 
     @Override
-    protected String getDBName() {
-        return "nube-app-installer";
-    }
-
-    @Override
     protected void registerEventBus() {
         final EventBus bus = getVertx().eventBus();
         bus.consumer(EventModel.EDGE_APP_INSTALLER.getAddress(),
