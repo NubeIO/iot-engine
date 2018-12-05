@@ -23,6 +23,7 @@ import lombok.Getter;
 /**
  * An implementation of {@link Verticle} taking care of the discovery and publication of services.
  */
+@Deprecated
 public abstract class RxMicroServiceVerticle extends AbstractVerticle implements IMicroProvider {
 
     @Getter

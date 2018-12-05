@@ -14,6 +14,7 @@ jar {
         println '- Semantic Version: ' + project.semanticVersion
         println '- Build Number:     ' + project.buildNumber
         println '- Java Version:     ' + javaVersion
+        println '- Vertx Version:    ' + project.vertxVersion
 
         def manifestMap = [
                 (java.util.jar.Attributes.Name.MANIFEST_VERSION.toString())      : '1.0',
@@ -44,10 +45,16 @@ jar {
 }
 
 distZip {
+    onlyIf {
+        project.hasProperty("executable") && project.executable == "true"
+    }
     baseName = computeBaseName(project)
 }
 
 distTar {
+    onlyIf {
+        project.hasProperty("executable") && project.executable == "true"
+    }
     baseName = computeBaseName(project)
 }
 
@@ -69,7 +76,7 @@ task dist(group: 'distribution') {
 
 task uberJar(type: Jar) {
     onlyIf {
-        project.hasProperty("executable") && project.executable == "true"
+        project.hasProperty("standalone") && project.standalone == "true"
     }
     classifier = 'fat'
     baseName = computeBaseName(project)

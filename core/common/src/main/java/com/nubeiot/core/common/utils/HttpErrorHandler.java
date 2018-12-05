@@ -5,6 +5,10 @@ import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_
 
 import io.vertx.reactivex.ext.web.RoutingContext;
 
+/**
+ * Tobe removed
+ */
+@Deprecated
 public class HttpErrorHandler {
     public static void handleError(Throwable throwable, RoutingContext routingContext) {
         HttpException exception = (HttpException) throwable;

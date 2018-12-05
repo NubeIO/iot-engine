@@ -7,6 +7,12 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.nubeiot.core.utils.Strings;
+
+/**
+ * Merge in @{@link Strings}
+ */
+@Deprecated
 public class StringUtils {
     public static String[] removeQuotes(String[] tokens) {
         String[] tokenWithoutQuote = new String[tokens.length];

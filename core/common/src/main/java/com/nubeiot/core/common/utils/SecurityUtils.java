@@ -3,6 +3,7 @@ package com.nubeiot.core.common.utils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.binary.Base64;
 
+@Deprecated
 public class SecurityUtils {
     private static String SALT = "NubeIoTSalt";
 

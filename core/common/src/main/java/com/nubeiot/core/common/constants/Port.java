@@ -1,5 +1,6 @@
 package com.nubeiot.core.common.constants;
 
+@Deprecated
 public class Port {
     public static int MONGO_DB_PORT = 8083;
     public static int HIVE_SERVER_PORT = 8084;
