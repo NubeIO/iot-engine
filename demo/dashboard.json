@@ -29,9 +29,7 @@
       "maxLifeTimeMS": 3600000,
       "maintenanceFrequencyMS": 2000,
       "maintenanceInitialDelayMS": 500,
-      "waitQueueMultiple": 100,
-      "http.port": 8083,
-      "api.name": "mongo"
+      "waitQueueMultiple": 100
     }
   },
   "ditto-policy": false
