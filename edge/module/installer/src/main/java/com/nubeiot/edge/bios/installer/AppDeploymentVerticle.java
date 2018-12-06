@@ -29,7 +29,7 @@ public final class AppDeploymentVerticle extends EdgeVerticle {
 
     @Override
     protected ModuleTypeRule registerModuleRule() {
-        return new ModuleTypeRule().registerRule(ModuleType.JAVA, "com.nubeiot.edge.services", this.validateGroup(ModuleType.JAVA));
+        return new ModuleTypeRule().registerRule(ModuleType.JAVA, "com.nubeiot.edge.service", this.validateGroup(ModuleType.JAVA));
     }
 
     @Override

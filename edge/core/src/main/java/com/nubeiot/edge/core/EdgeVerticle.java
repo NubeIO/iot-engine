@@ -1,8 +1,5 @@
 package com.nubeiot.edge.core;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -82,7 +79,12 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
     
     protected Predicate<String> validateGroup(ModuleType moduleType) {
         return artifact -> {
-            return this.getSupportGroups(moduleType).stream().anyMatch(item -> artifact.contains(item));
+            
+            List<String> supportGroups = this.getSupportGroups(moduleType);
+            if (supportGroups == null || supportGroups.isEmpty()) {
+                return true;
+            }
+            return supportGroups.stream().anyMatch(item -> artifact.contains(item));
         };
     }
 
