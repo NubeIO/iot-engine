@@ -1,39 +1,14 @@
 package com.nubeiot.dashboard.impl;
 
-import static com.nubeiot.dashboard.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
-import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
-import static com.nubeiot.dashboard.constants.Address.SERVICE_NAME;
-import static com.nubeiot.dashboard.constants.Address.SITE_COLLECTION_ADDRESS;
-import static com.nubeiot.dashboard.constants.Collection.COMPANY;
-import static com.nubeiot.dashboard.constants.Collection.MENU;
-import static com.nubeiot.dashboard.constants.Collection.SETTINGS;
-import static com.nubeiot.dashboard.constants.Collection.SITE;
-import static com.nubeiot.dashboard.constants.Collection.USER;
-import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
-import static com.nubeiot.dashboard.constants.Location.MEDIA_FILE_LOCATION;
-import static com.nubeiot.dashboard.constants.Location.WEB_SERVER_MICRO_SERVICE_LOCATION;
-import static com.nubeiot.dashboard.utils.FileUtils.appendRealFileNameWithExtension;
-import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
-import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
-import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
-import static com.nubeiot.core.common.utils.response.ResponseUtils.buildAbsoluteUri;
-import static com.nubeiot.core.common.HttpHelper.serviceUnavailable;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.HttpHelper;
 import com.nubeiot.core.common.RxRestAPIVerticle;
-
-import io.netty.handler.codec.http.HttpResponseStatus;
-
+import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.CustomMessageCodec;
 import com.nubeiot.core.common.utils.SQLUtils;
 import com.nubeiot.core.common.utils.StringUtils;
-
+import com.nubeiot.dashboard.Role;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.vertx.core.DeploymentOptions;
@@ -65,6 +40,17 @@ import io.vertx.reactivex.ext.web.handler.StaticHandler;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.servicediscovery.Record;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+import static com.nubeiot.core.common.utils.response.ResponseUtils.*;
+import static com.nubeiot.dashboard.constants.Address.*;
+import static com.nubeiot.dashboard.constants.Collection.*;
+import static com.nubeiot.dashboard.constants.Location.MEDIA_FILE_LOCATION;
+import static com.nubeiot.dashboard.constants.Location.WEB_SERVER_MICRO_SERVICE_LOCATION;
+import static com.nubeiot.dashboard.utils.FileUtils.appendRealFileNameWithExtension;
+import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
+
 /**
  * Created by topsykretts on 5/4/18.
  */
@@ -81,7 +67,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     @Override
     public void start(io.vertx.core.Future<Void> future) {
         super.start();
-        mongoClient = MongoClient.createNonShared(vertx, config().getJsonObject("mongo").getJsonObject("config"));
+        mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo").getJsonObject("config"));
         eventBus = getVertx().eventBus();
 
         // Register codec for custom message
@@ -128,7 +114,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     }
 
     private Single<HttpServer> startWebApp() {
-        loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, config().getJsonObject("keycloak"));
+        loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, appConfig.getJsonObject("keycloak"));
 
         // Create a router object.
         Router router = Router.router(vertx);
@@ -146,13 +132,13 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         handleStaticResource(router);
 
         // Create the HTTP server and pass the "accept" method to the request handler.
-        return createHttpServer(router, config().getString("http.host", "0.0.0.0"), config().getInteger("http.port", Port.HTTP_WEB_SERVER_PORT))
+        return createHttpServer(router, appConfig.getString("http.host", "0.0.0.0"), appConfig.getInteger("http.port", Port.HTTP_WEB_SERVER_PORT))
             .doOnSuccess(httpServer -> logger.info("Web Server started at " + httpServer.actualPort()))
             .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint(SERVICE_NAME, "0.0.0.0", config().getInteger("http.port", 8085))
+        return publishHttpEndpoint(SERVICE_NAME, "0.0.0.0", appConfig.getInteger("http.port", 8085))
             .doOnSubscribe(res -> logger.info("Publish successful HttpWebServer."))
             .doOnError(throwable -> logger.error("Cannot publish HttpWebServer: " + throwable.getLocalizedMessage()));
     }
@@ -211,7 +197,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             .put("user", ctx.user().principal())
             .put("host", ctx.request().host())
             .put("Site-Id", ctx.request().headers().get("Site-Id"))
-            .put("keycloakConfig", config().getJsonObject("keycloak"));
+            .put("keycloakConfig", appConfig.getJsonObject("keycloak"));
 
         T body;
         if (StringUtils.isNull(ctx.getBody().toString())) {
@@ -399,7 +385,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         User user = ctx.user();
         String access_token = user.principal().getString("access_token");
         String refresh_token = body.getString("refresh_token");
-        JsonObject keycloakConfig = config().getJsonObject("keycloak");
+        JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         String client_id = keycloakConfig.getString("resource");
         String client_secret = keycloakConfig
             .getJsonObject("credentials").getString("secret");
@@ -575,7 +561,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         JsonObject body = ctx.getBodyAsJson();
         String refresh_token = body.getString("refresh_token");
         String access_token = ctx.request().getHeader("Authorization"); // Bearer {{token}}
-        JsonObject keycloakConfig = config().getJsonObject("keycloak");
+        JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         String client_id = keycloakConfig.getString("resource");
         String client_secret = keycloakConfig
             .getJsonObject("credentials").getString("secret");

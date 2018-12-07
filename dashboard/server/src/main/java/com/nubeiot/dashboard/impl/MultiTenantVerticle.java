@@ -1,42 +1,15 @@
 package com.nubeiot.dashboard.impl;
 
-import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
-import static com.nubeiot.dashboard.constants.Collection.COMPANY;
-import static com.nubeiot.dashboard.constants.Collection.SITE;
-import static com.nubeiot.dashboard.constants.Collection.USER;
-import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleForbiddenResponse;
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleHttpException;
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleNotFoundResponse;
-import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
-import static com.nubeiot.core.common.HttpHelper.badRequest;
-import static com.nubeiot.core.common.HttpHelper.forbidden;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.core.common.constants.Services;
-import com.nubeiot.dashboard.impl.models.Company;
-import com.nubeiot.dashboard.impl.models.KeycloakUserRepresentation;
-import com.nubeiot.dashboard.impl.models.Site;
-import com.nubeiot.dashboard.impl.models.UserGroup;
 import com.nubeiot.core.common.HttpHelper;
 import com.nubeiot.core.common.RxRestAPIVerticle;
-
-import io.netty.handler.codec.http.HttpResponseStatus;
-
-import com.nubeiot.dashboard.impl.models.MongoUser;
-import com.nubeiot.core.common.utils.CustomMessage;
+import com.nubeiot.core.common.constants.Services;
+import com.nubeiot.core.common.utils.*;
+import com.nubeiot.dashboard.Role;
+import com.nubeiot.dashboard.impl.models.*;
 import com.nubeiot.dashboard.utils.DittoUtils;
-import com.nubeiot.core.common.utils.HttpException;
-import com.nubeiot.core.common.utils.JSONUtils;
 import com.nubeiot.dashboard.utils.MultiTenantCustomMessageHelper;
-import com.nubeiot.core.common.utils.SQLUtils;
-import com.nubeiot.core.common.utils.StringUtils;
 import com.nubeiot.dashboard.utils.UserUtils;
-
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
@@ -53,6 +26,15 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.Record;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.*;
+import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
+import static com.nubeiot.dashboard.constants.Collection.*;
+import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
+
 public class MultiTenantVerticle extends RxRestAPIVerticle {
     private MongoClient mongoClient;
     private static final String DEFAULT_PASSWORD = "helloworld";
@@ -60,7 +42,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     @Override
     public void start() {
         super.start();
-        mongoClient = MongoClient.createNonShared(vertx, config().getJsonObject("mongo").getJsonObject("config"));
+        mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo").getJsonObject("config"));
         EventBus eventBus = getVertx().eventBus();
 
         // Receive message
@@ -318,7 +300,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 JsonObject mongoUser = new MongoUser(editedBody, user, keycloakUser).toJsonObject();
                 return mongoClient.rxSave(USER, mongoUser)
                     .flatMap(ignored -> {
-                        if (config().getBoolean("ditto-policy")) {
+                        if (appConfig.getBoolean("ditto-policy")) {
                             if (Role.ADMIN == Role.valueOf(mongoUser.getString("role"))) {
                                 return byAdminCompanyGetAdminWithManagerSelectionListQuery(mongoUser.getString("company_id"))
                                     .flatMap(subQuery -> mongoClient.rxFind(SITE, subQuery))
@@ -352,7 +334,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     JsonObject mongoUser = new MongoUser(body, user, keycloakUser).toJsonObject();
                     return mongoClient.rxSave(USER, mongoUser)
                         .flatMap(ignored -> {
-                            if (config().getBoolean("ditto-policy")) {
+                            if (appConfig.getBoolean("ditto-policy")) {
                                 return putSubjectOnPolicy(headers, mongoUser);
                             } else {
                                 return Single.just("");
@@ -458,7 +440,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 })
                 .flatMap(associatedCompany -> mongoClient.rxSave(SITE, new Site(body.put("associated_company_id", associatedCompany.getString("_id")).put("role", Role.MANAGER.toString())).toJsonObject())
                     .flatMap(siteId -> {
-                        if (config().getBoolean("ditto-policy")) {
+                        if (appConfig.getBoolean("ditto-policy")) {
                             // We will create a fresh ditto policy for Site
                             return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompany.getString("_id")), null)
                                 .flatMap(managerLevelCompany -> mongoClient.rxFindOne(COMPANY, idQuery(managerLevelCompany.getString("associated_company_id")), null)
@@ -702,7 +684,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
 
                     return mongoClient.rxRemoveDocuments(USER, queryToDeleteOne)
                         .flatMap(ignored -> {
-                            if (config().getBoolean("ditto-policy")) {
+                            if (appConfig.getBoolean("ditto-policy")) {
                                 if (Role.ADMIN == Role.valueOf(userObjectJson.getString("role"))) {
                                     return byAdminCompanyGetAdminWithManagerSelectionListQuery(userObjectJson.getString("company_id"))
                                         .flatMap(subQuery -> mongoClient.rxFind(SITE, subQuery))
@@ -793,7 +775,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 .flatMap(ignored -> Observable.fromIterable(queryInput)
                     .flatMapSingle(id -> mongoClient.rxRemoveDocument(SITE, idQuery(id.toString()))
                         .flatMap(ign -> {
-                            if (config().getBoolean("ditto-policy")) {
+                            if (appConfig.getBoolean("ditto-policy")) {
                                 return dispatchRequests(HttpMethod.DELETE, headers, Services.POLICY_PREFIX + id, null);
                             } else {
                                 return Single.just("");
@@ -1346,7 +1328,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                             // Updating site_id for all Users which are associated to that Site
                                             return mongoClient.rxUpdateCollectionWithOptions(USER, new JsonObject().put("company_id", companyId), new JsonObject().put("$set", new JsonObject().put("site_id", siteId$)), new UpdateOptions(false, true))
                                                 .flatMap(ignored -> {
-                                                    if (config().getBoolean("ditto-policy")) {
+                                                    if (appConfig.getBoolean("ditto-policy")) {
                                                         if (role == Role.SUPER_ADMIN) {
                                                             return mongoClient.rxFind(USER, new JsonObject().put("role", Role.SUPER_ADMIN.toString()))
                                                                 .flatMap(users -> dispatchRequests(HttpMethod.PUT, headers, Services.POLICY_PREFIX + siteId$, DittoUtils.createPolicy(users)));

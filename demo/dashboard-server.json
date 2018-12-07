@@ -1,36 +1,55 @@
 {
-  "http.port": 8085,
-  "keycloak": {
-    "realm": "iot",
-    "auth-server-url": "https://keyclock.local/auth",
-    "ssl-required": "external",
-    "resource": "api-gateway",
-    "credentials": {
-      "secret": "00ca9b57-343a-48ff-a7a3-695ed7b311b1"
+  "__system__": {
+    "__eventBus__": {
+      "ssl": true,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
     },
-    "confidential-port": 0,
-    "policy-enforcer": {}
-  },
-  "mongo": {
-    "config": {
-      "hosts": [
-        {
-          "host": "localhost",
-          "port": 27017
-        }
-      ],
-      "db_name": "iot",
-      "username": "root",
-      "password": "root",
-      "authSource": "admin",
-      "maxPoolSize": 50,
-      "minPoolSize": 25,
-      "maxIdleTimeMS": 300000,
-      "maxLifeTimeMS": 3600000,
-      "maintenanceFrequencyMS": 2000,
-      "maintenanceInitialDelayMS": 500,
-      "waitQueueMultiple": 100
+    "__cluster__": {
+      "active": true,
+      "ha": true
     }
   },
-  "ditto-policy": false
+  "__app__": {
+    "http.port": 8085,
+    "keycloak": {
+      "realm": "nube_iot",
+      "auth-server-url": "http://localhost:8082/auth",
+      "ssl-required": "external",
+      "resource": "nube-web-api-gateway",
+      "credentials": {
+        "secret": "0cc6aaa3-761e-49a1-868b-07ac8622447d"
+      },
+      "confidential-port": 0,
+      "policy-enforcer": {}
+    },
+    "mongo": {
+      "config": {
+        "hosts": [
+          {
+            "host": "localhost",
+            "port": 27017
+          }
+        ],
+        "db_name": "nube",
+        "username": "root",
+        "password": "root",
+        "authSource": "admin",
+        "maxPoolSize": 50,
+        "minPoolSize": 25,
+        "maxIdleTimeMS": 300000,
+        "maxLifeTimeMS": 3600000,
+        "maintenanceFrequencyMS": 2000,
+        "maintenanceInitialDelayMS": 500,
+        "waitQueueMultiple": 100
+      }
+    },
+    "ditto-policy": false
+  }
 }
