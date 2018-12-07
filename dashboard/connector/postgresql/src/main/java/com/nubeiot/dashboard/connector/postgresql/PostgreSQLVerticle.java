@@ -11,7 +11,6 @@ import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.dashboard.connector.postgresql.controller.RulesController;
 import com.nubeiot.core.common.utils.ErrorCodeException;
 import com.nubeiot.core.common.utils.ErrorHandler;
-import com.nubeiot.core.common.utils.Runner;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
 import com.nubeiot.core.common.RxMicroServiceVerticle;
 
@@ -34,12 +33,6 @@ import io.vertx.serviceproxy.ServiceBinder;
 public class PostgreSQLVerticle extends RxMicroServiceVerticle {
 
     private RulesController controller;
-
-    // Convenience method so you can run it in your IDE
-    public static void main(String[] args) {
-        String JAVA_DIR = "nube-vertx-postgresql/src/main/java/";
-        Runner.runExample(JAVA_DIR, PostgreSQLVerticle.class);
-    }
 
     @Override
     public void start(Future<Void> startFuture) {
@@ -138,5 +131,4 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
         logger.info("Current thread loader = " + Thread.currentThread().getContextClassLoader());
         logger.info(PostgreSQLVerticle.class.getClassLoader());
     }
-
 }

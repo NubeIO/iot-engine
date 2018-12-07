@@ -59,7 +59,6 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle implements
         return vertx.createHttpServer().requestHandler(router::accept).rxListen(port, host);
     }
 
-    //TODO: CHECK CONFIG FOR OTHER MAVEN MODULE
     protected final Single<Record> publishHttpEndpoint(String name, String host, int port) {
         String apiName = this.appConfig.getString("api.name", "");
         Record record = HttpEndpoint.createRecord(name, host, port, "/", new JsonObject().put("api.name", apiName));
