@@ -4,11 +4,10 @@ task annotationProcessing(type: JavaCompile, group: 'build') {
     onlyIf {
         project.hasProperty('generated') && project.generated == "true"
     }
-    def outputDir = file Paths.get(project.projectDir.absolutePath, project.genSrcFolder)
-    outputDir.mkdirs()
+    def outputDir = file Paths.get(project.projectDir.absolutePath, project.genParentSrcFolder)
     source = sourceSets.main.java
     classpath = configurations.compile + configurations.compileOnly
-    destinationDir = project.file(project.genJavaSrcFolder)
+    destinationDir = project.file(project.genSrcFolder)
     options.compilerArgs = [
             "-proc:only",
             "-processor", "io.vertx.codegen.CodeGenProcessor",
@@ -38,7 +37,7 @@ processResources.dependsOn(generateServiceDescriptor)
 sourceSets {
     main {
         java {
-            srcDirs += project.genJavaSrcFolder
+            srcDirs += project.genSrcFolder
         }
     }
 }

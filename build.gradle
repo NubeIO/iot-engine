@@ -8,8 +8,8 @@ plugins {
 ext {
     vertxVersion = "3.5.4"
     lombokVersion = "1.18.4"
-    genSrcFolder = "src/generated"
-    genJavaSrcFolder = "$project.genSrcFolder/java"
+    genParentSrcFolder = "src/main"
+    genSrcFolder = "$genParentSrcFolder/generated"
     baseName = "nube"
 }
 
