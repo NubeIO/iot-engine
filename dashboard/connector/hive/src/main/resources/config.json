@@ -1,0 +1,12 @@
+{
+  "__app__": {
+    "http.port": 8084,
+    "api.name": "sql-hive",
+    "hiveConfig": {
+      "url": "jdbc:hive2://45.77.220.111:10000/filodb",
+      "driver_class": "org.apache.hive.jdbc.HiveDriver",
+      "user": "root",
+      "password": ""
+    }
+  }
+}

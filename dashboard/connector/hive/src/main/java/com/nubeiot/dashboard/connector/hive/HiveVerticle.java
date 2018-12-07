@@ -1,20 +1,11 @@
 package com.nubeiot.dashboard.connector.hive;
 
-import static com.nubeiot.core.common.utils.ErrorCodes.NO_QUERY_SPECIFIED;
-import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
-import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
-
-import java.net.URL;
-import java.net.URLClassLoader;
-
-import com.nubeiot.dashboard.connector.hive.controller.RulesController;
+import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.utils.ErrorCodeException;
 import com.nubeiot.core.common.utils.ErrorHandler;
-import com.nubeiot.core.common.utils.Runner;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
-import com.nubeiot.core.common.RxMicroServiceVerticle;
-
+import com.nubeiot.dashboard.connector.hive.controller.RulesController;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
@@ -28,6 +19,13 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
 import io.vertx.serviceproxy.ServiceBinder;
 
+import java.net.URL;
+import java.net.URLClassLoader;
+
+import static com.nubeiot.core.common.utils.ErrorCodes.NO_QUERY_SPECIFIED;
+import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
+import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
+
 /**
  * Created by topsykretts on 4/26/18.
  */
@@ -36,12 +34,6 @@ public class HiveVerticle extends RxMicroServiceVerticle {
 
     private RulesController controller;
 
-    // Convenience method so you can run it in your IDE
-    public static void main(String[] args) {
-        String JAVA_DIR = "nube-vertx-hive/src/main/java/";
-        Runner.runExample(JAVA_DIR, HiveVerticle.class);
-    }
-
     @Override
     public void start(Future<Void> startFuture) {
         super.start();
@@ -49,7 +41,7 @@ public class HiveVerticle extends RxMicroServiceVerticle {
 
         startWebApp()
             .flatMap(httpServer -> publishHttp())
-            .flatMap(ignored -> HiveService.create(vertx, config().getJsonObject("hiveConfig"))
+            .flatMap(ignored -> HiveService.create(vertx, appConfig.getJsonObject("hiveConfig"))
                 .doOnSuccess(hiveService -> {
                     ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
                     binder.setAddress(HiveService.SERVICE_ADDRESS).register(HiveService.class, hiveService);
@@ -61,7 +53,7 @@ public class HiveVerticle extends RxMicroServiceVerticle {
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.sql-hive.engine", "0.0.0.0", config().getInteger("http.port", Port.HIVE_SERVER_PORT))
+        return publishHttpEndpoint("io.nubespark.sql-hive.engine", "0.0.0.0", appConfig.getInteger("http.port", Port.HIVE_SERVER_PORT))
             .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
@@ -79,7 +71,7 @@ public class HiveVerticle extends RxMicroServiceVerticle {
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
             .requestHandler(router::accept)
-            .rxListen(config().getInteger("http.port", Port.HIVE_SERVER_PORT))
+            .rxListen(appConfig.getInteger("http.port", Port.HIVE_SERVER_PORT))
             .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
             .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
@@ -153,5 +145,4 @@ public class HiveVerticle extends RxMicroServiceVerticle {
         logger.info("Current thread loader = " + Thread.currentThread().getContextClassLoader());
         logger.info(HiveVerticle.class.getClassLoader());
     }
-
 }
