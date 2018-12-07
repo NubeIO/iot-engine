@@ -1,7 +1,5 @@
 package com.nubeiot.edge.bios;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import com.nubeiot.core.enums.Status;
@@ -12,9 +10,10 @@ import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.ModuleEventHandler;
 import com.nubeiot.edge.core.TransactionEventHandler;
+import com.nubeiot.edge.core.loader.BIOSModuleTypeRuleProvider;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeFactory;
-import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.core.loader.ModuleTypeRuleProvider;
 import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
 
@@ -36,11 +35,6 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
         bus.consumer(
             EventModel.EDGE_BIOS_TRANSACTION.getAddress(), m -> this.handleEvent(
                 m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
-    }
-
-    @Override
-    protected ModuleTypeRule registerModuleRule() {
-        return new ModuleTypeRule().registerRule(ModuleType.JAVA, "com.nubeiot.edge.module", this.validateGroup(ModuleType.JAVA));
     }
 
     @Override
@@ -95,8 +89,9 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     }
 
     @Override
-    protected List<String> getSupportGroups(ModuleType moduleType) {
-        return Arrays.asList("com.nubeiot.edge.module");
+    protected ModuleTypeRuleProvider getModuleRuleProvider() {
+        return new BIOSModuleTypeRuleProvider();
     }
+
 
 }

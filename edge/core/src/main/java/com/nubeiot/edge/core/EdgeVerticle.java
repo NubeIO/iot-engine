@@ -1,8 +1,5 @@
 package com.nubeiot.edge.core;
 
-import java.util.List;
-import java.util.function.Predicate;
-
 import org.jooq.Configuration;
 
 import com.nubeiot.core.dto.RequestData;
@@ -16,8 +13,8 @@ import com.nubeiot.core.sql.ISqlProvider;
 import com.nubeiot.core.sql.SQLWrapper;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.core.loader.ModuleLoader;
-import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.core.loader.ModuleTypeRuleProvider;
 import com.nubeiot.edge.core.model.gen.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.gen.tables.daos.TblRemoveHistoryDao;
 import com.nubeiot.edge.core.model.gen.tables.daos.TblTransactionDao;
@@ -52,7 +49,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
     public final void start() throws Exception {
         this.appConfig = Configs.getApplicationCfg(config());
         this.moduleLoader = new ModuleLoader(vertx);
-        this.moduleRule = this.registerModuleRule();
+        this.moduleRule = this.getModuleRuleProvider().getModuleTypeRule();
         registerEventBus();
         this.sqlWrapper = ISqlProvider.initConfig(this.vertx, config(), this::initData);
         this.sqlWrapper.start();
@@ -71,23 +68,10 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
 
     protected abstract void registerEventBus();
 
-    protected abstract ModuleTypeRule registerModuleRule();
+    protected abstract ModuleTypeRuleProvider getModuleRuleProvider();
 
     protected abstract Single<JsonObject> initData();
     
-    protected abstract List<String> getSupportGroups(ModuleType moduleType);
-    
-    protected Predicate<String> validateGroup(ModuleType moduleType) {
-        return artifact -> {
-            
-            List<String> supportGroups = this.getSupportGroups(moduleType);
-            if (supportGroups == null || supportGroups.isEmpty()) {
-                return true;
-            }
-            return supportGroups.stream().anyMatch(item -> artifact.contains(item));
-        };
-    }
-
     protected Single<JsonObject> startupModules() {
         return this.entityHandler.getModulesWhenBootstrap()
                                  .flattenAsObservable(tblModules -> tblModules)
