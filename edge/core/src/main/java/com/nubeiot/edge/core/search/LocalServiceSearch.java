@@ -34,14 +34,14 @@ import io.vertx.core.logging.LoggerFactory;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
-@AllArgsConstructor(access=AccessLevel.PACKAGE)
+@AllArgsConstructor(access=AccessLevel.PUBLIC)
 public final class LocalServiceSearch implements IServiceSearch {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final static String CREATED_FROM = "from_" + Tables.TBL_MODULE.CREATED_AT.getName();
-    private final static String CREATED_TO = "to_" + Tables.TBL_MODULE.CREATED_AT.getName();
-    private final static String MODIFIED_FROM = "from_" + Tables.TBL_MODULE.MODIFIED_AT.getName();
-    private final static String MODIFIED_TO = "to_" + Tables.TBL_MODULE.MODIFIED_AT.getName();
+    final static String CREATED_FROM = "from_" + Tables.TBL_MODULE.CREATED_AT.getName();
+    final static String CREATED_TO = "to_" + Tables.TBL_MODULE.CREATED_AT.getName();
+    final static String MODIFIED_FROM = "from_" + Tables.TBL_MODULE.MODIFIED_AT.getName();
+    final static String MODIFIED_TO = "to_" + Tables.TBL_MODULE.MODIFIED_AT.getName();
     
     private final EntityHandler entityHandler;
 

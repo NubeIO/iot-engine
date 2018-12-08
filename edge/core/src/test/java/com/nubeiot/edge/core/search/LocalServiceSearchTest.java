@@ -1,14 +1,15 @@
 package com.nubeiot.edge.core.search;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.edge.core.model.gen.Tables;
-import io.vertx.core.json.JsonObject;
-import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import io.vertx.core.json.JsonObject;
 
 public class LocalServiceSearchTest {
 
@@ -67,28 +68,46 @@ public class LocalServiceSearchTest {
     }
 
     @Test
-    public void testFromDate() {
+    public void testFromCreatedDate() {
         LocalServiceSearch service = new LocalServiceSearch(null);
         JsonObject filter = new JsonObject();
-        filter.put("from_" , "2018-11-16T20:10:22+06:00");
+        filter.put(LocalServiceSearch.CREATED_FROM , "2018-11-16T20:10:22+06:00");
         JsonObject validatedFilter = service.validateFilter(filter);
-        assertTrue(validatedFilter.containsKey("from"));
+        assertTrue(validatedFilter.containsKey(LocalServiceSearch.CREATED_FROM));
     }
 
     @Test
-    public void testToDate() {
+    public void testToCreatedDate() {
         LocalServiceSearch service = new LocalServiceSearch(null);
         JsonObject filter = new JsonObject();
-        filter.put("to", "2018-11-16T20:10:22+06:00");
+        filter.put(LocalServiceSearch.CREATED_TO, "2018-11-16T20:10:22+06:00");
         JsonObject validatedFilter = service.validateFilter(filter);
-        assertTrue(validatedFilter.containsKey("to"));
+        assertTrue(validatedFilter.containsKey(LocalServiceSearch.CREATED_TO));
+    }
+    
+    @Test
+    public void testFromModifiedDate() {
+        LocalServiceSearch service = new LocalServiceSearch(null);
+        JsonObject filter = new JsonObject();
+        filter.put(LocalServiceSearch.MODIFIED_FROM , "2018-11-16T20:10:22+06:00");
+        JsonObject validatedFilter = service.validateFilter(filter);
+        assertTrue(validatedFilter.containsKey(LocalServiceSearch.MODIFIED_FROM));
+    }
+    
+    @Test
+    public void testToModifiedDate() {
+        LocalServiceSearch service = new LocalServiceSearch(null);
+        JsonObject filter = new JsonObject();
+        filter.put(LocalServiceSearch.MODIFIED_TO , "2018-11-16T20:10:22+06:00");
+        JsonObject validatedFilter = service.validateFilter(filter);
+        assertTrue(validatedFilter.containsKey(LocalServiceSearch.MODIFIED_TO));
     }
 
     @Test(expected = NubeException.class)
     public void testInvalidDate() {
         LocalServiceSearch service = new LocalServiceSearch(null);
         JsonObject filter = new JsonObject();
-        filter.put("to", "2018-11-16T20:10:22 06:00");
+        filter.put(LocalServiceSearch.CREATED_TO, "2018-11-16T20:10:22 06:00");
         service.validateFilter(filter);
     }
 
@@ -106,7 +125,7 @@ public class LocalServiceSearchTest {
         filter.put(Tables.TBL_MODULE.MODIFIED_AT.getName(), "8");
         filter.put(Tables.TBL_MODULE.PUBLISHED_BY.getName(), "9");
         JsonObject validatedFilter = service.validateFilter(filter);
-        assertFalse(filter.equals(validatedFilter));
+        assertTrue(filter.equals(validatedFilter));
     }
     
     @Test
@@ -121,7 +140,7 @@ public class LocalServiceSearchTest {
         filter.put(Tables.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(), "7");
         filter.put(Tables.TBL_MODULE.PUBLISHED_BY.getName(), "9");
         JsonObject validatedFilter = service.validateFilter(filter);
-        assertFalse(filter.equals(validatedFilter));
+        assertTrue(filter.equals(validatedFilter));
     }
 
 }
