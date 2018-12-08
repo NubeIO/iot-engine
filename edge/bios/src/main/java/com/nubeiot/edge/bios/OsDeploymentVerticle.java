@@ -1,6 +1,7 @@
 package com.nubeiot.edge.bios;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventModel;
@@ -10,10 +11,9 @@ import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.ModuleEventHandler;
 import com.nubeiot.edge.core.TransactionEventHandler;
-import com.nubeiot.edge.core.loader.BIOSModuleTypeRuleProvider;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeFactory;
-import com.nubeiot.edge.core.loader.ModuleTypeRuleProvider;
+import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
 
@@ -29,12 +29,10 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     @Override
     protected void registerEventBus() {
         final EventBus bus = getVertx().eventBus();
-        bus.consumer(
-            EventModel.EDGE_BIOS_INSTALLER.getAddress(), m -> this.handleEvent(
-                m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
-        bus.consumer(
-            EventModel.EDGE_BIOS_TRANSACTION.getAddress(), m -> this.handleEvent(
-                m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
+        bus.consumer(EventModel.EDGE_BIOS_INSTALLER.getAddress(),
+                     m -> this.handleEvent(m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
+        bus.consumer(EventModel.EDGE_BIOS_TRANSACTION.getAddress(),
+                     m -> this.handleEvent(m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
     }
 
     @Override
@@ -56,14 +54,14 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
 
     private Single<JsonObject> initApp(JsonObject repositoryCfg, JsonObject appCfg) {
         JsonObject deployCfg = appCfg.getJsonObject(
-            com.nubeiot.edge.core.model.gen.tables.TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(),
-            new JsonObject());
-    JsonObject deployAppCfg = Configs.toApplicationCfg(repositoryCfg.mergeIn(Configs.getApplicationCfg(deployCfg)));
-    ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
-                                          .fromJson(ModuleTypeFactory.getDefault()
-                                                                     .serialize(appCfg, this.getModuleRule()))
-                                          .setDeployConfigJson(deployAppCfg);
-    return processDeploymentTransaction((TblModule) tblModule, EventType.INIT);
+                com.nubeiot.edge.core.model.gen.tables.TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(),
+                new JsonObject());
+        JsonObject deployAppCfg = Configs.toApplicationCfg(repositoryCfg.mergeIn(Configs.getApplicationCfg(deployCfg)));
+        ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
+                                              .fromJson(ModuleTypeFactory.getDefault()
+                                                                         .serialize(appCfg, this.getModuleRule()))
+                                              .setDeployConfigJson(deployAppCfg);
+        return processDeploymentTransaction((TblModule) tblModule, EventType.INIT);
     }
 
     private JsonObject setupMavenRepos(JsonObject repositoryCfg) {
@@ -81,17 +79,15 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
             JsonObject remoteCfg = (JsonObject) entry.getValue();
             logger.info("Maven local repositories: {}", local);
             logger.info("Maven remote repositories: {}", remoteCfg);
-            ResolverOptions resolver = new ResolverOptions()
-                .setRemoteRepositories(remoteCfg.getJsonArray("urls", new JsonArray()).getList()).setLocalRepository(
-                    local);
+            ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
+                    remoteCfg.getJsonArray("urls", new JsonArray()).getList()).setLocalRepository(local);
             vertx.getDelegate().registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
     }
 
     @Override
-    protected ModuleTypeRuleProvider getModuleRuleProvider() {
+    protected Supplier<ModuleTypeRule> getModuleRuleProvider() {
         return new BIOSModuleTypeRuleProvider();
     }
-
 
 }

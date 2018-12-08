@@ -1,5 +1,7 @@
 package com.nubeiot.edge.core;
 
+import java.util.function.Supplier;
+
 import org.jooq.Configuration;
 
 import com.nubeiot.core.dto.RequestData;
@@ -14,7 +16,6 @@ import com.nubeiot.core.sql.SQLWrapper;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.edge.core.loader.ModuleTypeRuleProvider;
 import com.nubeiot.edge.core.model.gen.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.gen.tables.daos.TblRemoveHistoryDao;
 import com.nubeiot.edge.core.model.gen.tables.daos.TblTransactionDao;
@@ -49,7 +50,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
     public final void start() throws Exception {
         this.appConfig = Configs.getApplicationCfg(config());
         this.moduleLoader = new ModuleLoader(vertx);
-        this.moduleRule = this.getModuleRuleProvider().getModuleTypeRule();
+        this.moduleRule = this.getModuleRuleProvider().get();
         registerEventBus();
         this.sqlWrapper = ISqlProvider.initConfig(this.vertx, config(), this::initData);
         this.sqlWrapper.start();
@@ -68,10 +69,10 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
 
     protected abstract void registerEventBus();
 
-    protected abstract ModuleTypeRuleProvider getModuleRuleProvider();
+    protected abstract Supplier<ModuleTypeRule> getModuleRuleProvider();
 
     protected abstract Single<JsonObject> initData();
-    
+
     protected Single<JsonObject> startupModules() {
         return this.entityHandler.getModulesWhenBootstrap()
                                  .flattenAsObservable(tblModules -> tblModules)
@@ -117,5 +118,5 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
                                                                         r.getString("deploy_id")),
                                t -> entityHandler.handleErrorPostDeployment(serviceId, transactionId, event, t));
     }
-    
+
 }
