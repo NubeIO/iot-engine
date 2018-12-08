@@ -10,6 +10,7 @@ jar {
 
         println '- Project Name:     ' + baseName
         println '- Project Title:    ' + project.title
+        println '- Project Group:    ' + project.group
         println '- Project Version:  ' + project.version
         println '- Semantic Version: ' + project.semanticVersion
         println '- Build Number:     ' + project.buildNumber
