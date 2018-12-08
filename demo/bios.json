@@ -38,7 +38,7 @@
     },
     "default_app": {
       "group_id": "com.nubeiot.edge.module",
-      "artifact_id": "bios-installer",
+      "artifact_id": "installer",
       "version": "1.0.0-SNAPSHOT",
       "service_name": "bios-installer",
       "deploy_config_json": {
