@@ -31,16 +31,19 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 
+@AllArgsConstructor(access=AccessLevel.PACKAGE)
 public final class LocalServiceSearch implements IServiceSearch {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
+    private final static String CREATED_FROM = "from_" + Tables.TBL_MODULE.CREATED_AT.getName();
+    private final static String CREATED_TO = "to_" + Tables.TBL_MODULE.CREATED_AT.getName();
+    private final static String MODIFIED_FROM = "from_" + Tables.TBL_MODULE.MODIFIED_AT.getName();
+    private final static String MODIFIED_TO = "to_" + Tables.TBL_MODULE.MODIFIED_AT.getName();
+    
     private final EntityHandler entityHandler;
-
-    public LocalServiceSearch(EntityHandler entityHandler) {
-        this.entityHandler = entityHandler;
-    }
 
     @Override
     public Single<JsonObject> search(RequestData requestData) throws NubeException {
@@ -68,15 +71,27 @@ public final class LocalServiceSearch implements IServiceSearch {
             }
         }
 
-        // TODO from/to + "_" + table fields name
-        String from = filter.getString("from");
-        String to = filter.getString("to");
-        if (Strings.isNotBlank(from)) {
-            sqlData.put("from", DateTimes.parseISO8601(from));
+        String createdFrom = filter.getString(CREATED_FROM);
+        String createdTo = filter.getString(CREATED_TO);
+        if (Strings.isNotBlank(createdFrom)) {
+            sqlData.put(CREATED_FROM, DateTimes.parseISO8601(createdFrom));
         }
-        if (Strings.isNotBlank(to)) {
-            sqlData.put("to", DateTimes.parseISO8601(to));
+        if (Strings.isNotBlank(createdTo)) {
+            sqlData.put(CREATED_TO, DateTimes.parseISO8601(createdTo));
         }
+        
+        
+        String modifiedFrom = filter.getString(MODIFIED_FROM);
+        String modifiedTo = filter.getString(MODIFIED_TO);
+        if (Strings.isNotBlank(modifiedFrom)) {
+            sqlData.put(MODIFIED_FROM, DateTimes.parseISO8601(modifiedFrom));
+        }
+        if (Strings.isNotBlank(modifiedTo)) {
+            sqlData.put(MODIFIED_TO, DateTimes.parseISO8601(modifiedTo));
+        }
+        sqlData.remove(Tables.TBL_MODULE.CREATED_AT.getName());
+        sqlData.remove(Tables.TBL_MODULE.MODIFIED_AT.getName());
+        
         return sqlData;
     }
 
@@ -91,14 +106,24 @@ public final class LocalServiceSearch implements IServiceSearch {
                     Field field = Tables.TBL_MODULE.field(entry.getKey());
                     sql.and(field.eq(entry.getValue()));
                 });
-        final Instant from = filter.getInstant("from");
-        if (Objects.nonNull(from)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(Date.from(from)));
+        Instant createdFrom = filter.getInstant(CREATED_FROM);
+        if (Objects.nonNull(createdFrom)) {
+            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(Date.from(createdFrom)));
         }
 
-        final Instant to = filter.getInstant("to");
-        if (Objects.nonNull(to)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(Date.from(to)));
+        Instant createdTo = filter.getInstant(CREATED_TO);
+        if (Objects.nonNull(createdTo)) {
+            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(Date.from(createdTo)));
+        }
+        
+        Instant modifiedFrom = filter.getInstant(MODIFIED_FROM);
+        if (Objects.nonNull(modifiedFrom)) {
+            sql.and(DSL.field(Tables.TBL_MODULE.MODIFIED_AT).gt(Date.from(modifiedFrom)));
+        }
+
+        Instant modifiedTo = filter.getInstant(MODIFIED_TO);
+        if (Objects.nonNull(modifiedTo)) {
+            sql.and(DSL.field(Tables.TBL_MODULE.MODIFIED_AT).lt(Date.from(modifiedTo)));
         }
 
         return sql

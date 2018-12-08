@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class LocalServiceSearchTest {
@@ -56,19 +57,12 @@ public class LocalServiceSearchTest {
         assertEquals(validatedFilter.getValue(Tables.TBL_MODULE.STATE.getName()), State.UNAVAILABLE.name());
     }
 
-    @Test
+    @Test(expected = NubeException.class)
     public void testStateINVALID() {
         LocalServiceSearch service = new LocalServiceSearch(null);
         JsonObject filter = new JsonObject();
         filter.put("state", "INVALID");
-        boolean hasError = false;
-        try {
-            service.validateFilter(filter);
-        } catch (NubeException ex) {
-            assertEquals(ex.getErrorCode(), NubeException.ErrorCode.INVALID_ARGUMENT);
-            hasError = true;
-        }
-        assertTrue(hasError);
+        service.validateFilter(filter);
 
     }
 
@@ -76,7 +70,7 @@ public class LocalServiceSearchTest {
     public void testFromDate() {
         LocalServiceSearch service = new LocalServiceSearch(null);
         JsonObject filter = new JsonObject();
-        filter.put("from", "2018-11-16T20:10:22+06:00");
+        filter.put("from_" , "2018-11-16T20:10:22+06:00");
         JsonObject validatedFilter = service.validateFilter(filter);
         assertTrue(validatedFilter.containsKey("from"));
     }
@@ -90,23 +84,16 @@ public class LocalServiceSearchTest {
         assertTrue(validatedFilter.containsKey("to"));
     }
 
-    @Test
+    @Test(expected = NubeException.class)
     public void testInvalidDate() {
         LocalServiceSearch service = new LocalServiceSearch(null);
         JsonObject filter = new JsonObject();
         filter.put("to", "2018-11-16T20:10:22 06:00");
-        boolean hasError = false;
-        try {
-            service.validateFilter(filter);
-        } catch (NubeException ex) {
-            assertEquals(ex.getErrorCode(), NubeException.ErrorCode.INVALID_ARGUMENT);
-            hasError = true;
-        }
-        assertTrue(hasError);
+        service.validateFilter(filter);
     }
 
     @Test
-    public void testParams() {
+    public void testParamsFilter() {
         LocalServiceSearch service = new LocalServiceSearch(null);
         JsonObject filter = new JsonObject();
         filter.put(Tables.TBL_MODULE.DEPLOY_ID.getName(), "1");
@@ -119,7 +106,22 @@ public class LocalServiceSearchTest {
         filter.put(Tables.TBL_MODULE.MODIFIED_AT.getName(), "8");
         filter.put(Tables.TBL_MODULE.PUBLISHED_BY.getName(), "9");
         JsonObject validatedFilter = service.validateFilter(filter);
-        assertEquals(validatedFilter, filter);
+        assertFalse(filter.equals(validatedFilter));
+    }
+    
+    @Test
+    public void testParams() {
+        LocalServiceSearch service = new LocalServiceSearch(null);
+        JsonObject filter = new JsonObject();
+        filter.put(Tables.TBL_MODULE.DEPLOY_ID.getName(), "1");
+        filter.put(Tables.TBL_MODULE.SERVICE_ID.getName(), "2");
+        filter.put(Tables.TBL_MODULE.SERVICE_NAME.getName(), "3");
+        filter.put(Tables.TBL_MODULE.SERVICE_TYPE.getName(), "4");
+        filter.put(Tables.TBL_MODULE.VERSION.getName(), "5");
+        filter.put(Tables.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(), "7");
+        filter.put(Tables.TBL_MODULE.PUBLISHED_BY.getName(), "9");
+        JsonObject validatedFilter = service.validateFilter(filter);
+        assertFalse(filter.equals(validatedFilter));
     }
 
 }
