@@ -1,17 +1,10 @@
 package com.nubeiot.dashboard.connector.ditto;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.constants.Services;
-import com.nubeiot.core.common.utils.Runner;
 import com.nubeiot.core.common.utils.StringUtils;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
-import com.nubeiot.core.common.RxMicroServiceVerticle;
-
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -35,6 +28,11 @@ import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by topsykretts on 5/11/18.
  */
@@ -43,12 +41,6 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
     private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
 
     private HttpClient client;
-
-    // Convenience method so you can run it in your IDE
-    public static void main(String[] args) {
-        String JAVA_DIR = "nube-server-ditto-driver/src/main/java/";
-        Runner.runExample(JAVA_DIR, ServerDittoDriver.class);
-    }
 
     @Override
     public void start(Future<Void> startFuture) {
