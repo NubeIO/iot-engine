@@ -1,0 +1,29 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "ssl": true,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
+    },
+    "__cluster__": {
+      "active": true,
+      "ha": true
+    }
+  },
+  "__app__": {
+    "http.port": 8088,
+    "http.host": "0.0.0.0",
+    "api.name": "ditto",
+    "ditto.http.port": 8080,
+    "ditto.http.host": "localhost",
+    "ditto.http.username": "ditto",
+    "ditto.http.password": "ditto",
+    "ditto-policy": false
+  }
+}

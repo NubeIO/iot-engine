@@ -78,13 +78,13 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
             .requestHandler(router::accept)
-            .rxListen(config().getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT))
+            .rxListen(appConfig.getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT))
             .doOnSuccess(httpServer -> logger.info("Ditto Server Driver started at port: " + httpServer.actualPort()))
             .doOnError(throwable -> logger.error("Cannot start Ditto Server Driver: " + throwable.getLocalizedMessage()));
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.server-ditto-driver", "0.0.0.0", config().getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT))
+        return publishHttpEndpoint("io.nubespark.server-ditto-driver", "0.0.0.0", appConfig.getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT))
             .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
@@ -116,8 +116,8 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
     private void requestDittoServer(HttpClient client, RoutingContext ctx, Handler<AsyncResult<JsonObject>> next) {
         String uri = ctx.request().uri();
         HttpMethod httpMethod = ctx.request().method();
-        String host = config().getString("ditto.http.host", "localhost");
-        Integer port = config().getInteger("ditto.http.port", 8080);
+        String host = appConfig.getString("ditto.http.host", "localhost");
+        Integer port = appConfig.getInteger("ditto.http.port", 8080);
         boolean ssl = false;
         if (port == 443 || port == 8443) {
             ssl = true;
@@ -153,7 +153,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
 
         req.setChunked(true);
         //Adding ditto authorization
-        if (config().getBoolean("ditto-policy")) {
+        if (appConfig.getBoolean("ditto-policy")) {
             req.putHeader(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
             if (StringUtils.isNotNull(ctx.getBody().toString())) {
                 if (StringUtils.isNull(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
@@ -176,8 +176,8 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
     }
 
     private String getAuthKey() {
-        String apiKey = config().getString("ditto.http.username", "ditto");
-        String secretKey = config().getString("ditto.http.password", "ditto");
+        String apiKey = appConfig.getString("ditto.http.username", "ditto");
+        String secretKey = appConfig.getString("ditto.http.password", "ditto");
         String auth = apiKey + ":" + secretKey;
         return Base64.getEncoder().encodeToString(auth.getBytes());
     }
