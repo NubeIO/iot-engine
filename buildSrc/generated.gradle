@@ -26,10 +26,9 @@ task generateServiceDescriptor(group: 'build') {
             throw new TaskExecutionException(project.tasks.processResources,
                     new RuntimeException("Missing mainVerticle or serviceDescriptor"))
         }
-        def resourcesDir = sourceSets.main.output.resourcesDir
-        resourcesDir.mkdirs()
         def contents = "{ \"main\": \"$project.mainVerticle\" }"
-        new File(resourcesDir, project.serviceDescriptor + ".json").text = contents
+        new File(project.genOutResourceFolder).mkdirs()
+        new File(project.genOutResourceFolder, project.serviceDescriptor + ".json").text = contents
     }
 }
 
@@ -39,6 +38,7 @@ sourceSets {
     main {
         java {
             srcDirs += project.genJavaSrcFolder
+            resources.srcDirs += project.genOutResourceFolder
         }
     }
 }
