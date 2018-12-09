@@ -37,7 +37,6 @@ dependencies {
     compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx', version: "$project.vertx_jooq_version"
     compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx-jdbc', version: "$project.vertx_jooq_version"
     compile group: 'javax.persistence', name: 'javax.persistence-api', version: "$project.jpa_version"
-    compile 'io.vertx:vertx-web-client:3.5.4'
     
 }
 
