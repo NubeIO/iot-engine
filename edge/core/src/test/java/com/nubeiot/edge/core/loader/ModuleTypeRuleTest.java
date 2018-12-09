@@ -40,5 +40,10 @@ public class ModuleTypeRuleTest {
         groups.forEach(item -> assertTrue(javaRule.test(item)));
         assertFalse(javaRule.test("group4"));
     }
+    
+    @Test
+    public void testDifferentModuleType() {
+        
+    }
 
 }

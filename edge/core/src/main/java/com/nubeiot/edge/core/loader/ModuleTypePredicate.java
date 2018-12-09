@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-//TODO add more type
 interface ModuleTypePredicate extends Predicate<String> {
 
     List<String> getSearchPattern();
@@ -48,6 +47,82 @@ interface ModuleTypePredicate extends Predicate<String> {
 
         @Override
         public boolean test(String s) {
+            return true;
+        }
+
+        @Override
+        public Predicate<String> getRule() {
+            return this;
+        }
+
+    }
+    
+    @RequiredArgsConstructor
+    @Getter
+    class GroovyPredicate implements ModuleTypePredicate {
+
+        @NonNull
+        private final List<String> searchPattern;
+
+        @Override
+        public boolean test(String test) {
+            return true;
+        }
+
+        @Override
+        public Predicate<String> getRule() {
+            return this;
+        }
+
+    }
+    
+    @RequiredArgsConstructor
+    @Getter
+    class ScalaPredicate implements ModuleTypePredicate {
+
+        @NonNull
+        private final List<String> searchPattern;
+
+        @Override
+        public boolean test(String test) {
+            return true;
+        }
+
+        @Override
+        public Predicate<String> getRule() {
+            return this;
+        }
+
+    }
+    
+    @RequiredArgsConstructor
+    @Getter
+    class KotlinPredicate implements ModuleTypePredicate {
+
+        @NonNull
+        private final List<String> searchPattern;
+
+        @Override
+        public boolean test(String test) {
+            return true;
+        }
+
+        @Override
+        public Predicate<String> getRule() {
+            return this;
+        }
+
+    }
+    
+    @RequiredArgsConstructor
+    @Getter
+    class RubyPredicate implements ModuleTypePredicate {
+
+        @NonNull
+        private final List<String> searchPattern;
+
+        @Override
+        public boolean test(String test) {
             return true;
         }
 
