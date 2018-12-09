@@ -4,10 +4,11 @@ task annotationProcessing(type: JavaCompile, group: 'build') {
     onlyIf {
         project.hasProperty('generated') && project.generated == "true"
     }
-    def outputDir = file Paths.get(project.projectDir.absolutePath, project.genParentSrcFolder)
+    def outputDir = file Paths.get(project.projectDir.absolutePath, project.genSrcFolder)
+    outputDir.mkdirs()
     source = sourceSets.main.java
     classpath = configurations.compile + configurations.compileOnly
-    destinationDir = project.file(project.genSrcFolder)
+    destinationDir = project.file(project.genJavaSrcFolder)
     options.compilerArgs = [
             "-proc:only",
             "-processor", "io.vertx.codegen.CodeGenProcessor",
@@ -25,10 +26,9 @@ task generateServiceDescriptor(group: 'build') {
             throw new TaskExecutionException(project.tasks.processResources,
                     new RuntimeException("Missing mainVerticle or serviceDescriptor"))
         }
-        def resourcesDir = sourceSets.main.output.resourcesDir
-        resourcesDir.mkdirs()
         def contents = "{ \"main\": \"$project.mainVerticle\" }"
-        new File(resourcesDir, project.serviceDescriptor + ".json").text = contents
+        new File(project.genOutResourceFolder).mkdirs()
+        new File(project.genOutResourceFolder, project.serviceDescriptor + ".json").text = contents
     }
 }
 
@@ -37,7 +37,8 @@ processResources.dependsOn(generateServiceDescriptor)
 sourceSets {
     main {
         java {
-            srcDirs += project.genSrcFolder
+            srcDirs += project.genJavaSrcFolder
+            resources.srcDirs += project.genOutResourceFolder
         }
     }
 }
