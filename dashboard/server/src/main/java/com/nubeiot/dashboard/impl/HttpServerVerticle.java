@@ -362,9 +362,9 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                 System.out.println("Auth Success");
                 AccessToken token = res.result();
 
-                String user_id = token.principal().getString("sub");
+                String username = token.principal().getString("username");
                 String access_token = token.principal().getString("access_token");
-                mongoClient.rxFindOne(USER, idQuery(user_id), null)
+                mongoClient.rxFindOne(USER, new JsonObject().put("username", username), null)
                     .subscribe(response -> {
                         io.vertx.ext.auth.User user = new UserImpl(new JsonObject()
                             .put("access_token", access_token).mergeIn(response));
