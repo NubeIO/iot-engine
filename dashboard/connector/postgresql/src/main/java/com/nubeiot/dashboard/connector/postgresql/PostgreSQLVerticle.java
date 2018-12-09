@@ -41,7 +41,7 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
 
         startWebApp()
             .flatMap(httpServer -> publishHttp())
-            .flatMap(ignored -> PostgreSQLService.create(vertx, config().getJsonObject("pgConfig"))
+            .flatMap(ignored -> PostgreSQLService.create(vertx, appConfig.getJsonObject("pgConfig"))
                 .doOnSuccess(pgService -> {
                     ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
                     binder.setAddress(PostgreSQLService.SERVICE_ADDRESS).register(PostgreSQLService.class, pgService);
@@ -53,7 +53,7 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.sql-hive.engine", "0.0.0.0", config().getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
+        return publishHttpEndpoint("io.nubespark.sql-pg.engine", "0.0.0.0", appConfig.getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
             .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
@@ -69,7 +69,7 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
             .requestHandler(router::accept)
-            .rxListen(config().getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
+            .rxListen(appConfig.getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
             .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
             .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
