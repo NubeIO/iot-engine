@@ -1,6 +1,7 @@
 package com.nubeiot.edge.bios;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventModel;
@@ -32,12 +33,6 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
                      m -> this.handleEvent(m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
         bus.consumer(EventModel.EDGE_BIOS_TRANSACTION.getAddress(),
                      m -> this.handleEvent(m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
-    }
-
-    @Override
-    protected ModuleTypeRule registerModuleRule() {
-        return new ModuleTypeRule().registerRule(ModuleType.JAVA, "com.nubeiot.edge.module",
-                                                 artifactId -> artifactId.startsWith("com.nubeiot.edge.module"));
     }
 
     @Override
@@ -88,6 +83,11 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
                     remoteCfg.getJsonArray("urls", new JsonArray()).getList()).setLocalRepository(local);
             vertx.getDelegate().registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
+    }
+
+    @Override
+    protected Supplier<ModuleTypeRule> getModuleRuleProvider() {
+        return new BIOSModuleTypeRuleProvider();
     }
 
 }

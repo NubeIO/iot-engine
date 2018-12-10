@@ -1,5 +1,7 @@
 package com.nubeiot.edge.core;
 
+import java.util.function.Supplier;
+
 import org.jooq.Configuration;
 
 import com.nubeiot.core.dto.RequestData;
@@ -48,7 +50,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
     public final void start() throws Exception {
         this.appConfig = Configs.getApplicationCfg(config());
         this.moduleLoader = new ModuleLoader(vertx);
-        this.moduleRule = this.registerModuleRule();
+        this.moduleRule = this.getModuleRuleProvider().get();
         registerEventBus();
         this.sqlWrapper = ISqlProvider.initConfig(this.vertx, config(), this::initData);
         this.sqlWrapper.start();
@@ -67,7 +69,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
 
     protected abstract void registerEventBus();
 
-    protected abstract ModuleTypeRule registerModuleRule();
+    protected abstract Supplier<ModuleTypeRule> getModuleRuleProvider();
 
     protected abstract Single<JsonObject> initData();
 
