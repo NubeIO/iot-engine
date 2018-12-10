@@ -4,8 +4,8 @@ import com.nubeiot.core.common.RxRestAPIVerticle;
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.HttpException;
 import com.nubeiot.core.common.utils.StringUtils;
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.utils.MongoUtils;
+import com.nubeiot.dashboard.DynamicCollection;
+import com.nubeiot.dashboard.impl.handlers.BaseCollectionHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -50,6 +50,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         }
     }
 
+    @SuppressWarnings("Duplicates")
     private void handleGetAll(Message<Object> message, CustomMessage customMessage) {
         String collection = customMessage.getHeader().getString("collection");
         JsonArray sitesIds = getSitesIds(customMessage);
@@ -95,18 +96,19 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
 
     private void handleValidUrl(Message<Object> message, CustomMessage customMessage) {
         String method = customMessage.getHeader().getString("method");
+        BaseCollectionHandler baseCollection = DynamicCollection.getCollection(customMessage.getHeader().getString("collection"));
         switch (method.toUpperCase()) {
             case "GET":
-                this.handleGetUrl(message, customMessage);
+                baseCollection.handleGetUrl(message, customMessage, mongoClient);
                 break;
             case "POST":
-                this.handlePostUrl(message, customMessage);
+                baseCollection.handlePostUrl(message, customMessage, mongoClient);
                 break;
             case "PUT":
-                this.handlePutUrl(message, customMessage);
+                baseCollection.handlePutUrl(message, customMessage, mongoClient);
                 break;
             case "DELETE":
-                this.handleDeleteUrl(message, customMessage);
+                baseCollection.handleDeleteUrl(message, customMessage, mongoClient);
                 break;
             default:
                 handleNotFoundResponse(message);
@@ -114,148 +116,8 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private void handleGetUrl(Message<Object> message, CustomMessage customMessage) {
-        String collection = customMessage.getHeader().getString("collection");
-        String siteId = customMessage.getHeader().getString("Site-Id");
-        String id = customMessage.getHeader().getString("url");
-        JsonArray sitesIds = getSitesIds(customMessage);
-        if (sitesIds.size() > 0) {
-            if (sitesIds.contains(siteId)) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                    .subscribe(response -> {
-                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                            null,
-                            this.pickOneOrNullJsonObject(response),
-                            HttpResponseStatus.OK.code());
-                        message.reply(replyMessage);
-                    }, throwable -> handleException(message, throwable));
-            } else {
-                handleForbiddenResponse(message);
-            }
-        } else {
-            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
-        }
-    }
-
-    private void handlePostUrl(Message<Object> message, CustomMessage customMessage) {
-        String role = customMessage.getHeader().getJsonObject("user").getString("role");
-        String collection = customMessage.getHeader().getString("collection");
-        String id = customMessage.getHeader().getString("url");
-        String siteId = customMessage.getHeader().getString("Site-Id");
-        JsonArray sitesIds = getSitesIds(customMessage);
-        if (sitesIds.size() == 0) {
-            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
-        } else if (!role.equals(Role.GUEST.toString())) {
-            if (sitesIds.contains(siteId)) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                    .map(response -> {
-                        JsonObject body = (JsonObject) customMessage.getBody();
-                        if (response.size() > 0) {
-                            throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
-                        }
-                        body.put("site_id", siteId);
-                        body.put("id", id);
-                        return body;
-                    })
-                    .flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body))
-                    .subscribe(buffer -> {
-                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                            null,
-                            new JsonObject(),
-                            HttpResponseStatus.OK.code());
-                        message.reply(replyMessage);
-                    }, throwable -> {
-                        HttpException exception = (HttpException) throwable;
-                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                            null,
-                            new JsonObject().put("message", exception.getMessage()),
-                            exception.getStatusCode().code());
-                        message.reply(replyMessage);
-                    });
-            } else {
-                handleForbiddenResponse(message);
-            }
-        } else {
-            handleForbiddenResponse(message);
-        }
-    }
-
-    private void handlePutUrl(Message<Object> message, CustomMessage customMessage) {
-        String role = customMessage.getHeader().getJsonObject("user").getString("role");
-        String collection = customMessage.getHeader().getString("collection");
-        String id = customMessage.getHeader().getString("url");
-        String siteId = customMessage.getHeader().getString("Site-Id");
-        JsonArray sitesIds = getSitesIds(customMessage);
-        if (sitesIds.size() == 0) {
-            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
-        } else if (!role.equals(Role.GUEST.toString())) {
-            if (sitesIds.contains(siteId)) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                    .map(jsonArray -> {
-                        JsonObject body = (JsonObject) customMessage.getBody();
-                        if (jsonArray.size() > 0) {
-                            body.put("_id", this.pickOneOrNullJsonObject(jsonArray).getString("_id"));
-                        }
-                        body.put("site_id", siteId);
-                        body.put("id", id);
-                        return body;
-                    })
-                    .flatMap(body -> mongoClient.rxSave(collection, body))
-                    .subscribe(buffer -> {
-                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                            null,
-                            new JsonObject(),
-                            HttpResponseStatus.OK.code());
-                        message.reply(replyMessage);
-                    }, throwable -> {
-                        HttpException exception = (HttpException) throwable;
-                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                            null,
-                            new JsonObject().put("message", exception.getMessage()),
-                            exception.getStatusCode().code());
-                        message.reply(replyMessage);
-                    });
-            } else {
-                handleForbiddenResponse(message);
-            }
-        } else {
-            handleForbiddenResponse(message);
-        }
-    }
-
-    private void handleDeleteUrl(Message<Object> message, CustomMessage customMessage) {
-        String collection = customMessage.getHeader().getString("collection");
-        String id = customMessage.getHeader().getString("url");
-        String siteId = customMessage.getHeader().getString("Site-Id");
-        JsonArray sitesIds = getSitesIds(customMessage);
-        if (sitesIds.size() > 0) {
-            if (sitesIds.contains(siteId)) {
-                mongoClient.rxRemoveDocuments(collection, new JsonObject().put("site_id", siteId).put("id", id))
-                    .subscribe(buffer -> {
-                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                            null,
-                            new JsonObject(),
-                            HttpResponseStatus.NO_CONTENT.code());
-                        message.reply(replyMessage);
-                    }, throwable -> handleException(message, throwable));
-            } else {
-                handleForbiddenResponse(message);
-            }
-        } else {
-            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
-        }
-    }
-
-    private JsonObject pickOneOrNullJsonObject(List<JsonObject> jsonObjectList) {
-        if (jsonObjectList.size() > 0) {
-            return jsonObjectList.get(0);
-        } else {
-            return new JsonObject();
-        }
-    }
-
     private boolean validateUrl(String url) {
-        return !(url.contains("/") || url.contains("?"));
+        return !url.contains("?");
     }
 
     private boolean validateData(CustomMessage customMessage) {

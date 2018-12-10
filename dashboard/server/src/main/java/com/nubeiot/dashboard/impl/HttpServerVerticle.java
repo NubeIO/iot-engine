@@ -182,6 +182,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         router.route("/api/layout_grid/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "layout_grid"));
         router.route("/api/menu/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "menu"));
         router.route("/api/settings/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "settings"));
+        router.route("/api/widget_image/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "widget_image"));
         router.route("/api/query_pg/*").handler(ctx -> this.handleSiteCollection(ctx, "query_pg"));
         router.route("/api/query_hive/*").handler(ctx -> this.handleSiteCollection(ctx, "query_hive"));
         router.post("/api/upload_image").handler(this::handleUploadImage);
@@ -276,7 +277,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
     private void handleCollectionAPIs(RoutingContext ctx, String collection, String address) {
         JsonObject header = new JsonObject()
-            .put("url", ctx.normalisedPath().substring(("/api/" + collection + "/").length()))
+            .put("url", ctx.normalisedPath().substring(("/api/" + collection).length()).replaceAll("^/", ""))
             .put("method", ctx.request().method())
             .put("user", ctx.user().principal())
             .put("Site-Id", ctx.request().headers().get("Site-Id"))
