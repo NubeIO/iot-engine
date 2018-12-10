@@ -30,13 +30,14 @@ public interface ModuleType {
 
 
     ModuleType JAVA = new AbstractModuleType() {
+
         @Override
         public String name() {
             return "JAVA";
         }
 
-        static final String DEFAULT_GROUP_ID = "com.nubeiot.edge";
-        static final String DEFAULT_VERSION = "1.0.0";
+        private static final String DEFAULT_GROUP_ID = "com.nubeiot.edge";
+        private static final String DEFAULT_VERSION = "1.0.0";
 
         @Override
         public JsonObject serialize(@NonNull JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {

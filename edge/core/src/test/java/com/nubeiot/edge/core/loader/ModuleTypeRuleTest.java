@@ -40,10 +40,19 @@ public class ModuleTypeRuleTest {
         groups.forEach(item -> assertTrue(javaRule.test(item)));
         assertFalse(javaRule.test("group4"));
     }
-    
+
     @Test
     public void testDifferentModuleType() {
-        
+        final List<String> javaSearchPattern = Arrays.asList("group1", "group2");
+        final List<String> jsSearchPattern = Arrays.asList("group3", "group4");
+        ModuleTypeRule rule = new ModuleTypeRule().registerRule(ModuleType.JAVA, javaSearchPattern)
+                                                  .registerRule(ModuleType.JAVASCRIPT, jsSearchPattern);
+        assertTrue(rule.getRule(ModuleType.JAVA).test("group1.abc"));
+        assertEquals(javaSearchPattern, rule.getSearchPattern(ModuleType.JAVA));
+        assertTrue(rule.getRule(ModuleType.JAVASCRIPT).test("abc"));
+        assertEquals(jsSearchPattern, rule.getSearchPattern(ModuleType.JAVASCRIPT));
+        assertFalse(rule.getRule(ModuleType.GROOVY).test("xxx"));
+        assertEquals(0, rule.getSearchPattern(ModuleType.GROOVY).size());
     }
 
 }

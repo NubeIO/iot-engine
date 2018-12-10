@@ -13,14 +13,25 @@ interface ModuleTypePredicate extends Predicate<String> {
 
     List<String> getSearchPattern();
 
-    Predicate<String> getRule();
+    default Predicate<String> getRule() {
+        return this;
+    }
 
     @RequiredArgsConstructor
     @Getter
-    class JavaPredicate implements ModuleTypePredicate {
+    abstract class AbstractModuleTypePredicate implements ModuleTypePredicate {
 
         @NonNull
-        private final List<String> searchPattern;
+        protected final List<String> searchPattern;
+
+    }
+
+
+    class JavaPredicate extends AbstractModuleTypePredicate {
+
+        JavaPredicate(@NonNull List<String> searchPattern) {
+            super(searchPattern);
+        }
 
         @Override
         public boolean test(String test) {
@@ -30,105 +41,74 @@ interface ModuleTypePredicate extends Predicate<String> {
             return searchPattern.isEmpty() || this.searchPattern.parallelStream().anyMatch(test::startsWith);
         }
 
-        @Override
-        public Predicate<String> getRule() {
-            return this;
-        }
-
     }
 
 
-    @RequiredArgsConstructor
-    @Getter
-    class JavascriptPredicate implements ModuleTypePredicate {
+    class JavascriptPredicate extends AbstractModuleTypePredicate {
 
-        @NonNull
-        private final List<String> searchPattern;
+        JavascriptPredicate(@NonNull List<String> searchPattern) {
+            super(searchPattern);
+        }
 
         @Override
         public boolean test(String s) {
             return true;
         }
 
-        @Override
-        public Predicate<String> getRule() {
-            return this;
-        }
-
     }
-    
-    @RequiredArgsConstructor
-    @Getter
-    class GroovyPredicate implements ModuleTypePredicate {
 
-        @NonNull
-        private final List<String> searchPattern;
+
+    class GroovyPredicate extends AbstractModuleTypePredicate {
+
+        GroovyPredicate(@NonNull List<String> searchPattern) {
+            super(searchPattern);
+        }
 
         @Override
         public boolean test(String test) {
             return true;
         }
 
-        @Override
-        public Predicate<String> getRule() {
-            return this;
-        }
-
     }
-    
-    @RequiredArgsConstructor
-    @Getter
-    class ScalaPredicate implements ModuleTypePredicate {
 
-        @NonNull
-        private final List<String> searchPattern;
+
+    class ScalaPredicate extends AbstractModuleTypePredicate {
+
+        ScalaPredicate(@NonNull List<String> searchPattern) {
+            super(searchPattern);
+        }
 
         @Override
         public boolean test(String test) {
             return true;
         }
 
-        @Override
-        public Predicate<String> getRule() {
-            return this;
-        }
-
     }
-    
-    @RequiredArgsConstructor
-    @Getter
-    class KotlinPredicate implements ModuleTypePredicate {
 
-        @NonNull
-        private final List<String> searchPattern;
+
+    class KotlinPredicate extends AbstractModuleTypePredicate {
+
+        KotlinPredicate(@NonNull List<String> searchPattern) {
+            super(searchPattern);
+        }
 
         @Override
         public boolean test(String test) {
             return true;
         }
 
-        @Override
-        public Predicate<String> getRule() {
-            return this;
-        }
-
     }
-    
-    @RequiredArgsConstructor
-    @Getter
-    class RubyPredicate implements ModuleTypePredicate {
 
-        @NonNull
-        private final List<String> searchPattern;
+
+    class RubyPredicate extends AbstractModuleTypePredicate {
+
+        RubyPredicate(@NonNull List<String> searchPattern) {
+            super(searchPattern);
+        }
 
         @Override
         public boolean test(String test) {
             return true;
-        }
-
-        @Override
-        public Predicate<String> getRule() {
-            return this;
         }
 
     }
