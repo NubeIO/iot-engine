@@ -1,7 +1,7 @@
 package com.nubeiot.core.common;
 
-import com.nubeiot.core.micro.IMicroVerticle;
-import com.nubeiot.core.micro.MicroserviceConfig;
+import com.nubeiot.core.micro.IMicroProvider;
+import com.nubeiot.core.micro.Microservice;
 import com.nubeiot.core.utils.Configs;
 
 import io.reactivex.Single;
@@ -23,27 +23,28 @@ import lombok.Getter;
 /**
  * An implementation of {@link Verticle} taking care of the discovery and publication of services.
  */
-public abstract class RxMicroServiceVerticle extends AbstractVerticle implements IMicroVerticle {
+@Deprecated
+public abstract class RxMicroServiceVerticle extends AbstractVerticle implements IMicroProvider {
 
     @Getter
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected ServiceDiscovery discovery;
     protected CircuitBreaker circuitBreaker;
-    @Getter
-    private MicroserviceConfig microserviceConfig;
+    private Microservice microservice;
     protected JsonObject appConfig;
 
     @Override
     public void start() {
         this.appConfig = Configs.getApplicationCfg(config());
-        this.microserviceConfig = IMicroVerticle.initConfig(vertx, config()).onStart();
-        this.discovery = this.microserviceConfig.getDiscovery();
-        this.circuitBreaker = this.microserviceConfig.getCircuitBreaker();
+        this.microservice = IMicroProvider.initConfig(vertx, config());
+        this.microservice.start();
+        this.discovery = this.microservice.getDiscovery();
+        this.circuitBreaker = this.microservice.getCircuitBreaker();
     }
 
     @Override
     public void stop(Future<Void> future) {
-        this.microserviceConfig.onStop(future);
+        this.microservice.stop(future);
     }
 
     /**
@@ -62,11 +63,11 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle implements
     protected final Single<Record> publishHttpEndpoint(String name, String host, int port) {
         String apiName = this.appConfig.getString("api.name", "");
         Record record = HttpEndpoint.createRecord(name, host, port, "/", new JsonObject().put("api.name", apiName));
-        return this.microserviceConfig.publish(record);
+        return this.microservice.publish(record);
     }
 
     protected final Single<Record> publishMessageSource(String name, String address) {
-        return this.microserviceConfig.publish(MessageSource.createRecord(name, address));
+        return this.microservice.publish(MessageSource.createRecord(name, address));
     }
 
 }

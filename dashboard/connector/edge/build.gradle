@@ -2,4 +2,5 @@
 dependencies {
     compile project(':core:common')
     compile project(':core:httpserver')
+    compile project(':core:cluster:hazelcast')
 }

@@ -11,18 +11,24 @@ pipeline {
     }
     stages {
 
-        stage("Build") {
+        stage("Prepare") {
             steps {
-                sh "gradle clean dist -x test -PbuildBy=${BUILD_AGENT} -PbuildNumber=${BUILD_NUMBER} " +
-                        "-PbuildHash=${GIT_COMMIT}"
                 script {
                     VERSION = sh(script: "gradle properties | grep 'version:' | awk '{print \$2}'", returnStdout: true).trim()
+                    BUILD_CMD = BRANCH_NAME ==~ /^master|v.+|PR-.+/ ? 'dist' : 'build'
                 }
+            }
+        }
+
+        stage("Build") {
+            steps {
+                sh "gradle clean ${BUILD_CMD} -x test -PbuildBy=${BUILD_AGENT} -PbuildNumber=${BUILD_NUMBER} " +
+                        "-PbuildHash=${GIT_COMMIT}"
             }
             post {
                 success {
                     archiveArtifacts artifacts: "build/distributions/*", fingerprint: true
-                    archiveArtifacts artifacts: "build/docs/*", fingerprint: true
+                    archiveArtifacts artifacts: "build/docs/*", fingerprint: true, allowEmptyArchive: true
                 }
             }
         }
@@ -53,7 +59,9 @@ pipeline {
         }
 
         stage("Publish") {
-            when { tag "v*" }
+            when {
+                expression { BRANCH_NAME ==~ /^master|v.+/ }
+            }
             steps {
                 // TODO: Update later
                 echo "Publish"
@@ -67,7 +75,7 @@ pipeline {
             sh "apk add git"
             script {
                 currentBuild.result = currentBuild.currentResult
-            }           
+            }
             githubHookStatus()
             emailNotifications(VERSION)
         }

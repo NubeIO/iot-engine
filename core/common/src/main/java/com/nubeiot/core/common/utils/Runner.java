@@ -10,6 +10,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * Tobe removed
+ */
+@Deprecated
 public class Runner {
     public static void runExample(String JAVA_DIR, Class clazz) {
         DeploymentOptions deploymentOptions = new DeploymentOptions();

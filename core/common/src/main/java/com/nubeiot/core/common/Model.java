@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
+@Deprecated
 public abstract class Model {
     public Map<String, JsonObject> input = new HashMap<>();
 

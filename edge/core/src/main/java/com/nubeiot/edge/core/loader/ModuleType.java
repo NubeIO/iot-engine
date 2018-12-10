@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
+//TODO Later for other languages (except JAVA)
 public interface ModuleType {
 
     String name();
@@ -29,13 +30,14 @@ public interface ModuleType {
 
 
     ModuleType JAVA = new AbstractModuleType() {
+
         @Override
         public String name() {
             return "JAVA";
         }
 
-        static final String DEFAULT_GROUP_ID = "com.nubeiot.edge";
-        static final String DEFAULT_VERSION = "1.0.0";
+        private static final String DEFAULT_GROUP_ID = "com.nubeiot.edge";
+        private static final String DEFAULT_VERSION = "1.0.0";
 
         @Override
         public JsonObject serialize(@NonNull JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
@@ -61,6 +63,54 @@ public interface ModuleType {
         @Override
         public String name() {
             return "JAVASCRIPT";
+        }
+
+        @Override
+        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
+            return null;
+        }
+    };
+
+    ModuleType GROOVY = new AbstractModuleType() {
+        @Override
+        public String name() {
+            return "GROOVY";
+        }
+
+        @Override
+        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
+            return null;
+        }
+    };
+
+    ModuleType SCALA = new AbstractModuleType() {
+        @Override
+        public String name() {
+            return "SCALA";
+        }
+
+        @Override
+        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
+            return null;
+        }
+    };
+
+    ModuleType KOTLIN = new AbstractModuleType() {
+        @Override
+        public String name() {
+            return "KOTLIN";
+        }
+
+        @Override
+        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
+            return null;
+        }
+    };
+
+    ModuleType RUBY = new AbstractModuleType() {
+        @Override
+        public String name() {
+            return "RUBY";
         }
 
         @Override

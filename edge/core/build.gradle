@@ -1,11 +1,6 @@
 
-
 ext {
-    jooq_version = '3.10.8'
-    vertx_jooq_version = '3.1.0'
-    sqlite_version = '3.23.1'
-    hikari_version = '3.2.0'
-    jpa_version = '2.2'
+    h2_version = '1.4.197'
 }
 
 //buildscript {
@@ -37,7 +32,7 @@ dependencies {
     compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx', version: "$project.vertx_jooq_version"
     compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx-jdbc', version: "$project.vertx_jooq_version"
     compile group: 'javax.persistence', name: 'javax.persistence-api', version: "$project.jpa_version"
-    
+
 }
 
 

@@ -1,12 +1,13 @@
 package com.nubeiot.core.common.utils;
 
+import com.nubeiot.core.dto.RequestData;
+
 import io.vertx.core.json.JsonObject;
 
 /**
- * Custom message for example
- *
- * @author Junbong
+ * @deprecated use {@link RequestData}
  */
+@Deprecated
 public class CustomMessage<T> {
 
     private final JsonObject header;

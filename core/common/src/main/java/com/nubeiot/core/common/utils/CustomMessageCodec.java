@@ -1,15 +1,17 @@
 package com.nubeiot.core.common.utils;
 
+import com.nubeiot.core.dto.RequestData;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageCodec;
 import io.vertx.core.json.JsonObject;
 
 /**
- * Vert.x core example for {@link io.vertx.core.eventbus.EventBus} and {@link MessageCodec}
- *
- * @author Junbong
+ * @deprecated use {@link RequestData}
  */
+@Deprecated
 public class CustomMessageCodec implements MessageCodec<CustomMessage, CustomMessage> {
+
     @Override
     public void encodeToWire(Buffer buffer, CustomMessage customMessage) {
         // Easiest ways is using JSON object
@@ -71,4 +73,5 @@ public class CustomMessageCodec implements MessageCodec<CustomMessage, CustomMes
         // Always -1
         return -1;
     }
+
 }

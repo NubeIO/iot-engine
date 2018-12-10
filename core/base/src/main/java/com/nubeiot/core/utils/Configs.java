@@ -2,16 +2,11 @@ package com.nubeiot.core.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Scanner;
 
-import com.hazelcast.config.ConfigBuilder;
-import com.hazelcast.config.XmlConfigBuilder;
 import com.nubeiot.core.NubeLauncher;
-import com.nubeiot.core.exceptions.NubeException;
 
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
@@ -24,9 +19,9 @@ import lombok.NoArgsConstructor;
 public final class Configs {
 
     private static final Logger logger = LoggerFactory.getLogger(Configs.class);
-    public static final String SYSTEM_CFG_KEY = "__system__";
-    public static final String DEPLOY_CFG_KEY = "__deploy__";
-    public static final String APP_CFG_KEY = "__app__";
+    private static final String SYSTEM_CFG_KEY = "__system__";
+    private static final String DEPLOY_CFG_KEY = "__deploy__";
+    private static final String APP_CFG_KEY = "__app__";
     public static final String EVENT_BUS_CFG_KEY = "__eventBus__";
     public static final String CLUSTER_CFG_KEY = "__cluster__";
 
@@ -60,9 +55,13 @@ public final class Configs {
         return config.getJsonObject(APP_CFG_KEY, new JsonObject());
     }
 
+    public static JsonObject toApplicationCfg(JsonObject config) {
+        return new JsonObject().put(APP_CFG_KEY, config);
+    }
+
     public static Properties loadPropsConfig(String file) {
         Properties properties = new Properties();
-        final InputStream resourceAsStream = NubeLauncher.class.getClassLoader().getResourceAsStream(file);
+        final InputStream resourceAsStream = Reflections.staticClassLoader().getResourceAsStream(file);
         if (Objects.isNull(resourceAsStream)) {
             logger.warn("File not found");
             return properties;
@@ -75,21 +74,6 @@ public final class Configs {
             FileUtils.silentClose(resourceAsStream);
         }
         return properties;
-    }
-
-    public static ConfigBuilder parseClusterConfig(JsonObject clusterOption) {
-        URL url = FileUtils.toUrl(clusterOption.getString("url", null));
-        try {
-            if (Objects.nonNull(url)) {
-                return new XmlConfigBuilder(url);
-            } else {
-                Path path = FileUtils.toPath(clusterOption.getString("file"), "cluster.xml");
-                return new XmlConfigBuilder(path.toAbsolutePath().toString());
-            }
-        } catch (IOException | NubeException | IllegalArgumentException ex) {
-            logger.info("Fallback to default", ex);
-            return new XmlConfigBuilder();
-        }
     }
 
 }

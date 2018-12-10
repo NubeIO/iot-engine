@@ -1,9 +1,15 @@
 package com.nubeiot.core.common.utils;
 
+import com.nubeiot.core.exceptions.HttpStatusMapping;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 
+/**
+ * @deprecated use @{@link HttpStatusMapping}
+ */
+@Deprecated
 public class CustomMessageResponseHelper {
 
     public static void handleNotFoundResponse(Message<Object> message) {

@@ -10,6 +10,7 @@ ext {
     lombokVersion = "1.18.4"
     genSrcFolder = "src/generated"
     genJavaSrcFolder = "$project.genSrcFolder/java"
+    genOutResourceFolder = "$project.buildDir/generated-resources"
     baseName = "nube"
 }
 
@@ -43,7 +44,8 @@ def static computeGroup(project) {
     if (project.parent == null) {
         return project.group
     }
-    return computeGroup(project.parent) + "." + project.parent.name
+    def suffix = project.parent == project.rootProject ? "" : ("." + project.parent.name)
+    return computeGroup(project.parent) + suffix
 }
 
 def static computeBaseName(project) {

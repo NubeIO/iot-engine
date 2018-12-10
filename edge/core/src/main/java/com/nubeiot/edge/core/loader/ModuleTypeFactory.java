@@ -12,10 +12,19 @@ public final class ModuleTypeFactory {
 
     public static ModuleType factory(String type) {
         if (ModuleType.JAVASCRIPT.name().equalsIgnoreCase(type)) {
-            return ModuleType.JAVA;
+            return ModuleType.JAVASCRIPT;
         }
-        if (ModuleType.JAVA.name().equalsIgnoreCase(type)) {
-            return ModuleType.JAVA;
+        if (ModuleType.RUBY.name().equalsIgnoreCase(type)) {
+            return ModuleType.RUBY;
+        }
+        if (ModuleType.GROOVY.name().equalsIgnoreCase(type)) {
+            return ModuleType.GROOVY;
+        }
+        if (ModuleType.SCALA.name().equalsIgnoreCase(type)) {
+            return ModuleType.SCALA;
+        }
+        if (ModuleType.KOTLIN.name().equalsIgnoreCase(type)) {
+            return ModuleType.KOTLIN;
         }
         return getDefault();
     }

@@ -13,7 +13,8 @@
     },
     "__cluster__": {
       "active": true,
-      "ha": true
+      "ha": true,
+      "address": "com.nubeiot.dashboard.connector.edge.cluster"
     }
   },
   "__app__": {

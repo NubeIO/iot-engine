@@ -20,6 +20,7 @@ import java.util.Set;
 /**
  * An implementation of {@link Verticle} taking care of the discovery and publication of services.
  */
+@Deprecated
 public class MicroServiceVerticle extends AbstractVerticle {
     protected ServiceDiscovery discovery;
     protected CircuitBreaker circuitBreaker;

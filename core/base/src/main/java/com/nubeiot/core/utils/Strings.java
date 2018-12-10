@@ -155,9 +155,11 @@ public final class Strings {
 
     public static String convertToString(InputStream inputStream) {
         try {
-            return FileUtils.convertToByteArray(inputStream).toString(StandardCharsets.UTF_8.name());
+            return Objects.isNull(inputStream)
+                   ? null
+                   : FileUtils.convertToByteArray(inputStream).toString(StandardCharsets.UTF_8.name());
         } catch (UnsupportedEncodingException ex) {
-            logger.trace(ex, "Impossible");
+            logger.trace("Impossible", ex);
             return null;
         }
     }

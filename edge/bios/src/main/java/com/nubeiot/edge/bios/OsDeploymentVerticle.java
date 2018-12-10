@@ -1,6 +1,7 @@
 package com.nubeiot.edge.bios;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventModel;
@@ -26,23 +27,12 @@ import io.vertx.maven.ResolverOptions;
 public final class OsDeploymentVerticle extends EdgeVerticle {
 
     @Override
-    protected String getDBName() {
-        return "nube-bios";
-    }
-
-    @Override
     protected void registerEventBus() {
         final EventBus bus = getVertx().eventBus();
         bus.consumer(EventModel.EDGE_BIOS_INSTALLER.getAddress(),
                      m -> this.handleEvent(m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
         bus.consumer(EventModel.EDGE_BIOS_TRANSACTION.getAddress(),
                      m -> this.handleEvent(m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
-    }
-
-    @Override
-    protected ModuleTypeRule registerModuleRule() {
-        return new ModuleTypeRule().registerRule(ModuleType.JAVA, "com.nubeiot.edge.module",
-                                                 artifactId -> artifactId.startsWith("com.nubeiot.edge.module"));
     }
 
     @Override
@@ -63,11 +53,14 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     }
 
     private Single<JsonObject> initApp(JsonObject repositoryCfg, JsonObject appCfg) {
+        JsonObject deployCfg = appCfg.getJsonObject(
+                com.nubeiot.edge.core.model.gen.tables.TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(),
+                new JsonObject());
+        JsonObject deployAppCfg = Configs.toApplicationCfg(repositoryCfg.mergeIn(Configs.getApplicationCfg(deployCfg)));
         ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
                                               .fromJson(ModuleTypeFactory.getDefault()
                                                                          .serialize(appCfg, this.getModuleRule()))
-                                              .setDeployConfigJson(
-                                                      repositoryCfg.mergeIn(Configs.getApplicationCfg(appCfg)));
+                                              .setDeployConfigJson(deployAppCfg);
         return processDeploymentTransaction((TblModule) tblModule, EventType.INIT);
     }
 
@@ -90,6 +83,11 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
                     remoteCfg.getJsonArray("urls", new JsonArray()).getList()).setLocalRepository(local);
             vertx.getDelegate().registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
+    }
+
+    @Override
+    protected Supplier<ModuleTypeRule> getModuleRuleProvider() {
+        return new BIOSModuleTypeRuleProvider();
     }
 
 }

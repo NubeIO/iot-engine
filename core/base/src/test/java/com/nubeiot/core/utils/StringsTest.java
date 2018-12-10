@@ -2,6 +2,7 @@ package com.nubeiot.core.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
@@ -109,9 +110,9 @@ public class StringsTest extends TestBase {
         assertEquals("zero.test=lalala", Strings.convertToString(is).trim());
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void test_convert_null() {
-        Strings.convertToString(null);
+        assertNull(Strings.convertToString(null));
     }
 
 }

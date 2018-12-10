@@ -2,6 +2,10 @@ package com.nubeiot.core.common.utils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
+/**
+ * @deprecated use {@link com.nubeiot.core.exceptions.HttpException}
+ */
+@Deprecated
 public class HttpException extends RuntimeException {
     private HttpResponseStatus statusCode;
     private String message;
