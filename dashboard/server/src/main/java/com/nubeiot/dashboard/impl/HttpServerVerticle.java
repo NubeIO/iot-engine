@@ -7,6 +7,7 @@ import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.CustomMessageCodec;
 import com.nubeiot.core.common.utils.SQLUtils;
 import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.dashboard.Role;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
@@ -36,7 +37,6 @@ import io.vertx.reactivex.ext.web.FileUpload;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
-import io.vertx.reactivex.ext.web.handler.StaticHandler;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.servicediscovery.Record;
 
@@ -46,8 +46,6 @@ import java.util.Base64;
 import static com.nubeiot.core.common.utils.response.ResponseUtils.*;
 import static com.nubeiot.dashboard.constants.Address.*;
 import static com.nubeiot.dashboard.constants.Collection.*;
-import static com.nubeiot.dashboard.constants.Location.MEDIA_FILE_LOCATION;
-import static com.nubeiot.dashboard.constants.Location.WEB_SERVER_MICRO_SERVICE_LOCATION;
 import static com.nubeiot.dashboard.utils.FileUtils.appendRealFileNameWithExtension;
 import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
 
@@ -59,10 +57,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     private OAuth2Auth loginAuth;
     private EventBus eventBus;
     private MongoClient mongoClient;
-
-    public String getRootFolder() {
-        return System.getProperty("user.dir") + WEB_SERVER_MICRO_SERVICE_LOCATION;
-    }
+    private String workingDirectory = "";
 
     @Override
     protected Single<String> onStartComplete() {
@@ -71,6 +66,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
         // Register codec for custom message
         eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
+        workingDirectory = FileUtils.createFolder("", "nube-io"); // todo: after FileUtils.createFolder refactor with default value, we will edit this code
 
         logger.info("Config on HttpWebServer is:");
         logger.info(Json.encodePrettily(config()));
@@ -118,7 +114,8 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         Router router = Router.router(vertx);
 
         // creating body handler
-        router.route().handler(BodyHandler.create().setUploadsDirectory(getRootFolder() + MEDIA_FILE_LOCATION).setBodyLimit(5000000)); // limited to 5 MB
+        router.route().handler(BodyHandler.create().setUploadsDirectory(
+                workingDirectory + "/" + appConfig.getString("MEDIA_ROOT")));
         // handle the form
 
         enableCorsSupport(router);
@@ -127,7 +124,6 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         handleAuthEventBus(router);
         handleEventBus(router);
         handleGateway(router);
-        handleStaticResource(router);
 
         // Create the HTTP server and pass the "accept" method to the request handler.
         return createHttpServer(router, appConfig.getString("http.host", "0.0.0.0"), appConfig.getInteger("http.port", Port.HTTP_WEB_SERVER_PORT))
@@ -237,7 +233,8 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             ctx.response()
                 .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .setStatusCode(HttpResponseStatus.CREATED.code())
-                .end(Json.encodePrettily(new JsonObject().put("path", appendRealFileNameWithExtension(fileUpload).replace(getRootFolder(), ""))));
+                .end(Json.encodePrettily(new JsonObject().put("path", appendRealFileNameWithExtension(fileUpload).replace(
+                        workingDirectory, ""))));
         } else {
             ctx.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
         }
@@ -341,19 +338,6 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             // This signals that it's ok to process the event
             event.complete(true);
         }));
-    }
-
-    /**
-     * By default index.html from webroot/ is available on route "/" only.
-     * <p>
-     * For single page application, when we did refresh the page then we firstly need to return index.html then the
-     * requested APIs values. So here we are making the index.html page available for those actions.
-     *
-     * @param router routing the URLs
-     */
-    private void handleStaticResource(Router router) {
-        router.route().handler(StaticHandler.create().setCachingEnabled(false).setAllowRootFileSystemAccess(true).setWebRoot(getRootFolder()));
-        router.route("/*").handler(ctx -> ctx.response().sendFile(getRootFolder() + "/index.html"));
     }
 
     private void setAuthenticUser(RoutingContext ctx, String authorization) {

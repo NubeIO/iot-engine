@@ -19,6 +19,7 @@
   "__app__": {
     "__micro__": {},
     "http.port": 8085,
+    "MEDIA_ROOT": "media",
     "keycloak": {
       "realm": "nube_iot",
       "auth-server-url": "http://localhost:8082/auth",
