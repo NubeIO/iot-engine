@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.utils;
 
 import static org.junit.Assert.assertEquals;
 

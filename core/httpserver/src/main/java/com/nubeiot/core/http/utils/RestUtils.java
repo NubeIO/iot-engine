@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,8 +6,10 @@ import java.util.Objects;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.http.InvalidUrlException;
 import com.nubeiot.core.utils.Strings;
 
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import lombok.AccessLevel;
@@ -19,7 +21,7 @@ public final class RestUtils {
     private static final String EQUAL = "=";
     private static final String SEPARATE = "&";
 
-    public static Map<String, Object> deserializeQuery(String query) {
+    private static Map<String, Object> deserializeQuery(String query) {
         Map<String, Object> map = new HashMap<>();
         for (String property : query.split("\\" + SEPARATE)) {
             String[] keyValues = property.split("\\" + EQUAL);
@@ -40,19 +42,20 @@ public final class RestUtils {
                 mergeInput.mergeIn(bodyAsJson, true);
             }
         }
-        Pagination pagination = Pagination.builder()
-                                          .page(context.queryParams().get("page"))
-                                          .perPage(context.queryParams().get("per_page"))
-                                          .build();
+        final RequestData.Builder dataBuilder = RequestData.builder();
+        if (context.request().method() == HttpMethod.GET) {
+            Pagination pagination = Pagination.builder()
+                                              .page(context.queryParams().get("page"))
+                                              .perPage(context.queryParams().get("per_page"))
+                                              .build();
+            dataBuilder.pagination(pagination);
+        }
+
         final String query = context.request().query();
         if (Strings.isBlank(query)) {
-            return RequestData.builder().pagination(pagination).body(mergeInput).build();
+            return dataBuilder.body(mergeInput).build();
         }
-        return RequestData.builder()
-                          .pagination(pagination)
-                          .body(mergeInput)
-                          .filter(JsonObject.mapFrom(deserializeQuery(query)))
-                          .build();
+        return dataBuilder.body(mergeInput).filter(JsonObject.mapFrom(deserializeQuery(query))).build();
     }
 
 }

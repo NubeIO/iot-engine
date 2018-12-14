@@ -35,7 +35,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class SQLWrapper implements IComponent {
+public final class SQLWrapper implements IComponent {
 
     private static final Logger logger = LoggerFactory.getLogger(SQLWrapper.class);
     private static final String DDL_SQL_FILE = "sql/ddl.sql";
@@ -57,7 +57,7 @@ public class SQLWrapper implements IComponent {
                           .subscribe(logger::info, throwable -> {
                               logger.error("Failed to startup application", throwable);
                               throw new IllegalStateException(ErrorMessage.parse(throwable).toJson().encode());
-                          });
+                          }).dispose();
     }
 
     @Override

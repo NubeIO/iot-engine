@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -6,104 +6,106 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import com.nubeiot.core.http.InvalidUrlException;
+
 public class UrlsTest {
 
     private static final String DEFAULT_URL = "http://localhost:8080/api";
 
     @Test(expected = IllegalArgumentException.class)
     public void test_optimizeUrl_Blank() {
-        Urls.optimizeUrl(null, null);
+        Urls.optimizeURL(null, null);
     }
 
     @Test(expected = InvalidUrlException.class)
     public void test_optimizeUrl_InvalidBaseFormat() {
-        Urls.optimizeUrl("htt://abc", null);
+        Urls.optimizeURL("htt://abc", null);
     }
 
     @Test(expected = InvalidUrlException.class)
     public void test_optimizeUrl_InvalidPathFormat_BaseIsBlank() {
-        Urls.optimizeUrl(null, "abc");
+        Urls.optimizeURL(null, "abc");
     }
 
     @Test
     public void test_optimizeUrl_NullPath() {
-        assertEquals(DEFAULT_URL, Urls.optimizeUrl(DEFAULT_URL, null));
+        assertEquals(DEFAULT_URL, Urls.optimizeURL(DEFAULT_URL, null));
     }
 
     @Test
     public void test_optimizeUrl_BlankPath() {
-        assertEquals(DEFAULT_URL, Urls.optimizeUrl(DEFAULT_URL, ""));
+        assertEquals(DEFAULT_URL, Urls.optimizeURL(DEFAULT_URL, ""));
     }
 
     @Test
     public void test_optimizeUrl_FullPath() {
-        assertEquals(DEFAULT_URL + "/auth", Urls.optimizeUrl(DEFAULT_URL, "/auth"));
+        assertEquals(DEFAULT_URL + "/auth", Urls.optimizeURL(DEFAULT_URL, "/auth"));
     }
 
     @Test(expected = InvalidUrlException.class)
     public void test_optimizeUrl_PathWithSpace() {
-        Urls.optimizeUrl(DEFAULT_URL, "auth/abc xyz");
+        Urls.optimizeURL(DEFAULT_URL, "auth/abc xyz");
     }
 
     @Test
     public void test_optimizeUrl_MessyPath1() {
-        assertEquals(DEFAULT_URL + "/auth/t1", Urls.optimizeUrl(DEFAULT_URL, "//auth///t1"));
+        assertEquals(DEFAULT_URL + "/auth/t1", Urls.optimizeURL(DEFAULT_URL, "//auth///t1"));
     }
 
     @Test
     public void test_optimizeUrl_MessyPath2() {
-        assertEquals(DEFAULT_URL + "/auth/t2/", Urls.optimizeUrl(DEFAULT_URL, "//auth///t2///"));
+        assertEquals(DEFAULT_URL + "/auth/t2/", Urls.optimizeURL(DEFAULT_URL, "//auth///t2///"));
     }
 
     @Test(expected = InvalidUrlException.class)
     public void test_optimizeUrl_PathWithParameter() {
-        assertEquals(DEFAULT_URL + "/auth?getName=x&age=20", Urls.optimizeUrl(DEFAULT_URL, "auth?getName=x&age=20"));
+        assertEquals(DEFAULT_URL + "/auth?getName=x&age=20", Urls.optimizeURL(DEFAULT_URL, "auth?getName=x&age=20"));
     }
 
     @Test(expected = InvalidUrlException.class)
     public void test_optimizeUrl_PathWithEncodeParameter() {
         assertEquals(DEFAULT_URL + "/auth?getName=x%2By&age=20",
-                     Urls.optimizeUrl(DEFAULT_URL, "auth?getName=x+y&age=20"));
+                     Urls.optimizeURL(DEFAULT_URL, "auth?getName=x+y&age=20"));
     }
 
     @Test
     public void test_optimizeUrl_PathIsUrl() {
-        assertEquals("https://localhost/api", Urls.optimizeUrl(DEFAULT_URL, "https://localhost/api"));
+        assertEquals("https://localhost/api", Urls.optimizeURL(DEFAULT_URL, "https://localhost/api"));
     }
 
     @Test
     public void test_validUrl_LocalWithoutPort() {
-        assertTrue(Urls.validateUrl("https://localhost"));
+        assertTrue(Urls.validateURL("https://localhost"));
     }
 
     @Test
     public void test_validUrl_LocalWithPort() {
-        assertTrue(Urls.validateUrl("https://localhost:80/"));
+        assertTrue(Urls.validateURL("https://localhost:80/"));
     }
 
     @Test
     public void test_validUrl_LocalWithTopLabel() {
-        assertTrue(Urls.validateUrl("https://localhost.com"));
+        assertTrue(Urls.validateURL("https://localhost.com"));
     }
 
     @Test
     public void test_validUrl_LocalWithPortAndTopLabel() {
-        assertTrue(Urls.validateUrl("https://localhost.com:9090/"));
+        assertTrue(Urls.validateURL("https://localhost.com:9090/"));
     }
 
     @Test
     public void test_validUrl_Remote() {
-        assertTrue(Urls.validateUrl("https://github.com/google//blob/master/UserGuide.md"));
+        assertTrue(Urls.validateURL("https://github.com/google//blob/master/UserGuide.md"));
     }
 
     @Test
     public void test_validUrl_Remote_WithParameter() {
-        assertFalse(Urls.validateUrl("https://github.org/wiki/GRUB_2?rd=Grub2"));
+        assertFalse(Urls.validateURL("https://github.org/wiki/GRUB_2?rd=Grub2"));
     }
 
     @Test
     public void test_validUrl_Remote_WithSpecialChar() {
-        assertTrue(Urls.validateUrl(
+        assertTrue(Urls.validateURL(
                 "https://jenkins.org/blue/organizations/jenkins/zos%2Foauth-apis-client/,();$!a+bc=d:@&!*xy/"));
     }
 
@@ -125,6 +127,19 @@ public class UrlsTest {
     @Test
     public void test_buildUrl_QueryBlank() {
         assertEquals("https://github.org#section2.3", Urls.buildURL("https://github.org", null, "section2.3"));
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_combinePath_Null() {
+        assertEquals("/api/test", Urls.combinePath((String[]) null));
+    }
+
+    @Test
+    public void test_combinePath() {
+        assertEquals("/api/test", Urls.combinePath("/api", "test"));
+        assertEquals("/api/test", Urls.combinePath("/api", "/test"));
+        assertEquals("/api/test", Urls.combinePath("/api/", "/test"));
+        assertEquals("/api/test", Urls.combinePath("/api/", "//test"));
     }
 
 }

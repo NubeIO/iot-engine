@@ -52,7 +52,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
         this.moduleLoader = new ModuleLoader(vertx);
         this.moduleRule = this.getModuleRuleProvider().get();
         registerEventBus();
-        this.sqlWrapper = ISqlProvider.initConfig(this.vertx, config(), this::initData);
+        this.sqlWrapper = ISqlProvider.create(this.vertx, config(), this::initData);
         this.sqlWrapper.start();
         Configuration jooqConfig = this.sqlWrapper.getJooqConfig();
         this.entityHandler = new EntityHandler(() -> new TblModuleDao(jooqConfig, vertx),

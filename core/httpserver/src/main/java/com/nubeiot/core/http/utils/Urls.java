@@ -1,20 +1,25 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.HttpScheme;
+import com.nubeiot.core.http.InvalidUrlException;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 /**
  * URL Utilities.
@@ -71,14 +76,14 @@ public final class Urls {
      * @param path Second segment, typically is {@code Path}
      * @return String combination of base and path that conforms to {@code URL} syntax
      */
-    public static String optimizeUrl(String base, String path) {
+    public static String optimizeURL(String base, String path) {
         if (Strings.isBlank(base) && Strings.isBlank(path)) {
             throw new IllegalArgumentException("Base URl and path are blank");
         }
-        if (validateUrl(path)) {
+        if (validateURL(path)) {
             return path;
         }
-        if (validateUrl(base)) {
+        if (validateURL(base)) {
             if (Strings.isBlank(path)) {
                 return base;
             }
@@ -98,7 +103,7 @@ public final class Urls {
      * @return {@code True} if given input is valid URL syntax, otherwise {@code False}
      * @see #URL_PATTERN
      */
-    public static boolean validateUrl(String url) {
+    public static boolean validateURL(String url) {
         return validate(url, URL_PATTERN);
     }
 
@@ -111,6 +116,10 @@ public final class Urls {
      */
     public static boolean validatePath(String path) {
         return validate(path, PATH_PATTERN);
+    }
+
+    public static String combinePath(@NonNull String... path) {
+        return normalize(Arrays.stream(path).filter(Strings::isNotBlank).collect(Collectors.joining("/")));
     }
 
     private static String normalize(String url) {

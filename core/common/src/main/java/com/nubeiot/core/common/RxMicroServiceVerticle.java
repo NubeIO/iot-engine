@@ -36,7 +36,7 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle implements
     @Override
     public void start() {
         this.appConfig = Configs.getApplicationCfg(config());
-        this.microservice = IMicroProvider.initConfig(vertx, config());
+        this.microservice = IMicroProvider.create(vertx, config());
         this.microservice.start();
         this.discovery = this.microservice.getDiscovery();
         this.circuitBreaker = this.microservice.getCircuitBreaker();
