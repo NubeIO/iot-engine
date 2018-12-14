@@ -1,6 +1,7 @@
 package com.nubeiot.core.utils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -167,7 +168,9 @@ public final class Reflections {
 
     public static <T> T createObject(Class<T> clazz) {
         try {
-            return clazz.getConstructor().newInstance();
+            Constructor<T> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             logger.warn("Cannot init instance of {}", e, clazz.getName());
             return null;

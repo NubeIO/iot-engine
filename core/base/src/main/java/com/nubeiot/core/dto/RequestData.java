@@ -4,6 +4,10 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
 import io.vertx.core.json.JsonObject;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,6 +16,8 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public final class RequestData implements Serializable {
 
     private Map<String, Object> body;
@@ -37,7 +43,7 @@ public final class RequestData implements Serializable {
 
         private JsonObject body;
         private JsonObject filter;
-        private Pagination pagination = Pagination.builder().build();
+        private Pagination pagination;
 
         public Builder body(JsonObject body) {
             this.body = body;
@@ -50,7 +56,7 @@ public final class RequestData implements Serializable {
         }
 
         public Builder pagination(Pagination pagination) {
-            this.pagination = Objects.isNull(pagination) ? this.pagination : pagination;
+            this.pagination = Objects.isNull(pagination) ? Pagination.builder().build() : pagination;
             return this;
         }
 

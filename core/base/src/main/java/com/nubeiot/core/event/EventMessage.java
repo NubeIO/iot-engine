@@ -41,7 +41,7 @@ public final class EventMessage {
     }
 
     public static EventMessage error(EventType action, NubeException.ErrorCode code, String message) {
-        return new EventMessage(Status.FAILED, action, null, new ErrorMessage(code, message));
+        return new EventMessage(Status.FAILED, action, null, ErrorMessage.parse(code, message));
     }
 
     public static EventMessage success(EventType action) {

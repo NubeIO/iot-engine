@@ -1,38 +1,41 @@
 package com.nubeiot.core.exceptions;
 
-import java.util.List;
-import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.reactivex.exceptions.CompositeException;
 import io.vertx.core.json.JsonObject;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.ToString;
 
 @ToString
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-@AllArgsConstructor
-public class ErrorMessage {
+public final class ErrorMessage {
 
+    @JsonIgnore
+    private NubeException throwable;
     private NubeException.ErrorCode code;
     private String message;
 
-    public static ErrorMessage parse(Throwable throwable) {
-        Throwable t = throwable;
-        if (t instanceof CompositeException) {
-            List<Throwable> exceptions = ((CompositeException) throwable).getExceptions();
-            t = exceptions.get(exceptions.size() - 1);
-        }
-        if (t instanceof NubeException) {
-            String errorMsg = Objects.nonNull(t.getCause())
-                              ? t.getCause().toString()
-                              : Objects.toString(t.getMessage(), t.toString());
-            return new ErrorMessage(((NubeException) t).getErrorCode(), errorMsg);
-        }
-        return new ErrorMessage(NubeException.ErrorCode.UNKNOWN_ERROR, Objects.toString(t.getMessage(), t.toString()));
+    private ErrorMessage(@NonNull NubeException throwable) {
+        this.throwable = throwable;
+        this.code = throwable.getErrorCode();
+        this.message = throwable.getMessage();
+    }
+
+    private ErrorMessage(@NonNull NubeException.ErrorCode code, @NonNull String message) {
+        this.code = code;
+        this.message = message;
+    }
+
+    public static ErrorMessage parse(@NonNull Throwable throwable) {
+        return new ErrorMessage(new NubeExceptionConverter().apply(throwable));
+    }
+
+    public static ErrorMessage parse(@NonNull NubeException.ErrorCode code, @NonNull String message) {
+        return new ErrorMessage(code, message);
     }
 
     public JsonObject toJson() {

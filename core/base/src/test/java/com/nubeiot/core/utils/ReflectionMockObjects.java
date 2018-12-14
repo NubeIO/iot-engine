@@ -1,6 +1,9 @@
 package com.nubeiot.core.utils;
 
+import java.util.List;
+
 import com.nubeiot.core.cluster.ClusterDelegate;
+import com.nubeiot.core.cluster.ClusterNode;
 import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.exceptions.ServiceException;
 
@@ -47,6 +50,16 @@ class ReflectionMockObjects {
 
         @Override
         public ClusterManager initClusterManager(JsonObject clusterConfig) {
+            return null;
+        }
+
+        @Override
+        public ClusterNode lookupNodeById(String id) {
+            return null;
+        }
+
+        @Override
+        public List<ClusterNode> getAllNodes() {
             return null;
         }
 

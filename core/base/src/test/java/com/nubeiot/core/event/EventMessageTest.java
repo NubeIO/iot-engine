@@ -30,8 +30,8 @@ public class EventMessageTest {
         Assert.assertNotNull(error.getError());
         Assert.assertEquals("{}", error.getData().encode());
         Assert.assertEquals("{\"status\":\"FAILED\",\"action\":\"REMOVE\",\"data\":{}," +
-                            "\"error\":{\"code\":\"UNKNOWN_ERROR\",\"message\":\"xxx\"}}", error.toJson().encode());
-        System.out.println(EventMessage.from(error));
+                            "\"error\":{\"code\":\"UNKNOWN_ERROR\",\"message\":\"UNKNOWN_ERROR | Cause: xxx\"}}",
+                            error.toJson().encode());
     }
 
 }
