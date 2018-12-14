@@ -6,7 +6,9 @@
     },
     "__cluster__": {
       "active": false,
-      "ha": true
+      "ha": true,
+      "type": "hazelcast",
+      "listener.address": ""
     }
   },
   "__deploy__": {

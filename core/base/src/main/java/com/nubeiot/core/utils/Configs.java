@@ -22,8 +22,8 @@ public final class Configs {
     private static final String SYSTEM_CFG_KEY = "__system__";
     private static final String DEPLOY_CFG_KEY = "__deploy__";
     private static final String APP_CFG_KEY = "__app__";
-    public static final String EVENT_BUS_CFG_KEY = "__eventBus__";
-    public static final String CLUSTER_CFG_KEY = "__cluster__";
+    private static final String EVENT_BUS_CFG_KEY = "__eventBus__";
+    private static final String CLUSTER_CFG_KEY = "__cluster__";
 
     public static JsonObject loadDefaultConfig(String file) {
         return loadDefaultConfig(NubeLauncher.class, file);
@@ -45,6 +45,15 @@ public final class Configs {
 
     public static JsonObject getSystemCfg(JsonObject config) {
         return config.getJsonObject(SYSTEM_CFG_KEY, new JsonObject());
+    }
+
+    public static JsonObject getClusterCfg(JsonObject config) {
+        return config.getJsonObject(SYSTEM_CFG_KEY, new JsonObject()).getJsonObject(CLUSTER_CFG_KEY, new JsonObject());
+    }
+
+    public static JsonObject getEventBusCfg(JsonObject config) {
+        return config.getJsonObject(SYSTEM_CFG_KEY, new JsonObject())
+                     .getJsonObject(EVENT_BUS_CFG_KEY, new JsonObject());
     }
 
     public static JsonObject getDeployCfg(JsonObject config) {

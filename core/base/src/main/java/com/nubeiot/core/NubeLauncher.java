@@ -24,6 +24,7 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     private static final Logger logger;
     private JsonObject allConfig;
     private VertxOptions options;
+    private IClusterDelegate clusterDelegate;
 
     static {
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
@@ -47,19 +48,18 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         logger.info("Before starting Vertx instance...");
         JsonObject cfg = Configs.getSystemCfg(allConfig);
         logger.info("System Config: {}", cfg.encode());
-        this.options = reloadVertxOptions(options, cfg);
+        this.options = reloadVertxOptions(options, allConfig);
         super.beforeStartingVertx(this.options);
     }
 
     @Override
     public void afterStartingVertx(Vertx vertx) {
         if (vertx.isClustered()) {
-            final String address = Configs.getSystemCfg(allConfig)
-                                          .getJsonObject(Configs.CLUSTER_CFG_KEY, new JsonObject())
-                                          .getString("address");
+            final String address = Configs.getClusterCfg(allConfig).getString(IClusterDelegate.Config.LISTENER_ADDRESS);
             if (Strings.isNotBlank(address)) {
+                EventBus eventBus = new EventBus(vertx.eventBus());
                 this.options.getClusterManager()
-                            .nodeListener(new ClusterNodeListener(new EventBus(vertx.eventBus()), address));
+                            .nodeListener(new ClusterNodeListener(clusterDelegate, eventBus, address));
             }
         }
         super.afterStartingVertx(vertx);
@@ -92,11 +92,11 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         return Configs.loadDefaultConfig("system.json");
     }
 
-    private VertxOptions reloadVertxOptions(VertxOptions vertxOptions, JsonObject systemCfg) {
+    private VertxOptions reloadVertxOptions(VertxOptions vertxOptions, JsonObject allConfig) {
         StateMachine.init();
         ClusterRegistry.init();
-        configEventBus(vertxOptions, systemCfg.getJsonObject(Configs.EVENT_BUS_CFG_KEY, new JsonObject()));
-        configCluster(vertxOptions, systemCfg.getJsonObject(Configs.CLUSTER_CFG_KEY, new JsonObject()));
+        configEventBus(vertxOptions, Configs.getEventBusCfg(allConfig));
+        configCluster(vertxOptions, Configs.getClusterCfg(allConfig));
         return vertxOptions;
     }
 
@@ -109,18 +109,18 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     }
 
     private void configCluster(VertxOptions options, JsonObject clusterConfig) {
-        if (clusterConfig.isEmpty() || !clusterConfig.getBoolean("active", Boolean.FALSE)) {
+        if (clusterConfig.isEmpty() || !clusterConfig.getBoolean(IClusterDelegate.Config.ACTIVE, Boolean.FALSE)) {
             return;
         }
         logger.info("Setup Cluster...");
         options.setClustered(true);
-        options.setHAEnabled(clusterConfig.getBoolean("ha", Boolean.FALSE));
-        final String delegateType = clusterConfig.getString("type", "hazelcast");
-        final IClusterDelegate delegate = ClusterRegistry.instance().getClusterDelegate(delegateType);
-        if (Objects.isNull(delegate)) {
+        options.setHAEnabled(clusterConfig.getBoolean(IClusterDelegate.Config.HA, Boolean.FALSE));
+        String delegateType = clusterConfig.getString(IClusterDelegate.Config.TYPE, ClusterRegistry.DEFAULT_CLUSTER);
+        this.clusterDelegate = ClusterRegistry.instance().getClusterDelegate(delegateType);
+        if (Objects.isNull(this.clusterDelegate)) {
             throw new EngineException("Cannot load cluster config: " + delegateType);
         }
-        options.setClusterManager(delegate.initClusterManager(clusterConfig));
+        options.setClusterManager(this.clusterDelegate.initClusterManager(clusterConfig));
     }
 
 }

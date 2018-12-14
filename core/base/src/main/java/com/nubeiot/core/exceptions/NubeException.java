@@ -40,7 +40,7 @@ public class NubeException extends RuntimeException {
         INSUFFICIENT_PERMISSION_ERROR,
         HTTP_ERROR,
         SERVICE_ERROR,
-        ENGINE_ERROR,
+        ENGINE_ERROR, CLUSTER_ERROR, EVENT_ERROR,
         DATABASE_ERROR,
         STATE_ERROR,
         UNKNOWN_ERROR

@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ClusterRegistry {
 
+    public static final String DEFAULT_CLUSTER = "hazelcast";
+    private static final String DEFAULT_CLUSTER_PACKAGE = "com.nubeiot.core.cluster";
     private static ClusterRegistry instance;
     private final Map<String, IClusterDelegate> registry = new HashMap<>();
 
@@ -20,7 +22,7 @@ public final class ClusterRegistry {
             throw new IllegalStateException("Machine is already initialized");
         }
         instance = new ClusterRegistry();
-        Reflections.scanClassesInPackage("com.nubeiot.core.cluster", ClusterDelegate.class, IClusterDelegate.class)
+        Reflections.scanClassesInPackage(DEFAULT_CLUSTER_PACKAGE, ClusterDelegate.class, IClusterDelegate.class)
                    .parallelStream()
                    .forEach(instance::addDelegate);
     }
