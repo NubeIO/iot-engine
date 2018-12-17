@@ -3,7 +3,7 @@
     "http.port": 8084,
     "api.name": "sql-hive",
     "hiveConfig": {
-      "url": "jdbc:hive2://45.77.220.111:10000/filodb",
+      "url": "jdbc:hive2://localhost:10000/filo_db",
       "driver_class": "org.apache.hive.jdbc.HiveDriver",
       "user": "root",
       "password": ""
