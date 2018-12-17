@@ -95,4 +95,21 @@ public class ReflectionsTest {
         Assert.assertNotNull(delegate);
         Assert.assertEquals("hazelcast", delegate.getTypeName());
     }
+
+    @Test
+    public void test_assert_data_type_with_primitive() {
+        Assert.assertTrue(Reflections.assertDataType(int.class, int.class));
+        Assert.assertTrue(Reflections.assertDataType(int.class, Integer.class));
+        Assert.assertTrue(Reflections.assertDataType(Integer.class, int.class));
+        Assert.assertTrue(Reflections.assertDataType(Integer.class, Integer.class));
+    }
+
+    @Test
+    public void test_assert_data_type() {
+        Assert.assertFalse(Reflections.assertDataType(ReflectionMockObjects.MockParent.class,
+                                                      ReflectionMockObjects.MockChild.class));
+        Assert.assertTrue(Reflections.assertDataType(ReflectionMockObjects.MockChild.class,
+                                                     ReflectionMockObjects.MockParent.class));
+    }
+
 }

@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.StateException;
 
@@ -16,17 +17,31 @@ public class EventHandlerTest {
 
     @Test
     public void test_get_method_one_contractor() {
-        final Method method = EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.CREATE);
+        final Method method = EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.UPDATE);
         Assert.assertNotNull(method);
-        Assert.assertEquals("install", method.getName());
+        Assert.assertEquals("throwException", method.getName());
     }
 
     @Test
-    public void test_execute_method_one_contractor() {
-        final Single<JsonObject> handle = new MockEventHandler().handle(EventType.CREATE,
-                                                                        RequestData.builder().build());
+    public void test_execute_method_contractor_return_other() {
+        Single<JsonObject> handle = new MockEventHandler().handleEvent(EventType.CREATE, RequestData.builder().build());
         Assert.assertNotNull(handle);
         Assert.assertEquals("install", handle.blockingGet().getString("key"));
+    }
+
+    @Test
+    public void test_execute_method_contractor_return_single_json() {
+        Single<JsonObject> handle = new MockEventHandler().handleEvent(EventType.INIT, RequestData.builder().build());
+        Assert.assertNotNull(handle);
+        Assert.assertEquals("init", handle.blockingGet().getString("key"));
+    }
+
+    @Test
+    public void test_execute_method_contractor_return_single_other() {
+        Single<JsonObject> handle = new MockEventHandler().handleEvent(EventType.GET_LIST,
+                                                                       RequestData.builder().build());
+        Assert.assertNotNull(handle);
+        Assert.assertEquals("list", handle.blockingGet().getString("key"));
     }
 
     @Test
@@ -41,35 +56,48 @@ public class EventHandlerTest {
 
     @Test
     public void test_execute_method_with_multiple_contractor() {
-        final Single<JsonObject> handle = new MockEventHandler().handle(EventType.REMOVE,
-                                                                        RequestData.builder().build());
+        final Single<JsonObject> handle = new MockEventHandler().handleEvent(EventType.REMOVE,
+                                                                             RequestData.builder().build());
         Assert.assertNotNull(handle);
         Assert.assertEquals("delete", handle.blockingGet().getString("key"));
     }
 
-    @Test
-    public void test_get_method_NotFoundValue() {
-        Assert.assertNull(EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.INIT));
+    @Test(expected = HiddenException.ImplementationError.class)
+    public void test_get_method_no_output() throws Throwable {
+        try {
+            EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.GET_ONE);
+        } catch (NubeException e) {
+            throw e.getCause();
+        }
     }
 
     @Test(expected = StateException.class)
     public void test_execute_method_unsupported_event() {
-        new MockEventHandler().handle(EventType.GET_LIST, RequestData.builder().build());
+        new MockEventHandler.MockEventUnsupportedHandler().handleEvent(EventType.GET_LIST,
+                                                                       RequestData.builder().build());
     }
 
-    @Test
-    public void test_get_method_PrivateStaticMethod() {
-        Assert.assertNull(EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.INIT));
+    @Test(expected = HiddenException.ImplementationError.class)
+    public void test_get_method_public_static() throws Throwable {
+        try {
+            EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.GET_ONE);
+        } catch (NubeException e) {
+            throw e.getCause();
+        }
     }
 
-    @Test
-    public void test_get_method_NonePrivateMethod() {
-        Assert.assertNull(EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.GET_ONE));
+    @Test(expected = HiddenException.ImplementationError.class)
+    public void test_get_method_none_public_method() throws Throwable {
+        try {
+            EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.GET_ONE);
+        } catch (NubeException e) {
+            throw e.getCause();
+        }
     }
 
-    @Test(expected = NubeException.class)
+    @Test(expected = RuntimeException.class)
     public void test_execute_method_that_throwException() {
-        new MockEventHandler().handle(EventType.UPDATE, RequestData.builder().build());
+        new MockEventHandler().handleEvent(EventType.UPDATE, RequestData.builder().build());
     }
 
 }

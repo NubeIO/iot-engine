@@ -16,7 +16,7 @@ public final class EventBusRestBuilder {
     private final Vertx vertx;
     private final Router router;
     private final EventBus eventBus;
-    private final List<Class<? extends IEventBusRestApi>> apis = new ArrayList<>();
+    private final List<Class<? extends EventBusRestApi>> apis = new ArrayList<>();
 
     public EventBusRestBuilder(Vertx vertx) {
         this.vertx = vertx;
@@ -39,7 +39,7 @@ public final class EventBusRestBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    public EventBusRestBuilder register(Class<? extends IEventBusRestApi>... restApi) {
+    public EventBusRestBuilder register(Class<? extends EventBusRestApi>... restApi) {
         Objects.requireNonNull(restApi, "Missing REST API");
         apis.addAll(Arrays.asList(restApi));
         return this;

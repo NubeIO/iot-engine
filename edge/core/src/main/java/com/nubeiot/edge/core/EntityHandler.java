@@ -177,7 +177,7 @@ public final class EntityHandler {
     }
 
     private Single<TblModule> markModuleModify(TblModule module, TblModule oldOne, boolean isUpdated) {
-        //TODO: handle merge data
+        //TODO: handleEvent merge data
         logger.debug("Mark service {} to modify...", module.getServiceId());
         final TblModule into = isUpdated ? module.into(oldOne) : oldOne.into(module);
         return moduleDaoSupplier.get()

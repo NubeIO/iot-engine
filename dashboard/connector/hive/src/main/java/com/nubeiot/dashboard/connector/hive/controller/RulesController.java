@@ -1,8 +1,12 @@
 package com.nubeiot.dashboard.connector.hive.controller;
 
-import com.nubeiot.dashboard.connector.hive.HiveService;
+import java.io.StringReader;
+import java.util.Collections;
+
 import com.nubeiot.core.common.utils.ErrorCodeException;
 import com.nubeiot.core.common.utils.ErrorCodes;
+import com.nubeiot.dashboard.connector.hive.HiveService;
+
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -10,9 +14,6 @@ import io.vertx.reactivex.core.Vertx;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
-
-import java.io.StringReader;
-import java.util.Collections;
 
 /**
  * Created by topsykretts on 4/26/18.
@@ -47,7 +48,7 @@ public class RulesController {
             .map(queryString -> {
                 CCJSqlParserManager ccjSqlParserManager = new CCJSqlParserManager();
                 final Statement statement = ccjSqlParserManager.parse(new StringReader(query));
-                // Only handle select statements
+                // Only handleEvent select statements
                 if (!(statement instanceof Select)) {
                     throw new ErrorCodeException(ErrorCodes.BAD_ACTION);
                 } else {

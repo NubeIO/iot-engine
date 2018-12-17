@@ -30,9 +30,9 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     protected void registerEventBus() {
         final EventBus bus = getVertx().eventBus();
         bus.consumer(EventModel.EDGE_BIOS_INSTALLER.getAddress(),
-                     m -> this.handleEvent(m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
+                     m -> new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER).handleMessage(m));
         bus.consumer(EventModel.EDGE_BIOS_TRANSACTION.getAddress(),
-                     m -> this.handleEvent(m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
+                     m -> new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION).handleMessage(m));
     }
 
     @Override

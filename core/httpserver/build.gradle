@@ -3,8 +3,10 @@ dependencies {
     compile project(':core:base')
     compile "io.vertx:vertx-web:$project.vertxVersion"
 //    compile "io.vertx:vertx-web-api-contract:$project.vertxVersion"
+//    compile "org.jboss.resteasy:resteasy-vertx:3.6.2.Final"
     compile("com.zandero:rest.vertx:0.8.8") {
         exclude group: 'org.slf4j', module: 'slf4j-api'
     }
-    compile "org.glassfish.jersey.core:jersey-common:2.22.2"
+    compile "org.jboss.resteasy:resteasy-jaxrs:3.6.2.Final"
+
 }

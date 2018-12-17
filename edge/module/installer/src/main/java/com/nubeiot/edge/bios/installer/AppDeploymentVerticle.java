@@ -18,9 +18,9 @@ public final class AppDeploymentVerticle extends EdgeVerticle {
     protected void registerEventBus() {
         final EventBus bus = getVertx().eventBus();
         bus.consumer(EventModel.EDGE_APP_INSTALLER.getAddress(),
-                     m -> this.handleEvent(m, new ModuleEventHandler(this, EventModel.EDGE_APP_INSTALLER)));
+                     m -> new ModuleEventHandler(this, EventModel.EDGE_APP_INSTALLER).handleMessage(m));
         bus.consumer(EventModel.EDGE_APP_TRANSACTION.getAddress(),
-                     m -> this.handleEvent(m, new TransactionEventHandler(this, EventModel.EDGE_APP_TRANSACTION)));
+                     m -> new TransactionEventHandler(this, EventModel.EDGE_APP_TRANSACTION).handleMessage(m));
     }
 
     @Override

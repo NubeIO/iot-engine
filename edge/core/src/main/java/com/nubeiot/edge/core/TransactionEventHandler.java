@@ -19,7 +19,7 @@ import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.NonNull;
 
-public final class TransactionEventHandler extends EventHandler {
+public final class TransactionEventHandler implements EventHandler {
 
     private final EdgeVerticle verticle;
     @Getter
@@ -30,8 +30,8 @@ public final class TransactionEventHandler extends EventHandler {
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
 
-    @EventContractor(values = EventType.GET_ONE)
-    private Single<JsonObject> getOne(RequestData data) {
+    @EventContractor(events = EventType.GET_ONE, returnType = Single.class)
+    public Single<JsonObject> getOne(RequestData data) {
         String transId = data.getBody().getString(Tables.TBL_TRANSACTION.TRANSACTION_ID.getName());
         if (Strings.isBlank(transId)) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");

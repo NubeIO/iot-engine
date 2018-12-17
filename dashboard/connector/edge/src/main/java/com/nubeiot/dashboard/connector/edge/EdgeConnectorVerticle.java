@@ -1,8 +1,8 @@
 package com.nubeiot.dashboard.connector.edge;
 
 import com.nubeiot.core.component.IComponent;
+import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.core.http.IHttpServerProvider;
 import com.nubeiot.core.micro.IMicroProvider;
 import com.nubeiot.core.sql.ISqlProvider;
 import com.nubeiot.core.utils.Configs;
@@ -15,7 +15,7 @@ import io.vertx.reactivex.core.AbstractVerticle;
 import lombok.Getter;
 
 public final class EdgeConnectorVerticle extends AbstractVerticle
-        implements ISqlProvider, IMicroProvider, IHttpServerProvider {
+        implements ISqlProvider, IMicroProvider, HttpServerProvider {
 
     @Getter
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -28,7 +28,7 @@ public final class EdgeConnectorVerticle extends AbstractVerticle
     public void start() throws Exception {
         this.appConfig = Configs.getApplicationCfg(config());
         logger.info("Config on app store REST {}", this.appConfig);
-        this.httpServer = IHttpServerProvider.create(this.vertx, config(), initHttpRouter());
+        this.httpServer = HttpServerProvider.create(this.vertx, config(), initHttpRouter());
         this.sqlWrapper = ISqlProvider.create(this.vertx, config(), () -> Single.just(new JsonObject()));
         this.httpServer.start();
         //        this.sqlWrapper.start();

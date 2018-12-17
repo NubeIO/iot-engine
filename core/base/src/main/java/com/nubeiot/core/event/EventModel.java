@@ -32,12 +32,12 @@ public final class EventModel {
     private final String address;
     private final Set<EventType> events = new HashSet<>();
 
-    EventModel add(EventType eventType) {
+    public EventModel add(EventType eventType) {
         this.events.add(Objects.requireNonNull(eventType));
         return this;
     }
 
-    EventModel add(EventType... eventTypes) {
+    public EventModel add(EventType... eventTypes) {
         this.events.addAll(Arrays.stream(eventTypes).filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
     }

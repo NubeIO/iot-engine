@@ -9,12 +9,16 @@ import io.vertx.core.Future;
  */
 public interface IComponent {
 
-    void start(Future<Void> startFuture) throws NubeException;
-
     void start() throws NubeException;
 
     void stop() throws NubeException;
 
-    void stop(Future<Void> future) throws NubeException;
+    default void start(Future<Void> startFuture) throws NubeException {
+        start();
+    }
+
+    default void stop(Future<Void> future) throws NubeException {
+        stop();
+    }
 
 }

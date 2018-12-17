@@ -10,10 +10,10 @@ import javax.annotation.Generated;
 
 import org.jooq.Configuration;
 
+import com.nubeiot.core.enums.State;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.gen.tables.TblModule;
 import com.nubeiot.edge.core.model.gen.tables.records.TblModuleRecord;
-import com.nubeiot.core.enums.State;
 
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.AbstractVertxDAO;
@@ -55,70 +55,70 @@ public class TblModuleDao extends AbstractVertxDAO<TblModuleRecord, com.nubeiot.
     }
 
     /**
-     * Find records that have <code>service_name IN (values)</code> asynchronously
+     * Find records that have <code>service_name IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByServiceName(List<String> values) {
         return findManyByCondition(TblModule.TBL_MODULE.SERVICE_NAME.in(values));
     }
 
     /**
-     * Find records that have <code>service_type IN (values)</code> asynchronously
+     * Find records that have <code>service_type IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByServiceType(List<ModuleType> values) {
         return findManyByCondition(TblModule.TBL_MODULE.SERVICE_TYPE.in(values));
     }
 
     /**
-     * Find records that have <code>version IN (values)</code> asynchronously
+     * Find records that have <code>version IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByVersion(List<String> values) {
         return findManyByCondition(TblModule.TBL_MODULE.VERSION.in(values));
     }
 
     /**
-     * Find records that have <code>published_by IN (values)</code> asynchronously
+     * Find records that have <code>published_by IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByPublishedBy(List<String> values) {
         return findManyByCondition(TblModule.TBL_MODULE.PUBLISHED_BY.in(values));
     }
 
     /**
-     * Find records that have <code>state IN (values)</code> asynchronously
+     * Find records that have <code>state IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByState(List<State> values) {
         return findManyByCondition(TblModule.TBL_MODULE.STATE.in(values));
     }
 
     /**
-     * Find records that have <code>created_at IN (values)</code> asynchronously
+     * Find records that have <code>created_at IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByCreatedAt(List<Date> values) {
         return findManyByCondition(TblModule.TBL_MODULE.CREATED_AT.in(values));
     }
 
     /**
-     * Find records that have <code>modified_at IN (values)</code> asynchronously
+     * Find records that have <code>modified_at IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByModifiedAt(List<Date> values) {
         return findManyByCondition(TblModule.TBL_MODULE.MODIFIED_AT.in(values));
     }
 
     /**
-     * Find records that have <code>deploy_id IN (values)</code> asynchronously
+     * Find records that have <code>deploy_id IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByDeployId(List<String> values) {
         return findManyByCondition(TblModule.TBL_MODULE.DEPLOY_ID.in(values));
     }
 
     /**
-     * Find records that have <code>deploy_config_json IN (values)</code> asynchronously
+     * Find records that have <code>deploy_config_json IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByDeployConfigJson(List<JsonObject> values) {
         return findManyByCondition(TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.in(values));
     }
 
     /**
-     * Find records that have <code>deploy_location IN (values)</code> asynchronously
+     * Find records that have <code>deploy_location IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblModule>> findManyByDeployLocation(List<String> values) {
         return findManyByCondition(TblModule.TBL_MODULE.DEPLOY_LOCATION.in(values));

@@ -90,9 +90,7 @@ public final class Reflections {
                         "Method '" + method.getName() + "' does not accept " + inputData.getClass().getName() +
                         " as argument");
             }
-            final Class<?> returnType = method.getReturnType();
-            Class<?> primitiveClass = getPrimitiveClass(outputClazz);
-            if (returnType.isPrimitive() ? returnType != primitiveClass : returnType != outputClazz) {
+            if (!assertDataType(outputClazz, method.getReturnType())) {
                 throw new IllegalArgumentException(
                         "Method '" + method.getName() + "' does not accept " + outputClazz.getName() +
                         " as return type");
@@ -110,6 +108,27 @@ public final class Reflections {
             }
             throw new NubeException(e);
         }
+    }
+
+    /**
+     * @param childClass Given child {@code Class}
+     * @param superClass Give super {@code Class}
+     * @return {@code true} if {@code childClass} is primitive class or class that sub of {@code superClass}
+     * @see Class#isAssignableFrom(Class)
+     */
+    public static boolean assertDataType(@NonNull Class<?> childClass, @NonNull Class<?> superClass) {
+        if (childClass.isPrimitive() && superClass.isPrimitive()) {
+            return childClass == superClass;
+        }
+        if (childClass.isPrimitive()) {
+            Class<?> superPrimitiveClass = getPrimitiveClass(superClass);
+            return childClass == superPrimitiveClass;
+        }
+        if (superClass.isPrimitive()) {
+            Class<?> childPrimitiveClass = getPrimitiveClass(childClass);
+            return childPrimitiveClass == superClass;
+        }
+        return superClass.isAssignableFrom(childClass);
     }
 
     private static <P> Class<?> getPrimitiveClass(Class<P> findClazz) {

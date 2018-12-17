@@ -20,13 +20,13 @@ import io.vertx.reactivex.core.Vertx;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class ModuleLoader extends EventHandler {
+public final class ModuleLoader implements EventHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ModuleLoader.class);
     private final Vertx context;
 
-    @EventContractor(values = {EventType.CREATE, EventType.INIT})
-    private Single<JsonObject> installModule(RequestData data) {
+    @EventContractor(events = {EventType.CREATE, EventType.INIT}, returnType = Single.class)
+    public Single<JsonObject> installModule(RequestData data) {
         PreDeploymentResult preResult = PreDeploymentResult.fromJson(data.getBody());
         logger.info("Vertx install module {} with config {}...", preResult.getServiceId(), preResult.getDeployCfg());
         DeploymentOptions options = new DeploymentOptions().setConfig(preResult.getDeployCfg());
@@ -35,8 +35,8 @@ public final class ModuleLoader extends EventHandler {
         }).map(id -> new JsonObject().put("deploy_id", id));
     }
 
-    @EventContractor(values = {EventType.REMOVE, EventType.HALT})
-    private Single<JsonObject> removeModule(RequestData data) {
+    @EventContractor(events = {EventType.REMOVE, EventType.HALT}, returnType = Single.class)
+    public Single<JsonObject> removeModule(RequestData data) {
         PreDeploymentResult preResult = PreDeploymentResult.fromJson(data.getBody());
         String deployId = preResult.getDeployId();
         logger.info("Vertx unload module {}...", deployId);
@@ -49,8 +49,8 @@ public final class ModuleLoader extends EventHandler {
         }).andThen(Single.just(new JsonObject().put("deploy_id", deployId)));
     }
 
-    @EventContractor(values = EventType.UPDATE)
-    private Single<JsonObject> reloadModule(RequestData data) {
+    @EventContractor(events = EventType.UPDATE, returnType = Single.class)
+    public Single<JsonObject> reloadModule(RequestData data) {
         PreDeploymentResult preResult = PreDeploymentResult.fromJson(data.getBody());
         logger.info("Vertx reload module {} with config {}...", preResult.getDeployId(), preResult.getDeployCfg());
         return context.rxUndeploy(preResult.getDeployId()).onErrorResumeNext(throwable -> {
@@ -60,7 +60,7 @@ public final class ModuleLoader extends EventHandler {
     }
 
     @Override
-    protected List<EventType> getAvailableEvents() {
+    public List<EventType> getAvailableEvents() {
         return Arrays.asList(EventType.INIT, EventType.CREATE, EventType.UPDATE, EventType.HALT, EventType.REMOVE);
     }
 

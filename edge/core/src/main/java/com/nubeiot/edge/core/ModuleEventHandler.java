@@ -23,7 +23,7 @@ import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.NonNull;
 
-public final class ModuleEventHandler extends EventHandler {
+public final class ModuleEventHandler implements EventHandler {
 
     private final EdgeVerticle verticle;
     @Getter
@@ -34,8 +34,8 @@ public final class ModuleEventHandler extends EventHandler {
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
 
-    @EventContractor(values = EventType.GET_LIST)
-    private Single<JsonObject> getList(RequestData data) {
+    @EventContractor(events = EventType.GET_LIST, returnType = Single.class)
+    public Single<JsonObject> getList(RequestData data) {
         JsonObject filter = data.getFilter();
         if (filter.getBoolean("available", Boolean.FALSE)) {
             return Single.just(new JsonObject());
@@ -43,8 +43,8 @@ public final class ModuleEventHandler extends EventHandler {
         return new LocalServiceSearch(this.verticle.getEntityHandler()).search(data);
     }
 
-    @EventContractor(values = EventType.GET_ONE)
-    private Single<JsonObject> getOne(RequestData data) {
+    @EventContractor(events = EventType.GET_ONE, returnType = Single.class)
+    public Single<JsonObject> getOne(RequestData data) {
         String serviceId = data.getBody().getString(Tables.TBL_MODULE.SERVICE_ID.getName());
         if (Strings.isBlank(serviceId)) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
@@ -55,8 +55,8 @@ public final class ModuleEventHandler extends EventHandler {
                                     String.format("Not found service id '%s'", serviceId))));
     }
 
-    @EventContractor(values = EventType.HALT)
-    private Single<JsonObject> halt(RequestData data) {
+    @EventContractor(events = EventType.HALT, returnType = Single.class)
+    public Single<JsonObject> halt(RequestData data) {
         String serviceId = data.getBody().getString(Tables.TBL_MODULE.SERVICE_ID.getName());
         if (Strings.isBlank(serviceId)) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
@@ -64,8 +64,8 @@ public final class ModuleEventHandler extends EventHandler {
         return this.verticle.processDeploymentTransaction(new TblModule().setServiceId(serviceId), EventType.HALT);
     }
 
-    @EventContractor(values = EventType.UPDATE)
-    private Single<JsonObject> update(RequestData data) {
+    @EventContractor(events = EventType.UPDATE, returnType = Single.class)
+    public Single<JsonObject> update(RequestData data) {
         JsonObject body = data.getBody();
         String serviceId = body.getString(Tables.TBL_MODULE.SERVICE_ID.getName());
         if (Strings.isBlank(serviceId)) {
@@ -82,8 +82,8 @@ public final class ModuleEventHandler extends EventHandler {
         return this.verticle.processDeploymentTransaction((TblModule) new TblModule().fromJson(body), EventType.UPDATE);
     }
 
-    @EventContractor(values = EventType.REMOVE)
-    private Single<JsonObject> remove(RequestData data) {
+    @EventContractor(events = EventType.REMOVE, returnType = Single.class)
+    public Single<JsonObject> remove(RequestData data) {
         String serviceId = data.getBody().getString(Tables.TBL_MODULE.SERVICE_ID.getName());
         if (Strings.isBlank(serviceId)) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
@@ -91,8 +91,8 @@ public final class ModuleEventHandler extends EventHandler {
         return this.verticle.processDeploymentTransaction(new TblModule().setServiceId(serviceId), EventType.REMOVE);
     }
 
-    @EventContractor(values = EventType.CREATE)
-    private Single<JsonObject> create(RequestData data) {
+    @EventContractor(events = EventType.CREATE, returnType = Single.class)
+    public Single<JsonObject> create(RequestData data) {
         JsonObject body = data.getBody();
         ModuleType moduleType = ModuleTypeFactory.factory(body.getString(Tables.TBL_MODULE.SERVICE_TYPE.getName()));
         JsonObject moduleJson = moduleType.serialize(body, this.verticle.getModuleRule());

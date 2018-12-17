@@ -26,11 +26,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public final class Microservice implements IComponent {
 
-    private static final Logger logger = LoggerFactory.getLogger(Microservice.class);
     static final String MICRO_CFG_NAME = "__micro__";
     private static final String CIRCUIT_BREAKER_CFG_NAME = "__circuitBreaker__";
     private static final String SERVICE_DISCOVERY_CFG_NAME = "__serviceDiscovery__";
 
+    private final Logger logger = LoggerFactory.getLogger(Microservice.class);
     private final Vertx vertx;
     @Getter
     private final JsonObject microConfig;

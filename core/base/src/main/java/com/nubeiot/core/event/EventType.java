@@ -7,6 +7,6 @@ import lombok.Getter;
 @Getter
 public enum EventType implements Serializable {
 
-    INIT, CREATE, UPDATE, HALT, REMOVE, GET_ONE, GET_LIST
+    INIT, CREATE, UPDATE, PATCH, HALT, REMOVE, GET_ONE, GET_LIST
 
 }

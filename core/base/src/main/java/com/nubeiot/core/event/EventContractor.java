@@ -5,10 +5,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import io.vertx.core.json.JsonObject;
+import lombok.NonNull;
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface EventContractor {
 
-    EventType[] values();
+    EventType[] events();
+
+    @NonNull Class<?> returnType() default JsonObject.class;
 
 }

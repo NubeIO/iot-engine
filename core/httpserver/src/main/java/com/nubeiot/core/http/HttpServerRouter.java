@@ -10,7 +10,7 @@ import lombok.Getter;
 public final class HttpServerRouter {
 
     private final Set<Class> restApiClass = new HashSet<>();
-    private final Set<Class<? extends IEventBusRestApi>> eventBusRestApiClass = new HashSet<>();
+    private final Set<Class<? extends EventBusRestApi>> eventBusRestApiClass = new HashSet<>();
 
     public HttpServerRouter registerApi(Class... apiClass) {
         restApiClass.addAll(Arrays.asList(apiClass));
@@ -18,9 +18,21 @@ public final class HttpServerRouter {
     }
 
     @SuppressWarnings("unchecked")
-    public HttpServerRouter registerEventBusApi(Class<? extends IEventBusRestApi>... eventBusApiClass) {
+    public HttpServerRouter registerEventBusApi(Class<? extends EventBusRestApi>... eventBusApiClass) {
         eventBusRestApiClass.addAll(Arrays.asList(eventBusApiClass));
         return this;
+    }
+
+    boolean validate() {
+        return hasApi() || hasEventBusApi();
+    }
+
+    boolean hasApi() {
+        return !restApiClass.isEmpty();
+    }
+
+    boolean hasEventBusApi() {
+        return !eventBusRestApiClass.isEmpty();
     }
 
 }

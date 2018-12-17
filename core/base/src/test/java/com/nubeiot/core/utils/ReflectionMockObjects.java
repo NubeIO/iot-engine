@@ -65,4 +65,10 @@ class ReflectionMockObjects {
 
     }
 
+
+    static class MockParent {}
+
+
+    static class MockChild extends MockParent {}
+
 }

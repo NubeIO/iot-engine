@@ -1,65 +1,73 @@
 package com.nubeiot.core.http;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventType;
-import com.nubeiot.core.http.utils.Urls;
+import com.nubeiot.core.exceptions.HiddenException;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.ServiceException;
+import com.nubeiot.core.http.handler.JsonContextHandler;
+import com.nubeiot.core.http.utils.RestUtils;
+import com.nubeiot.core.utils.Strings;
 
+import io.reactivex.Single;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.eventbus.EventBus;
+import io.vertx.reactivex.core.eventbus.Message;
 import io.vertx.reactivex.ext.web.Router;
-import lombok.AccessLevel;
-import lombok.Getter;
+import io.vertx.reactivex.ext.web.RoutingContext;
 
-public abstract class EventBusRestApi implements IEventBusRestApi {
+/**
+ * Make a mapping dynamically between {@code HTTP endpoint} and {@code EventBus}
+ */
+public interface EventBusRestApi {
 
-    @Getter
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final Map<EventType, HttpMethod> httpEventMapping;
-    @Getter(value = AccessLevel.PROTECTED)
-    private final List<Metadata> routers = new ArrayList<>();
-
-    protected EventBusRestApi() {
-        this.httpEventMapping = Collections.unmodifiableMap(initHttpEventMapping());
+    static Map<EventType, HttpMethod> defaultEventHttpMap() {
+        Map<EventType, HttpMethod> map = new HashMap<>();
+        map.put(EventType.CREATE, HttpMethod.POST);
+        map.put(EventType.UPDATE, HttpMethod.PUT);
+        map.put(EventType.PATCH, HttpMethod.PATCH);
+        map.put(EventType.REMOVE, HttpMethod.DELETE);
+        map.put(EventType.GET_ONE, HttpMethod.GET);
+        map.put(EventType.GET_LIST, HttpMethod.GET);
+        return map;
     }
 
-    protected abstract Map<EventType, HttpMethod> initHttpEventMapping();
+    List<EventBusRestMetadata> getRestMetadata();
 
-    protected void addRouter(EventModel eventModel, String api, String paramName) {
-        eventModel.getEvents().parallelStream().forEach(event -> {
-            final HttpMethod httpMethod = httpEventMapping.get(event);
-            if (Objects.isNull(httpMethod)) {
-                return;
-            }
-            routers.add(Metadata.builder()
-                                .address(eventModel.getAddress())
-                                .action(event)
-                                .path(api)
-                                .method(httpMethod)
-                                .paramName(paramName)
-                                .build());
-        });
+    void register(EventBus eventBus, Router router);
+
+    default void registerAppControllerHandler(EventBus eventBus, RoutingContext ctx, EventBusRestMetadata metadata) {
+        Logger logger = LoggerFactory.getLogger(this.getClass());
+        EventMessage msg = EventMessage.success(metadata.getAction(), RestUtils.convertToRequestData(ctx));
+        logger.info("Receive message from endpoint: {}", msg.toJson().encode());
+        eventBus.send(metadata.getAddress(), msg.toJson(), reply -> handleEventReply(metadata, reply).subscribe(
+                eventMessage -> handleHttpResponse(ctx, eventMessage), ctx::fail));
     }
 
-    @Override
-    public void register(EventBus eventBus, Router router) {
-        routers.parallelStream().forEach(metadata -> createRouter(eventBus, router, metadata));
+    default Single<EventMessage> handleEventReply(EventBusRestMetadata metadata, AsyncResult<Message<Object>> reply) {
+        if (reply.failed()) {
+            NubeException hidden = new HiddenException(NubeException.ErrorCode.EVENT_ERROR,
+                                                       Strings.format("No reply from address: {0} - Action: {1}",
+                                                                      metadata.getAddress(), metadata.getAction()),
+                                                       reply.cause());
+            return Single.error(new ServiceException("Service unavailable", hidden));
+        }
+        EventMessage replyMsg = EventMessage.from(reply.result().body());
+        return Single.just(replyMsg);
     }
 
-    private void createRouter(EventBus eventBus, Router router, Metadata metadata) {
-        final String path = Urls.combinePath(ApiConstants.ROOT_API_PATH, metadata.getPath());
-        logger.info("Registering route | Event Binding:\t{} {} --- {} {}", metadata.getMethod(), path,
-                    metadata.getAction(), metadata.getAddress());
-        router.route(metadata.getMethod(), path)
-              .produces(ApiConstants.DEFAULT_CONTENT_TYPE)
-              .handler(ctx -> registerAppControllerHandler(eventBus, ctx, metadata));
+    default void handleHttpResponse(RoutingContext ctx, EventMessage eventMessage) {
+        Logger logger = LoggerFactory.getLogger(this.getClass());
+        logger.info("Receive message from backend: {}", eventMessage.toJson().encode());
+        ctx.put(JsonContextHandler.EVENT_RESULT, eventMessage);
+        ctx.next();
     }
 
 }

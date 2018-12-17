@@ -1,2 +1,17 @@
 {
+  "__system__": {
+    "__http__": {
+      "host": "0.0.0.0",
+      "port": 8080,
+      "enable": true,
+      "__http2__": {
+        "enable": false,
+        "port": 8080
+      },
+      "__socket__": {
+        "enable": false,
+        "port": 8080
+      }
+    }
+  }
 }

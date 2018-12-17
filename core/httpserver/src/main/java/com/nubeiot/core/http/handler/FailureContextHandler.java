@@ -13,9 +13,9 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.ext.web.RoutingContext;
 
-public final class ContextFailureHandler implements Handler<RoutingContext> {
+public final class FailureContextHandler implements Handler<RoutingContext> {
 
-    private final Logger logger = LoggerFactory.getLogger(ContextFailureHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(FailureContextHandler.class);
 
     @Override
     public void handle(RoutingContext failureContext) {
