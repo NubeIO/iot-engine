@@ -30,8 +30,8 @@
     </root>
     <logger name="com.hazelcast" level="info"/>
     <logger name="com.zaxxer.hikari.pool" level="info"/>
-    <logger name="com.zaxxer.hikari" level="info"/>
+    <logger name="com.zaxxer.hikari" level="debug"/>
 
-    <logger name="com.nubeiot" level="info"/>
+    <logger name="com.nubeiot" level="debug"/>
 
 </configuration>
