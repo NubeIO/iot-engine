@@ -15,7 +15,6 @@ include ':dashboard:connector:edge'
 include ':dashboard:connector:kafka'
 include ':dashboard:connector:ditto'
 include ':dashboard:connector:hive'
-include ':dashboard:connector:mongodb'
 include ':dashboard:connector:zeppelin'
 include ':dashboard:connector:postgresql'
 

@@ -2303,6 +2303,57 @@ i.trigger:hover {
 :global .list__link:hover {
   color: #515158;
 }
+
+.sidebar {
+  border-radius: 5px;
+}
+
+.collapsedSidebar {
+  border-radius: 5px;
+}
+
+.container {
+  background-color: #fff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.sidebar {
+  border-radius: 5px;
+}
+
+.collapsedSidebar {
+  border-radius: 5px;
+}
+
+.container {
+  background-color: #fff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.main {
+  box-shadow: 0 0 5px #555;
+}
+
+.header {
+  background-color: #4883f4;
+  color: #fff;
+}
+
+.header .title {
+  color: #fff;
+}
+
+.header .caret {
+  background-color: #fff;
+  color: #6c5ce7;
+  box-shadow: 0 0 10px #555;
+}
+
+.branchClosed {
+  color: #d63031;
+}
 .list .item .avatar {
   background: #fff;
 }
@@ -2362,6 +2413,11 @@ i.trigger:hover {
 }
 .pageHeader .title {
   color: @heading-color;
+}
+
+:global .ant-tabs-bar {
+  background-color: white;
+  box-shadow: inset 1px 4px 9px -6px;
 }
 :global .react-grid-item {
   background: #fff;
@@ -2451,6 +2507,14 @@ i.trigger:hover {
 :global .nube-form-item-footer {
   border-top: 1px solid #dde4ed;
 }
+
+.mainContainer .topicTitle {
+  color: @text-color;
+}
+
+.mainContainer .topicValue > span {
+  color: @heading-color;
+}
 :global .rangeslider {
   background: #e6e6e6;
 }
@@ -2506,31 +2570,22 @@ i.trigger:hover {
 :global .rangeslider-vertical .rangeslider__labels .rangeslider__label-item::before {
   background: black;
 }
-
-.redButton {
-  color: #fff;
-  background-color: #f1000d;
-  border-color: #f1000d;
-}
-.redButton:hover {
-  color: #fff;
-  background-color: #ff4d4f;
-  border-color: #ff4d4f;
-}
-.redButton:focus {
-  color: #fff;
-  background-color: #ff4d4f;
-  border-color: #ff4d4f;
-}
-.redButton:active {
-  color: #fff;
-  background-color: #cf1322;
-  border-color: #cf1322;
-}
 :global .ReactTable .rt-thead.-header {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
   box-shadow: none !important;
   -webkit-box-shadow: none !important;
+}
+
+:global .weather-two-box {
+  background: #fff;
+  border-radius: 4px;
+}
+
+:global .weather-two-box .weather-header {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  background-color: #02b0f1;
+  color: white;
 }
 .result .icon > .success {
   color: #52c41a;
@@ -2588,6 +2643,11 @@ i.trigger:hover {
 .standardFormRowLast {
   border: none;
 }
+
+:global .editable-row:hover .editable-cell-value-wrap {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+}
 .trendItem .up {
   color: #f5222d;
 }
@@ -2598,8 +2658,24 @@ i.trigger:hover {
 .trendItem.trendItemGrey .down {
   color: @text-color;
 }
-.mapSidebar {
-  border-radius: 5px;
+
+:global .autocomplete-dropdown-container {
+  color: @text-color;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+:global .suggestion-item {
+  color: @text-color;
+}
+
+:global .suggestion-item:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+:global .suggestion-item:last-child {
+  border-radius: 4px 4px 0 0;
 }
 .sidebarTab {
   background-color: #fff;
@@ -2635,11 +2711,6 @@ i.trigger:hover {
 .sidebarHeader {
   color: #fff;
   background-color: #399;
-}
-.sidebarContainer {
-  background-color: #fff;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
 }
 .sidebarContent {
   background-color: #fff;
@@ -7783,8 +7854,24 @@ li.ant-tree-treenode-disabled > .ant-tree-node-content-wrapper:hover {
 .ant-upload-list .ant-upload-success-icon {
   color: #52c41a;
 }
-.mapSidebar {
-  border-radius: 5px;
+
+:global .autocomplete-dropdown-container {
+  color: @text-color;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+:global .suggestion-item {
+  color: @text-color;
+}
+
+:global .suggestion-item:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+:global .suggestion-item:last-child {
+  border-radius: 4px 4px 0 0;
 }
 .sidebarTab {
   background-color: #fff;
@@ -7820,11 +7907,6 @@ li.ant-tree-treenode-disabled > .ant-tree-node-content-wrapper:hover {
 .sidebarHeader {
   color: #fff;
   background-color: #399;
-}
-.sidebarContainer {
-  background-color: #fff;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
 }
 .sidebarContent {
   background-color: #fff;

@@ -6,7 +6,7 @@ plugins {
 }
 
 ext {
-    vertxVersion = "3.5.4"
+    vertxVersion = "3.6.0"
     lombokVersion = "1.18.4"
     genSrcFolder = "src/generated"
     genJavaSrcFolder = "$project.genSrcFolder/java"

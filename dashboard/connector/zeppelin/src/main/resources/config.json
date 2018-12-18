@@ -1,0 +1,8 @@
+{
+  "__app__": {
+    "http.port": 8087,
+    "api.name": "zeppelin",
+    "server.host": "localhost",
+    "server.port": 18080
+  }
+}

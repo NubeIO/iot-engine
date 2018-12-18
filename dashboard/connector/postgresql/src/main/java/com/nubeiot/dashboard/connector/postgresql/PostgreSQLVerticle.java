@@ -11,7 +11,6 @@ import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.dashboard.connector.postgresql.controller.RulesController;
 import com.nubeiot.core.common.utils.ErrorCodeException;
 import com.nubeiot.core.common.utils.ErrorHandler;
-import com.nubeiot.core.common.utils.Runner;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
 import com.nubeiot.core.common.RxMicroServiceVerticle;
 
@@ -35,12 +34,6 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
 
     private RulesController controller;
 
-    // Convenience method so you can run it in your IDE
-    public static void main(String[] args) {
-        String JAVA_DIR = "nube-vertx-postgresql/src/main/java/";
-        Runner.runExample(JAVA_DIR, PostgreSQLVerticle.class);
-    }
-
     @Override
     public void start(Future<Void> startFuture) {
         super.start();
@@ -48,7 +41,7 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
 
         startWebApp()
             .flatMap(httpServer -> publishHttp())
-            .flatMap(ignored -> PostgreSQLService.create(vertx, config().getJsonObject("pgConfig"))
+            .flatMap(ignored -> PostgreSQLService.create(vertx, appConfig.getJsonObject("pgConfig"))
                 .doOnSuccess(pgService -> {
                     ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
                     binder.setAddress(PostgreSQLService.SERVICE_ADDRESS).register(PostgreSQLService.class, pgService);
@@ -60,7 +53,7 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.sql-hive.engine", "0.0.0.0", config().getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
+        return publishHttpEndpoint("io.nubespark.sql-pg.engine", "0.0.0.0", appConfig.getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
             .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
@@ -76,7 +69,7 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
             .requestHandler(router::accept)
-            .rxListen(config().getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
+            .rxListen(appConfig.getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
             .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
             .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
@@ -138,5 +131,4 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
         logger.info("Current thread loader = " + Thread.currentThread().getContextClassLoader());
         logger.info(PostgreSQLVerticle.class.getClassLoader());
     }
-
 }
