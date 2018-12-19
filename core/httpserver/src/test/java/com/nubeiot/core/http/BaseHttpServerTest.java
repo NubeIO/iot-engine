@@ -21,7 +21,7 @@ import io.vertx.reactivex.core.http.HttpClient;
 
 public class BaseHttpServerTest {
 
-    protected static final int DEFAULT_CONNECT_TIMEOUT = 2000;
+    protected static final int DEFAULT_CONNECT_TIMEOUT = 3000;
     protected static final String DEFAULT_HOST = "127.0.0.1";
     protected Vertx vertx;
     protected JsonObject httpConfig;
