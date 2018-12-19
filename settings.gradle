@@ -25,3 +25,6 @@ include ':edge:module:installer'
 include ':edge:connector:ditto'
 include ':edge:connector:sensor'
 include ':edge:rule:sample'
+
+include ':eventbus:edge'
+include ':eventbus:sensor'

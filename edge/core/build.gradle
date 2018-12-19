@@ -24,6 +24,7 @@ ext {
 dependencies {
     compile project(':core:base')
     compile project(':core:sql')
+    compile project(':eventbus:edge')
     compile "com.h2database:h2:$project.h2_version"
     compile "io.vertx:vertx-maven-service-factory:$project.vertxVersion"
 }

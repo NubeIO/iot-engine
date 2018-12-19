@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventType;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.FileUtils;
@@ -16,6 +15,7 @@ import com.nubeiot.edge.core.loader.ModuleTypeFactory;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
+import com.nubeiot.eventbus.edge.EdgeEventBus;
 
 import io.reactivex.Single;
 import io.vertx.core.eventbus.EventBus;
@@ -29,10 +29,10 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     @Override
     protected void registerEventBus() {
         final EventBus bus = getVertx().eventBus();
-        bus.consumer(EventModel.EDGE_BIOS_INSTALLER.getAddress(),
-                     m -> new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER).handleMessage(m));
-        bus.consumer(EventModel.EDGE_BIOS_TRANSACTION.getAddress(),
-                     m -> new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION).handleMessage(m));
+        bus.consumer(EdgeEventBus.BIOS_INSTALLER.getAddress(),
+                     m -> new ModuleEventHandler(this, EdgeEventBus.BIOS_INSTALLER).handleMessage(m));
+        bus.consumer(EdgeEventBus.BIOS_TRANSACTION.getAddress(),
+                     m -> new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION).handleMessage(m));
     }
 
     @Override
