@@ -4,7 +4,7 @@ library identifier: 'shared@master', retriever: modernSCM(
 
 pipeline {
     agent {
-        docker "gradle:4.10.2-jdk8-alpine"
+        docker "gradle:4.10.3-jdk8-alpine"
     }
     environment {
         BUILD_AGENT = "jenkins:${JENKINS_VERSION}-gradle:4.10.2-jdk8-alpine"

@@ -66,7 +66,7 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
 
     private JsonObject setupMavenRepos(JsonObject repositoryCfg) {
         logger.info("Setting up maven local and remote repo");
-        String local = FileUtils.createFolder(repositoryCfg.getString("local"), ".nubeio", "repository");
+        String local = FileUtils.createFolder(repositoryCfg.getString("local"), "repository");
         JsonObject remotes = repositoryCfg.getJsonObject("remote", new JsonObject());
         remotes.stream().parallel().forEach(entry -> handleVerticleFactory(local, entry));
         return new JsonObject().put("remotes", remotes);

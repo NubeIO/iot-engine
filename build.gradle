@@ -10,7 +10,7 @@ ext {
     lombokVersion = "1.18.4"
     genSrcFolder = "src/generated"
     genJavaSrcFolder = "$project.genSrcFolder/java"
-    genOutResourceFolder = "$project.buildDir/generated-resources"
+    genOutResourceFolder = "generated-resources"
     baseName = "nube"
 }
 

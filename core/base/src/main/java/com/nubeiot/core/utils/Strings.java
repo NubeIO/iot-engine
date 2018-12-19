@@ -168,7 +168,7 @@ public final class Strings {
 
     public static String format(String msgPattern, Object... params) {
         String[] args = Arrays.stream(params).map(String::valueOf).toArray(String[]::new);
-        return MessageFormat.format(msgPattern, args);
+        return MessageFormat.format(msgPattern, (Object[]) args);
     }
 
 }
