@@ -57,7 +57,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     private OAuth2Auth loginAuth;
     private EventBus eventBus;
     private MongoClient mongoClient;
-    private String workingDirectory = "";
+    private String workingDir = "";
 
     @Override
     protected Single<String> onStartComplete() {
@@ -66,7 +66,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
         // Register codec for custom message
         eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
-        workingDirectory = FileUtils.createFolder("", "nube-io"); // todo: after FileUtils.createFolder refactor with default value, we will edit this code
+        workingDir = FileUtils.createFolder(appConfig.getString("DATA_DIR"));
 
         logger.info("Config on HttpWebServer is:");
         logger.info(Json.encodePrettily(config()));
@@ -114,8 +114,9 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         Router router = Router.router(vertx);
 
         // creating body handler
+        FileUtils.createFolder(workingDir, appConfig.getString("MEDIA_ROOT"));
         router.route().handler(BodyHandler.create().setUploadsDirectory(
-                workingDirectory + "/" + appConfig.getString("MEDIA_ROOT")));
+                workingDir + "/" + appConfig.getString("MEDIA_ROOT")).setBodyLimit(5000000)); // limited to 5 MB
         // handle the form
 
         enableCorsSupport(router);
@@ -234,7 +235,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                 .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .setStatusCode(HttpResponseStatus.CREATED.code())
                 .end(Json.encodePrettily(new JsonObject().put("path", appendRealFileNameWithExtension(fileUpload).replace(
-                        workingDirectory, ""))));
+                        workingDir, ""))));
         } else {
             ctx.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
         }
