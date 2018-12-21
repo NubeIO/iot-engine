@@ -37,6 +37,7 @@ import io.vertx.reactivex.ext.web.FileUpload;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import io.vertx.reactivex.ext.web.handler.StaticHandler;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.servicediscovery.Record;
 
@@ -125,11 +126,16 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
         handleAuthEventBus(router);
         handleEventBus(router);
         handleGateway(router);
+        handleStaticResource(router);
 
         // Create the HTTP server and pass the "accept" method to the request handler.
         return createHttpServer(router, appConfig.getString("http.host", "0.0.0.0"), appConfig.getInteger("http.port", Port.HTTP_WEB_SERVER_PORT))
             .doOnSuccess(httpServer -> logger.info("Web Server started at " + httpServer.actualPort()))
             .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
+    }
+
+    private void handleStaticResource(Router router) {
+        router.route().handler(StaticHandler.create().setCachingEnabled(false).setAllowRootFileSystemAccess(true).setWebRoot(workingDir));
     }
 
     private Single<Record> publishHttp() {
