@@ -37,8 +37,7 @@ public final class EdgeConnectorVerticle extends AbstractVerticle
 
     @SuppressWarnings("unchecked")
     private HttpServerRouter initHttpRouter() {
-        return new HttpServerRouter().registerApi(EdgeRestController.class)
-                                     .registerEventBusApi(EdgeEventBusRestApi.class);
+        return new HttpServerRouter().registerApi(EdgeRestController.class).registerEventBusApi(EdgeRestEventApi.class);
     }
 
     @Override

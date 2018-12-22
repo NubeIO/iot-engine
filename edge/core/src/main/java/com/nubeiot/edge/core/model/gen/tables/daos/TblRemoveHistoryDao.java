@@ -11,7 +11,7 @@ import javax.annotation.Generated;
 import org.jooq.Configuration;
 
 import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.edge.core.model.gen.tables.TblRemoveHistory;
 import com.nubeiot.edge.core.model.gen.tables.records.TblRemoveHistoryRecord;
 
@@ -59,7 +59,8 @@ public class TblRemoveHistoryDao extends AbstractVertxDAO<TblRemoveHistoryRecord
     /**
      * Find records that have <code>event IN (events)</code> asynchronously
      */
-    public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblRemoveHistory>> findManyByEvent(List<EventType> values) {
+    public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblRemoveHistory>> findManyByEvent(
+            List<EventAction> values) {
         return findManyByCondition(TblRemoveHistory.TBL_REMOVE_HISTORY.EVENT.in(values));
     }
 

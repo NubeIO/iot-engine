@@ -17,10 +17,10 @@ import org.jooq.Record11;
 import org.jooq.Row11;
 import org.jooq.impl.UpdatableRecordImpl;
 
+import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.edge.core.model.gen.tables.TblRemoveHistory;
 import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblRemoveHistory;
-import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
@@ -41,7 +41,10 @@ import io.vertx.core.json.JsonObject;
 @Table(name = "tbl_remove_history", indexes = {
     @Index(name = "sqlite_autoindex_tbl_remove_history_1", unique = true, columnList = "transaction_id ASC")
 })
-public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistoryRecord> implements VertxPojo, Record11<String, String, EventType, Status, Date, String, String, Date, JsonObject, JsonObject, Integer>, ITblRemoveHistory {
+public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistoryRecord> implements VertxPojo,
+                                                                                                   Record11<String,
+                                                                                                                   String, EventAction, Status, Date, String, String, Date, JsonObject, JsonObject, Integer>,
+                                                                                                   ITblRemoveHistory {
 
     private static final long serialVersionUID = -365194657;
 
@@ -86,7 +89,7 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
      * Setter for <code>tbl_remove_history.event</code>.
      */
     @Override
-    public TblRemoveHistoryRecord setEvent(EventType value) {
+    public TblRemoveHistoryRecord setEvent(EventAction value) {
         set(2, value);
         return this;
     }
@@ -96,8 +99,8 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
      */
     @Column(name = "event", nullable = false, length = 15)
     @Override
-    public EventType getEvent() {
-        return (EventType) get(2);
+    public EventAction getEvent() {
+        return (EventAction) get(2);
     }
 
     /**
@@ -264,7 +267,7 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
      * {@inheritDoc}
      */
     @Override
-    public Row11<String, String, EventType, Status, Date, String, String, Date, JsonObject, JsonObject, Integer> fieldsRow() {
+    public Row11<String, String, EventAction, Status, Date, String, String, Date, JsonObject, JsonObject, Integer> fieldsRow() {
         return (Row11) super.fieldsRow();
     }
 
@@ -272,7 +275,7 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
      * {@inheritDoc}
      */
     @Override
-    public Row11<String, String, EventType, Status, Date, String, String, Date, JsonObject, JsonObject, Integer> valuesRow() {
+    public Row11<String, String, EventAction, Status, Date, String, String, Date, JsonObject, JsonObject, Integer> valuesRow() {
         return (Row11) super.valuesRow();
     }
 
@@ -296,7 +299,7 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
      * {@inheritDoc}
      */
     @Override
-    public Field<EventType> field3() {
+    public Field<EventAction> field3() {
         return TblRemoveHistory.TBL_REMOVE_HISTORY.EVENT;
     }
 
@@ -384,7 +387,7 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
      * {@inheritDoc}
      */
     @Override
-    public EventType component3() {
+    public EventAction component3() {
         return getEvent();
     }
 
@@ -472,7 +475,7 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
      * {@inheritDoc}
      */
     @Override
-    public EventType value3() {
+    public EventAction value3() {
         return getEvent();
     }
 
@@ -562,7 +565,7 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
      * {@inheritDoc}
      */
     @Override
-    public TblRemoveHistoryRecord value3(EventType value) {
+    public TblRemoveHistoryRecord value3(EventAction value) {
         setEvent(value);
         return this;
     }
@@ -643,7 +646,9 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
      * {@inheritDoc}
      */
     @Override
-    public TblRemoveHistoryRecord values(String value1, String value2, EventType value3, Status value4, Date value5, String value6, String value7, Date value8, JsonObject value9, JsonObject value10, Integer value11) {
+    public TblRemoveHistoryRecord values(String value1, String value2, EventAction value3, Status value4, Date value5,
+                                         String value6, String value7, Date value8, JsonObject value9,
+                                         JsonObject value10, Integer value11) {
         value1(value1);
         value2(value2);
         value3(value3);
@@ -703,7 +708,9 @@ public class TblRemoveHistoryRecord extends UpdatableRecordImpl<TblRemoveHistory
     /**
      * Create a detached, initialised TblRemoveHistoryRecord
      */
-    public TblRemoveHistoryRecord(String transactionId, String moduleId, EventType event, Status status, Date issuedAt, String issuedBy, String issuedFrom, Date modifiedAt, JsonObject prevStateJson, JsonObject lastErrorJson, Integer retry) {
+    public TblRemoveHistoryRecord(String transactionId, String moduleId, EventAction event, Status status,
+                                  Date issuedAt, String issuedBy, String issuedFrom, Date modifiedAt,
+                                  JsonObject prevStateJson, JsonObject lastErrorJson, Integer retry) {
         super(TblRemoveHistory.TBL_REMOVE_HISTORY);
 
         set(0, transactionId);

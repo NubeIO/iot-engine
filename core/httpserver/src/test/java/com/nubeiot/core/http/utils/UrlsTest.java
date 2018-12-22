@@ -136,10 +136,13 @@ public class UrlsTest {
 
     @Test
     public void test_combinePath() {
+        assertEquals("/api/test", Urls.combinePath("api", "test"));
+        assertEquals("/api/test", Urls.combinePath("api", "/test"));
         assertEquals("/api/test", Urls.combinePath("/api", "test"));
         assertEquals("/api/test", Urls.combinePath("/api", "/test"));
         assertEquals("/api/test", Urls.combinePath("/api/", "/test"));
         assertEquals("/api/test", Urls.combinePath("/api/", "//test"));
+        assertEquals("/api/test", Urls.combinePath("//api/", "//test"));
     }
 
 }

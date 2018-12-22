@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.mock.MockApiDefinition;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -21,12 +22,12 @@ import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class NormalHttpServerTest extends BaseHttpServerTest {
+public class RestServerTest extends BaseHttpServerTest {
 
     @Rule
     public RepeatRule repeatRule = new RepeatRule();
     @Rule
-    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.DEFAULT_CONNECT_TIMEOUT);
+    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.DEFAULT_TIMEOUT);
 
     @BeforeClass
     public static void beforeSuite() {
@@ -53,8 +54,8 @@ public class NormalHttpServerTest extends BaseHttpServerTest {
         int port = httpConfig.getInteger("port");
         String path = "/abc/";
         JsonObject expected = notFoundResponse(port, path);
-        startServer(new HttpServerRouter().registerApi(MockApiServer.MockAPI.class));
-        assertByClient(context, HttpMethod.GET, port, path, 404, expected);
+        startServer(new HttpServerRouter().registerApi(MockApiDefinition.MockAPI.class));
+        assertRestByClient(context, HttpMethod.GET, port, path, 404, expected);
     }
 
     @Test
@@ -62,8 +63,8 @@ public class NormalHttpServerTest extends BaseHttpServerTest {
         int port = httpConfig.getInteger("port");
         String path = "/api/xx";
         JsonObject expected = notFoundResponse(port, path);
-        startServer(new HttpServerRouter().registerApi(MockApiServer.MockAPI.class));
-        assertByClient(context, HttpMethod.GET, port, path, 404, expected);
+        startServer(new HttpServerRouter().registerApi(MockApiDefinition.MockAPI.class));
+        assertRestByClient(context, HttpMethod.GET, port, path, 404, expected);
     }
 
     @Test
@@ -71,8 +72,8 @@ public class NormalHttpServerTest extends BaseHttpServerTest {
         int port = httpConfig.getInteger("port");
         String path = "/api/test/error";
         JsonObject expected = ErrorMessage.parse(NubeException.ErrorCode.UNKNOWN_ERROR, "error").toJson();
-        startServer(new HttpServerRouter().registerApi(MockApiServer.MockAPI.class));
-        assertByClient(context, HttpMethod.GET, port, path, 500, expected);
+        startServer(new HttpServerRouter().registerApi(MockApiDefinition.MockAPI.class));
+        assertRestByClient(context, HttpMethod.GET, port, path, 500, expected);
     }
 
     @Test
@@ -80,8 +81,8 @@ public class NormalHttpServerTest extends BaseHttpServerTest {
         int port = httpConfig.getInteger("port");
         String path = "/api/test";
         JsonObject expected = new JsonObject().put("abc", "xxx");
-        startServer(new HttpServerRouter().registerApi(MockApiServer.MockAPI.class));
-        assertByClient(context, HttpMethod.GET, port, path, 200, expected);
+        startServer(new HttpServerRouter().registerApi(MockApiDefinition.MockAPI.class));
+        assertRestByClient(context, HttpMethod.GET, port, path, 200, expected);
     }
 
 }

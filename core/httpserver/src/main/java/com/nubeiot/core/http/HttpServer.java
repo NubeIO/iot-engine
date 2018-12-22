@@ -9,8 +9,9 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.handler.ApiExceptionHandler;
 import com.nubeiot.core.http.handler.ApiJsonWriter;
 import com.nubeiot.core.http.handler.FailureContextHandler;
-import com.nubeiot.core.http.handler.JsonContextHandler;
 import com.nubeiot.core.http.handler.NotFoundContextHandler;
+import com.nubeiot.core.http.handler.RestEventResponseHandler;
+import com.nubeiot.core.http.utils.Urls;
 import com.zandero.rest.RestBuilder;
 
 import io.reactivex.Single;
@@ -45,10 +46,9 @@ public class HttpServer implements IComponent {
         logger.info("HTTP Server configuration: {}", httpConfig.encode());
         String host = this.httpConfig.getString("host", DEFAULT_HOST);
         int port = this.httpConfig.getInteger("port", DEFAULT_PORT);
-        createHttpServer(initRouter(), host, port).subscribe(httpServer -> {
-            this.httpServer = httpServer;
-            logger.info("Web Server started at {}", httpServer.actualPort());
-        }, throwable -> logger.error("Cannot start server", throwable));
+        createHttpServer(initRouter(), host, port).subscribe(
+                httpServer -> logger.info("Web Server started at {}", httpServer.actualPort()),
+                throwable -> logger.error("Cannot start server", throwable));
     }
 
     @Override
@@ -59,18 +59,18 @@ public class HttpServer implements IComponent {
     }
 
     private Single<io.vertx.reactivex.core.http.HttpServer> createHttpServer(Router router, String host, int port) {
-        return vertx.createHttpServer().requestHandler(router::accept).rxListen(port, host);
+        this.httpServer = vertx.createHttpServer();
+        return httpServer.requestHandler(router).rxListen(port, host);
     }
 
     private Router initRouter() {
-        if (!httpRouter.validate()) {
-            throw new InitializerError("No REST API given, register at least one.");
-        }
         Router router = Router.router(vertx);
-        router = initUploadRouter(initDownloadRouter(router));
-        router = initWebSocketRouter(router);
-        router = initHttp2Router(router);
-        router = initEventBusRouter(initRestApiRouter(router));
+        initUploadRouter(router);
+        initDownloadRouter(router);
+        initWebSocketRouter(router);
+        initHttp2Router(router);
+        initRestRouter(router);
+        //TODO Cors Handler from config
         CorsHandler corsHandler = CorsHandler.create("*").allowedMethods(ApiConstants.DEFAULT_CORS_HTTP_METHOD);
         router.route()
               .handler(io.vertx.reactivex.ext.web.handler.CorsHandler.newInstance(corsHandler))
@@ -78,10 +78,23 @@ public class HttpServer implements IComponent {
               .handler(ResponseTimeHandler.create())
               .failureHandler(ResponseTimeHandler.create())
               .failureHandler(new FailureContextHandler());
-        router.route(httpConfig.getString("rootApi", ApiConstants.ROOT_API_PATH_WILDCARDS))
-              .handler(new JsonContextHandler())
-              .produces(ApiConstants.DEFAULT_CONTENT_TYPE);
         router.route().last().handler(new NotFoundContextHandler());
+        return router;
+    }
+
+    private Router initRestRouter(Router router) {
+        boolean enabled = httpConfig.getBoolean("enabled", true);
+        if (!enabled) {
+            return router;
+        }
+        if (!httpRouter.hasRestApi()) {
+            throw new InitializerError("No REST API given, register at least one.");
+        }
+        String rootApi = httpConfig.getString("rootApi", ApiConstants.ROOT_API_PATH);
+        String wildCards = Urls.combinePath(rootApi, ApiConstants.PATH_WILDCARDS);
+        initRestApiRouter(initEventBusApiRouter(router, rootApi)).route(wildCards)
+                                                                 .handler(new RestEventResponseHandler())
+                                                                 .produces(ApiConstants.DEFAULT_CONTENT_TYPE);
         return router;
     }
 
@@ -89,21 +102,19 @@ public class HttpServer implements IComponent {
         if (!httpRouter.hasApi()) {
             return router;
         }
-        RestBuilder builder = new RestBuilder(router.getDelegate()).errorHandler(ApiExceptionHandler.class)
-                                                                   .writer(MediaType.APPLICATION_JSON_TYPE,
-                                                                           ApiJsonWriter.class);
-        httpRouter.getRestApiClass().forEach(builder::register);
-        return Router.newInstance(builder.build());
+        Class[] classes = httpRouter.getRestApiClass().toArray(new Class[] {});
+        return Router.newInstance(new RestBuilder(router.getDelegate()).errorHandler(ApiExceptionHandler.class)
+                                                                       .writer(MediaType.APPLICATION_JSON_TYPE,
+                                                                               ApiJsonWriter.class)
+                                                                       .register((Object[]) classes)
+                                                                       .build());
     }
 
-    @SuppressWarnings("unchecked")
-    private Router initEventBusRouter(Router router) {
+    private Router initEventBusApiRouter(Router router, String rootApi) {
         if (!httpRouter.hasEventBusApi()) {
             return router;
         }
-        EventBusRestBuilder builder = new EventBusRestBuilder(router, vertx.eventBus());
-        httpRouter.getEventBusRestApiClass().forEach(builder::register);
-        return builder.build();
+        return new RestEventBuilder(router).rootApi(rootApi).register(httpRouter.getRestEventApiClass()).build();
     }
 
     private Router initUploadRouter(Router router) {
@@ -115,6 +126,14 @@ public class HttpServer implements IComponent {
     }
 
     private Router initWebSocketRouter(Router router) {
+        final JsonObject socketCfg = httpConfig.getJsonObject(SOCKET_CFG_NAME, new JsonObject());
+        boolean enabled = socketCfg.getBoolean("enabled", false);
+        String rootWs = httpConfig.getString("rootWS", ApiConstants.ROOT_WS_PATH);
+        if (enabled) {
+            return new WebsocketEventBuilder(vertx, router).rootWs(rootWs)
+                                                           .register(httpRouter.getWebsocketEvents())
+                                                           .build();
+        }
         return router;
     }
 

@@ -1,39 +1,26 @@
 package com.nubeiot.core.http.utils;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.http.InvalidUrlException;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.utils.Strings;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.core.MultiMap;
+import io.vertx.reactivex.core.http.ServerWebSocket;
 import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.handler.sockjs.SockJSSocket;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+//TODO should convert HEADER also
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class RestUtils {
+public final class RequestConverter {
 
-    private static final String EQUAL = "=";
-    private static final String SEPARATE = "&";
-
-    private static Map<String, Object> deserializeQuery(String query) {
-        Map<String, Object> map = new HashMap<>();
-        for (String property : query.split("\\" + SEPARATE)) {
-            String[] keyValues = property.split("\\" + EQUAL);
-            if (keyValues.length != 2) {
-                throw new InvalidUrlException("Property doesn't conform the syntax: `key`" + EQUAL + "`value`");
-            }
-            map.put(Urls.decode(keyValues[0]), Urls.decode(keyValues[1]));
-        }
-        return map;
-    }
-
-    public static RequestData convertToRequestData(RoutingContext context) {
+    public static RequestData convert(RoutingContext context) {
         JsonObject mergeInput = JsonObject.mapFrom(context.pathParams());
         String body = context.getBodyAsString();
         if (Strings.isNotBlank(body)) {
@@ -42,20 +29,34 @@ public final class RestUtils {
                 mergeInput.mergeIn(bodyAsJson, true);
             }
         }
-        final RequestData.Builder dataBuilder = RequestData.builder();
+        final RequestData.Builder builder = RequestData.builder();
         if (context.request().method() == HttpMethod.GET) {
             Pagination pagination = Pagination.builder()
                                               .page(context.queryParams().get("page"))
                                               .perPage(context.queryParams().get("per_page"))
                                               .build();
-            dataBuilder.pagination(pagination);
+            builder.pagination(pagination);
         }
 
         final String query = context.request().query();
         if (Strings.isBlank(query)) {
-            return dataBuilder.body(mergeInput).build();
+            return builder.body(mergeInput).build();
         }
-        return dataBuilder.body(mergeInput).filter(JsonObject.mapFrom(deserializeQuery(query))).build();
+        return builder.body(mergeInput).filter(JsonObject.mapFrom(HttpUtils.deserializeQuery(query))).build();
+    }
+
+    public static RequestData convert(ServerWebSocket context) {
+        final RequestData.Builder builder = RequestData.builder();
+        final String query = context.query();
+        if (Strings.isBlank(query)) {
+            return builder.build();
+        }
+        return builder.filter(JsonObject.mapFrom(HttpUtils.deserializeQuery(query))).build();
+    }
+
+    public static RequestData convert(EventMessage msg, SockJSSocket socket) {
+        final MultiMap headers = socket.headers();
+        return RequestData.builder().body(msg.getData()).build();
     }
 
 }

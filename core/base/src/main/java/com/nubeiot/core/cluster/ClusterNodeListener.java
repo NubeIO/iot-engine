@@ -1,8 +1,8 @@
 package com.nubeiot.core.cluster;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventType;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -24,7 +24,7 @@ public final class ClusterNodeListener implements NodeListener {
         logger.info("Add node: {}", nodeID);
         JsonObject node = clusterDelegate.lookupNodeById(nodeID).toJson();
         eventBus.send(listenerAddress,
-                      EventMessage.success(EventType.CREATE, RequestData.builder().body(node).build()));
+                      EventMessage.success(EventAction.CREATE, RequestData.builder().body(node).build()));
     }
 
     @Override
@@ -32,7 +32,7 @@ public final class ClusterNodeListener implements NodeListener {
         logger.info("Remove node: {}", nodeID);
         JsonObject node = ClusterNode.builder().id(nodeID).build().toJson();
         eventBus.send(listenerAddress,
-                      EventMessage.success(EventType.REMOVE, RequestData.builder().body(node).build()));
+                      EventMessage.success(EventAction.REMOVE, RequestData.builder().body(node).build()));
     }
 
 }

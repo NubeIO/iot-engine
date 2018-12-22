@@ -1,37 +1,53 @@
 package com.nubeiot.core.event;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NonNull;
+import lombok.Singular;
+import lombok.ToString;
 
+/**
+ * Keep event bus {@code address}, {@code pattern} and {@code available event types} for this {@code address}.
+ *
+ * @see EventAction
+ * @see EventPattern
+ */
+@Getter
 @EqualsAndHashCode(doNotUseGetters = true, onlyExplicitlyIncluded = true)
-@RequiredArgsConstructor
+@Builder(builderClassName = "Builder")
+@ToString(onlyExplicitlyIncluded = true)
 public final class EventModel {
 
-    @Getter
+    @NonNull
     @EqualsAndHashCode.Include
+    @ToString.Include
     private final String address;
-    private final Set<EventType> events = new HashSet<>();
+    @lombok.Builder.Default
+    @ToString.Include
+    private final EventPattern pattern = EventPattern.REQUEST_RESPONSE;
+    @lombok.Builder.Default
+    @ToString.Include
+    private final boolean local = false;
+    @Singular
+    @NonNull
+    private final Set<EventAction> events;
 
-    public EventModel add(EventType eventType) {
-        this.events.add(Objects.requireNonNull(eventType));
-        return this;
+    public static EventModel clone(@NonNull EventModel model, @NonNull String address) {
+        return new EventModel(address, model.getPattern(), model.isLocal(), model.getEvents());
     }
 
-    public EventModel add(EventType... eventTypes) {
-        this.events.addAll(Arrays.stream(eventTypes).filter(Objects::nonNull).collect(Collectors.toList()));
-        return this;
+    public static EventModel clone(@NonNull EventModel model, @NonNull String address, @NonNull EventPattern pattern) {
+        return new EventModel(address, pattern, model.isLocal(), model.getEvents());
     }
 
-    public Set<EventType> getEvents() {
-        return Collections.unmodifiableSet(this.events);
+    public Set<EventAction> getEvents() {
+        return Collections.unmodifiableSet(this.events.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
     }
 
 }

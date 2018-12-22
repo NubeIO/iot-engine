@@ -2,21 +2,21 @@ package com.nubeiot.dashboard.connector.edge;
 
 import java.util.Map;
 
-import com.nubeiot.core.event.EventType;
-import com.nubeiot.core.http.AbstractEventBusRestApi;
-import com.nubeiot.core.http.EventBusRestApi;
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.http.AbstractRestEventApi;
+import com.nubeiot.core.http.RestEventApi;
 import com.nubeiot.eventbus.edge.EdgeEventBus;
 
 import io.vertx.core.http.HttpMethod;
 import lombok.Getter;
 
 @Getter
-final class EdgeEventBusRestApi extends AbstractEventBusRestApi {
+final class EdgeRestEventApi extends AbstractRestEventApi {
 
     @Override
-    protected Map<EventType, HttpMethod> initHttpEventMap() {
-        Map<EventType, HttpMethod> map = EventBusRestApi.defaultEventHttpMap();
-        map.put(EventType.HALT, HttpMethod.PATCH);
+    protected Map<EventAction, HttpMethod> initHttpEventMap() {
+        Map<EventAction, HttpMethod> map = RestEventApi.defaultEventHttpMap();
+        map.put(EventAction.HALT, HttpMethod.PATCH);
         return map;
     }
 

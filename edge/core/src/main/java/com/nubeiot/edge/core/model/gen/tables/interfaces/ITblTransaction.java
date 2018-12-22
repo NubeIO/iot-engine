@@ -13,7 +13,7 @@ import javax.persistence.Index;
 import javax.persistence.Table;
 
 import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
+import com.nubeiot.core.event.EventAction;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
@@ -64,13 +64,13 @@ public interface ITblTransaction extends VertxPojo, Serializable {
     /**
      * Setter for <code>tbl_transaction.event</code>.
      */
-    public ITblTransaction setEvent(EventType value);
+    public ITblTransaction setEvent(EventAction value);
 
     /**
      * Getter for <code>tbl_transaction.event</code>.
      */
     @Column(name = "event", nullable = false, length = 15)
-    public EventType getEvent();
+    public EventAction getEvent();
 
     /**
      * Setter for <code>tbl_transaction.status</code>.
@@ -178,7 +178,7 @@ public interface ITblTransaction extends VertxPojo, Serializable {
     public default ITblTransaction fromJson(io.vertx.core.json.JsonObject json) {
         setTransactionId(json.getString("transaction_id"));
         setModuleId(json.getString("module_id"));
-        setEvent(json.getString("event")==null? null: EventType.valueOf(json.getString("event")));
+        setEvent(json.getString("event") == null ? null : EventAction.valueOf(json.getString("event")));
         setStatus(json.getString("status")==null? null: Status.valueOf(json.getString("status")));
         setIssuedAt(json.getLong("issued_at")==null?null:Date.from(java.time.Instant.ofEpochMilli(json.getLong("issued_at"))));
         setIssuedBy(json.getString("issued_by"));

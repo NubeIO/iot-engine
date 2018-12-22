@@ -4,7 +4,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.EdgeVerticle;
@@ -18,7 +19,6 @@ import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
 import com.nubeiot.eventbus.edge.EdgeEventBus;
 
 import io.reactivex.Single;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.maven.MavenVerticleFactory;
@@ -28,11 +28,10 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
 
     @Override
     protected void registerEventBus() {
-        final EventBus bus = getVertx().eventBus();
-        bus.consumer(EdgeEventBus.BIOS_INSTALLER.getAddress(),
-                     m -> new ModuleEventHandler(this, EdgeEventBus.BIOS_INSTALLER).handleMessage(m));
-        bus.consumer(EdgeEventBus.BIOS_TRANSACTION.getAddress(),
-                     m -> new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION).handleMessage(m));
+        EventController controller = new EventController(getVertx());
+        controller.consume(EdgeEventBus.BIOS_INSTALLER, new ModuleEventHandler(this, EdgeEventBus.BIOS_INSTALLER));
+        controller.consume(EdgeEventBus.BIOS_TRANSACTION,
+                           new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION));
     }
 
     @Override
@@ -61,7 +60,7 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
                                               .fromJson(ModuleTypeFactory.getDefault()
                                                                          .serialize(appCfg, this.getModuleRule()))
                                               .setDeployConfigJson(deployAppCfg);
-        return processDeploymentTransaction((TblModule) tblModule, EventType.INIT);
+        return processDeploymentTransaction((TblModule) tblModule, EventAction.INIT);
     }
 
     private JsonObject setupMavenRepos(JsonObject repositoryCfg) {

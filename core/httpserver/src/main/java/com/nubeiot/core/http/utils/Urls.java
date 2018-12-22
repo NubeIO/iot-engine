@@ -119,7 +119,7 @@ public final class Urls {
     }
 
     public static String combinePath(@NonNull String... path) {
-        return normalize(Arrays.stream(path).filter(Strings::isNotBlank).collect(Collectors.joining("/")));
+        return normalize("/" + Arrays.stream(path).filter(Strings::isNotBlank).collect(Collectors.joining("/")));
     }
 
     private static String normalize(String url) {

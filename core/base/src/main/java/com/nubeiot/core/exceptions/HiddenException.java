@@ -7,6 +7,10 @@ import lombok.NonNull;
  */
 public class HiddenException extends NubeException {
 
+    public HiddenException(@NonNull Throwable e) {
+        super(e);
+    }
+
     public HiddenException(@NonNull ErrorCode code, @NonNull String message, Throwable e) {
         super(code, message, e);
     }

@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.enums.State;
-import com.nubeiot.core.event.EventType;
+import com.nubeiot.core.event.EventAction;
 
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;
@@ -21,7 +21,7 @@ import lombok.Setter;
 public class PreDeploymentResult {
 
     private final String transactionId;
-    private final EventType event;
+    private final EventAction event;
     private final State prevState;
     private final String serviceId;
     private final String deployId;

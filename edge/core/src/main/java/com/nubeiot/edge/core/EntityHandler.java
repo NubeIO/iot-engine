@@ -14,7 +14,7 @@ import org.jooq.DSLContext;
 
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.statemachine.StateMachine;
@@ -70,23 +70,23 @@ public final class EntityHandler {
                                                     : this.findHistoryTransactionById(transactionId));
     }
 
-    Single<PreDeploymentResult> handlePreDeployment(TblModule module, EventType event) {
+    Single<PreDeploymentResult> handlePreDeployment(TblModule module, EventAction event) {
         logger.info("Handle entities before do deployment...");
         return validateModuleState(module.getServiceId(), event).flatMap(o -> {
-            if (EventType.INIT == event || EventType.CREATE == event) {
+            if (EventAction.INIT == event || EventAction.CREATE == event) {
                 module.setState(State.NONE);
                 return markModuleInsert(new TblModule(module)).flatMap(
                         key -> createTransaction(key.getServiceId(), event, module.toJson()).map(
                                 transId -> createPreDeployResult(module, transId, event, module.getState())));
             }
             final TblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
-            final boolean isUpdated = EventType.UPDATE == event;
-            if (isUpdated || EventType.HALT == event) {
+            final boolean isUpdated = EventAction.UPDATE == event;
+            if (isUpdated || EventAction.HALT == event) {
                 return markModuleModify(module, new TblModule(oldOne), isUpdated).flatMap(
                         key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
                                 transId -> createPreDeployResult(key, transId, event, oldOne.getState())));
             }
-            if (EventType.REMOVE == event) {
+            if (EventAction.REMOVE == event) {
                 return markModuleDelete(new TblModule(oldOne)).flatMap(
                         key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
                                 transId -> createPreDeployResult(key, transId, event, oldOne.getState())));
@@ -95,7 +95,7 @@ public final class EntityHandler {
         });
     }
 
-    private PreDeploymentResult createPreDeployResult(TblModule module, String transactionId, EventType event,
+    private PreDeploymentResult createPreDeployResult(TblModule module, String transactionId, EventAction event,
                                                       State prevState) {
         Map<String, Object> deployCfg = Objects.isNull(module.getDeployConfigJson())
                                         ? null
@@ -104,24 +104,26 @@ public final class EntityHandler {
                                        deployCfg);
     }
 
-    private Single<Optional<TblModule>> validateModuleState(String serviceId, EventType eventType) {
-        logger.info("Validate {}::::{} ...", serviceId, eventType);
-        return moduleDaoSupplier.get().findOneById(serviceId).map(o -> validateModuleState(o.orElse(null), eventType));
+    private Single<Optional<TblModule>> validateModuleState(String serviceId, EventAction eventAction) {
+        logger.info("Validate {}::::{} ...", serviceId, eventAction);
+        return moduleDaoSupplier.get()
+                                .findOneById(serviceId)
+                                .map(o -> validateModuleState(o.orElse(null), eventAction));
     }
 
     //TODO: register EventBus to send message somewhere
-    public void succeedPostDeployment(String serviceId, String transId, EventType eventType, String deployId) {
+    public void succeedPostDeployment(String serviceId, String transId, EventAction eventAction, String deployId) {
         logger.info("Handle entities after success deployment...");
         final Status status = Status.SUCCESS;
-        final State state = StateMachine.instance().transition(eventType, status);
+        final State state = StateMachine.instance().transition(eventAction, status);
         if (State.UNAVAILABLE == state) {
             logger.info("Remove module id {} and its transactions", serviceId);
             transDaoSupplier.get()
                             .findOneById(transId)
                             .flatMap(o -> this.createRemovedServiceRecord(o.orElse(
                                     new TblTransaction().setTransactionId(transId)
-                                                        .setModuleId(serviceId)
-                                                        .setEvent(eventType)).setStatus(status)))
+                                                        .setModuleId(serviceId).setEvent(eventAction))
+                                                                           .setStatus(status)))
                             .map(history -> transDaoSupplier.get())
                             .flatMap(transDao -> transDao.deleteByCondition(
                                     Tables.TBL_TRANSACTION.MODULE_ID.eq(serviceId))
@@ -141,7 +143,7 @@ public final class EntityHandler {
     }
 
     //TODO: register EventBus to send message somewhere
-    public void handleErrorPostDeployment(String serviceId, String transId, EventType eventType, Throwable error) {
+    public void handleErrorPostDeployment(String serviceId, String transId, EventAction eventAction, Throwable error) {
         logger.error("Handle entities after error deployment...", error);
         JDBCRXGenericQueryExecutor queryExecutor = executorSupplier.get();
         queryExecutor.execute(c -> updateTransStatus(c, transId, Status.FAILED,
@@ -152,15 +154,14 @@ public final class EntityHandler {
                      .subscribe();
     }
 
-    private Single<String> createTransaction(String moduleId, EventType eventType, JsonObject prevState) {
-        logger.debug("Create new transaction for {}::::{}...", moduleId, eventType);
+    private Single<String> createTransaction(String moduleId, EventAction eventAction, JsonObject prevState) {
+        logger.debug("Create new transaction for {}::::{}...", moduleId, eventAction);
         logger.debug("Previous module state: {}", prevState.encode());
         final Date now = DateTimes.now();
         final String transactionId = UUID.randomUUID().toString();
         final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)
                                                                .setModuleId(moduleId)
-                                                               .setStatus(Status.WIP)
-                                                               .setEvent(eventType)
+                                                               .setStatus(Status.WIP).setEvent(eventAction)
                                                                .setIssuedAt(now)
                                                                .setModifiedAt(now)
                                                                .setRetry(0)
@@ -192,12 +193,12 @@ public final class EntityHandler {
                                 .map(ignore -> module);
     }
 
-    private Optional<TblModule> validateModuleState(TblModule findModule, EventType eventType) {
+    private Optional<TblModule> validateModuleState(TblModule findModule, EventAction eventAction) {
         logger.info("StateMachine is validating...");
-        StateMachine.instance().validate(findModule, eventType, "service");
+        StateMachine.instance().validate(findModule, eventAction, "service");
         if (Objects.nonNull(findModule)) {
             StateMachine.instance()
-                        .validateConflict(findModule.getState(), eventType, "service " + findModule.getServiceId());
+                        .validateConflict(findModule.getState(), eventAction, "service " + findModule.getServiceId());
             return Optional.of(findModule);
         }
         return Optional.empty();

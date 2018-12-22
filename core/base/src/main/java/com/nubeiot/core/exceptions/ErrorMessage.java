@@ -1,5 +1,7 @@
 package com.nubeiot.core.exceptions;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.vertx.core.json.JsonObject;
@@ -9,10 +11,13 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 
+/**
+ * The error message.
+ */
 @ToString
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class ErrorMessage {
+public final class ErrorMessage implements Serializable {
 
     @JsonIgnore
     private NubeException throwable;

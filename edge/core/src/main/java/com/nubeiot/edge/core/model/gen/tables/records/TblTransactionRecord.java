@@ -17,10 +17,10 @@ import org.jooq.Record11;
 import org.jooq.Row11;
 import org.jooq.impl.UpdatableRecordImpl;
 
+import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.edge.core.model.gen.tables.TblTransaction;
 import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblTransaction;
-import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
@@ -43,7 +43,11 @@ import io.vertx.core.json.JsonObject;
     @Index(name = "Idx_tbl_transaction_module_lifetime", columnList = "module_id ASC, issued_at ASC"),
     @Index(name = "sqlite_autoindex_tbl_transaction_1", unique = true, columnList = "transaction_id ASC")
 })
-public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionRecord> implements VertxPojo, Record11<String, String, EventType, Status, Date, String, String, Date, JsonObject, JsonObject, Integer>, ITblTransaction {
+public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionRecord> implements VertxPojo,
+                                                                                               Record11<String,
+                                                                                                               String
+                                                                                                               , EventAction, Status, Date, String, String, Date, JsonObject, JsonObject, Integer>,
+                                                                                               ITblTransaction {
 
     private static final long serialVersionUID = 415663572;
 
@@ -88,7 +92,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * Setter for <code>tbl_transaction.event</code>.
      */
     @Override
-    public TblTransactionRecord setEvent(EventType value) {
+    public TblTransactionRecord setEvent(EventAction value) {
         set(2, value);
         return this;
     }
@@ -98,8 +102,8 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      */
     @Column(name = "event", nullable = false, length = 15)
     @Override
-    public EventType getEvent() {
-        return (EventType) get(2);
+    public EventAction getEvent() {
+        return (EventAction) get(2);
     }
 
     /**
@@ -266,7 +270,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public Row11<String, String, EventType, Status, Date, String, String, Date, JsonObject, JsonObject, Integer> fieldsRow() {
+    public Row11<String, String, EventAction, Status, Date, String, String, Date, JsonObject, JsonObject, Integer> fieldsRow() {
         return (Row11) super.fieldsRow();
     }
 
@@ -274,7 +278,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public Row11<String, String, EventType, Status, Date, String, String, Date, JsonObject, JsonObject, Integer> valuesRow() {
+    public Row11<String, String, EventAction, Status, Date, String, String, Date, JsonObject, JsonObject, Integer> valuesRow() {
         return (Row11) super.valuesRow();
     }
 
@@ -298,7 +302,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public Field<EventType> field3() {
+    public Field<EventAction> field3() {
         return TblTransaction.TBL_TRANSACTION.EVENT;
     }
 
@@ -386,7 +390,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public EventType component3() {
+    public EventAction component3() {
         return getEvent();
     }
 
@@ -474,7 +478,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public EventType value3() {
+    public EventAction value3() {
         return getEvent();
     }
 
@@ -564,7 +568,7 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord value3(EventType value) {
+    public TblTransactionRecord value3(EventAction value) {
         setEvent(value);
         return this;
     }
@@ -645,7 +649,9 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
      * {@inheritDoc}
      */
     @Override
-    public TblTransactionRecord values(String value1, String value2, EventType value3, Status value4, Date value5, String value6, String value7, Date value8, JsonObject value9, JsonObject value10, Integer value11) {
+    public TblTransactionRecord values(String value1, String value2, EventAction value3, Status value4, Date value5,
+                                       String value6, String value7, Date value8, JsonObject value9, JsonObject value10,
+                                       Integer value11) {
         value1(value1);
         value2(value2);
         value3(value3);
@@ -705,7 +711,9 @@ public class TblTransactionRecord extends UpdatableRecordImpl<TblTransactionReco
     /**
      * Create a detached, initialised TblTransactionRecord
      */
-    public TblTransactionRecord(String transactionId, String moduleId, EventType event, Status status, Date issuedAt, String issuedBy, String issuedFrom, Date modifiedAt, JsonObject prevStateJson, JsonObject lastErrorJson, Integer retry) {
+    public TblTransactionRecord(String transactionId, String moduleId, EventAction event, Status status, Date issuedAt,
+                                String issuedBy, String issuedFrom, Date modifiedAt, JsonObject prevStateJson,
+                                JsonObject lastErrorJson, Integer retry) {
         super(TblTransaction.TBL_TRANSACTION);
 
         set(0, transactionId);

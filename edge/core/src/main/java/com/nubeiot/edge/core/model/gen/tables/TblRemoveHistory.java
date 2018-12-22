@@ -18,13 +18,13 @@ import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.TableImpl;
 
+import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.edge.core.model.converter.DateConverter;
 import com.nubeiot.edge.core.model.gen.DefaultSchema;
 import com.nubeiot.edge.core.model.gen.Indexes;
 import com.nubeiot.edge.core.model.gen.Keys;
 import com.nubeiot.edge.core.model.gen.tables.records.TblRemoveHistoryRecord;
-import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
 
 import io.github.jklingsporn.vertx.jooq.shared.JsonObjectConverter;
 import io.vertx.core.json.JsonObject;
@@ -71,7 +71,13 @@ public class TblRemoveHistory extends TableImpl<TblRemoveHistoryRecord> {
     /**
      * The column <code>tbl_remove_history.event</code>.
      */
-    public final TableField<TblRemoveHistoryRecord, EventType> EVENT = createField("event", org.jooq.impl.SQLDataType.VARCHAR(15).nullable(false), this, "", new org.jooq.impl.EnumConverter<java.lang.String, EventType>(java.lang.String.class, EventType.class));
+    public final TableField<TblRemoveHistoryRecord, EventAction> EVENT = createField("event",
+                                                                                     org.jooq.impl.SQLDataType.VARCHAR(
+                                                                                             15).nullable(false), this,
+                                                                                     "",
+                                                                                     new org.jooq.impl.EnumConverter<java.lang.String, EventAction>(
+                                                                                             java.lang.String.class,
+                                                                                             EventAction.class));
 
     /**
      * The column <code>tbl_remove_history.status</code>.

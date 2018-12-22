@@ -19,12 +19,12 @@ import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class RestUtilsTest extends BaseHttpServerTest {
+public class HttpUtilsTest extends BaseHttpServerTest {
 
     @Rule
     public RepeatRule repeatRule = new RepeatRule();
     @Rule
-    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.DEFAULT_CONNECT_TIMEOUT);
+    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.DEFAULT_TIMEOUT);
 
     @BeforeClass
     public static void beforeSuite() {

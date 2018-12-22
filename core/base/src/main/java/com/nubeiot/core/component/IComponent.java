@@ -7,6 +7,7 @@ import io.vertx.core.Future;
 /**
  * Represents small and independent component that integrate with verticle.
  */
+//TODO Make as verticle
 public interface IComponent {
 
     void start() throws NubeException;

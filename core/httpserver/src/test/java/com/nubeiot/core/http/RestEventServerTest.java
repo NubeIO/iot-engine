@@ -11,6 +11,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.mock.MockApiDefinition;
+import com.nubeiot.core.http.mock.MockEventBusErrorHandler;
+import com.nubeiot.core.http.mock.MockEventBusSuccessHandler;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -21,12 +24,12 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @SuppressWarnings("unchecked")
 @RunWith(VertxUnitRunner.class)
-public class EventBusHttpServerTest extends BaseHttpServerTest {
+public class RestEventServerTest extends BaseHttpServerTest {
 
     @Rule
     public RepeatRule repeatRule = new RepeatRule();
     @Rule
-    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.DEFAULT_CONNECT_TIMEOUT);
+    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.DEFAULT_TIMEOUT);
 
     @BeforeClass
     public static void beforeSuite() {
@@ -48,41 +51,41 @@ public class EventBusHttpServerTest extends BaseHttpServerTest {
         int port = httpConfig.getInteger("port");
         String path = "/api/test/event";
         JsonObject expected = notFoundResponse(port, path);
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.GET, port, path, 404, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.GET, port, path, 404, expected);
     }
 
     @Test
     public void test_api_eventbus_error_unexpected(TestContext context) {
-        new MockApiServer.MockEventBusErrorHandler(this.vertx.eventBus()).start();
+        MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
         int port = httpConfig.getInteger("port");
         String path = "/api/test/events";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.UNKNOWN_ERROR)
                                               .put("message", "UNKNOWN_ERROR | Cause: xxx");
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.GET, port, path, 500, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.GET, port, path, 500, expected);
     }
 
     @Test
     public void test_api_eventbus_error_from_server(TestContext context) {
-        new MockApiServer.MockEventBusErrorHandler(this.vertx.eventBus()).start();
+        MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
         int port = httpConfig.getInteger("port");
         String path = "/api/test/events";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.ENGINE_ERROR)
                                               .put("message", "Engine error");
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.POST, port, path, 500, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.POST, port, path, 500, expected);
     }
 
     @Test
     public void test_api_eventbus_error_from_user(TestContext context) {
-        new MockApiServer.MockEventBusErrorHandler(this.vertx.eventBus()).start();
+        MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
         int port = httpConfig.getInteger("port");
         String path = "/api/test/event/:event_id";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.INVALID_ARGUMENT)
                                               .put("message", "invalid");
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.PUT, port, path, 400, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.PUT, port, path, 400, expected);
     }
 
     @Test
@@ -91,58 +94,58 @@ public class EventBusHttpServerTest extends BaseHttpServerTest {
         String path = "/api/test/event/:event_id";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.SERVICE_ERROR)
                                               .put("message", "Service unavailable");
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.GET, port, path, 503, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.GET, port, path, 503, expected);
     }
 
     @Test
     public void test_api_eventbus_success_data_list(TestContext context) {
-        new MockApiServer.MockEventBusSuccessHandler(this.vertx.eventBus()).start();
+        MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
         int port = httpConfig.getInteger("port");
         String path = "/api/test/events";
         JsonObject expected = new JsonObject().put("data", Arrays.asList("1", "2", "3"));
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.GET, port, path, 200, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.GET, port, path, 200, expected);
     }
 
     @Test
     public void test_api_eventbus_success_data_other(TestContext context) {
-        new MockApiServer.MockEventBusSuccessHandler(this.vertx.eventBus()).start();
+        MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
         int port = httpConfig.getInteger("port");
         String path = "/api/test/event/1";
         JsonObject expected = new JsonObject().put("data", 1);
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.GET, port, path, 200, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.GET, port, path, 200, expected);
     }
 
     @Test
     public void test_api_eventbus_success_data_json(TestContext context) {
-        new MockApiServer.MockEventBusSuccessHandler(this.vertx.eventBus()).start();
+        MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
         int port = httpConfig.getInteger("port");
         String path = "/api/test/events";
         JsonObject expected = new JsonObject().put("create", "success");
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.POST, port, path, 201, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.POST, port, path, 201, expected);
     }
 
     @Test
     public void test_api_eventbus_success_data_single(TestContext context) {
-        new MockApiServer.MockEventBusSuccessHandler(this.vertx.eventBus()).start();
+        MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
         int port = httpConfig.getInteger("port");
         String path = "/api/test/event/1";
         JsonObject expected = new JsonObject().put("data", "success");
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.PUT, port, path, 200, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.PUT, port, path, 200, expected);
     }
 
     @Test
     public void test_api_eventbus_success_data_single_json(TestContext context) {
-        new MockApiServer.MockEventBusSuccessHandler(this.vertx.eventBus()).start();
+        MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
         int port = httpConfig.getInteger("port");
         String path = "/api/test/event/1";
         JsonObject expected = new JsonObject().put("patch", "success").put("event_id", 1);
-        startServer(new HttpServerRouter().registerEventBusApi(MockApiServer.MockEventBusAPI.class));
-        assertByClient(context, HttpMethod.PATCH, port, path, 200, expected);
+        startServer(new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.PATCH, port, path, 200, expected);
     }
 
 }

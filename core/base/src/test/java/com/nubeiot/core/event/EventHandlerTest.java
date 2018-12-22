@@ -17,28 +17,29 @@ public class EventHandlerTest {
 
     @Test
     public void test_get_method_one_contractor() {
-        final Method method = EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.UPDATE);
+        final Method method = EventHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.UPDATE);
         Assert.assertNotNull(method);
         Assert.assertEquals("throwException", method.getName());
     }
 
     @Test
     public void test_execute_method_contractor_return_other() {
-        Single<JsonObject> handle = new MockEventHandler().handleEvent(EventType.CREATE, RequestData.builder().build());
+        Single<JsonObject> handle = new MockEventHandler().handleEvent(EventAction.CREATE,
+                                                                       RequestData.builder().build());
         Assert.assertNotNull(handle);
         Assert.assertEquals("install", handle.blockingGet().getString("key"));
     }
 
     @Test
     public void test_execute_method_contractor_return_single_json() {
-        Single<JsonObject> handle = new MockEventHandler().handleEvent(EventType.INIT, RequestData.builder().build());
+        Single<JsonObject> handle = new MockEventHandler().handleEvent(EventAction.INIT, RequestData.builder().build());
         Assert.assertNotNull(handle);
         Assert.assertEquals("init", handle.blockingGet().getString("key"));
     }
 
     @Test
     public void test_execute_method_contractor_return_single_other() {
-        Single<JsonObject> handle = new MockEventHandler().handleEvent(EventType.GET_LIST,
+        Single<JsonObject> handle = new MockEventHandler().handleEvent(EventAction.GET_LIST,
                                                                        RequestData.builder().build());
         Assert.assertNotNull(handle);
         Assert.assertEquals("list", handle.blockingGet().getString("key"));
@@ -46,8 +47,8 @@ public class EventHandlerTest {
 
     @Test
     public void test_get_method_with_multiple_contractor() {
-        final Method method1 = EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.HALT);
-        final Method method2 = EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.REMOVE);
+        final Method method1 = EventHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.HALT);
+        final Method method2 = EventHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.REMOVE);
         Assert.assertNotNull(method1);
         Assert.assertNotNull(method2);
         Assert.assertEquals("delete", method1.getName());
@@ -56,7 +57,7 @@ public class EventHandlerTest {
 
     @Test
     public void test_execute_method_with_multiple_contractor() {
-        final Single<JsonObject> handle = new MockEventHandler().handleEvent(EventType.REMOVE,
+        final Single<JsonObject> handle = new MockEventHandler().handleEvent(EventAction.REMOVE,
                                                                              RequestData.builder().build());
         Assert.assertNotNull(handle);
         Assert.assertEquals("delete", handle.blockingGet().getString("key"));
@@ -65,7 +66,7 @@ public class EventHandlerTest {
     @Test(expected = HiddenException.ImplementationError.class)
     public void test_get_method_no_output() throws Throwable {
         try {
-            EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.GET_ONE);
+            EventHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.GET_ONE);
         } catch (NubeException e) {
             throw e.getCause();
         }
@@ -73,14 +74,14 @@ public class EventHandlerTest {
 
     @Test(expected = StateException.class)
     public void test_execute_method_unsupported_event() {
-        new MockEventHandler.MockEventUnsupportedHandler().handleEvent(EventType.GET_LIST,
+        new MockEventHandler.MockEventUnsupportedHandler().handleEvent(EventAction.GET_LIST,
                                                                        RequestData.builder().build());
     }
 
     @Test(expected = HiddenException.ImplementationError.class)
     public void test_get_method_public_static() throws Throwable {
         try {
-            EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.GET_ONE);
+            EventHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.GET_ONE);
         } catch (NubeException e) {
             throw e.getCause();
         }
@@ -89,7 +90,7 @@ public class EventHandlerTest {
     @Test(expected = HiddenException.ImplementationError.class)
     public void test_get_method_none_public_method() throws Throwable {
         try {
-            EventHandler.getMethodByAnnotation(MockEventHandler.class, EventType.GET_ONE);
+            EventHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.GET_ONE);
         } catch (NubeException e) {
             throw e.getCause();
         }
@@ -97,7 +98,7 @@ public class EventHandlerTest {
 
     @Test(expected = RuntimeException.class)
     public void test_execute_method_that_throwException() {
-        new MockEventHandler().handleEvent(EventType.UPDATE, RequestData.builder().build());
+        new MockEventHandler().handleEvent(EventAction.UPDATE, RequestData.builder().build());
     }
 
 }

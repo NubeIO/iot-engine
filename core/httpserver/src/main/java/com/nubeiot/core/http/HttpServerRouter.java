@@ -2,7 +2,9 @@ package com.nubeiot.core.http;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 
@@ -10,20 +12,26 @@ import lombok.Getter;
 public final class HttpServerRouter {
 
     private final Set<Class> restApiClass = new HashSet<>();
-    private final Set<Class<? extends EventBusRestApi>> eventBusRestApiClass = new HashSet<>();
+    private final Set<Class<? extends RestEventApi>> restEventApiClass = new HashSet<>();
+    private final Set<WebsocketEventMetadata> websocketEvents = new HashSet<>();
 
     public HttpServerRouter registerApi(Class... apiClass) {
-        restApiClass.addAll(Arrays.asList(apiClass));
+        restApiClass.addAll(Arrays.stream(apiClass).filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
     }
 
     @SuppressWarnings("unchecked")
-    public HttpServerRouter registerEventBusApi(Class<? extends EventBusRestApi>... eventBusApiClass) {
-        eventBusRestApiClass.addAll(Arrays.asList(eventBusApiClass));
+    public HttpServerRouter registerEventBusApi(Class<? extends RestEventApi>... eventBusApiClass) {
+        restEventApiClass.addAll(Arrays.stream(eventBusApiClass).filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
     }
 
-    boolean validate() {
+    public HttpServerRouter registerEventBusSocket(WebsocketEventMetadata... eventBusSocket) {
+        websocketEvents.addAll(Arrays.stream(eventBusSocket).filter(Objects::nonNull).collect(Collectors.toList()));
+        return this;
+    }
+
+    boolean hasRestApi() {
         return hasApi() || hasEventBusApi();
     }
 
@@ -32,7 +40,7 @@ public final class HttpServerRouter {
     }
 
     boolean hasEventBusApi() {
-        return !eventBusRestApiClass.isEmpty();
+        return !restEventApiClass.isEmpty();
     }
 
 }

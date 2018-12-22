@@ -2,6 +2,7 @@ package com.nubeiot.core.http.handler;
 
 import java.util.Objects;
 
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
 import com.nubeiot.core.http.ApiConstants;
@@ -11,16 +12,17 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.reactivex.ext.web.RoutingContext;
 
-public final class JsonContextHandler implements Handler<RoutingContext> {
-
-    public static final String EVENT_RESULT = "event_result";
+/**
+ * Rest response end handler for {@code eventbus}
+ */
+public final class RestEventResponseHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext context) {
         context.addHeadersEndHandler(
                 v -> context.response().putHeader(ApiConstants.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE));
         HttpMethod method = context.request().method();
-        EventMessage eventMessage = context.get(EVENT_RESULT);
+        EventMessage eventMessage = context.get(EventAction.RETURN.name());
         if (Objects.isNull(eventMessage)) {
             context.next();
             return;

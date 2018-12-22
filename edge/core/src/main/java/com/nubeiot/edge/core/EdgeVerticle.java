@@ -7,7 +7,7 @@ import org.jooq.Configuration;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.ISqlProvider;
 import com.nubeiot.core.sql.SQLWrapper;
 import com.nubeiot.core.utils.Configs;
@@ -72,14 +72,14 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
     protected Single<JsonObject> startupModules() {
         return this.entityHandler.getModulesWhenBootstrap()
                                  .flattenAsObservable(tblModules -> tblModules)
-                                 .flatMapSingle(module -> this.processDeploymentTransaction(module, EventType.UPDATE))
+                                 .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.UPDATE))
                                  .collect(JsonArray::new, JsonArray::add)
                                  .map(results -> new JsonObject().put("results", results));
     }
 
-    protected Single<JsonObject> processDeploymentTransaction(TblModule module, EventType eventType) {
-        logger.info("{} module with data {}", eventType, module.toJson().encode());
-        return this.entityHandler.handlePreDeployment(module, eventType)
+    protected Single<JsonObject> processDeploymentTransaction(TblModule module, EventAction eventAction) {
+        logger.info("{} module with data {}", eventAction, module.toJson().encode());
+        return this.entityHandler.handlePreDeployment(module, eventAction)
                                  .doAfterSuccess(this::deployModule)
                                  .map(result -> result.toJson()
                                                       .put("message", "Work in progress")
@@ -89,9 +89,9 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
     private void deployModule(PreDeploymentResult preDeployResult) {
         final String transactionId = preDeployResult.getTransactionId();
         final String serviceId = preDeployResult.getServiceId();
-        final EventType event = preDeployResult.getEvent();
+        final EventAction event = preDeployResult.getEvent();
         logger.info("Execute transaction: {}", transactionId);
-        preDeployResult.setSilent(EventType.REMOVE == event && State.DISABLED == preDeployResult.getPrevState());
+        preDeployResult.setSilent(EventAction.REMOVE == event && State.DISABLED == preDeployResult.getPrevState());
         final RequestData data = RequestData.builder().body(preDeployResult.toJson()).build();
         moduleLoader.handleEvent(event, data)
                     .subscribe(r -> entityHandler.succeedPostDeployment(serviceId, transactionId, event,
