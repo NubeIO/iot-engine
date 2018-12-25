@@ -7,8 +7,8 @@ import javax.ws.rs.Produces;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.AbstractRestEventApi;
 import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.rest.AbstractRestEventApi;
 import com.zandero.rest.annotation.Get;
 
 import io.vertx.core.json.JsonObject;

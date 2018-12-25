@@ -45,6 +45,7 @@ public final class EventController {
      * @param message Request data message
      * @see EventPattern
      * @see EventMessage
+     * @see #request(String, EventPattern, EventMessage, Consumer)
      */
     public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message) {
         request(address, pattern, message, null);
@@ -62,7 +63,7 @@ public final class EventController {
      */
     public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
                         Consumer<AsyncResult<Message<Object>>> replyConsumer) {
-        logger.debug("Eventbus::Request:Message:Address: {} - Pattern: {}", address, pattern);
+        logger.debug("Eventbus::Request:Address: {} - Pattern: {}", address, pattern);
         fire(address, pattern, message.toJson(), replyConsumer);
     }
 
@@ -94,7 +95,7 @@ public final class EventController {
         if (message.isError()) {
             response(address, pattern, message.getError(), replyConsumer);
         } else {
-            response(address, pattern, message.getData(), replyConsumer);
+            response(address, pattern, message.toJson(), replyConsumer);
         }
     }
 
@@ -135,7 +136,7 @@ public final class EventController {
      */
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error,
                          Consumer<AsyncResult<Message<Object>>> replyConsumer) {
-        logger.debug("Eventbus::Response:Error:Address: {} - Pattern: {}", address, pattern);
+        logger.debug("Eventbus::Error Response:Address: {} - Pattern: {}", address, pattern);
         fire(address, pattern, error.toJson(), replyConsumer);
     }
 
@@ -151,7 +152,7 @@ public final class EventController {
      */
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
                          Consumer<AsyncResult<Message<Object>>> replyConsumer) {
-        logger.debug("Eventbus::Response:Data:Address: {} - Pattern: {}", address, pattern);
+        logger.debug("Eventbus::Response:Address: {} - Pattern: {}", address, pattern);
         fire(address, pattern, data, replyConsumer);
     }
 

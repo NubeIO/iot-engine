@@ -3,8 +3,8 @@ package com.nubeiot.dashboard.connector.edge;
 import java.util.Map;
 
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.http.AbstractRestEventApi;
-import com.nubeiot.core.http.RestEventApi;
+import com.nubeiot.core.http.rest.AbstractRestEventApi;
+import com.nubeiot.core.http.rest.RestEventApi;
 import com.nubeiot.eventbus.edge.EdgeEventBus;
 
 import io.vertx.core.http.HttpMethod;

@@ -11,7 +11,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.ext.web.RoutingContext;
 
 public final class FailureContextHandler implements Handler<RoutingContext> {
 
@@ -27,7 +27,7 @@ public final class FailureContextHandler implements Handler<RoutingContext> {
             failureContext.response()
                           .putHeader(ApiConstants.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE)
                           .setStatusCode(HttpStatusMapping.error(method, errorMessage.getThrowable()).code())
-                          .end(CommonParamParser.prettify(errorMessage, failureContext.request().getDelegate()));
+                          .end(CommonParamParser.prettify(errorMessage, failureContext.request()));
         }
     }
 

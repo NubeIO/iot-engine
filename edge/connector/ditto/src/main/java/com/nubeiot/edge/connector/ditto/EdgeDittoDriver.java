@@ -106,7 +106,7 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
         router.route("/").handler(this::indexHandler);
         router.route().handler(BodyHandler.create());
         router.route("/*").handler(this::handleWebServer);
-        // This is last handler that gives not found message
+        // This is last handler that gives not found body
         router.route().last().handler(this::handlePageNotFound);
 
         // Create the HTTP server and pass the "accept" method to the request handler.

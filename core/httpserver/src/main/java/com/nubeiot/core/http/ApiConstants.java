@@ -14,11 +14,11 @@ public final class ApiConstants {
 
     public static final String ROOT_API_PATH = "/api";
     public static final String ROOT_WS_PATH = "/ws";
-    public static final String ROOT_UPLOAD_PATH = "/upload";
+    public static final String ROOT_UPLOAD_PATH = "/ul";
+    public static final String ROOT_DOWNLOAD_PATH = "/dl";
     public static final String PATH_WILDCARDS = "*";
 
     public static final String CONTENT_TYPE = "content-type";
-    public static final String CONTENT_TYPE_JSON = "application/json; charset=utf-8";
     public static final String DEFAULT_CONTENT_TYPE = "application/json;charset=utf-8";
 
     public static final Set<HttpMethod> DEFAULT_CORS_HTTP_METHOD = Collections.unmodifiableSet(new HashSet<>(

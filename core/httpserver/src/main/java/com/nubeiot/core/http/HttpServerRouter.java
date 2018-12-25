@@ -6,8 +6,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.nubeiot.core.http.rest.RestEventApi;
+import com.nubeiot.core.http.ws.WebsocketEventMetadata;
+
 import lombok.Getter;
 
+//TODO: Use Builder: WebsocketEventBuilder, RestEventBuilder
 @Getter
 public final class HttpServerRouter {
 
@@ -29,18 +33,6 @@ public final class HttpServerRouter {
     public HttpServerRouter registerEventBusSocket(WebsocketEventMetadata... eventBusSocket) {
         websocketEvents.addAll(Arrays.stream(eventBusSocket).filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
-    }
-
-    boolean hasRestApi() {
-        return hasApi() || hasEventBusApi();
-    }
-
-    boolean hasApi() {
-        return !restApiClass.isEmpty();
-    }
-
-    boolean hasEventBusApi() {
-        return !restEventApiClass.isEmpty();
     }
 
 }

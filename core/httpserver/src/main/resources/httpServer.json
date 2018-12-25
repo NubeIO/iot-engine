@@ -3,15 +3,120 @@
     "__http__": {
       "host": "0.0.0.0",
       "port": 8080,
-      "enable": true,
+      "enabled": true,
       "rootApi": "/api",
-      "__http2__": {
-        "enable": false,
-        "port": 8080
+      "options": {
+        "sendBufferSize": -1,
+        "receiveBufferSize": -1,
+        "trafficClass": -1,
+        "reuseAddress": true,
+        "logActivity": false,
+        "reusePort": false,
+        "tcpNoDelay": true,
+        "tcpKeepAlive": false,
+        "soLinger": -1,
+        "usePooledBuffers": false,
+        "idleTimeout": 0,
+        "idleTimeoutUnit": "SECONDS",
+        "ssl": false,
+        "keyCertOptions": null,
+        "trustOptions": null,
+        "enabledCipherSuites": [],
+        "crlPaths": [],
+        "crlValues": [],
+        "useAlpn": false,
+        "sslEngineOptions": null,
+        "enabledSecureTransportProtocols": [
+          "TLSv1",
+          "TLSv1.1",
+          "TLSv1.2"
+        ],
+        "tcpFastOpen": false,
+        "tcpCork": false,
+        "tcpQuickAck": false,
+        "port": 80,
+        "host": "0.0.0.0",
+        "acceptBacklog": -1,
+        "clientAuth": "NONE",
+        "sni": false,
+        "compressionSupported": false,
+        "compressionLevel": 6,
+        "maxWebsocketFrameSize": 65536,
+        "maxWebsocketMessageSize": 262144,
+        "websocketSubProtocols": null,
+        "handle100ContinueAutomatically": false,
+        "maxChunkSize": 8192,
+        "maxInitialLineLength": 4096,
+        "maxHeaderSize": 8192,
+        "initialSettings": {
+          "headerTableSize": 4096,
+          "pushEnabled": true,
+          "maxConcurrentStreams": 100,
+          "initialWindowSize": 65535,
+          "maxFrameSize": 16384,
+          "maxHeaderListSize": 2147483647,
+          "extraSettings": null
+        },
+        "alpnVersions": [
+          "HTTP_2",
+          "HTTP_1_1"
+        ],
+        "http2ConnectionWindowSize": -1,
+        "decompressionSupported": false,
+        "acceptUnmaskedFrames": false,
+        "decoderInitialBufferSize": 128,
+        "keyStoreOptions": null,
+        "pfxKeyCertOptions": null,
+        "pemKeyCertOptions": null,
+        "trustStoreOptions": null,
+        "pemTrustOptions": null,
+        "pfxTrustOptions": null,
+        "clientAuthRequired": false,
+        "jdkSslEngineOptions": null,
+        "openSslEngineOptions": null,
+        "websocketAllowServerNoContext": false,
+        "websocketPreferredClientNoContext": false
       },
       "__socket__": {
-        "enable": false,
+        "enabled": false,
+        "port": 8080,
+        "rootWs": "/ws",
+        "options": {
+          "sessionTimeout": 5000,
+          "insertJSESSIONID": true,
+          "heartbeatInterval": 25000,
+          "maxBytesStreaming": 131072,
+          "libraryURL": "//cdn.jsdelivr.net/sockjs/1.1.5/sockjs.min.js",
+          "disabledTransports": []
+        },
+        "bridgeOptions": {
+          "maxAddressLength": 200,
+          "maxHandlersPerSocket": 1000,
+          "pingTimeout": 10000,
+          "replyTimeout": 30000,
+          "inboundPermitteds": [],
+          "outboundPermitteds": []
+        }
+      },
+      "__http2__": {
+        "enabled": false,
         "port": 8080
+      },
+      "__cors__": {
+        "allowedOriginPattern": "*",
+        "allowedMethods": [
+          "HEAD",
+          "POST",
+          "PUT",
+          "OPTIONS",
+          "PATCH",
+          "GET",
+          "DELETE"
+        ],
+        "allowedHeaders": [],
+        "exposedHeaders": [],
+        "allowCredentials": true,
+        "maxAgeSeconds": 3600
       }
     }
   }

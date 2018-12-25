@@ -10,7 +10,7 @@ import com.nubeiot.core.http.CommonParamParser;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.ext.web.RoutingContext;
 
 /**
  * Rest response end handler for {@code eventbus}
@@ -30,11 +30,11 @@ public final class RestEventResponseHandler implements Handler<RoutingContext> {
         if (eventMessage.isSuccess()) {
             context.response()
                    .setStatusCode(HttpStatusMapping.success(method).code())
-                   .end(CommonParamParser.prettify(eventMessage.getData(), context.request().getDelegate()));
+                   .end(CommonParamParser.prettify(eventMessage.getData(), context.request()));
         } else {
             context.response()
                    .setStatusCode(HttpStatusMapping.error(method, eventMessage.getError().getCode()).code())
-                   .end(CommonParamParser.prettify(eventMessage.getError().toJson(), context.request().getDelegate()));
+                   .end(CommonParamParser.prettify(eventMessage.getError().toJson(), context.request()));
         }
     }
 

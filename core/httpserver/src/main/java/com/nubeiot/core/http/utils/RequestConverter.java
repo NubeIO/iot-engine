@@ -8,11 +8,9 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.utils.Strings;
 
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.MultiMap;
-import io.vertx.reactivex.core.http.ServerWebSocket;
-import io.vertx.reactivex.ext.web.RoutingContext;
-import io.vertx.reactivex.ext.web.handler.sockjs.SockJSSocket;
+import io.vertx.ext.web.RoutingContext;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -45,6 +43,10 @@ public final class RequestConverter {
         return builder.body(mergeInput).filter(JsonObject.mapFrom(HttpUtils.deserializeQuery(query))).build();
     }
 
+    public static RequestData convert(io.vertx.reactivex.ext.web.RoutingContext context) {
+        return convert(context.getDelegate());
+    }
+
     public static RequestData convert(ServerWebSocket context) {
         final RequestData.Builder builder = RequestData.builder();
         final String query = context.query();
@@ -54,8 +56,7 @@ public final class RequestConverter {
         return builder.filter(JsonObject.mapFrom(HttpUtils.deserializeQuery(query))).build();
     }
 
-    public static RequestData convert(EventMessage msg, SockJSSocket socket) {
-        final MultiMap headers = socket.headers();
+    public static RequestData convert(EventMessage msg) {
         return RequestData.builder().body(msg.getData()).build();
     }
 

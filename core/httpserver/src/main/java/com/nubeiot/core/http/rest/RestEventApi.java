@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.rest;
 
 import java.util.HashMap;
 import java.util.List;

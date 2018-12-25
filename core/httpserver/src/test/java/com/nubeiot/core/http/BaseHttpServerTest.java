@@ -2,8 +2,10 @@ package com.nubeiot.core.http;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Objects;
 
 import org.json.JSONException;
+import org.junit.BeforeClass;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
@@ -28,6 +30,7 @@ public class BaseHttpServerTest {
     protected HttpClient client;
     private HttpServer httpServer;
 
+    @BeforeClass
     protected static void beforeSuite() {
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
     }
@@ -43,7 +46,9 @@ public class BaseHttpServerTest {
         RestRouter.getReaders().clear();
         RestRouter.getContextProviders().clear();
         RestRouter.getExceptionHandlers().clear();
-        httpServer.stop();
+        if (Objects.nonNull(httpServer)) {
+            httpServer.stop();
+        }
         vertx.close(context.asyncAssertSuccess());
     }
 
@@ -69,7 +74,7 @@ public class BaseHttpServerTest {
     }
 
     protected void startServer(HttpServerRouter httpRouter) {
-        httpServer = new HttpServer(vertx, httpConfig, httpRouter);
+        httpServer = new HttpServer(vertx.getDelegate(), httpConfig.mapTo(HttpConfig.class), httpRouter);
         httpServer.start();
         try {
             Thread.sleep(500);
@@ -92,10 +97,19 @@ public class BaseHttpServerTest {
     }
 
     protected void testComplete(Async async) {
-        if (!async.isCompleted()) {
-            async.complete();
+        this.testComplete(async, "");
+    }
+
+    protected void testComplete(Async async, String msgEvent) {
+        System.out.println("Count:" + async.count());
+        System.out.println(msgEvent);
+        if (async.count() > 0) {
+            async.countDown();
         }
-        client.close();
+        if (async.count() == 0 && !async.isCompleted()) {
+            async.complete();
+            client.close();
+        }
     }
 
 }

@@ -6,7 +6,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -190,6 +192,20 @@ public final class Reflections {
             Constructor<T> constructor = clazz.getDeclaredConstructor();
             constructor.setAccessible(true);
             return constructor.newInstance();
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            logger.warn("Cannot init instance of {}", e, clazz.getName());
+            return null;
+        }
+    }
+
+    public static <T> T createObject(Class<T> clazz, Map<Class, Object> inputs) {
+        if (!(inputs instanceof LinkedHashMap)) {
+            throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
+        }
+        try {
+            Constructor<T> constructor = clazz.getDeclaredConstructor(inputs.keySet().toArray(new Class[] {}));
+            constructor.setAccessible(true);
+            return constructor.newInstance(inputs.values().toArray(new Object[] {}));
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             logger.warn("Cannot init instance of {}", e, clazz.getName());
             return null;

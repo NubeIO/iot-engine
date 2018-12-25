@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.rest;
 
 import org.junit.Assert;
 import org.junit.Test;

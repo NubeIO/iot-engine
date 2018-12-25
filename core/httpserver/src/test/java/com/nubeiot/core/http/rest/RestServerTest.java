@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.rest;
 
 import java.io.IOException;
 
@@ -12,6 +12,8 @@ import org.junit.runner.RunWith;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.BaseHttpServerTest;
+import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.mock.MockApiDefinition;
 
 import io.vertx.core.http.HttpMethod;

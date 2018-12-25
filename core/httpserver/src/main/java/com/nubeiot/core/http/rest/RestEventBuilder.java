@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.rest;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,15 +9,17 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.InvalidUrlException;
 import com.nubeiot.core.http.handler.RestEventResultHandler;
 import com.nubeiot.core.http.utils.Urls;
 import com.nubeiot.core.utils.Reflections;
 import com.nubeiot.core.utils.Strings;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.Vertx;
-import io.vertx.reactivex.ext.web.Router;
+import io.vertx.ext.web.Router;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -41,16 +43,16 @@ public final class RestEventBuilder {
         this.router = Router.router(vertx);
     }
 
-    public RestEventBuilder(io.vertx.core.Vertx vertx) {
-        this(Vertx.newInstance(vertx));
+    public RestEventBuilder(io.vertx.reactivex.core.Vertx vertx) {
+        this(vertx.getDelegate());
     }
 
     public RestEventBuilder(Router router) {
         this.router = router;
     }
 
-    public RestEventBuilder(io.vertx.ext.web.Router router) {
-        this(Router.newInstance(router));
+    public RestEventBuilder(io.vertx.reactivex.ext.web.Router router) {
+        this(router.getDelegate());
     }
 
     public RestEventBuilder rootApi(String rootApi) {

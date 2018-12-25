@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.rest;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.BaseHttpServerTest;
+import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.mock.MockApiDefinition;
 import com.nubeiot.core.http.mock.MockEventBusErrorHandler;
 import com.nubeiot.core.http.mock.MockEventBusSuccessHandler;
