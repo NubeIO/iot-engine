@@ -1,1 +1,12 @@
-{}
+{
+  "__system__": {
+    "__kafka__": {
+      "consumer": {
+        "bootstrap.servers": "localhost:9092"
+      },
+      "producer": {
+        "bootstrap.servers": "localhost:9092"
+      }
+    }
+  }
+}

@@ -2,21 +2,13 @@ package com.nubeiot.core.http.ws;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
-import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
@@ -30,10 +22,7 @@ import com.nubeiot.core.http.mock.MockWebsocketEvent;
 import com.nubeiot.core.http.utils.Urls;
 
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.eventbus.MessageConsumer;
-import io.vertx.core.http.RequestOptions;
 import io.vertx.core.http.WebSocket;
-import io.vertx.core.http.WebSocketFrame;
 import io.vertx.core.http.WebsocketRejectedException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
@@ -53,13 +42,10 @@ public class WebsocketEventServerTest extends BaseHttpServerTest {
         BaseHttpServerTest.beforeSuite();
     }
 
-    private RequestOptions requestOptions;
-
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
         this.httpConfig.put("enabled", false).put("__socket__", new JsonObject().put("enabled", true));
-        this.requestOptions = new RequestOptions().setHost(DEFAULT_HOST).setPort(httpConfig.getInteger("port"));
         new MockWebsocketEvent.MockWebsocketEventServerHandler(vertx.eventBus()).start();
     }
 
@@ -137,11 +123,11 @@ public class WebsocketEventServerTest extends BaseHttpServerTest {
         EventMessage echo = EventMessage.success(EventAction.GET_ONE, new JsonObject().put("echo", 1));
         JsonObject expected = createWebsocketMsg(publisher.getAddress(), echo, BridgeEventType.RECEIVE);
         EventController controller = new EventController(vertx);
-        String path = Urls.combinePath("/ws", MockWebsocketEvent.ONLY_PUBLISHER.getPath());
         startServer(new HttpServerRouter().registerEventBusSocket(MockWebsocketEvent.ONLY_PUBLISHER));
         vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo));
         Async async = context.async(1);
-        WebSocket ws = setupSockJsClient(async, path, clientRegister(publisher.getAddress()), context::fail);
+        WebSocket ws = setupSockJsClient(async, Urls.combinePath("/ws", MockWebsocketEvent.ONLY_PUBLISHER.getPath()),
+                                         clientRegister(publisher.getAddress()), context::fail);
         ws.handler(buffer -> assertResponse(context, async, expected, buffer));
     }
 
@@ -189,66 +175,6 @@ public class WebsocketEventServerTest extends BaseHttpServerTest {
                 testComplete(async);
             }
         });
-    }
-
-    private void assertResponse(TestContext context, Async async, JsonObject expected, Buffer actual) {
-        assertResponse(context, async, expected, actual.toJsonObject());
-    }
-
-    private void assertResponse(TestContext context, Async async, JsonObject expected, JsonObject actual) {
-        try {
-            JSONAssert.assertEquals(expected.encode(), actual.encode(), JSONCompareMode.STRICT);
-        } catch (JSONException e) {
-            context.fail(e);
-        } finally {
-            testComplete(async);
-        }
-    }
-
-    private void setupConsumer(Async async, String address, Consumer<Object> assertOut) {
-        MessageConsumer<Object> consumer = vertx.getDelegate().eventBus().consumer(address);
-        consumer.handler(event -> {
-            System.out.println("Received message from address: " + address);
-            assertOut.accept(event.body());
-            consumer.unregister(v -> testComplete(async, "CONSUMER END"));
-        });
-    }
-
-    private WebSocket setupSockJsClient(Async async, Consumer<Throwable> error) throws InterruptedException {
-        return setupSockJsClient(async, "/ws", null, error);
-    }
-
-    private WebSocket setupSockJsClient(Async async, String path, Consumer<WebSocket> writerBeforeHandler,
-                                        Consumer<Throwable> error) throws InterruptedException {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        AtomicReference<WebSocket> wsReference = new AtomicReference<>();
-        client.websocket(requestOptions.setURI(Urls.combinePath(path, "/websocket")), ws -> {
-            if (Objects.nonNull(writerBeforeHandler)) {
-                writerBeforeHandler.accept(ws.getDelegate());
-            }
-            wsReference.set(ws.getDelegate());
-            countDownLatch.countDown();
-            ws.endHandler(v -> testComplete(async, "CLIENT END"));
-            ws.exceptionHandler(error::accept);
-        }, error::accept);
-        countDownLatch.await(1200, TimeUnit.MILLISECONDS);
-        return wsReference.get();
-    }
-
-    private Consumer<WebSocket> clientRegister(String address) {
-        return clientWrite(createWebsocketMsg(address, null, BridgeEventType.REGISTER));
-    }
-
-    private Consumer<WebSocket> clientSend(String address, EventMessage body) {
-        return clientWrite(createWebsocketMsg(address, body, BridgeEventType.SEND));
-    }
-
-    private Consumer<WebSocket> clientWrite(JsonObject data) {
-        return ws -> ws.writeFrame(WebSocketFrame.textFrame(data.encode(), true));
-    }
-
-    private JsonObject createWebsocketMsg(String address, EventMessage body, BridgeEventType send) {
-        return WebsocketEventMessage.builder().type(send).address(address).body(body).build().toJson();
     }
 
 }
