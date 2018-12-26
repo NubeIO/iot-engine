@@ -13,6 +13,12 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaReadStream;
 
+/**
+ * Kafka Write Stream supplier
+ *
+ * @see NubeKafkaSerdes
+ * @see KafkaReadStream
+ */
 public interface KafkaReaderSupplier {
 
     /**
@@ -22,6 +28,8 @@ public interface KafkaReaderSupplier {
      * @param config    Kafka consumer configuration
      * @param keyType   class type for the key deserialization
      * @param valueType class type for the value deserialization
+     * @param <K>       type of key
+     * @param <V>       type of value
      * @return an instance of the KafkaReadStream
      */
     static <K, V> KafkaReadStream<K, V> create(Vertx vertx, Properties config, Class<K> keyType, Class<V> valueType) {
@@ -37,6 +45,8 @@ public interface KafkaReaderSupplier {
      * @param config    Kafka consumer configuration
      * @param keyType   class type for the key deserialization
      * @param valueType class type for the value deserialization
+     * @param <K>       type of key
+     * @param <V>       type of value
      * @return an instance of the KafkaReadStream
      */
     static <K, V> KafkaReadStream<K, V> create(Vertx vertx, Map<String, Object> config, Class<K> keyType,
@@ -53,6 +63,8 @@ public interface KafkaReaderSupplier {
      * @param config    Kafka consumer configuration
      * @param keyType   class type for the key deserialization
      * @param valueType class type for the value deserialization
+     * @param <K>       type of key
+     * @param <V>       type of value
      * @return an instance of the KafkaReadStream
      */
     static <K, V> KafkaReadStream<K, V> create(Vertx vertx, JsonObject config, Class<K> keyType, Class<V> valueType) {
@@ -64,7 +76,11 @@ public interface KafkaReaderSupplier {
      *
      * @param vertx    Vert.x instance to use
      * @param consumer native Kafka consumer instance
+     * @param <K>      type of key
+     * @param <V>      type of value
      * @return an instance of the KafkaReadStream
+     * @see Consumer
+     * @see KafkaConsumer
      */
     static <K, V> KafkaReadStream<K, V> create(Vertx vertx, Consumer<K, V> consumer) {
         return KafkaReadStream.create(vertx, consumer);

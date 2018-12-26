@@ -47,11 +47,12 @@ public final class Reflections {
     }
 
     /**
-     * Returns an array of class Loaders initialized from the specified array.
+     * Returns an array of class loaders initialized from the specified array.
      * <p>
      * If the input is null or empty, it defaults to both {@link #contextClassLoader()} and {@link
      * #staticClassLoader()}
      *
+     * @param classLoaders Given class loaders
      * @return the array of class loaders, not null
      */
     public static ClassLoader[] classLoaders(ClassLoader... classLoaders) {

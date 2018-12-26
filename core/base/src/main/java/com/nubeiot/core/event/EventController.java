@@ -159,7 +159,7 @@ public final class EventController {
     /**
      * Fire event data to event address
      * <p>
-     * It will call response if {@link EventMessage#getAction()} equals {@link EventAction#RETURN}, else otherwise
+     * It will call response if {@code event message action} equals {@link EventAction#RETURN}, else otherwise
      *
      * @param address       Eventbus address
      * @param pattern       Event pattern

@@ -13,6 +13,12 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.producer.KafkaWriteStream;
 
+/**
+ * Kafka Write Stream supplier
+ *
+ * @see NubeKafkaSerdes
+ * @see KafkaWriteStream
+ */
 public interface KafkaWriterSupplier {
 
     /**
@@ -22,6 +28,8 @@ public interface KafkaWriterSupplier {
      * @param config    Kafka producer configuration
      * @param keyType   class type for the key serialization
      * @param valueType class type for the value serialization
+     * @param <K>       type of key
+     * @param <V>       type of value
      * @return an instance of the KafkaWriteStream
      */
     static <K, V> KafkaWriteStream<K, V> create(Vertx vertx, Properties config, Class<K> keyType, Class<V> valueType) {
@@ -37,6 +45,8 @@ public interface KafkaWriterSupplier {
      * @param config    Kafka producer configuration
      * @param keyType   class type for the key serialization
      * @param valueType class type for the value serialization
+     * @param <K>       type of key
+     * @param <V>       type of value
      * @return an instance of the KafkaWriteStream
      */
     static <K, V> KafkaWriteStream<K, V> create(Vertx vertx, Map<String, Object> config, Class<K> keyType,
@@ -53,6 +63,8 @@ public interface KafkaWriterSupplier {
      * @param config    Kafka producer configuration
      * @param keyType   class type for the key serialization
      * @param valueType class type for the value serialization
+     * @param <K>       type of key
+     * @param <V>       type of value
      * @return an instance of the KafkaWriteStream
      */
     static <K, V> KafkaWriteStream<K, V> create(Vertx vertx, JsonObject config, Class<K> keyType, Class<V> valueType) {
@@ -64,6 +76,11 @@ public interface KafkaWriterSupplier {
      *
      * @param vertx    Vert.x instance to use
      * @param producer native Kafka producer instance
+     * @param <K>      type of key
+     * @param <V>      type of value
+     * @return an instance of the KafkaWriteStream
+     * @see Producer
+     * @see KafkaProducer
      */
     static <K, V> KafkaWriteStream<K, V> create(Vertx vertx, Producer<K, V> producer) {
         return KafkaWriteStream.create(vertx, producer);

@@ -11,12 +11,13 @@ public class NubeKafkaSerdes extends Serdes {
 
     public static final class EventMessageSerde extends WrapperSerde<EventMessage> {
 
-        public EventMessageSerde() {
+        EventMessageSerde() {
             super(new EventMessageSerializer(), new EventMessageDeserializer());
         }
 
     }
 
+    @SuppressWarnings("unchecked")
     static public <T> Serde<T> serdeFrom(Class<T> type) {
         if (EventMessage.class.isAssignableFrom(type)) {
             return (Serde<T>) new EventMessageSerde();
