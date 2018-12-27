@@ -2,12 +2,13 @@ package com.nubeiot.core.utils;
 
 import java.util.List;
 
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.cluster.ClusterDelegate;
 import com.nubeiot.core.cluster.ClusterNode;
+import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.exceptions.ServiceException;
 
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.spi.cluster.ClusterManager;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,12 +45,12 @@ class ReflectionMockObjects {
     static class MockAnnotationType implements IClusterDelegate {
 
         @Override
-        public String getTypeName() {
-            return "mock";
+        public ClusterType getTypeName() {
+            return ClusterType.IGNITE;
         }
 
         @Override
-        public ClusterManager initClusterManager(JsonObject clusterConfig) {
+        public ClusterManager initClusterManager(NubeConfig.SystemConfig.ClusterConfig clusterConfig) {
             return null;
         }
 

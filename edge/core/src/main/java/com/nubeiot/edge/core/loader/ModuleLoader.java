@@ -27,7 +27,7 @@ public final class ModuleLoader implements EventHandler {
 
     @EventContractor(events = {EventAction.CREATE, EventAction.INIT}, returnType = Single.class)
     public Single<JsonObject> installModule(RequestData data) {
-        PreDeploymentResult preResult = PreDeploymentResult.fromJson(data.getBody());
+        PreDeploymentResult preResult = PreDeploymentResult.from(data.getBody());
         logger.info("Vertx install module {} with config {}...", preResult.getServiceId(), preResult.getDeployCfg());
         DeploymentOptions options = new DeploymentOptions().setConfig(preResult.getDeployCfg());
         return vertx.rxDeployVerticle(preResult.getServiceId(), options).doOnError(throwable -> {
@@ -37,7 +37,7 @@ public final class ModuleLoader implements EventHandler {
 
     @EventContractor(events = {EventAction.REMOVE, EventAction.HALT}, returnType = Single.class)
     public Single<JsonObject> removeModule(RequestData data) {
-        PreDeploymentResult preResult = PreDeploymentResult.fromJson(data.getBody());
+        PreDeploymentResult preResult = PreDeploymentResult.from(data.getBody());
         String deployId = preResult.getDeployId();
         logger.info("Vertx unload module {}...", deployId);
         return vertx.rxUndeploy(deployId).onErrorResumeNext(throwable -> {
@@ -51,7 +51,7 @@ public final class ModuleLoader implements EventHandler {
 
     @EventContractor(events = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> reloadModule(RequestData data) {
-        PreDeploymentResult preResult = PreDeploymentResult.fromJson(data.getBody());
+        PreDeploymentResult preResult = PreDeploymentResult.from(data.getBody());
         logger.info("Vertx reload module {} with config {}...", preResult.getDeployId(), preResult.getDeployCfg());
         return vertx.rxUndeploy(preResult.getDeployId()).onErrorResumeNext(throwable -> {
             logger.debug("Module {} is gone in Vertx. Just installing...", throwable, preResult.getDeployId());

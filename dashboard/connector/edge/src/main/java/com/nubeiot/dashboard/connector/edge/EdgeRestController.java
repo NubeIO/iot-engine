@@ -6,12 +6,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.cluster.ClusterNode;
 import com.nubeiot.core.cluster.ClusterRegistry;
 import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.utils.Configs;
 import com.zandero.rest.annotation.Get;
 
 import io.vertx.core.Vertx;
@@ -33,9 +34,10 @@ public final class EdgeRestController {
     @Get
     @Path("/nodes")
     public List<JsonObject> nodes(@Context Vertx vertx) {
-        String clusterType = Configs.getClusterCfg(vertx.getOrCreateContext().config())
-                                    .getString(IClusterDelegate.Config.TYPE, ClusterRegistry.DEFAULT_CLUSTER);
-        IClusterDelegate clusterDelegate = ClusterRegistry.instance().getClusterDelegate(clusterType);
+        JsonObject config = vertx.getOrCreateContext().config();
+        NubeConfig.SystemConfig.ClusterConfig clusterConfig = IConfig.from(config,
+                                                                           NubeConfig.SystemConfig.ClusterConfig.class);
+        IClusterDelegate clusterDelegate = ClusterRegistry.instance().getClusterDelegate(clusterConfig.getType());
         return clusterDelegate.getAllNodes().stream().map(ClusterNode::toJson).collect(Collectors.toList());
     }
 

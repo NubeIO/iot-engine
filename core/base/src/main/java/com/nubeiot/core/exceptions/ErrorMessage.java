@@ -3,8 +3,8 @@ package com.nubeiot.core.exceptions;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.nubeiot.core.dto.JsonData;
 
-import io.vertx.core.json.JsonObject;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,7 @@ import lombok.ToString;
 @ToString
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class ErrorMessage implements Serializable {
+public final class ErrorMessage implements Serializable, JsonData {
 
     @JsonIgnore
     private NubeException throwable;
@@ -41,10 +41,6 @@ public final class ErrorMessage implements Serializable {
 
     public static ErrorMessage parse(@NonNull NubeException.ErrorCode code, @NonNull String message) {
         return new ErrorMessage(code, message);
-    }
-
-    public JsonObject toJson() {
-        return JsonObject.mapFrom(this);
     }
 
 }

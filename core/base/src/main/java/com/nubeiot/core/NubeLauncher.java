@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import com.nubeiot.core.cluster.ClusterNodeListener;
 import com.nubeiot.core.cluster.ClusterRegistry;
+import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.statemachine.StateMachine;
@@ -22,7 +23,7 @@ import io.vertx.reactivex.core.eventbus.EventBus;
 public final class NubeLauncher extends io.vertx.core.Launcher {
 
     private static final Logger logger;
-    private JsonObject allConfig;
+    private NubeConfig config;
     private VertxOptions options;
     private IClusterDelegate clusterDelegate;
 
@@ -38,24 +39,25 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     @Override
     public void afterConfigParsed(JsonObject config) {
         logger.debug("Input config: {}", config.encode());
-        this.allConfig = defaultConfig().mergeIn(config, true);
-        logger.info("Final all config: {}", this.allConfig);
-        super.afterConfigParsed(this.allConfig);
+        JsonObject jsonCfg = Configs.loadJsonConfig("system.json").mergeIn(config, true);
+        this.config = IConfig.from(jsonCfg, NubeConfig.class);
+        logger.debug("Final all config: {}", jsonCfg.encode());
+        super.afterConfigParsed(jsonCfg);
     }
 
     @Override
     public void beforeStartingVertx(VertxOptions options) {
         logger.info("Before starting Vertx instance...");
-        JsonObject cfg = Configs.getSystemCfg(allConfig);
-        logger.info("System Config: {}", cfg.encode());
-        this.options = reloadVertxOptions(options, allConfig);
+        JsonObject systemConfig = config.getSystemConfig().toJson();
+        logger.info("System Config: {}", systemConfig.encode());
+        this.options = reloadVertxOptions(options);
         super.beforeStartingVertx(this.options);
     }
 
     @Override
     public void afterStartingVertx(Vertx vertx) {
         if (vertx.isClustered()) {
-            final String address = Configs.getClusterCfg(allConfig).getString(IClusterDelegate.Config.LISTENER_ADDRESS);
+            String address = config.getSystemConfig().getClusterConfig().getListenerAddress();
             if (Strings.isNotBlank(address)) {
                 EventBus eventBus = new EventBus(vertx.eventBus());
                 this.options.getClusterManager()
@@ -71,9 +73,10 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         JsonObject inputDeployOptions = deploymentOptions.toJson();
         JsonObject inputAppCfg = deploymentOptions.getConfig();
         logger.debug("Input Deployment Options: {}", inputDeployOptions.encode());
-        JsonObject options = Configs.getDeployCfg(allConfig).mergeIn(inputDeployOptions, true);
-        DeploymentOptions mergeOptions = new DeploymentOptions(options);
-        mergeOptions.setConfig(Configs.getApplicationCfg(allConfig).mergeIn(inputAppCfg, true));
+        JsonObject deployOptions = config.toJson();
+        DeploymentOptions mergeOptions = new DeploymentOptions(deployOptions.mergeIn(inputDeployOptions, true));
+        JsonObject appConfig = config.getAppConfig().toJson();
+        mergeOptions.setConfig(appConfig.mergeIn(inputAppCfg, true));
         logger.info("Final Deployment Options: {}", mergeOptions.toJson().encode());
         super.beforeDeployingVerticle(mergeOptions);
     }
@@ -88,39 +91,35 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         super.afterStoppingVertx();
     }
 
-    private static JsonObject defaultConfig() {
-        return Configs.loadDefaultConfig("system.json");
-    }
-
-    private VertxOptions reloadVertxOptions(VertxOptions vertxOptions, JsonObject allConfig) {
+    private VertxOptions reloadVertxOptions(VertxOptions vertxOptions) {
         StateMachine.init();
         ClusterRegistry.init();
-        configEventBus(vertxOptions, Configs.getEventBusCfg(allConfig));
-        configCluster(vertxOptions, Configs.getClusterCfg(allConfig));
+        configEventBus(vertxOptions);
+        configCluster(vertxOptions);
         return vertxOptions;
     }
 
-    private void configEventBus(VertxOptions options, JsonObject eventBusCfg) {
+    private void configEventBus(VertxOptions options) {
         logger.info("Setup EventBus...");
-        EventBusOptions option = new EventBusOptions(eventBusCfg);
-        logger.debug("Event Bus Config: {}", eventBusCfg.encode());
+        EventBusOptions option = this.config.getSystemConfig().getEventBusConfig();
         logger.info("Event Bus Options: {}", option.toJson().encode());
         options.setEventBusOptions(option);
     }
 
-    private void configCluster(VertxOptions options, JsonObject clusterConfig) {
-        if (clusterConfig.isEmpty() || !clusterConfig.getBoolean(IClusterDelegate.Config.ACTIVE, Boolean.FALSE)) {
+    private void configCluster(VertxOptions options) {
+        NubeConfig.SystemConfig.ClusterConfig clusterCfg = config.getSystemConfig().getClusterConfig();
+        if (Objects.isNull(clusterCfg) || !clusterCfg.isActive()) {
             return;
         }
         logger.info("Setup Cluster...");
         options.setClustered(true);
-        options.setHAEnabled(clusterConfig.getBoolean(IClusterDelegate.Config.HA, Boolean.FALSE));
-        String delegateType = clusterConfig.getString(IClusterDelegate.Config.TYPE, ClusterRegistry.DEFAULT_CLUSTER);
-        this.clusterDelegate = ClusterRegistry.instance().getClusterDelegate(delegateType);
+        options.setHAEnabled(clusterCfg.isHa());
+        ClusterType type = clusterCfg.getType();
+        this.clusterDelegate = ClusterRegistry.instance().getClusterDelegate(type);
         if (Objects.isNull(this.clusterDelegate)) {
-            throw new EngineException("Cannot load cluster config: " + delegateType);
+            throw new EngineException("Cannot load cluster config: " + type);
         }
-        options.setClusterManager(this.clusterDelegate.initClusterManager(clusterConfig));
+        options.setClusterManager(this.clusterDelegate.initClusterManager(clusterCfg));
     }
 
 }

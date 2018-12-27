@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public final class RequestData implements Serializable {
+public final class RequestData implements Serializable, JsonData {
 
     private Map<String, Object> body;
     private Map<String, Object> filter;
@@ -26,10 +26,6 @@ public final class RequestData implements Serializable {
     private Pagination pagination;
 
     public static Builder builder() {return new Builder();}
-
-    public JsonObject toJson() {
-        return JsonObject.mapFrom(this);
-    }
 
     public JsonObject getBody() {
         return Objects.isNull(this.body) ? new JsonObject() : JsonObject.mapFrom(this.body);

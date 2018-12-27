@@ -20,14 +20,18 @@ import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.ResponseContentTypeHandler;
 import io.vertx.ext.web.handler.ResponseTimeHandler;
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class HttpServer implements IComponent {
 
     private final Logger logger = LoggerFactory.getLogger(HttpServer.class);
+    @NonNull
     private final Vertx vertx;
+    @NonNull
     private final HttpConfig httpConfig;
+    @NonNull
     private final HttpServerRouter httpRouter;
     private io.vertx.core.http.HttpServer httpServer;
 

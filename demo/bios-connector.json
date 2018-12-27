@@ -1,6 +1,7 @@
 {
   "__system__": {
     "__eventBus__": {
+      "clientAuth": "REQUIRED",
       "ssl": true,
       "keyStoreOptions": {
         "path": "eventBusKeystore.jks",
@@ -14,11 +15,16 @@
     "__cluster__": {
       "active": true,
       "ha": true,
-      "address": "com.nubeiot.dashboard.connector.edge.cluster"
+      "listenerAddress": "com.nubeiot.dashboard.connector.edge.cluster"
     }
   },
   "__app__": {
-    "http.port": 8086,
+    "__http__": {
+      "host": "0.0.0.0",
+      "port": 8086,
+      "enabled": true,
+      "rootApi": "/api"
+    },
     "api.name": "edge-connector"
   }
 }

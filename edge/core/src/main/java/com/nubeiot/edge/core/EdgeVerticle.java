@@ -4,13 +4,14 @@ import java.util.function.Supplier;
 
 import org.jooq.Configuration;
 
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.ISqlProvider;
 import com.nubeiot.core.sql.SQLWrapper;
-import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.gen.tables.daos.TblModuleDao;
@@ -40,15 +41,15 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
     @Getter
     protected EntityHandler entityHandler;
     @Getter
-    private JsonObject appConfig;
+    private NubeConfig nubeConfig;
 
     @Override
     public final void start() throws Exception {
-        this.appConfig = Configs.getApplicationCfg(config());
+        this.nubeConfig = IConfig.from(config(), NubeConfig.class);
         this.moduleLoader = new ModuleLoader(vertx);
         this.moduleRule = this.getModuleRuleProvider().get();
         registerEventBus();
-        this.sqlWrapper = ISqlProvider.create(this.vertx, config(), this::initData);
+        this.sqlWrapper = ISqlProvider.create(this.vertx, nubeConfig, this::initData);
         this.sqlWrapper.start();
         Configuration jooqConfig = this.sqlWrapper.getJooqConfig();
         this.entityHandler = new EntityHandler(() -> new TblModuleDao(jooqConfig, vertx),
@@ -89,7 +90,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
     private void deployModule(PreDeploymentResult preDeployResult) {
         final String transactionId = preDeployResult.getTransactionId();
         final String serviceId = preDeployResult.getServiceId();
-        final EventAction event = preDeployResult.getEvent();
+        final EventAction event = preDeployResult.getAction();
         logger.info("Execute transaction: {}", transactionId);
         preDeployResult.setSilent(EventAction.REMOVE == event && State.DISABLED == preDeployResult.getPrevState());
         final RequestData data = RequestData.builder().body(preDeployResult.toJson()).build();

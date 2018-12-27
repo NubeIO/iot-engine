@@ -10,13 +10,13 @@ import java.util.stream.Collectors;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.exceptions.ClusterException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
@@ -29,17 +29,17 @@ public final class HazelcastClusterDelegate implements IClusterDelegate {
     private HazelcastClusterManager manager;
 
     @Override
-    public String getTypeName() {
-        return "hazelcast";
+    public ClusterType getTypeName() {
+        return ClusterType.HAZELCAST;
     }
 
-    private com.hazelcast.config.Config parseConfig(JsonObject clusterConfig) {
-        URL url = FileUtils.toUrl(clusterConfig.getString("url", null));
+    private com.hazelcast.config.Config parseConfig(NubeConfig.SystemConfig.ClusterConfig clusterConfig) {
+        URL url = FileUtils.toUrl(clusterConfig.getUrl());
         try {
             if (Objects.nonNull(url)) {
                 return new XmlConfigBuilder(url).build();
             } else {
-                Path path = FileUtils.toPath(clusterConfig.getString("file"), "cluster.xml");
+                Path path = FileUtils.toPath(clusterConfig.getFile(), "cluster.xml");
                 return new XmlConfigBuilder(path.toAbsolutePath().toString()).build();
             }
         } catch (IOException | NubeException | IllegalArgumentException ex) {
@@ -49,11 +49,12 @@ public final class HazelcastClusterDelegate implements IClusterDelegate {
     }
 
     @Override
-    public ClusterManager initClusterManager(JsonObject clusterConfig) {
-        logger.info("Cluster Configuration: {}", clusterConfig);
+    public ClusterManager initClusterManager(NubeConfig.SystemConfig.ClusterConfig clusterConfig) {
+        logger.info("Cluster type: {}", clusterConfig.getType());
+        logger.info("Cluster configuration: {}", clusterConfig.toJson());
         com.hazelcast.config.Config hazelcastCfg = parseConfig(clusterConfig).setProperty("hazelcast.logging.type",
                                                                                           "slf4j");
-        String clusterName = clusterConfig.getString(Config.NAME, "");
+        String clusterName = clusterConfig.getName();
         if (Strings.isNotBlank(clusterName)) {
             hazelcastCfg.setInstanceName(clusterName);
         }

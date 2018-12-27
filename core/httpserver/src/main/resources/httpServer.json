@@ -1,11 +1,11 @@
 {
-  "__system__": {
+  "__app__": {
     "__http__": {
       "host": "0.0.0.0",
       "port": 8080,
       "enabled": true,
       "rootApi": "/api",
-      "options": {
+      "__server__": {
         "sendBufferSize": -1,
         "receiveBufferSize": -1,
         "trafficClass": -1,
@@ -19,13 +19,10 @@
         "idleTimeout": 0,
         "idleTimeoutUnit": "SECONDS",
         "ssl": false,
-        "keyCertOptions": null,
-        "trustOptions": null,
         "enabledCipherSuites": [],
         "crlPaths": [],
         "crlValues": [],
         "useAlpn": false,
-        "sslEngineOptions": null,
         "enabledSecureTransportProtocols": [
           "TLSv1",
           "TLSv1.1",
@@ -39,11 +36,10 @@
         "acceptBacklog": -1,
         "clientAuth": "NONE",
         "sni": false,
-        "compressionSupported": false,
+        "compressionSupported": true,
         "compressionLevel": 6,
         "maxWebsocketFrameSize": 65536,
         "maxWebsocketMessageSize": 262144,
-        "websocketSubProtocols": null,
         "handle100ContinueAutomatically": false,
         "maxChunkSize": 8192,
         "maxInitialLineLength": 4096,
@@ -54,26 +50,17 @@
           "maxConcurrentStreams": 100,
           "initialWindowSize": 65535,
           "maxFrameSize": 16384,
-          "maxHeaderListSize": 2147483647,
-          "extraSettings": null
+          "maxHeaderListSize": 2147483647
         },
         "alpnVersions": [
           "HTTP_2",
           "HTTP_1_1"
         ],
         "http2ConnectionWindowSize": -1,
-        "decompressionSupported": false,
+        "decompressionSupported": true,
         "acceptUnmaskedFrames": false,
         "decoderInitialBufferSize": 128,
-        "keyStoreOptions": null,
-        "pfxKeyCertOptions": null,
-        "pemKeyCertOptions": null,
-        "trustStoreOptions": null,
-        "pemTrustOptions": null,
-        "pfxTrustOptions": null,
         "clientAuthRequired": false,
-        "jdkSslEngineOptions": null,
-        "openSslEngineOptions": null,
         "websocketAllowServerNoContext": false,
         "websocketPreferredClientNoContext": false
       },
@@ -81,7 +68,7 @@
         "enabled": false,
         "port": 8080,
         "rootWs": "/ws",
-        "options": {
+        "__sockjs__": {
           "sessionTimeout": 5000,
           "insertJSESSIONID": true,
           "heartbeatInterval": 25000,
@@ -89,7 +76,7 @@
           "libraryURL": "//cdn.jsdelivr.net/sockjs/1.1.5/sockjs.min.js",
           "disabledTransports": []
         },
-        "bridgeOptions": {
+        "__bridge__": {
           "maxAddressLength": 200,
           "maxHandlersPerSocket": 1000,
           "pingTimeout": 10000,
@@ -105,17 +92,17 @@
       "__cors__": {
         "allowedOriginPattern": "*",
         "allowedMethods": [
-          "HEAD",
-          "POST",
-          "PUT",
-          "OPTIONS",
           "PATCH",
+          "POST",
           "GET",
-          "DELETE"
+          "HEAD",
+          "DELETE",
+          "PUT",
+          "OPTIONS"
         ],
         "allowedHeaders": [],
         "exposedHeaders": [],
-        "allowCredentials": true,
+        "allowCredentials": false,
         "maxAgeSeconds": 3600
       }
     }

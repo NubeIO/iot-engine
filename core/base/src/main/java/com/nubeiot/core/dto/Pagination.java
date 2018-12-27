@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.json.JsonObject;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,14 +12,10 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public final class Pagination implements Serializable {
+public final class Pagination implements Serializable, JsonData {
 
     private int page;
     private int perPage;
-
-    public JsonObject toJson() {
-        return JsonObject.mapFrom(this);
-    }
 
     public static Builder builder() {return new Builder();}
 

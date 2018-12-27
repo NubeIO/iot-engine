@@ -1,8 +1,9 @@
 package com.nubeiot.core.common;
 
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.micro.IMicroProvider;
 import com.nubeiot.core.micro.Microservice;
-import com.nubeiot.core.utils.Configs;
 
 import io.reactivex.Single;
 import io.vertx.core.Future;
@@ -31,11 +32,14 @@ public abstract class RxMicroServiceVerticle extends AbstractVerticle implements
     protected ServiceDiscovery discovery;
     protected CircuitBreaker circuitBreaker;
     private Microservice microservice;
+    //TODO open another branch to migrate
+    protected NubeConfig nubeConfig;
     protected JsonObject appConfig;
 
     @Override
     public void start() {
-        this.appConfig = Configs.getApplicationCfg(config());
+        this.nubeConfig = IConfig.from(config(), NubeConfig.class);
+        this.appConfig = nubeConfig.getAppConfig().toJson();
         this.microservice = IMicroProvider.create(vertx, config());
         this.microservice.start();
         this.discovery = this.microservice.getDiscovery();

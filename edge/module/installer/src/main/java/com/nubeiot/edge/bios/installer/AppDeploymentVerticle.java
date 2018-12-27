@@ -24,7 +24,7 @@ public final class AppDeploymentVerticle extends EdgeVerticle {
 
     @Override
     protected Single<JsonObject> initData() {
-        logger.info("Setup NubeIO App Installer with config {}", getAppConfig().encode());
+        logger.info("Setup NubeIO App Installer with config {}", getNubeConfig().getAppConfig().toJson());
         return this.startupModules();
     }
 

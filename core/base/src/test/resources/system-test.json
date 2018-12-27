@@ -1,7 +1,7 @@
 {
   "__system__": {
     "__cluster__": {
-      "active": true,
+      "active": false,
       "ha": false,
       "name": "",
       "type": "HAZELCAST",
@@ -24,9 +24,6 @@
       "idleTimeout": 0,
       "idleTimeoutUnit": "SECONDS",
       "ssl": false,
-      "enabledCipherSuites": [],
-      "crlPaths": [],
-      "crlValues": [],
       "useAlpn": false,
       "enabledSecureTransportProtocols": [
         "TLSv1",
@@ -37,7 +34,7 @@
       "tcpCork": false,
       "tcpQuickAck": false,
       "clustered": false,
-      "clusterPublicPort": -1,
+      "clusterPublicPort": 0,
       "clusterPingInterval": 20000,
       "clusterPingReplyInterval": 20000,
       "port": 0,

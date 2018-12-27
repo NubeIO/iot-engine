@@ -8,13 +8,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -24,7 +22,7 @@ import lombok.Getter;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder(builderClassName = "Builder")
-public class WebsocketEventMessage implements Serializable {
+public class WebsocketEventMessage implements Serializable, JsonData {
 
     @EqualsAndHashCode.Include
     private final String address;
@@ -46,20 +44,8 @@ public class WebsocketEventMessage implements Serializable {
         }
     }
 
-    public JsonObject toJson() {
-        return JsonObject.mapFrom(this);
-    }
-
     public static WebsocketEventMessage from(Object object) {
-        try {
-            JsonObject entries = object instanceof String
-                                 ? new JsonObject((String) object)
-                                 : JsonObject.mapFrom(Objects.requireNonNull(object));
-            return entries.mapTo(WebsocketEventMessage.class);
-        } catch (NullPointerException | IllegalArgumentException e) {
-            throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Invalid websocket event body format",
-                                    new HiddenException(e));
-        }
+        return JsonData.from(object, WebsocketEventMessage.class, "Invalid websocket event body format");
     }
 
 }

@@ -1,7 +1,6 @@
 package com.nubeiot.core.cluster;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.EnumMap;
 import java.util.Objects;
 
 import com.nubeiot.core.utils.Reflections;
@@ -12,10 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ClusterRegistry {
 
-    public static final String DEFAULT_CLUSTER = "hazelcast";
     private static final String DEFAULT_CLUSTER_PACKAGE = "com.nubeiot.core.cluster";
     private static ClusterRegistry instance;
-    private final Map<String, IClusterDelegate> registry = new HashMap<>();
+    private final EnumMap<ClusterType, IClusterDelegate> registry = new EnumMap<>(ClusterType.class);
 
     public static synchronized void init() {
         if (Objects.nonNull(instance)) {
@@ -38,8 +36,8 @@ public final class ClusterRegistry {
         }
     }
 
-    public IClusterDelegate getClusterDelegate(String delegateType) {
-        return registry.get(delegateType);
+    public IClusterDelegate getClusterDelegate(ClusterType clusterType) {
+        return registry.get(clusterType);
     }
 
 }

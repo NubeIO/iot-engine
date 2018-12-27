@@ -10,8 +10,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
 
 import io.github.classgraph.ClassGraph;
@@ -63,6 +65,21 @@ public final class Reflections {
             return contextClassLoader != null ? staticClassLoader != null && contextClassLoader != staticClassLoader
                                                 ? new ClassLoader[] {contextClassLoader, staticClassLoader}
                                                 : new ClassLoader[] {contextClassLoader} : new ClassLoader[] {};
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T getConstantByName(Class<?> destClazz, String fieldName) {
+        try {
+            Field field = destClazz.getDeclaredField("methods");
+            int modifiers = field.getModifiers();
+            if (!Modifier.isPublic(modifiers) || !Modifier.isStatic(modifiers) || !Modifier.isFinal(modifiers)) {
+                return null;
+            }
+            return (T) field.get(null);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new NubeException(
+                    Strings.format("Failed to get field constant {0} of {1}", fieldName, destClazz.getName()), e);
         }
     }
 
@@ -182,9 +199,11 @@ public final class Reflections {
             } else {
                 infoList = scanResult.getAllClasses();
             }
-            infoList.filter(clazz -> clazz.hasAnnotation(annotationClass.getName()));
-            final List<Class<?>> classes = infoList.loadClasses();
-            return classes.stream().map(clazz -> (Class<T>) clazz).collect(Collectors.toList());
+            return infoList.filter(clazz -> clazz.hasAnnotation(annotationClass.getName()))
+                           .loadClasses()
+                           .stream()
+                           .map(clazz -> (Class<T>) clazz)
+                           .collect(Collectors.toList());
         }
     }
 
@@ -197,6 +216,19 @@ public final class Reflections {
             logger.warn("Cannot init instance of {}", e, clazz.getName());
             return null;
         }
+    }
+
+    public static <T> BiConsumer<T, HiddenException> createObject(Class<T> clazz,
+                                                                  BiConsumer<T, HiddenException> consumer) {
+        try {
+            Constructor<T> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            consumer.accept(constructor.newInstance(), null);
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            consumer.accept(null, new HiddenException(NubeException.ErrorCode.INITIALIZER_ERROR,
+                                                      "Cannot init instance of " + clazz.getName(), e));
+        }
+        return consumer;
     }
 
     public static <T> T createObject(Class<T> clazz, Map<Class, Object> inputs) {

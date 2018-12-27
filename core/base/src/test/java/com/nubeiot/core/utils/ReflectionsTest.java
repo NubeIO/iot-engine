@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.nubeiot.core.cluster.ClusterDelegate;
+import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.exceptions.NubeException;
 
@@ -82,7 +83,7 @@ public class ReflectionsTest {
         Assert.assertEquals(1, classes.size());
         final IClusterDelegate delegate = Reflections.createObject(classes.get(0));
         Assert.assertNotNull(delegate);
-        Assert.assertEquals("mock", delegate.getTypeName());
+        Assert.assertEquals(ClusterType.IGNITE, delegate.getTypeName());
     }
 
     @Test
@@ -93,7 +94,7 @@ public class ReflectionsTest {
         Assert.assertEquals(1, classes.size());
         final IClusterDelegate delegate = Reflections.createObject(classes.get(0));
         Assert.assertNotNull(delegate);
-        Assert.assertEquals("hazelcast", delegate.getTypeName());
+        Assert.assertEquals(ClusterType.HAZELCAST, delegate.getTypeName());
     }
 
     @Test

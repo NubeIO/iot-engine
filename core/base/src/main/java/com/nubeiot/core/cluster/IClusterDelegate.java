@@ -2,28 +2,18 @@ package com.nubeiot.core.cluster;
 
 import java.util.List;
 
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.exceptions.ClusterException;
 import com.nubeiot.core.exceptions.NotFoundException;
 
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.spi.cluster.ClusterManager;
 import lombok.NonNull;
 
 public interface IClusterDelegate {
 
-    class Config {
+    @NonNull ClusterType getTypeName();
 
-        public static final String LISTENER_ADDRESS = "listener.address";
-        public static final String TYPE = "type";
-        public static final String ACTIVE = "active";
-        public static final String HA = "ha";
-        public static final String NAME = "name";
-
-    }
-
-    @NonNull String getTypeName();
-
-    @NonNull ClusterManager initClusterManager(JsonObject clusterConfig);
+    @NonNull ClusterManager initClusterManager(NubeConfig.SystemConfig.ClusterConfig clusterConfig);
 
     /**
      * Find node in cluster.

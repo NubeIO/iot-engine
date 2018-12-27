@@ -18,7 +18,7 @@
   },
   "__app__": {
     "__sql__": {
-      "hikari": {
+      "__hikari__": {
         "jdbcUrl": "jdbc:h2:file:./bios;database_to_upper=false"
       }
     },

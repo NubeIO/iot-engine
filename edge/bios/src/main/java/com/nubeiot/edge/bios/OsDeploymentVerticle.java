@@ -3,10 +3,11 @@ package com.nubeiot.edge.bios;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.ModuleEventHandler;
@@ -36,13 +37,14 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
 
     @Override
     protected Single<JsonObject> initData() {
-        logger.info("Setup NubeIO Bios with config {}", getAppConfig().encode());
-        JsonObject repositoryCfg = setupMavenRepos(getAppConfig().getJsonObject("repository", new JsonObject()));
-        boolean autoInstall = getAppConfig().getBoolean("auto_install", true);
+        JsonObject appConfig = getNubeConfig().getAppConfig().toJson();
+        logger.info("Setup NubeIO Bios with config {}", appConfig);
+        JsonObject repositoryCfg = setupMavenRepos(appConfig.getJsonObject("repository", new JsonObject()));
+        boolean autoInstall = appConfig.getBoolean("auto_install", true);
         return this.entityHandler.isFreshInstall().flatMap(isFresh -> {
             if (isFresh) {
                 if (autoInstall) {
-                    JsonObject defaultApp = getAppConfig().getJsonObject("default_app", new JsonObject());
+                    JsonObject defaultApp = appConfig.getJsonObject("default_app", new JsonObject());
                     return initApp(repositoryCfg, defaultApp);
                 }
                 return Single.just(new JsonObject().put("message", "nothing change").put("status", Status.SUCCESS));
@@ -55,7 +57,9 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
         JsonObject deployCfg = appCfg.getJsonObject(
                 com.nubeiot.edge.core.model.gen.tables.TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(),
                 new JsonObject());
-        JsonObject deployAppCfg = Configs.toApplicationCfg(repositoryCfg.mergeIn(Configs.getApplicationCfg(deployCfg)));
+        JsonObject inputAppConfig = IConfig.from(deployCfg, NubeConfig.AppConfig.class).toJson();
+        JsonObject deployAppCfg = IConfig.from(repositoryCfg.mergeIn(inputAppConfig), NubeConfig.AppConfig.class)
+                                         .toJson();
         ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
                                               .fromJson(ModuleTypeFactory.getDefault()
                                                                          .serialize(appCfg, this.getModuleRule()))

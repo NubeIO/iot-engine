@@ -8,9 +8,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.exceptions.ErrorMessage;
-import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
 
 import io.vertx.core.json.JsonObject;
@@ -27,7 +27,7 @@ import lombok.ToString;
  */
 @ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public final class EventMessage implements Serializable {
+public final class EventMessage implements Serializable, JsonData {
 
     @Getter
     private final Status status;
@@ -78,15 +78,7 @@ public final class EventMessage implements Serializable {
     }
 
     public static EventMessage from(Object object) {
-        try {
-            JsonObject entries = object instanceof String
-                                 ? new JsonObject((String) object)
-                                 : JsonObject.mapFrom(Objects.requireNonNull(object));
-            return entries.mapTo(EventMessage.class);
-        } catch (IllegalArgumentException | NullPointerException ex) {
-            throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Invalid event message format",
-                                    new HiddenException(ex));
-        }
+        return JsonData.from(object, EventMessage.class, "Invalid event message format");
     }
 
     public JsonObject getData() {
@@ -101,10 +93,6 @@ public final class EventMessage implements Serializable {
     @JsonIgnore
     public boolean isError() {
         return this.status == Status.FAILED;
-    }
-
-    public JsonObject toJson() {
-        return JsonObject.mapFrom(this);
     }
 
 }

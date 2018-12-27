@@ -1,0 +1,15 @@
+version: '2'
+services:
+  keycloak:
+    image: jboss/keycloak
+    environment:
+      DB_VENDOR: H2
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+    volumes:
+      - keycloak-data:/opt/jboss/keycloak/standalone/data
+    ports:
+      - 9000:8080
+volumes:
+  keycloak-data:
+    driver: local
