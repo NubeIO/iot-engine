@@ -24,10 +24,6 @@ import org.jooq.Table;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DefaultConfiguration;
 
-import io.reactivex.Single;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
@@ -42,6 +38,9 @@ import com.nubeiot.core.utils.Functions.Silencer;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.zaxxer.hikari.HikariDataSource;
 
+import io.reactivex.Single;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

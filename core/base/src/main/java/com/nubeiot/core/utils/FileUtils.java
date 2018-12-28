@@ -8,6 +8,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,11 +25,10 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 import com.nubeiot.core.exceptions.NubeException;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -259,6 +260,33 @@ public final class FileUtils {
             return path.isAbsolute() ? path : DEFAULT_DATADIR.resolve(dir);
         }
         return DEFAULT_DATADIR;
+    }
+
+    /**
+     * For creating a file
+     *
+     * @param fileName name of the file
+     * @param value    content which will be stored on the file
+     */
+    public static void createFile(String fileName, String value) {
+        try {
+            PrintWriter writer = new PrintWriter(FileUtils.resolveDataFolder(fileName).toString(), "UTF-8");
+            writer.println(value);
+            writer.close();
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * For deleting a file
+     *
+     * @param fileName name of the file
+     */
+    public static boolean deleteFile(String fileName) {
+        Path path = FileUtils.resolveDataFolder(fileName);
+        File file = new File(path.toUri());
+        return file.delete();
     }
 
 }

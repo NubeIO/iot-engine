@@ -1,0 +1,21 @@
+import com.nubeiot.buildscript.jooq.JooqGenerateTask
+
+dependencies {
+    compile project(':core:base')
+    compile project(':core:httpserver')
+    compile project(':core:sql')
+    compile project(':core:cluster:hazelcast')
+    compile project.deps.database.h2
+    compile project.deps.auth0
+    compile project.deps.jbcrypt
+
+    testCompile project(":core:base")
+    testCompile project(":core:base").sourceSets.test.output
+    testCompile project(":core:httpserver")
+    testCompile project(":core:httpserver").sourceSets.test.output
+}
+
+task jooqGen(type: JooqGenerateTask) {
+    packageName = "com.nubeiot.edge.connector.bonescript.model"
+    dbTypes = project(':core:sql').ext.dbTypes
+}

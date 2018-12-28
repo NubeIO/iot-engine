@@ -103,8 +103,8 @@ public class FileUtilsTest extends TestBase {
 
     @Test
     public void test_convertToBytes() {
-        Assert.assertNotNull(FileUtils.convertToBytes(
-                FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt")));
+        Assert.assertNotNull(
+            FileUtils.convertToBytes(FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt")));
     }
 
     @Test(expected = NullPointerException.class)
@@ -121,14 +121,14 @@ public class FileUtilsTest extends TestBase {
     @Test
     public void test_writeToOutputStream() {
         Assert.assertNotNull(FileUtils.writeToOutputStream(
-                FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt"),
-                new ByteArrayOutputStream()));
+            FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt"),
+            new ByteArrayOutputStream()));
     }
 
     @Test
     public void test_convertToByteArray() {
         Assert.assertNotNull(FileUtils.convertToByteArray(
-                FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt")));
+            FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt")));
     }
 
     private void readErrorFile(String filePath) throws Throwable {
@@ -157,6 +157,16 @@ public class FileUtilsTest extends TestBase {
         Path dataDir = tempFolder.newFolder().toPath().resolve("test");
         System.out.println(dataDir);
         Assert.assertEquals(dataDir.toString(), FileUtils.resolveDataFolder(dataDir.toString()).toString());
+    }
+
+    @Test
+    public void test_create_file() {
+        String fileName = "password.txt";
+        String value = "password";
+        FileUtils.createFile(fileName, "password");
+        Path path = FileUtils.resolveDataFolder(fileName);
+        Assert.assertEquals(FileUtils.readFileToString(path.toString()), value);
+        FileUtils.deleteFile(fileName);
     }
 
 }

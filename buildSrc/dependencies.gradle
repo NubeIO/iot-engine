@@ -1,6 +1,8 @@
 def versions = [
     vertx   : "3.6.0",
     lombok  : "1.18.4",
+    autho0: "3.4.1",
+    jbcrypt: "0.4",
     database: [
         jooq     : "3.11.8",
         jooqVertx: "4.0.0",
@@ -18,6 +20,8 @@ ext.versions = versions
 
 ext.deps = [
     lombok  : "org.projectlombok:lombok:$versions.lombok",
+    auth0: "com.auth0:java-jwt:$versions.autho0",
+    jbcrypt: "org.mindrot:jbcrypt:$versions.jbcrypt",
     log     : [
         slf4j  : "org.slf4j:slf4j-api:1.7.25",
         logback: "ch.qos.logback:logback-classic:1.2.3"

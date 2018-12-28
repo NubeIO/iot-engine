@@ -1,0 +1,18 @@
+{
+  "__app__": {
+    "__sql__": {
+      "dialect": "H2",
+      "__hikari__": {
+        "jdbcUrl": "jdbc:h2:file:./ditto;database_to_upper=false"
+      }
+    },
+    "__http__": {
+      "host": "0.0.0.0",
+      "port": 8091,
+      "enabled": true,
+      "rootApi": "/api"
+    },
+    "bb_version": "v14",
+    "api.name": "bone-script-connector"
+  }
+}

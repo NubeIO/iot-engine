@@ -1,5 +1,7 @@
 package com.nubeiot.core;
 
+import org.junit.Before;
+
 public class TestBase {
 
     private static final String OS = System.getProperty("os.name").toLowerCase();
@@ -20,4 +22,8 @@ public class TestBase {
         return OS.contains("sunos");
     }
 
+    @Before
+    public void setUp() {
+        System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
+    }
 }

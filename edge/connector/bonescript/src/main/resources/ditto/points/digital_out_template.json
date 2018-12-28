@@ -1,0 +1,35 @@
+{
+    "name": "<pin>",
+    "value": 0,
+    "pinValue": 0,
+    "priority": "null",
+    "priorityArray": {
+        "1": "null",
+        "2": "null",
+        "3": "null",
+        "4": "null",
+        "5": "null",
+        "6": "null",
+        "7": "null",
+        "8": "null",
+        "9": "null",
+        "10": "null",
+        "11": "null",
+        "12": "null",
+        "13": "null",
+        "14": "null",
+        "15": "null",
+        "16": "null"
+    },
+    "kind": "Bool",
+    "unit": "null",
+    "tags": [],
+    "historySettings": {
+        "type": "cov",
+        "tolerance": 0,
+        "size": 672
+    },
+    "ditto": {
+        "enable": false
+    }
+}

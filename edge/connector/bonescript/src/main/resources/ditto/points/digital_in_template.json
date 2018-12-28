@@ -1,0 +1,16 @@
+{
+    "name": "<pin>",
+    "value": 1,
+    "pinValue": 1,
+    "kind": "Bool",
+    "unit": "null",
+    "tags": [],
+    "historySettings": {
+        "type": "cov",
+        "tolerance": 0,
+        "size": 672
+    },
+    "ditto": {
+        "enable": false
+    }
+}

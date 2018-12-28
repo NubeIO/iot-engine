@@ -1,0 +1,32 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "ssl": true,
+      "clustered": true,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
+    }
+  },
+  "__app__": {
+    "__sql__": {
+      "dialect": "H2",
+      "__hikari__": {
+        "jdbcUrl": "jdbc:h2:file:./ditto"
+      }
+    },
+    "__http__": {
+      "host": "0.0.0.0",
+      "port": 8091,
+      "enabled": true,
+      "rootApi": "/api"
+    },
+    "bb_version": "v14",
+    "api.name": "bone-script-connector"
+  }
+}
