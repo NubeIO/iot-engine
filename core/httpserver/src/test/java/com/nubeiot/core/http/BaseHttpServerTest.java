@@ -39,7 +39,7 @@ import io.vertx.reactivex.core.http.HttpClient;
 public class BaseHttpServerTest {
 
     private static final String DEFAULT_HOST = "127.0.0.1";
-    protected static final int DEFAULT_TIMEOUT = 3000;
+    protected static final int DEFAULT_TIMEOUT = 5000;
     protected Vertx vertx;
     protected JsonObject httpConfig;
     protected HttpClient client;
@@ -172,7 +172,7 @@ public class BaseHttpServerTest {
             ws.endHandler(v -> testComplete(async, "CLIENT END"));
             ws.exceptionHandler(error::accept);
         }, error::accept);
-        countDownLatch.await(1500, TimeUnit.MILLISECONDS);
+        countDownLatch.await(3000, TimeUnit.MILLISECONDS);
         return wsReference.get();
     }
 
