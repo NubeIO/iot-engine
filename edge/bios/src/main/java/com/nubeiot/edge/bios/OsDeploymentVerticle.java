@@ -15,6 +15,7 @@ import com.nubeiot.edge.core.TransactionEventHandler;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeFactory;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.core.model.gen.Tables;
 import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
 import com.nubeiot.eventbus.edge.EdgeEventBus;
@@ -44,8 +45,7 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
         return this.entityHandler.isFreshInstall().flatMap(isFresh -> {
             if (isFresh) {
                 if (autoInstall) {
-                    JsonObject defaultApp = appConfig.getJsonObject("default_app", new JsonObject());
-                    return initApp(repositoryCfg, defaultApp);
+                    return initApp(repositoryCfg, appConfig.getJsonObject("default_app", new JsonObject()));
                 }
                 return Single.just(new JsonObject().put("message", "nothing change").put("status", Status.SUCCESS));
             }
@@ -54,16 +54,12 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     }
 
     private Single<JsonObject> initApp(JsonObject repositoryCfg, JsonObject appCfg) {
-        JsonObject deployCfg = appCfg.getJsonObject(
-                com.nubeiot.edge.core.model.gen.tables.TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(),
-                new JsonObject());
-        JsonObject inputAppConfig = IConfig.from(deployCfg, NubeConfig.AppConfig.class).toJson();
-        JsonObject deployAppCfg = IConfig.from(repositoryCfg.mergeIn(inputAppConfig), NubeConfig.AppConfig.class)
-                                         .toJson();
+        JsonObject deployCfg = appCfg.getJsonObject(Tables.TBL_MODULE.DEPLOY_CONFIG_JSON.getName());
+        NubeConfig.AppConfig appConfig = IConfig.merge(repositoryCfg, deployCfg, NubeConfig.AppConfig.class);
         ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
                                               .fromJson(ModuleTypeFactory.getDefault()
                                                                          .serialize(appCfg, this.getModuleRule()))
-                                              .setDeployConfigJson(deployAppCfg);
+                                              .setDeployConfigJson(appConfig.toJson());
         return processDeploymentTransaction((TblModule) tblModule, EventAction.INIT);
     }
 

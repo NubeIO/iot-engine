@@ -3,6 +3,7 @@ package com.nubeiot.edge.core.loader;
 import java.util.Arrays;
 import java.util.List;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
@@ -27,9 +28,10 @@ public final class ModuleLoader implements EventHandler {
 
     @EventContractor(events = {EventAction.CREATE, EventAction.INIT}, returnType = Single.class)
     public Single<JsonObject> installModule(RequestData data) {
-        PreDeploymentResult preResult = PreDeploymentResult.from(data.getBody());
-        logger.info("Vertx install module {} with config {}...", preResult.getServiceId(), preResult.getDeployCfg());
-        DeploymentOptions options = new DeploymentOptions().setConfig(preResult.getDeployCfg());
+        PreDeploymentResult preResult = JsonData.from(data.getBody(), PreDeploymentResult.class);
+        logger.info("Vertx install module {}...", preResult.getServiceId());
+        DeploymentOptions options = new DeploymentOptions(preResult.getDeployCfg().getDeployConfig()).setConfig(
+                preResult.getDeployCfg().toJson());
         return vertx.rxDeployVerticle(preResult.getServiceId(), options).doOnError(throwable -> {
             throw new EngineException(throwable);
         }).map(id -> new JsonObject().put("deploy_id", id));
@@ -37,7 +39,7 @@ public final class ModuleLoader implements EventHandler {
 
     @EventContractor(events = {EventAction.REMOVE, EventAction.HALT}, returnType = Single.class)
     public Single<JsonObject> removeModule(RequestData data) {
-        PreDeploymentResult preResult = PreDeploymentResult.from(data.getBody());
+        PreDeploymentResult preResult = JsonData.from(data.getBody(), PreDeploymentResult.class);
         String deployId = preResult.getDeployId();
         logger.info("Vertx unload module {}...", deployId);
         return vertx.rxUndeploy(deployId).onErrorResumeNext(throwable -> {
@@ -51,8 +53,8 @@ public final class ModuleLoader implements EventHandler {
 
     @EventContractor(events = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> reloadModule(RequestData data) {
-        PreDeploymentResult preResult = PreDeploymentResult.from(data.getBody());
-        logger.info("Vertx reload module {} with config {}...", preResult.getDeployId(), preResult.getDeployCfg());
+        PreDeploymentResult preResult = JsonData.from(data.getBody(), PreDeploymentResult.class);
+        logger.info("Vertx reload module {}...", preResult.getDeployId());
         return vertx.rxUndeploy(preResult.getDeployId()).onErrorResumeNext(throwable -> {
             logger.debug("Module {} is gone in Vertx. Just installing...", throwable, preResult.getDeployId());
             return CompletableObserver::onComplete;

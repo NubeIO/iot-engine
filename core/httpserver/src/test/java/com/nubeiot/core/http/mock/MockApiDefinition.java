@@ -1,6 +1,7 @@
 package com.nubeiot.core.http.mock;
 
 import java.util.Arrays;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
@@ -9,7 +10,6 @@ import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.rest.AbstractRestEventApi;
-import com.zandero.rest.annotation.Get;
 
 import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +20,14 @@ public class MockApiDefinition {
     @Path("/api/test")
     public static class MockAPI {
 
-        @Get
+        @GET
         @Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
         public JsonObject get() {
             return new JsonObject().put("abc", "xxx");
         }
 
-        @Get("/error")
+        @GET
+        @Path("/error")
         @Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
         public JsonObject error() {
             throw new NubeException("error");

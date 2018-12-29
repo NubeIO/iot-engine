@@ -2,6 +2,7 @@ package com.nubeiot.dashboard.connector.edge;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -13,7 +14,6 @@ import com.nubeiot.core.cluster.ClusterRegistry;
 import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.ApiConstants;
-import com.zandero.rest.annotation.Get;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -22,7 +22,7 @@ import io.vertx.core.json.JsonObject;
 @Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
 public final class EdgeRestController {
 
-    @Get
+    @GET
     @Path("/info")
     public JsonObject info() {
         return new JsonObject().put("name", "edge-connector-rest")
@@ -31,7 +31,7 @@ public final class EdgeRestController {
                                .put("java_version", "8.0");
     }
 
-    @Get
+    @GET
     @Path("/nodes")
     public List<JsonObject> nodes(@Context Vertx vertx) {
         JsonObject config = vertx.getOrCreateContext().config();
@@ -41,7 +41,7 @@ public final class EdgeRestController {
         return clusterDelegate.getAllNodes().stream().map(ClusterNode::toJson).collect(Collectors.toList());
     }
 
-    @Get
+    @GET
     @Path("/test")
     public JsonObject test() {
         throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Test exception");

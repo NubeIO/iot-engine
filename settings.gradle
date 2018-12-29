@@ -8,6 +8,7 @@ include ':core:sql'
 include ':core:cluster:hazelcast'
 include ':core:httpclient'
 include ':core:httpserver'
+include ':core:auth'
 include ':core:kafka'
 include ':core:common'
 
@@ -28,3 +29,5 @@ include ':edge:rule:sample'
 
 include ':eventbus:edge'
 include ':eventbus:sensor'
+
+include ':ext:rx-jdbc'

@@ -17,21 +17,17 @@ public interface IComponentProvider {
         return defSysCfg.toJson().mergeIn(inputCfg, true);
     }
 
-    static <T extends IConfig> T computeConfig(String defCfgClasspathFile, Class<T> configClass, JsonObject config) {
-        T defaultCfg = IConfig.from(Configs.loadJsonConfig(defCfgClasspathFile), configClass);
-        T givenCfg = IConfig.from(config, configClass);
-        return IConfig.merge(defaultCfg, givenCfg);
+    static <T extends IConfig> T computeConfig(String defCfgClasspathFile, Class<T> configClass, JsonObject given) {
+        return IConfig.merge(Configs.loadJsonConfig(defCfgClasspathFile), given, configClass);
     }
 
     static <T extends IConfig> T computeConfig(String defCfgClasspathFile, Class<T> configClass, NubeConfig config) {
-        T defaultCfg = IConfig.from(Configs.loadJsonConfig(defCfgClasspathFile), configClass);
-        T givenCfg = IConfig.from(config, configClass);
-        return IConfig.merge(defaultCfg, givenCfg);
+        return IConfig.merge(Configs.loadJsonConfig(defCfgClasspathFile), IConfig.from(config, configClass),
+                             configClass);
     }
 
     static <T extends IConfig> T computeConfig(String defCfgClasspathFile, Class<T> configClass, T config) {
-        T defaultCfg = IConfig.from(Configs.loadJsonConfig(defCfgClasspathFile), configClass);
-        return IConfig.merge(defaultCfg, config);
+        return IConfig.merge(Configs.loadJsonConfig(defCfgClasspathFile), config, configClass);
     }
 
 }

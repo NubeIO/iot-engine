@@ -2,5 +2,4 @@
 dependencies {
     compile project(':core:base')
     compile group: 'io.vertx', name: 'vertx-web', version:"$project.vertxVersion"
-    compile group: 'io.vertx', name: 'vertx-web-api-contract', version:"$project.vertxVersion"
 }

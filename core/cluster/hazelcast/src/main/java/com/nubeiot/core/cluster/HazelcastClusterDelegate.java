@@ -50,8 +50,6 @@ public final class HazelcastClusterDelegate implements IClusterDelegate {
 
     @Override
     public ClusterManager initClusterManager(NubeConfig.SystemConfig.ClusterConfig clusterConfig) {
-        logger.info("Cluster type: {}", clusterConfig.getType());
-        logger.info("Cluster configuration: {}", clusterConfig.toJson());
         com.hazelcast.config.Config hazelcastCfg = parseConfig(clusterConfig).setProperty("hazelcast.logging.type",
                                                                                           "slf4j");
         String clusterName = clusterConfig.getName();

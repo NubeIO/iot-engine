@@ -97,11 +97,14 @@ public final class EntityHandler {
 
     private PreDeploymentResult createPreDeployResult(TblModule module, String transactionId, EventAction event,
                                                       State prevState) {
-        Map<String, Object> deployCfg = Objects.isNull(module.getDeployConfigJson())
-                                        ? null
-                                        : module.getDeployConfigJson().getMap();
-        return new PreDeploymentResult(transactionId, event, prevState, module.getServiceId(), module.getDeployId(),
-                                       deployCfg);
+        return PreDeploymentResult.builder()
+                                  .transactionId(transactionId)
+                                  .action(event)
+                                  .prevState(prevState)
+                                  .serviceId(module.getServiceId())
+                                  .deployId(module.getDeployId())
+                                  .deployCfg(module.getDeployConfigJson())
+                                  .build();
     }
 
     private Single<Optional<TblModule>> validateModuleState(String serviceId, EventAction eventAction) {
@@ -122,8 +125,8 @@ public final class EntityHandler {
                             .findOneById(transId)
                             .flatMap(o -> this.createRemovedServiceRecord(o.orElse(
                                     new TblTransaction().setTransactionId(transId)
-                                                        .setModuleId(serviceId).setEvent(eventAction))
-                                                                           .setStatus(status)))
+                                                        .setModuleId(serviceId)
+                                                        .setEvent(eventAction)).setStatus(status)))
                             .map(history -> transDaoSupplier.get())
                             .flatMap(transDao -> transDao.deleteByCondition(
                                     Tables.TBL_TRANSACTION.MODULE_ID.eq(serviceId))
@@ -143,7 +146,7 @@ public final class EntityHandler {
     }
 
     //TODO: register EventBus to send message somewhere
-    public void handleErrorPostDeployment(String serviceId, String transId, EventAction eventAction, Throwable error) {
+    public void handleErrorPostDeployment(String serviceId, String transId, EventAction action, Throwable error) {
         logger.error("Handle entities after error deployment...", error);
         JDBCRXGenericQueryExecutor queryExecutor = executorSupplier.get();
         queryExecutor.execute(c -> updateTransStatus(c, transId, Status.FAILED,
@@ -154,14 +157,15 @@ public final class EntityHandler {
                      .subscribe();
     }
 
-    private Single<String> createTransaction(String moduleId, EventAction eventAction, JsonObject prevState) {
-        logger.debug("Create new transaction for {}::::{}...", moduleId, eventAction);
+    private Single<String> createTransaction(String moduleId, EventAction action, JsonObject prevState) {
+        logger.debug("Create new transaction for {}::::{}...", moduleId, action);
         logger.debug("Previous module state: {}", prevState.encode());
         final Date now = DateTimes.now();
         final String transactionId = UUID.randomUUID().toString();
         final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)
                                                                .setModuleId(moduleId)
-                                                               .setStatus(Status.WIP).setEvent(eventAction)
+                                                               .setStatus(Status.WIP)
+                                                               .setEvent(action)
                                                                .setIssuedAt(now)
                                                                .setModifiedAt(now)
                                                                .setRetry(0)

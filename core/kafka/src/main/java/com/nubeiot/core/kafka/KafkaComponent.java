@@ -4,7 +4,6 @@ import com.nubeiot.core.component.IComponent;
 import com.nubeiot.core.exceptions.NubeException;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import lombok.AccessLevel;
@@ -16,7 +15,7 @@ public final class KafkaComponent implements IComponent {
     private static final Logger logger = LoggerFactory.getLogger(KafkaComponent.class);
 
     private final Vertx vertx;
-    private final JsonObject kafkaConfig;
+    private final KafkaConfig kafkaConfig;
 
     @Override
     public void start() throws NubeException {

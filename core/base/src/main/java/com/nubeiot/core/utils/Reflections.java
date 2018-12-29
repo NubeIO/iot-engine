@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -241,6 +242,25 @@ public final class Reflections {
             return constructor.newInstance(inputs.values().toArray(new Object[] {}));
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             logger.warn("Cannot init instance of {}", e, clazz.getName());
+            return null;
+        }
+    }
+
+    public static <T> List<T> findFieldValueByType(@NonNull Object obj, @NonNull Class<T> searchType) {
+        Field[] fields = obj.getClass().getDeclaredFields();
+        return Arrays.stream(fields)
+                     .filter(f -> !Modifier.isStatic(f.getModifiers()) && assertDataType(f.getType(), searchType))
+                     .map(f -> getFieldValue(obj, f, searchType))
+                     .filter(Objects::nonNull)
+                     .collect(Collectors.toList());
+    }
+
+    private static <T> T getFieldValue(@NonNull Object obj, @NonNull Field f, @NonNull Class<T> type) {
+        try {
+            f.setAccessible(true);
+            return type.cast(f.get(obj));
+        } catch (IllegalAccessException | ClassCastException e) {
+            logger.warn("Cannot get data of field {}", e, f.getName());
             return null;
         }
     }

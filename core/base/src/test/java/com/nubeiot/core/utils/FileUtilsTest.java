@@ -141,13 +141,13 @@ public class FileUtilsTest extends TestBase {
 
     @Test
     public void test_default_datadir() {
-        Assert.assertEquals(Paths.get(System.getProperty("user.home"), "nubeio"), FileUtils.resolveDataFolder(null));
-        Assert.assertEquals(Paths.get(System.getProperty("user.home"), "nubeio"), FileUtils.resolveDataFolder(""));
+        Assert.assertEquals(Paths.get(System.getProperty("user.home"), ".nubeio"), FileUtils.resolveDataFolder(null));
+        Assert.assertEquals(Paths.get(System.getProperty("user.home"), ".nubeio"), FileUtils.resolveDataFolder(""));
     }
 
     @Test
     public void test_datadir_with_non_absolute_given_path() {
-        Path dataDir = Paths.get(System.getProperty("user.home"), "nubeio", "test");
+        Path dataDir = Paths.get(System.getProperty("user.home"), ".nubeio", "test");
         System.out.println(dataDir);
         Assert.assertEquals(dataDir.toString(), FileUtils.resolveDataFolder("test").toString());
     }

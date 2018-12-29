@@ -161,6 +161,20 @@ public final class EventController {
      * <p>
      * It will call response if {@code event message action} equals {@link EventAction#RETURN}, else otherwise
      *
+     * @param address Eventbus address
+     * @param pattern Event pattern
+     * @param message Event message
+     * @see #fire(String, EventPattern, EventMessage, Consumer)
+     */
+    public void fire(String address, EventPattern pattern, EventMessage message) {
+        fire(address, pattern, message, null);
+    }
+
+    /**
+     * Fire event data to event address
+     * <p>
+     * It will call response if {@code event message action} equals {@link EventAction#RETURN}, else otherwise
+     *
      * @param address       Eventbus address
      * @param pattern       Event pattern
      * @param message       Event message

@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MicroConfig implements IConfig {
 
-    public static final String NAME = NubeConfig.SystemConfig.MicroConfig.NAME;
+    public static final String NAME = "__micro__";
 
     @JsonProperty(value = ServiceDiscoveryConfig.NAME)
     private ServiceDiscoveryConfig discoveryConfig = new ServiceDiscoveryConfig();
@@ -26,7 +26,7 @@ public class MicroConfig implements IConfig {
     public String name() { return NAME; }
 
     @Override
-    public Class<? extends IConfig> parent() { return NubeConfig.SystemConfig.class; }
+    public Class<? extends IConfig> parent() { return NubeConfig.AppConfig.class; }
 
     public static class ServiceDiscoveryConfig extends ServiceDiscoveryOptions implements IConfig {
 

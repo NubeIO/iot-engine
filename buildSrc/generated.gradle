@@ -39,7 +39,7 @@ sourceSets {
     main {
         java {
             srcDirs += project.genJavaSrcFolder
-            resources.srcDirs += project.genOutResourceFolder
+            resources.srcDirs += new File(project.buildDir.absolutePath, project.genOutResourceFolder)
         }
     }
 }

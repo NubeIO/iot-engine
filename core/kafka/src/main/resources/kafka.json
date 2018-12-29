@@ -1,5 +1,5 @@
 {
-  "__system__": {
+  "__app__": {
     "__kafka__": {
       "consumer": {
         "bootstrap.servers": "localhost:9092"

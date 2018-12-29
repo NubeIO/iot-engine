@@ -8,17 +8,14 @@ import com.nubeiot.core.component.IComponent;
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
 import io.reactivex.Single;
-import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Future;
 import io.vertx.core.impl.ConcurrentHashSet;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.Record;
-import io.vertx.servicediscovery.ServiceDiscoveryOptions;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,15 +23,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public final class Microservice implements IComponent {
 
-    static final String MICRO_CFG_NAME = "__micro__";
-    private static final String CIRCUIT_BREAKER_CFG_NAME = "__circuitBreaker__";
-    private static final String SERVICE_DISCOVERY_CFG_NAME = "__serviceDiscovery__";
-
     private final Logger logger = LoggerFactory.getLogger(Microservice.class);
     private final Vertx vertx;
     @Getter
-    private final JsonObject microConfig;
-    private final Set<Record> registeredRecords = new ConcurrentHashSet<>();
+    private final MicroConfig microConfig;
+    //TODO: register when creating MICRO_SERVICE
+    private final Set<Record> records = new ConcurrentHashSet<>();
     @Getter
     private ServiceDiscovery discovery;
     @Getter
@@ -42,30 +36,21 @@ public final class Microservice implements IComponent {
 
     public Single<Record> publish(Record record) {
         return discovery.rxPublish(record).doOnSuccess(rec -> {
-            registeredRecords.add(rec);
+            records.add(rec);
             logger.info("Service <{}> published with {}", rec.getName(), rec.getMetadata());
         });
     }
 
     @Override
-    public void start(Future<Void> startFuture) {
-
-    }
-
-    @Override
     public void start() {
-        logger.info("Setup micro-service...", microConfig);
-        JsonObject discoveryCfg = microConfig.getJsonObject(SERVICE_DISCOVERY_CFG_NAME, new JsonObject());
-        JsonObject breakerCfg = microConfig.getJsonObject(CIRCUIT_BREAKER_CFG_NAME, new JsonObject());
-        ServiceDiscoveryOptions discoveryOptions = new ServiceDiscoveryOptions().setBackendConfiguration(discoveryCfg);
-        CircuitBreakerOptions breakerOptions = new CircuitBreakerOptions(breakerCfg);
-        logger.debug("Service Discovery Config : {}", discoveryCfg.encode());
-        logger.info("Service Discovery Options: {}", discoveryOptions.toJson().encode());
-        logger.debug("Circuit Breaker Config : {}", breakerCfg.encode());
-        logger.info("Circuit Breaker Options: {}", breakerOptions.toJson().encode());
-        discovery = ServiceDiscovery.create(vertx, discoveryOptions);
-        circuitBreaker = CircuitBreaker.create(breakerCfg.getString("name", "nubeio-circuit-breaker"), vertx,
-                                               breakerOptions);
+        logger.info("Setup micro-service...");
+        MicroConfig.ServiceDiscoveryConfig discoveryConfig = microConfig.getDiscoveryConfig();
+        logger.info("Service Discovery Config : {}", discoveryConfig.toJson().encode());
+        discovery = ServiceDiscovery.create(vertx, discoveryConfig);
+
+        MicroConfig.CircuitBreakerConfig circuitConfig = microConfig.getCircuitConfig();
+        logger.info("Service Discovery Config : {}", circuitConfig.toJson().encode());
+        circuitBreaker = CircuitBreaker.create(circuitConfig.getCircuitName(), vertx, circuitConfig.getOptions());
     }
 
     @Override
@@ -75,10 +60,9 @@ public final class Microservice implements IComponent {
 
     @Override
     public void stop(Future<Void> future) {
-        final Iterable<CompletableSource> unPublishSources = registeredRecords.stream()
-                                                                              .map(record -> discovery.rxUnpublish(
-                                                                                      record.getRegistration()))
-                                                                              .collect(Collectors.toList());
+        Iterable<CompletableSource> unPublishSources = records.stream()
+                                                              .map(r -> discovery.rxUnpublish(r.getRegistration()))
+                                                              .collect(Collectors.toList());
         Completable.merge(unPublishSources).doOnComplete(future::complete).doOnError(future::fail).subscribe();
     }
 

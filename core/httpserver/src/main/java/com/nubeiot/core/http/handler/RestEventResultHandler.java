@@ -22,7 +22,7 @@ public class RestEventResultHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext context) {
         EventMessage msg = EventMessage.success(metadata.getAction(), RequestConverter.convert(context));
-        logger.info("Receive body from endpoint: {}", msg.toJson().encode());
+        logger.info("REST::Request data: {}", msg.toJson().encode());
         ReplyEventHandler replyEventHandler = new ReplyEventHandler("REST", metadata.getAction(), metadata.getAddress(),
                                                                     message -> response(context, message),
                                                                     context::fail);

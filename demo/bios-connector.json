@@ -3,6 +3,7 @@
     "__eventBus__": {
       "clientAuth": "REQUIRED",
       "ssl": true,
+      "clustered": true,
       "keyStoreOptions": {
         "path": "eventBusKeystore.jks",
         "password": "nubesparkEventBus"

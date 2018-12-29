@@ -39,7 +39,7 @@ import lombok.NoArgsConstructor;
 public final class FileUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
-    public static final Path DEFAULT_DATADIR = Paths.get(System.getProperty("user.home"), "nubeio");
+    public static final Path DEFAULT_DATADIR = Paths.get(System.getProperty("user.home"), ".nubeio");
 
     /**
      * To URL.

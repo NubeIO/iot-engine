@@ -1,37 +1,19 @@
 ext {
-    jooq_version = '3.10.8'
-    vertx_jooq_version = '3.1.0'
-    hikari_version = '3.2.0'
-    jpa_version = '2.2'
+    jooq_version = "3.10.8"
+    vertx_jooq_version = "3.1.0"
+    hikari_version = "3.2.0"
+    jpa_version = "2.2"
 }
 
-//buildscript {
-//    sourceSets {
-//        java {
-//            srcDir file('src/buildscript/java/')
-//            include '**/edge/model/buildscript/*.java'
-//            include '**/edge/model/converter/*.java'
-//            include '**/edge/loader/*.java'
-//        }
-//    }
-//    dependencies {
-//        classpath project(':core')
-//        classpath "org.jooq:jooq-codegen:$project.jooq_version"
-//        classpath "org.jooq:jooq-meta:$project.jooq_version"
-//        classpath "io.github.jklingsporn:vertx-jooq-generate:$project.vertx_jooq_version"
-//        classpath "org.xerial:sqlite-jdbc:$project.sqlite_version"
-//    }
-//}
 
 dependencies {
-    compile project(':core:base')
+    compile project(":core:base")
     compile("io.vertx:vertx-jdbc-client:$project.vertxVersion") {
-        exclude group: 'com.mchange', module: 'c3p0'
+        exclude group: "com.mchange", module: "c3p0"
     }
-    compile group: 'com.zaxxer', name: 'HikariCP', version: "$project.hikari_version"
-    compile group: 'org.jooq', name: 'jooq', version: "$project.jooq_version"
-    compile group: 'org.jooq', name: 'jooq-meta', version: "$project.jooq_version"
-    compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx', version: "$project.vertx_jooq_version"
-    compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx-jdbc', version: "$project.vertx_jooq_version"
-    compile group: 'javax.persistence', name: 'javax.persistence-api', version: "$project.jpa_version"
+    compile "com.zaxxer:HikariCP:$project.hikari_version"
+    compile "javax.persistence:javax.persistence-api:$project.jpa_version"
+    compile "org.jooq:jooq:$project.jooq_version"
+    compile "org.jooq:jooq-meta:$project.jooq_version"
+    compile project(":ext:rx-jdbc")
 }

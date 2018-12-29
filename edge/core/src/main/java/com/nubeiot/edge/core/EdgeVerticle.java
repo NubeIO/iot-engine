@@ -6,7 +6,6 @@ import org.jooq.Configuration;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
@@ -93,8 +92,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
         final EventAction event = preDeployResult.getAction();
         logger.info("Execute transaction: {}", transactionId);
         preDeployResult.setSilent(EventAction.REMOVE == event && State.DISABLED == preDeployResult.getPrevState());
-        final RequestData data = RequestData.builder().body(preDeployResult.toJson()).build();
-        moduleLoader.handleEvent(event, data)
+        moduleLoader.handleEvent(event, preDeployResult.toRequestData())
                     .subscribe(r -> entityHandler.succeedPostDeployment(serviceId, transactionId, event,
                                                                         r.getString("deploy_id")),
                                t -> entityHandler.handleErrorPostDeployment(serviceId, transactionId, event, t));
