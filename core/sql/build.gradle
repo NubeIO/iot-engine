@@ -1,8 +1,7 @@
 ext {
-    jooq_version = "3.10.8"
-    vertx_jooq_version = "3.1.0"
-    hikari_version = "3.2.0"
-    jpa_version = "2.2"
+    jooqVersion = "3.10.8"
+    hikariVersion = "3.2.0"
+    jpaVersion = "2.2"
 }
 
 
@@ -11,9 +10,9 @@ dependencies {
     compile("io.vertx:vertx-jdbc-client:$project.vertxVersion") {
         exclude group: "com.mchange", module: "c3p0"
     }
-    compile "com.zaxxer:HikariCP:$project.hikari_version"
-    compile "javax.persistence:javax.persistence-api:$project.jpa_version"
-    compile "org.jooq:jooq:$project.jooq_version"
-    compile "org.jooq:jooq-meta:$project.jooq_version"
+    compile "com.zaxxer:HikariCP:$project.hikariVersion"
+    compile "javax.persistence:javax.persistence-api:$project.jpaVersion"
+    compile "org.jooq:jooq:$project.jooqVersion"
+    compile "org.jooq:jooq-meta:$project.jooqVersion"
     compile project(":ext:rx-jdbc")
 }

@@ -1,0 +1,30 @@
+plugins {
+    id 'groovy'
+    id 'java'
+}
+
+ext {
+    vertxVersion = "3.6.0"
+    lombokVersion = "1.18.4"
+    jooqVersion = "3.11.8"
+    vertxJooqVersion = "4.0.0"
+}
+
+
+repositories {
+    mavenLocal()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    mavenCentral()
+}
+
+dependencies {
+    compile "io.vertx:vertx-core:$project.vertxVersion"
+    compile "org.jooq:jooq:$project.jooqVersion"
+    compile "org.jooq:jooq-meta:$project.jooqVersion"
+    compile "org.jooq:jooq-codegen:$project.jooqVersion"
+    compile "org.jooq:jooq-meta-extensions:$project.jooqVersion"
+    compile "io.github.jklingsporn:vertx-jooq-generate:$project.vertxJooqVersion"
+
+    compileOnly "org.projectlombok:lombok:$project.lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$project.lombokVersion"
+}

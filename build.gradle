@@ -8,6 +8,8 @@ plugins {
 ext {
     vertxVersion = "3.6.0"
     lombokVersion = "1.18.4"
+    
+
     genSrcFolder = "src/generated"
     genJavaSrcFolder = "$project.genSrcFolder/java"
     genOutResourceFolder = "generated-resources"
@@ -35,7 +37,7 @@ allprojects {
         maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
         mavenCentral()
     }
-    
+
     apply plugin: "eclipse"
     apply plugin: "idea"
 }
