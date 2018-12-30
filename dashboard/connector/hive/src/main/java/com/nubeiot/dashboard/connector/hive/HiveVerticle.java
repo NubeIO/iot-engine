@@ -1,11 +1,19 @@
 package com.nubeiot.dashboard.connector.hive;
 
+import static com.nubeiot.core.common.utils.ErrorCodes.NO_QUERY_SPECIFIED;
+import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
+import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
+
+import java.net.URL;
+import java.net.URLClassLoader;
+
 import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.utils.ErrorCodeException;
 import com.nubeiot.core.common.utils.ErrorHandler;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
 import com.nubeiot.dashboard.connector.hive.controller.RulesController;
+
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
@@ -18,13 +26,6 @@ import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
 import io.vertx.serviceproxy.ServiceBinder;
-
-import java.net.URL;
-import java.net.URLClassLoader;
-
-import static com.nubeiot.core.common.utils.ErrorCodes.NO_QUERY_SPECIFIED;
-import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
-import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 
 /**
  * Created by topsykretts on 4/26/18.
@@ -65,7 +66,7 @@ public class HiveVerticle extends RxMicroServiceVerticle {
         router.get("/tag/:id").handler(this::tagGetHandler);
         router.post("/engine").handler(this::engineHivePostHandler);
 
-        // This is last handler that gives not found message
+        // This is last handler that gives not found body
         router.route().last().handler(this::handlePageNotFound);
 
         // Create the HTTP server and pass the "accept" method to the request handler.

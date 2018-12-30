@@ -1,10 +1,16 @@
 package com.nubeiot.dashboard.connector.ditto;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.constants.Services;
 import com.nubeiot.core.common.utils.StringUtils;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
+
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -27,11 +33,6 @@ import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by topsykretts on 5/11/18.
@@ -64,7 +65,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         router.route("/").handler(this::indexHandler);
         router.route().handler(BodyHandler.create());
         router.route("/*").handler(this::handleWebServer);
-        // This is last handler that gives not found message
+        // This is last handler that gives not found body
         router.route().last().handler(this::handlePageNotFound);
 
         // Create the HTTP server and pass the "accept" method to the request handler.

@@ -29,7 +29,7 @@
         <appender-ref ref="FILE" />
     </root>
     <logger name="com.hazelcast" level="info"/>
-    
-    <logger name="com.nubeiot" level="info"/>
+
+    <logger name="com.nubeiot" level="debug"/>
 
 </configuration>

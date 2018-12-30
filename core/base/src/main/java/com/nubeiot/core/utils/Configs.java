@@ -2,11 +2,12 @@ package com.nubeiot.core.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Scanner;
 
-import com.nubeiot.core.NubeLauncher;
+import com.nubeiot.core.exceptions.NubeException;
 
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
@@ -19,49 +20,24 @@ import lombok.NoArgsConstructor;
 public final class Configs {
 
     private static final Logger logger = LoggerFactory.getLogger(Configs.class);
-    private static final String SYSTEM_CFG_KEY = "__system__";
-    private static final String DEPLOY_CFG_KEY = "__deploy__";
-    private static final String APP_CFG_KEY = "__app__";
-    public static final String EVENT_BUS_CFG_KEY = "__eventBus__";
-    public static final String CLUSTER_CFG_KEY = "__cluster__";
 
-    public static JsonObject loadDefaultConfig(String file) {
-        return loadDefaultConfig(NubeLauncher.class, file);
-    }
-
-    public static JsonObject loadDefaultConfig(Class<?> clazz, String file) {
-        final InputStream resourceAsStream = clazz.getClassLoader().getResourceAsStream(file);
+    public static JsonObject loadJsonConfig(String file) {
+        final InputStream resourceAsStream = Reflections.contextClassLoader().getResourceAsStream(file);
         if (Objects.isNull(resourceAsStream)) {
             logger.warn("File not found");
             return new JsonObject();
         }
         try (Scanner scanner = new Scanner(resourceAsStream).useDelimiter("\\A")) {
             return new JsonObject(scanner.next());
-        } catch (DecodeException e) {
-            logger.warn("Config file is not valid JSON object", e);
-            return new JsonObject();
+        } catch (DecodeException | NoSuchElementException e) {
+            throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Config file is not valid JSON object",
+                                    e);
         }
     }
 
-    public static JsonObject getSystemCfg(JsonObject config) {
-        return config.getJsonObject(SYSTEM_CFG_KEY, new JsonObject());
-    }
-
-    public static JsonObject getDeployCfg(JsonObject config) {
-        return config.getJsonObject(DEPLOY_CFG_KEY, new JsonObject());
-    }
-
-    public static JsonObject getApplicationCfg(JsonObject config) {
-        return config.getJsonObject(APP_CFG_KEY, new JsonObject());
-    }
-
-    public static JsonObject toApplicationCfg(JsonObject config) {
-        return new JsonObject().put(APP_CFG_KEY, config);
-    }
-
-    public static Properties loadPropsConfig(String file) {
+    public static Properties loadPropertiesConfig(String file) {
         Properties properties = new Properties();
-        final InputStream resourceAsStream = Reflections.staticClassLoader().getResourceAsStream(file);
+        final InputStream resourceAsStream = Reflections.contextClassLoader().getResourceAsStream(file);
         if (Objects.isNull(resourceAsStream)) {
             logger.warn("File not found");
             return properties;

@@ -4,46 +4,76 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.dto.IRequestData;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
-import com.nubeiot.core.event.EventType;
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.NubeException;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-@RequiredArgsConstructor
 @Getter
+@Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PreDeploymentResult {
+@JsonDeserialize(builder = PreDeploymentResult.Builder.class)
+public class PreDeploymentResult implements JsonData, IRequestData {
+
+    private static final Logger logger = LoggerFactory.getLogger(PreDeploymentResult.class);
 
     private final String transactionId;
-    private final EventType event;
+    private final EventAction action;
     private final State prevState;
     private final String serviceId;
     private final String deployId;
-    private final Map<String, Object> deployCfg;
+    private final NubeConfig deployCfg;
     @Setter
+    @lombok.Builder.Default
     private boolean silent = false;
 
-    // For Json
-    private PreDeploymentResult() {
-        this(null, null, null, null, null, null);
-    }
 
-    JsonObject toJson() {
-        return JsonObject.mapFrom(this);
-    }
+    @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class Builder {
 
-    public JsonObject getDeployCfg() {
-        return Objects.isNull(this.deployCfg) ? null : JsonObject.mapFrom(this.deployCfg);
-    }
+        private JsonObject deployCfg;
 
-    public static PreDeploymentResult fromJson(JsonObject jsonObject) {
-        return jsonObject.mapTo(PreDeploymentResult.class);
+        @JsonProperty("deploy_cfg")
+        public Builder deployCfg(Map<String, Object> deployCfg) {
+            return this.deployCfg(JsonObject.mapFrom(deployCfg));
+        }
+
+        public Builder deployCfg(JsonObject deployCfg) {
+            this.deployCfg = JsonObject.mapFrom(deployCfg);
+            return this;
+        }
+
+        public PreDeploymentResult build() {
+            return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
+                                           serviceId, deployId, parseDeployCfg(deployCfg), silent);
+        }
+
+        private NubeConfig parseDeployCfg(JsonObject deployCfg) {
+            try {
+                return Objects.nonNull(deployCfg) ? IConfig.from(deployCfg, NubeConfig.class) : NubeConfig.blank();
+            } catch (NubeException ex) {
+                logger.trace("Try to parse deploy_cfg to NubeConfig.AppConfig", ex);
+                return NubeConfig.blank(deployCfg);
+            }
+        }
+
     }
 
 }

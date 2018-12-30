@@ -20,7 +20,7 @@ public class RulesController {
 
     public Single<JsonObject> getPostgreSQLData(String query, JsonObject settings) {
         return Single.just(query).map(queryString -> {
-            // Only handle select statements
+            // Only handleEvent select statements
             if (queryString.toUpperCase().trim().startsWith("SELECT")) {
                 return true;
             } else {

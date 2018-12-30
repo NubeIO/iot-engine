@@ -4,7 +4,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
@@ -18,15 +17,14 @@ import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Reflections;
 import com.nubeiot.core.utils.Strings;
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import io.reactivex.Single;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
@@ -35,14 +33,13 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class SQLWrapper implements IComponent {
+public final class SQLWrapper implements IComponent {
 
     private static final Logger logger = LoggerFactory.getLogger(SQLWrapper.class);
     private static final String DDL_SQL_FILE = "sql/ddl.sql";
-    static final String SQL_CFG_NAME = "__sql__";
 
     private final Vertx vertx;
-    private final JsonObject sqlConfig;
+    private final SqlConfig sqlConfig;
     private final Supplier<Single<JsonObject>> initData;
     private DataSource dataSource;
     @Getter
@@ -74,14 +71,10 @@ public class SQLWrapper implements IComponent {
 
     private Single<SQLClient> initDBConnection() {
         logger.info("Create Hikari datasource from application configuration...");
-        logger.debug(this.sqlConfig);
-        Properties properties = new Properties();
-        properties.putAll(this.sqlConfig.getJsonObject("hikari", new JsonObject()).getMap());
-        HikariConfig config = new HikariConfig(properties);
-        this.dataSource = new HikariDataSource(config);
+        logger.debug(this.sqlConfig.getHikariConfig().toJson());
+        this.dataSource = new HikariDataSource(this.sqlConfig.getHikariConfig());
         this.jooqConfig = new DefaultConfiguration().set(dataSource);
-        return Single.just(
-                JDBCClient.newInstance(io.vertx.ext.jdbc.JDBCClient.create(vertx.getDelegate(), dataSource)));
+        return Single.just(JDBCClient.newInstance(io.vertx.ext.jdbc.JDBCClient.create(vertx, dataSource)));
     }
 
     private Single<List<Integer>> createDatabase(SQLClient sqlClient) {

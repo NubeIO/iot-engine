@@ -1,0 +1,14 @@
+ext {
+    debeziumVersion = "0.8.3.Final"
+    kafkaVersion = "2.1.0"
+}
+dependencies {
+    compile project(":core:base")
+    compile "io.vertx:vertx-kafka-client:${project.vertxVersion}"
+
+    testCompile project(":core:httpserver")
+    testCompile project(":core:httpserver").sourceSets.test.output
+    testCompile "org.apache.kafka:kafka_2.12:${project.kafkaVersion}"
+    testCompile "io.debezium:debezium-core:${project.debeziumVersion}"
+    testCompile group: "io.debezium", name: "debezium-core", version: "${project.debeziumVersion}", classifier: "tests"
+}

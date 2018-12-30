@@ -1,3 +1,5 @@
+import org.gradle.util.GradleVersion
+
 import java.time.Instant
 
 jar {
@@ -7,6 +9,7 @@ jar {
             it.getName()
         }.join(' ')
         def javaVersion = System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')'
+        GradleVersion gradleVersion = GradleVersion.current()
 
         println '- Project Name:     ' + baseName
         println '- Project Title:    ' + project.title
@@ -15,6 +18,7 @@ jar {
         println '- Semantic Version: ' + project.semanticVersion
         println '- Build Number:     ' + project.buildNumber
         println '- Java Version:     ' + javaVersion
+        println '- Gradle Version:   ' + gradleVersion.version
         println '- Vertx Version:    ' + project.vertxVersion
 
         def manifestMap = [
@@ -29,6 +33,7 @@ jar {
                 'Build-Date'                                                     : Instant.now(),
                 'Build-By'                                                       : "${project.buildBy}",
                 'Java-Version'                                                   : "${javaVersion}",
+                'Gradle-Version'                                                 : "${gradleVersion.version}",
                 'Vertx-Version'                                                  : "${project.vertxVersion}",
                 'Class-Path'                                                     : "${classPath}"
         ]

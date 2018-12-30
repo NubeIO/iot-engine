@@ -3,10 +3,11 @@ package com.nubeiot.edge.bios;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventType;
-import com.nubeiot.core.utils.Configs;
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.ModuleEventHandler;
@@ -14,11 +15,12 @@ import com.nubeiot.edge.core.TransactionEventHandler;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeFactory;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.core.model.gen.Tables;
 import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
+import com.nubeiot.eventbus.edge.EdgeEventBus;
 
 import io.reactivex.Single;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.maven.MavenVerticleFactory;
@@ -28,23 +30,22 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
 
     @Override
     protected void registerEventBus() {
-        final EventBus bus = getVertx().eventBus();
-        bus.consumer(EventModel.EDGE_BIOS_INSTALLER.getAddress(),
-                     m -> this.handleEvent(m, new ModuleEventHandler(this, EventModel.EDGE_BIOS_INSTALLER)));
-        bus.consumer(EventModel.EDGE_BIOS_TRANSACTION.getAddress(),
-                     m -> this.handleEvent(m, new TransactionEventHandler(this, EventModel.EDGE_BIOS_TRANSACTION)));
+        EventController controller = new EventController(getVertx());
+        controller.consume(EdgeEventBus.BIOS_INSTALLER, new ModuleEventHandler(this, EdgeEventBus.BIOS_INSTALLER));
+        controller.consume(EdgeEventBus.BIOS_TRANSACTION,
+                           new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION));
     }
 
     @Override
     protected Single<JsonObject> initData() {
-        logger.info("Setup NubeIO Bios with config {}", getAppConfig().encode());
-        JsonObject repositoryCfg = setupMavenRepos(getAppConfig().getJsonObject("repository", new JsonObject()));
-        boolean autoInstall = getAppConfig().getBoolean("auto_install", true);
+        JsonObject appConfig = getNubeConfig().getAppConfig().toJson();
+        logger.info("Setup NubeIO Bios with config {}", appConfig);
+        JsonObject repositoryCfg = setupMavenRepos(appConfig.getJsonObject("repository", new JsonObject()));
+        boolean autoInstall = appConfig.getBoolean("auto_install", true);
         return this.entityHandler.isFreshInstall().flatMap(isFresh -> {
             if (isFresh) {
                 if (autoInstall) {
-                    JsonObject defaultApp = getAppConfig().getJsonObject("default_app", new JsonObject());
-                    return initApp(repositoryCfg, defaultApp);
+                    return initApp(repositoryCfg, appConfig.getJsonObject("default_app", new JsonObject()));
                 }
                 return Single.just(new JsonObject().put("message", "nothing change").put("status", Status.SUCCESS));
             }
@@ -53,20 +54,18 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     }
 
     private Single<JsonObject> initApp(JsonObject repositoryCfg, JsonObject appCfg) {
-        JsonObject deployCfg = appCfg.getJsonObject(
-                com.nubeiot.edge.core.model.gen.tables.TblModule.TBL_MODULE.DEPLOY_CONFIG_JSON.getName(),
-                new JsonObject());
-        JsonObject deployAppCfg = Configs.toApplicationCfg(repositoryCfg.mergeIn(Configs.getApplicationCfg(deployCfg)));
+        JsonObject deployCfg = appCfg.getJsonObject(Tables.TBL_MODULE.DEPLOY_CONFIG_JSON.getName());
+        NubeConfig.AppConfig appConfig = IConfig.merge(repositoryCfg, deployCfg, NubeConfig.AppConfig.class);
         ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
                                               .fromJson(ModuleTypeFactory.getDefault()
                                                                          .serialize(appCfg, this.getModuleRule()))
-                                              .setDeployConfigJson(deployAppCfg);
-        return processDeploymentTransaction((TblModule) tblModule, EventType.INIT);
+                                              .setDeployConfigJson(appConfig.toJson());
+        return processDeploymentTransaction((TblModule) tblModule, EventAction.INIT);
     }
 
     private JsonObject setupMavenRepos(JsonObject repositoryCfg) {
         logger.info("Setting up maven local and remote repo");
-        String local = FileUtils.createFolder(repositoryCfg.getString("local"), ".nubeio", "repository");
+        String local = FileUtils.createFolder(repositoryCfg.getString("local"), "repository");
         JsonObject remotes = repositoryCfg.getJsonObject("remote", new JsonObject());
         remotes.stream().parallel().forEach(entry -> handleVerticleFactory(local, entry));
         return new JsonObject().put("remotes", remotes);

@@ -1,0 +1,10 @@
+ext {
+    jooq_version = '3.10.8'
+    vertx_jooq_version = '3.1.0'
+}
+
+
+dependencies {
+    compile project(':core:base')
+    compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx', version: "$project.vertx_jooq_version"
+}

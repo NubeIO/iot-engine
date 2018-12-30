@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,6 +39,7 @@ import lombok.NoArgsConstructor;
 public final class FileUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
+    public static final Path DEFAULT_DATADIR = Paths.get(System.getProperty("user.home"), ".nubeio");
 
     /**
      * To URL.
@@ -225,14 +227,37 @@ public final class FileUtils {
         return writeToOutputStream(inputStream, new ByteArrayOutputStream());
     }
 
-    public static String createFolder(String local, String... paths) {
-        final String root = Strings.isBlank(local) ? System.getProperty("user.home") : local;
-        final Path path = Paths.get(root, paths);
-        final File folder = path.toFile();
+    /**
+     * Create new folder inside parent folder
+     *
+     * @param parentDir Given parent folder. Can be {@code blank} to fallback {@code default data dir}
+     * @param paths     Given sub paths
+     * @return new folder
+     * @throws NubeException if any error when creating folder
+     * @see #resolveDataFolder(String)
+     */
+    public static String createFolder(String parentDir, String... paths) {
+        Path path = resolveDataFolder(parentDir);
+        Arrays.stream(paths).filter(Strings::isNotBlank).forEach(path::resolve);
+        File folder = path.toFile();
         if (!folder.exists() && !folder.mkdirs()) {
             throw new NubeException("Cannot create folder with path: " + path.toString());
         }
         return path.toAbsolutePath().toString();
+    }
+
+    /**
+     * Resolve dir to data dir.
+     *
+     * @param dir Given directory. Can be absolute path or relative
+     * @return data dir. {@code $HOME/nubeio} if {@code dir} is {@code blank}.
+     */
+    public static Path resolveDataFolder(String dir) {
+        if (Strings.isNotBlank(dir)) {
+            Path path = toPath(dir);
+            return path.isAbsolute() ? path : DEFAULT_DATADIR.resolve(dir);
+        }
+        return DEFAULT_DATADIR;
     }
 
 }

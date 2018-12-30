@@ -1,25 +1,35 @@
 {
   "__system__": {
-    "__eventBus__": {
-      "clientAuth": "REQUIRED",
-      "ssl": false
-    },
     "__cluster__": {
-      "active": false,
-      "ha": true
+      "active": true,
+      "ha": false,
+      "name": "nubeio-cluster",
+      "type": "HAZELCAST",
+      "listenerAddress": "",
+      "url": "",
+      "file": "",
+      "options": {}
+    },
+    "__eventBus__": {
+      "idleTimeout": 0,
+      "idleTimeoutUnit": "SECONDS",
+      "ssl": false,
+      "clustered": true,
+      "clientAuth": "NONE",
+      "reconnectAttempts": 0,
+      "reconnectInterval": 1000,
+      "connectTimeout": 60000,
+      "trustAll": true
     }
   },
   "__deploy__": {
-    "ha": false,
-    "instances": 1,
-    "multiThreaded": false,
     "worker": false,
-    "workerPoolName": null,
+    "multiThreaded": false,
     "workerPoolSize": 20,
     "maxWorkerExecuteTime": 60000000000,
-    "extraClasspath": [],
-    "isolationGroup": null,
-    "isolatedClasses": []
+    "ha": false,
+    "instances": 1,
+    "maxWorkerExecuteTimeUnit": "NANOSECONDS"
   },
   "__app__": {}
 }

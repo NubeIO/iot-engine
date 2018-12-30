@@ -11,9 +11,9 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
 
-import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblRemoveHistory;
 import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblRemoveHistory;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
@@ -40,7 +40,7 @@ public class TblRemoveHistory implements VertxPojo, ITblRemoveHistory {
 
     private String     transactionId;
     private String     moduleId;
-    private EventType  event;
+    private EventAction event;
     private Status     status;
     private Date       issuedAt;
     private String     issuedBy;
@@ -67,17 +67,16 @@ public class TblRemoveHistory implements VertxPojo, ITblRemoveHistory {
     }
 
     public TblRemoveHistory(
-        String     transactionId,
-        String     moduleId,
-        EventType  event,
-        Status     status,
-        Date       issuedAt,
-        String     issuedBy,
-        String     issuedFrom,
-        Date       modifiedAt,
-        JsonObject prevStateJson,
-        JsonObject lastErrorJson,
-        Integer    retry
+            String     transactionId,
+            String     moduleId, EventAction event,
+            Status     status,
+            Date       issuedAt,
+            String     issuedBy,
+            String     issuedFrom,
+            Date       modifiedAt,
+            JsonObject prevStateJson,
+            JsonObject lastErrorJson,
+            Integer    retry
     ) {
         this.transactionId = transactionId;
         this.moduleId = moduleId;
@@ -119,12 +118,12 @@ public class TblRemoveHistory implements VertxPojo, ITblRemoveHistory {
 
     @Column(name = "event", nullable = false, length = 15)
     @Override
-    public EventType getEvent() {
+    public EventAction getEvent() {
         return this.event;
     }
 
     @Override
-    public TblRemoveHistory setEvent(EventType event) {
+    public TblRemoveHistory setEvent(EventAction event) {
         this.event = event;
         return this;
     }

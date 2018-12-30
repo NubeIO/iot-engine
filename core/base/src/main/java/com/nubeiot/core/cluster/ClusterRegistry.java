@@ -1,7 +1,6 @@
 package com.nubeiot.core.cluster;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.EnumMap;
 import java.util.Objects;
 
 import com.nubeiot.core.utils.Reflections;
@@ -12,15 +11,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ClusterRegistry {
 
+    private static final String DEFAULT_CLUSTER_PACKAGE = "com.nubeiot.core.cluster";
     private static ClusterRegistry instance;
-    private final Map<String, IClusterDelegate> registry = new HashMap<>();
+    private final EnumMap<ClusterType, IClusterDelegate> registry = new EnumMap<>(ClusterType.class);
 
     public static synchronized void init() {
         if (Objects.nonNull(instance)) {
             throw new IllegalStateException("Machine is already initialized");
         }
         instance = new ClusterRegistry();
-        Reflections.scanClassesInPackage("com.nubeiot.core.cluster", ClusterDelegate.class, IClusterDelegate.class)
+        Reflections.scanClassesInPackage(DEFAULT_CLUSTER_PACKAGE, ClusterDelegate.class, IClusterDelegate.class)
                    .parallelStream()
                    .forEach(instance::addDelegate);
     }
@@ -36,8 +36,8 @@ public final class ClusterRegistry {
         }
     }
 
-    public IClusterDelegate getClusterDelegate(String delegateType) {
-        return registry.get(delegateType);
+    public IClusterDelegate getClusterDelegate(ClusterType clusterType) {
+        return registry.get(clusterType);
     }
 
 }

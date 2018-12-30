@@ -1,6 +1,16 @@
 {
+  "__system__": {
+    "__cluster__": {
+      "listenerAddress": "com.nubeiot.dashboard.connector.edge.devices.1"
+    }
+  },
   "__app__": {
-    "http.port": 8086,
+    "__http__": {
+      "host": "0.0.0.0",
+      "port": 8086,
+      "enabled": true,
+      "rootApi": "/api"
+    },
     "api.name": "edge-connector"
   }
 }

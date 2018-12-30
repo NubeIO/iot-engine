@@ -1,6 +1,8 @@
-
 dependencies {
-    compile project(':core:common')
+    compile project(':core:base')
+    compile project(':core:micro')
     compile project(':core:httpserver')
+    compile project(':core:sql')
     compile project(':core:cluster:hazelcast')
+    compile project(':eventbus:edge')
 }

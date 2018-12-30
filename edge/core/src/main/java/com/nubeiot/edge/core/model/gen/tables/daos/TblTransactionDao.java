@@ -10,10 +10,10 @@ import javax.annotation.Generated;
 
 import org.jooq.Configuration;
 
+import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.edge.core.model.gen.tables.TblTransaction;
 import com.nubeiot.edge.core.model.gen.tables.records.TblTransactionRecord;
-import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventType;
 
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.AbstractVertxDAO;
@@ -50,70 +50,71 @@ public class TblTransactionDao extends AbstractVertxDAO<TblTransactionRecord, co
     }
 
     /**
-     * Find records that have <code>module_id IN (values)</code> asynchronously
+     * Find records that have <code>module_id IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByModuleId(List<String> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.MODULE_ID.in(values));
     }
 
     /**
-     * Find records that have <code>event IN (values)</code> asynchronously
+     * Find records that have <code>event IN (events)</code> asynchronously
      */
-    public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByEvent(List<EventType> values) {
+    public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByEvent(
+            List<EventAction> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.EVENT.in(values));
     }
 
     /**
-     * Find records that have <code>status IN (values)</code> asynchronously
+     * Find records that have <code>status IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByStatus(List<Status> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.STATUS.in(values));
     }
 
     /**
-     * Find records that have <code>issued_at IN (values)</code> asynchronously
+     * Find records that have <code>issued_at IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByIssuedAt(List<Date> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.ISSUED_AT.in(values));
     }
 
     /**
-     * Find records that have <code>issued_by IN (values)</code> asynchronously
+     * Find records that have <code>issued_by IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByIssuedBy(List<String> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.ISSUED_BY.in(values));
     }
 
     /**
-     * Find records that have <code>issued_from IN (values)</code> asynchronously
+     * Find records that have <code>issued_from IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByIssuedFrom(List<String> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.ISSUED_FROM.in(values));
     }
 
     /**
-     * Find records that have <code>modified_at IN (values)</code> asynchronously
+     * Find records that have <code>modified_at IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByModifiedAt(List<Date> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.MODIFIED_AT.in(values));
     }
 
     /**
-     * Find records that have <code>prev_state_json IN (values)</code> asynchronously
+     * Find records that have <code>prev_state_json IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByPrevStateJson(List<JsonObject> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.PREV_STATE_JSON.in(values));
     }
 
     /**
-     * Find records that have <code>last_error_json IN (values)</code> asynchronously
+     * Find records that have <code>last_error_json IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByLastErrorJson(List<JsonObject> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.LAST_ERROR_JSON.in(values));
     }
 
     /**
-     * Find records that have <code>retry IN (values)</code> asynchronously
+     * Find records that have <code>retry IN (events)</code> asynchronously
      */
     public Single<List<com.nubeiot.edge.core.model.gen.tables.pojos.TblTransaction>> findManyByRetry(List<Integer> values) {
         return findManyByCondition(TblTransaction.TBL_TRANSACTION.RETRY.in(values));

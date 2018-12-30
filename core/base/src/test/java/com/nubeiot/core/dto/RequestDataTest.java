@@ -2,6 +2,7 @@ package com.nubeiot.core.dto;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -23,6 +24,18 @@ public class RequestDataTest {
         assertEquals(20, requestData.getPagination().getPerPage());
         assertEquals("{\"body\":{\"name\":\"hello\"},\"filter\":{\"filter\":\"test\"},\"pagination\":{\"page\":1," +
                      "\"perPage\":20}}", requestData.toJson().encode());
+    }
+
+    @Test
+    public void test_to_json_without_pagination() {
+        RequestData requestData = RequestData.builder()
+                                             .body(new JsonObject().put("name", "hello"))
+                                             .filter(new JsonObject().put("filter", "test"))
+                                             .build();
+        assertEquals("hello", requestData.getBody().getString("name"));
+        assertEquals("test", requestData.getFilter().getString("filter"));
+        assertNull(requestData.getPagination());
+        assertEquals("{\"body\":{\"name\":\"hello\"},\"filter\":{\"filter\":\"test\"}}", requestData.toJson().encode());
     }
 
     @Test

@@ -6,11 +6,11 @@ import java.util.Map;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.nio.Address;
+import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.constants.Port;
-
 import com.nubeiot.core.common.utils.Runner;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
-import com.nubeiot.core.common.RxMicroServiceVerticle;
+
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
@@ -31,9 +31,9 @@ import io.vertx.servicediscovery.Record;
 
 /**
  * This EdgeDittoDriver resides on Edge Devices, and have following functionalities:
- * 1. Can PUT some values on NodeRED (Currently we have no any use cases).
- * 1.1. ServerDittoDriver can PUT some values to NodeRED
- * 1.2. Other micro-services on Edge Device can communicate to EdgeDittoDriver for PUTing some values
+ * 1. Can PUT some events on NodeRED (Currently we have no any use cases).
+ * 1.1. ServerDittoDriver can PUT some events to NodeRED
+ * 1.2. Other micro-services on Edge Device can communicate to EdgeDittoDriver for PUTing some events
  * <p>
  * 2. CURD operation request from EdgeDittoDriver to ServerDittoDriver
  */
@@ -87,7 +87,7 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
                 req.write(Buffer.buffer(Json.encodePrettily(request)).toString());
 
                 req.end();
-                logger.info("Requesting NodeRED to handle the request from server...");
+                logger.info("Requesting NodeRED to handleEvent the request from server...");
             });
 
         this.startWebApp()
@@ -106,7 +106,7 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
         router.route("/").handler(this::indexHandler);
         router.route().handler(BodyHandler.create());
         router.route("/*").handler(this::handleWebServer);
-        // This is last handler that gives not found message
+        // This is last handler that gives not found body
         router.route().last().handler(this::handlePageNotFound);
 
         // Create the HTTP server and pass the "accept" method to the request handler.
@@ -148,7 +148,7 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
                 }
                 ctx.request().response().end();
             } else {
-                // TODO: 5/12/18 Identify cases where request fails and handle accordingly
+                // TODO: 5/12/18 Identify cases where request fails and handleEvent accordingly
                 ctx.request().response()
                     .setStatusCode(500)
                     .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)

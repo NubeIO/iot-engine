@@ -1,8 +1,8 @@
 {
   "__app__": {
     "__sql__": {
-      "hikari": {
-        "minimumIdle": 3,
+      "__hikari__": {
+        "minimumIdle": 2,
         "maximumPoolSize": 10,
         "connectionTimeout": 60000,
         "idleTimeout": 600000,

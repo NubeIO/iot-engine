@@ -7,9 +7,13 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.FileSystemException;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import com.nubeiot.core.TestBase;
 import com.nubeiot.core.exceptions.NubeException;
@@ -17,6 +21,8 @@ import com.nubeiot.core.exceptions.NubeException;
 public class FileUtilsTest extends TestBase {
 
     private static final URL RESOURCE = FileUtilsTest.class.getClassLoader().getResource("none_private_key.txt");
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test(expected = FileSystemException.class)
     public void test_readFileToString_FileURINotFound() throws Throwable {
@@ -73,8 +79,7 @@ public class FileUtilsTest extends TestBase {
 
     @Test(expected = NullPointerException.class)
     public void test_toStream_From_Null_Url() {
-        URL url = null;
-        Assert.assertNotNull(FileUtils.toStream(url));
+        Assert.assertNotNull(FileUtils.toStream((URL) null));
     }
 
     @Test
@@ -132,6 +137,26 @@ public class FileUtilsTest extends TestBase {
         } catch (NubeException ex) {
             throw ex.getCause();
         }
+    }
+
+    @Test
+    public void test_default_datadir() {
+        Assert.assertEquals(Paths.get(System.getProperty("user.home"), ".nubeio"), FileUtils.resolveDataFolder(null));
+        Assert.assertEquals(Paths.get(System.getProperty("user.home"), ".nubeio"), FileUtils.resolveDataFolder(""));
+    }
+
+    @Test
+    public void test_datadir_with_non_absolute_given_path() {
+        Path dataDir = Paths.get(System.getProperty("user.home"), ".nubeio", "test");
+        System.out.println(dataDir);
+        Assert.assertEquals(dataDir.toString(), FileUtils.resolveDataFolder("test").toString());
+    }
+
+    @Test
+    public void test_datadir_with_absolute_given_path() throws IOException {
+        Path dataDir = tempFolder.newFolder().toPath().resolve("test");
+        System.out.println(dataDir);
+        Assert.assertEquals(dataDir.toString(), FileUtils.resolveDataFolder(dataDir.toString()).toString());
     }
 
 }

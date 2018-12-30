@@ -1,4 +1,0 @@
-dependencies {
-    compile project(":core:base")
-    compile "io.vertx:vertx-kafka-client:${project.vertxVersion}"
-}

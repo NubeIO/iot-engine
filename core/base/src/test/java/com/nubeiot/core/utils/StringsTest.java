@@ -115,4 +115,9 @@ public class StringsTest extends TestBase {
         assertNull(Strings.convertToString(null));
     }
 
+    @Test
+    public void test_format() {
+        assertEquals("hello world 12345 true", Strings.format("hello {0} {1} {2}", "world", 12345, true));
+    }
+
 }

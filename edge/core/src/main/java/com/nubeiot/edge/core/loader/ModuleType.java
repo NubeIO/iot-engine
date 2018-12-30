@@ -36,7 +36,7 @@ public interface ModuleType {
             return "JAVA";
         }
 
-        private static final String DEFAULT_GROUP_ID = "com.nubeiot.edge";
+        private static final String DEFAULT_GROUP_ID = "com.nubeiot.edge.connector";
         private static final String DEFAULT_VERSION = "1.0.0";
 
         @Override
