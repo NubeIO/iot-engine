@@ -22,7 +22,7 @@ pipeline {
 
         stage("Build") {
             steps {
-                sh "gradle clean ${BUILD_CMD} -x test -PbuildBy=${BUILD_AGENT} -PbuildNumber=${BUILD_NUMBER} " +
+                sh "gradle clean jooq ${BUILD_CMD} -x test -PbuildBy=${BUILD_AGENT} -PbuildNumber=${BUILD_NUMBER} " +
                         "-PbuildHash=${GIT_COMMIT}"
             }
             post {

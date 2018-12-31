@@ -1,4 +1,4 @@
-package com.nubeiot.edge.core.model.converter;
+package com.nubeiot.core.sql.converter;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -33,3 +33,4 @@ public final class DateConverter implements Converter<Timestamp, Date> {
     }
 
 }
+

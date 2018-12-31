@@ -4,11 +4,11 @@ ext {
 }
 dependencies {
     compile project(":core:base")
-    compile "io.vertx:vertx-kafka-client:${project.vertxVersion}"
+    compile "io.vertx:vertx-kafka-client:$project.versions.vertx"
+    compile "org.apache.kafka:kafka_2.12:${project.kafkaVersion}"
 
     testCompile project(":core:httpserver")
     testCompile project(":core:httpserver").sourceSets.test.output
-    testCompile "org.apache.kafka:kafka_2.12:${project.kafkaVersion}"
     testCompile "io.debezium:debezium-core:${project.debeziumVersion}"
     testCompile group: "io.debezium", name: "debezium-core", version: "${project.debeziumVersion}", classifier: "tests"
 }

@@ -3,6 +3,11 @@ package com.nubeiot.edge.bios;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import io.reactivex.Single;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.maven.MavenVerticleFactory;
+import io.vertx.maven.ResolverOptions;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.enums.Status;
@@ -15,16 +20,10 @@ import com.nubeiot.edge.core.TransactionEventHandler;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeFactory;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.edge.core.model.gen.Tables;
-import com.nubeiot.edge.core.model.gen.tables.interfaces.ITblModule;
-import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
+import com.nubeiot.edge.core.model.Tables;
+import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
+import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.eventbus.edge.EdgeEventBus;
-
-import io.reactivex.Single;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.maven.MavenVerticleFactory;
-import io.vertx.maven.ResolverOptions;
 
 public final class OsDeploymentVerticle extends EdgeVerticle {
 
@@ -54,13 +53,13 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
     }
 
     private Single<JsonObject> initApp(JsonObject repositoryCfg, JsonObject appCfg) {
-        JsonObject deployCfg = appCfg.getJsonObject(Tables.TBL_MODULE.DEPLOY_CONFIG_JSON.getName());
+        JsonObject deployCfg = appCfg.getJsonObject(Tables.TBL_MODULE.DEPLOY_CONFIG.getName().toLowerCase());
         NubeConfig.AppConfig appConfig = IConfig.merge(repositoryCfg, deployCfg, NubeConfig.AppConfig.class);
         ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
                                               .fromJson(ModuleTypeFactory.getDefault()
                                                                          .serialize(appCfg, this.getModuleRule()))
-                                              .setDeployConfigJson(appConfig.toJson());
-        return processDeploymentTransaction((TblModule) tblModule, EventAction.INIT);
+                                              .setDeployConfig(appConfig.toJson());
+        return processDeploymentTransaction(tblModule, EventAction.INIT);
     }
 
     private JsonObject setupMavenRepos(JsonObject repositoryCfg) {
@@ -79,7 +78,7 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
             logger.info("Maven local repositories: {}", local);
             logger.info("Maven remote repositories: {}", remoteCfg);
             ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
-                    remoteCfg.getJsonArray("urls", new JsonArray()).getList()).setLocalRepository(local);
+                remoteCfg.getJsonArray("urls", new JsonArray()).getList()).setLocalRepository(local);
             vertx.getDelegate().registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
     }

@@ -1,0 +1,57 @@
+def versions = [
+    vertx   : "3.6.0",
+    lombok  : "1.18.4",
+    database: [
+        jooq     : "3.11.8",
+        jooqVertx: "4.0.0",
+        hikari   : "3.2.0",
+        jpa      : "2.2",
+        h2       : "1.4.197",
+        pgsql    : "42.2.5",
+    ],
+    tests   : [
+        junit: "4.12"
+    ],
+]
+
+ext.versions = versions
+
+ext.deps = [
+    lombok  : "org.projectlombok:lombok:$versions.lombok",
+    log     : [
+        slf4j  : "org.slf4j:slf4j-api:1.7.25",
+        logback: "ch.qos.logback:logback-classic:1.2.3"
+    ],
+    vertx   : [
+        core   : "io.vertx:vertx-core:$versions.vertx",
+        codegen: "io.vertx:vertx-codegen:$versions.vertx",
+        junit  : "io.vertx:vertx-unit:$versions.vertx"
+    ],
+    database: [
+        h2              : "com.h2database:h2:$versions.database.h2",
+        pgsql           : "org.postgresql:postgresql:$versions.database.pgsql",
+        hikari          : "com.zaxxer:HikariCP:$versions.database.hikari",
+        jpa             : "javax.persistence:javax.persistence-api:$versions.database.jpa",
+        jooq            : "org.jooq:jooq:$versions.database.jooq",
+        jooqMeta        : "org.jooq:jooq-meta:$versions.database.jooq",
+        jooqMetaExt     : "org.jooq:jooq-meta-extensions:$versions.database.jooq",
+        jooqCodegen     : "org.jooq:jooq-codegen:$versions.database.jooq",
+        jooqVertxRx     : "io.github.jklingsporn:vertx-jooq-rx:$versions.database.jooqVertx",
+        jooqVertxCodegen: "io.github.jklingsporn:vertx-jooq-generate:$versions.database.jooqVertx"
+    ],
+    tests   : [
+        junit      : "junit:junit:$versions.tests.junit",
+        jsonAssert : "org.skyscreamer:jsonassert:1.5.0",
+        assertj    : "org.assertj:assertj-core:3.5.2",
+        awaitility : "com.jayway.awaitility:awaitility:1.7.0",
+        restAssured: "com.jayway.restassured:rest-assured:2.9.0",
+    ]
+]
+
+def genFolder = "src/generated"
+
+ext.genSrc = [
+    srcFolder     : genFolder,
+    javaSrcFolder : "$genFolder/java",
+    resourceFolder: "$genFolder/resources"
+]

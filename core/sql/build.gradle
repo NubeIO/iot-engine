@@ -1,18 +1,11 @@
-ext {
-    jooqVersion = "3.10.8"
-    hikariVersion = "3.2.0"
-    jpaVersion = "2.2"
-}
-
-
 dependencies {
     compile project(":core:base")
-    compile("io.vertx:vertx-jdbc-client:$project.vertxVersion") {
+    compile("io.vertx:vertx-jdbc-client:$project.versions.vertx") {
         exclude group: "com.mchange", module: "c3p0"
     }
-    compile "com.zaxxer:HikariCP:$project.hikariVersion"
-    compile "javax.persistence:javax.persistence-api:$project.jpaVersion"
-    compile "org.jooq:jooq:$project.jooqVersion"
-    compile "org.jooq:jooq-meta:$project.jooqVersion"
+    compile project.deps.database.hikari
+    compile project.deps.database.jpa
+    compile project.deps.database.jooq
+    compile project.deps.database.jooqMeta
     compile project(":ext:rx-jdbc")
 }

@@ -1,9 +1,4 @@
-ext {
-    vertxJooqVersion = '3.1.0'
-}
-
-
 dependencies {
     compile project(':core:base')
-    compile group: 'io.github.jklingsporn', name: 'vertx-jooq-rx', version: "$project.vertxJooqVersion"
+    compile project.deps.database.jooqVertxRx
 }

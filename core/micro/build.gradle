@@ -1,7 +1,7 @@
 
 dependencies {
     compile project(':core:base')
-    compile group: 'io.vertx', name: 'vertx-service-proxy', version: "$project.vertxVersion"
-    compile group: 'io.vertx', name: 'vertx-service-discovery', version: "$project.vertxVersion"
-    compile group: 'io.vertx', name: 'vertx-circuit-breaker', version: "$project.vertxVersion"
+    compile "io.vertx:vertx-service-proxy:$project.versions.vertx"
+    compile "io.vertx:vertx-service-discovery:$project.versions.vertx"
+    compile "io.vertx:vertx-circuit-breaker:$project.versions.vertx"
 }

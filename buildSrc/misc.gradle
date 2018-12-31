@@ -1,2 +1,2 @@
 task allDeps(type: DependencyReportTask, group: 'help',
-        description: 'Displays all dependencies declared in sub project') {}
+             description: 'Displays all dependencies declared in sub project') {}

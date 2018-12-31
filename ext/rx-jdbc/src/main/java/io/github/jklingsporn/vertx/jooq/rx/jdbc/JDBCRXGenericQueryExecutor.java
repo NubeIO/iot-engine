@@ -4,9 +4,16 @@ import java.util.function.Function;
 
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
+import org.jooq.Query;
+import org.jooq.Record;
+import org.jooq.ResultQuery;
 import org.jooq.impl.DSL;
 
+import io.github.jklingsporn.vertx.jooq.rx.RXQueryExecutor;
+import io.github.jklingsporn.vertx.jooq.shared.internal.AbstractQueryExecutor;
+import io.github.jklingsporn.vertx.jooq.shared.internal.QueryResult;
 import io.github.jklingsporn.vertx.jooq.shared.internal.jdbc.JDBCQueryExecutor;
+import io.github.jklingsporn.vertx.jooq.shared.internal.jdbc.JDBCQueryResult;
 import io.reactivex.Single;
 import io.vertx.core.Handler;
 import io.vertx.reactivex.core.Future;
@@ -15,23 +22,33 @@ import io.vertx.reactivex.core.Vertx;
 /**
  * Created by jensklingsporn on 05.02.18.
  */
-public class JDBCRXGenericQueryExecutor implements JDBCQueryExecutor<Single<?>> {
+public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
+        implements JDBCQueryExecutor<Single<?>>, RXQueryExecutor {
 
-    protected final Configuration configuration;
     protected final Vertx vertx;
 
     public JDBCRXGenericQueryExecutor(Configuration configuration, Vertx vertx) {
-        this.configuration = configuration;
+        super(configuration);
         this.vertx = vertx;
     }
 
     @Override
-    public <X> Single<X> execute(Function<DSLContext, X> function) {
-        return executeBlocking(h -> h.complete(function.apply(DSL.using(configuration))));
+    public <X> Single<X> executeAny(Function<DSLContext, X> function) {
+        return executeBlocking(h -> h.complete(function.apply(DSL.using(configuration()))));
     }
 
     <X> Single<X> executeBlocking(Handler<Future<X>> blockingCodeHandler) {
         return vertx.rxExecuteBlocking(blockingCodeHandler).toSingle();
+    }
+
+    @Override
+    public Single<Integer> execute(Function<DSLContext, ? extends Query> queryFunction) {
+        return executeBlocking(h -> h.complete(createQuery(queryFunction).execute()));
+    }
+
+    @Override
+    public <R extends Record> Single<QueryResult> query(Function<DSLContext, ? extends ResultQuery<R>> queryFunction) {
+        return executeBlocking(h -> h.complete(new JDBCQueryResult(createQuery(queryFunction).fetch())));
     }
 
 }

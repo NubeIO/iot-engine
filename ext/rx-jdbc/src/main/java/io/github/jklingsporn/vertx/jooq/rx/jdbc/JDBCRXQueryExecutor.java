@@ -5,8 +5,8 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.jooq.Configuration;
+import org.jooq.DSLContext;
 import org.jooq.InsertResultStep;
-import org.jooq.Query;
 import org.jooq.ResultQuery;
 import org.jooq.UpdatableRecord;
 
@@ -22,29 +22,25 @@ public class JDBCRXQueryExecutor<R extends UpdatableRecord<R>, P, T> extends JDB
 
     private final Class<P> daoType;
 
-    public JDBCRXQueryExecutor(Class<P> daoType, Configuration configuration, Vertx vertx) {
+    public JDBCRXQueryExecutor(Configuration configuration, Class<P> daoType, Vertx vertx) {
         super(configuration, vertx);
         this.daoType = daoType;
     }
 
     @Override
-    public Single<List<P>> findMany(ResultQuery<R> query) {
-        return executeBlocking(h -> h.complete(query.fetchInto(daoType)));
+    public Single<List<P>> findMany(Function<DSLContext, ? extends ResultQuery<R>> queryFunction) {
+        return executeBlocking(h -> h.complete(createQuery(queryFunction).fetchInto(daoType)));
     }
 
     @Override
-    public Single<Optional<P>> findOne(ResultQuery<R> query) {
-        return executeBlocking(h -> h.complete(Optional.ofNullable(query.fetchOneInto(daoType))));
+    public Single<Optional<P>> findOne(Function<DSLContext, ? extends ResultQuery<R>> queryFunction) {
+        return executeBlocking(h -> h.complete(Optional.ofNullable(createQuery(queryFunction).fetchOneInto(daoType))));
     }
 
     @Override
-    public Single<Integer> execute(Query query) {
-        return executeBlocking(h -> h.complete(query.execute()));
-    }
-
-    @Override
-    public Single<T> insertReturning(InsertResultStep<R> query, Function<Object, T> keyMapper) {
-        return executeBlocking(h -> h.complete(keyMapper.apply(query.fetchOne())));
+    public Single<T> insertReturning(Function<DSLContext, ? extends InsertResultStep<R>> queryFunction,
+                                     Function<Object, T> keyMapper) {
+        return executeBlocking(h -> h.complete(keyMapper.apply(createQuery(queryFunction).fetchOne())));
     }
 
 }

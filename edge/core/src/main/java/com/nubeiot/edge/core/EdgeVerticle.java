@@ -4,6 +4,13 @@ import java.util.function.Supplier;
 
 import org.jooq.Configuration;
 
+import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
+import io.reactivex.Single;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.core.AbstractVerticle;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.enums.State;
@@ -13,18 +20,11 @@ import com.nubeiot.core.sql.ISqlProvider;
 import com.nubeiot.core.sql.SQLWrapper;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.edge.core.model.gen.tables.daos.TblModuleDao;
-import com.nubeiot.edge.core.model.gen.tables.daos.TblRemoveHistoryDao;
-import com.nubeiot.edge.core.model.gen.tables.daos.TblTransactionDao;
-import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
+import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
+import com.nubeiot.edge.core.model.tables.daos.TblRemoveHistoryDao;
+import com.nubeiot.edge.core.model.tables.daos.TblTransactionDao;
+import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 
-import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
-import io.reactivex.Single;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.AbstractVerticle;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -77,7 +77,7 @@ public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvi
                                  .map(results -> new JsonObject().put("results", results));
     }
 
-    protected Single<JsonObject> processDeploymentTransaction(TblModule module, EventAction eventAction) {
+    protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction eventAction) {
         logger.info("{} module with data {}", eventAction, module.toJson().encode());
         return this.entityHandler.handlePreDeployment(module, eventAction)
                                  .doAfterSuccess(this::deployModule)

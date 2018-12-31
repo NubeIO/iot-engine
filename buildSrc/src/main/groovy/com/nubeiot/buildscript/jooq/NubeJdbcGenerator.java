@@ -12,7 +12,7 @@ import io.github.jklingsporn.vertx.jooq.generate.builder.VertxGeneratorBuilder;
 public class NubeJdbcGenerator extends DelegatingVertxGenerator {
 
     public NubeJdbcGenerator() {
-        super(VertxGeneratorBuilder.init().withRXAPI().withJDBCDriver().build());
+        this(VertxGeneratorBuilder.init().withRXAPI().withJDBCDriver());
     }
 
     public NubeJdbcGenerator(DIStep step) {
@@ -20,7 +20,7 @@ public class NubeJdbcGenerator extends DelegatingVertxGenerator {
     }
 
     @Override
-    protected boolean handleCustomTypeFromJson(TypedElementDefinition<?> column, String setter, String columnType,
+    protected boolean handleCustomTypeFromJson(TypedElementDefinition column, String setter, String columnType,
                                                String javaMemberName, JavaWriter out) {
         if (CacheDataType.instance().getParsers().containsKey(columnType)) {
             return writeSetter(out, setter, javaMemberName, CacheDataType.instance().getParsers().get(columnType));
@@ -29,7 +29,7 @@ public class NubeJdbcGenerator extends DelegatingVertxGenerator {
     }
 
     @Override
-    protected boolean handleCustomTypeToJson(TypedElementDefinition<?> column, String getter, String columnType,
+    protected boolean handleCustomTypeToJson(TypedElementDefinition column, String getter, String columnType,
                                              String javaMemberName, JavaWriter out) {
         if (CacheDataType.instance().getConverters().containsKey(columnType)) {
             return writeGetter(out, column, getter, CacheDataType.instance().getConverters().get(columnType));
@@ -37,15 +37,17 @@ public class NubeJdbcGenerator extends DelegatingVertxGenerator {
         return super.handleCustomTypeToJson(column, getter, columnType, javaMemberName, out);
     }
 
-    private boolean writeGetter(JavaWriter out, TypedElementDefinition<?> column, String getter,
+    private boolean writeGetter(JavaWriter out, TypedElementDefinition column, String getter,
                                 Function<String, String> f) {
         String method = getter + "()";
         out.tab(2).println("json.put(\"%s\",%s==null?null:%s);", getJsonKeyName(column), method, f.apply(method));
         return true;
     }
 
-    private boolean writeSetter(JavaWriter out, String setter, String javaMemberName, Function<String, String> f) {
-        out.tab(2).println("%s(json.getValue(\"%s\")==null?null:%s);", setter, javaMemberName, f.apply(javaMemberName));
+    private static boolean writeSetter(JavaWriter out, String setter, String javaMemberName,
+                                       Function<String, String> f) {
+        String parser = f.apply(String.format("json.getValue(\"%s\")", javaMemberName));
+        out.tab(2).println("%s(json.getValue(\"%s\")==null?null:%s);", setter, javaMemberName, parser);
         return true;
     }
 

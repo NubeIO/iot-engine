@@ -3,13 +3,7 @@ plugins {
     id 'java'
 }
 
-ext {
-    vertxVersion = "3.6.0"
-    lombokVersion = "1.18.4"
-    jooqVersion = "3.11.8"
-    vertxJooqVersion = "4.0.0"
-}
-
+apply from: "dependencies.gradle"
 
 repositories {
     mavenLocal()
@@ -18,13 +12,12 @@ repositories {
 }
 
 dependencies {
-    compile "io.vertx:vertx-core:$project.vertxVersion"
-    compile "org.jooq:jooq:$project.jooqVersion"
-    compile "org.jooq:jooq-meta:$project.jooqVersion"
-    compile "org.jooq:jooq-codegen:$project.jooqVersion"
-    compile "org.jooq:jooq-meta-extensions:$project.jooqVersion"
-    compile "io.github.jklingsporn:vertx-jooq-generate:$project.vertxJooqVersion"
+    compile project.deps.vertx.core
+    compile project.deps.database.jooq
+    compile project.deps.database.jooqMeta
+    compile project.deps.database.jooqMetaExt
+    compile project.deps.database.jooqCodegen
+    compile project.deps.database.jooqVertxCodegen
 
-    compileOnly "org.projectlombok:lombok:$project.lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$project.lombokVersion"
+    testCompile project.deps.tests.junit
 }

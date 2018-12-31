@@ -1,11 +1,30 @@
-ext {
-    h2Version = '1.4.197'
-}
+import org.jooq.meta.jaxb.ForcedType
+
+import com.nubeiot.buildscript.jooq.DB
+import com.nubeiot.buildscript.jooq.JooqGenerateTask
+import com.nubeiot.buildscript.jooq.JooqGenerateTask.CustomDataType
+import com.nubeiot.buildscript.jooq.Utils
 
 dependencies {
     compile project(':core:base')
     compile project(':core:sql')
     compile project(':eventbus:edge')
-    compile "com.h2database:h2:$project.h2Version"
-    compile "io.vertx:vertx-maven-service-factory:$project.vertxVersion"
+    compile project.deps.database.h2
+    compile "io.vertx:vertx-maven-service-factory:$project.versions.vertx"
+}
+
+task jooqGen(type: JooqGenerateTask) {
+    packageName = "com.nubeiot.edge.core.model"
+    javaTypes = [
+        new CustomDataType(className: "com.nubeiot.edge.core.loader.ModuleType",
+                           converter: "%s.name()",
+                           parser: "com.nubeiot.edge.core.loader.ModuleTypeFactory.factory((String)%s)")
+    ]
+    dbTypes = [
+        new ForcedType(userType: "com.nubeiot.edge.core.loader.ModuleType", types: DB.TYPES.varchar,
+                       expression: Utils.toRegexIgnoreCase("service_type"),
+                       converter: "com.nubeiot.edge.core.model.converter.ModuleTypeConverter"),
+        new ForcedType(userType: "java.util.Date", types: DB.TYPES.timestamp,
+                       converter: "com.nubeiot.core.sql.converter.DateConverter")
+    ]
 }

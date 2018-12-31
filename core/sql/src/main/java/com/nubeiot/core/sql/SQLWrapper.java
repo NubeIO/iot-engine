@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 public final class SQLWrapper implements IComponent {
 
     private static final Logger logger = LoggerFactory.getLogger(SQLWrapper.class);
-    private static final String DDL_SQL_FILE = "sql/ddl.sql";
+    private static final String DDL_SQL_FILE = "ddl/ddl.ddl";
 
     private final Vertx vertx;
     private final SqlConfig sqlConfig;
