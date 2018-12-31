@@ -1,11 +1,11 @@
 package com.nubeiot.core.common.utils;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.utils.Strings;
 

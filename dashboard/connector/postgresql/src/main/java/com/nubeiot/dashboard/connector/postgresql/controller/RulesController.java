@@ -1,11 +1,11 @@
 package com.nubeiot.dashboard.connector.postgresql.controller;
 
-import com.nubeiot.core.common.utils.ErrorCodeException;
-import com.nubeiot.core.common.utils.ErrorCodes;
-
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
+
+import com.nubeiot.core.common.utils.ErrorCodeException;
+import com.nubeiot.core.common.utils.ErrorCodes;
 
 /**
  * Created by topsykretts on 4/26/18.

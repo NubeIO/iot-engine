@@ -2,11 +2,11 @@ package com.nubeiot.core.http.ws;
 
 import java.io.IOException;
 
+import io.vertx.ext.bridge.BridgeEventType;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
-import io.vertx.ext.bridge.BridgeEventType;
 
 public final class BridgeEventTypeSerialize extends StdSerializer<BridgeEventType> {
 

@@ -8,6 +8,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.Router;
+
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.InvalidUrlException;
@@ -16,10 +21,6 @@ import com.nubeiot.core.http.utils.Urls;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.web.Router;
 import lombok.Getter;
 import lombok.NonNull;
 

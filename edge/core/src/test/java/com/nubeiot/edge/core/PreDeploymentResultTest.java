@@ -8,12 +8,12 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
-
-import io.vertx.core.json.JsonObject;
 
 public class PreDeploymentResultTest {
 

@@ -3,9 +3,6 @@ package com.nubeiot.core.event;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import com.nubeiot.core.exceptions.ErrorMessage;
-import com.nubeiot.core.utils.Strings;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -14,6 +11,10 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.shareddata.Shareable;
 import io.vertx.reactivex.core.Vertx;
+
+import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.utils.Strings;
+
 import lombok.NonNull;
 
 /**

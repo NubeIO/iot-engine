@@ -1,13 +1,12 @@
 package com.nubeiot.dashboard.utils;
 
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.StringUtils;
 import com.nubeiot.dashboard.Role;
-
-import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 public class MultiTenantCustomMessageHelper {
     public static String buildAbsoluteUri(Message<Object> message, String location) {

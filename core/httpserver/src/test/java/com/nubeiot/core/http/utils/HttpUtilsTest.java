@@ -9,14 +9,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.http.BaseHttpServerTest;
-import com.nubeiot.core.http.HttpServerRouter;
-
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RepeatRule;
 import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+
+import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.core.http.BaseHttpServerTest;
+import com.nubeiot.core.http.HttpServerRouter;
 
 @RunWith(VertxUnitRunner.class)
 public class HttpUtilsTest extends BaseHttpServerTest {

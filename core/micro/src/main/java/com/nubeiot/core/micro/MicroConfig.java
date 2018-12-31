@@ -1,11 +1,12 @@
 package com.nubeiot.core.micro;
 
+import io.vertx.circuitbreaker.CircuitBreakerOptions;
+import io.vertx.servicediscovery.ServiceDiscoveryOptions;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 
-import io.vertx.circuitbreaker.CircuitBreakerOptions;
-import io.vertx.servicediscovery.ServiceDiscoveryOptions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

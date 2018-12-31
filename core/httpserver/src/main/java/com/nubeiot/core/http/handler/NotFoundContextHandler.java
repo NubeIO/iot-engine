@@ -1,13 +1,13 @@
 package com.nubeiot.core.http.handler;
 
-import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.http.CommonParamParser;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+
+import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.CommonParamParser;
 
 public final class NotFoundContextHandler implements Handler<RoutingContext> {
 

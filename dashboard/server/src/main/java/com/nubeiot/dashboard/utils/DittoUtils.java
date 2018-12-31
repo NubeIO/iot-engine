@@ -2,9 +2,9 @@ package com.nubeiot.dashboard.utils;
 
 import java.util.List;
 
-import com.nubeiot.dashboard.Role;
-
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.dashboard.Role;
 
 public class DittoUtils {
     public static JsonObject createPolicy(List<JsonObject> jsonObjectList) {

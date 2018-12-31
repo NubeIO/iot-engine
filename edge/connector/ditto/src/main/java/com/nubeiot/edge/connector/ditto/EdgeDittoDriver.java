@@ -3,14 +3,6 @@ package com.nubeiot.edge.connector.ditto;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.nio.Address;
-import com.nubeiot.core.common.RxMicroServiceVerticle;
-import com.nubeiot.core.common.constants.Port;
-import com.nubeiot.core.common.utils.Runner;
-import com.nubeiot.core.common.utils.response.ResponseUtils;
-
 import io.reactivex.Single;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientOptions;
@@ -27,6 +19,14 @@ import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
+
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.nio.Address;
+import com.nubeiot.core.common.RxMicroServiceVerticle;
+import com.nubeiot.core.common.constants.Port;
+import com.nubeiot.core.common.utils.Runner;
+import com.nubeiot.core.common.utils.response.ResponseUtils;
 
 /**
  * This EdgeDittoDriver resides on Edge Devices, and have following functionalities: 1. Can PUT some events on NodeRED

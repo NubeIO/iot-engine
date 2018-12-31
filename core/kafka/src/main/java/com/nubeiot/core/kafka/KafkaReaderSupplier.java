@@ -7,11 +7,11 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.Deserializer;
 
-import com.nubeiot.core.kafka.serialization.NubeKafkaSerdes;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaReadStream;
+
+import com.nubeiot.core.kafka.serialization.NubeKafkaSerdes;
 
 /**
  * Kafka Write Stream supplier

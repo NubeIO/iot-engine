@@ -3,14 +3,14 @@ package com.nubeiot.core.http.mock;
 import java.util.Arrays;
 import java.util.List;
 
+import io.vertx.reactivex.core.eventbus.EventBus;
+
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.http.ws.WebsocketEventMetadata;
-
-import io.vertx.reactivex.core.eventbus.EventBus;
 
 public class MockWebsocketEvent {
 

@@ -3,16 +3,17 @@ package com.nubeiot.core.event;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import com.nubeiot.core.exceptions.HiddenException;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.exceptions.ServiceException;
-import com.nubeiot.core.utils.Strings;
-
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import com.nubeiot.core.exceptions.HiddenException;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.ServiceException;
+import com.nubeiot.core.utils.Strings;
+
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

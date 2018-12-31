@@ -1,16 +1,17 @@
 package com.nubeiot.dashboard.impl.handlers;
 
-import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.common.utils.HttpException;
-import com.nubeiot.dashboard.Role;
+import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleBadRequestResponse;
+import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleForbiddenResponse;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleBadRequestResponse;
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleForbiddenResponse;
+import com.nubeiot.core.common.utils.CustomMessage;
+import com.nubeiot.core.common.utils.HttpException;
+import com.nubeiot.dashboard.Role;
 
 public class MenuCollectionHandler extends BaseCollectionHandler {
     public void handlePutUrl(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient) {

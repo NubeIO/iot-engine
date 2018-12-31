@@ -1,7 +1,7 @@
 package com.nubeiot.core.common.utils;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
 
 @Deprecated
 public class SecurityUtils {

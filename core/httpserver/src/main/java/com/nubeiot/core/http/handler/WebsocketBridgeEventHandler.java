@@ -6,6 +6,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.web.handler.sockjs.BridgeEvent;
+import io.vertx.ext.web.handler.sockjs.SockJSSocket;
+
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -16,13 +24,6 @@ import com.nubeiot.core.http.ws.WebsocketEventMessage;
 import com.nubeiot.core.http.ws.WebsocketEventMetadata;
 import com.nubeiot.core.utils.Strings;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.bridge.BridgeEventType;
-import io.vertx.ext.web.handler.sockjs.BridgeEvent;
-import io.vertx.ext.web.handler.sockjs.SockJSSocket;
 import lombok.NonNull;
 
 /**

@@ -2,11 +2,11 @@ package com.nubeiot.core.http.handler;
 
 import java.util.Objects;
 
-import com.nubeiot.core.http.CommonParamParser;
-import com.zandero.rest.writer.HttpResponseWriter;
-
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+
+import com.nubeiot.core.http.CommonParamParser;
+import com.zandero.rest.writer.HttpResponseWriter;
 
 public final class ApiJsonWriter<T> implements HttpResponseWriter<T> {
 

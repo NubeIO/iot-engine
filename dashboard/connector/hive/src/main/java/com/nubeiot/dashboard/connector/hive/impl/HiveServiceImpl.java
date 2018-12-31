@@ -1,7 +1,8 @@
 package com.nubeiot.dashboard.connector.hive.impl;
 
-import com.nubeiot.dashboard.connector.hive.HiveService;
-import com.nubeiot.core.common.BaseService;
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.annotations.NonNull;
@@ -18,8 +19,8 @@ import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 
-import java.util.Collections;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.nubeiot.core.common.BaseService;
+import com.nubeiot.dashboard.connector.hive.HiveService;
 
 public class HiveServiceImpl implements HiveService, BaseService {
     private final Logger logger = LoggerFactory.getLogger(HiveServiceImpl.class);

@@ -9,19 +9,19 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.nubeiot.core.exceptions.ErrorMessage;
-import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.BaseHttpServerTest;
-import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.core.http.mock.MockApiDefinition;
-
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RepeatRule;
 import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+
+import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.BaseHttpServerTest;
+import com.nubeiot.core.http.HttpServerRouter;
+import com.nubeiot.core.http.mock.MockApiDefinition;
 
 @RunWith(VertxUnitRunner.class)
 public class RestServerTest extends BaseHttpServerTest {

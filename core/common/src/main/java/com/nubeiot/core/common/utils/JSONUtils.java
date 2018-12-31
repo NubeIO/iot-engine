@@ -1,8 +1,8 @@
 package com.nubeiot.core.common.utils;
 
-import io.vertx.core.json.JsonObject;
-
 import java.util.List;
+
+import io.vertx.core.json.JsonObject;
 
 public class JSONUtils {
     public static JsonObject getMatchValueOrDefaultOne(List<JsonObject> jsonObjectList, String _id) {

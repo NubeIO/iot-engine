@@ -1,14 +1,15 @@
 package com.nubeiot.core.common.utils;
 
-import com.nubeiot.core.common.Launcher;
+import java.io.File;
+import java.io.IOException;
+import java.util.function.Consumer;
+
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.function.Consumer;
+import com.nubeiot.core.common.Launcher;
 
 /**
  * Tobe removed

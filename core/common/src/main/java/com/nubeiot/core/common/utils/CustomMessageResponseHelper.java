@@ -1,10 +1,10 @@
 package com.nubeiot.core.common.utils;
 
-import com.nubeiot.core.exceptions.HttpStatusMapping;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.exceptions.HttpStatusMapping;
 
 /**
  * @deprecated use @{@link HttpStatusMapping}

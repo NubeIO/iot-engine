@@ -1,7 +1,8 @@
 package com.nubeiot.core.common.utils.response;
 
-import com.nubeiot.core.common.utils.StringUtils;
 import io.vertx.reactivex.ext.web.RoutingContext;
+
+import com.nubeiot.core.common.utils.StringUtils;
 
 /**
  * Created by topsykretts on 4/26/18.

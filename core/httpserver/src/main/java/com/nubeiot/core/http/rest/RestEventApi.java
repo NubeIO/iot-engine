@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.nubeiot.core.event.EventAction;
-
 import io.vertx.core.http.HttpMethod;
+
+import com.nubeiot.core.event.EventAction;
 
 /**
  * Make a mapping dynamically between {@code HTTP endpoint} and {@code EventBus}

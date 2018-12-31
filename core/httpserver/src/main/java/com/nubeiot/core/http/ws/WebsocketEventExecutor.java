@@ -3,6 +3,9 @@ package com.nubeiot.core.http.ws;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -11,8 +14,6 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.http.utils.RequestConverter;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

@@ -5,9 +5,9 @@ import java.util.Objects;
 
 import org.apache.kafka.common.serialization.Deserializer;
 
-import com.nubeiot.core.event.EventMessage;
-
 import io.vertx.core.buffer.Buffer;
+
+import com.nubeiot.core.event.EventMessage;
 
 public class EventMessageDeserializer implements Deserializer<EventMessage> {
 

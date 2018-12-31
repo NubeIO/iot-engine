@@ -10,19 +10,19 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.BaseHttpServerTest;
-import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.core.http.mock.MockApiDefinition;
-import com.nubeiot.core.http.mock.MockEventBusErrorHandler;
-import com.nubeiot.core.http.mock.MockEventBusSuccessHandler;
-
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RepeatRule;
 import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.BaseHttpServerTest;
+import com.nubeiot.core.http.HttpServerRouter;
+import com.nubeiot.core.http.mock.MockApiDefinition;
+import com.nubeiot.core.http.mock.MockEventBusErrorHandler;
+import com.nubeiot.core.http.mock.MockEventBusSuccessHandler;
 
 @SuppressWarnings("unchecked")
 @RunWith(VertxUnitRunner.class)

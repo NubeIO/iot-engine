@@ -2,9 +2,10 @@ package com.nubeiot.edge.core.loader;
 
 import java.util.Objects;
 
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.json.JsonObject;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 

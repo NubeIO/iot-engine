@@ -6,12 +6,12 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.FileUtils;
-
-import io.vertx.core.json.JsonObject;
 
 public class NubeConfigTest {
 

@@ -9,10 +9,10 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.nubeiot.core.utils.Strings;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpMethod;
+
+import com.nubeiot.core.utils.Strings;
 
 public class HttpStatusMappingTest {
 

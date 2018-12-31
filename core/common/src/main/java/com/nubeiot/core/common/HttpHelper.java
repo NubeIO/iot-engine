@@ -1,13 +1,13 @@
 package com.nubeiot.core.common;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import com.nubeiot.core.common.utils.HttpException;
-import com.nubeiot.core.common.utils.response.ResponseUtils;
-import com.nubeiot.core.exceptions.HttpStatusMapping;
-
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.web.RoutingContext;
+
+import com.nubeiot.core.common.utils.HttpException;
+import com.nubeiot.core.common.utils.response.ResponseUtils;
+import com.nubeiot.core.exceptions.HttpStatusMapping;
 
 /**
  * @deprecated Use {@link HttpStatusMapping}

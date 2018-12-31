@@ -1,8 +1,8 @@
 package com.nubeiot.core.common.utils;
 
-import com.nubeiot.core.dto.RequestData;
-
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.dto.RequestData;
 
 /**
  * @deprecated use {@link RequestData}

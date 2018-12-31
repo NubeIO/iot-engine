@@ -1,8 +1,9 @@
 package com.nubeiot.dashboard.impl.models;
 
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.common.GeoPoint;
 import com.nubeiot.core.common.Model;
-import io.vertx.core.json.JsonObject;
 
 public class Site extends Model {
     public String associated_company_id;

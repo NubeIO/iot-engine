@@ -3,14 +3,15 @@ package com.nubeiot.dashboard.connector.hive.controller;
 import java.io.StringReader;
 import java.util.Collections;
 
-import com.nubeiot.core.common.utils.ErrorCodeException;
-import com.nubeiot.core.common.utils.ErrorCodes;
-import com.nubeiot.dashboard.connector.hive.HiveService;
-
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
+
+import com.nubeiot.core.common.utils.ErrorCodeException;
+import com.nubeiot.core.common.utils.ErrorCodes;
+import com.nubeiot.dashboard.connector.hive.HiveService;
+
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;

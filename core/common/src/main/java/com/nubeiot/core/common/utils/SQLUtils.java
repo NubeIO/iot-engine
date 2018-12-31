@@ -1,9 +1,8 @@
 package com.nubeiot.core.common.utils;
 
+import java.util.List;
 
 import io.vertx.core.json.JsonObject;
-
-import java.util.List;
 
 public class SQLUtils {
     public static boolean in(String field, String... str) {

@@ -10,6 +10,16 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.WebSocket;
+import io.vertx.core.http.WebsocketRejectedException;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.Timeout;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -20,16 +30,6 @@ import com.nubeiot.core.http.BaseHttpServerTest;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
 import com.nubeiot.core.http.utils.Urls;
-
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.WebSocket;
-import io.vertx.core.http.WebsocketRejectedException;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.bridge.BridgeEventType;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.Timeout;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
 public class WebsocketEventServerTest extends BaseHttpServerTest {

@@ -1,7 +1,8 @@
 package com.nubeiot.dashboard.impl.models;
 
-import com.nubeiot.core.common.Model;
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.common.Model;
 
 public class KeycloakUserRepresentation extends Model {
     private String username;

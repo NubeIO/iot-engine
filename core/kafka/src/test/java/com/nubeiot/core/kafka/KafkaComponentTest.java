@@ -15,6 +15,14 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
+import io.debezium.kafka.KafkaCluster;
+import io.vertx.core.http.WebSocket;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.BaseHttpServerTest;
@@ -24,14 +32,6 @@ import com.nubeiot.core.http.utils.Urls;
 import com.nubeiot.core.http.ws.WebsocketEventMetadata;
 import com.nubeiot.core.kafka.mock.MockKafkaConsumer;
 import com.nubeiot.core.kafka.mock.MockKafkaProducer;
-
-import io.debezium.kafka.KafkaCluster;
-import io.vertx.core.http.WebSocket;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.bridge.BridgeEventType;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaComponentTest extends BaseHttpServerTest {

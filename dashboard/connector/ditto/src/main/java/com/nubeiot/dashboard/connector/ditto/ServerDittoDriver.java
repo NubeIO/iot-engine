@@ -5,12 +5,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.nubeiot.core.common.RxMicroServiceVerticle;
-import com.nubeiot.core.common.constants.Port;
-import com.nubeiot.core.common.constants.Services;
-import com.nubeiot.core.common.utils.StringUtils;
-import com.nubeiot.core.common.utils.response.ResponseUtils;
-
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -33,6 +27,12 @@ import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
+
+import com.nubeiot.core.common.RxMicroServiceVerticle;
+import com.nubeiot.core.common.constants.Port;
+import com.nubeiot.core.common.constants.Services;
+import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.common.utils.response.ResponseUtils;
 
 /**
  * Created by topsykretts on 5/11/18.

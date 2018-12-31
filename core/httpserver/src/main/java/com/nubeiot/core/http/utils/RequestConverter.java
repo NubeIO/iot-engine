@@ -2,15 +2,16 @@ package com.nubeiot.core.http.utils;
 
 import java.util.Objects;
 
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.ServerWebSocket;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
+
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.ServerWebSocket;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

@@ -2,6 +2,14 @@ package com.nubeiot.core;
 
 import java.util.Objects;
 
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.eventbus.EventBusOptions;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
 import com.nubeiot.core.cluster.ClusterNodeListener;
 import com.nubeiot.core.cluster.ClusterRegistry;
 import com.nubeiot.core.cluster.ClusterType;
@@ -11,14 +19,6 @@ import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.Strings;
-
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
-import io.vertx.core.eventbus.EventBusOptions;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public final class NubeLauncher extends io.vertx.core.Launcher {
 

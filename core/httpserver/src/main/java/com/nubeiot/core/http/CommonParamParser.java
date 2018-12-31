@@ -3,12 +3,13 @@ package com.nubeiot.core.http;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.nubeiot.core.utils.Strings;
-
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+
+import com.nubeiot.core.utils.Strings;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

@@ -1,7 +1,5 @@
 package com.nubeiot.dashboard.connector.hive;
 
-import com.nubeiot.dashboard.connector.hive.impl.HiveServiceImpl;
-
 import io.reactivex.Single;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.GenIgnore;
@@ -12,6 +10,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
+
+import com.nubeiot.dashboard.connector.hive.impl.HiveServiceImpl;
 
 @ProxyGen
 @VertxGen

@@ -1,13 +1,13 @@
 package com.nubeiot.dashboard.impl;
 
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.core.common.Model;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.auth.User;
+
+import com.nubeiot.core.common.Model;
+import com.nubeiot.dashboard.Role;
 
 public class UserImpl extends Model implements User {
 

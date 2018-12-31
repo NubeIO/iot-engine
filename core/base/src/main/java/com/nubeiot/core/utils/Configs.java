@@ -7,12 +7,13 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Scanner;
 
-import com.nubeiot.core.exceptions.NubeException;
-
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import com.nubeiot.core.exceptions.NubeException;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

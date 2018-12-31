@@ -1,5 +1,10 @@
 package com.nubeiot.core.http.handler;
 
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.RoutingContext;
+
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -7,10 +12,6 @@ import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.http.rest.RestEventMetadata;
 import com.nubeiot.core.http.utils.RequestConverter;
 
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.web.RoutingContext;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

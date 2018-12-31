@@ -1,8 +1,8 @@
 package com.nubeiot.dashboard.utils;
 
-import io.vertx.reactivex.ext.web.FileUpload;
-
 import java.io.File;
+
+import io.vertx.reactivex.ext.web.FileUpload;
 
 public class FileUtils {
     public static String appendRealFileNameWithExtension(FileUpload fileUpload) {

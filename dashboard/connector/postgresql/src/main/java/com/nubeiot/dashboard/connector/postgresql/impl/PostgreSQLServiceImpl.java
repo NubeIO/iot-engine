@@ -1,7 +1,10 @@
 package com.nubeiot.dashboard.connector.postgresql.impl;
 
-import com.nubeiot.dashboard.connector.postgresql.PostgreSQLService;
-import com.nubeiot.core.common.BaseService;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
@@ -21,11 +24,8 @@ import io.vertx.reactivex.ext.asyncsql.PostgreSQLClient;
 import io.vertx.reactivex.ext.sql.SQLClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.nubeiot.core.common.BaseService;
+import com.nubeiot.dashboard.connector.postgresql.PostgreSQLService;
 
 public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
     private final Logger logger = LoggerFactory.getLogger(PostgreSQLService.class);
