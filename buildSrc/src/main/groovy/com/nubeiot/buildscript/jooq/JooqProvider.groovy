@@ -37,10 +37,10 @@ abstract class JooqProvider {
 
     static <T extends VertxGenerator> Configuration createConfiguration(Database databaseCfg, Target target,
                                                                         Class<T> generatorClass) {
-        logger.info("-" * 20)
+        logger.info("-" * 58)
         logger.info("Java Types")
-        logger.info("-" * 20)
-        CacheDataType.instance().converters.each { logger.info(it.key) }
+        logger.info("-" * 58)
+        CacheDataType.instance().dataTypes.each { logger.info(it.toString()) }
         logger.info("")
         Generator generator = new Generator().withDatabase(databaseCfg).withGenerate(createGenerate())
                                              .withStrategy(createStrategy()).withTarget(target)
@@ -55,10 +55,10 @@ abstract class JooqProvider {
             JsonArrayConverter.class.getName(), expression: DB.COL_REGEX.jsonArray, types: DB.TYPES.text)
 
         forcedTypes += [jsonType, jsonArrayType]
-        logger.info("-" * 20)
+        logger.info("-" * 58)
         logger.info("Database Force Types")
-        logger.info("-" * 20)
-        forcedTypes.each { logger.info(it.toString()) }
+        logger.info("-" * 58)
+        forcedTypes.each { logger.info("${it.types} - ${it.userType} - ${it.expression}") }
         logger.info("")
         return new Database().withName("org.jooq.meta.extensions.ddl.DDLDatabase")
                              .withProperties(new Property().withKey("scripts").withValue(ddlDir))

@@ -6,12 +6,12 @@ import java.util.function.Supplier;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 
-final class InstallerModuleTypeRuleProvider implements Supplier<ModuleTypeRule> {
+final class EdgeInstallerRuleProvider implements Supplier<ModuleTypeRule> {
 
     @Override
     public ModuleTypeRule get() {
         return new ModuleTypeRule().registerRule(ModuleType.JAVA,
-                                                 Arrays.asList("com.nubeio.edge.connector", "com.nubeio.edge.rule"));
+                                                 Arrays.asList("com.nubeiot.edge.connector", "com.nubeiot.edge.rule"));
     }
 
 }

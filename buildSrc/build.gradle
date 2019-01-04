@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     compile project.deps.vertx.core
+    compile project.deps.database.h2
     compile project.deps.database.jooq
     compile project.deps.database.jooqMeta
     compile project.deps.database.jooqMetaExt

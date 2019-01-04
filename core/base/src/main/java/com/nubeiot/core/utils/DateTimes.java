@@ -1,9 +1,11 @@
 package com.nubeiot.core.utils;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Date;
 
 import com.nubeiot.core.exceptions.NubeException;
 
@@ -17,8 +19,20 @@ public final class DateTimes {
 
     private static final Logger logger = LoggerFactory.getLogger(DateTimes.class);
 
-    public static Date now() {
-        return Date.from(Instant.now());
+    public static LocalDateTime nowUTC() {
+        return fromUTC(Instant.now());
+    }
+
+    public static LocalDateTime fromUTC(Instant instant) {
+        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    public static OffsetDateTime now() {
+        return from(Instant.now());
+    }
+
+    public static OffsetDateTime from(Instant instant) {
+        return OffsetDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     public static Instant parseISO8601(String datetime) {

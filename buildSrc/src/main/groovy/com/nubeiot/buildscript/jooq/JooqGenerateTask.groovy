@@ -15,23 +15,34 @@ class JooqGenerateTask extends DefaultTask {
     JDBCType jdbcType = JDBCType.PLAIN_JDBC
     @Input
     APIType apiType = APIType.RX
-    @Input
-    public Set<ForcedType> dbTypes = []
+
+    /**
+     * Enum Types that using {@code valueOf} function to parse data
+     */
     @Input
     public Set<String> enumTypes = []
-    @Input
-    public Set<CustomDataType> javaTypes = []
 
-    String ddlDir = "src/main/resources/ddl/*.sql"
-    String targetDir = project.genSrc.javaSrcFolder
+    /**
+     * Converter between Java data type and database type
+     */
+    @Input
+    public Set<ForcedType> dbTypes = []
+
+    /**
+     * Converter between JsonObject and Java data type
+     */
+    @Input
+    public Set<JsonDataType> javaTypes = []
+
+    @Input
+    public String ddlDir = "src/main/resources/ddl/*.sql"
+    @Input
+    public String targetDir = project.genSrc.javaSrcFolder
 
     @TaskAction
     void generate() {
         def input = project.projectDir.toPath().resolve(ddlDir).toString()
         def output = project.projectDir.toPath().resolve(targetDir).toString()
-        enumTypes += ["com.nubeiot.core.enums.State", "com.nubeiot.core.enums.Status",
-                      "com.nubeiot.core.event.EventAction", "com.nubeiot.core.event.EventPattern",
-                      "com.nubeiot.core.exceptions.NubeException.ErrorCode", "com.nubeiot.core.cluster.ClusterType"]
         CacheDataType.instance().addEnumClasses(enumTypes).addDataType(javaTypes)
         enumTypes.each { s ->
             def expression = s.substring(s.lastIndexOf(".") + 1)
@@ -45,6 +56,10 @@ class JooqGenerateTask extends DefaultTask {
                                                       JooqProvider.createTarget(output, packageName),
                                                       JooqProvider.getVertxGenerator(apiType, jdbcType))
         try {
+            logger.info("-" * 58)
+            logger.info("Generating DDL based on: {}", project.deps.database.h2)
+            logger.info("=" * 58)
+            logger.info("")
             GenerationTool.generate(config)
         } catch (Exception e) {
             throw new GradleException("Cannot generate jooq", e)
@@ -59,9 +74,17 @@ class JooqGenerateTask extends DefaultTask {
         REACTIVE_POSTGRES, PLAIN_JDBC
     }
 
-    static class CustomDataType {
+    /**
+     * Converter between JsonObject and Java data type
+     */
+    static class JsonDataType {
         String className
-        String parser
         String converter
+        String parser
+
+        @Override
+        String toString() {
+            return "${className} - Converter: ${converter} - Parser: ${parser}"
+        }
     }
 }

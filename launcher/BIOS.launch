@@ -15,7 +15,8 @@
 <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
 <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.buildship.core.classpathprovider"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.nubeiot.core.NubeLauncher"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="run com.nubeiot.edge.bios.OsDeploymentVerticle -conf ${workspace_loc:/iot-engine}/demo/bios.json -cluster --redeploy=&quot;${workspace_loc:bios}/src/**/*.java,${workspace_loc:edge-core}/src/**/*.java,${workspace_loc:base}/src/**/*.java&quot; --launcher-class=com.nubeiot.core.NubeLauncher"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS"
+                     value="run com.nubeiot.edge.bios.EdgeBiosVerticle -conf ${workspace_loc:/iot-engine}/demo/bios.json -cluster --redeploy=&quot;${workspace_loc:bios}/src/**/*.java,${workspace_loc:edge-core}/src/**/*.java,${workspace_loc:base}/src/**/*.java&quot; --launcher-class=com.nubeiot.core.NubeLauncher"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="bios"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dlogback.configurationFile=${workspace_loc:/iot-engine}/demo/logback-bios.xml"/>

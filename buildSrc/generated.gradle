@@ -42,4 +42,10 @@ sourceSets {
             resources.srcDirs += new File(project.projectDir.absolutePath, project.genSrc.resourceFolder)
         }
     }
+    test {
+        java {
+            srcDirs += project.genSrc.javaTestSrcFolder
+            resources.srcDirs += new File(project.projectDir.absolutePath, project.genSrc.testResourceFolder)
+        }
+    }
 }

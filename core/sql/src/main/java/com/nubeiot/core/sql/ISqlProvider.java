@@ -1,19 +1,18 @@
 package com.nubeiot.core.sql;
 
-import java.util.function.Supplier;
+import org.jooq.Catalog;
+
+import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.component.IComponentProvider;
 
-import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.Vertx;
-
 public interface ISqlProvider extends IComponentProvider {
 
-    static SQLWrapper create(Vertx vertx, NubeConfig nubeConfig, Supplier<Single<JsonObject>> initData) {
+    static <T extends EntityHandler> SQLWrapper<T> create(Vertx vertx, NubeConfig nubeConfig, Catalog catalog,
+                                                          Class<T> entityHandlerCreator) {
         SqlConfig sqlConfig = IComponentProvider.computeConfig("sql.json", SqlConfig.class, nubeConfig);
-        return new SQLWrapper(vertx.getDelegate(), sqlConfig, initData);
+        return new SQLWrapper<>(catalog, entityHandlerCreator);
     }
 
 }

@@ -1,10 +1,9 @@
-package com.nubeiot.edge.bios;
+package com.nubeiot.edge.bios.installer;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -12,21 +11,21 @@ import org.junit.Test;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 
-public class BIOSModuleTypeRuleProviderTest {
+public class EdgeInstallerRuleProviderTest {
 
     private ModuleTypeRule rule;
 
     @Before
     public void setup() {
-        this.rule = new BIOSModuleTypeRuleProvider().get();
+        this.rule = new EdgeInstallerRuleProvider().get();
     }
 
     @Test
     public void test_ModuleTypeJAVA_success() {
-        assertTrue(rule.getRule(ModuleType.JAVA).test("com.nubeiot.edge.module.xyz"));
-        final List<String> searchPattern = rule.getSearchPattern(ModuleType.JAVA);
-        assertEquals(1, searchPattern.size());
-        assertTrue(searchPattern.contains("com.nubeiot.edge.module"));
+        ModuleTypeRule rule = new EdgeInstallerRuleProvider().get();
+        assertTrue(rule.getRule(ModuleType.JAVA).test("com.nubeiot.edge.connector.xyz"));
+        assertTrue(rule.getSearchPattern(ModuleType.JAVA)
+                       .containsAll(Arrays.asList("com.nubeiot.edge.connector", "com.nubeiot.edge.rule")));
     }
 
     @Test

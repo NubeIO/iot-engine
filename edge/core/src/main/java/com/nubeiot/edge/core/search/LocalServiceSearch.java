@@ -2,7 +2,6 @@ package com.nubeiot.edge.core.search;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -26,7 +25,7 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.EntityHandler;
+import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.Tables;
 import com.nubeiot.edge.core.model.tables.records.TblModuleRecord;
@@ -37,17 +36,16 @@ public final class LocalServiceSearch implements IServiceSearch {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private EntityHandler entityHandler;
+    private EdgeEntityHandler entityHandler;
 
-    public LocalServiceSearch(@NonNull EntityHandler entityHandler) {
+    public LocalServiceSearch(@NonNull EdgeEntityHandler entityHandler) {
         this.entityHandler = entityHandler;
     }
 
     @Override
     public Single<JsonObject> search(RequestData requestData) throws NubeException {
         logger.info("Start executing local service searching  {}", requestData.getFilter());
-        return this.entityHandler.getExecutorSupplier()
-                                 .get()
+        return this.entityHandler.getQueryExecutor()
                                  .executeAny(context -> filter(validateFilter(requestData.getFilter()),
                                                                requestData.getPagination(), context))
                                  .flattenAsObservable(records -> records)
@@ -98,12 +96,12 @@ public final class LocalServiceSearch implements IServiceSearch {
               });
         final Instant from = filter.getInstant("from");
         if (Objects.nonNull(from)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(Date.from(from)));
+            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(DateTimes.fromUTC(from)));
         }
 
         final Instant to = filter.getInstant("to");
         if (Objects.nonNull(to)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(Date.from(to)));
+            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(DateTimes.fromUTC(to)));
         }
 
         return sql.limit(pagination.getPerPage())

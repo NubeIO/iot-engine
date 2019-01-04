@@ -2,7 +2,7 @@ import org.jooq.meta.jaxb.ForcedType
 
 import com.nubeiot.buildscript.jooq.DB
 import com.nubeiot.buildscript.jooq.JooqGenerateTask
-import com.nubeiot.buildscript.jooq.JooqGenerateTask.CustomDataType
+import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
 import com.nubeiot.buildscript.jooq.Utils
 
 dependencies {
@@ -15,16 +15,15 @@ dependencies {
 
 task jooqGen(type: JooqGenerateTask) {
     packageName = "com.nubeiot.edge.core.model"
-    javaTypes = [
-        new CustomDataType(className: "com.nubeiot.edge.core.loader.ModuleType",
-                           converter: "%s.name()",
-                           parser: "com.nubeiot.edge.core.loader.ModuleTypeFactory.factory((String)%s)")
-    ]
-    dbTypes = [
+    enumTypes = project(':core:sql').ext.enumTypes
+    dbTypes = project(':core:sql').ext.dbTypes + [
         new ForcedType(userType: "com.nubeiot.edge.core.loader.ModuleType", types: DB.TYPES.varchar,
                        expression: Utils.toRegexIgnoreCase("service_type"),
-                       converter: "com.nubeiot.edge.core.model.converter.ModuleTypeConverter"),
-        new ForcedType(userType: "java.util.Date", types: DB.TYPES.timestamp,
-                       converter: "com.nubeiot.core.sql.converter.DateConverter")
+                       converter: "com.nubeiot.edge.core.model.converter.ModuleTypeConverter")
+    ]
+    javaTypes = project(':core:sql').ext.javaTypes + [
+        new JsonDataType(className: "com.nubeiot.edge.core.loader.ModuleType",
+                         converter: "%s.name()",
+                         parser: "com.nubeiot.edge.core.loader.ModuleTypeFactory.factory((String)%s)")
     ]
 }

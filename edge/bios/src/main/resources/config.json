@@ -2,7 +2,7 @@
   "__app__": {
     "__sql__": {
       "hikari": {
-        "jdbcUrl": "jdbc:h2:file:./bios;database_to_upper=false"
+        "jdbcUrl": "jdbc:h2:file:./bios"
       }
     },
     "auto_install": true,

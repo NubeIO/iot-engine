@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.json.JSONException;
-import org.junit.BeforeClass;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.slf4j.LoggerFactory;
@@ -46,7 +45,6 @@ public class BaseHttpServerTest {
     protected RequestOptions requestOptions;
     private HttpServer httpServer;
 
-    @BeforeClass
     protected static void beforeSuite() {
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
         Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);

@@ -29,4 +29,26 @@ class UtilsTest {
         Assert.assertEquals("test_a_b_c", Utils.toSnakeCase("TEST_Abc", false))
         Assert.assertEquals("test_abc", Utils.toSnakeCase("test_abc", false))
     }
+
+    @Test
+    void replace_json_suffix() {
+        Assert.assertEquals("abc", Utils.replaceJsonSuffix("abc"))
+        Assert.assertEquals("abc", Utils.replaceJsonSuffix("abc_json"))
+        Assert.assertEquals("abc", Utils.replaceJsonSuffix("abc_json_array"))
+        Assert.assertEquals("abc", Utils.replaceJsonSuffix("abc_array"))
+        Assert.assertEquals("ABC", Utils.replaceJsonSuffix("ABC_JSON"))
+        Assert.assertEquals("ABC", Utils.replaceJsonSuffix("ABC_JSON_ARRAY"))
+        Assert.assertEquals("ABC", Utils.replaceJsonSuffix("ABC_ARRAY"))
+    }
+
+    @Test
+    void expression_datetime_zone() {
+        Assert.assertFalse("abc".matches(DB.TYPES.timestampz))
+        Assert.assertFalse("TIMESTAMP".matches(DB.TYPES.timestampz))
+        Assert.assertFalse("TIMESTAMP WITH TIME ZONE1".matches(DB.TYPES.timestampz))
+        Assert.assertTrue("TIMESTAMP WITH TIME ZONE".matches(DB.TYPES.timestampz))
+        Assert.assertTrue("timestamp with time zone".matches(DB.TYPES.timestampz))
+        Assert.assertTrue("timestamp(6) with time zone".matches(DB.TYPES.timestampz))
+        Assert.assertFalse("timestamp with time zone(9)".matches(DB.TYPES.timestampz))
+    }
 }

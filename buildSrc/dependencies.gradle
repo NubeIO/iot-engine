@@ -48,10 +48,13 @@ ext.deps = [
     ]
 ]
 
-def genFolder = "src/generated"
+def genFolder = "generated"
 
 ext.genSrc = [
-    srcFolder     : genFolder,
-    javaSrcFolder : "$genFolder/java",
-    resourceFolder: "$genFolder/resources"
+    srcFolder         : "$genFolder/main",
+    javaSrcFolder     : "$genFolder/main/java",
+    resourceFolder    : "$genFolder/main/resources",
+    testFolder        : "$genFolder/test",
+    javaTestSrcFolder : "$genFolder/test/java",
+    testResourceFolder: "$genFolder/test/resources"
 ]

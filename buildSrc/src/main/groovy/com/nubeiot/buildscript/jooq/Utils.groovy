@@ -2,13 +2,19 @@ package com.nubeiot.buildscript.jooq
 
 class DB {
     static TYPES = [
-        varchar  : Utils.toRegexIgnoreCase("N?VARCHAR"),
-        text     : Utils.toRegexIgnoreCase("TEXT|CLOB"),
-        timestamp: Utils.toRegexIgnoreCase("TIMESTAMP")
+        varchar   : Utils.toRegexIgnoreCase("N?VARCHAR"),
+        text      : Utils.toRegexIgnoreCase("TEXT|CLOB"),
+        date      : Utils.toRegexIgnoreCase("DATE"),
+        time      : Utils.toRegexIgnoreCase("TIME"),
+        timestamp : Utils.toRegexIgnoreCase("TIMESTAMP"),
+        timestampz: Utils.toRegexIgnoreCase("timestamp(\\([0-9]\\))? with time zone"),
+
     ]
     static COL_REGEX = [
         json     : Utils.toRegexIgnoreCase(".+_JSON\$"),
         jsonArray: Utils.toRegexIgnoreCase(".+(_JSON_ARRAY|_ARRAY)\$"),
+        period   : Utils.toRegexIgnoreCase(".+(_PERIOD)\$"),
+        duration : Utils.toRegexIgnoreCase(".+(_DURATION)\$"),
     ]
 }
 
@@ -32,7 +38,7 @@ static def toSnakeCase(String text, boolean upper = true) {
 }
 
 static def replaceJsonSuffix(String name) {
-    return name.replaceAll("_JSON(_ARRAY)?|_ARRAY\$", "")
+    return name.replaceAll(toRegexIgnoreCase("_JSON(_ARRAY)?|_ARRAY\$"), "")
 }
 
 static def toRegexIgnoreCase(String name) {

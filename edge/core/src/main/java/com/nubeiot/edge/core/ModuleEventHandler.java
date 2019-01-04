@@ -60,7 +60,8 @@ public final class ModuleEventHandler implements EventHandler {
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
-        return this.verticle.processDeploymentTransaction(new TblModule().setServiceId(module.getServiceId()),
+        return this.verticle.getEntityHandler()
+                            .processDeploymentTransaction(new TblModule().setServiceId(module.getServiceId()),
                                                           EventAction.HALT);
     }
 
@@ -76,9 +77,9 @@ public final class ModuleEventHandler implements EventHandler {
                 throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT,
                                         "Provide at least service_id or service_name");
             }
-            return this.verticle.processDeploymentTransaction(module, EventAction.UPDATE);
+            return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.UPDATE);
         }
-        return this.verticle.processDeploymentTransaction(module, EventAction.UPDATE);
+        return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.UPDATE);
     }
 
     @EventContractor(events = EventAction.REMOVE, returnType = Single.class)
@@ -87,7 +88,7 @@ public final class ModuleEventHandler implements EventHandler {
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
-        return this.verticle.processDeploymentTransaction(module, EventAction.REMOVE);
+        return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.REMOVE);
     }
 
     @EventContractor(events = EventAction.CREATE, returnType = Single.class)
@@ -99,7 +100,7 @@ public final class ModuleEventHandler implements EventHandler {
         if (Strings.isBlank(module.getServiceName())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Missing service_name");
         }
-        return this.verticle.processDeploymentTransaction(module, EventAction.CREATE);
+        return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.CREATE);
     }
 
 }

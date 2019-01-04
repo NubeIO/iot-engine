@@ -1,60 +1,76 @@
 package com.nubeiot.core.sql;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
 
+import org.jooq.Catalog;
 import org.jooq.Configuration;
+import org.jooq.Constraint;
+import org.jooq.CreateIndexStep;
+import org.jooq.CreateSchemaFinalStep;
+import org.jooq.ForeignKey;
+import org.jooq.Key;
+import org.jooq.Schema;
+import org.jooq.Table;
+import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DefaultConfiguration;
 
-import com.nubeiot.core.component.IComponent;
-import com.nubeiot.core.exceptions.DatabaseException;
-import com.nubeiot.core.exceptions.ErrorMessage;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.utils.Reflections;
-import com.nubeiot.core.utils.Strings;
-import com.zaxxer.hikari.HikariDataSource;
-
 import io.reactivex.Single;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.ext.jdbc.JDBCClient;
-import io.vertx.reactivex.ext.sql.SQLClient;
-import io.vertx.reactivex.ext.sql.SQLConnection;
+
+import com.nubeiot.core.component.IComponentProvider;
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.exceptions.DatabaseException;
+import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.exceptions.HiddenException;
+import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.core.exceptions.InitializerError.MigrationError;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeExceptionConverter;
+import com.nubeiot.core.utils.Reflections;
+import com.zaxxer.hikari.HikariDataSource;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class SQLWrapper implements IComponent {
+public final class SQLWrapper<T extends EntityHandler> extends AbstractVerticle {
 
     private static final Logger logger = LoggerFactory.getLogger(SQLWrapper.class);
-    private static final String DDL_SQL_FILE = "ddl/ddl.ddl";
 
-    private final Vertx vertx;
-    private final SqlConfig sqlConfig;
-    private final Supplier<Single<JsonObject>> initData;
+    private final Catalog catalog;
+    private final Class<T> entityHandlerClass;
     private DataSource dataSource;
     @Getter
-    private Configuration jooqConfig;
+    private T entityHandler;
 
     @Override
-    public void start(Future<Void> startFuture) throws NubeException { }
-
-    @Override
-    public void start() throws NubeException {
-        initDBConnection().flatMap(client -> this.createDatabase(client).flatMap(ignores -> this.initData.get()))
-                          .subscribe(logger::info, throwable -> {
-                              logger.error("Failed to startup application", throwable);
-                              throw new IllegalStateException(ErrorMessage.parse(throwable).toJson().encode());
-                          });
+    public void start(Future<Void> startFuture) throws NubeException {
+        SqlConfig sqlConfig = IComponentProvider.computeConfig("sql.json", SqlConfig.class, config());
+        logger.info("Create Hikari datasource from application configuration...");
+        logger.debug(sqlConfig.getHikariConfig().toJson());
+        this.dataSource = new HikariDataSource(sqlConfig.getHikariConfig());
+        this.createDatabase(new DefaultConfiguration().set(dataSource).set(sqlConfig.getDialect()))
+            .flatMap(this::validateInitOrMigrationData)
+            .subscribe(result -> complete(startFuture, result),
+                       t -> startFuture.fail(new NubeExceptionConverter(false).apply(t)));
     }
 
     @Override
@@ -62,45 +78,142 @@ public final class SQLWrapper implements IComponent {
         try {
             this.dataSource.unwrap(HikariDataSource.class).close();
         } catch (SQLException e) {
-            logger.debug("Unable to close datasource", e);
+            logger.info("Unable to close datasource", e);
         }
     }
 
-    @Override
-    public void stop(Future<Void> future) throws NubeException { }
-
-    private Single<SQLClient> initDBConnection() {
-        logger.info("Create Hikari datasource from application configuration...");
-        logger.debug(this.sqlConfig.getHikariConfig().toJson());
-        this.dataSource = new HikariDataSource(this.sqlConfig.getHikariConfig());
-        this.jooqConfig = new DefaultConfiguration().set(dataSource);
-        return Single.just(JDBCClient.newInstance(io.vertx.ext.jdbc.JDBCClient.create(vertx, dataSource)));
+    private void complete(Future<Void> startFuture, EventMessage result) throws Exception {
+        logger.info("Result: {}", result.toJson().encode());
+        logger.info("DATABASE IS READY TO USE");
+        super.start(startFuture);
     }
 
-    private Single<List<Integer>> createDatabase(SQLClient sqlClient) {
-        logger.info("Create database...");
-        String fileContent = Strings.convertToString(Reflections.staticClassLoader().getResourceAsStream(DDL_SQL_FILE));
-        if (Strings.isBlank(fileContent)) {
-            return Single.just(new ArrayList<>());
+    private Single<EventMessage> createDatabase(Configuration jooqConfig) {
+        try {
+            this.entityHandler = createEntityHandler(jooqConfig, vertx, entityHandlerClass);
+            if (this.entityHandler.isNew()) {
+                createNewDatabase(jooqConfig);
+                logger.info("Initializing data...");
+                return entityHandler.initData();
+            }
+            logger.info("Migrating database...");
+            return this.entityHandler.migrate();
+        } catch (DataAccessException e) {
+            return Single.error(new InitializerError("Unknown error when initializing database", e));
         }
-        logger.trace("SQL::{}", fileContent);
-        return sqlClient.rxGetConnection().doOnError(throwable -> {
-            throw new DatabaseException("Cannot open database connection", throwable);
-        }).flatMap(conn -> executeCreateDDL(conn, fileContent));
     }
 
-    private Single<List<Integer>> executeCreateDDL(SQLConnection conn, String fileContent) {
-        List<String> sqlStatements = Strings.isBlank(fileContent)
-                                     ? new ArrayList<>()
-                                     : Arrays.stream(fileContent.split(";"))
-                                             .filter(Strings::isNotBlank)
-                                             .collect(Collectors.toList());
-        return conn.rxBatch(sqlStatements)
-                   .doAfterSuccess(result -> logger.info("Create Database success: {}", result))
-                   .doOnError(throwable -> {
-                       throw new DatabaseException("Cannot create database", throwable);
-                   })
-                   .doFinally(conn::close);
+    private T createEntityHandler(Configuration configuration, Vertx vertx, Class<T> clazz) {
+        Map<Class, Object> map = new LinkedHashMap<>();
+        map.put(Configuration.class, configuration);
+        map.put(Vertx.class, vertx);
+        return ((HandlerConsumer) Reflections.createObject(clazz, map, new HandlerConsumer())).get();
+    }
+
+    private void createNewDatabase(Configuration jooqConfig) {
+        logger.info("Creating database...");
+        logger.info("Creating schema...");
+        this.catalog.schemaStream()
+                    .map(schema -> createSchema(jooqConfig, schema))
+                    .map(Schema::getTables)
+                    .flatMap(Collection::stream)
+                    .map(table -> createTableAndIndex(jooqConfig, table))
+                    .map(this::listConstraint)
+                    .map(Map::entrySet)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toMap(Entry::getKey, Entry::getValue, this::merge))
+                    .forEach((table, constraints) -> createConstraints(jooqConfig, table, constraints));
+        logger.info("Created database successfully...");
+    }
+
+    private Schema createSchema(Configuration jooqConfig, Schema schema) {
+        CreateSchemaFinalStep step = jooqConfig.dsl().createSchemaIfNotExists(schema);
+        logger.debug(step.getSQL());
+        step.execute();
+        logger.info("Created schema {} successfully", schema.getName());
+        return schema;
+    }
+
+    private Map<Table, Set<Constraint>> listConstraint(Table<?> table) {
+        Set<Constraint> constraints = table.getKeys().stream().map(Key::constraint).collect(Collectors.toSet());
+        if (Objects.nonNull(table.getPrimaryKey())) {
+            constraints.add(table.getPrimaryKey().constraint());
+        }
+        if (Objects.nonNull(table.getReferences())) {
+            constraints.addAll(table.getReferences().stream().map(ForeignKey::constraint).collect(Collectors.toSet()));
+        }
+        return Collections.singletonMap(table, constraints);
+    }
+
+    private Table<?> createTableAndIndex(Configuration jooqConfig, Table<?> table) {
+        createTable(jooqConfig, table);
+        createIndex(jooqConfig, table);
+        logger.info("Created table {} successfully", table.getQualifiedName());
+        return table;
+    }
+
+    private void createTable(Configuration jooqConfig, Table<?> table) {
+        logger.info("Creating table {}...", table.getSchema().getQualifiedName().append(table.getQualifiedName()));
+        jooqConfig.dsl().createTableIfNotExists(table).columns(table.fields()).execute();
+    }
+
+    private void createIndex(Configuration jooqConfig, Table<?> table) {
+        table.getIndexes().forEach(index -> {
+            logger.info("Creating index {}...", table.getSchema().getQualifiedName().append(index.getQualifiedName()));
+            CreateIndexStep indexStep;
+            if (index.getUnique()) {
+                indexStep = jooqConfig.dsl().createUniqueIndexIfNotExists(index.getName());
+            } else {
+                indexStep = jooqConfig.dsl().createIndexIfNotExists(index.getName());
+            }
+            indexStep.on(table, index.getFields()).where(index.getWhere()).execute();
+        });
+    }
+
+    private void createConstraints(Configuration jooqConfig, Table table, Set<Constraint> constraints) {
+        logger.info("Creating constraints of table {}...", table.getName());
+        jooqConfig.dsl().setSchema(table.getSchema()).execute();
+        constraints.forEach(constraint -> {
+            logger.debug("Constraint: {}", constraint.getQualifiedName());
+            jooqConfig.dsl().alterTable(table).add(constraint).execute();
+        });
+    }
+
+    private Set<Constraint> merge(Set<Constraint> c1, Set<Constraint> c2) {
+        return Stream.of(c1, c2).flatMap(Set::stream).collect(Collectors.toSet());
+    }
+
+    private Single<EventMessage> validateInitOrMigrationData(EventMessage result) {
+        if (result.isError()) {
+            ErrorMessage error = result.getError();
+            Throwable t = error.getThrowable();
+            if (Objects.isNull(t)) {
+                t = new NubeException(error.getCode(), error.getMessage());
+            }
+            if (result.getAction() == EventAction.INIT) {
+                return Single.error(new InitializerError("Failed to startup SQL component", t));
+            } else {
+                return Single.error(new MigrationError("Failed to startup SQL component", t));
+            }
+        }
+        return Single.just(result);
+    }
+
+    private class HandlerConsumer implements BiConsumer<T, HiddenException>, Supplier<T> {
+
+        private T entityHandler;
+
+        @Override
+        public void accept(T t, HiddenException e) {
+            if (Objects.nonNull(e)) {
+                throw new DatabaseException("Error when creating entity handler", e);
+            }
+            entityHandler = t;
+        }
+
+        @Override
+        public T get() { return entityHandler; }
+
     }
 
 }

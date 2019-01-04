@@ -1,63 +1,59 @@
 package com.nubeiot.edge.bios;
 
 import java.util.Map;
-import java.util.function.Supplier;
+
+import org.jooq.Configuration;
 
 import io.reactivex.Single;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.edge.core.EdgeVerticle;
-import com.nubeiot.edge.core.ModuleEventHandler;
-import com.nubeiot.edge.core.TransactionEventHandler;
+import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeFactory;
-import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.Tables;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
-import com.nubeiot.eventbus.edge.EdgeEventBus;
 
-public final class OsDeploymentVerticle extends EdgeVerticle {
+public class EdgeBiosEntityHandler extends EdgeEntityHandler {
 
-    @Override
-    protected void registerEventBus() {
-        EventController controller = new EventController(getVertx());
-        controller.consume(EdgeEventBus.BIOS_INSTALLER, new ModuleEventHandler(this, EdgeEventBus.BIOS_INSTALLER));
-        controller.consume(EdgeEventBus.BIOS_TRANSACTION,
-                           new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION));
+    protected EdgeBiosEntityHandler(Configuration configuration, Vertx vertx) {
+        super(configuration, vertx);
     }
 
     @Override
-    protected Single<JsonObject> initData() {
-        JsonObject appConfig = getNubeConfig().getAppConfig().toJson();
-        logger.info("Setup NubeIO Bios with config {}", appConfig);
+    public Single<EventMessage> initData() {
+        JsonObject appConfig = this.verticle.getNubeConfig().getAppConfig().toJson();
         JsonObject repositoryCfg = setupMavenRepos(appConfig.getJsonObject("repository", new JsonObject()));
         boolean autoInstall = appConfig.getBoolean("auto_install", true);
-        return this.entityHandler.isFreshInstall().flatMap(isFresh -> {
-            if (isFresh) {
-                if (autoInstall) {
-                    return initApp(repositoryCfg, appConfig.getJsonObject("default_app", new JsonObject()));
-                }
-                return Single.just(new JsonObject().put("message", "nothing change").put("status", Status.SUCCESS));
-            }
-            return this.startupModules();
-        });
+        return this.isFreshInstall()
+                   .map(isFresh -> startup(appConfig, repositoryCfg, autoInstall, isFresh))
+                   .map(r -> EventMessage.success(EventAction.INIT, r));
     }
 
-    private Single<JsonObject> initApp(JsonObject repositoryCfg, JsonObject appCfg) {
+    private Single<JsonObject> startup(JsonObject appConfig, JsonObject repositoryCfg, boolean autoInstall,
+                                       Boolean isFresh) {
+        if (!isFresh) {
+            return this.startupModules();
+        }
+        if (autoInstall) {
+            return initInstaller(repositoryCfg, appConfig.getJsonObject("default_app", new JsonObject()));
+        }
+        return Single.just(new JsonObject());
+    }
+
+    private Single<JsonObject> initInstaller(JsonObject repositoryCfg, JsonObject appCfg) {
         JsonObject deployCfg = appCfg.getJsonObject(Tables.TBL_MODULE.DEPLOY_CONFIG.getName().toLowerCase());
         NubeConfig.AppConfig appConfig = IConfig.merge(repositoryCfg, deployCfg, NubeConfig.AppConfig.class);
-        ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
-                                              .fromJson(ModuleTypeFactory.getDefault()
-                                                                         .serialize(appCfg, this.getModuleRule()))
+        JsonObject module = ModuleTypeFactory.getDefault().serialize(appCfg, this.verticle.getModuleRule());
+        ITblModule tblModule = new TblModule().setPublishedBy("NubeIO").fromJson(module)
                                               .setDeployConfig(appConfig.toJson());
         return processDeploymentTransaction(tblModule, EventAction.INIT);
     }
@@ -79,13 +75,8 @@ public final class OsDeploymentVerticle extends EdgeVerticle {
             logger.info("Maven remote repositories: {}", remoteCfg);
             ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
                 remoteCfg.getJsonArray("urls", new JsonArray()).getList()).setLocalRepository(local);
-            vertx.getDelegate().registerVerticleFactory(new MavenVerticleFactory(resolver));
+            vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
-    }
-
-    @Override
-    protected Supplier<ModuleTypeRule> getModuleRuleProvider() {
-        return new BIOSModuleTypeRuleProvider();
     }
 
 }

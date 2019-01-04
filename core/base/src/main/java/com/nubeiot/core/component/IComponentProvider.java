@@ -18,7 +18,8 @@ public interface IComponentProvider {
     }
 
     static <T extends IConfig> T computeConfig(String defCfgClasspathFile, Class<T> configClass, JsonObject given) {
-        return IConfig.merge(Configs.loadJsonConfig(defCfgClasspathFile), given, configClass);
+        return IConfig.merge(IConfig.from(Configs.loadJsonConfig(defCfgClasspathFile), configClass), given,
+                             configClass);
     }
 
     static <T extends IConfig> T computeConfig(String defCfgClasspathFile, Class<T> configClass, NubeConfig config) {

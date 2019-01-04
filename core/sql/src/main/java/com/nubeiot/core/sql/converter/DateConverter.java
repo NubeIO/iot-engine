@@ -1,35 +1,33 @@
 package com.nubeiot.core.sql.converter;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Objects;
 
 import org.jooq.Converter;
 
-public final class DateConverter implements Converter<Timestamp, Date> {
+public final class DateConverter implements Converter<java.sql.Date, LocalDate> {
 
     @Override
-    public Date from(Timestamp databaseObject) {
+    public LocalDate from(java.sql.Date databaseObject) {
         if (Objects.isNull(databaseObject)) {
             return null;
         }
-        return Date.from(Instant.ofEpochMilli(databaseObject.getTime()));
+        return LocalDate.ofEpochDay(databaseObject.getTime());
     }
 
     @Override
-    public Timestamp to(Date userObject) {
-        return Objects.isNull(userObject) ? null : new Timestamp(userObject.getTime());
+    public java.sql.Date to(LocalDate userObject) {
+        return Objects.isNull(userObject) ? null : new java.sql.Date(userObject.toEpochDay());
     }
 
     @Override
-    public Class<Timestamp> fromType() {
-        return Timestamp.class;
+    public Class<java.sql.Date> fromType() {
+        return java.sql.Date.class;
     }
 
     @Override
-    public Class<Date> toType() {
-        return Date.class;
+    public Class<LocalDate> toType() {
+        return LocalDate.class;
     }
 
 }

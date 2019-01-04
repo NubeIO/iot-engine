@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.nubeiot.core.utils.Strings;
-
 import io.reactivex.exceptions.CompositeException;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import com.nubeiot.core.utils.Strings;
+
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 /**
@@ -17,9 +20,12 @@ import lombok.NonNull;
  *
  * @see ErrorMessage
  */
+@NoArgsConstructor
+@AllArgsConstructor
 public final class NubeExceptionConverter implements Function<Throwable, NubeException> {
 
-    private final Logger logger = LoggerFactory.getLogger(NubeExceptionConverter.class);
+    private static final Logger logger = LoggerFactory.getLogger(NubeExceptionConverter.class);
+    private boolean friendly = true;
 
     @Override
     public NubeException apply(@NonNull Throwable throwable) {
@@ -29,12 +35,12 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
             t = exceptions.get(exceptions.size() - 1);
         }
         if (t instanceof NubeException) {
-            return convertFriendly((NubeException) t, true);
+            return friendly ? convertFriendly((NubeException) t, true) : (NubeException) t;
         }
         if (t.getCause() instanceof NubeException) {
             // Rarely case
             logger.debug("Wrapper Exception: ", t);
-            return convertFriendly((NubeException) t.getCause(), false);
+            return friendly ? convertFriendly((NubeException) t.getCause(), false) : (NubeException) t.getCause();
         }
         return convertFriendly(new NubeException(NubeException.ErrorCode.UNKNOWN_ERROR, null, t), false);
     }

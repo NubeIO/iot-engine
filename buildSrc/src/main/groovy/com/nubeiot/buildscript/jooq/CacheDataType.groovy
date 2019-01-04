@@ -1,39 +1,49 @@
 package com.nubeiot.buildscript.jooq
 
-import java.time.Instant
+
 import java.util.function.Function
 
-import com.nubeiot.buildscript.jooq.JooqGenerateTask.CustomDataType
+import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
 
 class CacheDataType {
+
     private static CacheDataType instance
 
-    private CacheDataType() {
-        this.addDataType(Date.class.getName(), "%s.getTime()",
-                         "Date.from(java.time.Instant.ofEpochMilli((Long)%s))")
-        this.addDataType(Instant.class.getName(), "%s.toEpochMilli()",
-                         "java.time.Instant.ofEpochMilli((Long)%s))")
-    }
+    private CacheDataType() {}
 
     static synchronized CacheDataType instance() {
         return instance == null ? instance = new CacheDataType() : instance
     }
 
+    private final Set<JsonDataType> dataTypes = new HashSet<>()
     private final Map<String, Function<String, String>> converters = new HashMap<>()
     private final Map<String, Function<String, String>> parsers = new HashMap<>()
+
+    Set<JsonDataType> getDataTypes() { return dataTypes }
 
     Map<String, Function<String, String>> getParsers() { return parsers }
 
     Map<String, Function<String, String>> getConverters() { return converters }
 
     CacheDataType addEnumClasses(Set<String> enums) {
-        enums.each { clazz -> addDataType(clazz, null, clazz + ".valueOf((String)%s)") }
+        enums.each { clazz ->
+            addDataType(new JsonDataType(className: clazz, converter: null,
+                                         parser: "${clazz}.valueOf(((String)%s).toUpperCase())"))
+        }
         return this
     }
 
-    CacheDataType addDataType(Set<CustomDataType> dataTypes) {
+    CacheDataType addDataType(Set<JsonDataType> dataTypes) {
         if (Objects.nonNull(dataTypes)) {
-            dataTypes.each { dt -> addDataType(dt.getClassName(), dt.getConverter(), dt.getParser()) }
+            dataTypes.each { dt -> addDataType(dt) }
+        }
+        return this
+    }
+
+    CacheDataType addDataType(JsonDataType dataType) {
+        if (Objects.nonNull(dataType)) {
+            dataTypes.add(dataType)
+            addDataType(dataType.getClassName(), dataType.getConverter(), dataType.getParser())
         }
         return this
     }

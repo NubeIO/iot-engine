@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 
-final class BIOSModuleTypeRuleProvider implements Supplier<ModuleTypeRule> {
+final class EdgeBiosRuleProvider implements Supplier<ModuleTypeRule> {
 
     @Override
     public ModuleTypeRule get() {
