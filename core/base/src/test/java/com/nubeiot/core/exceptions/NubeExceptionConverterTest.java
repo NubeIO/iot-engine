@@ -10,7 +10,7 @@ public class NubeExceptionConverterTest {
 
     @Before
     public void setup() {
-        converter = new NubeExceptionConverter();
+        converter = new NubeExceptionConverter(true);
     }
 
     @Test(expected = NullPointerException.class)

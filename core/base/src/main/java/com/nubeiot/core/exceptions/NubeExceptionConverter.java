@@ -10,8 +10,8 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.utils.Strings;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 /**
@@ -19,13 +19,33 @@ import lombok.NonNull;
  * user, any technical information will be log.
  *
  * @see ErrorMessage
+ * @see NubeException
  */
-@NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public final class NubeExceptionConverter implements Function<Throwable, NubeException> {
 
     private static final Logger logger = LoggerFactory.getLogger(NubeExceptionConverter.class);
-    private boolean friendly = true;
+    private final boolean friendly;
+
+    /**
+     * Friendly converter for human user
+     *
+     * @param throwable any exception
+     * @return nube exception
+     */
+    public static NubeException friendly(Throwable throwable) {
+        return new NubeExceptionConverter(true).apply(throwable);
+    }
+
+    /**
+     * Raw converter for system process
+     *
+     * @param throwable any exception
+     * @return nube exception
+     */
+    public static NubeException from(Throwable throwable) {
+        return new NubeExceptionConverter(false).apply(throwable);
+    }
 
     @Override
     public NubeException apply(@NonNull Throwable throwable) {

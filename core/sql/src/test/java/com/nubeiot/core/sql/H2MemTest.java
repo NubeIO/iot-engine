@@ -2,6 +2,7 @@ package com.nubeiot.core.sql;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.jooq.Table;
 import org.junit.After;
@@ -43,7 +44,7 @@ public class H2MemTest extends BaseSqlTest {
 
     @Override
     @NonNull String getJdbcUrl() {
-        return "jdbc:h2:mem:dbh2mem";
+        return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString();
     }
 
     @Test
@@ -61,7 +62,6 @@ public class H2MemTest extends BaseSqlTest {
 
     @Test
     public void test_init_with_data(TestContext context) throws InterruptedException {
-        //TODO WHY NOT REMOVE NULL VAL??
         JsonObject e0 = JsonPojo.from(new TblSample_00().setId(1)
                                                         .setFBool(true)
                                                         .setFStr("hello")
@@ -70,8 +70,6 @@ public class H2MemTest extends BaseSqlTest {
                                                         .setFBool(false)
                                                         .setFStr("hola")
                                                         .setFValue(new JsonObject().put("key", "spanish"))).toJson();
-        e0.remove(ManySchema.TBL_SAMPLE_00.F_DATE.getName().toLowerCase());
-        e1.remove(ManySchema.TBL_SAMPLE_00.F_DATE.getName().toLowerCase());
         List<String> excludes = Collections.singletonList(ManySchema.TBL_SAMPLE_00.F_DATE.getName().toLowerCase());
         MockManyEntityHandler entityHandler = startSQL(ManySchema.CATALOG, MockManyEntityHandler.class, context);
         Async async = context.async(4);

@@ -4,18 +4,17 @@ import java.util.function.Supplier;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-import com.nubeiot.core.component.IComponent;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.kafka.KafkaWriterSupplier;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.producer.KafkaWriteStream;
+
+import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.kafka.KafkaWriterSupplier;
+
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class MockKafkaProducer implements IComponent {
+public class MockKafkaProducer {
 
     private final Vertx vertx;
     private final JsonObject producerCfg;
@@ -23,8 +22,7 @@ public class MockKafkaProducer implements IComponent {
     private final Supplier<EventMessage> messageSupplier;
     private KafkaWriteStream<String, EventMessage> producer;
 
-    @Override
-    public void start() throws NubeException {
+    public void start() throws Exception {
         producer = KafkaWriterSupplier.create(vertx, producerCfg, String.class, EventMessage.class);
         vertx.setPeriodic(2000, id -> {
             EventMessage message = messageSupplier.get();
@@ -34,8 +32,7 @@ public class MockKafkaProducer implements IComponent {
         });
     }
 
-    @Override
-    public void stop() throws NubeException {
+    public void stop() throws Exception {
         if (producer != null) {
             producer.close();
         }

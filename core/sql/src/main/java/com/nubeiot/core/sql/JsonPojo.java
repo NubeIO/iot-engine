@@ -1,5 +1,6 @@
 package com.nubeiot.core.sql;
 
+import java.io.IOException;
 import java.util.Map;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -12,30 +13,39 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class JsonPojo<T extends VertxPojo> implements JsonData {
+public final class JsonPojo<T extends VertxPojo> implements JsonData {
 
     @Getter
     @JsonIgnore
     private final T pojo;
+    @Getter
+    private ObjectMapper mapper = Json.mapper.copy().setSerializationInclusion(Include.NON_NULL);
 
     public static <T extends VertxPojo> JsonPojo<T> from(@NonNull T pojo) {
         return new JsonPojo<>(pojo);
     }
 
-    @Override
-    public ObjectMapper mapper() {
-        return Json.mapper.setSerializationInclusion(Include.NON_NULL);
+    public static <T extends VertxPojo> JsonPojo<T> from(@NonNull T pojo, @NonNull ObjectMapper mapper) {
+        return new JsonPojo<>(pojo, mapper);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public JsonObject toJson() {
-        return new JsonObject((Map<String, Object>) mapper().convertValue(this.pojo.toJson().getMap(), Map.class));
+        JsonObject json = this.pojo.toJson();
+        try {
+            Map map = mapper.readValue(this.mapper.writeValueAsBytes(json.getMap()), Map.class);
+            return new JsonObject(map);
+        } catch (IOException e) {
+            return json;
+        }
     }
 
 }

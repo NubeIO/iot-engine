@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 abstract class BaseSqlTest {
 
+    public static int TEST_TIMEOUT = 5;
     private Vertx vertx;
     private DeploymentOptions options;
     private String deployId;
@@ -100,7 +101,7 @@ abstract class BaseSqlTest {
             ref.set(verticle.getEntityHandler());
             latch.countDown();
         });
-        latch.await(8, TimeUnit.SECONDS);
+        latch.await(TEST_TIMEOUT, TimeUnit.SECONDS);
         return ref.get();
     }
 

@@ -13,7 +13,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class SqlConfig implements IConfig {
+public final class SqlConfig implements IConfig {
 
     public static final String NAME = "__sql__";
 

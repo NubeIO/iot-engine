@@ -27,13 +27,10 @@ import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DefaultConfiguration;
 
 import io.reactivex.Single;
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
-import com.nubeiot.core.component.IComponentProvider;
+import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.DatabaseException;
@@ -51,9 +48,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class SQLWrapper<T extends EntityHandler> extends AbstractVerticle {
-
-    private static final Logger logger = LoggerFactory.getLogger(SQLWrapper.class);
+public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlConfig> {
 
     private final Catalog catalog;
     private final Class<T> entityHandlerClass;
@@ -62,19 +57,23 @@ public final class SQLWrapper<T extends EntityHandler> extends AbstractVerticle 
     private T entityHandler;
 
     @Override
-    public void start(Future<Void> startFuture) throws NubeException {
-        SqlConfig sqlConfig = IComponentProvider.computeConfig("sql.json", SqlConfig.class, config());
-        logger.info("Create Hikari datasource from application configuration...");
-        logger.debug(sqlConfig.getHikariConfig().toJson());
-        this.dataSource = new HikariDataSource(sqlConfig.getHikariConfig());
-        this.createDatabase(new DefaultConfiguration().set(dataSource).set(sqlConfig.getDialect()))
-            .flatMap(this::validateInitOrMigrationData)
-            .subscribe(result -> complete(startFuture, result),
-                       t -> startFuture.fail(new NubeExceptionConverter(false).apply(t)));
+    public void start() {
+        super.start();
+        logger.info("Creating Hikari datasource from application configuration...");
+        logger.debug(config.getHikariConfig().toJson());
+        this.dataSource = new HikariDataSource(config.getHikariConfig());
     }
 
     @Override
-    public void stop() throws NubeException {
+    public void start(Future<Void> future) {
+        this.start();
+        this.createDatabase(new DefaultConfiguration().set(dataSource).set(config.getDialect()))
+            .flatMap(this::validateInitOrMigrationData)
+            .subscribe(result -> complete(future, result), t -> future.fail(NubeExceptionConverter.from(t)));
+    }
+
+    @Override
+    public void stop() {
         try {
             this.dataSource.unwrap(HikariDataSource.class).close();
         } catch (SQLException e) {
@@ -82,10 +81,16 @@ public final class SQLWrapper<T extends EntityHandler> extends AbstractVerticle 
         }
     }
 
-    private void complete(Future<Void> startFuture, EventMessage result) throws Exception {
+    @Override
+    public Class<SqlConfig> configClass() { return SqlConfig.class; }
+
+    @Override
+    public String configFile() { return "sql.json"; }
+
+    private void complete(Future<Void> future, EventMessage result) {
         logger.info("Result: {}", result.toJson().encode());
         logger.info("DATABASE IS READY TO USE");
-        super.start(startFuture);
+        future.complete();
     }
 
     private Single<EventMessage> createDatabase(Configuration jooqConfig) {

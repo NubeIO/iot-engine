@@ -45,7 +45,7 @@ public class MockManyEntityHandler extends EntityHandler {
 
     @Override
     public Single<EventMessage> migrate() {
-        return Single.just(EventMessage.success(EventAction.MIGRATE));
+        return Single.just(EventMessage.success(EventAction.MIGRATE, new JsonObject().put("records", "No migrate")));
     }
 
     public static class MockManyNoData extends MockManyEntityHandler {

@@ -2,86 +2,98 @@ package com.nubeiot.core.http;
 
 import java.util.Objects;
 
-import com.nubeiot.core.component.IComponent;
+import io.vertx.core.Future;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
+import io.vertx.ext.web.handler.ResponseContentTypeHandler;
+import io.vertx.ext.web.handler.ResponseTimeHandler;
+
+import com.nubeiot.core.component.UnitVerticle;
+import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.core.http.handler.FailureContextHandler;
 import com.nubeiot.core.http.handler.NotFoundContextHandler;
 import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
 import com.nubeiot.core.http.rest.RestApiBuilder;
 import com.nubeiot.core.http.ws.WebsocketEventBuilder;
 
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.CorsHandler;
-import io.vertx.ext.web.handler.ResponseContentTypeHandler;
-import io.vertx.ext.web.handler.ResponseTimeHandler;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-public class HttpServer implements IComponent {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+public final class HttpServer extends UnitVerticle<HttpConfig> {
 
-    private final Logger logger = LoggerFactory.getLogger(HttpServer.class);
-    @NonNull
-    private final Vertx vertx;
-    @NonNull
-    private final HttpConfig httpConfig;
     @NonNull
     private final HttpServerRouter httpRouter;
     private io.vertx.core.http.HttpServer httpServer;
 
     @Override
-    public void start() throws NubeException {
-        logger.info("HTTP Server configuration: {}", httpConfig.toJson().encode());
-        HttpServerOptions options = new HttpServerOptions(httpConfig.getOptions()).setHost(httpConfig.getHost())
-                                                                                  .setPort(httpConfig.getPort());
-        this.httpServer = vertx.createHttpServer(options).requestHandler(initRouter());
-        io.vertx.reactivex.core.http.HttpServer.newInstance(httpServer)
-                                               .rxListen()
-                                               .subscribe(s -> logger.info("Web Server started at {}", s.actualPort()),
-                                                          t -> logger.error("Cannot start server", t));
+    public void start(Future<Void> future) {
+        super.start();
+        logger.info("HTTP Server configuration: {}", config.toJson().encode());
+        HttpServerOptions options = new HttpServerOptions(config.getOptions()).setHost(config.getHost())
+                                                                              .setPort(config.getPort());
+        this.httpServer = vertx.createHttpServer(options).requestHandler(initRouter()).listen(event -> {
+            if (event.succeeded()) {
+                logger.info("Web Server started at {}", event.result().actualPort());
+                future.complete();
+                return;
+            }
+            future.fail(NubeExceptionConverter.from(event.cause()));
+        });
     }
 
     @Override
-    public void stop() throws NubeException {
+    public void stop() {
         if (Objects.nonNull(this.httpServer)) {
             this.httpServer.close();
         }
     }
 
+    @Override
+    public Class<HttpConfig> configClass() { return HttpConfig.class; }
+
+    @Override
+    public String configFile() { return "httpServer.json"; }
+
     private Router initRouter() {
-        io.vertx.ext.web.Router router = io.vertx.ext.web.Router.router(vertx);
-        HttpConfig.CorsOptions corsOptions = httpConfig.getCorsOptions();
-        CorsHandler corsHandler = CorsHandler.create(corsOptions.getAllowedOriginPattern())
-                                             .allowedMethods(corsOptions.getAllowedMethods())
-                                             .allowedHeaders(corsOptions.getAllowedHeaders())
-                                             .allowCredentials(corsOptions.isAllowCredentials())
-                                             .exposedHeaders(corsOptions.getExposedHeaders())
-                                             .maxAgeSeconds(corsOptions.getMaxAgeSeconds());
-        router.route().handler(BodyHandler.create()).handler(corsHandler)
-              .handler(ResponseContentTypeHandler.create())
-              .handler(ResponseTimeHandler.create())
-              .failureHandler(ResponseTimeHandler.create())
-              .failureHandler(new FailureContextHandler());
-        initUploadRouter(router);
-        initDownloadRouter(router);
-        initWebSocketRouter(router);
-        initHttp2Router(router);
-        initRestRouter(router);
-        router.route().last().handler(new NotFoundContextHandler());
-        return router;
+        try {
+            io.vertx.ext.web.Router router = io.vertx.ext.web.Router.router(vertx);
+            HttpConfig.CorsOptions corsOptions = config.getCorsOptions();
+            CorsHandler corsHandler = CorsHandler.create(corsOptions.getAllowedOriginPattern())
+                                                 .allowedMethods(corsOptions.getAllowedMethods())
+                                                 .allowedHeaders(corsOptions.getAllowedHeaders())
+                                                 .allowCredentials(corsOptions.isAllowCredentials())
+                                                 .exposedHeaders(corsOptions.getExposedHeaders())
+                                                 .maxAgeSeconds(corsOptions.getMaxAgeSeconds());
+            router.route()
+                  .handler(BodyHandler.create())
+                  .handler(corsHandler)
+                  .handler(ResponseContentTypeHandler.create())
+                  .handler(ResponseTimeHandler.create())
+                  .failureHandler(ResponseTimeHandler.create())
+                  .failureHandler(new FailureContextHandler());
+            initUploadRouter(router);
+            initDownloadRouter(router);
+            initWebSocketRouter(router);
+            initHttp2Router(router);
+            initRestRouter(router);
+            router.route().last().handler(new NotFoundContextHandler());
+            return router;
+        } catch (NubeException e) {
+            throw new InitializerError("Error when initializing http server route", e);
+        }
     }
 
     private Router initRestRouter(Router router) {
-        if (!httpConfig.isEnabled()) {
+        if (!config.isEnabled()) {
             return router;
         }
-        return new RestApiBuilder(router).rootApi(httpConfig.getRootApi())
+        return new RestApiBuilder(router).rootApi(config.getRootApi())
                                          .registerApi(httpRouter.getRestApiClass())
                                          .registerEventBusApi(httpRouter.getRestEventApiClass())
                                          .build();
@@ -96,13 +108,13 @@ public class HttpServer implements IComponent {
     }
 
     private Router initWebSocketRouter(Router router) {
-        if (!httpConfig.getWebsocketCfg().isEnabled()) {
+        if (!config.getWebsocketCfg().isEnabled()) {
             return router;
         }
-        return new WebsocketEventBuilder(vertx, router).rootWs(httpConfig.getWebsocketCfg().getRootWs())
+        return new WebsocketEventBuilder(vertx, router).rootWs(config.getWebsocketCfg().getRootWs())
                                                        .register(httpRouter.getWebsocketEvents())
                                                        .handler(WebsocketBridgeEventHandler.class)
-                                                       .options(httpConfig.getWebsocketCfg())
+                                                       .options(config.getWebsocketCfg())
                                                        .build();
     }
 

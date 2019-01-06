@@ -16,7 +16,6 @@ javadoc {
     options.tags("apiNote:a:API Note:",
             "implSpec:a:Implementation Requirements:",
             "implNote:a:Implementation Note:")
-    //  TODO Remove gen folder later
-    exclude "**/gen/**"
+    exclude "**/${project.genSrc.javaSrcFolder}/**"
     finalizedBy(zipDoc, javadocJar)
 }

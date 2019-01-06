@@ -1,54 +1,46 @@
 package com.nubeiot.core.common;
 
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.micro.IMicroProvider;
-import com.nubeiot.core.micro.Microservice;
-
 import io.reactivex.Single;
-import io.vertx.core.Future;
 import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
-import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.reactivex.servicediscovery.types.MessageSource;
 import io.vertx.servicediscovery.Record;
+
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.micro.Microservice;
+import com.nubeiot.core.micro.MicroserviceProvider;
+
 import lombok.Getter;
 
 /**
  * An implementation of {@link Verticle} taking care of the discovery and publication of services.
  */
 @Deprecated
-public abstract class RxMicroServiceVerticle extends AbstractVerticle implements IMicroProvider {
+public abstract class RxMicroServiceVerticle extends ContainerVerticle {
 
     @Getter
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private Microservice microservice;
     protected ServiceDiscovery discovery;
     protected CircuitBreaker circuitBreaker;
-    private Microservice microservice;
-    //TODO open another branch to migrate
-    protected NubeConfig nubeConfig;
     protected JsonObject appConfig;
 
     @Override
     public void start() {
-        this.nubeConfig = IConfig.from(config(), NubeConfig.class);
-        this.appConfig = nubeConfig.getAppConfig().toJson();
-        this.microservice = IMicroProvider.create(vertx, config());
-        this.microservice.start();
-        this.discovery = this.microservice.getDiscovery();
-        this.circuitBreaker = this.microservice.getCircuitBreaker();
-    }
-
-    @Override
-    public void stop(Future<Void> future) {
-        this.microservice.stop(future);
+        super.start();
+        this.addProvider(new MicroserviceProvider(), microservice -> {
+            this.microservice = microservice;
+            this.discovery = this.microservice.getDiscovery();
+            this.circuitBreaker = this.microservice.getCircuitBreaker();
+            this.appConfig = this.nubeConfig.getAppConfig().toJson();
+        });
     }
 
     /**
