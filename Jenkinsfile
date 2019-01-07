@@ -39,7 +39,7 @@ pipeline {
             steps {
                 sh "su gradle -s /bin/bash"
                 sh "whoami"
-                sh "gradle test jacocoTestReport"
+                sh "gradle -PexcludeTests=**/PostgresMemTest* test jacocoTestReport"
             }
             post {
                 always {
