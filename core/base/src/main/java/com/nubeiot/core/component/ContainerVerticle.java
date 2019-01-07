@@ -28,6 +28,8 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, UnitProvider<? extends Unit>> components = new LinkedHashMap<>();
     private final Map<Class<? extends Unit>, Consumer<? extends Unit>> afterSuccesses = new HashMap<>();
     private final Map<Class<? extends Unit>, String> deployments = new HashMap<>();
+    private final Map<String, Object> sharedData = new HashMap<>();
+    private final String sharedDataKey = this.getClass().getName();
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Getter
     protected NubeConfig nubeConfig;
@@ -37,15 +39,23 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
         this.nubeConfig = IConfig.from(config(), NubeConfig.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void start(Future<Void> future) {
         this.start();
+        this.vertx.sharedData().getLocalMap(sharedDataKey).getDelegate().putAll(sharedData);
         this.startUnits(future);
     }
 
     @Override
     public void stop(Future<Void> future) {
         this.stopUnits(future);
+    }
+
+    @Override
+    public Container addSharedData(String key, Object data) {
+        this.sharedData.put(key, data);
+        return this;
     }
 
     @Override
@@ -65,7 +75,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     public void startUnits(Future<Void> future) {
         Flowable.fromIterable(components.entrySet()).map(entry -> {
-            Unit unit = entry.getValue().get();
+            Unit unit = entry.getValue().get().registerSharedData(sharedDataKey);
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
             return vertx.rxDeployVerticle(unit, options)

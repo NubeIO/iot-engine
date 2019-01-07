@@ -1,5 +1,7 @@
 package com.nubeiot.core.sql;
 
+import java.util.function.Function;
+
 import org.jooq.Configuration;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
@@ -12,6 +14,7 @@ import com.nubeiot.core.event.EventMessage;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NonNull;
 
 public abstract class EntityHandler {
 
@@ -20,8 +23,10 @@ public abstract class EntityHandler {
     protected final Configuration jooqConfig;
     @Getter
     protected final JDBCRXGenericQueryExecutor queryExecutor;
+    @Getter
+    protected Function<String, Object> sharedDataFunc = k -> null;
 
-    public EntityHandler(Configuration jooqConfig, Vertx vertx) {
+    public EntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         this.jooqConfig = jooqConfig;
         this.vertx = vertx;
         queryExecutor = new JDBCRXGenericQueryExecutor(jooqConfig, getVertx());
@@ -72,6 +77,12 @@ public abstract class EntityHandler {
                               .where(schema + " = '" + table.getSchema().getName() + "'")
                               .and(tbl + " = '" + table.getName() + "'")
                               .fetchOne(0, int.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    <T extends EntityHandler> T registerFunc(Function<String, Object> sharedDataFunc) {
+        this.sharedDataFunc = sharedDataFunc;
+        return (T) this;
     }
 
 }

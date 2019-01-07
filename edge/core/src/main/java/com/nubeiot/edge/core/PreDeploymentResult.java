@@ -69,7 +69,7 @@ public class PreDeploymentResult implements JsonData, IRequestData {
             try {
                 return Objects.nonNull(deployCfg) ? IConfig.from(deployCfg, NubeConfig.class) : NubeConfig.blank();
             } catch (NubeException ex) {
-                logger.trace("Try to parse deploy_cfg to NubeConfig.AppConfig", ex);
+                logger.trace("Try to parse deploy_cfg to AppConfig", ex);
                 return NubeConfig.blank(deployCfg);
             }
         }

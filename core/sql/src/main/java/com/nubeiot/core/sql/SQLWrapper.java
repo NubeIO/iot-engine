@@ -95,7 +95,7 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
 
     private Single<EventMessage> createDatabase(Configuration jooqConfig) {
         try {
-            this.entityHandler = createEntityHandler(jooqConfig, vertx, entityHandlerClass);
+            this.entityHandler = createHandler(jooqConfig, vertx, entityHandlerClass).registerFunc(this::getSharedData);
             if (this.entityHandler.isNew()) {
                 createNewDatabase(jooqConfig);
                 logger.info("Initializing data...");
@@ -103,20 +103,20 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
             }
             logger.info("Migrating database...");
             return this.entityHandler.migrate();
-        } catch (DataAccessException e) {
+        } catch (DataAccessException | NullPointerException | IllegalArgumentException | NubeException e) {
             return Single.error(new InitializerError("Unknown error when initializing database", e));
         }
     }
 
-    private T createEntityHandler(Configuration configuration, Vertx vertx, Class<T> clazz) {
+    private T createHandler(Configuration configuration, Vertx vertx, Class<T> clazz) {
         Map<Class, Object> map = new LinkedHashMap<>();
         map.put(Configuration.class, configuration);
         map.put(Vertx.class, vertx);
-        return ((HandlerConsumer) Reflections.createObject(clazz, map, new HandlerConsumer())).get();
+        return ((CreationHandler) Reflections.createObject(clazz, map, new CreationHandler())).get();
     }
 
     private void createNewDatabase(Configuration jooqConfig) {
-        logger.info("Creating database...");
+        logger.info("Creating database model...");
         logger.info("Creating schema...");
         this.catalog.schemaStream()
                     .map(schema -> createSchema(jooqConfig, schema))
@@ -128,7 +128,7 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
                     .flatMap(Collection::stream)
                     .collect(Collectors.toMap(Entry::getKey, Entry::getValue, this::merge))
                     .forEach((table, constraints) -> createConstraints(jooqConfig, table, constraints));
-        logger.info("Created database successfully...");
+        logger.info("Created database model successfully");
     }
 
     private Schema createSchema(Configuration jooqConfig, Schema schema) {
@@ -153,7 +153,8 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     private Table<?> createTableAndIndex(Configuration jooqConfig, Table<?> table) {
         createTable(jooqConfig, table);
         createIndex(jooqConfig, table);
-        logger.info("Created table {} successfully", table.getQualifiedName());
+        logger.info("Created table {} successfully",
+                    table.getSchema().getQualifiedName().append(table.getQualifiedName()));
         return table;
     }
 
@@ -164,7 +165,7 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
 
     private void createIndex(Configuration jooqConfig, Table<?> table) {
         table.getIndexes().forEach(index -> {
-            logger.info("Creating index {}...", table.getSchema().getQualifiedName().append(index.getQualifiedName()));
+            logger.debug("Creating index {}...", table.getSchema().getQualifiedName().append(index.getQualifiedName()));
             CreateIndexStep indexStep;
             if (index.getUnique()) {
                 indexStep = jooqConfig.dsl().createUniqueIndexIfNotExists(index.getName());
@@ -204,7 +205,7 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
         return Single.just(result);
     }
 
-    private class HandlerConsumer implements BiConsumer<T, HiddenException>, Supplier<T> {
+    private class CreationHandler implements BiConsumer<T, HiddenException>, Supplier<T> {
 
         private T entityHandler;
 

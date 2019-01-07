@@ -13,6 +13,15 @@ import io.vertx.core.Future;
 public interface Container {
 
     /**
+     * Add local shared data to between different verticles
+     *
+     * @param key  Data key
+     * @param data Data value
+     * @return a reference to this, so the API can be used fluently
+     */
+    Container addSharedData(String key, Object data);
+
+    /**
      * Add unit provider to startup
      *
      * @param <T>      Type of unit

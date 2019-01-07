@@ -12,17 +12,20 @@ import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeFactory;
-import com.nubeiot.edge.core.model.Tables;
+import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
+import com.nubeiot.eventbus.edge.EdgeEventBus;
 
-public class EdgeBiosEntityHandler extends EdgeEntityHandler {
+public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
 
     protected EdgeBiosEntityHandler(Configuration configuration, Vertx vertx) {
         super(configuration, vertx);
@@ -30,31 +33,47 @@ public class EdgeBiosEntityHandler extends EdgeEntityHandler {
 
     @Override
     public Single<EventMessage> initData() {
-        JsonObject appConfig = this.verticle.getNubeConfig().getAppConfig().toJson();
-        JsonObject repositoryCfg = setupMavenRepos(appConfig.getJsonObject("repository", new JsonObject()));
-        boolean autoInstall = appConfig.getBoolean("auto_install", true);
-        return this.isFreshInstall()
-                   .map(isFresh -> startup(appConfig, repositoryCfg, autoInstall, isFresh))
-                   .map(r -> EventMessage.success(EventAction.INIT, r));
+        return bootstrap(EventAction.INIT);
     }
 
-    private Single<JsonObject> startup(JsonObject appConfig, JsonObject repositoryCfg, boolean autoInstall,
-                                       Boolean isFresh) {
+    @Override
+    public Single<EventMessage> migrate() {
+        return bootstrap(EventAction.MIGRATE);
+    }
+
+    @Override
+    protected EventModel deploymentEvent() {
+        return EdgeEventBus.BIOS_DEPLOYMENT;
+    }
+
+    private Single<EventMessage> bootstrap(EventAction action) {
+        JsonObject appCfg = IConfig.from(this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_APP_CFG), AppConfig.class)
+                                   .toJson();
+        logger.debug("Shared app configuration: {}", appCfg);
+        JsonObject repoCfg = setupMavenRepos(appCfg.getJsonObject("repository", new JsonObject()));
+        boolean auto = appCfg.getBoolean("auto_install", true);
+        return this.isFreshInstall()
+                   .flatMap(f -> startup(appCfg, repoCfg, auto, f).map(r -> EventMessage.success(action, r)));
+    }
+
+    private Single<JsonObject> startup(JsonObject appCfg, JsonObject repoCfg, boolean autoInstall, boolean isFresh) {
         if (!isFresh) {
             return this.startupModules();
         }
         if (autoInstall) {
-            return initInstaller(repositoryCfg, appConfig.getJsonObject("default_app", new JsonObject()));
+            return initInstaller(repoCfg, appCfg.getJsonObject("default_app", new JsonObject()));
         }
         return Single.just(new JsonObject());
     }
 
     private Single<JsonObject> initInstaller(JsonObject repositoryCfg, JsonObject appCfg) {
-        JsonObject deployCfg = appCfg.getJsonObject(Tables.TBL_MODULE.DEPLOY_CONFIG.getName().toLowerCase());
-        NubeConfig.AppConfig appConfig = IConfig.merge(repositoryCfg, deployCfg, NubeConfig.AppConfig.class);
-        JsonObject module = ModuleTypeFactory.getDefault().serialize(appCfg, this.verticle.getModuleRule());
-        ITblModule tblModule = new TblModule().setPublishedBy("NubeIO").fromJson(module)
-                                              .setDeployConfig(appConfig.toJson());
+        JsonObject installerDeployCfg = appCfg.getJsonObject("deploy_config", new JsonObject());
+        AppConfig installerAppConfig = IConfig.merge(repositoryCfg, installerDeployCfg, NubeConfig.AppConfig.class);
+        ModuleTypeRule rule = (ModuleTypeRule) this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_MODULE_RULE);
+        JsonObject module = ModuleTypeFactory.getDefault().serialize(appCfg, rule);
+        ITblModule tblModule = new TblModule().setPublishedBy("NubeIO")
+                                              .fromJson(module)
+                                              .setDeployConfig(installerAppConfig.toJson());
         return processDeploymentTransaction(tblModule, EventAction.INIT);
     }
 

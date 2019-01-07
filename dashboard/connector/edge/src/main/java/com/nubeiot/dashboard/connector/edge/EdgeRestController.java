@@ -1,23 +1,13 @@
 package com.nubeiot.dashboard.connector.edge;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.NubeConfig.SystemConfig.ClusterConfig;
-import com.nubeiot.core.cluster.ClusterNode;
-import com.nubeiot.core.cluster.ClusterRegistry;
-import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.ApiConstants;
 
@@ -34,17 +24,6 @@ public final class EdgeRestController {
                                .put("version", "1.0.0-SNAPSHOT")
                                .put("vert.x_version", "3.5.4")
                                .put("java_version", "8.0");
-    }
-
-    @GET
-    @Path("/nodes")
-    public List<JsonObject> nodes(@Context Vertx vertx) {
-        JsonObject jsonConfig = vertx.getOrCreateContext().config();
-        logger.debug(jsonConfig);
-        NubeConfig config = IConfig.from(jsonConfig, NubeConfig.class);
-        ClusterConfig clusterConfig = IConfig.from(config, ClusterConfig.class);
-        IClusterDelegate clusterDelegate = ClusterRegistry.instance().getClusterDelegate(clusterConfig.getType());
-        return clusterDelegate.getAllNodes().stream().map(ClusterNode::toJson).collect(Collectors.toList());
     }
 
     @GET

@@ -22,7 +22,10 @@ import io.vertx.core.logging.LoggerFactory;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.sql.EntityHandler;
@@ -50,7 +53,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private final TblModuleDao moduleDao;
     private final TblTransactionDao transDao;
     private final TblRemoveHistoryDao historyDao;
-    protected EdgeVerticle verticle;
 
     protected EdgeEntityHandler(Configuration configuration, Vertx vertx) {
         super(configuration, vertx);
@@ -66,8 +68,10 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     @Override
     public Single<EventMessage> migrate() {
-        return Single.just(EventMessage.success(EventAction.MIGRATE));
+        return this.startupModules().map(r -> EventMessage.success(EventAction.MIGRATE, r));
     }
+
+    protected abstract EventModel deploymentEvent();
 
     protected Single<JsonObject> startupModules() {
         return this.getModulesWhenBootstrap()
@@ -85,15 +89,18 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     private void deployModule(PreDeploymentResult preDeployResult) {
-        final String transactionId = preDeployResult.getTransactionId();
-        final String serviceId = preDeployResult.getServiceId();
-        final EventAction event = preDeployResult.getAction();
+        String transactionId = preDeployResult.getTransactionId();
+        String serviceId = preDeployResult.getServiceId();
+        EventAction action = preDeployResult.getAction();
         logger.info("Execute transaction: {}", transactionId);
-        preDeployResult.setSilent(EventAction.REMOVE == event && State.DISABLED == preDeployResult.getPrevState());
-        this.verticle.getModuleLoader()
-                     .handleEvent(event, preDeployResult.toRequestData())
-                     .subscribe(r -> succeedPostDeployment(serviceId, transactionId, event, r.getString("deploy_id")),
-                                t -> handleErrorPostDeployment(serviceId, transactionId, event, t));
+        preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
+        EventMessage request = EventMessage.success(action, preDeployResult.toRequestData());
+        EventController controller = (EventController) sharedDataFunc.apply(EdgeVerticle.SHARED_EVENTBUS);
+        ReplyEventHandler reply = new ReplyEventHandler("VERTX-DEPLOY", action, deploymentEvent().getAddress(),
+                                                        r -> succeedPostDeployment(serviceId, transactionId, action,
+                                                                                   r.getData().getString("deploy_id")),
+                                                        t -> errorPostDeployment(serviceId, transactionId, action, t));
+        controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply);
     }
 
     public Single<List<TblModule>> getModulesWhenBootstrap() {
@@ -183,7 +190,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     //TODO: register EventBus to send message somewhere
-    private void handleErrorPostDeployment(String serviceId, String transId, EventAction action, Throwable error) {
+    private void errorPostDeployment(String serviceId, String transId, EventAction action, Throwable error) {
         logger.error("Handle entities after error deployment...", error);
         queryExecutor.executeAny(c -> updateTransStatus(c, transId, Status.FAILED,
                                                         Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR,
@@ -243,7 +250,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private int updateModuleState(DSLContext context, String serviceId, State state, Map<?, ?> values) {
         return context.update(Tables.TBL_MODULE)
-                      .set(Tables.TBL_MODULE.STATE, state).set(Tables.TBL_MODULE.MODIFIED_AT, DateTimes.nowUTC())
+                      .set(Tables.TBL_MODULE.STATE, state)
+                      .set(Tables.TBL_MODULE.MODIFIED_AT, DateTimes.nowUTC())
                       .set(Objects.isNull(values) ? new HashMap<>() : values)
                       .where(Tables.TBL_MODULE.SERVICE_ID.eq(serviceId))
                       .execute();
@@ -280,11 +288,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<Optional<JsonObject>> findHistoryTransactionById(String transactionId) {
         return historyDao.findOneById(transactionId).map(optional -> optional.map(ITblRemoveHistory::toJson));
-    }
-
-    EdgeEntityHandler registerVerticle(EdgeVerticle verticle) {
-        this.verticle = verticle;
-        return this;
     }
 
 }

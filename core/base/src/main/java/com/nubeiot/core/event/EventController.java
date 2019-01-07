@@ -12,6 +12,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.shareddata.Shareable;
 import io.vertx.reactivex.core.Vertx;
 import lombok.NonNull;
 
@@ -22,7 +23,7 @@ import lombok.NonNull;
  * @see ErrorMessage
  */
 // TODO: Add event bus options/delivery options.
-public final class EventController {
+public final class EventController implements Shareable {
 
     private static final Logger logger = LoggerFactory.getLogger(EventController.class);
     //    private final Vertx vertx;

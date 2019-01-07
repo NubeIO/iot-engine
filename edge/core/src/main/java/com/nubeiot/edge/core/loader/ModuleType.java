@@ -13,7 +13,7 @@ public interface ModuleType {
 
     String name();
 
-    JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType;
+    JsonObject serialize(@NonNull JsonObject input, @NonNull ModuleTypeRule rule) throws InvalidModuleType;
 
     @EqualsAndHashCode
     abstract class AbstractModuleType implements ModuleType {
@@ -40,7 +40,7 @@ public interface ModuleType {
         private static final String DEFAULT_VERSION = "1.0.0";
 
         @Override
-        public JsonObject serialize(@NonNull JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
+        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             final String artifactId = input.getString("artifact_id");
             final String groupId = input.getString("group_id", DEFAULT_GROUP_ID);
             final String serviceName = input.getString("service_name", artifactId);

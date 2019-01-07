@@ -7,6 +7,7 @@ import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.ModuleEventHandler;
 import com.nubeiot.edge.core.TransactionEventHandler;
+import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.eventbus.edge.EdgeEventBus;
 
@@ -17,6 +18,7 @@ public final class EdgeInstallerVerticle extends EdgeVerticle {
         controller.consume(EdgeEventBus.APP_INSTALLER, new ModuleEventHandler(this, EdgeEventBus.APP_INSTALLER));
         controller.consume(EdgeEventBus.APP_TRANSACTION,
                            new TransactionEventHandler(this, EdgeEventBus.APP_TRANSACTION));
+        controller.consume(EdgeEventBus.APP_DEPLOYMENT, new ModuleLoader(vertx));
         return controller;
     }
 
