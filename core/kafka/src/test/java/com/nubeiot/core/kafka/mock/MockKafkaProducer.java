@@ -9,7 +9,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.producer.KafkaWriteStream;
 
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.kafka.KafkaWriterSupplier;
+import com.nubeiot.core.kafka.supplier.KafkaWriterSupplier;
 
 import lombok.RequiredArgsConstructor;
 

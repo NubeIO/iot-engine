@@ -10,7 +10,7 @@ import io.vertx.kafka.client.consumer.KafkaReadStream;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.kafka.KafkaReaderSupplier;
+import com.nubeiot.core.kafka.supplier.KafkaReaderSupplier;
 
 import lombok.RequiredArgsConstructor;
 

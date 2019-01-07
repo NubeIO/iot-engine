@@ -3,11 +3,11 @@ package com.nubeiot.core.kafka.serialization;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 
-import com.nubeiot.core.event.EventMessage;
-
 import io.vertx.kafka.client.serialization.VertxSerdes;
 
-public class NubeKafkaSerdes extends Serdes {
+import com.nubeiot.core.event.EventMessage;
+
+public final class NubeKafkaSerdes extends Serdes {
 
     public static final class EventMessageSerde extends WrapperSerde<EventMessage> {
 

@@ -2,7 +2,7 @@ package com.nubeiot.core.kafka;
 
 import com.nubeiot.core.component.UnitProvider;
 
-public class KafkaProvider implements UnitProvider<KafkaUnit> {
+public final class KafkaProvider implements UnitProvider<KafkaUnit> {
 
     @Override
     public Class<KafkaUnit> unitClass() { return KafkaUnit.class; }

@@ -14,6 +14,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
+import org.slf4j.LoggerFactory;
+
+import io.debezium.kafka.KafkaCluster;
+import io.vertx.core.http.WebSocket;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
@@ -25,13 +34,8 @@ import com.nubeiot.core.http.ws.WebsocketEventMetadata;
 import com.nubeiot.core.kafka.mock.MockKafkaConsumer;
 import com.nubeiot.core.kafka.mock.MockKafkaProducer;
 
-import io.debezium.kafka.KafkaCluster;
-import io.vertx.core.http.WebSocket;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.bridge.BridgeEventType;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaComponentTest extends BaseHttpServerTest {
@@ -45,6 +49,10 @@ public class KafkaComponentTest extends BaseHttpServerTest {
     @BeforeClass
     public static void beforeSuite() {
         BaseHttpServerTest.beforeSuite();
+        ((Logger) LoggerFactory.getLogger("kafka")).setLevel(Level.WARN);
+        ((Logger) LoggerFactory.getLogger("org.apache.zookeeper")).setLevel(Level.WARN);
+        ((Logger) LoggerFactory.getLogger("org.apache.kafka")).setLevel(Level.WARN);
+        ((Logger) LoggerFactory.getLogger("org.apache.kafka.clients")).setLevel(Level.INFO);
     }
 
     @Before

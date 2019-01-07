@@ -1,4 +1,4 @@
-package com.nubeiot.core.kafka;
+package com.nubeiot.core.kafka.supplier;
 
 import java.util.Map;
 import java.util.Properties;
@@ -7,11 +7,11 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.Serializer;
 
-import com.nubeiot.core.kafka.serialization.NubeKafkaSerdes;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.producer.KafkaWriteStream;
+
+import com.nubeiot.core.kafka.serialization.NubeKafkaSerdes;
 
 /**
  * Kafka Write Stream supplier

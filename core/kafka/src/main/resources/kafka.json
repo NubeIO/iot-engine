@@ -1,11 +1,54 @@
 {
   "__app__": {
     "__kafka__": {
-      "consumer": {
-        "bootstrap.servers": "localhost:9092"
+      "__consumer__": {
+        "auto.commit.interval.ms": 5000,
+        "auto.offset.reset": "earliest",
+        "bootstrap.servers": [],
+        "client.id": "consumer",
+        "group.id": "nubeio"
       },
-      "producer": {
-        "bootstrap.servers": "localhost:9092"
+      "__producer__": {
+        "acks": "1",
+        "bootstrap.servers": [],
+        "client.id": "producer",
+        "compression.type": "gzip"
+      },
+      "__security__": {
+        "sasl.client.callback.handler.class": null,
+        "sasl.jaas.config": null,
+        "sasl.kerberos.kinit.cmd": "/usr/bin/kinit",
+        "sasl.kerberos.min.time.before.relogin": 60000,
+        "sasl.kerberos.service.name": null,
+        "sasl.kerberos.ticket.renew.jitter": 0.05,
+        "sasl.kerberos.ticket.renew.window.factor": 0.8,
+        "sasl.login.callback.handler.class": null,
+        "sasl.login.class": null,
+        "sasl.login.refresh.buffer.seconds": 300,
+        "sasl.login.refresh.min.period.seconds": 60,
+        "sasl.login.refresh.window.factor": 0.8,
+        "sasl.login.refresh.window.jitter": 0.05,
+        "sasl.mechanism": "GSSAPI",
+        "security.protocol": "PLAINTEXT",
+        "ssl.cipher.suites": null,
+        "ssl.enabled.protocols": [
+          "TLSv1.2",
+          "TLSv1.1",
+          "TLSv1"
+        ],
+        "ssl.endpoint.identification.algorithm": "https",
+        "ssl.key.password": null,
+        "ssl.keymanager.algorithm": "SunX509",
+        "ssl.keystore.location": null,
+        "ssl.keystore.password": null,
+        "ssl.keystore.type": "JKS",
+        "ssl.protocol": "TLS",
+        "ssl.provider": null,
+        "ssl.secure.random.implementation": null,
+        "ssl.trustmanager.algorithm": "PKIX",
+        "ssl.truststore.location": null,
+        "ssl.truststore.password": null,
+        "ssl.truststore.type": "JKS"
       }
     }
   }

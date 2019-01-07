@@ -7,7 +7,7 @@ import org.apache.kafka.common.serialization.Serializer;
 
 import com.nubeiot.core.event.EventMessage;
 
-public class EventMessageSerializer implements Serializer<EventMessage> {
+public final class EventMessageSerializer implements Serializer<EventMessage> {
 
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) { }
