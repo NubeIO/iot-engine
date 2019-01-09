@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import io.vertx.core.http.HttpMethod;
+
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
-
-import io.vertx.core.http.HttpMethod;
 
 public abstract class AbstractRestEventApi implements RestEventApi {
 
@@ -25,6 +25,10 @@ public abstract class AbstractRestEventApi implements RestEventApi {
 
     protected Map<EventAction, HttpMethod> initHttpEventMap() {
         return RestEventApi.defaultEventHttpMap();
+    }
+
+    protected void addRouter(RestEventMetadata metadata) {
+        restMetadata.add(metadata);
     }
 
     protected void addRouter(EventModel eventModel, String api, String paramName) {
