@@ -22,17 +22,17 @@ public class MockKafkaProducer {
     private final Supplier<EventMessage> messageSupplier;
     private KafkaWriteStream<String, EventMessage> producer;
 
-    public void start() throws Exception {
+    public void start() {
         producer = KafkaWriterSupplier.create(vertx, producerCfg, String.class, EventMessage.class);
         vertx.setPeriodic(2000, id -> {
             EventMessage message = messageSupplier.get();
             System.err.println("PRODUCER ID: " + id);
             System.err.println(message.toJson().encodePrettily());
-            producer.write(new ProducerRecord<>(topic, message));
+            producer.unwrap().send(new ProducerRecord<>(topic, message));
         });
     }
 
-    public void stop() throws Exception {
+    public void stop() {
         if (producer != null) {
             producer.close();
         }

@@ -23,7 +23,7 @@ public class MockKafkaConsumer {
     private final Supplier<EventModel> eventModelSupplier;
     private KafkaReadStream<String, EventMessage> consumer;
 
-    public void start() throws Exception {
+    public void start() {
         EventController controller = new EventController(vertx);
         consumer = KafkaReaderSupplier.create(vertx, consumerCfg, String.class, EventMessage.class);
         consumer.handler(record -> {
@@ -35,7 +35,7 @@ public class MockKafkaConsumer {
         consumer.subscribe(Collections.singleton(topic));
     }
 
-    public void stop() throws Exception {
+    public void stop() {
         if (consumer != null) {
             consumer.close();
         }

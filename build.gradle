@@ -69,6 +69,8 @@ subprojects {
 
     dependencies {
         compile project.deps.vertx.core
+        compile project.deps.jackson.core
+        compile project.deps.jackson.databind
         compile project.deps.log.slf4j
         compile project.deps.log.logback
 

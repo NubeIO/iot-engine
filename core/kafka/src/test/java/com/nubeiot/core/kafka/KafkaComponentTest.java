@@ -3,6 +3,7 @@ package com.nubeiot.core.kafka;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -45,6 +46,8 @@ public class KafkaComponentTest extends BaseHttpServerTest {
     private KafkaCluster kafkaCluster;
     private JsonObject producerConfig;
     private JsonObject consumerConfig;
+    private MockKafkaConsumer consumer;
+    private MockKafkaProducer producer;
 
     @BeforeClass
     public static void beforeSuite() {
@@ -75,6 +78,12 @@ public class KafkaComponentTest extends BaseHttpServerTest {
     @After
     public void after(TestContext context) {
         kafkaCluster.shutdown();
+        if (Objects.nonNull(consumer)) {
+            consumer.stop();
+        }
+        if (Objects.nonNull(producer)) {
+            producer.stop();
+        }
         super.after(context);
     }
 
@@ -82,16 +91,7 @@ public class KafkaComponentTest extends BaseHttpServerTest {
     public void test_client_consumer(TestContext context) {
         WebsocketEventMetadata metadata = MockWebsocketEvent.ONLY_PUBLISHER;
         startServer(context, new HttpServerRouter().registerEventBusSocket(metadata));
-        try {
-            new MockKafkaConsumer(vertx.getDelegate(), consumerConfig, "nube", metadata::getPublisher).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            new MockKafkaProducer(vertx.getDelegate(), producerConfig, "nube", supply()).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        startKafkaClient(metadata);
         Async async = context.async(1);
         setupConsumer(async, metadata.getPublisher().getAddress(),
                       o -> assertResponse(context, async, supply().get().toJson(), (JsonObject) o));
@@ -103,20 +103,18 @@ public class KafkaComponentTest extends BaseHttpServerTest {
         JsonObject expected = createWebsocketMsg(metadata.getPublisher().getAddress(), supply().get(),
                                                  BridgeEventType.RECEIVE);
         startServer(context, new HttpServerRouter().registerEventBusSocket(metadata));
-        try {
-            new MockKafkaConsumer(vertx.getDelegate(), consumerConfig, "nube", metadata::getPublisher).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            new MockKafkaProducer(vertx.getDelegate(), producerConfig, "nube", supply()).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        startKafkaClient(metadata);
         Async async = context.async(1);
         WebSocket ws = setupSockJsClient(async, Urls.combinePath("ws", metadata.getPath()),
                                          clientRegister(metadata.getPublisher().getAddress()), context::fail);
         ws.handler(buffer -> assertResponse(context, async, expected, buffer));
+    }
+
+    private void startKafkaClient(WebsocketEventMetadata metadata) {
+        consumer = new MockKafkaConsumer(vertx.getDelegate(), consumerConfig, "nube", metadata::getPublisher);
+        producer = new MockKafkaProducer(vertx.getDelegate(), producerConfig, "nube", supply());
+        consumer.start();
+        producer.start();
     }
 
     private Supplier<EventMessage> supply() {

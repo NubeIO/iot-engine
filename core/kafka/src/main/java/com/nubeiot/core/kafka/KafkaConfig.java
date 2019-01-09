@@ -3,6 +3,8 @@ package com.nubeiot.core.kafka;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -12,7 +14,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.NubeConfig.AppConfig;
 
 import lombok.Getter;
 
@@ -22,40 +24,49 @@ import lombok.Getter;
  * @see <a href="https://kafka.apache.org/documentation/#consumerconfigs">Consumer Config</a>
  * @see <a href="https://kafka.apache.org/documentation/#producerconfigs">Producer Config</a>
  */
-@Getter
 public final class KafkaConfig implements IConfig {
 
     @JsonProperty(value = ConsumerCfg.NAME)
     private ConsumerCfg consumerConfig = new ConsumerCfg();
     @JsonProperty(value = ProducerCfg.NAME)
     private ProducerCfg producerConfig = new ProducerCfg();
+
+    /**
+     * Security part that applied but not override in both {@link ConsumerCfg} and {@link ProducerCfg}
+     */
+    @Getter
     @JsonProperty(value = SecurityConfig.NAME)
     private SecurityConfig securityConfig = new SecurityConfig();
+
     @JsonIgnore
-    private boolean mergeConsumer = false;
+    private AtomicBoolean hasMergedConsumer = new AtomicBoolean(false);
     @JsonIgnore
-    private boolean mergeProducer = false;
+    private AtomicBoolean hasMergedProducer = new AtomicBoolean(false);
 
     @Override
     public String name() { return "__kafka__"; }
 
     @Override
-    public Class<? extends IConfig> parent() { return NubeConfig.AppConfig.class; }
+    public Class<? extends IConfig> parent() { return AppConfig.class; }
 
     public ConsumerCfg getConsumerConfig() {
-        if (mergeConsumer) {
+        if (hasMergedConsumer.get()) {
             return this.consumerConfig;
         }
-        this.consumerConfig.putAll(this.securityConfig);
-        return this.consumerConfig;
+        return computeCfg(hasMergedConsumer, this.consumerConfig);
     }
 
     public ProducerCfg getProducerConfig() {
-        if (mergeProducer) {
+        if (hasMergedProducer.get()) {
             return this.producerConfig;
         }
-        this.producerConfig.putAll(this.securityConfig);
-        return this.producerConfig;
+        return computeCfg(hasMergedProducer, producerConfig);
+    }
+
+    private synchronized <T extends Map<String, Object>> T computeCfg(AtomicBoolean flag, T config) {
+        config.putAll(this.securityConfig);
+        flag.set(true);
+        return config;
     }
 
     public static class ConsumerCfg extends HashMap<String, Object> implements IConfig {
@@ -94,6 +105,9 @@ public final class KafkaConfig implements IConfig {
             Map<String, ?> m = new ProducerConfig(
                 ProducerConfig.addSerializerToConfig(new HashMap<>(), serde.serializer(), serde.serializer())).values();
             m.keySet().removeIf(key -> key.matches("^(ssl|sasl|security)\\..+") || key.endsWith(".serializer"));
+            if (Objects.isNull(m.get(ProducerConfig.TRANSACTIONAL_ID_CONFIG))) {
+                m.remove(ProducerConfig.TRANSACTIONAL_ID_CONFIG);
+            }
             DEFAULT = Collections.unmodifiableMap(m);
         }
 
