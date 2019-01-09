@@ -35,13 +35,14 @@ class JooqGenerateTask extends DefaultTask {
     public Set<JsonDataType> javaTypes = []
 
     @Input
-    public String ddlDir = "src/main/resources/ddl/*.sql"
+    public String ddlDir = "src/main/resources/ddl"
     @Input
     public String targetDir = project.genSrc.javaSrcFolder
 
     @TaskAction
     void generate() {
-        def input = project.projectDir.toPath().resolve(ddlDir).toString()
+        def ddl = project.projectDir.toPath().resolve(ddlDir).toString()
+        def input = ddl.endsWith(".sql") ? ddl : ddl + "/*.sql"
         def output = project.projectDir.toPath().resolve(targetDir).toString()
         CacheDataType.instance().addEnumClasses(enumTypes).addDataType(javaTypes)
         enumTypes.each { s ->
@@ -78,13 +79,26 @@ class JooqGenerateTask extends DefaultTask {
      * Converter between JsonObject and Java data type
      */
     static class JsonDataType {
+        /**
+         * Java full qualified class name
+         */
         String className
+        /**
+         * Serialize function
+         */
         String converter
+        /**
+         * Deserialize function
+         */
         String parser
+        /**
+         * Default value if {@code null} on deserialize
+         */
+        String defVal = "null"
 
         @Override
         String toString() {
-            return "${className} - Converter: ${converter} - Parser: ${parser}"
+            return "${className} - Converter: ${converter} - Parser: ${parser} - Default: ${defVal}"
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.nubeiot.buildscript.jooq;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.jooq.codegen.JavaWriter;
@@ -22,8 +23,10 @@ public class NubeJdbcGenerator extends DelegatingVertxGenerator {
     @Override
     protected boolean handleCustomTypeFromJson(TypedElementDefinition column, String setter, String columnType,
                                                String javaMemberName, JavaWriter out) {
-        if (CacheDataType.instance().getParsers().containsKey(columnType)) {
-            return writeSetter(out, setter, javaMemberName, CacheDataType.instance().getParsers().get(columnType));
+        Function<String, String> parser = CacheDataType.instance().getParser(columnType);
+        if (Objects.nonNull(parser)) {
+            return writeSetter(out, setter, javaMemberName, parser,
+                               CacheDataType.instance().getDefaultValue(columnType));
         }
         return super.handleCustomTypeFromJson(column, setter, columnType, javaMemberName, out);
     }
@@ -31,8 +34,9 @@ public class NubeJdbcGenerator extends DelegatingVertxGenerator {
     @Override
     protected boolean handleCustomTypeToJson(TypedElementDefinition column, String getter, String columnType,
                                              String javaMemberName, JavaWriter out) {
-        if (CacheDataType.instance().getConverters().containsKey(columnType)) {
-            return writeGetter(out, column, getter, CacheDataType.instance().getConverters().get(columnType));
+        Function<String, String> converter = CacheDataType.instance().getConverter(columnType);
+        if (Objects.nonNull(converter)) {
+            return writeGetter(out, column, getter, converter);
         }
         return super.handleCustomTypeToJson(column, getter, columnType, javaMemberName, out);
     }
@@ -44,10 +48,10 @@ public class NubeJdbcGenerator extends DelegatingVertxGenerator {
         return true;
     }
 
-    private static boolean writeSetter(JavaWriter out, String setter, String javaMemberName,
-                                       Function<String, String> f) {
+    private static boolean writeSetter(JavaWriter out, String setter, String javaMemberName, Function<String, String> f,
+                                       String defVal) {
         String parser = f.apply(String.format("json.getValue(\"%s\")", javaMemberName));
-        out.tab(2).println("%s(json.getValue(\"%s\")==null?null:%s);", setter, javaMemberName, parser);
+        out.tab(2).println("%s(json.getValue(\"%s\")==null?%s:%s);", setter, javaMemberName, defVal, parser);
         return true;
     }
 

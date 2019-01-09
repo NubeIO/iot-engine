@@ -24,6 +24,7 @@ task jooqGen(type: JooqGenerateTask) {
     javaTypes = project(':core:sql').ext.javaTypes + [
         new JsonDataType(className: "com.nubeiot.edge.core.loader.ModuleType",
                          converter: "%s.name()",
-                         parser: "com.nubeiot.edge.core.loader.ModuleTypeFactory.factory((String)%s)")
+                         parser: "com.nubeiot.edge.core.loader.ModuleTypeFactory.factory((String)%s)",
+                         defVal: "com.nubeiot.edge.core.loader.ModuleTypeFactory.getDefault()")
     ]
 }

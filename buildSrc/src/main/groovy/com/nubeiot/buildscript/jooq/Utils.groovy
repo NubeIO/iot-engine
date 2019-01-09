@@ -18,8 +18,12 @@ class DB {
     ]
 }
 
+static def isBlank(String text) {
+    return text == null || "" == text.trim()
+}
+
 static def requireNotBlank(String text, String message) {
-    if (text == null || "" == text.trim()) {
+    if (isBlank(text)) {
         throw new IllegalArgumentException(message)
     }
     return text.trim()

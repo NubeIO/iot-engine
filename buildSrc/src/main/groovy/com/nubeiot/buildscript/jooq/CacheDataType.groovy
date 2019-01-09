@@ -18,12 +18,21 @@ class CacheDataType {
     private final Set<JsonDataType> dataTypes = new HashSet<>()
     private final Map<String, Function<String, String>> converters = new HashMap<>()
     private final Map<String, Function<String, String>> parsers = new HashMap<>()
+    private final Map<String, String> defaultValues = new HashMap<>()
 
     Set<JsonDataType> getDataTypes() { return dataTypes }
 
-    Map<String, Function<String, String>> getParsers() { return parsers }
+    Function<String, String> getParser(String className) {
+        return parsers.get(className)
+    }
 
-    Map<String, Function<String, String>> getConverters() { return converters }
+    Function<String, String> getConverter(String className) {
+        return converters.get(className)
+    }
+
+    String getDefaultValue(String className) {
+        return defaultValues.getOrDefault(className, "null")
+    }
 
     CacheDataType addEnumClasses(Set<String> enums) {
         enums.each { clazz ->
@@ -43,15 +52,16 @@ class CacheDataType {
     CacheDataType addDataType(JsonDataType dataType) {
         if (Objects.nonNull(dataType)) {
             dataTypes.add(dataType)
-            addDataType(dataType.getClassName(), dataType.getConverter(), dataType.getParser())
+            addDataType(dataType.className, dataType.converter, dataType.parser, dataType.defVal)
         }
         return this
     }
 
-    def addDataType(String customClass, String convertCommand, String parseCommand) {
+    def addDataType(String customClass, String convertCommand, String parseCommand, String defaultValue = "null") {
         String className = Utils.requireNotBlank(customClass, "Class cannot be blank")
         converters.put(className, Objects.isNull(convertCommand) ? Function.identity() : toFunc(convertCommand))
         parsers.put(className, Objects.isNull(parseCommand) ? Function.identity() : toFunc(parseCommand))
+        defaultValues.put(className, Utils.isBlank(defaultValue) ? "null" : defaultValue)
     }
 
     private static Function<String, String> toFunc(String command) {
