@@ -73,9 +73,12 @@ abstract class BaseSqlTest {
 
     abstract @NonNull String getJdbcUrl();
 
-    SQLDialect getDialect()                { return SQLDialect.H2; }
+    SQLDialect getDialect() { return SQLDialect.H2; }
 
-    public void after(TestContext context) { vertx.close(context.asyncAssertSuccess()); }
+    public void after(TestContext context) {
+        stopSQL(context);
+        vertx.close(context.asyncAssertSuccess());
+    }
 
     void stopSQL(TestContext context) {
         if (Objects.nonNull(deployId)) {

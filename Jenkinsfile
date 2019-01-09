@@ -37,9 +37,7 @@ pipeline {
 
         stage("Test") {
             steps {
-                sh "su gradle -s /bin/bash"
-                sh "whoami"
-                sh "gradle -PexcludeTests=**/PostgresMemTest* test jacocoTestReport"
+                sh "gradle -PexcludeTests=**/PostgresMemTest* test jacocoTestReport --stacktrace"
             }
             post {
                 always {
