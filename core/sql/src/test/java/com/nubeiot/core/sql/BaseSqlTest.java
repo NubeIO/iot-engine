@@ -34,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 abstract class BaseSqlTest {
 
-    public static int TEST_TIMEOUT = 5;
+    public static int TEST_TIMEOUT = 10;
     private Vertx vertx;
     private DeploymentOptions options;
     private String deployId;
@@ -81,6 +81,7 @@ abstract class BaseSqlTest {
     }
 
     void stopSQL(TestContext context) {
+        System.out.println("Stop deployId: " + deployId);
         if (Objects.nonNull(deployId)) {
             vertx.undeploy(deployId, context.asyncAssertSuccess());
         }
@@ -97,14 +98,17 @@ abstract class BaseSqlTest {
         AtomicReference<T> ref = new AtomicReference<>();
         SQLWrapper<T> verticle = new SQLWrapper<>(catalog, handlerClass);
         vertx.deployVerticle(verticle, options, event -> {
+            latch.countDown();
             if (event.failed()) {
+                deployId = null;
                 consumer.accept(event.cause());
+                return;
             }
             deployId = event.result();
             ref.set(verticle.getEntityHandler());
-            latch.countDown();
+            System.out.println("Complete starting SQL with deployId: " + deployId);
         });
-        latch.await(TEST_TIMEOUT, TimeUnit.SECONDS);
+        System.out.println("Wait max " + TEST_TIMEOUT + "s : " + latch.await(TEST_TIMEOUT, TimeUnit.SECONDS));
         return ref.get();
     }
 
