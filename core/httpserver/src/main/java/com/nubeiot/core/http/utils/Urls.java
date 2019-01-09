@@ -44,7 +44,7 @@ public final class Urls {
      * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.3">Path syntax</a>
      */
     public static final String PATH_PATTERN
-            = "(/([\\w\\$\\-\\.\\+\\!\\*\\'\\(\\)\\,\\;\\:\\@\\&\\=]|(\\%[a-f0-9]{2}))*)*";
+        = "(/([\\w\\$\\-\\.\\+\\!\\*\\'\\(\\)\\,\\;\\:\\@\\&\\=]|(\\%[a-f0-9]{2}))*)*";
     /**
      * URL syntax. In this application case, any {@code query} or {@code fragment} will be not accepted.
      *
@@ -122,7 +122,7 @@ public final class Urls {
         return normalize("/" + Arrays.stream(path).filter(Strings::isNotBlank).collect(Collectors.joining("/")));
     }
 
-    private static String normalize(String url) {
+    private static String normalize(@NonNull String url) {
         return url.replaceAll("/+", "/").replaceFirst("(https?:)/", "$1//");
     }
 
@@ -200,6 +200,37 @@ public final class Urls {
         } catch (UnsupportedEncodingException uee) {
             throw new NubeException("Charset not found while decoding string: " + StandardCharsets.UTF_8, uee);
         }
+    }
+
+    /**
+     * Construct a capture path that is plain text
+     * <p>
+     * For example: {@code /catalogue/products/:product_type/:product_id}
+     *
+     * @param path   Path
+     * @param params list of param name
+     * @return capture path
+     * @see #capturePatternPath(String, String...)
+     */
+    public static String capturePath(@NonNull String path, String... params) {
+        String p = normalize("/" + path);
+        String pns = Arrays.stream(params).filter(Strings::isNotBlank).collect(Collectors.joining("/:"));
+        return Strings.isNotBlank(pns) ? normalize(p + "/:" + pns) : p;
+    }
+
+    /**
+     * Construct a capture path that is pattern
+     * <p>
+     * For example: {@code /points/:id/type/:type_id}
+     *
+     * @param path   Pattern path. E.g: /points/{0}/type/{1}
+     * @param params list of param name
+     * @return capture path
+     */
+    public static String capturePatternPath(@NonNull String path, String... params) {
+        String p = normalize("/" + path);
+        String[] pns = Arrays.stream(params).filter(Strings::isNotBlank).map(s -> "/:" + s).toArray(String[]::new);
+        return normalize(Strings.format(p, (Object[]) pns));
     }
 
     private static String applyRule(String encoded, String toReplace, String replacement) {
