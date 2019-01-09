@@ -3,11 +3,12 @@ package com.nubeiot.edge.connector.bonescript;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.sql.SQLWrapper;
 import com.nubeiot.core.sql.SqlProvider;
-import com.nubeiot.edge.connector.bonescript.jwt.JwtHandler;
+import com.nubeiot.edge.connector.bonescript.handlers.PointsEventHandler;
 import com.nubeiot.edge.connector.bonescript.model.DefaultCatalog;
 
 import io.vertx.core.logging.Logger;
@@ -21,7 +22,9 @@ public class BoneScriptVerticle extends ContainerVerticle {
     public static final String BB_VERSION = "bb_version";
 
     @Getter
-    private BoneScriptEntityHandler boneScriptEntityHandler;
+    private BoneScriptEntityHandler entityHandler;
+    @Getter
+    private EventController eventController;
 
     @Override
     public void start() {
@@ -36,14 +39,23 @@ public class BoneScriptVerticle extends ContainerVerticle {
         this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, BoneScriptEntityHandler.class),
                          this::handler);
         this.addProvider(new HttpServerProvider(initHttpRouter()), httpServer -> {});
+
+        this.eventController = registerEventBus(new EventController(vertx));
     }
 
     private void handler(SQLWrapper component) {
-        this.boneScriptEntityHandler = (BoneScriptEntityHandler) component.getEntityHandler();
+        this.entityHandler = (BoneScriptEntityHandler) component.getEntityHandler();
     }
 
+    @SuppressWarnings("unchecked")
     private HttpServerRouter initHttpRouter() {
-        return new HttpServerRouter().registerApi(JwtHandler.class, BoneScriptRestController.class);
+        return new HttpServerRouter().registerApi(BoneScriptRestController.class)
+                                     .registerEventBusApi(BoneScriptRestEventApi.class);
+    }
+
+    private EventController registerEventBus(EventController controller) {
+        controller.consume(BoneScriptEventBus.POINTS, new PointsEventHandler(this, BoneScriptEventBus.POINTS));
+        return controller;
     }
 
 }

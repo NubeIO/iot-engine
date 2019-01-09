@@ -20,6 +20,8 @@ import lombok.Getter;
 public class BoneScriptEntityHandler extends EntityHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(BoneScriptEntityHandler.class);
+    @Getter
+    private final TblDittoDao tblDittoDao = new TblDittoDao(jooqConfig, getVertx());
 
     protected BoneScriptEntityHandler(Configuration configuration, Vertx vertx) {
         super(configuration, vertx);
@@ -45,7 +47,6 @@ public class BoneScriptEntityHandler extends EntityHandler {
     }
 
     private Single<EventMessage> bootstrap(EventAction action) {
-        TblDittoDao tblDittoDao = new TblDittoDao(jooqConfig, getVertx());
         return isFreshInstall().flatMap(isFreshInstall -> {
             if (isFreshInstall) {
                 return new Init(tblDittoDao).get();
