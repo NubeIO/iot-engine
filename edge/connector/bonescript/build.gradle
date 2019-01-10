@@ -8,6 +8,7 @@ dependencies {
     compile project.deps.database.h2
     compile project.deps.auth0
     compile project.deps.jbcrypt
+    compile project.deps.quartz
 
     testCompile project(":core:base")
     testCompile project(":core:base").sourceSets.test.output

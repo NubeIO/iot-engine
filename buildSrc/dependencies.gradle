@@ -3,6 +3,7 @@ def versions = [
     lombok  : "1.18.4",
     autho0: "3.4.1",
     jbcrypt: "0.4",
+    quartz: "2.2.1",
     database: [
         jooq     : "3.11.8",
         jooqVertx: "4.0.0",
@@ -22,6 +23,7 @@ ext.deps = [
     lombok  : "org.projectlombok:lombok:$versions.lombok",
     auth0: "com.auth0:java-jwt:$versions.autho0",
     jbcrypt: "org.mindrot:jbcrypt:$versions.jbcrypt",
+    quartz: "org.quartz-scheduler:quartz:$versions.quartz",
     log     : [
         slf4j  : "org.slf4j:slf4j-api:1.7.25",
         logback: "ch.qos.logback:logback-classic:1.2.3"
