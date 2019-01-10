@@ -1,6 +1,5 @@
 package com.nubeiot.core.kafka.handler;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -23,7 +22,7 @@ public class ConsumerDispatcher<K, V> implements Consumer<ConsumerRecord<K, V>> 
 
     @NonNull
     @Singular("consumer")
-    private final Map<String, ConsumerHandler> consumersByTopic = new HashMap<>();
+    private final Map<String, ConsumerHandler> consumersByTopic;
     @NonNull
     @Default
     private final ConsumerRecordTransformer<K, V> transformer = new ConsumerRecordTransformer<>();
