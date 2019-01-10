@@ -41,12 +41,12 @@ public class MockWebsocketEvent {
             super(eventBus, SERVER_PROCESSOR);
         }
 
-        @EventContractor(events = EventAction.GET_LIST, returnType = List.class)
+        @EventContractor(action = EventAction.GET_LIST, returnType = List.class)
         public List<String> list(RequestData data) {
             return Arrays.asList("1", "2", "3");
         }
 
-        @EventContractor(events = EventAction.GET_ONE, returnType = String.class)
+        @EventContractor(action = EventAction.GET_ONE, returnType = String.class)
         public String one(RequestData data) {
             return "1";
         }

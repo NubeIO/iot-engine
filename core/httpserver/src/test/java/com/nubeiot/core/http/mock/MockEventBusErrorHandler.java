@@ -23,17 +23,17 @@ public class MockEventBusErrorHandler extends MockEventBusHandler {
         return new MockEventBusErrorHandler(eventBus, "http.server.test");
     }
 
-    @EventContractor(events = EventAction.GET_LIST)
+    @EventContractor(action = EventAction.GET_LIST)
     public JsonObject list(RequestData data) {
         throw new RuntimeException("xxx");
     }
 
-    @EventContractor(events = EventAction.CREATE)
+    @EventContractor(action = EventAction.CREATE)
     public JsonObject create(RequestData data) {
         throw new EngineException("Engine error");
     }
 
-    @EventContractor(events = EventAction.UPDATE)
+    @EventContractor(action = EventAction.UPDATE)
     public JsonObject update(RequestData data) {
         throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "invalid");
     }

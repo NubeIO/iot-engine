@@ -31,7 +31,7 @@ public final class TransactionEventHandler implements EventHandler {
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
 
-    @EventContractor(events = EventAction.GET_ONE, returnType = Single.class)
+    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
         ITblTransaction transaction = new TblTransaction().fromJson(data.getBody());
         if (Strings.isBlank(transaction.getTransactionId())) {

@@ -1,6 +1,8 @@
-package com.nubeiot.core.utils;
+package com.nubeiot.core.utils.mock;
 
 import java.util.List;
+
+import io.vertx.core.spi.cluster.ClusterManager;
 
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.cluster.ClusterDelegate;
@@ -9,17 +11,16 @@ import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.exceptions.ServiceException;
 
-import io.vertx.core.spi.cluster.ClusterManager;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-class ReflectionMockObjects {
+public class ReflectionMockObjects {
 
     @Getter
     @RequiredArgsConstructor
-    static class MockReflection {
+    public static class MockReflection {
 
         private final String id;
         @Setter
@@ -42,7 +43,7 @@ class ReflectionMockObjects {
 
     @NoArgsConstructor
     @ClusterDelegate
-    static class MockAnnotationType implements IClusterDelegate {
+    public static class MockAnnotationType implements IClusterDelegate {
 
         @Override
         public ClusterType getTypeName() {
@@ -67,9 +68,37 @@ class ReflectionMockObjects {
     }
 
 
-    static class MockParent {}
+    public static class MockParent {
+
+        private void mPrivate()            {}
+
+        void mPackage()                    {}
+
+        protected void mProtected()        {}
+
+        public void mPublic()              {}
+
+        public final void mPublicFinal()   {}
+
+        public static void mPublicStatic() {}
+
+    }
 
 
-    static class MockChild extends MockParent {}
+    public static class MockChild extends MockParent {
+
+        private void mPrivate()           {}
+
+        private void mChildPrivate()      {}
+
+        void mPackage()                   {}
+
+        protected void mProtected()       {}
+
+        public void mPublic()             {}
+
+        public static void mChildStatic() {}
+
+    }
 
 }

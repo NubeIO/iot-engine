@@ -28,12 +28,8 @@ public abstract class MockEventBusHandler implements EventHandler {
         this.availableEvents = new ArrayList<>(model.getEvents());
     }
 
-    public void start() throws Exception {
+    public void start() {
         this.eventBus.consumer(address, this::accept);
-    }
-
-    public void stop() throws Exception {
-
     }
 
 }

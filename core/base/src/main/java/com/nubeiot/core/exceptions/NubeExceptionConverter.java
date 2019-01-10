@@ -26,6 +26,7 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
 
     private static final Logger logger = LoggerFactory.getLogger(NubeExceptionConverter.class);
     private final boolean friendly;
+    private final String overrideMsg;
 
     /**
      * Friendly converter for human user
@@ -34,7 +35,18 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
      * @return nube exception
      */
     public static NubeException friendly(Throwable throwable) {
-        return new NubeExceptionConverter(true).apply(throwable);
+        return new NubeExceptionConverter(true, null).apply(throwable);
+    }
+
+    /**
+     * Friendly converter for human user
+     *
+     * @param throwable   any exception
+     * @param overrideMsg Override message
+     * @return nube exception
+     */
+    public static NubeException friendly(Throwable throwable, String overrideMsg) {
+        return new NubeExceptionConverter(true, overrideMsg).apply(throwable);
     }
 
     /**
@@ -44,7 +56,7 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
      * @return nube exception
      */
     public static NubeException from(Throwable throwable) {
-        return new NubeExceptionConverter(false).apply(throwable);
+        return new NubeExceptionConverter(false, null).apply(throwable);
     }
 
     @Override
@@ -55,14 +67,22 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
             t = exceptions.get(exceptions.size() - 1);
         }
         if (t instanceof NubeException) {
-            return friendly ? convertFriendly((NubeException) t, true) : (NubeException) t;
+            return overrideMsg(friendly ? convertFriendly((NubeException) t, true) : (NubeException) t);
         }
         if (t.getCause() instanceof NubeException) {
             // Rarely case
             logger.debug("Wrapper Exception: ", t);
-            return friendly ? convertFriendly((NubeException) t.getCause(), false) : (NubeException) t.getCause();
+            return overrideMsg(
+                friendly ? convertFriendly((NubeException) t.getCause(), false) : (NubeException) t.getCause());
         }
-        return convertFriendly(new NubeException(NubeException.ErrorCode.UNKNOWN_ERROR, null, t), false);
+        return convertFriendly(new NubeException(NubeException.ErrorCode.UNKNOWN_ERROR, overrideMsg, t), false);
+    }
+
+    private NubeException overrideMsg(NubeException t) {
+        if (Strings.isBlank(overrideMsg)) {
+            return t;
+        }
+        return new NubeException(t.getErrorCode(), overrideMsg, t.getCause());
     }
 
     private NubeException convertFriendly(NubeException t, boolean wrapperIsNube) {

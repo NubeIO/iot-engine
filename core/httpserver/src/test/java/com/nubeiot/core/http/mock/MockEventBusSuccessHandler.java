@@ -25,27 +25,27 @@ public class MockEventBusSuccessHandler extends MockEventBusHandler {
         return new MockEventBusSuccessHandler(eventBus, "http.server.test");
     }
 
-    @EventContractor(events = EventAction.GET_LIST, returnType = List.class)
+    @EventContractor(action = EventAction.GET_LIST, returnType = List.class)
     public List<String> list(RequestData data) {
         return Arrays.asList("1", "2", "3");
     }
 
-    @EventContractor(events = EventAction.GET_ONE, returnType = Integer.class)
+    @EventContractor(action = EventAction.GET_ONE, returnType = Integer.class)
     public int get(RequestData data) {
         return Integer.valueOf(data.getBody().getString("event_id"));
     }
 
-    @EventContractor(events = EventAction.CREATE)
+    @EventContractor(action = EventAction.CREATE)
     public JsonObject create(RequestData data) {
         return new JsonObject().put("create", "success");
     }
 
-    @EventContractor(events = EventAction.UPDATE, returnType = Single.class)
+    @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<String> update(RequestData data) {
         return Single.just("success");
     }
 
-    @EventContractor(events = EventAction.PATCH, returnType = Single.class)
+    @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData data) {
         return Single.just(new JsonObject().put("patch", "success")
                                            .put("event_id", Integer.valueOf(data.getBody().getString("event_id"))));

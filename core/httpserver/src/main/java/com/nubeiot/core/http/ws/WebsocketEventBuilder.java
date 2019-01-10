@@ -17,7 +17,7 @@ import com.nubeiot.core.http.HttpConfig;
 import com.nubeiot.core.http.InvalidUrlException;
 import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
 import com.nubeiot.core.http.utils.Urls;
-import com.nubeiot.core.utils.Reflections;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
 import io.vertx.core.Vertx;
@@ -128,7 +128,7 @@ public final class WebsocketEventBuilder {
         Map<Class, Object> map = new LinkedHashMap<>();
         map.put(EventController.class, controller);
         map.put(List.class, socketMapping);
-        WebsocketBridgeEventHandler handler = Reflections.createObject(bridgeHandlerClass, map);
+        WebsocketBridgeEventHandler handler = ReflectionClass.createObject(bridgeHandlerClass, map);
         return Objects.isNull(handler) ? new WebsocketBridgeEventHandler(controller, socketMapping) : handler;
     }
 

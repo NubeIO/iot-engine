@@ -10,7 +10,7 @@ public class NubeExceptionConverterTest {
 
     @Before
     public void setup() {
-        converter = new NubeExceptionConverter(true);
+        converter = new NubeExceptionConverter(true, null);
     }
 
     @Test(expected = NullPointerException.class)
@@ -61,7 +61,7 @@ public class NubeExceptionConverterTest {
     @Test(expected = RuntimeException.class)
     public void test_with_code_with_other_cause_no_message() throws Throwable {
         NubeException t = converter.apply(
-                new NubeException(NubeException.ErrorCode.EVENT_ERROR, "1", new RuntimeException()));
+            new NubeException(NubeException.ErrorCode.EVENT_ERROR, "1", new RuntimeException()));
         Assert.assertEquals(NubeException.ErrorCode.EVENT_ERROR, t.getErrorCode());
         Assert.assertEquals("1", t.getMessage());
         throw t.getCause();
@@ -70,7 +70,7 @@ public class NubeExceptionConverterTest {
     @Test(expected = RuntimeException.class)
     public void test_with_code_with_other_cause_has_message() throws Throwable {
         NubeException t = converter.apply(
-                new NubeException(NubeException.ErrorCode.HTTP_ERROR, "abc", new RuntimeException("xyz")));
+            new NubeException(NubeException.ErrorCode.HTTP_ERROR, "abc", new RuntimeException("xyz")));
         Assert.assertEquals(NubeException.ErrorCode.HTTP_ERROR, t.getErrorCode());
         Assert.assertEquals("abc | Cause: xyz", t.getMessage());
         throw t.getCause();
@@ -87,7 +87,7 @@ public class NubeExceptionConverterTest {
     @Test(expected = HiddenException.class)
     public void test_with_code_with_hidden_cause() throws Throwable {
         NubeException t = converter.apply(
-                new ServiceException("abc", new HiddenException(NubeException.ErrorCode.EVENT_ERROR, "xyz")));
+            new ServiceException("abc", new HiddenException(NubeException.ErrorCode.EVENT_ERROR, "xyz")));
         Assert.assertEquals(NubeException.ErrorCode.SERVICE_ERROR, t.getErrorCode());
         Assert.assertEquals("abc", t.getMessage());
         NubeException cause = (NubeException) t.getCause();

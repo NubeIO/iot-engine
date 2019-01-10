@@ -58,11 +58,7 @@ public class RestEventServerTest extends BaseHttpServerTest {
 
     @Test
     public void test_api_eventbus_error_unexpected(TestContext context) {
-        try {
-            MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
         String path = "/api/test/events";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.UNKNOWN_ERROR)
                                               .put("message", "UNKNOWN_ERROR | Cause: xxx");
@@ -72,11 +68,7 @@ public class RestEventServerTest extends BaseHttpServerTest {
 
     @Test
     public void test_api_eventbus_error_from_server(TestContext context) {
-        try {
-            MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
         String path = "/api/test/events";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.ENGINE_ERROR)
                                               .put("message", "Engine error");
@@ -86,11 +78,7 @@ public class RestEventServerTest extends BaseHttpServerTest {
 
     @Test
     public void test_api_eventbus_error_from_user(TestContext context) {
-        try {
-            MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
         String path = "/api/test/event/:event_id";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.INVALID_ARGUMENT)
                                               .put("message", "invalid");

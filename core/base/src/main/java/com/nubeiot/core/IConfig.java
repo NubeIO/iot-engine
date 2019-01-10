@@ -5,8 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
+
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -18,11 +19,11 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.utils.Reflections;
+import com.nubeiot.core.utils.Functions.Silencer;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.core.utils.Reflections.ReflectionField;
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.json.DecodeException;
-import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -53,7 +54,7 @@ public interface IConfig extends JsonData {
     @Override
     @SuppressWarnings("unchecked")
     default JsonObject toJson() {
-        List<? extends IConfig> fieldValues = Reflections.findFieldValueByType(this, IConfig.class);
+        List<? extends IConfig> fieldValues = ReflectionField.findFieldValueByType(this, IConfig.class);
         JsonObject json = new JsonObject();
         Set<String> fields = new HashSet<>();
         fieldValues.forEach(val -> {
@@ -85,7 +86,7 @@ public interface IConfig extends JsonData {
             JsonObject entries = data instanceof String
                                  ? new JsonObject((String) data)
                                  : JsonObject.mapFrom(Objects.requireNonNull(data));
-            return ((CreateConfig<T>) Reflections.createObject(clazz, new CreateConfig<>(clazz, entries))).get();
+            return ReflectionClass.createObject(clazz, new CreateConfig<>(clazz, entries)).get();
         } catch (IllegalArgumentException | NullPointerException | DecodeException | HiddenException ex) {
             HiddenException hidden = ex instanceof HiddenException ? (HiddenException) ex : new HiddenException(ex);
             if (Objects.nonNull(cause)) {
@@ -118,9 +119,8 @@ public interface IConfig extends JsonData {
     }
 
     @RequiredArgsConstructor
-    class CreateConfig<T extends IConfig> implements BiConsumer<T, HiddenException>, Supplier<T> {
+    class CreateConfig<T extends IConfig> extends Silencer<T> {
 
-        private T object;
         private final Class<T> clazz;
         private final JsonObject entries;
 
@@ -160,9 +160,6 @@ public interface IConfig extends JsonData {
                 throw new HiddenException(NubeException.ErrorCode.INVALID_ARGUMENT, e);
             }
         }
-
-        @Override
-        public T get() { return object; }
 
     }
 
