@@ -10,6 +10,7 @@ import com.nubeiot.core.sql.SQLWrapper;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.connector.bonescript.handlers.PointsEventHandler;
 import com.nubeiot.edge.connector.bonescript.model.DefaultCatalog;
+import com.nubeiot.edge.connector.bonescript.utils.DittoDBUtils;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -45,6 +46,12 @@ public class BoneScriptVerticle extends ContainerVerticle {
 
     private void handler(SQLWrapper component) {
         this.entityHandler = (BoneScriptEntityHandler) component.getEntityHandler();
+
+        DittoDBUtils.getDittoData(this.entityHandler.getTblDittoDao()).subscribe(db -> {
+            // Initializing Ditto for future use
+            Ditto.init(db);
+            logger.info("Ditto Initialization is successfully done.");
+        });
     }
 
     @SuppressWarnings("unchecked")
