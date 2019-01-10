@@ -27,6 +27,7 @@ final class EdgeRestEventApi extends AbstractRestEventApi {
         addRouter(EdgeEventBus.BIOS_STATUS, "/status", "id");
         addRouter(EdgeEventBus.APP_INSTALLER, "/service", "service_id");
         addRouter(EdgeEventBus.APP_TRANSACTION, "/service/transaction", "transaction_id");
+        addRouter(EdgeConnectorVerticle.CLUSTER_INFO, "/cluster/node", "node_id");
     }
 
 }

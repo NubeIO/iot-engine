@@ -2,100 +2,45 @@ package com.nubeiot.edge.core;
 
 import java.util.function.Supplier;
 
-import org.jooq.Configuration;
-
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.enums.State;
-import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.sql.ISqlProvider;
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.sql.SQLWrapper;
-import com.nubeiot.edge.core.loader.ModuleLoader;
+import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.edge.core.model.gen.tables.daos.TblModuleDao;
-import com.nubeiot.edge.core.model.gen.tables.daos.TblRemoveHistoryDao;
-import com.nubeiot.edge.core.model.gen.tables.daos.TblTransactionDao;
-import com.nubeiot.edge.core.model.gen.tables.pojos.TblModule;
+import com.nubeiot.edge.core.model.DefaultCatalog;
 
-import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
-import io.reactivex.Single;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.AbstractVerticle;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class EdgeVerticle extends AbstractVerticle implements ISqlProvider {
+public abstract class EdgeVerticle extends ContainerVerticle {
 
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    static final String SHARED_EVENTBUS = "module_loader";
     @Getter
     private ModuleTypeRule moduleRule;
-    private ModuleLoader moduleLoader;
-    private SQLWrapper sqlWrapper;
     @Getter
-    protected EntityHandler entityHandler;
+    private EdgeEntityHandler entityHandler;
     @Getter
-    private NubeConfig nubeConfig;
+    private EventController eventController;
 
     @Override
-    public final void start() throws Exception {
-        this.nubeConfig = IConfig.from(config(), NubeConfig.class);
-        this.moduleLoader = new ModuleLoader(vertx);
-        this.moduleRule = this.getModuleRuleProvider().get();
-        registerEventBus();
-        this.sqlWrapper = ISqlProvider.create(this.vertx, nubeConfig, this::initData);
-        this.sqlWrapper.start();
-        Configuration jooqConfig = this.sqlWrapper.getJooqConfig();
-        this.entityHandler = new EntityHandler(() -> new TblModuleDao(jooqConfig, vertx),
-                                               () -> new TblTransactionDao(jooqConfig, vertx),
-                                               () -> new TblRemoveHistoryDao(jooqConfig, vertx),
-                                               () -> new JDBCRXGenericQueryExecutor(jooqConfig, vertx));
+    public void start() {
         super.start();
+        this.moduleRule = this.getModuleRuleProvider().get();
+        this.eventController = registerEventBus(new EventController(vertx));
+        this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass()), this::handler);
+        this.addSharedData(SHARED_EVENTBUS, this.eventController);
     }
 
-    @Override
-    public final void stop() {
-        this.sqlWrapper.stop();
+    private void handler(SQLWrapper component) {
+        this.entityHandler = ((EdgeEntityHandler) component.getEntityHandler());
     }
 
-    protected abstract void registerEventBus();
+    protected abstract EventController registerEventBus(EventController controller);
 
     protected abstract Supplier<ModuleTypeRule> getModuleRuleProvider();
 
-    protected abstract Single<JsonObject> initData();
-
-    protected Single<JsonObject> startupModules() {
-        return this.entityHandler.getModulesWhenBootstrap()
-                                 .flattenAsObservable(tblModules -> tblModules)
-                                 .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.UPDATE))
-                                 .collect(JsonArray::new, JsonArray::add)
-                                 .map(results -> new JsonObject().put("results", results));
-    }
-
-    protected Single<JsonObject> processDeploymentTransaction(TblModule module, EventAction eventAction) {
-        logger.info("{} module with data {}", eventAction, module.toJson().encode());
-        return this.entityHandler.handlePreDeployment(module, eventAction)
-                                 .doAfterSuccess(this::deployModule)
-                                 .map(result -> result.toJson()
-                                                      .put("message", "Work in progress")
-                                                      .put("status", Status.WIP));
-    }
-
-    private void deployModule(PreDeploymentResult preDeployResult) {
-        final String transactionId = preDeployResult.getTransactionId();
-        final String serviceId = preDeployResult.getServiceId();
-        final EventAction event = preDeployResult.getAction();
-        logger.info("Execute transaction: {}", transactionId);
-        preDeployResult.setSilent(EventAction.REMOVE == event && State.DISABLED == preDeployResult.getPrevState());
-        moduleLoader.handleEvent(event, preDeployResult.toRequestData())
-                    .subscribe(r -> entityHandler.succeedPostDeployment(serviceId, transactionId, event,
-                                                                        r.getString("deploy_id")),
-                               t -> entityHandler.handleErrorPostDeployment(serviceId, transactionId, event, t));
-    }
+    protected abstract Class<? extends EdgeEntityHandler> entityHandlerClass();
 
 }

@@ -50,7 +50,8 @@ public class KafkaComponentTest extends BaseHttpServerTest {
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
-        this.httpConfig.put("enabled", false).put("__socket__", new JsonObject().put("enabled", true));
+        this.httpConfig.setEnabled(false);
+        this.httpConfig.getWebsocketCfg().setEnabled(true);
         File dataDir = folder.newFolder("cluster");
         kafkaCluster = new KafkaCluster().usingDirectory(dataDir)
                                          .withPorts(2182, 9093)
@@ -72,9 +73,17 @@ public class KafkaComponentTest extends BaseHttpServerTest {
     @Test
     public void test_client_consumer(TestContext context) {
         WebsocketEventMetadata metadata = MockWebsocketEvent.ONLY_PUBLISHER;
-        startServer(new HttpServerRouter().registerEventBusSocket(metadata));
-        new MockKafkaConsumer(vertx.getDelegate(), consumerConfig, "nube", metadata::getPublisher).start();
-        new MockKafkaProducer(vertx.getDelegate(), producerConfig, "nube", supply()).start();
+        startServer(context, new HttpServerRouter().registerEventBusSocket(metadata));
+        try {
+            new MockKafkaConsumer(vertx.getDelegate(), consumerConfig, "nube", metadata::getPublisher).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            new MockKafkaProducer(vertx.getDelegate(), producerConfig, "nube", supply()).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Async async = context.async(1);
         setupConsumer(async, metadata.getPublisher().getAddress(),
                       o -> assertResponse(context, async, supply().get().toJson(), (JsonObject) o));
@@ -85,9 +94,17 @@ public class KafkaComponentTest extends BaseHttpServerTest {
         WebsocketEventMetadata metadata = MockWebsocketEvent.ONLY_PUBLISHER;
         JsonObject expected = createWebsocketMsg(metadata.getPublisher().getAddress(), supply().get(),
                                                  BridgeEventType.RECEIVE);
-        startServer(new HttpServerRouter().registerEventBusSocket(metadata));
-        new MockKafkaConsumer(vertx.getDelegate(), consumerConfig, "nube", metadata::getPublisher).start();
-        new MockKafkaProducer(vertx.getDelegate(), producerConfig, "nube", supply()).start();
+        startServer(context, new HttpServerRouter().registerEventBusSocket(metadata));
+        try {
+            new MockKafkaConsumer(vertx.getDelegate(), consumerConfig, "nube", metadata::getPublisher).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            new MockKafkaProducer(vertx.getDelegate(), producerConfig, "nube", supply()).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Async async = context.async(1);
         WebSocket ws = setupSockJsClient(async, Urls.combinePath("ws", metadata.getPath()),
                                          clientRegister(metadata.getPublisher().getAddress()), context::fail);

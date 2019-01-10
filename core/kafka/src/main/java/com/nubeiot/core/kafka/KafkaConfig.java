@@ -3,7 +3,7 @@ package com.nubeiot.core.kafka;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 
-public class KafkaConfig implements IConfig {
+public final class KafkaConfig implements IConfig {
 
     @Override
     public String name() {

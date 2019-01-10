@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.nubeiot.core.exceptions.HiddenException;
@@ -80,7 +81,7 @@ public final class Reflections {
             return (T) field.get(null);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new NubeException(
-                    Strings.format("Failed to get field constant {0} of {1}", fieldName, destClazz.getName()), e);
+                Strings.format("Failed to get field constant {0} of {1}", fieldName, destClazz.getName()), e);
         }
     }
 
@@ -108,13 +109,12 @@ public final class Reflections {
             final Class<?> parameterType = method.getParameterTypes()[0];
             if (!parameterType.isInstance(inputData)) {
                 throw new IllegalArgumentException(
-                        "Method '" + method.getName() + "' does not accept " + inputData.getClass().getName() +
-                        " as argument");
+                    "Method '" + method.getName() + "' does not accept " + inputData.getClass().getName() +
+                    " as argument");
             }
             if (!assertDataType(outputClazz, method.getReturnType())) {
                 throw new IllegalArgumentException(
-                        "Method '" + method.getName() + "' does not accept " + outputClazz.getName() +
-                        " as return type");
+                    "Method '" + method.getName() + "' does not accept " + outputClazz.getName() + " as return type");
             }
             method.setAccessible(true);
             return (O) method.invoke(instance, inputData);
@@ -209,14 +209,7 @@ public final class Reflections {
     }
 
     public static <T> T createObject(Class<T> clazz) {
-        try {
-            Constructor<T> constructor = clazz.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            return constructor.newInstance();
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            logger.warn("Cannot init instance of {}", e, clazz.getName());
-            return null;
-        }
+        return ((SilentConsumer<T>) createObject(clazz, new SilentConsumer<>())).get();
     }
 
     public static <T> BiConsumer<T, HiddenException> createObject(Class<T> clazz,
@@ -233,17 +226,23 @@ public final class Reflections {
     }
 
     public static <T> T createObject(Class<T> clazz, Map<Class, Object> inputs) {
+        return ((SilentConsumer<T>) createObject(clazz, inputs, new SilentConsumer<>())).get();
+    }
+
+    public static <T> BiConsumer<T, HiddenException> createObject(Class<T> clazz, Map<Class, Object> inputs,
+                                                                  BiConsumer<T, HiddenException> consumer) {
         if (!(inputs instanceof LinkedHashMap)) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
         }
         try {
             Constructor<T> constructor = clazz.getDeclaredConstructor(inputs.keySet().toArray(new Class[] {}));
             constructor.setAccessible(true);
-            return constructor.newInstance(inputs.values().toArray(new Object[] {}));
+            consumer.accept(constructor.newInstance(inputs.values().toArray(new Object[] {})), null);
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            logger.warn("Cannot init instance of {}", e, clazz.getName());
-            return null;
+            consumer.accept(null, new HiddenException(NubeException.ErrorCode.INITIALIZER_ERROR,
+                                                      "Cannot init instance of " + clazz.getName(), e));
         }
+        return consumer;
     }
 
     public static <T> List<T> findFieldValueByType(@NonNull Object obj, @NonNull Class<T> searchType) {
@@ -263,6 +262,25 @@ public final class Reflections {
             logger.warn("Cannot get data of field {}", e, f.getName());
             return null;
         }
+    }
+
+    private static final class SilentConsumer<T> implements BiConsumer<T, HiddenException>, Supplier<T> {
+
+        private T object;
+
+        @Override
+        public void accept(T t, HiddenException e) {
+            if (Objects.nonNull(e)) {
+                logger.warn("Failed to create object", e);
+            }
+            object = t;
+        }
+
+        @Override
+        public T get() {
+            return object;
+        }
+
     }
 
 }

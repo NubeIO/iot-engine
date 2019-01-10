@@ -1,15 +1,13 @@
 package com.nubeiot.core.kafka;
 
-import com.nubeiot.core.component.IComponentProvider;
+import com.nubeiot.core.component.UnitProvider;
 
-import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.Vertx;
+public class KafkaProvider implements UnitProvider<KafkaUnit> {
 
-public interface KafkaProvider extends IComponentProvider {
+    @Override
+    public Class<KafkaUnit> unitClass() { return KafkaUnit.class; }
 
-    static KafkaComponent create(Vertx vertx, JsonObject rootCfg) {
-        KafkaConfig kafkaCfg = IComponentProvider.computeConfig("kafka.json", KafkaConfig.class, rootCfg);
-        return new KafkaComponent(vertx.getDelegate(), kafkaCfg);
-    }
+    @Override
+    public KafkaUnit get() { return new KafkaUnit(); }
 
 }

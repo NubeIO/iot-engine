@@ -1,19 +1,85 @@
-ext {
-    jooq_version = "3.10.8"
-    vertx_jooq_version = "3.1.0"
-    hikari_version = "3.2.0"
-    jpa_version = "2.2"
-}
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.Period
 
+import org.jooq.meta.jaxb.ForcedType
+
+import com.nubeiot.buildscript.jooq.DB
+import com.nubeiot.buildscript.jooq.JooqGenerateTask
+import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
+
+ext {
+    enumTypes = [
+        "com.nubeiot.core.enums.State", "com.nubeiot.core.enums.Status",
+        "com.nubeiot.core.event.EventAction", "com.nubeiot.core.event.EventPattern",
+        "com.nubeiot.core.exceptions.NubeException.ErrorCode", "com.nubeiot.core.cluster.ClusterType"
+    ]
+    dbTypes = [
+        new ForcedType(types: DB.TYPES.timestamp, userType: "java.time.LocalDateTime",
+                       converter: "com.nubeiot.core.sql.converter.TimestampConverter"),
+        new ForcedType(types: DB.TYPES.timestampz, userType: "java.time.Instant",
+                       converter: "com.nubeiot.core.sql.converter.TimestampZConverter"),
+        new ForcedType(types: DB.TYPES.date, userType: "java.time.LocalDate",
+                       converter: "com.nubeiot.core.sql.converter.DateConverter"),
+        new ForcedType(types: DB.TYPES.time, userType: "java.time.LocalTime",
+                       converter: "com.nubeiot.core.sql.converter.TimeConverter"),
+        new ForcedType(types: DB.TYPES.varchar, userType: "java.time.Duration", expression: DB.COL_REGEX.duration,
+                       converter: "com.nubeiot.core.sql.converter.DurationConverter"),
+        new ForcedType(types: DB.TYPES.varchar, userType: "java.time.Period", expression: DB.COL_REGEX.period,
+                       converter: "com.nubeiot.core.sql.converter.PeriodConverter"),
+    ]
+    javaTypes = [
+        new JsonDataType(className: Instant.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.Instant.parse((String)%s))"),
+        new JsonDataType(className: OffsetDateTime.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.OffsetDateTime.parse((String)%s, java.time.format.DateTimeFormatter.ISO_DATE_TIME)"),
+        new JsonDataType(className: LocalDateTime.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.LocalDateTime.parse((String)%s, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)"),
+        new JsonDataType(className: LocalDate.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.LocalDate.parse((String)%s, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)"),
+        new JsonDataType(className: LocalTime.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.LocalTime.parse((String)%s), java.time.format.DateTimeFormatter.ISO_LOCAL_TIME)"),
+        new JsonDataType(className: Duration.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.Duration.parse((String)%s)"),
+        new JsonDataType(className: Period.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.Period.parse((String)%s)"),
+    ]
+}
 
 dependencies {
     compile project(":core:base")
-    compile("io.vertx:vertx-jdbc-client:$project.vertxVersion") {
+    compile("io.vertx:vertx-jdbc-client:$project.versions.vertx") {
         exclude group: "com.mchange", module: "c3p0"
     }
-    compile "com.zaxxer:HikariCP:$project.hikari_version"
-    compile "javax.persistence:javax.persistence-api:$project.jpa_version"
-    compile "org.jooq:jooq:$project.jooq_version"
-    compile "org.jooq:jooq-meta:$project.jooq_version"
+    compile project.deps.database.hikari
+    compile project.deps.database.jpa
+    compile project.deps.database.jooq
+    compile project.deps.database.jooqMeta
     compile project(":ext:rx-jdbc")
+
+    testCompile project.deps.database.h2
+    testCompile project.deps.database.pgsql
+    testCompile "com.opentable.components:otj-pg-embedded:0.13.0"
+}
+
+task jooqGen1(type: JooqGenerateTask) {
+    ddlDir = "src/test/resources/default_schema.sql"
+    packageName = "com.nubeiot.core.sql.mock.oneschema"
+    targetDir = project.genSrc.javaTestSrcFolder
+    enumTypes = project.enumTypes
+    dbTypes = project.dbTypes
+    javaTypes = project.javaTypes
+}
+
+task jooqGen2(type: JooqGenerateTask) {
+    ddlDir = "src/test/resources/many_schema.sql"
+    packageName = "com.nubeiot.core.sql.mock.manyschema"
+    targetDir = project.genSrc.javaTestSrcFolder
+    enumTypes = project.enumTypes
+    dbTypes = project.dbTypes
+    javaTypes = project.javaTypes
 }

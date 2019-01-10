@@ -4,18 +4,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.nubeiot.core.component.IComponent;
+import io.vertx.reactivex.core.eventbus.EventBus;
+
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.exceptions.NubeException;
 
-import io.vertx.reactivex.core.eventbus.EventBus;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public abstract class MockEventBusHandler implements IComponent, EventHandler {
+public abstract class MockEventBusHandler implements EventHandler {
 
     private final EventBus eventBus;
     private final String address;
@@ -29,13 +28,11 @@ public abstract class MockEventBusHandler implements IComponent, EventHandler {
         this.availableEvents = new ArrayList<>(model.getEvents());
     }
 
-    @Override
-    public void start() throws NubeException {
+    public void start() throws Exception {
         this.eventBus.consumer(address, this::accept);
     }
 
-    @Override
-    public void stop() throws NubeException {
+    public void stop() throws Exception {
 
     }
 

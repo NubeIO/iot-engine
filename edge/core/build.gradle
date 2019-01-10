@@ -1,81 +1,30 @@
+import org.jooq.meta.jaxb.ForcedType
 
-ext {
-    h2_version = '1.4.197'
-}
-
-//buildscript {
-//    sourceSets {
-//        java {
-//            srcDir file('src/buildscript/java/')
-//            include '**/edge/model/buildscript/*.java'
-//            include '**/edge/model/converter/*.java'
-//            include '**/edge/loader/*.java'
-//        }
-//    }
-//    dependencies {
-//        classpath project(':core')
-//        classpath "org.jooq:jooq-codegen:$project.jooq_version"
-//        classpath "org.jooq:jooq-meta:$project.jooq_version"
-//        classpath "io.github.jklingsporn:vertx-jooq-generate:$project.vertx_jooq_version"
-//        classpath "org.xerial:sqlite-jdbc:$project.sqlite_version"
-//    }
-//}
+import com.nubeiot.buildscript.jooq.DB
+import com.nubeiot.buildscript.jooq.JooqGenerateTask
+import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
+import com.nubeiot.buildscript.jooq.Utils
 
 dependencies {
     compile project(':core:base')
     compile project(':core:sql')
     compile project(':eventbus:edge')
-    compile "com.h2database:h2:$project.h2_version"
-    compile "io.vertx:vertx-maven-service-factory:$project.vertxVersion"
+    compile project.deps.database.h2
+    compile "io.vertx:vertx-maven-service-factory:$project.versions.vertx"
 }
 
-
-//import groovy.xml.MarkupBuilder
-//import org.jooq.util.GenerationTool
-//
-//import javax.xml.bind.JAXB
-//
-//task jooqGenerate {
-//    doLast() {
-//        def writer = new StringWriter()
-//        new MarkupBuilder(writer)
-//                .configuration("xmlns": "http://www.jooq.org/xsd/jooq-codegen-$project.jooq_version"+".xsd") {
-//            jdbc {
-//                driver('org.sqlite.JDBC')
-//                url("jdbc:sqlite:${project.basedir}/app-installer.db")
-//            }
-//            generator {
-//                name('com.nubeiot.edge.model.buildscript.CustomVertxGenerator')
-//                database {
-//                    name('org.jooq.util.sqlite.SQLiteDatabase')
-//                    include('.*')
-//                    unsignedTypes(false)
-//                    includeTables(true)
-//                    includeRoutines(true)
-//                    includePackages(false)
-//                    includeUDTs(true)
-//                    includeSequences(true)
-//                }
-//                generate([:]) {
-//                    deprecated(false)
-//                    records(false)
-//                    interfaces(true)
-//                    fluentSetters(true)
-//                    jpaAnnotations(true)
-//                    pojos(true)
-//                    daos(true)
-//                }
-//                target() {
-//                    packageName('com.nubeiot.edge.model.gen')
-//                    directory("$projectDir/src/main/java")
-//                }
-//                strategy {
-//                    name('io.github.jklingsporn.vertx.jooq.generate.rx.JDBCRXVertxGeneratorStrategy')
-//                }
-//            }
-//        }
-//        GenerationTool.generate(
-//                JAXB.unmarshal(new StringReader(writer.toString()), org.jooq.meta.jaxb.Configuration.class)
-//        )
-//    }
-//}
+task jooqGen(type: JooqGenerateTask) {
+    packageName = "com.nubeiot.edge.core.model"
+    enumTypes = project(':core:sql').ext.enumTypes
+    dbTypes = project(':core:sql').ext.dbTypes + [
+        new ForcedType(userType: "com.nubeiot.edge.core.loader.ModuleType", types: DB.TYPES.varchar,
+                       expression: Utils.toRegexIgnoreCase("service_type"),
+                       converter: "com.nubeiot.edge.core.model.converter.ModuleTypeConverter")
+    ]
+    javaTypes = project(':core:sql').ext.javaTypes + [
+        new JsonDataType(className: "com.nubeiot.edge.core.loader.ModuleType",
+                         converter: "%s.name()",
+                         parser: "com.nubeiot.edge.core.loader.ModuleTypeFactory.factory((String)%s)",
+                         defVal: "com.nubeiot.edge.core.loader.ModuleTypeFactory.getDefault()")
+    ]
+}

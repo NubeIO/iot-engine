@@ -9,19 +9,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.json.JSONException;
-import org.junit.BeforeClass;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.slf4j.LoggerFactory;
 
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.http.utils.Urls;
-import com.nubeiot.core.http.ws.WebsocketEventMessage;
-import com.nubeiot.core.utils.Strings;
-import com.zandero.rest.RestRouter;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
@@ -36,17 +28,24 @@ import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
 
+import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.http.utils.Urls;
+import com.nubeiot.core.http.ws.WebsocketEventMessage;
+import com.nubeiot.core.utils.Strings;
+import com.zandero.rest.RestRouter;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+
 public class BaseHttpServerTest {
 
     private static final String DEFAULT_HOST = "127.0.0.1";
-    protected static final int DEFAULT_TIMEOUT = 5000;
+    protected static final int TEST_TIMEOUT = 3000;
     protected Vertx vertx;
-    protected JsonObject httpConfig;
+    protected HttpConfig httpConfig;
     protected HttpClient client;
     protected RequestOptions requestOptions;
-    private HttpServer httpServer;
 
-    @BeforeClass
     protected static void beforeSuite() {
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
         Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -55,9 +54,11 @@ public class BaseHttpServerTest {
 
     protected void before(TestContext context) throws IOException {
         vertx = Vertx.vertx();
-        httpConfig = new JsonObject().put("port", getRandomPort()).put("host", DEFAULT_HOST);
+        httpConfig = new HttpConfig();
+        httpConfig.setHost(DEFAULT_HOST);
+        httpConfig.setPort(getRandomPort());
         client = vertx.createHttpClient(createClientOptions());
-        requestOptions = new RequestOptions().setHost(DEFAULT_HOST).setPort(httpConfig.getInteger("port"));
+        requestOptions = new RequestOptions().setHost(DEFAULT_HOST).setPort(httpConfig.getPort());
     }
 
     protected void after(TestContext context) {
@@ -65,9 +66,6 @@ public class BaseHttpServerTest {
         RestRouter.getReaders().clear();
         RestRouter.getContextProviders().clear();
         RestRouter.getExceptionHandlers().clear();
-        if (Objects.nonNull(httpServer)) {
-            httpServer.stop();
-        }
         vertx.close(context.asyncAssertSuccess());
     }
 
@@ -78,28 +76,34 @@ public class BaseHttpServerTest {
     }
 
     protected HttpClientOptions createClientOptions() {
-        return new HttpClientOptions().setConnectTimeout(DEFAULT_TIMEOUT);
+        return new HttpClientOptions().setConnectTimeout(TEST_TIMEOUT);
     }
 
-    protected void assertRestByClient(TestContext context, HttpMethod method, int port, String path, int codeExpected,
+    protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected,
                                       JsonObject bodyExpected) {
         Async async = context.async();
         client.request(method, requestOptions.setURI(path), resp -> {
             context.assertEquals(ApiConstants.DEFAULT_CONTENT_TYPE, resp.getHeader(ApiConstants.CONTENT_TYPE));
-            //            context.assertNotNull(resp.getHeader("x-response-time"));
+            context.assertNotNull(resp.getHeader("x-response-time"));
             context.assertEquals(codeExpected, resp.statusCode());
             resp.bodyHandler(body -> assertResponseBody(context, bodyExpected, body));
         }).endHandler(event -> testComplete(async)).end();
     }
 
-    protected void startServer(HttpServerRouter httpRouter) {
-        httpServer = new HttpServer(vertx.getDelegate(), httpConfig.mapTo(HttpConfig.class), httpRouter);
-        httpServer.start();
+    protected void startServer(TestContext context, HttpServerRouter httpRouter) {
+        DeploymentOptions options = new DeploymentOptions().setConfig(httpConfig.toJson());
+        CountDownLatch latch = new CountDownLatch(1);
+        vertx.deployVerticle(new HttpServer(httpRouter), options, context.asyncAssertSuccess(id -> latch.countDown()));
         try {
-            Thread.sleep(500);
+            latch.await(TEST_TIMEOUT, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            context.fail(e);
         }
+    }
+
+    protected void startServer(TestContext context, HttpServerRouter httpRouter, Consumer<Throwable> consumer) {
+        DeploymentOptions options = new DeploymentOptions().setConfig(httpConfig.toJson());
+        vertx.deployVerticle(new HttpServer(httpRouter), options, context.asyncAssertFailure(consumer::accept));
     }
 
     protected void assertResponseBody(TestContext context, JsonObject bodyExpected, Buffer body) {
@@ -161,18 +165,18 @@ public class BaseHttpServerTest {
 
     protected WebSocket setupSockJsClient(Async async, String path, Consumer<WebSocket> writerBeforeHandler,
                                           Consumer<Throwable> error) throws InterruptedException {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<WebSocket> wsReference = new AtomicReference<>();
         client.websocket(requestOptions.setURI(Urls.combinePath(path, "/websocket")), ws -> {
             if (Objects.nonNull(writerBeforeHandler)) {
                 writerBeforeHandler.accept(ws.getDelegate());
             }
             wsReference.set(ws.getDelegate());
-            countDownLatch.countDown();
+            latch.countDown();
             ws.endHandler(v -> testComplete(async, "CLIENT END"));
             ws.exceptionHandler(error::accept);
         }, error::accept);
-        countDownLatch.await(3000, TimeUnit.MILLISECONDS);
+        latch.await(TEST_TIMEOUT, TimeUnit.SECONDS);
         return wsReference.get();
     }
 

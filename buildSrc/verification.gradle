@@ -26,8 +26,8 @@ task testReport(type: TestReport, group: "verification") {
     reportOn subprojects.tasks.test
     doLast {
         if (!testFailures.isEmpty()) {
-            def errors = testFailures.inject("There were failing tests. " +
-                    "See the report at: " + destinationDir.toPath().resolve("index.html").toUri()) {
+            def errors = testFailures.inject("There were failing tests. See the report at: " +
+                                             destinationDir.toPath().resolve("index.html").toUri()) {
                 acc, val -> acc + "\n" + "-" * 20 + "\n" + val
             }
             throw new TaskExecutionException(project.tasks.test, new Exception(errors))
@@ -36,11 +36,17 @@ task testReport(type: TestReport, group: "verification") {
 }
 
 test {
+    if (project.hasProperty('excludeTests')) {
+        exclude project.property('excludeTests')
+    }
     ignoreFailures = true
     dependsOn subprojects.tasks.test
     finalizedBy testReport
     subprojects {
         test {
+            if (project.hasProperty('excludeTests')) {
+                exclude project.property('excludeTests')
+            }
             maxParallelForks = numProc
             ignoreFailures = true
             afterTest { descriptor, result ->

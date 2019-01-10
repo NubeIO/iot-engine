@@ -31,7 +31,7 @@ public final class ModuleLoader implements EventHandler {
         PreDeploymentResult preResult = JsonData.from(data.getBody(), PreDeploymentResult.class);
         logger.info("Vertx install module {}...", preResult.getServiceId());
         DeploymentOptions options = new DeploymentOptions(preResult.getDeployCfg().getDeployConfig()).setConfig(
-                preResult.getDeployCfg().toJson());
+            preResult.getDeployCfg().toJson());
         return vertx.rxDeployVerticle(preResult.getServiceId(), options).doOnError(throwable -> {
             throw new EngineException(throwable);
         }).map(id -> new JsonObject().put("deploy_id", id));

@@ -1,10 +1,11 @@
 library identifier: 'shared@master', retriever: modernSCM(
-        [$class: 'GitSCMSource',
-         remote: 'https://github.com/zero-88/jenkins-pipeline-shared.git'])
+    [$class: 'GitSCMSource',
+     remote: 'https://github.com/zero-88/jenkins-pipeline-shared.git'])
 
 pipeline {
     agent {
-        docker "gradle:4.10.3-jdk8-alpine"
+        // docker "gradle:4.10.3-jdk8-alpine"
+        docker "gradle:4.10.3-jdk8"
     }
     environment {
         BUILD_AGENT = "ci-jenkins:${JENKINS_VERSION}"
@@ -14,7 +15,8 @@ pipeline {
         stage("Prepare") {
             steps {
                 script {
-                    VERSION = sh(script: "gradle properties | grep 'version:' | awk '{print \$2}'", returnStdout: true).trim()
+                    VERSION =
+                        sh(script: "gradle properties | grep 'version:' | awk '{print \$2}'", returnStdout: true).trim()
                     BUILD_CMD = BRANCH_NAME ==~ /^master|v.+|PR-.+/ ? 'dist' : 'build'
                 }
             }
@@ -22,8 +24,8 @@ pipeline {
 
         stage("Build") {
             steps {
-                sh "gradle clean ${BUILD_CMD} -x test -PbuildBy=${BUILD_AGENT} -PbuildNumber=${BUILD_NUMBER} " +
-                        "-PbuildHash=${GIT_COMMIT}"
+                sh "gradle clean jooq ${BUILD_CMD} -x test -PbuildBy=${BUILD_AGENT} -PbuildNumber=${BUILD_NUMBER} " +
+                   "-PbuildHash=${GIT_COMMIT}"
             }
             post {
                 success {
@@ -35,7 +37,7 @@ pipeline {
 
         stage("Test") {
             steps {
-                sh "gradle test jacocoTestReport"
+                sh "gradle -PexcludeTests=**/PostgresMemTest* test jacocoTestReport --stacktrace"
             }
             post {
                 always {
@@ -72,7 +74,7 @@ pipeline {
 
     post {
         always {
-            sh "apk add git"
+//            sh "apk add git"
             script {
                 currentBuild.result = currentBuild.currentResult
             }

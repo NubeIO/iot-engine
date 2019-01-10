@@ -18,9 +18,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class HttpConfig implements IConfig {
+public final class HttpConfig implements IConfig {
 
     public static final String NAME = "__http__";
     private String host = "0.0.0.0";
@@ -61,6 +62,7 @@ public class HttpConfig implements IConfig {
 
 
     @Getter
+    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     public static class WebsocketConfig implements IConfig {

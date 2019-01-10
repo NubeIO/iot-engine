@@ -36,7 +36,7 @@ public final class ErrorMessage implements Serializable, JsonData {
     }
 
     public static ErrorMessage parse(@NonNull Throwable throwable) {
-        return new ErrorMessage(new NubeExceptionConverter().apply(throwable));
+        return new ErrorMessage(NubeExceptionConverter.friendly(throwable));
     }
 
     public static ErrorMessage parse(@NonNull NubeException.ErrorCode code, @NonNull String message) {

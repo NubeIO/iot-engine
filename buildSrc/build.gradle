@@ -1,0 +1,24 @@
+plugins {
+    id 'groovy'
+    id 'java'
+}
+
+apply from: "dependencies.gradle"
+
+repositories {
+    mavenLocal()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    mavenCentral()
+}
+
+dependencies {
+    compile project.deps.vertx.core
+    compile project.deps.database.h2
+    compile project.deps.database.jooq
+    compile project.deps.database.jooqMeta
+    compile project.deps.database.jooqMetaExt
+    compile project.deps.database.jooqCodegen
+    compile project.deps.database.jooqVertxCodegen
+
+    testCompile project.deps.tests.junit
+}

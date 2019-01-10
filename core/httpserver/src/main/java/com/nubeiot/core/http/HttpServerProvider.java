@@ -1,15 +1,18 @@
 package com.nubeiot.core.http;
 
-import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.component.IComponentProvider;
+import com.nubeiot.core.component.UnitProvider;
 
-import io.vertx.reactivex.core.Vertx;
+import lombok.RequiredArgsConstructor;
 
-public interface HttpServerProvider extends IComponentProvider {
+@RequiredArgsConstructor
+public final class HttpServerProvider implements UnitProvider<HttpServer> {
 
-    static HttpServer create(Vertx vertx, NubeConfig nubeConfig, HttpServerRouter httpRouter) {
-        HttpConfig httpCfg = IComponentProvider.computeConfig("httpServer.json", HttpConfig.class, nubeConfig);
-        return new HttpServer(vertx.getDelegate(), httpCfg, httpRouter);
-    }
+    private final HttpServerRouter httpRouter;
+
+    @Override
+    public Class<HttpServer> unitClass() { return HttpServer.class; }
+
+    @Override
+    public HttpServer get() { return new HttpServer(httpRouter); }
 
 }

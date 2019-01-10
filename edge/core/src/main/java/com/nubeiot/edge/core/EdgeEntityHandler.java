@@ -1,0 +1,293 @@
+package com.nubeiot.edge.core;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.jooq.Configuration;
+import org.jooq.DSLContext;
+import org.jooq.TableField;
+
+import io.reactivex.Single;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import com.nubeiot.core.enums.State;
+import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.ReplyEventHandler;
+import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.statemachine.StateMachine;
+import com.nubeiot.core.utils.DateTimes;
+import com.nubeiot.edge.core.model.Tables;
+import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
+import com.nubeiot.edge.core.model.tables.daos.TblRemoveHistoryDao;
+import com.nubeiot.edge.core.model.tables.daos.TblTransactionDao;
+import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
+import com.nubeiot.edge.core.model.tables.interfaces.ITblRemoveHistory;
+import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
+import com.nubeiot.edge.core.model.tables.pojos.TblModule;
+import com.nubeiot.edge.core.model.tables.pojos.TblRemoveHistory;
+import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
+import com.nubeiot.edge.core.model.tables.records.TblModuleRecord;
+
+import lombok.Getter;
+
+@Getter
+public abstract class EdgeEntityHandler extends EntityHandler {
+
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    private final TblModuleDao moduleDao;
+    private final TblTransactionDao transDao;
+    private final TblRemoveHistoryDao historyDao;
+
+    protected EdgeEntityHandler(Configuration configuration, Vertx vertx) {
+        super(configuration, vertx);
+        moduleDao = new TblModuleDao(jooqConfig, getVertx());
+        transDao = new TblTransactionDao(jooqConfig, getVertx());
+        historyDao = new TblRemoveHistoryDao(jooqConfig, getVertx());
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew(com.nubeiot.edge.core.model.tables.TblModule.TBL_MODULE);
+    }
+
+    @Override
+    public Single<EventMessage> migrate() {
+        return this.startupModules().map(r -> EventMessage.success(EventAction.MIGRATE, r));
+    }
+
+    protected abstract EventModel deploymentEvent();
+
+    protected Single<JsonObject> startupModules() {
+        return this.getModulesWhenBootstrap()
+                   .flattenAsObservable(tblModules -> tblModules)
+                   .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.UPDATE))
+                   .collect(JsonArray::new, JsonArray::add)
+                   .map(results -> new JsonObject().put("results", results));
+    }
+
+    protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
+        logger.info("{} module with data {}", action, module.toJson().encode());
+        return this.handlePreDeployment(module, action)
+                   .doAfterSuccess(this::deployModule)
+                   .map(result -> result.toJson().put("message", "Work in progress").put("status", Status.WIP));
+    }
+
+    private void deployModule(PreDeploymentResult preDeployResult) {
+        String transactionId = preDeployResult.getTransactionId();
+        String serviceId = preDeployResult.getServiceId();
+        EventAction action = preDeployResult.getAction();
+        logger.info("Execute transaction: {}", transactionId);
+        preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
+        EventMessage request = EventMessage.success(action, preDeployResult.toRequestData());
+        EventController controller = (EventController) sharedDataFunc.apply(EdgeVerticle.SHARED_EVENTBUS);
+        ReplyEventHandler reply = new ReplyEventHandler("VERTX-DEPLOY", action, deploymentEvent().getAddress(),
+                                                        r -> succeedPostDeployment(serviceId, transactionId, action,
+                                                                                   r.getData().getString("deploy_id")),
+                                                        t -> errorPostDeployment(serviceId, transactionId, action, t));
+        controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply);
+    }
+
+    public Single<List<TblModule>> getModulesWhenBootstrap() {
+        return moduleDao.findManyByState(Collections.singletonList(State.ENABLED));
+    }
+
+    public Single<Boolean> isFreshInstall() {
+        return queryExecutor.executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
+    }
+
+    public Single<Optional<JsonObject>> findModuleById(String serviceId) {
+        return moduleDao.findOneById(serviceId).map(optional -> optional.map(ITblModule::toJson));
+    }
+
+    public Single<Optional<JsonObject>> findTransactionById(String transactionId) {
+        return transDao.findOneById(transactionId)
+                       .flatMap(optional -> optional.isPresent()
+                                            ? Single.just(Optional.of(optional.get().toJson()))
+                                            : this.findHistoryTransactionById(transactionId));
+    }
+
+    private Single<PreDeploymentResult> handlePreDeployment(ITblModule module, EventAction event) {
+        logger.info("Handle entities before do deployment...");
+        return validateModuleState(module.getServiceId(), event).flatMap(o -> {
+            if (EventAction.INIT == event || EventAction.CREATE == event) {
+                module.setState(State.NONE);
+                return markModuleInsert(new TblModule(module)).flatMap(
+                    key -> createTransaction(key.getServiceId(), event, module.toJson()).map(
+                        transId -> createPreDeployResult(module, transId, event, module.getState())));
+            }
+            final ITblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
+            final boolean isUpdated = EventAction.UPDATE == event;
+            if (isUpdated || EventAction.HALT == event) {
+                return markModuleModify(module, new TblModule(oldOne), isUpdated).flatMap(
+                    key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
+                        transId -> createPreDeployResult(key, transId, event, oldOne.getState())));
+            }
+            if (EventAction.REMOVE == event) {
+                return markModuleDelete(new TblModule(oldOne)).flatMap(
+                    key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
+                        transId -> createPreDeployResult(key, transId, event, oldOne.getState())));
+            }
+            throw new UnsupportedOperationException("Unsupported event " + event);
+        });
+    }
+
+    private PreDeploymentResult createPreDeployResult(ITblModule module, String transactionId, EventAction event,
+                                                      State prevState) {
+        return PreDeploymentResult.builder()
+                                  .transactionId(transactionId)
+                                  .action(event)
+                                  .prevState(prevState)
+                                  .serviceId(module.getServiceId())
+                                  .deployId(module.getDeployId())
+                                  .deployCfg(module.getDeployConfig())
+                                  .build();
+    }
+
+    private Single<Optional<ITblModule>> validateModuleState(String serviceId, EventAction eventAction) {
+        logger.info("Validate {}::::{} ...", serviceId, eventAction);
+        return moduleDao.findOneById(serviceId).map(o -> validateModuleState(o.orElse(null), eventAction));
+    }
+
+    //TODO: register EventBus to send message somewhere
+    private void succeedPostDeployment(String serviceId, String transId, EventAction eventAction, String deployId) {
+        logger.info("Handle entities after success deployment...");
+        final Status status = Status.SUCCESS;
+        final State state = StateMachine.instance().transition(eventAction, status);
+        if (State.UNAVAILABLE == state) {
+            logger.info("Remove module id {} and its transactions", serviceId);
+            transDao.findOneById(transId)
+                    .flatMap(o -> this.createRemovedServiceRecord(o.orElse(
+                        new TblTransaction().setTransactionId(transId).setModuleId(serviceId).setEvent(eventAction))
+                                                                   .setStatus(status)))
+                    .map(history -> transDao)
+                    .flatMap(transDao -> transDao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(serviceId))
+                                                 .flatMap(ignore -> moduleDao.deleteById(serviceId)))
+                    .subscribe();
+        } else {
+            Map<TableField<TblModuleRecord, String>, String> values = Collections.singletonMap(
+                Tables.TBL_MODULE.DEPLOY_ID, deployId);
+            queryExecutor.executeAny(c -> updateTransStatus(c, transId, status, null))
+                         .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, values))
+                                                     .map(r2 -> r1 + r2))
+                         .subscribe();
+        }
+    }
+
+    //TODO: register EventBus to send message somewhere
+    private void errorPostDeployment(String serviceId, String transId, EventAction action, Throwable error) {
+        logger.error("Handle entities after error deployment...", error);
+        queryExecutor.executeAny(c -> updateTransStatus(c, transId, Status.FAILED,
+                                                        Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR,
+                                                                                 ErrorMessage.parse(error).toJson())))
+                     .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
+                                                 .map(r2 -> r1 + r2))
+                     .subscribe();
+    }
+
+    private Single<String> createTransaction(String moduleId, EventAction action, JsonObject prevState) {
+        logger.debug("Create new transaction for {}::::{}...", moduleId, action);
+        logger.debug("Previous module state: {}", prevState.encode());
+        final LocalDateTime now = DateTimes.nowUTC();
+        final String transactionId = UUID.randomUUID().toString();
+        final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)
+                                                               .setModuleId(moduleId)
+                                                               .setStatus(Status.WIP)
+                                                               .setEvent(action)
+                                                               .setIssuedAt(now)
+                                                               .setModifiedAt(now)
+                                                               .setRetry(0)
+                                                               .setPrevState(prevState);
+        return transDao.insert(transaction).map(i -> transactionId);
+    }
+
+    private Single<ITblModule> markModuleInsert(ITblModule module) {
+        logger.debug("Mark service {} to create...", module.getServiceId());
+        LocalDateTime now = DateTimes.nowUTC();
+        return moduleDao.insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
+                        .map(i -> module);
+    }
+
+    private Single<ITblModule> markModuleModify(ITblModule module, ITblModule oldOne, boolean isUpdated) {
+        //TODO: handleEvent merge data
+        logger.debug("Mark service {} to modify...", module.getServiceId());
+        ITblModule into = isUpdated ? module.into(oldOne) : oldOne.into(module);
+        return moduleDao.update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
+                        .map(ignore -> oldOne);
+    }
+
+    private Single<ITblModule> markModuleDelete(ITblModule module) {
+        logger.debug("Mark service {} to delete...", module.getServiceId());
+        return moduleDao.update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
+                        .map(ignore -> module);
+    }
+
+    private Optional<ITblModule> validateModuleState(ITblModule findModule, EventAction eventAction) {
+        logger.info("StateMachine is validating...");
+        StateMachine.instance().validate(findModule, eventAction, "service");
+        if (Objects.nonNull(findModule)) {
+            StateMachine.instance()
+                        .validateConflict(findModule.getState(), eventAction, "service " + findModule.getServiceId());
+            return Optional.of(findModule);
+        }
+        return Optional.empty();
+    }
+
+    private int updateModuleState(DSLContext context, String serviceId, State state, Map<?, ?> values) {
+        return context.update(Tables.TBL_MODULE)
+                      .set(Tables.TBL_MODULE.STATE, state)
+                      .set(Tables.TBL_MODULE.MODIFIED_AT, DateTimes.nowUTC())
+                      .set(Objects.isNull(values) ? new HashMap<>() : values)
+                      .where(Tables.TBL_MODULE.SERVICE_ID.eq(serviceId))
+                      .execute();
+    }
+
+    private int updateTransStatus(DSLContext context, String transId, Status status, Map<?, ?> values) {
+        return context.update(Tables.TBL_TRANSACTION)
+                      .set(Tables.TBL_TRANSACTION.STATUS, status)
+                      .set(Tables.TBL_TRANSACTION.MODIFIED_AT, DateTimes.nowUTC())
+                      .set(Objects.isNull(values) ? new HashMap<>() : values)
+                      .where(Tables.TBL_TRANSACTION.TRANSACTION_ID.eq(transId))
+                      .execute();
+    }
+
+    private Single<ITblRemoveHistory> createRemovedServiceRecord(ITblTransaction transaction) {
+        logger.info("Create History record...");
+        ITblRemoveHistory history = this.convertToHistory(transaction);
+        return historyDao.insert((TblRemoveHistory) history).map(i -> history);
+    }
+
+    private ITblRemoveHistory convertToHistory(ITblTransaction transaction) {
+        ITblRemoveHistory history = new TblRemoveHistory().fromJson(transaction.toJson());
+        if (Objects.isNull(history.getIssuedAt())) {
+            history.setIssuedAt(DateTimes.nowUTC());
+        }
+        if (Objects.isNull(history.getModifiedAt())) {
+            history.setIssuedAt(DateTimes.nowUTC());
+        }
+        if (Objects.isNull(history.getRetry())) {
+            history.setRetry(0);
+        }
+        return history;
+    }
+
+    private Single<Optional<JsonObject>> findHistoryTransactionById(String transactionId) {
+        return historyDao.findOneById(transactionId).map(optional -> optional.map(ITblRemoveHistory::toJson));
+    }
+
+}

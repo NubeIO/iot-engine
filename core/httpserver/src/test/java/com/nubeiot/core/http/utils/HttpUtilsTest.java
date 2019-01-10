@@ -24,7 +24,7 @@ public class HttpUtilsTest extends BaseHttpServerTest {
     @Rule
     public RepeatRule repeatRule = new RepeatRule();
     @Rule
-    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.DEFAULT_TIMEOUT);
+    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.TEST_TIMEOUT);
 
     @BeforeClass
     public static void beforeSuite() {
@@ -41,9 +41,9 @@ public class HttpUtilsTest extends BaseHttpServerTest {
         super.after(context);
     }
 
-    @Test(expected = InitializerError.class)
-    public void test_not_yet_register() {
-        startServer(new HttpServerRouter());
+    @Test
+    public void test_not_yet_register(TestContext context) {
+        startServer(context, new HttpServerRouter(), t -> context.assertTrue(t instanceof InitializerError));
     }
 
 }

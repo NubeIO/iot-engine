@@ -1,6 +1,7 @@
-import org.gradle.util.GradleVersion
-
 import java.time.Instant
+import java.util.jar.Attributes.Name
+
+import org.gradle.util.GradleVersion
 
 jar {
     baseName = computeBaseName(project)
@@ -19,28 +20,28 @@ jar {
         println '- Build Number:     ' + project.buildNumber
         println '- Java Version:     ' + javaVersion
         println '- Gradle Version:   ' + gradleVersion.version
-        println '- Vertx Version:    ' + project.vertxVersion
+        println '- Vertx Version:    ' + project.versions.vertx
 
         def manifestMap = [
-                (java.util.jar.Attributes.Name.MANIFEST_VERSION.toString())      : '1.0',
-                (java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE.toString())  : "${baseName}",
-                (java.util.jar.Attributes.Name.IMPLEMENTATION_VENDOR.toString()) : "${project.vendor}",
-                (java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION.toString()): "${project.buildNumber}",
-                (java.util.jar.Attributes.Name.SIGNATURE_VERSION.toString())     : "${project.buildHash}",
-                (java.util.jar.Attributes.Name.SPECIFICATION_TITLE.toString())   : "${project.title}",
-                (java.util.jar.Attributes.Name.SPECIFICATION_VENDOR.toString())  : "${project.vendor}",
-                (java.util.jar.Attributes.Name.SPECIFICATION_VERSION.toString()) : "${project.version}",
-                'Build-Date'                                                     : Instant.now(),
-                'Build-By'                                                       : "${project.buildBy}",
-                'Java-Version'                                                   : "${javaVersion}",
-                'Gradle-Version'                                                 : "${gradleVersion.version}",
-                'Vertx-Version'                                                  : "${project.vertxVersion}",
-                'Class-Path'                                                     : "${classPath}"
+            (Name.MANIFEST_VERSION.toString())      : '1.0',
+            (Name.IMPLEMENTATION_TITLE.toString())  : "${baseName}",
+            (Name.IMPLEMENTATION_VENDOR.toString()) : "${project.vendor}",
+            (Name.IMPLEMENTATION_VERSION.toString()): "${project.buildNumber}",
+            (Name.SIGNATURE_VERSION.toString())     : "${project.buildHash}",
+            (Name.SPECIFICATION_TITLE.toString())   : "${project.title}",
+            (Name.SPECIFICATION_VENDOR.toString())  : "${project.vendor}",
+            (Name.SPECIFICATION_VERSION.toString()) : "${project.version}",
+            'Build-Date'                            : Instant.now(),
+            'Build-By'                              : "${project.buildBy}",
+            'Java-Version'                          : "${javaVersion}",
+            'Gradle-Version'                        : "${gradleVersion.version}",
+            'Vertx-Version'                         : "${project.versions.vertx}",
+            'Class-Path'                            : "${classPath}"
         ]
         if (project.hasProperty("executable") && project.executable == "true") {
             if (project.mainClass.trim() == "" || project.mainVerticle.trim() == "") {
                 throw new TaskExecutionException(project.tasks.jar, new RuntimeException("Missing mainClass or " +
-                        "mainVerticle"))
+                                                                                         "mainVerticle"))
             }
             manifestMap << ['Main-Class': "${project.mainClass}", 'Main-Verticle': "${project.mainVerticle}"]
         }
@@ -95,7 +96,7 @@ task uberJar(type: Jar) {
         manifest {
             if (project.mainClass.trim() == "" || project.mainVerticle.trim() == "") {
                 throw new TaskExecutionException(project.tasks.jar, new RuntimeException("Missing mainClass or " +
-                        "mainVerticle"))
+                                                                                         "mainVerticle"))
             }
             attributes(['Main-Class': "${project.mainClass}", 'Main-Verticle': "${project.mainVerticle}"])
         }

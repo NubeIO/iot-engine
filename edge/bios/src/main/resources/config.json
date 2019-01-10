@@ -1,8 +1,9 @@
 {
   "__app__": {
     "__sql__": {
+      "dialect": "H2",
       "hikari": {
-        "jdbcUrl": "jdbc:h2:file:./bios;database_to_upper=false"
+        "jdbcUrl": "jdbc:h2:file:./bios"
       }
     },
     "auto_install": true,
@@ -24,9 +25,10 @@
       "artifact_id": "bios-installer",
       "version": "1.0.0-SNAPSHOT",
       "service_name": "bios-installer",
-      "deploy_config_json": {
+      "deploy_config": {
         "__app__": {
           "__sql__": {
+            "dialect": "H2",
             "hikari": {
               "jdbcUrl": "jdbc:h2:file:./bios-installer;database_to_upper=false"
             }

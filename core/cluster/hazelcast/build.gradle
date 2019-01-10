@@ -1,4 +1,4 @@
 dependencies {
     compile project(':core:base')
-    compile "io.vertx:vertx-hazelcast:$project.vertxVersion"
+    compile "io.vertx:vertx-hazelcast:$project.versions.vertx"
 }

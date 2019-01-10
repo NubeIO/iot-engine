@@ -4,15 +4,15 @@ task annotationProcessing(type: JavaCompile, group: 'build') {
     onlyIf {
         project.hasProperty('generated') && project.generated == "true"
     }
-    def outputDir = file Paths.get(project.projectDir.absolutePath, project.genSrcFolder)
+    def outputDir = file Paths.get(project.projectDir.absolutePath, project.genSrc.srcFolder)
     outputDir.mkdirs()
     source = sourceSets.main.java
     classpath = configurations.compile + configurations.compileOnly
-    destinationDir = project.file(project.genJavaSrcFolder)
+    destinationDir = project.file(project.genSrc.javaSrcFolder)
     options.compilerArgs = [
-            "-proc:only",
-            "-processor", "io.vertx.codegen.CodeGenProcessor",
-            "-Acodegen.output=${outputDir.absolutePath}"
+        "-proc:only",
+        "-processor", "io.vertx.codegen.CodeGenProcessor",
+        "-Acodegen.output=${outputDir.absolutePath}"
     ]
 }
 compileJava.dependsOn(annotationProcessing)
@@ -24,10 +24,10 @@ task generateServiceDescriptor(group: 'build') {
     doLast {
         if (project.serviceDescriptor.trim() == "" || project.mainVerticle.trim() == "") {
             throw new TaskExecutionException(project.tasks.processResources,
-                    new RuntimeException("Missing mainVerticle or serviceDescriptor"))
+                                             new RuntimeException("Missing mainVerticle or serviceDescriptor"))
         }
         def contents = "{ \"main\": \"$project.mainVerticle\" }"
-        def outFolder = new File(project.buildDir.absolutePath, project.genOutResourceFolder)
+        def outFolder = new File(project.projectDir.absolutePath, project.genSrc.resourceFolder)
         outFolder.mkdirs()
         new File(outFolder.absolutePath, project.serviceDescriptor + ".json").text = contents
     }
@@ -38,8 +38,14 @@ processResources.dependsOn(generateServiceDescriptor)
 sourceSets {
     main {
         java {
-            srcDirs += project.genJavaSrcFolder
-            resources.srcDirs += new File(project.buildDir.absolutePath, project.genOutResourceFolder)
+            srcDirs += project.genSrc.javaSrcFolder
+            resources.srcDirs += new File(project.projectDir.absolutePath, project.genSrc.resourceFolder)
+        }
+    }
+    test {
+        java {
+            srcDirs += project.genSrc.javaTestSrcFolder
+            resources.srcDirs += new File(project.projectDir.absolutePath, project.genSrc.testResourceFolder)
         }
     }
 }

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MicroConfig implements IConfig {
+public final class MicroConfig implements IConfig {
 
     public static final String NAME = "__micro__";
 

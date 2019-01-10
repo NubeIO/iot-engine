@@ -1,5 +1,7 @@
 package com.nubeiot.core.sql;
 
+import org.jooq.SQLDialect;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
@@ -7,11 +9,15 @@ import com.nubeiot.core.NubeConfig;
 import com.zaxxer.hikari.HikariConfig;
 
 import lombok.Getter;
+import lombok.Setter;
 
+@Setter
 @Getter
-public class SqlConfig implements IConfig {
+public final class SqlConfig implements IConfig {
 
     public static final String NAME = "__sql__";
+
+    private SQLDialect dialect = SQLDialect.POSTGRES;
 
     @JsonProperty(value = Hikari.NAME)
     private Hikari hikariConfig = new Hikari();

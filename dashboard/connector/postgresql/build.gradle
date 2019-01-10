@@ -1,5 +1,5 @@
 
 dependencies {
     compile project(':core:common')
-    compile group: 'io.vertx', name: 'vertx-mysql-postgresql-client', version: "$project.vertxVersion"
+    compile "io.vertx:vertx-mysql-postgresql-client:$project.versions.vertx"
 }

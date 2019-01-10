@@ -1,6 +1,7 @@
 package com.nubeiot.core.sql;
 
 import org.json.JSONException;
+import org.junit.Assert;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -17,6 +18,15 @@ public class SqlConfigTest {
         System.out.println("DEFAULT: " + sqlConfig.toJson());
         System.out.println("FROM: " + from.toJson());
         JSONAssert.assertEquals(sqlConfig.toJson().encode(), from.toJson().encode(), JSONCompareMode.STRICT);
+    }
+
+    @Test
+    public void test_hikari() {
+        SqlConfig sqlConfig = new SqlConfig();
+        sqlConfig.getHikariConfig().setJdbcUrl("abc");
+        System.out.println(sqlConfig.toJson());
+        SqlConfig from = IConfig.from(sqlConfig.toJson(), SqlConfig.class);
+        Assert.assertEquals("abc", from.getHikariConfig().getJdbcUrl());
     }
 
 }

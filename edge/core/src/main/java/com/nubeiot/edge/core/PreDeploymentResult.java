@@ -3,6 +3,9 @@ package com.nubeiot.edge.core;
 import java.util.Map;
 import java.util.Objects;
 
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
@@ -17,9 +20,6 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException;
 
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -69,7 +69,7 @@ public class PreDeploymentResult implements JsonData, IRequestData {
             try {
                 return Objects.nonNull(deployCfg) ? IConfig.from(deployCfg, NubeConfig.class) : NubeConfig.blank();
             } catch (NubeException ex) {
-                logger.trace("Try to parse deploy_cfg to NubeConfig.AppConfig", ex);
+                logger.trace("Try to parse deploy_cfg to AppConfig", ex);
                 return NubeConfig.blank(deployCfg);
             }
         }
