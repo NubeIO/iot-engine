@@ -51,6 +51,7 @@ public class BoneScriptVerticle extends ContainerVerticle {
             // Initializing Ditto for future use
             Ditto.init(db);
             logger.info("Ditto Initialization is successfully done.");
+            Historian.init(vertx, db, this.entityHandler.getQueryExecutor());
         });
     }
 

@@ -29,5 +29,10 @@ public class DittoAttributes {
     public static String TYPE = "type";
     public static String PERIODIC = "periodic";
     public static String SCHEDULE = "schedule";
+    public static String DATA = "data";
+    public static String NAME = "name";
+    public static String TS = "ts";
+    public static String VAL = "val";
+    public static String SIZE = "size";
 
 }
