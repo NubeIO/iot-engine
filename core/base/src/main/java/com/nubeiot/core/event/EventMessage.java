@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -13,7 +15,6 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NubeException;
 
-import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
@@ -36,25 +37,33 @@ public final class EventMessage implements Serializable, JsonData {
     @Getter
     private final EventAction prevAction;
     private final Map<String, Object> data;
+    @JsonIgnore
+    private final Class<? extends JsonData> dataClass;
     @Getter
     @JsonProperty
     private final ErrorMessage error;
 
     @JsonCreator
-    private EventMessage(@JsonProperty(value = "status", defaultValue = "SUCCESS") Status status,
+    private EventMessage(@JsonProperty(value = "status", defaultValue = "INITIAL") Status status,
                          @JsonProperty(value = "action", required = true) @NonNull EventAction action,
                          @JsonProperty(value = "prevAction") EventAction prevAction,
                          @JsonProperty(value = "data") Map<String, Object> data,
+                         @JsonProperty(value = "dataClass") Class<? extends JsonData> dataClass,
                          @JsonProperty(value = "error") ErrorMessage error) {
-        this.status = Objects.isNull(status) ? Status.SUCCESS : status;
+        this.status = Objects.isNull(status) ? Status.INITIAL : status;
         this.action = action;
         this.prevAction = prevAction;
         this.data = data;
+        this.dataClass = Objects.isNull(dataClass) ? DefaultJsonData.class : dataClass;
         this.error = error;
     }
 
     private EventMessage(Status status, EventAction action, Map<String, Object> data, ErrorMessage error) {
-        this(status, action, null, data, error);
+        this(status, action, null, Objects.isNull(data) ? null : new DefaultJsonData(data), null, error);
+    }
+
+    private EventMessage(EventAction action, Status status, JsonData data, ErrorMessage error) {
+        this(status, action, null, Objects.isNull(data) ? null : data.toJson().getMap(), data.getClass(), error);
     }
 
     public static EventMessage error(EventAction action, Throwable throwable) {
@@ -65,6 +74,18 @@ public final class EventMessage implements Serializable, JsonData {
         return new EventMessage(Status.FAILED, action, null, ErrorMessage.parse(code, message));
     }
 
+    public static EventMessage initial(EventAction action) {
+        return new EventMessage(Status.INITIAL, action, null, null);
+    }
+
+    public static EventMessage initial(EventAction action, JsonObject data) {
+        return new EventMessage(Status.INITIAL, action, data.getMap(), null);
+    }
+
+    public static EventMessage initial(EventAction action, JsonData data) {
+        return new EventMessage(action, Status.INITIAL, data, null);
+    }
+
     public static EventMessage success(EventAction action) {
         return new EventMessage(Status.SUCCESS, action, null, null);
     }
@@ -73,16 +94,17 @@ public final class EventMessage implements Serializable, JsonData {
         return new EventMessage(Status.SUCCESS, action, data.getMap(), null);
     }
 
-    public static EventMessage success(EventAction action, Object data) {
-        return new EventMessage(Status.SUCCESS, action, JsonObject.mapFrom(data).getMap(), null);
+    public static EventMessage success(EventAction action, JsonData data) {
+        return new EventMessage(action, Status.SUCCESS, data, null);
     }
 
     public static EventMessage from(Object object) {
         return JsonData.from(object, EventMessage.class, "Invalid event message format");
     }
 
+    @JsonProperty
     public JsonObject getData() {
-        return JsonObject.mapFrom(this.data);
+        return Objects.isNull(data) ? null : JsonData.from(data, dataClass).toJson();
     }
 
     @JsonIgnore

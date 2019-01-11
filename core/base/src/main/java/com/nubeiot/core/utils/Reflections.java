@@ -289,7 +289,11 @@ public final class Reflections {
             return superClass.isAssignableFrom(childClass);
         }
 
-        private static <P> Class<?> getPrimitiveClass(Class<P> findClazz) {
+        public static boolean isJavaLangObject(Class<?> clazz) {
+            return clazz.isPrimitive() || clazz.isEnum() || "java.lang".equals(clazz.getPackage().getName());
+        }
+
+        private static <T> Class<?> getPrimitiveClass(Class<T> findClazz) {
             try {
                 Field t = findClazz.getField("TYPE");
                 if (!hasModifiers(Modifier.PUBLIC, Modifier.STATIC).test(t)) {

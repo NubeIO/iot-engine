@@ -45,11 +45,11 @@ public interface EventHandler extends Consumer<Message<Object>> {
     default ObjectMapper mapper() { return Json.mapper; }
 
     /**
-     * JsonObject key if output is collection
+     * Fallback json key if output is {@code collection/primitive}  value
      *
-     * @return collection json key. Default: {@code data}
+     * @return fallback json key. Default: {@code data}
      */
-    default String key() { return "data"; }
+    default String fallback() { return "data"; }
 
     @Override
     default void accept(Message<Object> message) {

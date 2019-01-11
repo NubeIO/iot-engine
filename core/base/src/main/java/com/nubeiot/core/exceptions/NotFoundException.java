@@ -1,6 +1,6 @@
 package com.nubeiot.core.exceptions;
 
-public class NotFoundException extends NubeException {
+public final class NotFoundException extends NubeException {
 
     public NotFoundException(String message, Throwable e) {
         super(ErrorCode.NOT_FOUND, message, e);

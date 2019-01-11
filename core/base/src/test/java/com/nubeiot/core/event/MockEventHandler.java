@@ -10,17 +10,13 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventContractor.Param;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class MockEventHandler implements EventHandler {
-
-    public static class MockEventUnsupportedHandler implements EventHandler {
-
-        @Override
-        public List<EventAction> getAvailableEvents() {
-            return new ArrayList<>();
-        }
-
-    }
 
     @Override
     public List<EventAction> getAvailableEvents() {
@@ -74,6 +70,60 @@ public class MockEventHandler implements EventHandler {
     @EventContractor(action = EventAction.GET_ONE)
     JsonObject nonPublicWithContractor(RequestData data) {
         return new JsonObject().put("key", "Non Public method with contractor");
+    }
+
+    public static class MockEventUnsupportedHandler implements EventHandler {
+
+        @Override
+        public List<EventAction> getAvailableEvents() {
+            return new ArrayList<>();
+        }
+
+    }
+
+
+    public static class MockEventWithDiffParam implements EventHandler {
+
+        @Override
+        public List<EventAction> getAvailableEvents() {
+            return Arrays.asList(EventAction.values());
+        }
+
+        @EventContractor(action = EventAction.GET_LIST, returnType = String.class)
+        public String noParam() { return "hello"; }
+
+        @EventContractor(action = EventAction.GET_ONE, returnType = int.class)
+        public int javaParam(@Param("id") String id) {
+            return Integer.parseInt(id);
+        }
+
+        @EventContractor(action = EventAction.CREATE, returnType = RequestData.class)
+        public RequestData refParam(RequestData data) { return data; }
+
+        @EventContractor(action = EventAction.PATCH, returnType = RequestData.class)
+        public RequestData overrideRefParam(@Param("data") RequestData data) { return data; }
+
+        @EventContractor(action = EventAction.UPDATE)
+        public JsonObject twoRefParams(@Param("mock") MockParam param, @Param("data") RequestData data) {
+            return new JsonObject().put("param", JsonObject.mapFrom(param)).put("request", data.toJson());
+        }
+
+        @EventContractor(action = EventAction.REMOVE)
+        public JsonObject mixParams(@Param("id") int id, @Param("data") RequestData data) {
+            return new JsonObject().put("id", id).put("request", data.toJson());
+        }
+
+    }
+
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    static class MockParam {
+
+        private int id;
+        private String name;
+
     }
 
 }

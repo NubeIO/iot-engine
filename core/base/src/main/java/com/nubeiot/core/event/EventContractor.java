@@ -28,11 +28,16 @@ public @interface EventContractor {
      */
     @NonNull Class<?> returnType() default JsonObject.class;
 
+    /**
+     * Define parameter name
+     *
+     * @apiNote Able to omit if {@code Java method} has only one parameter that can be deserialize from json
+     */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.PARAMETER)
     @interface Param {
 
-        String value() default "";
+        String value();
 
     }
 

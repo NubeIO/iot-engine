@@ -20,14 +20,14 @@ public final class HttpServerRouter {
     private final Set<Class<? extends RestEventApi>> restEventApiClass = new HashSet<>();
     private final Set<WebsocketEventMetadata> websocketEvents = new HashSet<>();
 
-    @SuppressWarnings("unchecked")
-    public HttpServerRouter registerApi(Class<? extends RestApi>... apiClass) {
+    @SafeVarargs
+    public final HttpServerRouter registerApi(Class<? extends RestApi>... apiClass) {
         restApiClass.addAll(Arrays.stream(apiClass).filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
     }
 
-    @SuppressWarnings("unchecked")
-    public HttpServerRouter registerEventBusApi(Class<? extends RestEventApi>... eventBusApiClass) {
+    @SafeVarargs
+    public final HttpServerRouter registerEventBusApi(Class<? extends RestEventApi>... eventBusApiClass) {
         restEventApiClass.addAll(Arrays.stream(eventBusApiClass).filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
     }

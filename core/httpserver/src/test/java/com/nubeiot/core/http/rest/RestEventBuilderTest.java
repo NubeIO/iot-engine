@@ -31,15 +31,14 @@ public class RestEventBuilderTest {
     @Test
     public void test_register_one_api() {
         Set<Class<? extends RestEventApi>> validate = new RestEventBuilder().register(
-                MockApiDefinition.MockRestEventApi.class).validate();
+            MockApiDefinition.MockRestEventApi.class).validate();
         Assert.assertEquals(1, validate.size());
     }
 
     @Test
     public void test_register_many_same_api() {
-        @SuppressWarnings("unchecked")
         Set<Class<? extends RestEventApi>> validate = new RestEventBuilder().register(
-                MockApiDefinition.MockRestEventApi.class, MockApiDefinition.MockRestEventApi.class).validate();
+            MockApiDefinition.MockRestEventApi.class, MockApiDefinition.MockRestEventApi.class).validate();
         Assert.assertEquals(1, validate.size());
     }
 
