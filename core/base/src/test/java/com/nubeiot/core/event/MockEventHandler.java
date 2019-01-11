@@ -6,10 +6,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.nubeiot.core.dto.RequestData;
-
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.dto.RequestData;
 
 public class MockEventHandler implements EventHandler {
 
@@ -28,7 +28,7 @@ public class MockEventHandler implements EventHandler {
     }
 
     @EventContractor(action = EventAction.UPDATE)
-    public JsonObject throwException() {
+    public JsonObject throwException(RequestData data) {
         throw new RuntimeException("Throw");
     }
 

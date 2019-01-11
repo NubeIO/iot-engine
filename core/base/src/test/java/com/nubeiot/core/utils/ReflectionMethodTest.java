@@ -9,8 +9,8 @@ import org.junit.Test;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.utils.mock.ReflectionMockObjects.MockReflection;
 import com.nubeiot.core.utils.Reflections.ReflectionMethod;
+import com.nubeiot.core.utils.mock.MockReflection;
 
 public class ReflectionMethodTest {
 

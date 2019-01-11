@@ -9,16 +9,15 @@ import com.nubeiot.core.cluster.ClusterDelegate;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.mock.ReflectionMockObjects.MockChild;
-import com.nubeiot.core.utils.mock.ReflectionMockObjects.MockParent;
+import com.nubeiot.core.utils.mock.MockChild;
+import com.nubeiot.core.utils.mock.MockParent;
 
 public class ReflectionClassTest {
 
     @Test
     public void test_get_mock_classes_by_annotation() {
-        List<Class<IClusterDelegate>> classes = ReflectionClass.scanClassesInPackage("com.nubeiot.core.utils",
-                                                                                     ClusterDelegate.class,
-                                                                                     IClusterDelegate.class);
+        List<Class<IClusterDelegate>> classes = ReflectionClass.find("com.nubeiot.core.utils", IClusterDelegate.class,
+                                                                     ClusterDelegate.class);
         Assert.assertEquals(1, classes.size());
         IClusterDelegate delegate = ReflectionClass.createObject(classes.get(0));
         Assert.assertNotNull(delegate);
@@ -27,9 +26,8 @@ public class ReflectionClassTest {
 
     @Test
     public void test_get_classes_by_annotation() {
-        List<Class<IClusterDelegate>> classes = ReflectionClass.scanClassesInPackage("com.nubeiot.core.cluster",
-                                                                                     ClusterDelegate.class,
-                                                                                     IClusterDelegate.class);
+        List<Class<IClusterDelegate>> classes = ReflectionClass.find("com.nubeiot.core.cluster", IClusterDelegate.class,
+                                                                     ClusterDelegate.class);
         Assert.assertEquals(1, classes.size());
         IClusterDelegate delegate = ReflectionClass.createObject(classes.get(0));
         Assert.assertNotNull(delegate);

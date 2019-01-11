@@ -17,7 +17,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
 import com.nubeiot.core.exceptions.NubeException;
@@ -39,7 +38,6 @@ final class AnnotationHandler<T extends EventHandler> {
     private static final Logger logger = LoggerFactory.getLogger(AnnotationHandler.class);
     private final T eventHandler;
 
-    @SuppressWarnings("unchecked")
     Single<JsonObject> execute(@NonNull EventMessage message) {
         if (!eventHandler.getAvailableEvents().contains(message.getAction())) {
             throw new StateException("Unsupported event " + message.getAction());
@@ -48,16 +46,6 @@ final class AnnotationHandler<T extends EventHandler> {
         Object response = ReflectionMethod.executeMethod(eventHandler, methodInfo.getMethod(), methodInfo.getOutput(),
                                                          methodInfo.getParams().values(),
                                                          parseMessage(message, methodInfo.getParams()));
-        return convertResult(response);
-    }
-
-    Single<JsonObject> execute(@NonNull EventAction action, @NonNull RequestData data) {
-        if (!eventHandler.getAvailableEvents().contains(action)) {
-            throw new StateException("Unsupported event " + action);
-        }
-        MethodInfo methodInfo = getMethodByAnnotation(eventHandler.getClass(), action);
-        Object response = ReflectionMethod.executeMethod(eventHandler, methodInfo.getMethod(), methodInfo.getOutput(),
-                                                         RequestData.class, data);
         return convertResult(response);
     }
 
@@ -97,7 +85,7 @@ final class AnnotationHandler<T extends EventHandler> {
     }
 
     static MethodInfo getMethodByAnnotation(@NonNull Class<?> clazz, @NonNull EventAction action) {
-        List<Method> methods = ReflectionMethod.find(clazz, false, filterMethod(action));
+        List<Method> methods = ReflectionMethod.find(clazz, filterMethod(action));
         if (methods.isEmpty() || methods.size() > 1) {
             throw new ImplementationError(NubeException.ErrorCode.EVENT_ERROR,
                                           Strings.format("Error when implementing @EventContractor in class {0}",
@@ -121,11 +109,11 @@ final class AnnotationHandler<T extends EventHandler> {
     }
 
     private static Predicate<Method> filterMethod(EventAction action) {
-        return Functions.and(Reflections.isModifiers(Modifier.PUBLIC), Reflections.hasAnnotation(EventContractor.class),
-                             method -> {
-                                 EventContractor contractor = method.getAnnotation(EventContractor.class);
-                                 return Stream.of(contractor.action()).anyMatch(eventType -> action == eventType);
-                             });
+        return Functions.and(Reflections.hasModifiers(Modifier.PUBLIC),
+                             Reflections.hasAnnotation(EventContractor.class), method -> {
+                EventContractor contractor = method.getAnnotation(EventContractor.class);
+                return Stream.of(contractor.action()).anyMatch(eventType -> action == eventType);
+            });
     }
 
     private static <T> BinaryOperator<T> throwingMerger() {

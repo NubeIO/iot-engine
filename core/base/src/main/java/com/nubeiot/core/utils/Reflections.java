@@ -27,6 +27,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Functions.Silencer;
 
 import lombok.AccessLevel;
@@ -78,9 +79,14 @@ public final class Reflections {
         }
     }
 
-    public static <T extends Member> Predicate<T> isModifiers(int... modifiers) {
-        int finalModifier = Arrays.stream(modifiers).reduce((left, right) -> left & right).orElse(0);
-        return member -> (member.getModifiers() & finalModifier) == finalModifier;
+    public static <T extends Member> Predicate<T> hasModifiers(int... modifiers) {
+        int searchMods = Arrays.stream(modifiers).reduce((left, right) -> left | right).orElse(0);
+        return member -> (member.getModifiers() & searchMods) == searchMods;
+    }
+
+    public static <T extends Member> Predicate<T> notModifiers(int... modifiers) {
+        int searchMods = Arrays.stream(modifiers).reduce((left, right) -> left | right).orElse(0);
+        return member -> (member.getModifiers() & searchMods) != searchMods;
     }
 
     @SafeVarargs
@@ -90,31 +96,51 @@ public final class Reflections {
 
     public static class ReflectionField {
 
+        /**
+         * Find declared fields in given {@code class} that matches with filter
+         *
+         * @param clazz     Given {@code class} to find methods
+         * @param predicate Given predicate
+         * @return Stream of matching {@code fields}
+         */
+        public static Stream<Field> findToStream(@NonNull Class<?> clazz, Predicate<Field> predicate) {
+            Stream<Field> stream = Stream.of(clazz.getDeclaredFields());
+            if (Objects.nonNull(predicate)) {
+                return stream.filter(predicate);
+            }
+            return stream;
+        }
+
+        public static List<Field> find(@NonNull Class<?> clazz, Predicate<Field> predicate) {
+            return findToStream(clazz, predicate).collect(Collectors.toList());
+        }
+
         @SuppressWarnings("unchecked")
-        public static <T> T getConstantByName(Class<?> destClazz, String fieldName) {
+        public static <T> T constantByName(Class<?> clazz, String fieldName) {
             try {
-                Field field = destClazz.getDeclaredField(fieldName);
-                if (isModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).test(field)) {
+                Field field = clazz.getDeclaredField(fieldName);
+                if (hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).test(field)) {
                     return (T) field.get(null);
                 }
                 return null;
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 throw new NubeException(
-                    Strings.format("Failed to get field constant {0} of {1}", fieldName, destClazz.getName()), e);
+                    Strings.format("Failed to get field constant {0} of {1}", fieldName, clazz.getName()), e);
+            } catch (ClassCastException e) {
+                throw new NubeException(ErrorCode.INVALID_ARGUMENT, "The output type does not match with " + fieldName,
+                                        e);
             }
         }
 
-        public static <T> List<T> findFieldValueByType(@NonNull Object obj, @NonNull Class<T> searchType) {
-            Field[] fields = obj.getClass().getDeclaredFields();
-            return Arrays.stream(fields)
-                         .filter(f -> !Modifier.isStatic(f.getModifiers()) &&
-                                      ReflectionClass.assertDataType(f.getType(), searchType))
-                         .map(f -> getFieldValue(obj, f, searchType))
-                         .filter(Objects::nonNull)
-                         .collect(Collectors.toList());
+        public static <T> List<T> getFieldValuesByType(@NonNull Object obj, @NonNull Class<T> searchType) {
+            Predicate<Field> predicate = Functions.and(notModifiers(Modifier.STATIC),
+                                                       f -> ReflectionClass.assertDataType(f.getType(), searchType));
+            return findToStream(obj.getClass(), predicate).map(f -> getFieldValue(obj, f, searchType))
+                                                          .filter(Objects::nonNull)
+                                                          .collect(Collectors.toList());
         }
 
-        private static <T> T getFieldValue(@NonNull Object obj, @NonNull Field f, @NonNull Class<T> type) {
+        public static <T> T getFieldValue(@NonNull Object obj, @NonNull Field f, @NonNull Class<T> type) {
             try {
                 f.setAccessible(true);
                 return type.cast(f.get(obj));
@@ -174,10 +200,17 @@ public final class Reflections {
             }
         }
 
-        public static List<Method> find(@NonNull Class<?> clazz, boolean onlyPublic, Predicate<Method> filter) {
-            Stream<Method> methods = Stream.of(onlyPublic ? clazz.getMethods() : clazz.getDeclaredMethods());
-            if (Objects.nonNull(filter)) {
-                methods = methods.filter(filter);
+        /**
+         * Find declared methods in given {@code class} that matches with filter
+         *
+         * @param clazz     Given {@code class} to find methods
+         * @param predicate Given predicate
+         * @return List of matching {@code methods}
+         */
+        public static List<Method> find(@NonNull Class<?> clazz, Predicate<Method> predicate) {
+            Stream<Method> methods = Stream.of(clazz.getDeclaredMethods());
+            if (Objects.nonNull(predicate)) {
+                methods = methods.filter(predicate);
             }
             return methods.collect(Collectors.toList());
         }
@@ -259,7 +292,7 @@ public final class Reflections {
         private static <P> Class<?> getPrimitiveClass(Class<P> findClazz) {
             try {
                 Field t = findClazz.getField("TYPE");
-                if (!isModifiers(Modifier.PUBLIC, Modifier.STATIC).test(t)) {
+                if (!hasModifiers(Modifier.PUBLIC, Modifier.STATIC).test(t)) {
                     return null;
                 }
                 Object primitiveClazz = t.get(null);
@@ -277,14 +310,14 @@ public final class Reflections {
          *
          * @param <T>             Type of output
          * @param packageName     Given package name
+         * @param parentClass     Given parent class. May {@code interface} class, {@code abstract} class or {@code
+         *                        null} if none inherited
          * @param annotationClass Given annotation type class {@code @Target(ElementType.TYPE_USE)}
-         * @param parentClass     Given parent class. May {@code interface} or {@code normal class}
          * @return List of matching class
          */
         @SuppressWarnings("unchecked")
-        public static <T> List<Class<T>> scanClassesInPackage(String packageName,
-                                                              @NonNull Class<? extends Annotation> annotationClass,
-                                                              Class<T> parentClass) {
+        public static <T> List<Class<T>> find(String packageName, Class<T> parentClass,
+                                              @NonNull Class<? extends Annotation> annotationClass) {
             Strings.requireNotBlank(packageName, "Package name cannot be empty");
             ClassGraph graph = new ClassGraph().enableAnnotationInfo()
                                                .ignoreClassVisibility()
@@ -315,6 +348,10 @@ public final class Reflections {
             return createObject(clazz, new Silencer<>()).get();
         }
 
+        public static <T> T createObject(Class<T> clazz, Map<Class, Object> inputs) {
+            return createObject(clazz, inputs, new Silencer<>()).get();
+        }
+
         public static <T> Silencer<T> createObject(Class<T> clazz, Silencer<T> silencer) {
             try {
                 Constructor<T> constructor = clazz.getDeclaredConstructor();
@@ -325,10 +362,6 @@ public final class Reflections {
                                                           "Cannot init instance of " + clazz.getName(), e));
             }
             return silencer;
-        }
-
-        public static <T> T createObject(Class<T> clazz, Map<Class, Object> inputs) {
-            return createObject(clazz, inputs, new Silencer<>()).get();
         }
 
         public static <T> Silencer<T> createObject(Class<T> clazz, Map<Class, Object> inputs, Silencer<T> silencer) {

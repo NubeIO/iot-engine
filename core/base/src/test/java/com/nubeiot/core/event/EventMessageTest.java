@@ -3,23 +3,23 @@ package com.nubeiot.core.event;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.nubeiot.core.exceptions.NubeException;
-
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.exceptions.NubeException;
 
 public class EventMessageTest {
 
     @Test
     public void test_EventMessage_Success() {
         EventMessage msg = EventMessage.success(EventAction.CREATE, new JsonObject(
-                "{\"groupId\":\"io.nubespark\",\"version\":\"1.0-SNAPSHOT\"}"));
+            "{\"groupId\":\"io.nubespark\",\"version\":\"1.0-SNAPSHOT\"}"));
         Assert.assertFalse(msg.isError());
         Assert.assertTrue(msg.isSuccess());
         Assert.assertEquals(EventAction.CREATE, msg.getAction());
         Assert.assertNull(msg.getError());
-        Assert.assertEquals(
-                "{\"status\":\"SUCCESS\",\"action\":\"CREATE\",\"data\":{\"groupId\":\"io.nubespark\",\"version\":\"1" +
-                ".0-SNAPSHOT\"}}", msg.toJson().encode());
+        Assert.assertEquals("{\"status\":\"SUCCESS\",\"action\":\"CREATE\",\"" +
+                            "data\":{\"groupId\":\"io.nubespark\",\"version\":\"1.0-SNAPSHOT\"}}",
+                            msg.toJson().encode());
     }
 
     @Test
@@ -67,8 +67,8 @@ public class EventMessageTest {
     @Test
     public void test_deserialize_error_data() {
         JsonObject jsonObject = new JsonObject(
-                "{\"status\":\"FAILED\",\"action\":\"REMOVE\",\"error\":{\"code\":\"UNKNOWN_ERROR\"," +
-                "\"message\":\"UNKNOWN_ERROR | Cause: xxx\"}}");
+            "{\"status\":\"FAILED\",\"action\":\"REMOVE\",\"error\":{\"code\":\"UNKNOWN_ERROR\"," +
+            "\"message\":\"UNKNOWN_ERROR | Cause: xxx\"}}");
         EventMessage message = EventMessage.from(jsonObject);
         Assert.assertTrue(message.isError());
         Assert.assertFalse(message.isSuccess());

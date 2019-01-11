@@ -39,21 +39,21 @@ public class AnnotationHandlerTest {
 
     @Test
     public void test_execute_method_contractor_return_other() {
-        Single<JsonObject> handle = getHandler().execute(EventAction.CREATE, RequestData.builder().build());
+        Single<JsonObject> handle = getHandler().execute(createMsgHasData(EventAction.CREATE));
         Assert.assertNotNull(handle);
         Assert.assertEquals("install", handle.blockingGet().getString("key"));
     }
 
     @Test
     public void test_execute_method_contractor_return_single_json() {
-        Single<JsonObject> handle = getHandler().execute(EventAction.INIT, RequestData.builder().build());
+        Single<JsonObject> handle = getHandler().execute(createMsgHasData(EventAction.INIT));
         Assert.assertNotNull(handle);
         Assert.assertEquals("init", handle.blockingGet().getString("key"));
     }
 
     @Test
     public void test_execute_method_contractor_return_single_other() {
-        Single<JsonObject> handle = getHandler().execute(EventAction.GET_LIST, RequestData.builder().build());
+        Single<JsonObject> handle = getHandler().execute(createMsgHasData(EventAction.GET_LIST));
         Assert.assertNotNull(handle);
         Assert.assertEquals("list", handle.blockingGet().getString("key"));
     }
@@ -71,7 +71,7 @@ public class AnnotationHandlerTest {
 
     @Test
     public void test_execute_method_with_multiple_contractor() {
-        final Single<JsonObject> handle = getHandler().execute(EventAction.REMOVE, RequestData.builder().build());
+        final Single<JsonObject> handle = getHandler().execute(createMsgHasData(EventAction.REMOVE));
         Assert.assertNotNull(handle);
         Assert.assertEquals("delete", handle.blockingGet().getString("key"));
     }
@@ -83,8 +83,7 @@ public class AnnotationHandlerTest {
 
     @Test(expected = StateException.class)
     public void test_execute_method_unsupported_event() {
-        new AnnotationHandler<>(new MockEventUnsupportedHandler()).execute(EventAction.GET_LIST,
-                                                                           RequestData.builder().build());
+        new AnnotationHandler<>(new MockEventUnsupportedHandler()).execute(createMsgHasData(EventAction.GET_LIST));
     }
 
     @Test(expected = ImplementationError.class)
@@ -99,7 +98,11 @@ public class AnnotationHandlerTest {
 
     @Test(expected = RuntimeException.class)
     public void test_execute_method_that_throwException() {
-        getHandler().execute(EventAction.UPDATE, RequestData.builder().build());
+        getHandler().execute(createMsgHasData(EventAction.UPDATE));
+    }
+
+    private EventMessage createMsgHasData(EventAction action) {
+        return EventMessage.success(action, RequestData.builder().build());
     }
 
 }

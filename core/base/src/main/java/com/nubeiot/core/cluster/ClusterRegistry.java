@@ -20,7 +20,7 @@ public final class ClusterRegistry {
             throw new IllegalStateException("Machine is already initialized");
         }
         instance = new ClusterRegistry();
-        ReflectionClass.scanClassesInPackage(DEFAULT_CLUSTER_PACKAGE, ClusterDelegate.class, IClusterDelegate.class)
+        ReflectionClass.find(DEFAULT_CLUSTER_PACKAGE, IClusterDelegate.class, ClusterDelegate.class)
                        .parallelStream()
                        .forEach(instance::addDelegate);
     }
