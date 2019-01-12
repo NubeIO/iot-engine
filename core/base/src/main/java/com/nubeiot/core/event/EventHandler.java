@@ -1,25 +1,18 @@
 package com.nubeiot.core.event;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.exceptions.HiddenException;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.exceptions.StateException;
-import com.nubeiot.core.utils.JsonUtils;
-import com.nubeiot.core.utils.Reflections;
-import com.nubeiot.core.utils.Strings;
-
-import io.reactivex.Single;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
+import com.nubeiot.core.exceptions.NubeExceptionConverter;
+import com.nubeiot.core.utils.Strings;
+
 import lombok.NonNull;
 
 /**
@@ -28,6 +21,7 @@ import lombok.NonNull;
  * @see EventContractor
  * @see EventMessage
  * @see EventAction
+ * @see EventPattern#REQUEST_RESPONSE
  */
 public interface EventHandler extends Consumer<Message<Object>> {
 
@@ -38,72 +32,52 @@ public interface EventHandler extends Consumer<Message<Object>> {
      */
     @NonNull List<EventAction> getAvailableEvents();
 
-    @Override
-    default void accept(Message<Object> message) {
-        Logger logger = LoggerFactory.getLogger(this.getClass());
-        EventMessage msg = EventMessage.from(message.body());
-        logger.info("Executing action: {} with data: {}", msg.getAction(), msg.toJson().encode());
-        try {
-            handleEvent(msg.getAction(), msg.getData().mapTo(RequestData.class)).subscribe(
-                    data -> message.reply(EventMessage.success(msg.getAction(), data).toJson()), throwable -> {
-                        logger.error("Failed when handle event", throwable);
-                        message.reply(EventMessage.error(msg.getAction(), throwable).toJson());
-                    });
-        } catch (IllegalArgumentException t) {
-            throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Data Message format is not correct",
-                                    new HiddenException(t));
-        } catch (NubeException ex) {
-            logger.error("Failed when handle event", ex);
-            message.reply(EventMessage.error(msg.getAction(), ex).toJson());
-        }
-    }
-
     @SuppressWarnings("unchecked")
     default void accept(io.vertx.reactivex.core.eventbus.Message<Object> message) {
         this.accept(message.getDelegate());
     }
 
-    @SuppressWarnings("unchecked")
-    default Single<JsonObject> handleEvent(@NonNull EventAction action, @NonNull RequestData data)
-            throws NubeException {
-        if (!this.getAvailableEvents().contains(action)) {
-            throw new StateException("Unsupported event " + action);
+    /**
+     * Jackson Object mapper for serialize/deserialize data
+     *
+     * @return Object mapper. Default: {@link Json#mapper}
+     */
+    default ObjectMapper mapper() { return Json.mapper; }
+
+    /**
+     * Fallback json key if output is {@code collection/primitive}  value
+     *
+     * @return fallback json key. Default: {@code data}
+     */
+    default String fallback() { return "data"; }
+
+    @Override
+    default void accept(Message<Object> message) {
+        Logger logger = LoggerFactory.getLogger(this.getClass());
+        EventMessage msg = EventMessage.from(message.body());
+        EventAction action = msg.getAction();
+        logger.info("Executing action: {} with data: {}", action, msg.toJson().encode());
+        AnnotationHandler<? extends EventHandler> handler = new AnnotationHandler<>(this);
+        try {
+            handler.execute(msg)
+                   .subscribe(data -> message.reply(EventMessage.success(action, data).toJson()),
+                              error(message, action, logger, null)::accept);
+        } catch (ImplementationError ex) {
+            error(message, action, logger, "No reply from event " + action).accept(ex);
+        } catch (Throwable t) {
+            error(message, action, logger, null).accept(t);
         }
-        Method method = getMethodByAnnotation(this.getClass(), action);
-        EventContractor contractor = method.getAnnotation(EventContractor.class);
-        Class<?> outputClazz = contractor.returnType();
-        Object response = Reflections.executeMethod(this, method, data, outputClazz);
-        if (response instanceof Single) {
-            return ((Single) response).map(o -> o instanceof JsonObject ? o : JsonUtils.toJson(o));
-        }
-        return Single.just(JsonUtils.toJson(response));
     }
 
-    static Method getMethodByAnnotation(@NonNull Class<?> clazz, @NonNull EventAction action) {
-        Method[] methods = clazz.getDeclaredMethods();
-        for (Method method : methods) {
-            if (!Modifier.isPublic(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
-                continue;
+    default Consumer<Throwable> error(Message<Object> message, EventAction action, Logger logger, String overrideMsg) {
+        return throwable -> {
+            logger.error("Failed when handle event {}", throwable, action);
+            Throwable t = throwable;
+            if (Strings.isNotBlank(overrideMsg)) {
+                t = NubeExceptionConverter.friendly(throwable, overrideMsg);
             }
-            EventContractor contractor = method.getAnnotation(EventContractor.class);
-            if (Objects.isNull(contractor)) {
-                continue;
-            }
-            if (Stream.of(contractor.events()).anyMatch(eventType -> action == eventType)) {
-                if (method.getParameterCount() != 1 ||
-                    !Reflections.assertDataType(method.getParameterTypes()[0], RequestData.class)) {
-                    continue;
-                }
-                if (Reflections.assertDataType(method.getReturnType(), contractor.returnType())) {
-                    return method;
-                }
-            }
-        }
-        HiddenException.ImplementationError t = new HiddenException.ImplementationError(
-                NubeException.ErrorCode.EVENT_ERROR,
-                Strings.format("Error when implementing @EventContractor in class {0}", clazz.getName()));
-        throw new NubeException(NubeException.ErrorCode.UNKNOWN_ERROR,
-                                Strings.format("No reply from event {0}", action), t);
+            message.reply(EventMessage.error(action, t).toJson());
+        };
     }
 
 }

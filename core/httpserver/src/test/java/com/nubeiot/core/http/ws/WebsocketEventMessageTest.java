@@ -6,14 +6,14 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.BridgeEventType;
+
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
-
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.bridge.BridgeEventType;
 
 public class WebsocketEventMessageTest {
 
@@ -53,7 +53,7 @@ public class WebsocketEventMessageTest {
     @Test
     public void test_deserialize_missing_msg() {
         WebsocketEventMessage message = new JsonObject("{\"address\":\"test\",\"type\":\"REGISTER\"}").mapTo(
-                WebsocketEventMessage.class);
+            WebsocketEventMessage.class);
         Assert.assertEquals("test", message.getAddress());
         Assert.assertEquals(BridgeEventType.REGISTER, message.getType());
         Assert.assertNull(message.getBody());
@@ -62,7 +62,7 @@ public class WebsocketEventMessageTest {
     @Test(expected = NubeException.class)
     public void test_deserialize_socketMsg_missing_event_action() {
         WebsocketEventMessage.from(
-                "{\"address\":\"test\",\"type\":\"SEND\",\"body\":{\"data\":{\"hello\":\"world\"}}}");
+            "{\"address\":\"test\",\"type\":\"SEND\",\"body\":{\"data\":{\"hello\":\"world\"}}}");
     }
 
     @Test(expected = NubeException.class)
@@ -73,7 +73,7 @@ public class WebsocketEventMessageTest {
     @Test
     public void test_deserialize_socketMsg_without_data() {
         WebsocketEventMessage from = WebsocketEventMessage.from(
-                new JsonObject("{\"address\":\"socket.client2server\",\"type\":\"RECEIVE\"}"));
+            new JsonObject("{\"address\":\"socket.client2server\",\"type\":\"RECEIVE\"}"));
         Assert.assertEquals(BridgeEventType.RECEIVE, from.getType());
         Assert.assertEquals("socket.client2server", from.getAddress());
         Assert.assertNull(from.getBody());
@@ -82,13 +82,13 @@ public class WebsocketEventMessageTest {
     @Test
     public void test_deserialize_socketMsg_full() throws JSONException {
         WebsocketEventMessage message = WebsocketEventMessage.from(
-                "{\"address\":\"test\",\"type\":\"rec\",\"body\":{" + "\"action\":\"CREATE\"," +
-                "\"data\":{\"hello\":\"world\"}}}");
+            "{\"address\":\"test\",\"type\":\"rec\",\"body\":{" + "\"action\":\"CREATE\"," +
+            "\"data\":{\"hello\":\"world\"}}}");
         Assert.assertEquals("test", message.getAddress());
         Assert.assertEquals(BridgeEventType.RECEIVE, message.getType());
         Assert.assertNotNull(message.getBody());
         Assert.assertEquals(EventAction.CREATE, message.getBody().getAction());
-        Assert.assertEquals(Status.SUCCESS, message.getBody().getStatus());
+        Assert.assertEquals(Status.INITIAL, message.getBody().getStatus());
         JSONAssert.assertEquals("{\"hello\":\"world\"}", message.getBody().getData().encode(), JSONCompareMode.STRICT);
         Assert.assertNull(message.getBody().getError());
     }

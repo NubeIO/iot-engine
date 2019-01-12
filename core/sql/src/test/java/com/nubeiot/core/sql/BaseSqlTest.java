@@ -76,7 +76,6 @@ abstract class BaseSqlTest {
     SQLDialect getDialect() { return SQLDialect.H2; }
 
     public void after(TestContext context) {
-        stopSQL(context);
         vertx.close(context.asyncAssertSuccess());
     }
 

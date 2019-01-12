@@ -1,25 +1,28 @@
 package com.nubeiot.core.event;
 
+import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.nubeiot.core.exceptions.NubeException;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.exceptions.NubeException;
 
 public class EventMessageTest {
 
     @Test
-    public void test_EventMessage_Success() {
+    public void test_EventMessage_Success() throws JSONException {
         EventMessage msg = EventMessage.success(EventAction.CREATE, new JsonObject(
-                "{\"groupId\":\"io.nubespark\",\"version\":\"1.0-SNAPSHOT\"}"));
+            "{\"groupId\":\"io.nubespark\",\"version\":\"1.0-SNAPSHOT\"}"));
         Assert.assertFalse(msg.isError());
         Assert.assertTrue(msg.isSuccess());
         Assert.assertEquals(EventAction.CREATE, msg.getAction());
         Assert.assertNull(msg.getError());
-        Assert.assertEquals(
-                "{\"status\":\"SUCCESS\",\"action\":\"CREATE\",\"data\":{\"groupId\":\"io.nubespark\",\"version\":\"1" +
-                ".0-SNAPSHOT\"}}", msg.toJson().encode());
+        JSONAssert.assertEquals("{\"status\":\"SUCCESS\",\"action\":\"CREATE\",\"" +
+                                "data\":{\"groupId\":\"io.nubespark\",\"version\":\"1.0-SNAPSHOT\"}}",
+                                msg.toJson().encode(), JSONCompareMode.STRICT);
     }
 
     @Test
@@ -46,7 +49,7 @@ public class EventMessageTest {
                                                "\"artifactId\":\"nube-edge-ditto-driver\"}}");
         EventMessage message = EventMessage.from(jsonObject.getMap());
         Assert.assertFalse(message.isError());
-        Assert.assertTrue(message.isSuccess());
+        Assert.assertFalse(message.isSuccess());
         Assert.assertEquals(EventAction.CREATE, message.getAction());
         Assert.assertEquals("{\"groupId\":\"io.nubespark\",\"artifactId\":\"nube-edge-ditto-driver\"}",
                             message.getData().encode());
@@ -67,8 +70,8 @@ public class EventMessageTest {
     @Test
     public void test_deserialize_error_data() {
         JsonObject jsonObject = new JsonObject(
-                "{\"status\":\"FAILED\",\"action\":\"REMOVE\",\"error\":{\"code\":\"UNKNOWN_ERROR\"," +
-                "\"message\":\"UNKNOWN_ERROR | Cause: xxx\"}}");
+            "{\"status\":\"FAILED\",\"action\":\"REMOVE\",\"error\":{\"code\":\"UNKNOWN_ERROR\"," +
+            "\"message\":\"UNKNOWN_ERROR | Cause: xxx\"}}");
         EventMessage message = EventMessage.from(jsonObject);
         Assert.assertTrue(message.isError());
         Assert.assertFalse(message.isSuccess());

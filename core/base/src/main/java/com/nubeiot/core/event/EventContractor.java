@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import io.vertx.core.json.JsonObject;
+
 import lombok.NonNull;
 
 /**
@@ -20,11 +21,24 @@ public @interface EventContractor {
     /**
      * @return the possible event types that a method can process
      */
-    EventAction[] events();
+    EventAction[] action();
 
     /**
      * @return Output type of method. Default: {@link JsonObject}
      */
     @NonNull Class<?> returnType() default JsonObject.class;
+
+    /**
+     * Define parameter name
+     *
+     * @apiNote Able to omit if {@code Java method} has only one parameter that can be deserialize from json
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    @interface Param {
+
+        String value();
+
+    }
 
 }

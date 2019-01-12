@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.ws.rs.core.MediaType;
 
+import io.vertx.ext.web.Router;
+
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.InvalidUrlException;
@@ -15,7 +17,6 @@ import com.nubeiot.core.http.utils.Urls;
 import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.RestBuilder;
 
-import io.vertx.ext.web.Router;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -25,12 +26,12 @@ public class RestApiBuilder {
     @NonNull
     private final Router router;
     @NonNull
-    private final Set<Class> restApiClass = new HashSet<>();
+    private final Set<Class<? extends RestApi>> restApiClass = new HashSet<>();
     @NonNull
     private final Set<Class<? extends RestEventApi>> restEventApiClass = new HashSet<>();
     private String rootApi = ApiConstants.ROOT_API_PATH;
 
-    public RestApiBuilder registerApi(Collection<Class> apiClass) {
+    public RestApiBuilder registerApi(Collection<Class<? extends RestApi>> apiClass) {
         restApiClass.addAll(apiClass);
         return this;
     }

@@ -10,7 +10,7 @@ public class InitializerError extends NubeException {
 
     public InitializerError(Throwable e)    { this(null, e); }
 
-    public static class MigrationError extends InitializerError {
+    public static final class MigrationError extends InitializerError {
 
         public MigrationError(String message, Throwable e) {
             super(message, e);

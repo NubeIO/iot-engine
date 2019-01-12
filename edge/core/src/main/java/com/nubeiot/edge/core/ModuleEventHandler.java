@@ -34,7 +34,7 @@ public final class ModuleEventHandler implements EventHandler {
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
 
-    @EventContractor(events = EventAction.GET_LIST, returnType = Single.class)
+    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getList(RequestData data) {
         JsonObject filter = data.getFilter();
         if (filter.getBoolean("available", Boolean.FALSE)) {
@@ -43,7 +43,7 @@ public final class ModuleEventHandler implements EventHandler {
         return new LocalServiceSearch(this.verticle.getEntityHandler()).search(data);
     }
 
-    @EventContractor(events = EventAction.GET_ONE, returnType = Single.class)
+    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
         ITblModule module = new TblModule(data.getBody());
         if (Strings.isBlank(module.getServiceId())) {
@@ -55,7 +55,7 @@ public final class ModuleEventHandler implements EventHandler {
                                 String.format("Not found service id '%s'", module.getServiceId()))));
     }
 
-    @EventContractor(events = EventAction.HALT, returnType = Single.class)
+    @EventContractor(action = EventAction.HALT, returnType = Single.class)
     public Single<JsonObject> halt(RequestData data) {
         ITblModule module = new TblModule(data.getBody());
         if (Strings.isBlank(module.getServiceId())) {
@@ -66,7 +66,7 @@ public final class ModuleEventHandler implements EventHandler {
                                                           EventAction.HALT);
     }
 
-    @EventContractor(events = EventAction.UPDATE, returnType = Single.class)
+    @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData data) {
         JsonObject body = data.getBody();
         ITblModule module = new TblModule().fromJson(body);
@@ -83,7 +83,7 @@ public final class ModuleEventHandler implements EventHandler {
         return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.UPDATE);
     }
 
-    @EventContractor(events = EventAction.REMOVE, returnType = Single.class)
+    @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> remove(RequestData data) {
         ITblModule module = new TblModule().fromJson(data.getBody());
         if (Strings.isBlank(module.getServiceId())) {
@@ -92,7 +92,7 @@ public final class ModuleEventHandler implements EventHandler {
         return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.REMOVE);
     }
 
-    @EventContractor(events = EventAction.CREATE, returnType = Single.class)
+    @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData data) {
         JsonObject body = data.getBody();
         ModuleType moduleType = new TblModule().fromJson(body).getServiceType();

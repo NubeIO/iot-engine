@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -28,12 +29,15 @@ public final class EventModel {
     @EqualsAndHashCode.Include
     @ToString.Include
     private final String address;
-    @lombok.Builder.Default
+
+    @Default
     @ToString.Include
     private final EventPattern pattern = EventPattern.REQUEST_RESPONSE;
-    @lombok.Builder.Default
+
+    @Default
     @ToString.Include
     private final boolean local = false;
+
     @Singular
     @NonNull
     private final Set<EventAction> events;

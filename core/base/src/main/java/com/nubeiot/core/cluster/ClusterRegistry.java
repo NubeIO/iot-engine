@@ -3,7 +3,7 @@ package com.nubeiot.core.cluster;
 import java.util.EnumMap;
 import java.util.Objects;
 
-import com.nubeiot.core.utils.Reflections;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -20,9 +20,9 @@ public final class ClusterRegistry {
             throw new IllegalStateException("Machine is already initialized");
         }
         instance = new ClusterRegistry();
-        Reflections.scanClassesInPackage(DEFAULT_CLUSTER_PACKAGE, ClusterDelegate.class, IClusterDelegate.class)
-                   .parallelStream()
-                   .forEach(instance::addDelegate);
+        ReflectionClass.find(DEFAULT_CLUSTER_PACKAGE, IClusterDelegate.class, ClusterDelegate.class)
+                       .parallelStream()
+                       .forEach(instance::addDelegate);
     }
 
     public static ClusterRegistry instance() {
@@ -30,7 +30,7 @@ public final class ClusterRegistry {
     }
 
     private void addDelegate(Class<IClusterDelegate> delegate) {
-        IClusterDelegate clusterDelegate = Reflections.createObject(delegate);
+        IClusterDelegate clusterDelegate = ReflectionClass.createObject(delegate);
         if (Objects.nonNull(clusterDelegate)) {
             this.registry.put(clusterDelegate.getTypeName(), clusterDelegate);
         }

@@ -34,7 +34,7 @@ public class ClusterController implements EventHandler {
         return Arrays.asList(EventAction.GET_LIST);
     }
 
-    @EventContractor(events = EventAction.GET_LIST, returnType = List.class)
+    @EventContractor(action = EventAction.GET_LIST, returnType = List.class)
     public List<JsonObject> list(RequestData data) {
         ClusterType clusterType = (ClusterType) sharedDataFunc.apply(EdgeConnectorVerticle.SHARED_CLUSTER_TYPE);
         IClusterDelegate clusterDelegate = ClusterRegistry.instance().getClusterDelegate(clusterType);

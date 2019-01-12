@@ -13,7 +13,7 @@ import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.InvalidUrlException;
 import com.nubeiot.core.http.handler.RestEventResultHandler;
 import com.nubeiot.core.http.utils.Urls;
-import com.nubeiot.core.utils.Reflections;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
 import io.vertx.core.Vertx;
@@ -71,7 +71,8 @@ public final class RestEventBuilder {
         return this;
     }
 
-    public RestEventBuilder register(Class<? extends RestEventApi>... restApi) {
+    @SafeVarargs
+    public final RestEventBuilder register(Class<? extends RestEventApi>... restApi) {
         return this.register(Arrays.asList(restApi));
     }
 
@@ -87,7 +88,7 @@ public final class RestEventBuilder {
     }
 
     public Router build() {
-        validate().stream().map(Reflections::createObject).filter(Objects::nonNull).forEach(this::createRouter);
+        validate().stream().map(ReflectionClass::createObject).filter(Objects::nonNull).forEach(this::createRouter);
         return router;
     }
 

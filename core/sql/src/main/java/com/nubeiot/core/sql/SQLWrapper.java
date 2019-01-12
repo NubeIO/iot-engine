@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
@@ -40,7 +38,8 @@ import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.InitializerError.MigrationError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
-import com.nubeiot.core.utils.Reflections;
+import com.nubeiot.core.utils.Functions.Silencer;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.AccessLevel;
@@ -112,7 +111,7 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
         Map<Class, Object> map = new LinkedHashMap<>();
         map.put(Configuration.class, configuration);
         map.put(Vertx.class, vertx);
-        return ((CreationHandler) Reflections.createObject(clazz, map, new CreationHandler())).get();
+        return ReflectionClass.createObject(clazz, map, new CreationHandler<>()).get();
     }
 
     private void createNewDatabase(Configuration jooqConfig) {
@@ -205,20 +204,15 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
         return Single.just(result);
     }
 
-    private class CreationHandler implements BiConsumer<T, HiddenException>, Supplier<T> {
-
-        private T entityHandler;
+    private class CreationHandler<E extends EntityHandler> extends Silencer<E> {
 
         @Override
-        public void accept(T t, HiddenException e) {
+        public void accept(E obj, HiddenException e) {
             if (Objects.nonNull(e)) {
                 throw new DatabaseException("Error when creating entity handler", e);
             }
-            entityHandler = t;
+            object = obj;
         }
-
-        @Override
-        public T get() { return entityHandler; }
 
     }
 

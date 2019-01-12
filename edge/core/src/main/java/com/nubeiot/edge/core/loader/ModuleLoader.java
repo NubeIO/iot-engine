@@ -26,7 +26,7 @@ public final class ModuleLoader implements EventHandler {
     private static final Logger logger = LoggerFactory.getLogger(ModuleLoader.class);
     private final Vertx vertx;
 
-    @EventContractor(events = {EventAction.CREATE, EventAction.INIT}, returnType = Single.class)
+    @EventContractor(action = {EventAction.CREATE, EventAction.INIT}, returnType = Single.class)
     public Single<JsonObject> installModule(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.getBody(), PreDeploymentResult.class);
         logger.info("Vertx install module {}...", preResult.getServiceId());
@@ -37,7 +37,7 @@ public final class ModuleLoader implements EventHandler {
         }).map(id -> new JsonObject().put("deploy_id", id));
     }
 
-    @EventContractor(events = {EventAction.REMOVE, EventAction.HALT}, returnType = Single.class)
+    @EventContractor(action = {EventAction.REMOVE, EventAction.HALT}, returnType = Single.class)
     public Single<JsonObject> removeModule(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.getBody(), PreDeploymentResult.class);
         String deployId = preResult.getDeployId();
@@ -51,7 +51,7 @@ public final class ModuleLoader implements EventHandler {
         }).andThen(Single.just(new JsonObject().put("deploy_id", deployId)));
     }
 
-    @EventContractor(events = EventAction.UPDATE, returnType = Single.class)
+    @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> reloadModule(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.getBody(), PreDeploymentResult.class);
         logger.info("Vertx reload module {}...", preResult.getDeployId());
