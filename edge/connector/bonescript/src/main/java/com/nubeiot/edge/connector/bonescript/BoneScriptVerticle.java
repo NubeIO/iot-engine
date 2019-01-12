@@ -47,11 +47,12 @@ public class BoneScriptVerticle extends ContainerVerticle {
     private void handler(SQLWrapper component) {
         this.entityHandler = (BoneScriptEntityHandler) component.getEntityHandler();
 
-        DittoDBUtils.getDittoData(this.entityHandler.getTblDittoDao()).subscribe(db -> {
+        DittoDBUtils.getDittoData(this.entityHandler).subscribe(db -> {
+            MultiThreadDittoDB multiThreadDittoDB = new MultiThreadDittoDB(entityHandler);
             // Initializing Ditto for future use
             Ditto.init(db);
             logger.info("Ditto Initialization is successfully done.");
-            Historian.init(vertx, db, this.entityHandler.getQueryExecutor());
+            Historian.init(vertx, this.entityHandler, multiThreadDittoDB, db);
         });
     }
 

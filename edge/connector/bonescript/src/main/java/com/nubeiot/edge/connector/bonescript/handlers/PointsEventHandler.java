@@ -35,7 +35,7 @@ public class PointsEventHandler implements EventHandler {
 
     @EventContractor(events = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getList(RequestData data) {
-        return DittoDBUtils.getDittoData(this.verticle.getEntityHandler().getTblDittoDao())
+        return DittoDBUtils.getDittoData(this.verticle.getEntityHandler())
                            .map(value -> value.getJsonObject(THING)
                                               .getJsonObject(FEATURES)
                                               .getJsonObject(POINTS)
