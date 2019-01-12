@@ -1,8 +1,5 @@
 package com.nubeiot.edge.connector.bonescript.jobs;
 
-import static com.nubeiot.edge.connector.bonescript.Historian.CONTEXT_DITTO_DB;
-import static com.nubeiot.edge.connector.bonescript.Historian.CONTEXT_ID;
-import static com.nubeiot.edge.connector.bonescript.Historian.CONTEXT_VERTX;
 import static com.nubeiot.edge.connector.bonescript.constants.Constants.OUTGOING_PORT;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.DATA;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.FEATURES;
@@ -16,6 +13,9 @@ import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.TH
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.TS;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.VAL;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.VALUE;
+import static com.nubeiot.edge.connector.bonescript.operations.Historian.CONTEXT_DITTO_DB;
+import static com.nubeiot.edge.connector.bonescript.operations.Historian.CONTEXT_ID;
+import static com.nubeiot.edge.connector.bonescript.operations.Historian.CONTEXT_VERTX;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;

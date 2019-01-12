@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bonescript;
+package com.nubeiot.edge.connector.bonescript.operations;
 
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.DITTO_ENABLE;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.DITTO_HOST;

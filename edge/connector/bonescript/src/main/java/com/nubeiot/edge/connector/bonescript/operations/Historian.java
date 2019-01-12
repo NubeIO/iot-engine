@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bonescript;
+package com.nubeiot.edge.connector.bonescript.operations;
 
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.FEATURES;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.HISTORY_SETTINGS;
@@ -22,6 +22,9 @@ import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
+import com.nubeiot.edge.connector.bonescript.BoneScriptEntityHandler;
+import com.nubeiot.edge.connector.bonescript.MultiThreadDittoDB;
+import com.nubeiot.edge.connector.bonescript.ScheduleJob;
 import com.nubeiot.edge.connector.bonescript.jobs.RecordPeriodicJob;
 
 import io.vertx.core.json.JsonObject;

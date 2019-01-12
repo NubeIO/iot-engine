@@ -26,7 +26,6 @@ public class Init implements Supplier<Single<JsonObject>> {
     private final TblDittoDao tblDittoDao;
 
     public static JsonObject initDittoTemplate() {
-        logger.info("JsoObject before: {}", "test");
         String dittoTemplate = Strings.convertToString(
             Reflections.staticClassLoader().getResourceAsStream(DITTO_TEMPLATE_RESOURCE_FILE));
         final String deviceId = UUID.randomUUID().toString();
