@@ -33,7 +33,7 @@ public class PointsEventHandler implements EventHandler {
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
 
-    @EventContractor(events = EventAction.GET_LIST, returnType = Single.class)
+    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getList(RequestData data) {
         return DittoDBUtils.getDittoData(this.verticle.getEntityHandler())
                            .map(value -> value.getJsonObject(THING)

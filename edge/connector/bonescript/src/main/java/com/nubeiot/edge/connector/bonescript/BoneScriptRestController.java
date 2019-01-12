@@ -5,12 +5,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.rest.RestApi;
 
 import io.vertx.core.json.JsonObject;
 
 @Path(ApiConstants.ROOT_API_PATH)
 @Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
-public class BoneScriptRestController {
+public class BoneScriptRestController implements RestApi {
 
     @GET
     @Path("/info")
