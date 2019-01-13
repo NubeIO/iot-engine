@@ -24,7 +24,7 @@ public interface KafkaReaderSupplier {
     /**
      * Create a new KafkaReadStream instance
      *
-     * @param vertx     Vert.x instance to use
+     * @param vertx     Vert.x instance serialize use
      * @param config    Kafka consumer configuration
      * @param keyType   class type for the key deserialization
      * @param valueType class type for the value deserialization
@@ -41,7 +41,7 @@ public interface KafkaReaderSupplier {
     /**
      * Create a new KafkaReadStream instance
      *
-     * @param vertx     Vert.x instance to use
+     * @param vertx     Vert.x instance serialize use
      * @param config    Kafka consumer configuration
      * @param keyType   class type for the key deserialization
      * @param valueType class type for the value deserialization
@@ -59,7 +59,7 @@ public interface KafkaReaderSupplier {
     /**
      * Create a new KafkaReadStream instance
      *
-     * @param vertx     Vert.x instance to use
+     * @param vertx     Vert.x instance serialize use
      * @param config    Kafka consumer configuration
      * @param keyType   class type for the key deserialization
      * @param valueType class type for the value deserialization
@@ -74,7 +74,7 @@ public interface KafkaReaderSupplier {
     /**
      * Create a new KafkaReadStream instance
      *
-     * @param vertx    Vert.x instance to use
+     * @param vertx    Vert.x instance serialize use
      * @param consumer native Kafka consumer instance
      * @param <K>      type of key
      * @param <V>      type of value

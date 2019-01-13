@@ -46,6 +46,10 @@ public interface JsonData {
         return from(object, clazz, Json.mapper, errorMsg);
     }
 
+    static <T extends JsonData> T from(Object object, Class<T> clazz, ObjectMapper mapper) {
+        return from(object, clazz, mapper, null);
+    }
+
     @SuppressWarnings("unchecked")
     static <T extends JsonData> T from(@NonNull Object object, @NonNull Class<T> clazz, @NonNull ObjectMapper mapper,
                                        String errorMsg) {

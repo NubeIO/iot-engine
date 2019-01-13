@@ -26,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 
 public interface IConfig extends JsonData {
 
+    ObjectMapper MAPPER = Json.mapper.copy().setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
     @JsonIgnore
     String name();
 
@@ -46,17 +48,17 @@ public interface IConfig extends JsonData {
         return this.toJson().mergeIn(to.toJson(), true);
     }
 
+    default ObjectMapper mapper() {
+        return MAPPER;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     default JsonObject toJson() {
         List<? extends IConfig> fieldValues = ReflectionField.getFieldValuesByType(this, IConfig.class);
         JsonObject json = new JsonObject();
-        fieldValues.forEach(val -> {
-            json.put(val.name(), val.toJson());
-        });
-        ObjectMapper mapper = Json.mapper.copy();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        return new JsonObject(mapper.convertValue(this, Map.class)).mergeIn(json);
+        fieldValues.forEach(val -> json.put(val.name(), val.toJson()));
+        return new JsonObject(mapper().convertValue(this, Map.class)).mergeIn(json);
     }
 
     static <T extends IConfig> T from(Object data, Class<T> clazz) {

@@ -66,7 +66,7 @@ public final class KafkaUnit extends UnitVerticle<KafkaConfig> {
 
     private void close(List<Completable> completables, AsyncResult event, String type) {
         if (event.failed()) {
-            logger.error("Failed to close {}", event.cause(), type);
+            logger.error("Failed serialize close {}", event.cause(), type);
         }
         completables.add(Completable.complete());
     }

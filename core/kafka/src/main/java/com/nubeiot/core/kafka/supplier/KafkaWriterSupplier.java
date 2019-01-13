@@ -24,7 +24,7 @@ public interface KafkaWriterSupplier {
     /**
      * Create a new KafkaWriteStream instance
      *
-     * @param vertx     Vert.x instance to use
+     * @param vertx     Vert.x instance serialize use
      * @param config    Kafka producer configuration
      * @param keyType   class type for the key serialization
      * @param valueType class type for the value serialization
@@ -41,7 +41,7 @@ public interface KafkaWriterSupplier {
     /**
      * Create a new KafkaWriteStream instance
      *
-     * @param vertx     Vert.x instance to use
+     * @param vertx     Vert.x instance serialize use
      * @param config    Kafka producer configuration
      * @param keyType   class type for the key serialization
      * @param valueType class type for the value serialization
@@ -59,7 +59,7 @@ public interface KafkaWriterSupplier {
     /**
      * Create a new KafkaWriteStream instance
      *
-     * @param vertx     Vert.x instance to use
+     * @param vertx     Vert.x instance serialize use
      * @param config    Kafka producer configuration
      * @param keyType   class type for the key serialization
      * @param valueType class type for the value serialization
@@ -74,7 +74,7 @@ public interface KafkaWriterSupplier {
     /**
      * Create a new KafkaWriteStream instance
      *
-     * @param vertx    Vert.x instance to use
+     * @param vertx    Vert.x instance serialize use
      * @param producer native Kafka producer instance
      * @param <K>      type of key
      * @param <V>      type of value
