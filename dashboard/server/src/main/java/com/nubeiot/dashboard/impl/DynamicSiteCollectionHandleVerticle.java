@@ -4,16 +4,14 @@ import com.nubeiot.core.common.RxRestAPIVerticle;
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.HttpException;
 import com.nubeiot.core.common.utils.StringUtils;
-import com.nubeiot.dashboard.DynamicCollection;
+import com.nubeiot.dashboard.enums.DynamicCollection;
 import com.nubeiot.dashboard.impl.handlers.BaseCollectionHandler;
-import io.netty.handler.codec.http.HttpResponseStatus;
+
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.mongo.MongoClient;
-
-import java.util.List;
 
 import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.*;
 import static com.nubeiot.dashboard.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
@@ -36,10 +34,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
         CustomMessage customMessage = (CustomMessage) message.body();
         String url = customMessage.getHeader().getString("url");
 
-        if (url.equals("") && customMessage.getHeader().getString("method").equalsIgnoreCase("GET")) {
-            // Getting all values; for example when we need to display all settings
-            handleGetAll(message, customMessage);
-        } else if (validateUrl(url)) {
+        if (validateUrl(url)) {
             if (validateData(customMessage)) {
                 this.handleValidUrl(message, customMessage);
             } else {
@@ -47,30 +42,6 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
             }
         } else {
             handleNotFoundResponse(message);
-        }
-    }
-
-    @SuppressWarnings("Duplicates")
-    private void handleGetAll(Message<Object> message, CustomMessage customMessage) {
-        String collection = customMessage.getHeader().getString("collection");
-        JsonArray sitesIds = getSitesIds(customMessage);
-        String siteId = customMessage.getHeader().getString("Site-Id");
-
-        if (sitesIds.size() > 0) {
-            if (sitesIds.contains(siteId)) {
-                mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId))
-                    .subscribe(response -> {
-                        CustomMessage<List<JsonObject>> replyMessage = new CustomMessage<>(
-                            null,
-                            response,
-                            HttpResponseStatus.OK.code());
-                        message.reply(replyMessage);
-                    }, throwable -> handleException(message, throwable));
-            } else {
-                handleForbiddenResponse(message);
-            }
-        } else {
-            handleBadRequestResponse(message, "User must be associated with <SiteSetting>");
         }
     }
 

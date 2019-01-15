@@ -290,6 +290,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             .put("method", ctx.request().method())
             .put("user", ctx.user().principal())
             .put("Site-Id", ctx.request().headers().get("Site-Id"))
+            .put("host", ctx.request().host())
             .put("collection", collection);
         JsonObject body;
         if (StringUtils.isNull(ctx.getBody().toString())) {

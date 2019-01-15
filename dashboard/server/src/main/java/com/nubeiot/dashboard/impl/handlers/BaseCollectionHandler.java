@@ -1,21 +1,24 @@
 package com.nubeiot.dashboard.impl.handlers;
 
+import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleBadRequestResponse;
+import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleForbiddenResponse;
+
+import java.util.List;
+import java.util.UUID;
+
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.HttpException;
 import com.nubeiot.core.common.utils.SQLUtils;
 import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.utils.MongoUtils;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.mongo.MongoClient;
-
-import java.util.UUID;
-
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleBadRequestResponse;
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleForbiddenResponse;
 
 public class BaseCollectionHandler {
     public void handleGetUrl(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient) {
@@ -25,14 +28,24 @@ public class BaseCollectionHandler {
         JsonArray sitesIds = getSitesIds(customMessage);
         if (sitesIds.size() > 0) {
             if (sitesIds.contains(siteId)) {
-                mongoClient.rxFindOne(collection, new JsonObject().put("site_id", siteId).put("id", id), null)
-                    .subscribe(response -> {
-                        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                            null,
-                            SQLUtils.getFirstNotNull(response, new JsonObject()),
-                            HttpResponseStatus.OK.code());
+                if (Strings.isNotBlank(id)) {
+                    mongoClient.rxFindOne(collection, new JsonObject().put("site_id", siteId).put("id", id), null)
+                               .subscribe(response -> {
+                                   CustomMessage<JsonObject> replyMessage = new CustomMessage<>(null,
+                                                                                                SQLUtils.getFirstNotNull(
+                                                                                                    response,
+                                                                                                    new JsonObject()),
+                                                                                                HttpResponseStatus.OK.code());
+                                   message.reply(replyMessage);
+                               }, throwable -> handleException(message, throwable));
+                } else {
+                    mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId)).subscribe(response -> {
+                        CustomMessage<List<JsonObject>> replyMessage = new CustomMessage<>(null, response,
+                                                                                           HttpResponseStatus.OK.code());
                         message.reply(replyMessage);
                     }, throwable -> handleException(message, throwable));
+                }
+
             } else {
                 handleForbiddenResponse(message);
             }
@@ -171,7 +184,7 @@ public class BaseCollectionHandler {
         return sitesIds;
     }
 
-    private void handleException(Message<Object> message, Throwable throwable) {
+    protected void handleException(Message<Object> message, Throwable throwable) {
         HttpException exception = (HttpException) throwable;
         CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
             null,
