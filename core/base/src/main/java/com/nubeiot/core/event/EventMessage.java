@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
-import io.vertx.core.json.JsonObject;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,6 +12,8 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NubeException;
+
+import io.vertx.core.json.JsonObject;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -63,7 +63,8 @@ public final class EventMessage implements Serializable, JsonData {
     }
 
     private EventMessage(EventAction action, Status status, JsonData data, ErrorMessage error) {
-        this(status, action, null, Objects.isNull(data) ? null : data.toJson().getMap(), data.getClass(), error);
+        this(status, action, null, Objects.isNull(data) ? null : data.toJson().getMap(),
+             Objects.isNull(data) ? DefaultJsonData.class : data.getClass(), error);
     }
 
     public static EventMessage error(EventAction action, Throwable throwable) {

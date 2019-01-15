@@ -1,6 +1,7 @@
 package com.nubeiot.core.event;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 import org.junit.Assert;
@@ -8,19 +9,21 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
-import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.MockEventHandler.MockEventUnsupportedHandler;
 import com.nubeiot.core.event.MockEventHandler.MockEventWithDiffParam;
 import com.nubeiot.core.event.MockEventHandler.MockParam;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.exceptions.StateException;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+
+import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 public class AnnotationHandlerTest {
 
@@ -44,19 +47,35 @@ public class AnnotationHandlerTest {
         Assert.assertEquals("throwException", method.getName());
     }
 
+    @Test(expected = NubeException.class)
+    public void test_data_is_null() {
+        JsonData data = null;
+        MH.get().execute(EventMessage.initial(EventAction.GET_LIST, data));
+    }
+
+    @Test(expected = NubeException.class)
+    public void test_invalid_status() {
+        MH.get().execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR, "Invalid status"));
+    }
+
     @Test(expected = ImplementationError.class)
     public void test_get_method_public_static() {
         AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.GET_ONE);
     }
 
     @Test(expected = ImplementationError.class)
+    public void test_more_than_one_method_defined() {
+        AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.RETURN);
+    }
+
+    @Test(expected = ImplementationError.class)
     public void test_get_method_none_public_method() {
-        AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.GET_ONE);
+        AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.MIGRATE);
     }
 
     @Test(expected = ImplementationError.class)
     public void test_get_method_no_output() {
-        AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.GET_ONE);
+        AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.PATCH);
     }
 
     @Test
@@ -171,6 +190,20 @@ public class AnnotationHandlerTest {
         Assert.assertEquals(10, r.getValue("id"));
         RequestData from = JsonData.from(r.getValue("request"), RequestData.class);
         Assert.assertEquals("o", from.getBody().getString("o"));
+    }
+
+    @Test
+    public void test_collectionParam() {
+        JsonObject d = new JsonObject().put("list", Arrays.asList("one", "two"));
+        EventMessage msg = EventMessage.initial(EventAction.HALT, d);
+        JsonObject r = MPH.get().execute(msg).blockingGet();
+        Assert.assertEquals("one", r.getString("one"));
+        Assert.assertEquals("two", r.getString("two"));
+    }
+
+    @Test(expected = ImplementationError.class)
+    public void test_wrong_return_type() {
+        AnnotationHandler.getMethodByAnnotation(MockEventWithDiffParam.class, EventAction.RETURN);
     }
 
 }

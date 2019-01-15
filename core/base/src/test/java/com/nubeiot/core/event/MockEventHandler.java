@@ -2,15 +2,16 @@ package com.nubeiot.core.event;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventContractor.Param;
+
+import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -57,17 +58,22 @@ public class MockEventHandler implements EventHandler {
         return new JsonObject().put("key", "Static method with contractor");
     }
 
-    @EventContractor(action = EventAction.GET_ONE)
+    @EventContractor(action = EventAction.PATCH, returnType = void.class)
     public void publicNotValidOutput(RequestData data) {
         new JsonObject().put("key", "Public method with not valid output");
     }
 
-    @EventContractor(action = EventAction.GET_ONE)
+    @EventContractor(action = EventAction.RETURN)
     public JsonObject publicNoInput() {
         return new JsonObject().put("key", "Public method with no input");
     }
 
-    @EventContractor(action = EventAction.GET_ONE)
+    @EventContractor(action = EventAction.RETURN)
+    public JsonObject secondPublicNoInput() {
+        return new JsonObject().put("key", "Second public method with no input");
+    }
+
+    @EventContractor(action = EventAction.MIGRATE)
     JsonObject nonPublicWithContractor(RequestData data) {
         return new JsonObject().put("key", "Non Public method with contractor");
     }
@@ -111,6 +117,20 @@ public class MockEventHandler implements EventHandler {
         @EventContractor(action = EventAction.REMOVE)
         public JsonObject mixParams(@Param("id") int id, @Param("data") RequestData data) {
             return new JsonObject().put("id", id).put("request", data.toJson());
+        }
+
+        @EventContractor(action = EventAction.HALT)
+        public JsonObject collectionParam(@Param("list") Collection<String> data) {
+            JsonObject result = new JsonObject();
+            data.forEach(item -> {
+                result.put(item, item);
+            });
+            return result;
+        }
+
+        @EventContractor(action = EventAction.RETURN, returnType = Single.class)
+        public JsonObject wrongReturnType() {
+            return new JsonObject();
         }
 
     }
