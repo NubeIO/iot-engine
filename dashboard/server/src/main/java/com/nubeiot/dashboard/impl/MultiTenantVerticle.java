@@ -42,7 +42,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     @Override
     public void start() {
         super.start();
-        mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo").getJsonObject("config"));
+        mongoClient = MongoClient.createNonShared(vertx, this.nubeConfig.toJson().getJsonObject("__app__").getJsonObject("mongo").getJsonObject("config"));
         EventBus eventBus = getVertx().eventBus();
 
         // Receive message

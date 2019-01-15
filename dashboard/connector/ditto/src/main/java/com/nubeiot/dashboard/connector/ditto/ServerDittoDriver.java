@@ -44,19 +44,26 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
     private HttpClient client;
 
     @Override
-    public void start(Future<Void> startFuture) {
-        super.start();
+    public void start(Future<Void> future) {
+        Future<Void> startFuture = Future.future();
+        super.start(startFuture);
+        startFuture.setHandler(ar -> {
+            if (ar.succeeded()) {
+                startWebApp()
+                    .flatMap(httpServer -> publishHttp())
+                    .flatMap(ignored -> publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER))
+                    .subscribe(record -> future.complete(), future::fail);
 
-        startWebApp()
-            .flatMap(httpServer -> publishHttp())
-            .flatMap(ignored -> publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER))
-            .subscribe(record -> startFuture.complete(), startFuture::fail);
 
-
-        client = vertx.createHttpClient(new HttpClientOptions()
-            .setVerifyHost(false)
-            .setTrustAll(true)
-            .setTcpKeepAlive(true));
+                client = vertx.createHttpClient(new HttpClientOptions()
+                    .setVerifyHost(false)
+                    .setTrustAll(true)
+                    .setTcpKeepAlive(true));
+                } else {
+                logger.info("Failure on deployment...");
+                startFuture.fail(ar.cause());
+            }
+        });
     }
 
     private Single<HttpServer> startWebApp() {

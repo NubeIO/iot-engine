@@ -27,21 +27,29 @@ public class ZeppelinVerticle extends RxMicroServiceVerticle {
     private String COOKIE_NAME = "JSESSIONID";
 
     @Override
-    public void start(Future<Void> startFuture) {
-        super.start();
-        client = vertx.createHttpClient(new HttpClientOptions());
-        Router router = Router.router(vertx);
-        // creating body handler
-        router.route().handler(BodyHandler.create());
-        handleRoutes(router);
+    public void start(Future<Void> future) {
+        Future<Void> startFuture = Future.future();
+        super.start(startFuture);
+        startFuture.setHandler(ar -> {
+            if (ar.succeeded()) {
+                client = vertx.createHttpClient(new HttpClientOptions());
+                Router router = Router.router(vertx);
+                // creating body handler
+                router.route().handler(BodyHandler.create());
+                handleRoutes(router);
 
-        vertx.createHttpServer()
-                .requestHandler(router)
-                .rxListen(appConfig.getInteger("http.port", Port.ZEPPELIN_PORT))
-                .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
-                .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()))
-                .flatMap(httpServer -> publishHttp())
-                .subscribe(record -> startFuture.complete(), startFuture::fail);
+                vertx.createHttpServer()
+                     .requestHandler(router)
+                     .rxListen(appConfig.getInteger("http.port", Port.ZEPPELIN_PORT))
+                     .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
+                     .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()))
+                     .flatMap(httpServer -> publishHttp())
+                     .subscribe(record -> future.complete(), future::fail);
+            } else {
+                logger.info("Failure on deployment...");
+                startFuture.fail(ar.cause());
+            }
+        });
     }
 
     private Single<Record> publishHttp() {

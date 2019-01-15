@@ -35,21 +35,31 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
     private RulesController controller;
 
     @Override
-    public void start(Future<Void> startFuture) {
-        super.start();
+    public void start(Future<Void> future) {
+        Future<Void> startFuture = Future.future();
+        super.start(startFuture);
         logServerDetails();
+        startFuture.setHandler(ar -> {
+            if (ar.succeeded()) {
+                super.start();
+                logServerDetails();
 
-        startWebApp()
-            .flatMap(httpServer -> publishHttp())
-            .flatMap(ignored -> PostgreSQLService.create(vertx, appConfig.getJsonObject("pgConfig"))
-                .doOnSuccess(pgService -> {
-                    ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
-                    binder.setAddress(PostgreSQLService.SERVICE_ADDRESS).register(PostgreSQLService.class, pgService);
-                    logger.info("Service bound to " + binder);
-                })).flatMap(ignored -> publishMessageSource(PostgreSQLService.SERVICE_NAME, PostgreSQLService.SERVICE_ADDRESS))
-            .subscribe(record -> startFuture.complete(), startFuture::fail);
+                startWebApp()
+                    .flatMap(httpServer -> publishHttp())
+                    .flatMap(ignored -> PostgreSQLService.create(vertx, appConfig.getJsonObject("pgConfig"))
+                        .doOnSuccess(pgService -> {
+                            ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
+                            binder.setAddress(PostgreSQLService.SERVICE_ADDRESS).register(PostgreSQLService.class, pgService);
+                            logger.info("Service bound to " + binder);
+                        })).flatMap(ignored -> publishMessageSource(PostgreSQLService.SERVICE_NAME, PostgreSQLService.SERVICE_ADDRESS))
+                    .subscribe(record -> future.complete(), future::fail);
 
-        controller = new RulesController(vertx);
+                controller = new RulesController(vertx);
+            } else {
+                logger.info("Failure on deployment...");
+                startFuture.fail(ar.cause());
+            }
+        });
     }
 
     private Single<Record> publishHttp() {

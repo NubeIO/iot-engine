@@ -1,6 +1,7 @@
 package com.nubeiot.core.common;
 
 import io.reactivex.Single;
+import io.vertx.core.Future;
 import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -33,14 +34,16 @@ public abstract class RxMicroServiceVerticle extends ContainerVerticle {
     protected JsonObject appConfig;
 
     @Override
-    public void start() {
-        super.start();
+    public void start(io.vertx.core.Future<Void> future) {
         this.addProvider(new MicroserviceProvider(), microservice -> {
             this.microservice = microservice;
             this.discovery = this.microservice.getDiscovery();
             this.circuitBreaker = this.microservice.getCircuitBreaker();
             this.appConfig = this.nubeConfig.getAppConfig().toJson();
+            future.complete();
         });
+        Future<Void> startFuture = Future.future();
+        super.start(startFuture);
     }
 
     /**
