@@ -19,15 +19,19 @@ include ':dashboard:connector:ditto'
 include ':dashboard:connector:hive'
 include ':dashboard:connector:zeppelin'
 include ':dashboard:connector:postgresql'
+include ':dashboard:connector:sample:kafka'
 
 include ':edge:core'
 include ':edge:bios'
 include ':edge:module:installer'
 include ':edge:connector:ditto'
 include ':edge:connector:sensor'
+include ':edge:connector:sample:kafka'
 include ':edge:rule:sample'
 
 include ':eventbus:edge'
 include ':eventbus:sensor'
 
 include ':ext:rx-jdbc'
+include 'edge:connector'
+
