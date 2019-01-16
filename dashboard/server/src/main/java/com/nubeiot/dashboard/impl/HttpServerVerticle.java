@@ -12,7 +12,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
@@ -66,60 +65,50 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     }
 
     @Override
-    public void start(io.vertx.core.Future<Void> future) {
-        Future<Void> startFuture = Future.future();
-        super.start(startFuture);
-        startFuture.setHandler(ar -> {
-            if (ar.succeeded()) {
-                mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo").getJsonObject("config"));
-                eventBus = getVertx().eventBus();
+    protected Single<String> onStartComplete() {
+        mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo").getJsonObject("config"));
+        eventBus = getVertx().eventBus();
 
-                // Register codec for custom message
-                eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
+        // Register codec for custom message
+        eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
 
-                logger.info("Config on HttpWebServer is:");
-                logger.info(Json.encodePrettily(config()));
-                startWebApp()
-                    .flatMap(httpServer -> publishHttp())
-                    .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(MultiTenantVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
-                        // Deploy succeed
-                        if (deployResult.succeeded()) {
-                            source.onSuccess("Deployment of MultiTenantVerticle is successful.");
-                            logger.info("Deployment of MultiTenantVerticle is successful.");
-                        } else {
-                            // Deploy failed
-                            System.out.println("Failure on deploying...................................");
-                            source.onError(deployResult.cause());
-                            deployResult.cause().printStackTrace();
-                        }
-                    })))
-                    .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(DynamicSiteCollectionHandleVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
-                        // Deploy succeed
-                        if (deployResult.succeeded()) {
-                            source.onSuccess("Deployment of DynamicSiteCollectionHandleVerticle is successful.");
-                            logger.info("Deployment of DynamicSiteCollectionHandleVerticle is successful.");
-                        } else {
-                            // Deploy failed
-                            source.onError(deployResult.cause());
-                            deployResult.cause().printStackTrace();
-                        }
-                    })))
-                    .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(SiteCollectionHandleVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
-                        // Deploy succeed
-                        if (deployResult.succeeded()) {
-                            source.onSuccess("Deployment of SiteCollectionHandleVerticle is successful.");
-                            logger.info("Deployment of SiteCollectionHandleVerticle is successful.");
-                        } else {
-                            // Deploy failed
-                            source.onError(deployResult.cause());
-                            deployResult.cause().printStackTrace();
-                        }
-                    })))
-                    .subscribe(ignored -> future.complete(), future::fail);
-            } else {
-                future.fail(ar.cause());
-            }
-        });
+        logger.info("Config on HttpWebServer is:");
+        logger.info(Json.encodePrettily(config()));
+        return startWebApp()
+            .flatMap(httpServer -> publishHttp())
+            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(MultiTenantVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
+                // Deploy succeed
+                if (deployResult.succeeded()) {
+                    source.onSuccess("Deployment of MultiTenantVerticle is successful.");
+                    logger.info("Deployment of MultiTenantVerticle is successful.");
+                } else {
+                    // Deploy failed
+                    source.onError(deployResult.cause());
+                    deployResult.cause().printStackTrace();
+                }
+            })))
+            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(DynamicSiteCollectionHandleVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
+                // Deploy succeed
+                if (deployResult.succeeded()) {
+                    source.onSuccess("Deployment of DynamicSiteCollectionHandleVerticle is successful.");
+                    logger.info("Deployment of DynamicSiteCollectionHandleVerticle is successful.");
+                } else {
+                    // Deploy failed
+                    source.onError(deployResult.cause());
+                    deployResult.cause().printStackTrace();
+                }
+            })))
+            .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(SiteCollectionHandleVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
+                // Deploy succeed
+                if (deployResult.succeeded()) {
+                    source.onSuccess("Deployment of SiteCollectionHandleVerticle is successful.");
+                    logger.info("Deployment of SiteCollectionHandleVerticle is successful.");
+                } else {
+                    // Deploy failed
+                    source.onError(deployResult.cause());
+                    deployResult.cause().printStackTrace();
+                }
+            })));
     }
 
     private Single<HttpServer> startWebApp() {

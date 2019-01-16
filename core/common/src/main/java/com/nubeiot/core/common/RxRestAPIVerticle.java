@@ -19,7 +19,7 @@ import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.Record;
 
 @Deprecated
-public class RxRestAPIVerticle extends RxMicroServiceVerticle {
+public abstract class RxRestAPIVerticle extends RxMicroServiceVerticle {
 
     /**
      * Enable CORS support.
@@ -41,14 +41,15 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
         allowHeaders.add("Authorization");
         allowHeaders.add("JSESSIONID");
 
-        router.route().handler(CorsHandler.create("*")
-            .allowedHeaders(allowHeaders)
-            .allowedMethod(HttpMethod.GET)
-            .allowedMethod(HttpMethod.PUT)
-            .allowedMethod(HttpMethod.OPTIONS)
-            .allowedMethod(HttpMethod.POST)
-            .allowedMethod(HttpMethod.DELETE)
-            .allowedMethod(HttpMethod.PATCH));
+        router.route()
+              .handler(CorsHandler.create("*")
+                                  .allowedHeaders(allowHeaders)
+                                  .allowedMethod(HttpMethod.GET)
+                                  .allowedMethod(HttpMethod.PUT)
+                                  .allowedMethod(HttpMethod.OPTIONS)
+                                  .allowedMethod(HttpMethod.POST)
+                                  .allowedMethod(HttpMethod.DELETE)
+                                  .allowedMethod(HttpMethod.PATCH));
     }
 
     protected void dispatchRequests(RoutingContext context, JsonObject settings) {
@@ -67,22 +68,30 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
                         future.complete();
                         return;
                     }
-                    String prefix = (path.substring(initialOffset)
-                        .split("/"))[0];
+                    String prefix = (path.substring(initialOffset).split("/"))[0];
                     System.out.println("prefix = " + prefix);
                     // generate new relative path
                     String newPath = path.substring(initialOffset + prefix.length());
                     // get one relevant HTTP client, may not exist
                     System.out.println("new path = " + newPath);
                     Optional<Record> client = recordList.stream()
-                        .filter(record -> record.getMetadata().getString("api.name") != null)
-                        .filter(record -> record.getMetadata().getString("api.name").equals(prefix))
-                        .findAny(); // simple load balance
+                                                        .filter(record -> record.getMetadata().getString("api.name") !=
+                                                                          null)
+                                                        .filter(record -> record.getMetadata()
+                                                                                .getString("api.name")
+                                                                                .equals(prefix))
+                                                        .findAny(); // simple load balance
 
                     if (client.isPresent()) {
                         System.out.println("Found client for uri: " + path);
-                        Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery,
-                            rec -> rec.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE) && rec.getMetadata().getString("api.name").equals(prefix));
+                        Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery, rec -> rec.getType()
+                                                                                                            .equals(
+                                                                                                                io.vertx.servicediscovery.types.HttpEndpoint.TYPE) &&
+                                                                                                         rec.getMetadata()
+                                                                                                            .getString(
+                                                                                                                "api.name")
+                                                                                                            .equals(
+                                                                                                                prefix));
                         doDispatch(context, settings, newPath, httpClientSingle, future);
                     } else {
                         System.out.println("Client endpoint not found for uri " + path);
@@ -107,28 +116,28 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
      * @param path             relative path
      * @param httpClientSingle relevant HTTP client
      */
-    private void doDispatch(RoutingContext context, JsonObject settings, String path, Single<HttpClient> httpClientSingle, io.vertx.reactivex.core.Future<Object> cbFuture) {
+    private void doDispatch(RoutingContext context, JsonObject settings, String path,
+                            Single<HttpClient> httpClientSingle, io.vertx.reactivex.core.Future<Object> cbFuture) {
         httpClientSingle.subscribe(client -> {
-            HttpClientRequest toReq = client
-                .request(context.request().method(), path, response -> {
-                    response.bodyHandler(body -> {
-                        if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
-                            cbFuture.fail(response.statusCode() + ": " + body.toString());
-                        } else {
-                            HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
-                            response.headers().getDelegate().forEach(header -> {
-                                if (!header.getKey().equals(HttpHeaders.TRANSFER_ENCODING.toString())) {
-                                    toRsp.putHeader(header.getKey(), header.getValue());
-                                }
-                            });
-                            // send response
-                            toRsp.end(body);
-                            client.close();
-                            cbFuture.complete();
-                        }
-                        io.vertx.servicediscovery.ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
-                    });
+            HttpClientRequest toReq = client.request(context.request().method(), path, response -> {
+                response.bodyHandler(body -> {
+                    if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
+                        cbFuture.fail(response.statusCode() + ": " + body.toString());
+                    } else {
+                        HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
+                        response.headers().getDelegate().forEach(header -> {
+                            if (!header.getKey().equals(HttpHeaders.TRANSFER_ENCODING.toString())) {
+                                toRsp.putHeader(header.getKey(), header.getValue());
+                            }
+                        });
+                        // send response
+                        toRsp.end(body);
+                        client.close();
+                        cbFuture.complete();
+                    }
+                    io.vertx.servicediscovery.ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
                 });
+            });
             // set headers
             context.request().headers().getDelegate().forEach(header -> {
                 toReq.putHeader(header.getKey(), header.getValue());
@@ -151,7 +160,8 @@ public class RxRestAPIVerticle extends RxMicroServiceVerticle {
     private io.vertx.reactivex.core.Future<List<Record>> getAllEndpoints() {
         io.vertx.reactivex.core.Future<List<Record>> future = io.vertx.reactivex.core.Future.future();
         discovery.getRecords(record -> record.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE),
-            future.completer());
+                             future.completer());
         return future;
     }
+
 }

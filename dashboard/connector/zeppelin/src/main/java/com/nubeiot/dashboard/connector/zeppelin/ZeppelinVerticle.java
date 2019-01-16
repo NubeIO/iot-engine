@@ -1,15 +1,14 @@
 package com.nubeiot.dashboard.connector.zeppelin;
 
-import com.nubeiot.core.common.RxMicroServiceVerticle;
-import io.reactivex.Single;
-import io.vertx.core.Future;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.json.JsonObject;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.constants.Port;
+
+import io.reactivex.Single;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
@@ -27,34 +26,26 @@ public class ZeppelinVerticle extends RxMicroServiceVerticle {
     private String COOKIE_NAME = "JSESSIONID";
 
     @Override
-    public void start(Future<Void> future) {
-        Future<Void> startFuture = Future.future();
-        super.start(startFuture);
-        startFuture.setHandler(ar -> {
-            if (ar.succeeded()) {
-                client = vertx.createHttpClient(new HttpClientOptions());
-                Router router = Router.router(vertx);
-                // creating body handler
-                router.route().handler(BodyHandler.create());
-                handleRoutes(router);
+    protected Single<String> onStartComplete() {
+        client = vertx.createHttpClient(new HttpClientOptions());
+        Router router = Router.router(vertx);
+        // creating body handler
+        router.route().handler(BodyHandler.create());
+        handleRoutes(router);
 
-                vertx.createHttpServer()
-                     .requestHandler(router)
-                     .rxListen(appConfig.getInteger("http.port", Port.ZEPPELIN_PORT))
-                     .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
-                     .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()))
-                     .flatMap(httpServer -> publishHttp())
-                     .subscribe(record -> future.complete(), future::fail);
-            } else {
-                logger.info("Failure on deployment...");
-                startFuture.fail(ar.cause());
-            }
-        });
+        return vertx.createHttpServer()
+                    .requestHandler(router)
+                    .rxListen(appConfig.getInteger("http.port", Port.ZEPPELIN_PORT))
+                    .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
+                    .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()))
+                    .flatMap(httpServer -> publishHttp())
+                    .map(record -> "Deployed successfully...");
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("zeppelin-api", "0.0.0.0", appConfig.getInteger("http.port", Port.ZEPPELIN_PORT))
-                .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
+        return publishHttpEndpoint("zeppelin-api", "0.0.0.0",
+                                   appConfig.getInteger("http.port", Port.ZEPPELIN_PORT)).doOnError(
+            throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
     private void handleRoutes(Router router) {
@@ -63,22 +54,26 @@ public class ZeppelinVerticle extends RxMicroServiceVerticle {
     }
 
     private void dispatchRequests(RoutingContext context) {
-        HttpClientRequest toReq = client.request(context.request().method(),
-            appConfig.getInteger("server.port"), appConfig.getString("server.host"), context.request().uri(), response -> {
-                response.bodyHandler(body -> {
-                    HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
-                    if (response.statusCode() < 500) {
-                        response.headers().getDelegate().forEach(header -> {
-                            if (!header.getKey().equalsIgnoreCase("Set-Cookie")) {
-                                // Ignore cookies; on login it will send cookie
-                                toRsp.putHeader(header.getKey(), header.getValue());
-                            }
-                        });
-                        body = cookieHandler(response, toRsp, body);
-                    }
-                    toRsp.end(body);
-                });
-            });
+        HttpClientRequest toReq = client.request(context.request().method(), appConfig.getInteger("server.port"),
+                                                 appConfig.getString("server.host"), context.request().uri(),
+                                                 response -> {
+                                                     response.bodyHandler(body -> {
+                                                         HttpServerResponse toRsp = context.response()
+                                                                                           .setStatusCode(
+                                                                                               response.statusCode());
+                                                         if (response.statusCode() < 500) {
+                                                             response.headers().getDelegate().forEach(header -> {
+                                                                 if (!header.getKey().equalsIgnoreCase("Set-Cookie")) {
+                                                                     // Ignore cookies; on login it will send cookie
+                                                                     toRsp.putHeader(header.getKey(),
+                                                                                     header.getValue());
+                                                                 }
+                                                             });
+                                                             body = cookieHandler(response, toRsp, body);
+                                                         }
+                                                         toRsp.end(body);
+                                                     });
+                                                 });
         // set headers
         context.request().headers().getDelegate().forEach(header -> {
             if (header.getKey().equalsIgnoreCase(COOKIE_NAME)) {
@@ -118,4 +113,5 @@ public class ZeppelinVerticle extends RxMicroServiceVerticle {
         }
         return body;
     }
+
 }

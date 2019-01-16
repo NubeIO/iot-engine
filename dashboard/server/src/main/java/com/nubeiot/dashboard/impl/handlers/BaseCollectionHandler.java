@@ -21,6 +21,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
 public class BaseCollectionHandler {
+
     public void handleGetUrl(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient) {
         String collection = customMessage.getHeader().getString("collection");
         String siteId = customMessage.getHeader().getString("Site-Id");
@@ -45,7 +46,6 @@ public class BaseCollectionHandler {
                         message.reply(replyMessage);
                     }, throwable -> handleException(message, throwable));
                 }
-
             } else {
                 handleForbiddenResponse(message);
             }
@@ -72,33 +72,28 @@ public class BaseCollectionHandler {
         }
     }
 
-    private void handlePostDocument(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient, String collection, String siteId) {
+    private void handlePostDocument(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient,
+                                    String collection, String siteId) {
         String id = UUID.randomUUID().toString();
-        mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id))
-            .map(response -> {
-                JsonObject body = (JsonObject) customMessage.getBody();
-                if (response.size() > 0) {
-                    throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
-                }
-                body.put("site_id", siteId);
-                body.put("id", id);
-                return body;
-            })
-            .flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body))
-            .subscribe(buffer -> {
-                CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                    null,
-                    new JsonObject(),
-                    HttpResponseStatus.OK.code());
-                message.reply(replyMessage);
-            }, throwable -> {
-                HttpException exception = (HttpException) throwable;
-                CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                    null,
-                    new JsonObject().put("message", exception.getMessage()),
-                    exception.getStatusCode().code());
-                message.reply(replyMessage);
-            });
+        mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id)).map(response -> {
+            JsonObject body = (JsonObject) customMessage.getBody();
+            if (response.size() > 0) {
+                throw new HttpException(HttpResponseStatus.CONFLICT.code(), "We have already that id value.");
+            }
+            body.put("site_id", siteId);
+            body.put("id", id);
+            return body;
+        }).flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body)).subscribe(buffer -> {
+            CustomMessage<JsonObject> replyMessage = new CustomMessage<>(null, new JsonObject(),
+                                                                         HttpResponseStatus.OK.code());
+            message.reply(replyMessage);
+        }, throwable -> {
+            HttpException exception = (HttpException) throwable;
+            CustomMessage<JsonObject> replyMessage = new CustomMessage<>(null, new JsonObject().put("message",
+                                                                                                    exception.getMessage()),
+                                                                         exception.getStatusCode().code());
+            message.reply(replyMessage);
+        });
     }
 
     public void handlePutUrl(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient) {
@@ -120,32 +115,31 @@ public class BaseCollectionHandler {
         }
     }
 
-    protected void handlePutDocument(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient, String collection, String id, String siteId) {
+    protected void handlePutDocument(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient,
+                                     String collection, String id, String siteId) {
         mongoClient.rxFindOne(collection, new JsonObject().put("site_id", siteId).put("id", id), null)
-            .map(jsonObject -> {
-                JsonObject body = (JsonObject) customMessage.getBody();
-                if (jsonObject != null) {
-                    body.put("_id", jsonObject.getString("_id"));
-                }
-                body.put("site_id", siteId);
-                body.put("id", id);
-                return body;
-            })
-            .flatMap(body -> mongoClient.rxSave(collection, body))
-            .subscribe(buffer -> {
-                CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                    null,
-                    new JsonObject(),
-                    HttpResponseStatus.OK.code());
-                message.reply(replyMessage);
-            }, throwable -> {
-                HttpException exception = (HttpException) throwable;
-                CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                    null,
-                    new JsonObject().put("message", exception.getMessage()),
-                    exception.getStatusCode().code());
-                message.reply(replyMessage);
-            });
+                   .map(jsonObject -> {
+                       JsonObject body = (JsonObject) customMessage.getBody();
+                       if (jsonObject != null) {
+                           body.put("_id", jsonObject.getString("_id"));
+                       }
+                       body.put("site_id", siteId);
+                       body.put("id", id);
+                       return body;
+                   })
+                   .flatMap(body -> mongoClient.rxSave(collection, body))
+                   .subscribe(buffer -> {
+                       CustomMessage<JsonObject> replyMessage = new CustomMessage<>(null, new JsonObject(),
+                                                                                    HttpResponseStatus.OK.code());
+                       message.reply(replyMessage);
+                   }, throwable -> {
+                       HttpException exception = (HttpException) throwable;
+                       CustomMessage<JsonObject> replyMessage = new CustomMessage<>(null,
+                                                                                    new JsonObject().put("message",
+                                                                                                         exception.getMessage()),
+                                                                                    exception.getStatusCode().code());
+                       message.reply(replyMessage);
+                   });
     }
 
     public void handleDeleteUrl(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient) {
@@ -164,15 +158,14 @@ public class BaseCollectionHandler {
         }
     }
 
-    protected void handleDeleteDocument(Message<Object> message, MongoClient mongoClient, String collection, String id, String siteId) {
+    protected void handleDeleteDocument(Message<Object> message, MongoClient mongoClient, String collection, String id,
+                                        String siteId) {
         mongoClient.rxRemoveDocuments(collection, new JsonObject().put("site_id", siteId).put("id", id))
-            .subscribe(buffer -> {
-                CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                    null,
-                    new JsonObject(),
-                    HttpResponseStatus.NO_CONTENT.code());
-                message.reply(replyMessage);
-            }, throwable -> handleException(message, throwable));
+                   .subscribe(buffer -> {
+                       CustomMessage<JsonObject> replyMessage = new CustomMessage<>(null, new JsonObject(),
+                                                                                    HttpResponseStatus.NO_CONTENT.code());
+                       message.reply(replyMessage);
+                   }, throwable -> handleException(message, throwable));
     }
 
     protected JsonArray getSitesIds(CustomMessage customMessage) {
@@ -186,10 +179,10 @@ public class BaseCollectionHandler {
 
     protected void handleException(Message<Object> message, Throwable throwable) {
         HttpException exception = (HttpException) throwable;
-        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-            null,
-            new JsonObject().put("message", exception.getMessage()),
-            exception.getStatusCode().code());
+        CustomMessage<JsonObject> replyMessage = new CustomMessage<>(null, new JsonObject().put("message",
+                                                                                                exception.getMessage()),
+                                                                     exception.getStatusCode().code());
         message.reply(replyMessage);
     }
+
 }

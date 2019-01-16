@@ -7,15 +7,14 @@ import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.constants.Port;
-import com.nubeiot.dashboard.connector.postgresql.controller.RulesController;
 import com.nubeiot.core.common.utils.ErrorCodeException;
 import com.nubeiot.core.common.utils.ErrorHandler;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
-import com.nubeiot.core.common.RxMicroServiceVerticle;
+import com.nubeiot.dashboard.connector.postgresql.controller.RulesController;
 
 import io.reactivex.Single;
-import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.http.HttpServer;
@@ -35,36 +34,31 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
     private RulesController controller;
 
     @Override
-    public void start(Future<Void> future) {
-        Future<Void> startFuture = Future.future();
-        super.start(startFuture);
+    protected Single<String> onStartComplete() {
         logServerDetails();
-        startFuture.setHandler(ar -> {
-            if (ar.succeeded()) {
-                super.start();
-                logServerDetails();
-
-                startWebApp()
-                    .flatMap(httpServer -> publishHttp())
-                    .flatMap(ignored -> PostgreSQLService.create(vertx, appConfig.getJsonObject("pgConfig"))
-                        .doOnSuccess(pgService -> {
-                            ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
-                            binder.setAddress(PostgreSQLService.SERVICE_ADDRESS).register(PostgreSQLService.class, pgService);
-                            logger.info("Service bound to " + binder);
-                        })).flatMap(ignored -> publishMessageSource(PostgreSQLService.SERVICE_NAME, PostgreSQLService.SERVICE_ADDRESS))
-                    .subscribe(record -> future.complete(), future::fail);
-
-                controller = new RulesController(vertx);
-            } else {
-                logger.info("Failure on deployment...");
-                startFuture.fail(ar.cause());
-            }
-        });
+        return startWebApp().flatMap(httpServer -> publishHttp())
+                            .flatMap(ignored -> PostgreSQLService.create(vertx, appConfig.getJsonObject("pgConfig"))
+                                                                 .doOnSuccess(pgService -> {
+                                                                     ServiceBinder binder = new ServiceBinder(
+                                                                         vertx.getDelegate());
+                                                                     binder.setAddress(
+                                                                         PostgreSQLService.SERVICE_ADDRESS)
+                                                                           .register(PostgreSQLService.class,
+                                                                                     pgService);
+                                                                     logger.info("Service bound to " + binder);
+                                                                 }))
+                            .flatMap(ignored -> publishMessageSource(PostgreSQLService.SERVICE_NAME,
+                                                                     PostgreSQLService.SERVICE_ADDRESS))
+                            .map(record -> {
+                                controller = new RulesController(vertx);
+                                return "Deployed Successfully...";
+                            });
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.sql-pg.engine", "0.0.0.0", appConfig.getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
-            .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
+        return publishHttpEndpoint("io.nubespark.sql-pg.engine", "0.0.0.0",
+                                   appConfig.getInteger("http.port", Port.POSTGRESQL_SERVER_PORT)).doOnError(
+            throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
     private Single<HttpServer> startWebApp() {
@@ -78,10 +72,10 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
 
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
-            .requestHandler(router::accept)
-            .rxListen(appConfig.getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
-            .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
-            .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
+                    .requestHandler(router::accept)
+                    .rxListen(appConfig.getInteger("http.port", Port.POSTGRESQL_SERVER_PORT))
+                    .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
+                    .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
 
     private void enginePostgreSQLPostHandler(RoutingContext routingContext) {
@@ -95,24 +89,21 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
             // Return query not specified error
             ErrorHandler.handleError(new ErrorCodeException(NO_QUERY_SPECIFIED), routingContext);
         } else {
-            controller.getPostgreSQLData(query, new JsonObject(routingContext.request().headers().get("settings"))).subscribe(
-                replyJson -> routingContext.response()
-                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(replyJson)),
-                throwable -> ErrorHandler.handleError(throwable, routingContext));
+            controller.getPostgreSQLData(query, new JsonObject(routingContext.request().headers().get("settings")))
+                      .subscribe(replyJson -> routingContext.response()
+                                                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                                            .end(Json.encodePrettily(replyJson)),
+                                 throwable -> ErrorHandler.handleError(throwable, routingContext));
         }
     }
 
     private void handlePageNotFound(RoutingContext routingContext) {
         String uri = routingContext.request().absoluteURI();
         routingContext.response()
-            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-            .setStatusCode(404)
-            .end(Json.encodePrettily(new JsonObject()
-                .put("uri", uri)
-                .put("status", 404)
-                .put("message", "Resource Not Found")
-            ));
+                      .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                      .setStatusCode(404)
+                      .end(Json.encodePrettily(
+                          new JsonObject().put("uri", uri).put("status", 404).put("message", "Resource Not Found")));
     }
 
     // Returns verticle properties in json
@@ -120,12 +111,10 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
         HttpServerResponse response = routingContext.response();
 
         response.putHeader("content-type", "application/json; charset=utf-8")
-            .end(Json.encodePrettily(new JsonObject()
-                .put("name", "postgresql-engine-rest")
-                .put("version", "1.0")
-                .put("vert.x_version", "3.4.1")
-                .put("java_version", "8.0")
-            ));
+                .end(Json.encodePrettily(new JsonObject().put("name", "postgresql-engine-rest")
+                                                         .put("version", "1.0")
+                                                         .put("vert.x_version", "3.4.1")
+                                                         .put("java_version", "8.0")));
     }
 
     private void logServerDetails() {
@@ -141,4 +130,5 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
         logger.info("Current thread loader = " + Thread.currentThread().getContextClassLoader());
         logger.info(PostgreSQLVerticle.class.getClassLoader());
     }
+
 }

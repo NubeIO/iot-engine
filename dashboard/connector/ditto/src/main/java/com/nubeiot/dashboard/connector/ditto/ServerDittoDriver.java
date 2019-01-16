@@ -44,26 +44,15 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
     private HttpClient client;
 
     @Override
-    public void start(Future<Void> future) {
-        Future<Void> startFuture = Future.future();
-        super.start(startFuture);
-        startFuture.setHandler(ar -> {
-            if (ar.succeeded()) {
-                startWebApp()
-                    .flatMap(httpServer -> publishHttp())
-                    .flatMap(ignored -> publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER))
-                    .subscribe(record -> future.complete(), future::fail);
-
-
-                client = vertx.createHttpClient(new HttpClientOptions()
-                    .setVerifyHost(false)
-                    .setTrustAll(true)
-                    .setTcpKeepAlive(true));
-                } else {
-                logger.info("Failure on deployment...");
-                startFuture.fail(ar.cause());
-            }
-        });
+    protected Single<String> onStartComplete() {
+        return startWebApp().flatMap(httpServer -> publishHttp())
+                            .flatMap(ignored -> publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER))
+                            .map(record -> {
+                                client = vertx.createHttpClient(new HttpClientOptions().setVerifyHost(false)
+                                                                                       .setTrustAll(true)
+                                                                                       .setTcpKeepAlive(true));
+                                return "Deployed successfully...";
+                            });
     }
 
     private Single<HttpServer> startWebApp() {
@@ -77,15 +66,18 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
 
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
-            .requestHandler(router::accept)
-            .rxListen(appConfig.getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT))
-            .doOnSuccess(httpServer -> logger.info("Ditto Server Driver started at port: " + httpServer.actualPort()))
-            .doOnError(throwable -> logger.error("Cannot start Ditto Server Driver: " + throwable.getLocalizedMessage()));
+                    .requestHandler(router::accept)
+                    .rxListen(appConfig.getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT))
+                    .doOnSuccess(
+                        httpServer -> logger.info("Ditto Server Driver started at port: " + httpServer.actualPort()))
+                    .doOnError(throwable -> logger.error(
+                        "Cannot start Ditto Server Driver: " + throwable.getLocalizedMessage()));
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.server-ditto-driver", "0.0.0.0", appConfig.getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT))
-            .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
+        return publishHttpEndpoint("io.nubespark.server-ditto-driver", "0.0.0.0",
+                                   appConfig.getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT)).doOnError(
+            throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
     private void handleWebServer(RoutingContext ctx) {
@@ -103,8 +95,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         for (String header : headers.fieldNames()) {
             headerMap.put(header, headers.getString(header));
         }
-        ctx.response()
-            .headers().setAll(new MultiMap(new VertxHttpHeaders().addAll(headerMap)));
+        ctx.response().headers().setAll(new MultiMap(new VertxHttpHeaders().addAll(headerMap)));
         ctx.response().setStatusCode(dittoRes.getInteger("statusCode"));
         byte[] responseBody = dittoRes.getBinary("body");
         if (responseBody != null) {
@@ -123,43 +114,42 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
             ssl = true;
         }
 
-        HttpClientRequest req = client.request(httpMethod,
-            new RequestOptions()
-                .setHost(host)
-                .setPort(port)
-                .setURI(uri)
-                .setSsl(ssl));
+        HttpClientRequest req = client.request(httpMethod, new RequestOptions().setHost(host)
+                                                                               .setPort(port)
+                                                                               .setURI(uri)
+                                                                               .setSsl(ssl));
 
-        req
-            .toFlowable()
-            .subscribe(res -> {
-                logger.info("Proxying response: " + res.statusCode());
-                JsonObject response = new JsonObject();
-                response.put("statusCode", res.statusCode());
-                JsonObject headers = new JsonObject();
-                for (Map.Entry<String, String> entry : res.getDelegate().headers()) {
-                    headers.put(entry.getKey(), entry.getValue());
-                }
-                response.put("headers", headers);
+        req.toFlowable().subscribe(res -> {
+            logger.info("Proxying response: " + res.statusCode());
+            JsonObject response = new JsonObject();
+            response.put("statusCode", res.statusCode());
+            JsonObject headers = new JsonObject();
+            for (Map.Entry<String, String> entry : res.getDelegate().headers()) {
+                headers.put(entry.getKey(), entry.getValue());
+            }
+            response.put("headers", headers);
 
-                Buffer data = new BufferImpl();
-                res.handler(x -> data.appendBytes(x.getDelegate().getBytes()));
-                res.endHandler((v) -> {
-                    response.put("body", data.getBytes());
-                    logger.info("Proxy Response Completed.");
-                    next.handle(Future.succeededFuture(response));
-                });
+            Buffer data = new BufferImpl();
+            res.handler(x -> data.appendBytes(x.getDelegate().getBytes()));
+            res.endHandler((v) -> {
+                response.put("body", data.getBytes());
+                logger.info("Proxy Response Completed.");
+                next.handle(Future.succeededFuture(response));
             });
+        });
 
         req.setChunked(true);
         //Adding ditto authorization
         if (appConfig.getBoolean("ditto-policy")) {
-            req.putHeader(HttpHeaders.AUTHORIZATION.toString(), ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
+            req.putHeader(HttpHeaders.AUTHORIZATION.toString(),
+                          ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
             if (StringUtils.isNotNull(ctx.getBody().toString())) {
                 if (StringUtils.isNull(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
                     // This means we are we are PUTing device value for the first time or going to updated whole data
                     JsonObject body = ctx.getBodyAsJson();
-                    body.put("policyId", Services.POLICY_NAMESPACE_PREFIX + ":" + new JsonObject(ctx.request().headers().getDelegate().get("user")).getString("site_id"));
+                    body.put("policyId", Services.POLICY_NAMESPACE_PREFIX + ":" +
+                                         new JsonObject(ctx.request().headers().getDelegate().get("user")).getString(
+                                             "site_id"));
                     logger.info("Body ::: " + body);
                     req.write(body.toString());
                 } else {
@@ -185,24 +175,19 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
     private void handlePageNotFound(RoutingContext routingContext) {
         String uri = routingContext.request().absoluteURI();
         routingContext.response()
-            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-            .setStatusCode(404)
-            .end(Json.encodePrettily(new JsonObject()
-                .put("uri", uri)
-                .put("status", 404)
-                .put("message", "Resource Not Found")
-            ));
+                      .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                      .setStatusCode(404)
+                      .end(Json.encodePrettily(
+                          new JsonObject().put("uri", uri).put("status", 404).put("message", "Resource Not Found")));
     }
 
     private void indexHandler(RoutingContext routingContext) {
         HttpServerResponse response = routingContext.response();
         response.putHeader("content-type", "application/json; charset=utf-8")
-            .end(Json.encodePrettily(new JsonObject()
-                .put("name", "server-ditto-driver")
-                .put("version", "1.0")
-                .put("vert.x_version", "3.4.1")
-                .put("java_version", "8.0")
-            ));
+                .end(Json.encodePrettily(new JsonObject().put("name", "server-ditto-driver")
+                                                         .put("version", "1.0")
+                                                         .put("vert.x_version", "3.4.1")
+                                                         .put("java_version", "8.0")));
     }
 
 }
