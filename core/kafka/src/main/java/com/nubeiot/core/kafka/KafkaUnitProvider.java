@@ -5,7 +5,7 @@ import com.nubeiot.core.component.UnitProvider;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class KafkaProvider implements UnitProvider<KafkaUnit> {
+public final class KafkaUnitProvider implements UnitProvider<KafkaUnit> {
 
     private final KafkaRouter kafkaRouter;
 

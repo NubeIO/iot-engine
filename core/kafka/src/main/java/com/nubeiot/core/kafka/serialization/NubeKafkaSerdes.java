@@ -28,7 +28,7 @@ public final class NubeKafkaSerdes extends Serdes {
     }
 
     @SuppressWarnings("unchecked")
-    static public <T> Serde<T> serdeFrom(@NonNull Class<T> type) {
+    public static <T> Serde<T> serdeFrom(@NonNull Class<T> type) {
         try {
             if (EventMessage.class.isAssignableFrom(type)) {
                 return (Serde<T>) new EventMessageSerde();

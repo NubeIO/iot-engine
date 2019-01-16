@@ -31,9 +31,13 @@ public abstract class AbstractRestEventApi implements RestEventApi {
         restMetadata.add(metadata);
     }
 
+    protected void addRouter(EventModel eventModel, String api) {
+        addRouter(eventModel, api, null);
+    }
+
     protected void addRouter(EventModel eventModel, String api, String paramName) {
         eventModel.getEvents().forEach(event -> {
-            final HttpMethod httpMethod = httpEventMapping.get(event);
+            HttpMethod httpMethod = httpEventMapping.get(event);
             if (Objects.isNull(httpMethod)) {
                 return;
             }

@@ -9,11 +9,13 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.ResponseContentTypeHandler;
 import io.vertx.ext.web.handler.ResponseTimeHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
+import com.nubeiot.core.http.HttpConfig.CorsOptions;
 import com.nubeiot.core.http.handler.FailureContextHandler;
 import com.nubeiot.core.http.handler.NotFoundContextHandler;
 import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
@@ -63,7 +65,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig> {
     private Router initRouter() {
         try {
             io.vertx.ext.web.Router router = io.vertx.ext.web.Router.router(vertx);
-            HttpConfig.CorsOptions corsOptions = config.getCorsOptions();
+            CorsOptions corsOptions = config.getCorsOptions();
             CorsHandler corsHandler = CorsHandler.create(corsOptions.getAllowedOriginPattern())
                                                  .allowedMethods(corsOptions.getAllowedMethods())
                                                  .allowedHeaders(corsOptions.getAllowedHeaders())
@@ -82,6 +84,11 @@ public final class HttpServer extends UnitVerticle<HttpConfig> {
             initWebSocketRouter(router);
             initHttp2Router(router);
             initRestRouter(router);
+            if (config.isIndex()) {
+                router.route("/index.html")
+                      .produces("text/html")
+                      .handler(StaticHandler.create().setAllowRootFileSystemAccess(false).setIncludeHidden(false));
+            }
             router.route().last().handler(new NotFoundContextHandler());
             return router;
         } catch (NubeException e) {

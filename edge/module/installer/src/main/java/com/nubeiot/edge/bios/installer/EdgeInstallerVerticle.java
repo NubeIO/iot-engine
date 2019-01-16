@@ -14,12 +14,11 @@ import com.nubeiot.eventbus.edge.EdgeEventBus;
 public final class EdgeInstallerVerticle extends EdgeVerticle {
 
     @Override
-    protected EventController registerEventBus(EventController controller) {
-        controller.consume(EdgeEventBus.APP_INSTALLER, new ModuleEventHandler(this, EdgeEventBus.APP_INSTALLER));
-        controller.consume(EdgeEventBus.APP_TRANSACTION,
-                           new TransactionEventHandler(this, EdgeEventBus.APP_TRANSACTION));
-        controller.consume(EdgeEventBus.APP_DEPLOYMENT, new ModuleLoader(vertx));
-        return controller;
+    public void registerEventbus(EventController controller) {
+        controller.register(EdgeEventBus.APP_INSTALLER, new ModuleEventHandler(this, EdgeEventBus.APP_INSTALLER));
+        controller.register(EdgeEventBus.APP_TRANSACTION,
+                            new TransactionEventHandler(this, EdgeEventBus.APP_TRANSACTION));
+        controller.register(EdgeEventBus.APP_DEPLOYMENT, new ModuleLoader(vertx));
     }
 
     @Override

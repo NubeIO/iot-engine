@@ -108,6 +108,16 @@ public final class EventMessage implements Serializable, JsonData {
         return new EventMessage(action, Status.SUCCESS, data);
     }
 
+    public static EventMessage from(@NonNull Status status, @NonNull EventAction action, EventAction prevAction,
+                                    ErrorMessage message) {
+        return new EventMessage(status, action, prevAction, null, null, message);
+    }
+
+    public static EventMessage from(@NonNull Status status, @NonNull EventAction action, EventAction prevAction,
+                                    JsonObject data) {
+        return new EventMessage(action, status, data);
+    }
+
     public static EventMessage from(@NonNull Object object) {
         return JsonData.from(object, EventMessage.class, "Invalid event message format");
     }

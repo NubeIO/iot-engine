@@ -17,6 +17,7 @@ import io.vertx.reactivex.core.AbstractVerticle;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
@@ -25,18 +26,23 @@ import lombok.Getter;
 
 public abstract class ContainerVerticle extends AbstractVerticle implements Container {
 
+    public static final String SHARED_EVENTBUS = "EVENTBUS_CONTROLLER";
     private final Map<Class<? extends Unit>, UnitProvider<? extends Unit>> components = new LinkedHashMap<>();
     private final Map<Class<? extends Unit>, Consumer<? extends Unit>> afterSuccesses = new HashMap<>();
     private final Map<Class<? extends Unit>, String> deployments = new HashMap<>();
     private final Map<String, Object> sharedData = new HashMap<>();
     private final String sharedDataKey = this.getClass().getName();
+
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private EventController eventController;
     @Getter
     protected NubeConfig nubeConfig;
 
     @Override
     public void start() {
         this.nubeConfig = IConfig.from(config(), NubeConfig.class);
+        this.eventController = new EventController(vertx);
+        this.registerEventbus(eventController);
     }
 
     @SuppressWarnings("unchecked")
@@ -44,6 +50,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     public void start(Future<Void> future) {
         this.start();
         this.vertx.sharedData().getLocalMap(sharedDataKey).getDelegate().putAll(sharedData);
+        this.addSharedData(SHARED_EVENTBUS, this.eventController);
         this.startUnits(future);
     }
 
@@ -51,6 +58,9 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     public void stop(Future<Void> future) {
         this.stopUnits(future);
     }
+
+    @Override
+    public void registerEventbus(EventController controller) { }
 
     @Override
     public Container addSharedData(String key, Object data) {

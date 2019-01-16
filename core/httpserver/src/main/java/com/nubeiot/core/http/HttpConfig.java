@@ -3,15 +3,16 @@ package com.nubeiot.core.http;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
-
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ public final class HttpConfig implements IConfig {
     private String host = "0.0.0.0";
     private int port = 8080;
     private boolean enabled = true;
+    private boolean index = false;
     private String rootApi = ApiConstants.ROOT_API_PATH;
     @JsonProperty(value = ServerOptions.NAME)
     private ServerOptions options = (ServerOptions) new ServerOptions().setCompressionSupported(true)

@@ -3,9 +3,6 @@ package com.nubeiot.core.event;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import com.nubeiot.core.exceptions.ErrorMessage;
-import com.nubeiot.core.utils.Strings;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -14,10 +11,14 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.shareddata.Shareable;
 import io.vertx.reactivex.core.Vertx;
+
+import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.utils.Strings;
+
 import lombok.NonNull;
 
 /**
- * Represents {@code Eventbus} controller to {@code send}, {@code publish}, {@code consume} event
+ * Represents {@code Eventbus} controller to {@code send}, {@code publish}, {@code register} event
  *
  * @see EventMessage
  * @see ErrorMessage
@@ -193,26 +194,26 @@ public final class EventController implements Shareable {
     }
 
     /**
-     * Consume event in cluster
+     * Register event consumer
      *
      * @param address Event bus address
      * @param handler Handler when receiving message
      * @see EventHandler
      */
-    public void consume(String address, @NonNull EventHandler handler) {
-        this.consume(address, true, handler);
+    public void register(String address, @NonNull EventHandler handler) {
+        this.register(address, true, handler);
     }
 
     /**
-     * Consume event
+     * Register event consumer
      *
      * @param address Event bus address
-     * @param local   If {@code true}, consume by only local event bus address
+     * @param local   If {@code true}, only register for local event address
      * @param handler Message handler when receive
      * @see EventHandler
-     * @see #consume(String, EventHandler)
+     * @see #register(String, EventHandler)
      */
-    public void consume(String address, boolean local, @NonNull EventHandler handler) {
+    public void register(String address, boolean local, @NonNull EventHandler handler) {
         Strings.requireNotBlank(address);
         if (local) {
             eventBus.localConsumer(address, handler::accept);
@@ -222,14 +223,14 @@ public final class EventController implements Shareable {
     }
 
     /**
-     * Consume event
+     * Register event consumer
      *
      * @param eventModel Event model
      * @param handler    Handler when receiving message
      * @see EventModel
      */
-    public void consume(@NonNull EventModel eventModel, @NonNull EventHandler handler) {
-        this.consume(eventModel.getAddress(), eventModel.isLocal(), handler);
+    public void register(@NonNull EventModel eventModel, @NonNull EventHandler handler) {
+        this.register(eventModel.getAddress(), eventModel.isLocal(), handler);
     }
 
     private void fire(String address, @NonNull EventPattern pattern, @NonNull JsonObject data,

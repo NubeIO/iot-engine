@@ -5,12 +5,12 @@ import java.util.function.Supplier;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaReadStream;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.kafka.supplier.KafkaReaderSupplier;
+import com.nubeiot.core.kafka.supplier.KafkaConsumerProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,11 +21,11 @@ public class MockKafkaConsumer {
     private final JsonObject consumerCfg;
     private final String topic;
     private final Supplier<EventModel> eventModelSupplier;
-    private KafkaReadStream<String, EventMessage> consumer;
+    private KafkaConsumer<String, EventMessage> consumer;
 
     public void start() {
         EventController controller = new EventController(vertx);
-        consumer = KafkaReaderSupplier.create(vertx, consumerCfg, String.class, EventMessage.class);
+        consumer = KafkaConsumerProvider.create(vertx, consumerCfg, String.class, EventMessage.class);
         consumer.handler(record -> {
             System.err.println("CONSUMER Topic: " + record.topic());
             System.err.println(record.value().toJson().encodePrettily());

@@ -27,7 +27,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Functions.Silencer;
 
 import lombok.AccessLevel;
@@ -116,20 +115,21 @@ public final class Reflections {
         }
 
         @SuppressWarnings("unchecked")
-        public static <T> T constantByName(Class<?> clazz, String fieldName) {
-            try {
-                Field field = clazz.getDeclaredField(fieldName);
-                if (hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).test(field)) {
-                    return (T) field.get(null);
-                }
-                return null;
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new NubeException(
-                    Strings.format("Failed to get field constant {0} of {1}", fieldName, clazz.getName()), e);
-            } catch (ClassCastException e) {
-                throw new NubeException(ErrorCode.INVALID_ARGUMENT, "The output type does not match with " + fieldName,
-                                        e);
+        public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,
+                                               Predicate<Field> predicate) {
+            Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+                                                    f -> ReflectionClass.assertDataType(fieldClass, f.getType()));
+            if (Objects.nonNull(predicate)) {
+                filter = filter.and(predicate);
             }
+            return findToStream(clazz, filter).map(field -> {
+                try {
+                    return (T) field.get(null);
+                } catch (IllegalAccessException e) {
+                    throw new NubeException(
+                        Strings.format("Failed to get field constant {0} of {1}", field.getName(), clazz.getName()), e);
+                }
+            }).collect(Collectors.toList());
         }
 
         public static <T> List<T> getFieldValuesByType(@NonNull Object obj, @NonNull Class<T> searchType) {

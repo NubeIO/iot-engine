@@ -1,16 +1,34 @@
 {
   "__app__": {
     "__kafka__": {
+      "__client__": {
+        "bootstrap.servers": [
+          "localhost:9092"
+        ],
+        "client.dns.lookup": "default",
+        "client.id": "",
+        "connections.max.idle.ms": 300000,
+        "metadata.max.age.ms": 300000,
+        "metric.reporters": [],
+        "metrics.num.samples": 2,
+        "metrics.recording.level": "INFO",
+        "metrics.sample.window.ms": 30000,
+        "receive.buffer.bytes": 65536,
+        "reconnect.backoff.max.ms": 1000,
+        "reconnect.backoff.ms": 50,
+        "request.timeout.ms": 120000,
+        "retries": 5,
+        "retry.backoff.ms": 100,
+        "send.buffer.bytes": 131072
+      },
       "__consumer__": {
         "auto.offset.reset": "earliest",
-        "bootstrap.servers": [],
         "client.id": "consumer",
-        "enable.auto.commit": false,
-        "group.id": "nubeio"
+        "enable.auto.commit": true,
+        "group.id": "NubeIO"
       },
       "__producer__": {
         "acks": "1",
-        "bootstrap.servers": [],
         "client.id": "producer",
         "compression.type": "gzip"
       },
@@ -29,6 +47,10 @@
         "ssl.truststore.location": null,
         "ssl.truststore.password": null,
         "ssl.truststore.type": "JKS"
+      },
+      "__topic__": {
+        "cleanup.policy": "delete",
+        "compression.type": "producer"
       }
     }
   }

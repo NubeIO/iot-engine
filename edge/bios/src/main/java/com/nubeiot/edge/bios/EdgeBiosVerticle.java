@@ -24,12 +24,11 @@ public final class EdgeBiosVerticle extends EdgeVerticle {
     }
 
     @Override
-    protected EventController registerEventBus(EventController controller) {
-        controller.consume(EdgeEventBus.BIOS_INSTALLER, new ModuleEventHandler(this, EdgeEventBus.BIOS_INSTALLER));
-        controller.consume(EdgeEventBus.BIOS_TRANSACTION,
-                           new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION));
-        controller.consume(EdgeEventBus.BIOS_DEPLOYMENT, new ModuleLoader(vertx));
-        return controller;
+    public void registerEventbus(EventController controller) {
+        controller.register(EdgeEventBus.BIOS_INSTALLER, new ModuleEventHandler(this, EdgeEventBus.BIOS_INSTALLER));
+        controller.register(EdgeEventBus.BIOS_TRANSACTION,
+                            new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION));
+        controller.register(EdgeEventBus.BIOS_DEPLOYMENT, new ModuleLoader(vertx));
     }
 
     @Override
