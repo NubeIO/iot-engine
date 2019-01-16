@@ -12,6 +12,7 @@ public class SQLUtilsTest {
         Assert.assertTrue(SQLUtils.in("abc", "xyz", "abc"));
         Assert.assertFalse(SQLUtils.in("abc", "xyz", "uvw"));
         Assert.assertFalse(SQLUtils.in(null, "xyz", "uvw"));
+        Assert.assertFalse(SQLUtils.in(null, null, "uvw"));
 
         Assert.assertTrue(SQLUtils.in("abc", true, "Abc"));
         Assert.assertTrue(SQLUtils.in("abc", true, "xyz", "ABC"));

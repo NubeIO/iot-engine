@@ -10,7 +10,6 @@ import java.util.stream.IntStream;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -170,6 +169,10 @@ public final class Strings {
     public static String format(String msgPattern, Object... params) {
         String[] args = Arrays.stream(params).map(String::valueOf).toArray(String[]::new);
         return MessageFormat.format(msgPattern, (Object[]) args);
+    }
+
+    public static boolean isNumeric(String s) {
+        return s != null && s.matches("[-+]?\\d*\\.?\\d+");
     }
 
 }

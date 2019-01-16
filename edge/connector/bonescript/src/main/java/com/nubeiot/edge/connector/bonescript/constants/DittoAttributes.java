@@ -21,7 +21,10 @@ public class DittoAttributes {
     public static String PROPERTIES = "properties";
 
     public static String PRIORITY_ARRAY = "priorityArray";
+    public static String PRIORITY = "priority";
     public static String VALUE = "value";
+    public static String PIN_VALUE = "pinValue";
+    public static String OFFSET = "offset";
     public static String DITTO_ENABLE = "dittoEnable";
     public static String DITTO_HOST = "dittoHost";
     public static String DITTO_HTTP_BASIC = "dittoHttpBasic";
@@ -34,5 +37,14 @@ public class DittoAttributes {
     public static String TS = "ts";
     public static String VAL = "val";
     public static String SIZE = "size";
+    public static String DEFAULT_VALUE = "defaultValue";
+    public static String DITTO = "ditto";
+    public static String ENABLE = "enable";
+    public static String LAST_VALUE = "lastValue";
+    public static String LAST_UPDATED = "lastUpdated";
+    public static String TOLERANCE = "tolerance";
+    public static String KIND = "kind";
+
+    public static String UI1 = "UI1";
 
 }

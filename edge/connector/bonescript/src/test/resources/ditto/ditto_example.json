@@ -1,0 +1,529 @@
+{
+  "thing": {
+    "thingId": "com.nubeio:24053e6e-de84-4e47-9f40-69ef87152634",
+    "policyId": "com.nubeio:24053e6e-de84-4e47-9f40-69ef87152634",
+    "attributes": {
+      "client": "CBA",
+      "country": "Australia",
+      "state": "NSW",
+      "region": "Sydney",
+      "site": "Caringbah - Controller 2",
+      "ip": "123.209.77.6"
+    },
+    "features": {
+      "alerts": {
+        "properties": {}
+      },
+      "settings": {
+        "properties": {
+          "edgeLoop": 200,
+          "dittoEnable": false,
+          "dittoHost": "",
+          "dittoHttpBasic": ""
+        }
+      },
+      "schedules": {
+        "properties": {
+          "weekly": {
+            "1e98bf61-1032-46f2-bab0-da934f9fdadd": {
+              "id": "1e98bf61-1032-46f2-bab0-da934f9fdadd",
+              "name": "AC Schedule",
+              "value": "1",
+              "color": "",
+              "days": [
+                "monday",
+                "wednesday",
+                "tuesday",
+                "friday",
+                "thursday"
+              ],
+              "start": "07:30",
+              "end": "18:01"
+            }
+          },
+          "events": {}
+        }
+      },
+      "histories": {
+        "properties": {}
+      },
+      "commands": {
+        "properties": {}
+      },
+      "users": {},
+      "points": {
+        "properties": {
+          "UI1": {
+            "name": "UI1",
+            "type": "10k thermistor",
+            "scale": "0:10",
+            "precision": 3,
+            "offset": 0,
+            "value": 26.016,
+            "pinValue": 0.5135531135531135,
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "periodic",
+              "schedule": "0 */15 * * * *",
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "tolerance": 0.1,
+              "lastValue": 26.016,
+              "lastUpdated": 1547402924259
+            }
+          },
+          "UI2": {
+            "name": "UI2",
+            "type": "10k thermistor",
+            "scale": "0:10",
+            "precision": 3,
+            "offset": 0,
+            "value": 26.131,
+            "pinValue": 0.5123321123321123,
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "periodic",
+              "schedule": "0 */15 * * * *",
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "tolerance": 0.1,
+              "lastValue": 26.131,
+              "lastUpdated": 1547406369528
+            }
+          },
+          "DI1": {
+            "name": "DI1",
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "lastValue": 0,
+              "lastUpdated": 1547190062832
+            }
+          },
+          "DI2": {
+            "name": "DI2",
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "lastValue": 0,
+              "lastUpdated": 1547190062856
+            }
+          },
+          "DI3": {
+            "name": "DI3",
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "lastValue": 0,
+              "lastUpdated": 1547193331112
+            }
+          },
+          "DO1": {
+            "name": "DO1",
+            "value": 0,
+            "pinValue": 0,
+            "priority": 16,
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": 0
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "lastValue": 0,
+              "lastUpdated": 1547190062264
+            }
+          },
+          "DO2": {
+            "name": "DO2",
+            "value": 0,
+            "pinValue": 0,
+            "priority": 16,
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": 0
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "lastValue": 0,
+              "lastUpdated": 1547190063307
+            }
+          },
+          "DO3": {
+            "name": "DO3",
+            "value": 0,
+            "pinValue": 0,
+            "priority": 16,
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": 0
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "lastValue": 0,
+              "lastUpdated": 1547066953682
+            }
+          },
+          "DO4": {
+            "name": "DO4",
+            "value": 0,
+            "pinValue": 0,
+            "priority": 16,
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": 0
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "lastValue": 0,
+              "lastUpdated": 1543971226266
+            }
+          },
+          "DO5": {
+            "name": "DO5",
+            "value": 0,
+            "pinValue": 0,
+            "priority": 16,
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": 0
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": true,
+              "lastValue": 0,
+              "lastUpdated": 1547190062268
+            }
+          },
+          "SETPOINT": {
+            "name": "SETPOINT",
+            "precision": 3,
+            "offset": 0,
+            "value": 22.5,
+            "priorityArray": {
+              "1": 22.5,
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": 22.25
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "priority": 1,
+            "ditto": {
+              "enable": true,
+              "lastValue": 22.5,
+              "lastUpdated": 1543971248654
+            }
+          },
+          "DEADBAND": {
+            "name": "DEADBAND",
+            "precision": 3,
+            "offset": 0,
+            "value": 1,
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": 1
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "priority": 16,
+            "ditto": {
+              "enable": true
+            }
+          },
+          "STAGE_DEADBAND": {
+            "name": "STAGE_DEADBAND",
+            "precision": 3,
+            "offset": 0,
+            "value": 0.5,
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": 0.5
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "priority": 16,
+            "ditto": {
+              "enable": true
+            }
+          },
+          "FAN_ENABLE_OVERRIDE": {
+            "name": "FAN_ENABLE_OVERRIDE",
+            "precision": 3,
+            "offset": 0,
+            "value": true,
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": true
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "priority": 16,
+            "ditto": {
+              "enable": true
+            }
+          },
+          "TEF_AOM_COMMAND": {
+            "name": "TEF_AOM_COMMAND",
+            "precision": 3,
+            "offset": 0,
+            "value": "AUTO",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "AUTO"
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "priority": 16,
+            "ditto": {
+              "enable": true,
+              "lastValue": "AUTO",
+              "lastUpdated": 1545263217077
+            }
+          }
+        }
+      }
+    }
+  }
+}

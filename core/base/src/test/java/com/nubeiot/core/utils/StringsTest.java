@@ -120,4 +120,14 @@ public class StringsTest extends TestBase {
         assertEquals("hello world 12345 true", Strings.format("hello {0} {1} {2}", "world", 12345, true));
     }
 
+    @Test
+    public void testIsNumeric() {
+        assertTrue(Strings.isNumeric("12.34"));
+        assertTrue(Strings.isNumeric("+12.34"));
+        assertTrue(Strings.isNumeric("-12.34"));
+        assertFalse(Strings.isNumeric(null));
+        assertFalse(Strings.isNumeric(""));
+        assertFalse(Strings.isNumeric("abc"));
+    }
+
 }

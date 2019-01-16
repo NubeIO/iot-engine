@@ -29,6 +29,8 @@ public class BoneScriptVerticle extends ContainerVerticle {
     private BoneScriptEntityHandler entityHandler;
     @Getter
     private EventController eventController;
+    @Getter
+    MultiThreadDittoDB multiThreadDittoDB;
 
     @Override
     public void start() {
@@ -51,7 +53,7 @@ public class BoneScriptVerticle extends ContainerVerticle {
         this.entityHandler = (BoneScriptEntityHandler) component.getEntityHandler();
 
         DittoDBUtils.getDittoData(this.entityHandler).subscribe(db -> {
-            MultiThreadDittoDB multiThreadDittoDB = new MultiThreadDittoDB(entityHandler);
+            multiThreadDittoDB = new MultiThreadDittoDB(entityHandler);
             // Initializing Ditto for future use
             Ditto.init(db);
             logger.info("Ditto Initialization is successfully done.");

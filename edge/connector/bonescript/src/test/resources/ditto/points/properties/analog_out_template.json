@@ -1,8 +1,8 @@
 {
-  "name": "<pin>",
-  "value": 0,
-  "pinValue": 0,
-  "priority": "null",
+  "name": "DEADBAND",
+  "precision": 3,
+  "offset": 1,
+  "value": 1,
   "priorityArray": {
     "1": "null",
     "2": "null",
@@ -19,17 +19,19 @@
     "13": "null",
     "14": "null",
     "15": "null",
-    "16": "null"
+    "16": 1
   },
-  "kind": "Bool",
+  "kind": "Number",
   "unit": "null",
-  "tags": [],
+  "tags": [
+  ],
   "historySettings": {
     "type": "cov",
     "tolerance": 0,
     "size": 672
   },
+  "priority": 16,
   "ditto": {
-    "enable": false
+    "enable": true
   }
 }

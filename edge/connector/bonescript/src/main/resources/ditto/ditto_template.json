@@ -1,49 +1,49 @@
 {
-    "thing": {
-        "thingId": "com.nubeio:<uuid>",
-        "policyId": "com.nubeio:<uuid>",
-        "attributes": {
-            "client": "client",
-            "country": "country",
-            "state": "state",
-            "region": "region",
-            "site": "site"
-        },
-        "features": {
-            "alerts": {
-                "properties": {
-                }
-            },
-            "commands": {
-                "properties": {
-                }
-            },
-            "histories": {
-                "properties": {}
-            },
-            "points": {
-                "properties": {
-                }
-            },
-            "schedules": {
-                "properties": {
-                    "weekly": {},
-                    "events": {}
-                }
-            },
-            "settings": {
-                "properties": {
-                    "edgeLoop": 200,
-                    "dittoEnable": false,
-                    "dittoHost": null,
-                    "dittoHttpBasic": null
-                }
-            },
-            "users": {
-                "admin": {
-                    "role": "admin"
-                }
-            }
+  "thing": {
+    "thingId": "com.nubeio:<uuid>",
+    "policyId": "com.nubeio:<uuid>",
+    "attributes": {
+      "client": "client",
+      "country": "country",
+      "state": "state",
+      "region": "region",
+      "site": "site"
+    },
+    "features": {
+      "alerts": {
+        "properties": {
         }
+      },
+      "commands": {
+        "properties": {
+        }
+      },
+      "histories": {
+        "properties": {}
+      },
+      "points": {
+        "properties": {
+        }
+      },
+      "schedules": {
+        "properties": {
+          "weekly": {},
+          "events": {}
+        }
+      },
+      "settings": {
+        "properties": {
+          "edgeLoop": 200,
+          "dittoEnable": false,
+          "dittoHost": null,
+          "dittoHttpBasic": null
+        }
+      },
+      "users": {
+        "admin": {
+          "role": "admin"
+        }
+      }
     }
+  }
 }

@@ -1,21 +1,21 @@
 {
-    "name": "<pin>",
-    "type": "0-10dc",
-    "scale": "0:10",
-    "precision": 3,
-    "offset": 0,
-    "value": 0,
-    "pinValue": 0,
-    "kind": "Number",
-    "unit": "null",
-    "tags": [],
-    "historySettings": {
-        "type": "periodic",
-      "schedule": "0 */15 * * * ?",
-        "size": 672
-    },
-    "ditto": {
-        "enable": false,
-        "tolerance": 0.1
-    }
+  "name": "<pin>",
+  "type": "0-10dc",
+  "scale": "0:10",
+  "precision": 3,
+  "offset": 0,
+  "value": 0,
+  "pinValue": 0,
+  "kind": "Number",
+  "unit": "null",
+  "tags": [],
+  "historySettings": {
+    "type": "periodic",
+    "schedule": "0 */15 * * * ?",
+    "size": 672
+  },
+  "ditto": {
+    "enable": false,
+    "tolerance": 0.1
+  }
 }
