@@ -2,6 +2,15 @@ package com.nubeiot.core;
 
 import java.util.Objects;
 
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.eventbus.EventBusOptions;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.spi.cluster.ClusterManager;
+
 import com.nubeiot.core.cluster.ClusterNodeListener;
 import com.nubeiot.core.cluster.ClusterRegistry;
 import com.nubeiot.core.cluster.ClusterType;
@@ -11,14 +20,6 @@ import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.Strings;
-
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
-import io.vertx.core.eventbus.EventBusOptions;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public final class NubeLauncher extends io.vertx.core.Launcher {
 
@@ -57,9 +58,9 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     public void afterStartingVertx(Vertx vertx) {
         if (vertx.isClustered()) {
             String addr = config.getSystemConfig().getClusterConfig().getListenerAddress();
+            ClusterManager clusterManager = this.options.getClusterManager();
             if (Strings.isNotBlank(addr)) {
-                this.options.getClusterManager()
-                            .nodeListener(new ClusterNodeListener(clusterDelegate, new EventController(vertx), addr));
+                clusterManager.nodeListener(new ClusterNodeListener(clusterDelegate, new EventController(vertx), addr));
             }
         }
         super.afterStartingVertx(vertx);
@@ -91,11 +92,14 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
 
     @Override
     public void afterStoppingVertx() {
-        this.options.getClusterManager().leave(event -> {
-            if (event.failed()) {
-                logger.error("Failed to leave cluster", event.cause());
-            }
-        });
+        ClusterManager clusterManager = this.options.getClusterManager();
+        if (Objects.nonNull(clusterManager)) {
+            clusterManager.leave(event -> {
+                if (event.failed()) {
+                    logger.error("Failed to leave cluster", event.cause());
+                }
+            });
+        }
         super.afterStoppingVertx();
     }
 

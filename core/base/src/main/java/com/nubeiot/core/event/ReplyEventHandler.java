@@ -3,22 +3,23 @@ package com.nubeiot.core.event;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import com.nubeiot.core.exceptions.HiddenException;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.exceptions.ServiceException;
-import com.nubeiot.core.utils.Strings;
-
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import lombok.AllArgsConstructor;
+
+import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.exceptions.HiddenException;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.ServiceException;
+import com.nubeiot.core.utils.Strings;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+//TODO More optimize
 @RequiredArgsConstructor
-@AllArgsConstructor
 public class ReplyEventHandler implements Consumer<AsyncResult<Message<Object>>> {
 
     private static final Logger logger = LoggerFactory.getLogger(ReplyEventHandler.class);
@@ -30,7 +31,26 @@ public class ReplyEventHandler implements Consumer<AsyncResult<Message<Object>>>
     private final String address;
     @NonNull
     private final Consumer<EventMessage> redirect;
+    private Consumer<ErrorMessage> errorHandler;
     private Consumer<Throwable> errorConsumer;
+
+    public ReplyEventHandler(@NonNull String system, @NonNull EventAction action, @NonNull String address,
+                             @NonNull Consumer<EventMessage> redirect, Consumer<Throwable> errorConsumer) {
+        this.system = system;
+        this.action = action;
+        this.address = address;
+        this.redirect = redirect;
+        this.errorConsumer = errorConsumer;
+    }
+
+    public ReplyEventHandler(@NonNull String system, @NonNull String address, @NonNull EventAction action,
+                             @NonNull Consumer<EventMessage> redirect, Consumer<ErrorMessage> errorHandler) {
+        this.system = system;
+        this.action = action;
+        this.address = address;
+        this.redirect = redirect;
+        this.errorHandler = errorHandler;
+    }
 
     @Override
     public void accept(AsyncResult<Message<Object>> reply) {
@@ -48,13 +68,19 @@ public class ReplyEventHandler implements Consumer<AsyncResult<Message<Object>>>
 
     private void handleReplySuccess(EventMessage eventMessage) {
         logger.info("{}::Backend eventbus response: {}", system, eventMessage.toJson().encode());
-        redirect.accept(eventMessage);
+        if (eventMessage.isError() && Objects.nonNull(errorHandler)) {
+            errorHandler.accept(eventMessage.getError());
+        } else {
+            redirect.accept(eventMessage);
+        }
     }
 
     private void handleReplyError(Throwable throwable) {
-        logger.error("{}::Backend eventbus response error", system, throwable);
+        logger.error("{}::Backend eventbus response error", throwable, system);
         if (Objects.nonNull(errorConsumer)) {
             errorConsumer.accept(throwable);
+        } else if (Objects.nonNull(errorHandler)) {
+            errorHandler.accept(ErrorMessage.parse(throwable));
         } else {
             redirect.accept(EventMessage.error(EventAction.RETURN, throwable));
         }

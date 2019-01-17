@@ -35,8 +35,8 @@ public final class HttpServer extends UnitVerticle<HttpConfig> {
 
     @Override
     public void start(Future<Void> future) {
+        logger.info("Starting HTTP Server...");
         super.start();
-        logger.info("HTTP Server configuration: {}", config.toJson().encode());
         HttpServerOptions options = new HttpServerOptions(config.getOptions()).setHost(config.getHost())
                                                                               .setPort(config.getPort());
         this.httpServer = vertx.createHttpServer(options).requestHandler(initRouter()).listen(event -> {
@@ -85,8 +85,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig> {
             initHttp2Router(router);
             initRestRouter(router);
             if (config.isIndex()) {
-                router.route("/index.html")
-                      .produces("text/html")
+                router.route("/index/*")
                       .handler(StaticHandler.create().setAllowRootFileSystemAccess(false).setIncludeHidden(false));
             }
             router.route().last().handler(new NotFoundContextHandler());
