@@ -65,8 +65,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     }
 
     @Override
-    public void start(io.vertx.core.Future<Void> future) {
-        super.start();
+    protected Single<String> onStartComplete() {
         mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo").getJsonObject("config"));
         eventBus = getVertx().eventBus();
 
@@ -75,7 +74,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
 
         logger.info("Config on HttpWebServer is:");
         logger.info(Json.encodePrettily(config()));
-        startWebApp()
+        return startWebApp()
             .flatMap(httpServer -> publishHttp())
             .flatMap(ignored -> Single.create(source -> getVertx().deployVerticle(MultiTenantVerticle.class.getName(), new DeploymentOptions().setConfig(config()), deployResult -> {
                 // Deploy succeed
@@ -109,8 +108,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
                     source.onError(deployResult.cause());
                     deployResult.cause().printStackTrace();
                 }
-            })))
-            .subscribe(ignored -> future.complete(), future::fail);
+            })));
     }
 
     private Single<HttpServer> startWebApp() {
@@ -281,6 +279,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             .put("method", ctx.request().method())
             .put("user", ctx.user().principal())
             .put("Site-Id", ctx.request().headers().get("Site-Id"))
+            .put("host", ctx.request().host())
             .put("collection", collection);
         JsonObject body;
         if (StringUtils.isNull(ctx.getBody().toString())) {
@@ -319,7 +318,7 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
     private void handleBasicAuth(RoutingContext ctx, String authorization) {
         if (authorization != null && authorization.startsWith("Basic")) {
             authorization = authorization.substring("Basic ".length());
-            byte decodedAuthorization[] = Base64.getDecoder().decode(authorization);
+            byte[] decodedAuthorization = Base64.getDecoder().decode(authorization);
             String basicAuthString = new String(decodedAuthorization, StandardCharsets.UTF_8);
             String username = basicAuthString.split(":")[0];
             String password = basicAuthString.split(":")[1];

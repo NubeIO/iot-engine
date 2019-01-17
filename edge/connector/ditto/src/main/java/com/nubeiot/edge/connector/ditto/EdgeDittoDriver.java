@@ -12,7 +12,6 @@ import com.nubeiot.core.common.utils.Runner;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
 
 import io.reactivex.Single;
-import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
@@ -30,10 +29,9 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
 
 /**
- * This EdgeDittoDriver resides on Edge Devices, and have following functionalities:
- * 1. Can PUT some events on NodeRED (Currently we have no any use cases).
- * 1.1. ServerDittoDriver can PUT some events to NodeRED
- * 1.2. Other micro-services on Edge Device can communicate to EdgeDittoDriver for PUTing some events
+ * This EdgeDittoDriver resides on Edge Devices, and have following functionalities: 1. Can PUT some events on NodeRED
+ * (Currently we have no any use cases). 1.1. ServerDittoDriver can PUT some events to NodeRED 1.2. Other micro-services
+ * on Edge Device can communicate to EdgeDittoDriver for PUTing some events
  * <p>
  * 2. CURD operation request from EdgeDittoDriver to ServerDittoDriver
  */
@@ -49,8 +47,7 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
     }
 
     @Override
-    public void start(Future<Void> startFuture) {
-        super.start();
+    protected Single<String> onStartComplete() {
         String nodeRedHost = config().getString("nodered.host", "localhost");
         Integer nodeRedPort = config().getInteger("nodered.port", 1880);
         logger.info("NodeRED Host: " + nodeRedHost);
@@ -59,45 +56,38 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
         HttpClient client = vertx.createHttpClient(new HttpClientOptions());
 
         // From Edge Devices to NodeRED
-        vertx.eventBus().<JsonObject>consumer(EDGE_DITTO_DRIVER)
-            .toFlowable()
-            .subscribe(message -> {
-                JsonObject request = message.body();
-                logger.info("Received request from server... ");
-                HttpClientRequest req = client.request(HttpMethod.PUT,
-                    nodeRedPort,
-                    nodeRedHost,
-                    "/device/manager",
-                    res -> {
-                        JsonObject response = new JsonObject();
-                        response.put("statusCode", res.statusCode());
-                        JsonObject headers = new JsonObject();
-                        for (Map.Entry<String, String> entry : res.headers().getDelegate().entries()) {
-                            headers.put(entry.getKey(), entry.getValue());
-                        }
-                        response.put("headers", headers);
-                        res.handler(data -> response.put("body", data.getDelegate().getBytes()));
-                        res.endHandler((v) -> {
-                            logger.info("Got response from NodeRED. Sending it to server.");
-                            message.reply(response);
-                        });
-                    });
-                req.setChunked(true);
-                // Adding ditto authorization
-                req.write(Buffer.buffer(Json.encodePrettily(request)).toString());
-
-                req.end();
-                logger.info("Requesting NodeRED to handleEvent the request from server...");
+        vertx.eventBus().<JsonObject>consumer(EDGE_DITTO_DRIVER).toFlowable().subscribe(message -> {
+            JsonObject request = message.body();
+            logger.info("Received request from server... ");
+            HttpClientRequest req = client.request(HttpMethod.PUT, nodeRedPort, nodeRedHost, "/device/manager", res -> {
+                JsonObject response = new JsonObject();
+                response.put("statusCode", res.statusCode());
+                JsonObject headers = new JsonObject();
+                for (Map.Entry<String, String> entry : res.headers().getDelegate().entries()) {
+                    headers.put(entry.getKey(), entry.getValue());
+                }
+                response.put("headers", headers);
+                res.handler(data -> response.put("body", data.getDelegate().getBytes()));
+                res.endHandler((v) -> {
+                    logger.info("Got response from NodeRED. Sending it to server.");
+                    message.reply(response);
+                });
             });
+            req.setChunked(true);
+            // Adding ditto authorization
+            req.write(Buffer.buffer(Json.encodePrettily(request)).toString());
 
-        this.startWebApp()
-            .flatMap(httpServer -> publishHttp())
-            .subscribe(record -> startFuture.complete(), startFuture::fail);
+            req.end();
+            logger.info("Requesting NodeRED to handleEvent the request from server...");
+        });
+
+        return this.startWebApp().flatMap(httpServer -> publishHttp()).map(record -> "Deployed successfully...");
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.edge-ditto-driver", "0.0.0.0", config().getInteger("http.port", Port.EDGE_DITTO_DRIVER_PORT))
-            .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
+        return publishHttpEndpoint("io.nubespark.edge-ditto-driver", "0.0.0.0",
+                                   config().getInteger("http.port", Port.EDGE_DITTO_DRIVER_PORT)).doOnError(
+            throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
     private Single<HttpServer> startWebApp() {
@@ -111,10 +101,12 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
 
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
-            .requestHandler(router::accept)
-            .rxListen(config().getInteger("http.port", Port.EDGE_DITTO_DRIVER_PORT))
-            .doOnSuccess(httpServer -> logger.info("Ditto Edge Driver started at port: " + httpServer.actualPort()))
-            .doOnError(throwable -> logger.error("Cannot start Ditto Edge Driver: " + throwable.getLocalizedMessage()));
+                    .requestHandler(router::accept)
+                    .rxListen(config().getInteger("http.port", Port.EDGE_DITTO_DRIVER_PORT))
+                    .doOnSuccess(
+                        httpServer -> logger.info("Ditto Edge Driver started at port: " + httpServer.actualPort()))
+                    .doOnError(throwable -> logger.error(
+                        "Cannot start Ditto Edge Driver: " + throwable.getLocalizedMessage()));
     }
 
     private void handleWebServer(RoutingContext ctx) {
@@ -149,13 +141,12 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
                 ctx.request().response().end();
             } else {
                 // TODO: 5/12/18 Identify cases where request fails and handleEvent accordingly
-                ctx.request().response()
-                    .setStatusCode(500)
-                    .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(new JsonObject()
-                        .put("message", "Internal Server Error")
-                        .put("error", handler.cause().getMessage())
-                    ));
+                ctx.request()
+                   .response()
+                   .setStatusCode(500)
+                   .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                   .end(Json.encodePrettily(new JsonObject().put("message", "Internal Server Error")
+                                                            .put("error", handler.cause().getMessage())));
             }
             logger.info(" After sending response...");
         });
@@ -165,26 +156,20 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
     private void handlePageNotFound(RoutingContext routingContext) {
         String uri = routingContext.request().absoluteURI();
         routingContext.response()
-            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-            .setStatusCode(404)
-            .end(Json.encodePrettily(new JsonObject()
-                .put("uri", uri)
-                .put("status", 404)
-                .put("message", "Resource Not Found")
-            ));
+                      .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                      .setStatusCode(404)
+                      .end(Json.encodePrettily(
+                          new JsonObject().put("uri", uri).put("status", 404).put("message", "Resource Not Found")));
     }
 
     private void indexHandler(RoutingContext routingContext) {
         HttpServerResponse response = routingContext.response();
         response.putHeader("content-type", "application/json; charset=utf-8")
-            .end(Json.encodePrettily(new JsonObject()
-                .put("name", "edge-ditto-driver")
-                .put("version", "1.0")
-                .put("vert.x_version", "3.4.1")
-                .put("java_version", "8.0")
-            ));
+                .end(Json.encodePrettily(new JsonObject().put("name", "edge-ditto-driver")
+                                                         .put("version", "1.0")
+                                                         .put("vert.x_version", "3.4.1")
+                                                         .put("java_version", "8.0")));
     }
-
 
     private String getDeviceAddress() {
         for (HazelcastInstance instance : Hazelcast.getAllHazelcastInstances()) {
@@ -193,4 +178,5 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
         }
         return null;
     }
+
 }

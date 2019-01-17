@@ -17,6 +17,7 @@
     }
   },
   "__app__": {
+    "__micro__": {},
     "http.port": 8088,
     "http.host": "0.0.0.0",
     "api.name": "ditto",

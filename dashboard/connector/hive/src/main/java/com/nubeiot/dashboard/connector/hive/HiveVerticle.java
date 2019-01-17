@@ -15,7 +15,6 @@ import com.nubeiot.core.common.utils.response.ResponseUtils;
 import com.nubeiot.dashboard.connector.hive.controller.RulesController;
 
 import io.reactivex.Single;
-import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.http.HttpServer;
@@ -36,26 +35,30 @@ public class HiveVerticle extends RxMicroServiceVerticle {
     private RulesController controller;
 
     @Override
-    public void start(Future<Void> startFuture) {
-        super.start();
+    protected Single<String> onStartComplete() {
+
         logServerDetails();
-
-        startWebApp()
-            .flatMap(httpServer -> publishHttp())
-            .flatMap(ignored -> HiveService.create(vertx, appConfig.getJsonObject("hiveConfig"))
-                .doOnSuccess(hiveService -> {
-                    ServiceBinder binder = new ServiceBinder(vertx.getDelegate());
-                    binder.setAddress(HiveService.SERVICE_ADDRESS).register(HiveService.class, hiveService);
-                    logger.info("Service bound to " + binder);
-                })).flatMap(ignored -> publishMessageSource(HiveService.SERVICE_NAME, HiveService.SERVICE_ADDRESS))
-            .subscribe(record -> startFuture.complete(), startFuture::fail);
-
-        controller = new RulesController(vertx);
+        return startWebApp().flatMap(httpServer -> publishHttp())
+                            .flatMap(ignored -> HiveService.create(vertx, appConfig.getJsonObject("hiveConfig"))
+                                                           .doOnSuccess(hiveService -> {
+                                                               ServiceBinder binder = new ServiceBinder(
+                                                                   vertx.getDelegate());
+                                                               binder.setAddress(HiveService.SERVICE_ADDRESS)
+                                                                     .register(HiveService.class, hiveService);
+                                                               logger.info("Service bound to " + binder);
+                                                           }))
+                            .flatMap(
+                                ignored -> publishMessageSource(HiveService.SERVICE_NAME, HiveService.SERVICE_ADDRESS))
+                            .map(record -> {
+                                controller = new RulesController(vertx);
+                                return "Deployed successfully...";
+                            });
     }
 
     private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.sql-hive.engine", "0.0.0.0", appConfig.getInteger("http.port", Port.HIVE_SERVER_PORT))
-            .doOnError(throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
+        return publishHttpEndpoint("io.nubespark.sql-hive.engine", "0.0.0.0",
+                                   appConfig.getInteger("http.port", Port.HIVE_SERVER_PORT)).doOnError(
+            throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
     private Single<HttpServer> startWebApp() {
@@ -71,21 +74,20 @@ public class HiveVerticle extends RxMicroServiceVerticle {
 
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
-            .requestHandler(router::accept)
-            .rxListen(appConfig.getInteger("http.port", Port.HIVE_SERVER_PORT))
-            .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
-            .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
+                    .requestHandler(router::accept)
+                    .rxListen(appConfig.getInteger("http.port", Port.HIVE_SERVER_PORT))
+                    .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
+                    .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }
-
 
     private void tagGetHandler(RoutingContext routingContext) {
         HttpServerRequest request = routingContext.request();
         String id = request.getParam("id");
-        controller.getOne(id).subscribe(
-            json -> routingContext.response()
-                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                .end(Json.encodePrettily(json)),
-            throwable -> ErrorHandler.handleError(throwable, routingContext));
+        controller.getOne(id)
+                  .subscribe(json -> routingContext.response()
+                                                   .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                                   .end(Json.encodePrettily(json)),
+                             throwable -> ErrorHandler.handleError(throwable, routingContext));
     }
 
     private void engineHivePostHandler(RoutingContext routingContext) {
@@ -99,25 +101,21 @@ public class HiveVerticle extends RxMicroServiceVerticle {
             // Return query not specified error
             ErrorHandler.handleError(new ErrorCodeException(NO_QUERY_SPECIFIED), routingContext);
         } else {
-            controller.getFiloData(query).subscribe(
-                replyJson -> routingContext.response()
-                    .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                    .end(Json.encodePrettily(replyJson)),
-                throwable -> ErrorHandler.handleError(throwable, routingContext));
+            controller.getFiloData(query)
+                      .subscribe(replyJson -> routingContext.response()
+                                                            .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                                            .end(Json.encodePrettily(replyJson)),
+                                 throwable -> ErrorHandler.handleError(throwable, routingContext));
         }
-
     }
 
     private void handlePageNotFound(RoutingContext routingContext) {
         String uri = routingContext.request().absoluteURI();
         routingContext.response()
-            .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-            .setStatusCode(404)
-            .end(Json.encodePrettily(new JsonObject()
-                .put("uri", uri)
-                .put("status", 404)
-                .put("message", "Resource Not Found")
-            ));
+                      .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
+                      .setStatusCode(404)
+                      .end(Json.encodePrettily(
+                          new JsonObject().put("uri", uri).put("status", 404).put("message", "Resource Not Found")));
     }
 
     // Returns verticle properties in json
@@ -125,12 +123,10 @@ public class HiveVerticle extends RxMicroServiceVerticle {
         HttpServerResponse response = routingContext.response();
 
         response.putHeader("content-type", "application/json; charset=utf-8")
-            .end(Json.encodePrettily(new JsonObject()
-                .put("name", "hive-engine-rest")
-                .put("version", "1.0")
-                .put("vert.x_version", "3.4.1")
-                .put("java_version", "8.0")
-            ));
+                .end(Json.encodePrettily(new JsonObject().put("name", "hive-engine-rest")
+                                                         .put("version", "1.0")
+                                                         .put("vert.x_version", "3.4.1")
+                                                         .put("java_version", "8.0")));
     }
 
     private void logServerDetails() {
@@ -146,4 +142,5 @@ public class HiveVerticle extends RxMicroServiceVerticle {
         logger.info("Current thread loader = " + Thread.currentThread().getContextClassLoader());
         logger.info(HiveVerticle.class.getClassLoader());
     }
+
 }

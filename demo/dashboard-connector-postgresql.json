@@ -17,6 +17,7 @@
     }
   },
   "__app__": {
+    "__micro__": {},
     "http.port": 8090,
     "api.name": "sql-pg",
     "pgConfig": {

@@ -17,6 +17,7 @@
     }
   },
   "__app__": {
+    "__micro__": {},
     "http.port": 8085,
     "keycloak": {
       "realm": "nube_iot",
