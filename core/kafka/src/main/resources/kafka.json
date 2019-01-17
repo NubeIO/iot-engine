@@ -6,7 +6,6 @@
           "localhost:9092"
         ],
         "client.dns.lookup": "default",
-        "client.id": "",
         "connections.max.idle.ms": 300000,
         "metadata.max.age.ms": 300000,
         "metric.reporters": [],
@@ -23,13 +22,11 @@
       },
       "__consumer__": {
         "auto.offset.reset": "earliest",
-        "client.id": "consumer",
         "enable.auto.commit": true,
         "group.id": "NubeIO"
       },
       "__producer__": {
         "acks": "1",
-        "client.id": "producer",
         "compression.type": "gzip"
       },
       "__security__": {

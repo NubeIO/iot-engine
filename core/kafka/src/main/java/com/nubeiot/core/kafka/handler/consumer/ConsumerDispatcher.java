@@ -33,6 +33,7 @@ public final class ConsumerDispatcher<K, V> implements Consumer<KafkaConsumerRec
         return handlersByTopic.keySet();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void accept(KafkaConsumerRecord<K, V> record) {
         KafkaConsumerHandler consumerHandler = handlersByTopic.get(record.topic());

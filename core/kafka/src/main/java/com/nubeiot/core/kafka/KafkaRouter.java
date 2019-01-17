@@ -50,7 +50,7 @@ public final class KafkaRouter {
         ClientTechId existedId = techIdMap.get(topic);
         if (Objects.nonNull(existedId) && !existedId.equals(techId)) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, Strings.format(
-                "Topic {1} is already registered with another pair classes: {2} - {3}", topic,
+                "Topic {0} is already registered with another pair classes: {1} - {2}", topic,
                 existedId.getKeyClass().getName(), existedId.getValueClass().getName()));
         }
         techIdMap.put(topic, techId);

@@ -9,10 +9,8 @@ import com.nubeiot.core.kafka.serialization.NubeKafkaSerdes;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.ToString;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(onlyExplicitlyIncluded = true)
 class ClientTechId<K, V> {
 
     @Getter
@@ -24,7 +22,6 @@ class ClientTechId<K, V> {
     @Getter
     private final Serde<V> valueSerdes;
     @EqualsAndHashCode.Include
-    @ToString.Include
     private String id;
 
     ClientTechId(@NonNull Class<K> keyClass, Serde<K> keySerdes, @NonNull Class<V> valueClass, Serde<V> valueSerdes) {
@@ -37,6 +34,11 @@ class ClientTechId<K, V> {
 
     private static String kafkaClientIdentifier(@NonNull Class keyClass, @NonNull Class valueClass) {
         return keyClass.getName() + "::" + valueClass.getName();
+    }
+
+    @Override
+    public String toString() {
+        return id;
     }
 
 }

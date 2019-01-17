@@ -33,6 +33,7 @@ public class DashboardKafkaDemo extends ContainerVerticle {
 
     @Override
     public void start() {
+        logger.info("DASHBOARD KAFKA DEMO");
         super.start();
         this.addProvider(new HttpServerProvider(initHttpRouter()))
             .addProvider(new KafkaUnitProvider(initKafkaRouter()), this::startConsumer);

@@ -211,7 +211,13 @@ public final class KafkaConfig implements IConfig {
             m.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, OffsetResetStrategy.EARLIEST.name().toLowerCase());
             m.put(ConsumerConfig.GROUP_ID_CONFIG, "NubeIO");
             m.put(ConsumerConfig.CLIENT_ID_CONFIG, "consumer-" + UUID.randomUUID().toString());
+            m.computeIfPresent(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,
+                               (s, o) -> convertListClass((List) o));
             DEFAULT = Collections.unmodifiableMap(m);
+        }
+
+        private static Object convertListClass(List o) {
+            return o.stream().map(v -> ((Class) v).getName()).collect(Collectors.toList());
         }
 
         ConsumerCfg() { this.putAll(DEFAULT); }
@@ -244,6 +250,7 @@ public final class KafkaConfig implements IConfig {
             m.put(ProducerConfig.ACKS_CONFIG, "1");
             m.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
             m.put(ProducerConfig.CLIENT_ID_CONFIG, "producer-" + UUID.randomUUID().toString());
+            m.computeIfPresent(ProducerConfig.PARTITIONER_CLASS_CONFIG, (s, o) -> ((Class) o).getName());
             DEFAULT = Collections.unmodifiableMap(m);
         }
 

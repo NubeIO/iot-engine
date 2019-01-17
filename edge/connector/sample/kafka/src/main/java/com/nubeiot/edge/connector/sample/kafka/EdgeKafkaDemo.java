@@ -9,7 +9,7 @@ import com.nubeiot.core.kafka.KafkaRouter;
 import com.nubeiot.core.kafka.KafkaUnit;
 import com.nubeiot.core.kafka.KafkaUnitProvider;
 
-public class EdgeKafkaDemo extends ContainerVerticle {
+public final class EdgeKafkaDemo extends ContainerVerticle {
 
     @Override
     public void start() {
@@ -22,8 +22,12 @@ public class EdgeKafkaDemo extends ContainerVerticle {
     }
 
     private void startProducer(KafkaUnit kafkaUnit) {
+        logger.info("Starting Producer Service...");
         KafkaProducerService producerService = kafkaUnit.getProducerService();
-        vertx.setPeriodic(3000, id -> producerService.publish("GPIO", this.deploymentID(), UUID.randomUUID()));
+        vertx.setPeriodic(3000, id -> {
+            logger.info("Sending data...");
+            producerService.publish("GPIO", this.deploymentID(), UUID.randomUUID());
+        });
     }
 
 }

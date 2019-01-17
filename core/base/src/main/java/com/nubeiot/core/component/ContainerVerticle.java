@@ -26,7 +26,6 @@ import lombok.Getter;
 
 public abstract class ContainerVerticle extends AbstractVerticle implements Container {
 
-    public static final String SHARED_EVENTBUS = "EVENTBUS_CONTROLLER";
     private final Map<Class<? extends Unit>, UnitProvider<? extends Unit>> components = new LinkedHashMap<>();
     private final Map<Class<? extends Unit>, Consumer<? extends Unit>> afterSuccesses = new HashMap<>();
     private final Map<Class<? extends Unit>, String> deployments = new HashMap<>();
@@ -34,7 +33,8 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final String sharedDataKey = this.getClass().getName();
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private EventController eventController;
+    @Getter
+    protected EventController eventController;
     @Getter
     protected NubeConfig nubeConfig;
 
@@ -43,6 +43,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
         this.nubeConfig = IConfig.from(config(), NubeConfig.class);
         this.eventController = new EventController(vertx);
         this.registerEventbus(eventController);
+        this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController);
     }
 
     @SuppressWarnings("unchecked")
@@ -50,7 +51,6 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     public void start(Future<Void> future) {
         this.start();
         this.vertx.sharedData().getLocalMap(sharedDataKey).getDelegate().putAll(sharedData);
-        this.addSharedData(SHARED_EVENTBUS, this.eventController);
         this.startUnits(future);
     }
 
@@ -91,7 +91,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
             return vertx.rxDeployVerticle(unit, options)
                         .subscribe(deployId -> succeed(unit, deployId), throwable -> fail(future, unit, throwable));
         }).count().subscribe(c -> {
-            logger.info("Deployed {} verticle successfully", c);
+            logger.info("Deploying {} verticle(s)...", c);
             future.complete();
         }, future::fail);
     }
@@ -120,7 +120,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     @SuppressWarnings("unchecked")
     private void succeed(Unit unit, String deployId) {
-        logger.info("Deployed {} successful with {}", unit.getClass(), deployId);
+        logger.info("Deployed Verticle '{}' successful with ID '{}'", unit.getClass().getName(), deployId);
         deployments.put(unit.getClass(), deployId);
         Consumer<Unit> consumer = (Consumer<Unit>) this.afterSuccesses.get(unit.getClass());
         if (Objects.nonNull(consumer)) {

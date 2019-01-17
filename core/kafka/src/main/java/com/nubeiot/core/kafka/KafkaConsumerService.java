@@ -14,7 +14,6 @@ import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 import com.nubeiot.core.kafka.KafkaConfig.ConsumerCfg;
 import com.nubeiot.core.kafka.handler.consumer.ConsumerDispatcher;
-import com.nubeiot.core.kafka.handler.consumer.ConsumerDispatcher.Builder;
 import com.nubeiot.core.kafka.handler.consumer.KafkaBroadcaster;
 import com.nubeiot.core.kafka.handler.consumer.KafkaConsumerHandler;
 import com.nubeiot.core.kafka.supplier.KafkaConsumerProvider;
@@ -26,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class KafkaConsumerService {
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaProducerService.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerService.class);
 
     private final Vertx vertx;
     private final ConsumerCfg config;
@@ -51,34 +50,41 @@ public final class KafkaConsumerService {
                                         Map<ClientTechId, Set<KafkaEventMetadata>> consumerEvents) {
         Map<ClientTechId, KafkaConsumer> temp = new HashMap<>();
         techIdMap.forEach((topic, techId) -> consumers.put(topic, temp.computeIfAbsent(techId, this::create)));
-        consumerEvents.forEach((clientId, metadata) -> registerHandler(temp.get(clientId), sharedDataFunc, metadata));
+        consumerEvents.forEach((techId, metadata) -> registerHandler(temp.get(techId), sharedDataFunc, metadata));
+        logger.debug("Registered {} kind of Kafka Consumer", temp.size());
         return this;
     }
 
     private <K, V> void registerHandler(KafkaConsumer<K, V> consumer, Function<String, Object> sharedDataFunc,
                                         Set<KafkaEventMetadata> identicalTechIdEvents) {
         ConsumerDispatcher<K, V> dispatcher = createDispatcher(sharedDataFunc, identicalTechIdEvents);
-        consumer.handler(dispatcher::accept).exceptionHandler(t -> logger.error("Error occurs in Kafka Consumer", t));
-        consumer.subscribe(dispatcher.topics());
+        consumer.handler(dispatcher::accept).subscribe(dispatcher.topics());
     }
 
     private <K, V> KafkaConsumer<K, V> create(ClientTechId techId) {
         return KafkaConsumerProvider.create(vertx, config, techId.getKeySerdes().deserializer(),
-                                            techId.getValueSerdes().deserializer());
+                                            techId.getValueSerdes().deserializer())
+                                    .exceptionHandler(
+                                        t -> logger.error("Error occurs in Kafka Consumer with techId {}", t, techId));
     }
 
     private <K, V> ConsumerDispatcher<K, V> createDispatcher(Function<String, Object> sharedDataFunc,
                                                              Set<KafkaEventMetadata> identicalTechIdEvents) {
-        Builder<K, V> builder = ConsumerDispatcher.builder();
-        identicalTechIdEvents.forEach(
-            event -> builder.handler(event.getTopic(), createConsumerHandler(sharedDataFunc, event)));
+        ConsumerDispatcher.Builder<K, V> builder = ConsumerDispatcher.builder();
+        identicalTechIdEvents.forEach(event -> {
+            KafkaConsumerHandler consumerHandler = createConsumerHandler(sharedDataFunc, event);
+            builder.handler(event.getTopic(), consumerHandler);
+            logger.info("Registering Kafka Consumer | Topic: {} | Kind: {} | Handler: {} | Transformer: {}",
+                        event.getTopic(), consumerHandler.getClass().getName(), event.getTechId().toString(),
+                        consumerHandler.transformer().getClass().getName());
+        });
         return builder.build();
     }
 
     private KafkaConsumerHandler createConsumerHandler(Function<String, Object> sharedFunc,
                                                        KafkaEventMetadata metadata) {
-        return new KafkaBroadcaster(sharedFunc, metadata.getEventModel()).registerTransformer(
-            metadata.getTransformer());
+        return new KafkaBroadcaster(metadata.getEventModel()).registerTransformer(metadata.getTransformer())
+                                                             .registerSharedData(sharedFunc);
     }
 
 }

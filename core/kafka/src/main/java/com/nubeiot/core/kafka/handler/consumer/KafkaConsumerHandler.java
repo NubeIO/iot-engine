@@ -1,12 +1,10 @@
 package com.nubeiot.core.kafka.handler.consumer;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import com.nubeiot.core.component.SharedDataDelegate;
 
 /**
  * Record handler by {@code Kafka topic} after receiving data from {@code Kafka Consumer} then transform to appropriate
@@ -14,28 +12,39 @@ import lombok.RequiredArgsConstructor;
  *
  * @param <K> Type of {@code KafkaConsumerRecord} key
  * @param <V> Type of {@code KafkaConsumerRecord} value
- * @param <R> Data type after transform {@code KafkaConsumerRecord}
+ * @param <T> Type of {@code KafkaConsumerRecordTransformer}
+ * @param <R> Type of transformer result
  * @see KafkaConsumerRecord
  * @see KafkaConsumerRecordTransformer
  * @see ConsumerDispatcher
+ * @see SharedDataDelegate
  */
-@RequiredArgsConstructor
-public abstract class KafkaConsumerHandler<K, V, R, T extends KafkaConsumerRecordTransformer<K, V, R>>
-    implements Consumer<KafkaConsumerRecord<K, V>> {
+public interface KafkaConsumerHandler<K, V, T extends KafkaConsumerRecordTransformer<K, V, R>, R>
+    extends Consumer<KafkaConsumerRecord<K, V>>, SharedDataDelegate {
 
-    @NonNull
-    protected final Function<String, Object> sharedDataFunc;
+    /**
+     * System will register it automatically. You don't need call it directly
+     *
+     * @param transformer Given transformer
+     * @return a reference to this, so the API can be used fluently
+     */
+    KafkaConsumerHandler registerTransformer(T transformer);
+
+    /**
+     * Handler data after transforming from {@code KafkaConsumerRecord}
+     *
+     * @param result Result after transforming
+     */
+    void execute(R result);
+
+    /**
+     * @return transformer
+     */
+    T transformer();
 
     @Override
-    public final void accept(KafkaConsumerRecord<K, V> record) {
+    default void accept(KafkaConsumerRecord<K, V> record) {
         execute(transformer().apply(record));
     }
-
-    protected abstract void execute(R result);
-
-    @NonNull
-    protected abstract T transformer();
-
-    public abstract KafkaConsumerHandler registerTransformer(T transformer);
 
 }

@@ -4,6 +4,7 @@ import org.apache.kafka.common.serialization.Serde;
 
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.kafka.handler.consumer.KafkaBroadcasterTransformer;
+import com.nubeiot.core.kafka.handler.producer.KafkaProducerHandler;
 import com.nubeiot.core.kafka.serialization.NubeKafkaSerdes;
 
 import lombok.AccessLevel;
@@ -32,6 +33,7 @@ public final class KafkaEventMetadata<K, V> {
     private final KafkaClientType type;
     private final EventModel eventModel;
     private final KafkaBroadcasterTransformer<K, V> transformer;
+    private final KafkaProducerHandler producerHandler;
     @NonNull
     private final ClientTechId<K, V> techId;
 
@@ -72,31 +74,44 @@ public final class KafkaEventMetadata<K, V> {
                                                            KafkaBroadcasterTransformer<K, V> transformer,
                                                            @NonNull Class<K> keyClass, Serde<K> keySerdes,
                                                            @NonNull Class<V> valueClass, Serde<V> valueSerdes) {
-        return new KafkaEventMetadata<>(topic, KafkaClientType.CONSUMER, model, transformer,
+        return new KafkaEventMetadata<>(topic, KafkaClientType.CONSUMER, model, transformer, null,
                                         new ClientTechId<>(keyClass, keySerdes, valueClass, valueSerdes));
     }
 
     public static <K, V> KafkaEventMetadata<K, V> producer(@NonNull String topic, @NonNull Class<K> keyClass,
                                                            @NonNull Class<V> valueClass) {
-        return producer(topic, keyClass, null, valueClass, null);
+        return producer(topic, keyClass, valueClass, null);
+    }
+
+    public static <K, V> KafkaEventMetadata<K, V> producer(@NonNull String topic, @NonNull Class<K> keyClass,
+                                                           @NonNull Class<V> valueClass,
+                                                           KafkaProducerHandler producerHandler) {
+        return producer(topic, keyClass, null, valueClass, null, producerHandler);
+    }
+
+    public static <K, V> KafkaEventMetadata<K, V> producer(@NonNull String topic, @NonNull Class<K> keyClass,
+                                                           Serde<K> keySerdes, @NonNull Class<V> valueClass,
+                                                           Serde<V> valueSerdes) {
+        return producer(topic, keyClass, keySerdes, valueClass, valueSerdes, null);
     }
 
     /**
-     * @param topic       Kafka Topic
-     * @param keyClass    {@code Kafka Producer record} key class
-     * @param keySerdes   {@code Kafka Producer record} key serdes
-     * @param valueClass  {@code Kafka Producer record} value class
-     * @param valueSerdes {@code Kafka Producer record} value  serdes
-     * @param <K>         Type of {@code Kafka Producer record} key
-     * @param <V>         Type of {@code Kafka Producer record} value
+     * @param topic           Kafka Topic
+     * @param keyClass        {@code Kafka Producer record} key class
+     * @param keySerdes       {@code Kafka Producer record} key serdes
+     * @param valueClass      {@code Kafka Producer record} value class
+     * @param valueSerdes     {@code Kafka Producer record} value  serdes
+     * @param producerHandler {@code Kafka Producer handler} after sending {@code Kafka record}
+     * @param <K>             Type of {@code Kafka Producer record} key
+     * @param <V>             Type of {@code Kafka Producer record} value
      * @return KafkaEventMetadata represents for Producer Record
      * @see Serde
      * @see NubeKafkaSerdes
      */
-    public static <K, V> KafkaEventMetadata<K, V> producer(@NonNull String topic, @NonNull Class<K> keyClass,
-                                                           Serde<K> keySerdes, @NonNull Class<V> valueClass,
-                                                           Serde<V> valueSerdes) {
-        return new KafkaEventMetadata<>(topic, KafkaClientType.PRODUCER, null, null,
+    public static <K, V> KafkaEventMetadata<K, V> producer(String topic, Class<K> keyClass, Serde<K> keySerdes,
+                                                           Class<V> valueClass, Serde<V> valueSerdes,
+                                                           KafkaProducerHandler producerHandler) {
+        return new KafkaEventMetadata<>(topic, KafkaClientType.PRODUCER, null, null, producerHandler,
                                         new ClientTechId<>(keyClass, keySerdes, valueClass, valueSerdes));
     }
 

@@ -34,10 +34,11 @@ public final class KafkaUnit extends UnitVerticle<KafkaConfig> {
     public String configFile() { return "kafka.json"; }
 
     @Override
-    public void start(Future<Void> startFuture) throws Exception {
+    public void start() {
+        logger.info("Starting Kafka Unit...");
         super.start();
-        this.producerService = KafkaProducerService.create(vertx, this.config.getProducerConfig(), router);
-        this.consumerService = KafkaConsumerService.create(vertx, this.config.getConsumerConfig(), router,
+        this.producerService = KafkaProducerService.create(vertx, config.getProducerConfig(), router);
+        this.consumerService = KafkaConsumerService.create(vertx, config.getConsumerConfig(), router,
                                                            this::getSharedData);
     }
 
@@ -47,17 +48,18 @@ public final class KafkaUnit extends UnitVerticle<KafkaConfig> {
         List<Completable> completables = new ArrayList<>();
         consumerService.consumers()
                        .parallelStream()
-                       .forEach(c -> c.close(event -> close(completables, (AsyncResult) event, "consumer")));
+                       .forEach(
+                           c -> c.close(event -> close(completables, (AsyncResult) event, KafkaClientType.CONSUMER)));
         producerService.producers()
                        .parallelStream()
-                       .forEach(p -> p.close(DEFAULT_CLOSE_TIMEOUT_MS,
-                                             event -> close(completables, (AsyncResult) event, "producer")));
+                       .forEach(p -> p.close(DEFAULT_CLOSE_TIMEOUT_MS, event -> close(completables, (AsyncResult) event,
+                                                                                      KafkaClientType.PRODUCER)));
         Completable.merge(completables).subscribe(stopFuture::complete);
     }
 
-    private void close(List<Completable> completables, AsyncResult event, String type) {
+    private void close(List<Completable> completables, AsyncResult event, KafkaClientType type) {
         if (event.failed()) {
-            logger.error("Failed serialize close {}", event.cause(), type);
+            logger.error("Failed when close Kafka {}", event.cause(), type);
         }
         completables.add(Completable.complete());
     }

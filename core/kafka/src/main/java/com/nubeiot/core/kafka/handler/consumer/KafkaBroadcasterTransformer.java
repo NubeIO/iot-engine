@@ -20,6 +20,8 @@ import com.nubeiot.core.kafka.handler.KafkaRecord;
  */
 public class KafkaBroadcasterTransformer<K, V> implements KafkaConsumerRecordTransformer<K, V, EventMessage> {
 
+    public static final KafkaBroadcasterTransformer DEFAULT = new KafkaBroadcasterTransformer();
+
     @Override
     public EventMessage apply(KafkaConsumerRecord<K, V> record) {
         EventMessage msg = KafkaHeaderConverter.apply(record.record().headers());

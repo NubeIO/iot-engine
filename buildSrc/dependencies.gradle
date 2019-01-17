@@ -2,6 +2,10 @@ def versions = [
     vertx   : "3.6.0",
     lombok  : "1.18.4",
     jackson : "2.9.8",
+    logs    : [
+        slf4j  : "1.7.25",
+        logback: "1.2.3"
+    ],
     database: [
         jooq     : "3.11.8",
         jooqVertx: "4.0.0",
@@ -19,9 +23,9 @@ ext.versions = versions
 
 ext.deps = [
     lombok  : "org.projectlombok:lombok:$versions.lombok",
-    log     : [
-        slf4j  : "org.slf4j:slf4j-api:1.7.25",
-        logback: "ch.qos.logback:logback-classic:1.2.3"
+    logs    : [
+        slf4j  : "org.slf4j:slf4j-api:$versions.logs.slf4j",
+        logback: "ch.qos.logback:logback-classic:$versions.logs.logback"
     ],
     vertx   : [
         core   : "io.vertx:vertx-core:$versions.vertx",

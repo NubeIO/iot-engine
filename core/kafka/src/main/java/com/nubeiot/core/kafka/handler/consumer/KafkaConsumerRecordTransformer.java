@@ -20,6 +20,9 @@ public interface KafkaConsumerRecordTransformer<K, V, R> extends Function<KafkaC
     @Override
     R apply(KafkaConsumerRecord<K, V> consumerRecord);
 
+    KafkaConsumerRecordTransformer DEFAULT = new RecordToJson<>();
+
+
     class RecordToJson<K, V> implements KafkaConsumerRecordTransformer<K, V, JsonObject> {
 
         @Override
