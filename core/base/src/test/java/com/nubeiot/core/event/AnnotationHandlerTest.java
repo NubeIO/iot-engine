@@ -49,8 +49,7 @@ public class AnnotationHandlerTest {
 
     @Test(expected = NubeException.class)
     public void test_data_is_null() {
-        JsonData data = null;
-        MH.get().execute(EventMessage.initial(EventAction.GET_LIST, data));
+        MH.get().execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR, "Invalid status"));
     }
 
     @Test(expected = NubeException.class)

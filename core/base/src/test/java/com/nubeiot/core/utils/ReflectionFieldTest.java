@@ -7,7 +7,6 @@ import java.util.stream.Stream;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
 import com.nubeiot.core.utils.mock.MockChild;
 import com.nubeiot.core.utils.mock.MockReflection;
@@ -52,9 +51,9 @@ public class ReflectionFieldTest {
         Assert.assertNull(constantByName);
     }
 
-    @Test(expected = NubeException.class)
+    @Test
     public void test_field_not_found() {
-        ReflectionField.constantByName(MockChild.class, "f6");
+        Assert.assertNull(ReflectionField.constantByName(MockChild.class, "f6"));
     }
 
     // @Test(expected = NubeException.class)

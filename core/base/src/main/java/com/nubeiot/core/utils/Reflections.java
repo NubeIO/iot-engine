@@ -115,6 +115,13 @@ public final class Reflections {
         }
 
         @SuppressWarnings("unchecked")
+        public static <T> T constantByName(@NonNull Class<?> clazz, String name) {
+            Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+                                                    f -> f.getName().equals(Strings.requireNotBlank(name)));
+            return (T) findToStream(clazz, filter).map(field -> getConstant(clazz, field)).findFirst().orElse(null);
+        }
+
+        @SuppressWarnings("unchecked")
         public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,
                                                Predicate<Field> predicate) {
             Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
@@ -122,14 +129,18 @@ public final class Reflections {
             if (Objects.nonNull(predicate)) {
                 filter = filter.and(predicate);
             }
-            return findToStream(clazz, filter).map(field -> {
-                try {
-                    return (T) field.get(null);
-                } catch (IllegalAccessException e) {
-                    throw new NubeException(
-                        Strings.format("Failed to get field constant {0} of {1}", field.getName(), clazz.getName()), e);
-                }
-            }).collect(Collectors.toList());
+            return (List<T>) findToStream(clazz, filter).map(field -> getConstant(clazz, field))
+                                                        .collect(Collectors.toList());
+        }
+
+        @SuppressWarnings("unchecked")
+        private static <T> T getConstant(@NonNull Class<?> clazz, Field field) {
+            try {
+                return (T) field.get(null);
+            } catch (IllegalAccessException | ClassCastException e) {
+                throw new NubeException(
+                    Strings.format("Failed to get field constant {0} of {1}", field.getName(), clazz.getName()), e);
+            }
         }
 
         public static <T> List<T> getFieldValuesByType(@NonNull Object obj, @NonNull Class<T> searchType) {
