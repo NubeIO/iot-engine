@@ -119,12 +119,9 @@ final class AnnotationHandler<T extends EventHandler> {
         return Functions.and(Reflections.hasModifiers(Modifier.PUBLIC), Reflections.notModifiers(Modifier.STATIC),
                              Reflections.hasAnnotation(EventContractor.class), method -> {
                 EventContractor contractor = method.getAnnotation(EventContractor.class);
-                //checking return type in annotation and method declaration
-                if (ReflectionClass.assertDataType(method.getReturnType(), Void.class) ||
-                    !ReflectionClass.assertDataType(method.getReturnType(), contractor.returnType())) {
-                    return false;
-                }
-                return Stream.of(contractor.action()).anyMatch(eventType -> action == eventType);
+                return !ReflectionClass.assertDataType(method.getReturnType(), Void.class) &&
+                       ReflectionClass.assertDataType(method.getReturnType(), contractor.returnType()) &&
+                       Stream.of(contractor.action()).anyMatch(eventType -> action == eventType);
             });
     }
 
