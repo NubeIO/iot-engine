@@ -1,4 +1,4 @@
-package com.nubeiot.core.kafka;
+package com.nubeiot.core.kafka.service;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
@@ -13,52 +14,51 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.kafka.ClientTechId;
 import com.nubeiot.core.kafka.KafkaConfig.ProducerCfg;
+import com.nubeiot.core.kafka.KafkaEventMetadata;
+import com.nubeiot.core.kafka.handler.KafkaErrorHandler;
 import com.nubeiot.core.kafka.handler.producer.KafkaProducerHandler;
-import com.nubeiot.core.kafka.handler.producer.LogKafkaProducerHandler;
 import com.nubeiot.core.kafka.supplier.KafkaProducerSupplier;
-import com.nubeiot.core.utils.DateTimes;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 @SuppressWarnings("unchecked")
-@RequiredArgsConstructor
-public final class KafkaProducerService {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+final class ProducerService implements KafkaProducerService {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaProducerService.class);
 
     private final Vertx vertx;
     private final ProducerCfg config;
     private final Map<String, ClientTechId> techIdMap;
+    private final Map<ClientTechId, KafkaErrorHandler> errorHandlers;
     private final Map<String, KafkaProducer> producers = new HashMap<>();
     private final Map<String, KafkaProducerHandler> handlers = new HashMap<>();
-
-    static KafkaProducerService create(Vertx vertx, ProducerCfg config, KafkaRouter router) {
-        return new KafkaProducerService(vertx, config, router.getProducerTechId()).create(router.getProducerEvents());
-    }
 
     public <K, V> KafkaProducer<K, V> producer(String topic) {
         return producers.get(topic);
     }
 
-    Collection<KafkaProducer> producers() {
+    public Collection<KafkaProducer> producers() {
         return Collections.unmodifiableCollection(producers.values());
     }
 
-    public <V> void publish(String topic, V value) {
-        this.publish(topic, null, null, value);
-    }
-
-    public <K, V> void publish(String topic, K key, V value) {
-        this.publish(topic, null, key, value);
-    }
-
-    public <K, V> void publish(String topic, Integer partition, K key, V value) {
-        validate(topic, key, value).write(
-            KafkaProducerRecord.create(topic, key, value, DateTimes.now().toInstant().toEpochMilli(), partition),
-            handlers.get(topic));
+    @Override
+    public <K, V> void publish(EventMessage message, String topic, Integer partition, K key, V value,
+                               Map<String, Object> headers) {
+        KafkaProducer producer = validate(topic, key, value);
+        KafkaProducerHandler handler = handlers.get(topic);
+        KafkaProducerRecord<K, V> record = handler.transformer().apply(message, topic, partition, key, value, null);
+        logger.info("Kafka producer sending data...");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Kafka producer record: {}", record.toString());
+        }
+        producer.write(record, handler);
     }
 
     private <K, V> KafkaProducer validate(String topic, K key, V value) {
@@ -79,26 +79,29 @@ public final class KafkaProducerService {
         return producers.get(topic);
     }
 
-    private KafkaProducerService create(Set<KafkaEventMetadata> producerEvents) {
+    ProducerService create(Function<String, Object> sharedDataFunc, Set<KafkaEventMetadata> producerEvents) {
         Map<ClientTechId, KafkaProducer> temp = new HashMap<>();
         producerEvents.forEach(event -> {
-            KafkaProducerHandler producerHandler = Objects.isNull(event.getProducerHandler())
-                                                   ? LogKafkaProducerHandler.DEFAULT
-                                                   : event.getProducerHandler();
+            KafkaProducerHandler handler = Objects.isNull(event.getProducerHandler())
+                                           ? KafkaProducerHandler.DEFAULT
+                                           : event.getProducerHandler();
+            handler.registerTransformer(event.getProducerTransformer()).registerSharedData(sharedDataFunc);
             this.producers.put(event.getTopic(), temp.computeIfAbsent(event.getTechId(), this::create));
-            this.handlers.put(event.getTopic(), producerHandler);
-            logger.info("Registering Kafka Producer | Topic: {} | Kind: {} | Handler: {}", event.getTopic(),
-                        event.getTechId(), producerHandler.getClass().getName());
+            this.handlers.put(event.getTopic(), handler);
+            logger.info("Registering Kafka Producer | Topic: {} | Kind: {} | Handler: {} | Transformer: {}",
+                        event.getTopic(), event.getTechId(), handler.getClass().getName(),
+                        handler.transformer().getClass().getName());
         });
         logger.debug("Registered {} kind of Kafka Producer", temp.size());
         return this;
     }
 
     private KafkaProducer create(ClientTechId techId) {
-        return KafkaProducerSupplier.create(vertx, config, techId.getKeySerdes().serializer(),
-                                            techId.getValueSerdes().serializer())
-                                    .exceptionHandler(
-                                        t -> logger.error("Error occurs in Kafka Producer with techId {}", t, techId));
+        KafkaProducer producer = KafkaProducerSupplier.create(vertx, config, techId.getKeySerdes().serializer(),
+                                                              techId.getValueSerdes().serializer());
+        return producer.exceptionHandler(
+            t -> errorHandlers.getOrDefault(techId, KafkaErrorHandler.PRODUCER_ERROR_HANDLER)
+                              .accept(techId, config.getClientId(), (Throwable) t));
     }
 
 }

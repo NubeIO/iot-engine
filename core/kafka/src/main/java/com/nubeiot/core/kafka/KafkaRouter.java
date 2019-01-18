@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.kafka.handler.KafkaErrorHandler;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
@@ -18,7 +19,7 @@ import lombok.NonNull;
 /**
  * Register metadata to init Kafka client that lives in the end of application lifetime
  */
-@Getter(AccessLevel.PACKAGE)
+@Getter(AccessLevel.PUBLIC)
 public final class KafkaRouter {
 
     private Map<String, ClientTechId> consumerTechId = new HashMap<>();
@@ -26,6 +27,9 @@ public final class KafkaRouter {
 
     private Map<String, ClientTechId> producerTechId = new HashMap<>();
     private Set<KafkaEventMetadata> producerEvents = new HashSet<>();
+
+    private Map<ClientTechId, KafkaErrorHandler> consumerExceptionHandler = new HashMap<>();
+    private Map<ClientTechId, KafkaErrorHandler> producerExceptionHandler = new HashMap<>();
 
     public KafkaRouter registerKafkaEvent(KafkaEventMetadata... kafkaEvents) {
         Arrays.stream(kafkaEvents).filter(Objects::nonNull).forEach(this::registerKafkaEvent);
@@ -54,6 +58,18 @@ public final class KafkaRouter {
                 existedId.getKeyClass().getName(), existedId.getValueClass().getName()));
         }
         techIdMap.put(topic, techId);
+    }
+
+    public KafkaRouter addConsumerErrorHandler(@NonNull ClientTechId techId,
+                                               @NonNull KafkaErrorHandler throwableHandler) {
+        this.consumerExceptionHandler.put(techId, throwableHandler);
+        return this;
+    }
+
+    public KafkaRouter addProducerErrorHandler(@NonNull ClientTechId techId,
+                                               @NonNull KafkaErrorHandler throwableHandler) {
+        this.producerExceptionHandler.put(techId, throwableHandler);
+        return this;
     }
 
 }

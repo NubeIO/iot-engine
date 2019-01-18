@@ -8,5 +8,7 @@ dependencies {
         exclude group: 'org.slf4j', module: 'slf4j-api'
     }
     compile "org.jboss.resteasy:resteasy-jaxrs:3.6.2.Final"
+    
+    testCompile project(":core:base").sourceSets.test.output
 
 }

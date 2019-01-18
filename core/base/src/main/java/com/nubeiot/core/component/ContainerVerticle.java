@@ -30,7 +30,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, Consumer<? extends Unit>> afterSuccesses = new HashMap<>();
     private final Map<Class<? extends Unit>, String> deployments = new HashMap<>();
     private final Map<String, Object> sharedData = new HashMap<>();
-    private final String sharedDataKey = this.getClass().getName();
+    private final String sharedKey = this.getClass().getName();
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Getter
@@ -50,7 +50,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     public void start(Future<Void> future) {
         this.start();
-        this.vertx.sharedData().getLocalMap(sharedDataKey).getDelegate().putAll(sharedData);
+        this.vertx.sharedData().getLocalMap(sharedKey).getDelegate().putAll(sharedData);
         this.startUnits(future);
     }
 
@@ -85,7 +85,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     public void startUnits(Future<Void> future) {
         Flowable.fromIterable(components.entrySet()).map(entry -> {
-            Unit unit = entry.getValue().get().registerSharedData(sharedDataKey);
+            Unit unit = entry.getValue().get().registerSharedData(sharedKey);
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
             return vertx.rxDeployVerticle(unit, options)

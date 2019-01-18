@@ -18,6 +18,7 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.sql.MockManyEntityHandler.MockManyNoData;
 import com.nubeiot.core.sql.mock.manyschema.mock0.tables.pojos.TblSample_00;
 import com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01;
@@ -48,8 +49,8 @@ public class H2MemTest extends BaseSqlTest {
     }
 
     @Test
-    public void test_init_no_data(TestContext context) throws InterruptedException {
-        MockManyEntityHandler entityHandler = startSQL(ManySchema.CATALOG, MockManyNoData.class, context);
+    public void test_init_no_data(TestContext context) {
+        MockManyEntityHandler entityHandler = startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
         Async async = context.async(2);
         entityHandler.getQueryExecutor()
                      .executeAny(dsl -> dsl.fetch(ManySchema.TBL_SAMPLE_00))
@@ -71,7 +72,7 @@ public class H2MemTest extends BaseSqlTest {
                                                         .setFStr("hola")
                                                         .setFValue(new JsonObject().put("key", "spanish"))).toJson();
         List<String> excludes = Collections.singletonList(ManySchema.TBL_SAMPLE_00.F_DATE.getName().toLowerCase());
-        MockManyEntityHandler entityHandler = startSQL(ManySchema.CATALOG, MockManyEntityHandler.class, context);
+        MockManyEntityHandler entityHandler = startSQL(context, ManySchema.CATALOG, MockManyEntityHandler.class);
         Async async = context.async(4);
         fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_00, e0, excludes);
         fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_01, e1, excludes);
@@ -87,13 +88,13 @@ public class H2MemTest extends BaseSqlTest {
                 context.assertNotNull(record.getValue(c));
                 record.remove(c);
             });
-            assertData(async, context, expected, record);
+            JsonHelper.assertJson(context, async, expected, record);
         });
     }
 
     @Test
-    public void test_init_complex_model(TestContext context) throws InterruptedException {
-        startSQL(OneSchema.CATALOG, MockOneEntityHandler.class, context);
+    public void test_init_complex_model(TestContext context) {
+        startSQL(context, OneSchema.CATALOG, MockOneEntityHandler.class);
     }
 
 }

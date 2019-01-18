@@ -9,26 +9,27 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.http.BaseHttpServerTest;
-import com.nubeiot.core.http.HttpServerRouter;
-
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RepeatRule;
 import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.core.http.HttpServerRouter;
+import com.nubeiot.core.http.HttpServerTestBase;
+
 @RunWith(VertxUnitRunner.class)
-public class HttpUtilsTest extends BaseHttpServerTest {
+public class HttpUtilsTest extends HttpServerTestBase {
 
     @Rule
     public RepeatRule repeatRule = new RepeatRule();
     @Rule
-    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.TEST_TIMEOUT);
+    public Timeout timeoutRule = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
 
     @BeforeClass
     public static void beforeSuite() {
-        BaseHttpServerTest.beforeSuite();
+        TestHelper.setup();
     }
 
     @Before

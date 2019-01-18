@@ -2,10 +2,12 @@ package com.nubeiot.core.kafka;
 
 import org.apache.kafka.common.serialization.Serde;
 
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.kafka.handler.consumer.KafkaBroadcasterTransformer;
+import com.nubeiot.core.kafka.handler.consumer.KafkaConsumerHandler;
+import com.nubeiot.core.kafka.handler.consumer.KafkaConsumerRecordTransformer;
 import com.nubeiot.core.kafka.handler.producer.KafkaProducerHandler;
-import com.nubeiot.core.kafka.serialization.NubeKafkaSerdes;
+import com.nubeiot.core.kafka.handler.producer.KafkaProducerRecordTransformer;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -31,88 +33,142 @@ public final class KafkaEventMetadata<K, V> {
     @NonNull
     @EqualsAndHashCode.Include
     private final KafkaClientType type;
-    private final EventModel eventModel;
-    private final KafkaBroadcasterTransformer<K, V> transformer;
-    private final KafkaProducerHandler producerHandler;
     @NonNull
     private final ClientTechId<K, V> techId;
 
-    public static <K, V> KafkaEventMetadata<K, V> consumer(@NonNull String topic, @NonNull EventModel model,
-                                                           @NonNull Class<K> keyClass, @NonNull Class<V> valueClass) {
-        return consumer(topic, model, keyClass, null, valueClass, null);
+    private final EventModel eventModel;
+    private final KafkaConsumerHandler consumerHandler;
+    private final KafkaConsumerRecordTransformer consumerTransformer;
+
+    private final KafkaProducerHandler producerHandler;
+    private final KafkaProducerRecordTransformer producerTransformer;
+
+    private KafkaEventMetadata(String topic, KafkaClientType type, ClientTechId<K, V> techId, EventModel model,
+                               KafkaConsumerHandler consumerHandler,
+                               KafkaConsumerRecordTransformer consumerTransformer) {
+        this(topic, type, techId, model, consumerHandler, consumerTransformer, null, null);
     }
 
-    public static <K, V> KafkaEventMetadata<K, V> consumer(@NonNull String topic, @NonNull EventModel model,
-                                                           @NonNull Class<K> keyClass, Serde<K> keySerdes,
-                                                           @NonNull Class<V> valueClass, Serde<V> valueSerdes) {
-        return consumer(topic, model, null, keyClass, keySerdes, valueClass, valueSerdes);
+    private KafkaEventMetadata(String topic, KafkaClientType type, ClientTechId<K, V> techId,
+                               KafkaProducerHandler producerHandler,
+                               KafkaProducerRecordTransformer producerTransformer) {
+        this(topic, type, techId, null, null, null, producerHandler, producerTransformer);
     }
 
-    public static <K, V> KafkaEventMetadata<K, V> consumer(@NonNull String topic, @NonNull EventModel model,
-                                                           @NonNull KafkaBroadcasterTransformer<K, V> transformer,
-                                                           @NonNull Class<K> keyClass, @NonNull Class<V> valueClass) {
-        return consumer(topic, model, transformer, keyClass, null, valueClass, null);
+    public static <K, V> ConsumerBuilder<K, V> consumer() {return new ConsumerBuilder<>();}
+
+    public static <K, V> ProducerBuilder<K, V> producer() {return new ProducerBuilder<>();}
+
+    public KafkaConsumerRecordTransformer getTransformer() {
+        return null;
     }
 
-    /**
-     * @param topic       Kafka Topic
-     * @param model       Event model
-     * @param transformer {@code EventMessage} transformer from {@code Kafka Consumer Record}
-     * @param keyClass    {@code Kafka Consumer record} key class
-     * @param keySerdes   {@code Kafka Consumer record} key serdes
-     * @param valueClass  {@code Kafka Consumer record} value class
-     * @param valueSerdes {@code Kafka Consumer record} value  serdes
-     * @param <K>         Type of {@code Kafka Consumer record} key
-     * @param <V>         Type of {@code Kafka Consumer record} value
-     * @return KafkaEventMetadata represents for {@code Kafka Consumer record}
-     * @see EventModel
-     * @see KafkaBroadcasterTransformer
-     * @see Serde
-     * @see NubeKafkaSerdes
-     */
-    public static <K, V> KafkaEventMetadata<K, V> consumer(@NonNull String topic, @NonNull EventModel model,
-                                                           KafkaBroadcasterTransformer<K, V> transformer,
-                                                           @NonNull Class<K> keyClass, Serde<K> keySerdes,
-                                                           @NonNull Class<V> valueClass, Serde<V> valueSerdes) {
-        return new KafkaEventMetadata<>(topic, KafkaClientType.CONSUMER, model, transformer, null,
-                                        new ClientTechId<>(keyClass, keySerdes, valueClass, valueSerdes));
+    public static class ConsumerBuilder<K, V> extends Builder<K, V, ConsumerBuilder> {
+
+        @NonNull
+        private EventModel eventModel;
+        private KafkaConsumerHandler handler;
+        private KafkaConsumerRecordTransformer<K, V, EventMessage> transformer;
+
+        ConsumerBuilder() {
+            super(KafkaClientType.CONSUMER);
+        }
+
+        public ConsumerBuilder<K, V> handler(KafkaConsumerHandler handler) {
+            this.handler = handler;
+            return this;
+        }
+
+        public ConsumerBuilder<K, V> transformer(KafkaConsumerRecordTransformer<K, V, EventMessage> transformer) {
+            this.transformer = transformer;
+            return this;
+        }
+
+        public ConsumerBuilder<K, V> model(@NonNull EventModel model) {
+            this.eventModel = model;
+            return this;
+        }
+
+        @Override
+        public KafkaEventMetadata<K, V> build() {
+            return new KafkaEventMetadata<>(topic, type, getTechId(), eventModel, handler, transformer);
+        }
+
     }
 
-    public static <K, V> KafkaEventMetadata<K, V> producer(@NonNull String topic, @NonNull Class<K> keyClass,
-                                                           @NonNull Class<V> valueClass) {
-        return producer(topic, keyClass, valueClass, null);
+
+    public static class ProducerBuilder<K, V> extends Builder<K, V, ProducerBuilder> {
+
+        private KafkaProducerHandler handler;
+        private KafkaProducerRecordTransformer<K, V> transformer;
+
+        ProducerBuilder() {
+            super(KafkaClientType.PRODUCER);
+        }
+
+        public ProducerBuilder<K, V> handler(KafkaProducerHandler handler) {
+            this.handler = handler;
+            return this;
+        }
+
+        public ProducerBuilder<K, V> transformer(KafkaProducerRecordTransformer<K, V> transformer) {
+            this.transformer = transformer;
+            return this;
+        }
+
+        @Override
+        public KafkaEventMetadata<K, V> build() {
+            return new KafkaEventMetadata<>(topic, type, getTechId(), handler, transformer);
+        }
+
     }
 
-    public static <K, V> KafkaEventMetadata<K, V> producer(@NonNull String topic, @NonNull Class<K> keyClass,
-                                                           @NonNull Class<V> valueClass,
-                                                           KafkaProducerHandler producerHandler) {
-        return producer(topic, keyClass, null, valueClass, null, producerHandler);
-    }
 
-    public static <K, V> KafkaEventMetadata<K, V> producer(@NonNull String topic, @NonNull Class<K> keyClass,
-                                                           Serde<K> keySerdes, @NonNull Class<V> valueClass,
-                                                           Serde<V> valueSerdes) {
-        return producer(topic, keyClass, keySerdes, valueClass, valueSerdes, null);
-    }
+    @SuppressWarnings("unchecked")
+    public static abstract class Builder<K, V, T extends Builder> {
 
-    /**
-     * @param topic           Kafka Topic
-     * @param keyClass        {@code Kafka Producer record} key class
-     * @param keySerdes       {@code Kafka Producer record} key serdes
-     * @param valueClass      {@code Kafka Producer record} value class
-     * @param valueSerdes     {@code Kafka Producer record} value  serdes
-     * @param producerHandler {@code Kafka Producer handler} after sending {@code Kafka record}
-     * @param <K>             Type of {@code Kafka Producer record} key
-     * @param <V>             Type of {@code Kafka Producer record} value
-     * @return KafkaEventMetadata represents for Producer Record
-     * @see Serde
-     * @see NubeKafkaSerdes
-     */
-    public static <K, V> KafkaEventMetadata<K, V> producer(String topic, Class<K> keyClass, Serde<K> keySerdes,
-                                                           Class<V> valueClass, Serde<V> valueSerdes,
-                                                           KafkaProducerHandler producerHandler) {
-        return new KafkaEventMetadata<>(topic, KafkaClientType.PRODUCER, null, null, producerHandler,
-                                        new ClientTechId<>(keyClass, keySerdes, valueClass, valueSerdes));
+        protected final @NonNull KafkaClientType type;
+        protected @NonNull String topic;
+        private Class<K> keyClass;
+        private Class<V> valueClass;
+        private Serde<K> keySerdes;
+        private Serde<V> valueSerdes;
+
+        private Builder(@NonNull KafkaClientType type) {
+            this.type = type;
+        }
+
+        public T topic(@NonNull String topic) {
+            this.topic = topic;
+            return (T) this;
+        }
+
+        public T keyClass(Class keyClass) {
+            this.keyClass = keyClass;
+            return (T) this;
+        }
+
+        public T valueClass(Class valueClass) {
+            this.valueClass = valueClass;
+            return (T) this;
+        }
+
+        public T keySerdes(Serde keySerdes) {
+            this.keySerdes = keySerdes;
+            return (T) this;
+        }
+
+        public T valueSerdes(Serde valueSerdes) {
+            this.valueSerdes = valueSerdes;
+            return (T) this;
+        }
+
+        ClientTechId<K, V> getTechId() {
+            return new ClientTechId<>(keyClass, keySerdes, valueClass, valueSerdes);
+        }
+
+        public abstract KafkaEventMetadata<K, V> build();
+
     }
 
 }

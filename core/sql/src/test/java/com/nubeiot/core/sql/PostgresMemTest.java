@@ -58,8 +58,8 @@ public class PostgresMemTest extends BaseSqlTest {
     }
 
     @Test
-    public void test_restart_app(TestContext context) throws InterruptedException {
-        startSQL(OneSchema.CATALOG, MockOneEntityHandler.class, context);
+    public void test_restart_app(TestContext context) {
+        startSQL(context, OneSchema.CATALOG, MockOneEntityHandler.class);
         //        stopSQL(context);
         //        startSQL(OneSchema.CATALOG, MockOneEntityHandler.class, context);
     }

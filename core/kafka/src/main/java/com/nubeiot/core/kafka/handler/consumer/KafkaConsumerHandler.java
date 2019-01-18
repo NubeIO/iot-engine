@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.event.EventModel;
 
 /**
  * Record handler by {@code Kafka topic} after receiving data from {@code Kafka Consumer} then transform to appropriate
@@ -21,6 +22,17 @@ import com.nubeiot.core.component.SharedDataDelegate;
  */
 public interface KafkaConsumerHandler<K, V, T extends KafkaConsumerRecordTransformer<K, V, R>, R>
     extends Consumer<KafkaConsumerRecord<K, V>>, SharedDataDelegate {
+
+    /**
+     * Create {@code Kafka Broadcaster} that linked to a specified {@code Eventbus model}
+     *
+     * @param eventModel Given event model
+     * @return a reference to this, so the API can be used fluently
+     * @see EventModel
+     */
+    static KafkaConsumerHandler createBroadcaster(EventModel eventModel) {
+        return new KafkaBroadcaster(eventModel);
+    }
 
     /**
      * System will register it automatically. You don't need call it directly

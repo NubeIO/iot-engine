@@ -8,11 +8,11 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.ws.WebsocketEventMetadata;
-import com.nubeiot.core.kafka.KafkaConsumerService;
 import com.nubeiot.core.kafka.KafkaEventMetadata;
 import com.nubeiot.core.kafka.KafkaRouter;
 import com.nubeiot.core.kafka.KafkaUnit;
 import com.nubeiot.core.kafka.KafkaUnitProvider;
+import com.nubeiot.core.kafka.service.KafkaConsumerService;
 
 public class DashboardKafkaDemo extends ContainerVerticle {
 
@@ -45,8 +45,11 @@ public class DashboardKafkaDemo extends ContainerVerticle {
     }
 
     private KafkaRouter initKafkaRouter() {
-        return new KafkaRouter().registerKafkaEvent(
-            KafkaEventMetadata.consumer("GPIO", KAFKA_EB_PUBLISHER, String.class, String.class));
+        return new KafkaRouter().registerKafkaEvent(KafkaEventMetadata.consumer()
+                                                                      .model(KAFKA_EB_PUBLISHER)
+                                                                      .keyClass(String.class)
+                                                                      .valueClass(String.class)
+                                                                      .build());
     }
 
     private HttpServerRouter initHttpRouter() {

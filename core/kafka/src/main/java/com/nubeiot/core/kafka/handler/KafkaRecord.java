@@ -46,12 +46,12 @@ public final class KafkaRecord<T> implements JsonData {
 
     @SuppressWarnings("unchecked")
     public static <K, V> KafkaRecord<ConsumerRecord<K, V>> toConsumer(@NonNull JsonObject data) {
-        return new KafkaRecord<>(JsonData.from(data, ConsumerRecordMixin.class));
+        return new KafkaRecord<>(JsonData.from(data, ConsumerRecordMixin.class, RecordMixin.MAPPER));
     }
 
     @SuppressWarnings("unchecked")
     public static <K, V> KafkaRecord<ProducerRecord<K, V>> toProducer(@NonNull JsonObject data) {
-        return new KafkaRecord<>(JsonData.from(data, ProducerRecordMixin.class));
+        return new KafkaRecord<>(JsonData.from(data, ProducerRecordMixin.class, RecordMixin.MAPPER));
     }
 
 }

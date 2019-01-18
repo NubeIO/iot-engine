@@ -1,6 +1,7 @@
 package com.nubeiot.core.kafka.handler;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -9,21 +10,32 @@ import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
+import org.apache.kafka.common.record.DefaultRecord;
 import org.apache.kafka.common.record.TimestampType;
 
 import io.vertx.core.json.Json;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.nubeiot.core.dto.JsonData;
 
 interface RecordMixin extends JsonData {
+
+    static FilterProvider filterProvider() {
+        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.serializeAllExcept("serializedKeySize",
+                                                                                      "serializedValueSize");
+        return new SimpleFilterProvider().addFilter("kafkaConsumerRecord", filter);
+    }
 
     ObjectMapper MAPPER = Json.mapper.copy()
                                      .addMixIn(ConsumerRecord.class, ConsumerRecordMixin.class)
@@ -36,6 +48,7 @@ interface RecordMixin extends JsonData {
                                      .setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
                                      .setVisibility(PropertyAccessor.CREATOR, Visibility.NONE)
                                      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                     .setFilterProvider(filterProvider())
                                      .registerModule(new Jdk8Module());
 
     @Override
@@ -47,21 +60,27 @@ interface RecordMixin extends JsonData {
     abstract class ByteBufferIgnoreMixin {}
 
 
+    @JsonFilter("kafkaConsumerRecord")
     class ConsumerRecordMixin<K, V> extends ConsumerRecord<K, V> implements RecordMixin {
 
         @JsonCreator
-        ConsumerRecordMixin(@JsonProperty(value = "topic", required = true) String topic,
-                            @JsonProperty(value = "partition", required = true) int partition,
-                            @JsonProperty(value = "offset", required = true) long offset,
-                            @JsonProperty("timestamp") long timestamp,
-                            @JsonProperty("timestampType") TimestampType timestampType,
-                            @JsonProperty("checksum") Long checksum,
-                            @JsonProperty("serializedKeySize") int serializedKeySize,
-                            @JsonProperty("serializedValueSize") int serializedValueSize, @JsonProperty("key") K key,
+        ConsumerRecordMixin(@JsonProperty(value = "topic", required = true) String topic, @JsonProperty(value = "partition", required = true) int partition,
+                            @JsonProperty(value = "offset", required = true) long offset, @JsonProperty("timestamp") long timestamp,
+                            @JsonProperty("timestampType") TimestampType timestampType, @JsonProperty("checksum") Long checksum,
+                            @JsonProperty("serializedKeySize") int serializedKeySize, @JsonProperty("serializedValueSize") int serializedValueSize, @JsonProperty("key") K key,
                             @JsonProperty("value") V value, @JsonProperty("headers") HeadersMixin headers,
                             @JsonProperty("leaderEpoch") Integer leaderEpoch) {
-            super(topic, partition, offset, timestamp, timestampType, checksum, serializedKeySize, serializedValueSize,
-                  key, value, headers, Optional.ofNullable(leaderEpoch));
+            super(topic, partition, offset, timestamp, timestampType,
+                  Objects.isNull(checksum) || checksum < 0
+                  ? DefaultRecord.computePartialChecksum(timestamp, serializedKeySize, serializedValueSize)
+                  : checksum, serializedKeySize, serializedValueSize, key, value, headers,
+                  Optional.ofNullable(leaderEpoch));
+        }
+
+        @JsonProperty("checksum")
+        @Override
+        public long checksum() {
+            return super.checksum();
         }
 
     }
@@ -97,6 +116,10 @@ interface RecordMixin extends JsonData {
         @JsonCreator
         HeaderMixin(@JsonProperty("key") String key, @JsonProperty("value") byte[] value) {
             super(key, value);
+        }
+
+        public static HeaderMixin from(RecordHeader record) {
+            return new HeaderMixin(record.key(), record.value());
         }
 
     }

@@ -5,10 +5,10 @@ import java.util.function.Supplier;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.producer.KafkaProducer;
 
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.kafka.KafkaConfig.ProducerCfg;
 import com.nubeiot.core.kafka.supplier.KafkaProducerSupplier;
 
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class MockKafkaProducer {
 
     private final Vertx vertx;
-    private final JsonObject producerCfg;
+    private final ProducerCfg producerCfg;
     private final String topic;
     private final Supplier<EventMessage> messageSupplier;
     private KafkaProducer<String, EventMessage> producer;

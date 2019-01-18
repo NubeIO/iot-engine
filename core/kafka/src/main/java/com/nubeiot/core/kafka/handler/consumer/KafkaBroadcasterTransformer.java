@@ -2,6 +2,7 @@ package com.nubeiot.core.kafka.handler.consumer;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
+import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 import com.nubeiot.core.event.EventMessage;
@@ -24,12 +25,12 @@ public class KafkaBroadcasterTransformer<K, V> implements KafkaConsumerRecordTra
 
     @Override
     public EventMessage apply(KafkaConsumerRecord<K, V> record) {
-        EventMessage msg = KafkaHeaderConverter.apply(record.record().headers());
+        EventMessage msg = KafkaHeaderConverter.convert(record.record().headers());
         if (msg.isError()) {
             return msg;
         }
-        return EventMessage.from(msg.getStatus(), msg.getAction(), msg.getPrevAction(),
-                                 KafkaRecord.serialize(record.record()).toJson());
+        JsonObject data = KafkaRecord.serialize(record.record()).toJson();
+        return EventMessage.from(msg.getStatus(), msg.getAction(), msg.getPrevAction(), data);
     }
 
 }

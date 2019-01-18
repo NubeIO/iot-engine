@@ -11,18 +11,18 @@ import lombok.Getter;
 import lombok.NonNull;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-class ClientTechId<K, V> {
+public class ClientTechId<K, V> {
 
     @Getter
     private final Class<K> keyClass;
     @Getter
-    private final Class<V> valueClass;
-    @Getter
     private final Serde<K> keySerdes;
+    @Getter
+    private final Class<V> valueClass;
     @Getter
     private final Serde<V> valueSerdes;
     @EqualsAndHashCode.Include
-    private String id;
+    private final String id;
 
     ClientTechId(@NonNull Class<K> keyClass, Serde<K> keySerdes, @NonNull Class<V> valueClass, Serde<V> valueSerdes) {
         this.keyClass = keyClass;
@@ -37,8 +37,6 @@ class ClientTechId<K, V> {
     }
 
     @Override
-    public String toString() {
-        return id;
-    }
+    public String toString() { return id; }
 
 }

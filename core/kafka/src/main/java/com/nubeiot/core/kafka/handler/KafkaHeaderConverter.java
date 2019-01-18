@@ -1,26 +1,31 @@
 package com.nubeiot.core.kafka.handler;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
-import org.apache.kafka.common.header.internals.RecordHeader;
-import org.apache.kafka.common.header.internals.RecordHeaders;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.kafka.client.producer.KafkaHeader;
 
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
 /**
  * @see Headers
+ * @see KafkaHeader
  */
 public final class KafkaHeaderConverter {
 
@@ -31,20 +36,28 @@ public final class KafkaHeaderConverter {
     private static final String PREV_ACTION = "nubeio.prevAction";
     private static final String ACTION = "nubeio.action";
 
-    public static Headers apply(@NonNull EventMessage message) {
-        Headers headers = new RecordHeaders();
-        headers.add(new RecordHeader(ACTION, message.getAction().name().getBytes(StandardCharsets.UTF_8)));
-        headers.add(new RecordHeader(PREV_ACTION, message.getPrevAction().name().getBytes(StandardCharsets.UTF_8)));
-        headers.add(new RecordHeader(STATUS, message.getStatus().name().getBytes(StandardCharsets.UTF_8)));
+    public static List<KafkaHeader> convert(@NonNull EventMessage message) {
+        List<KafkaHeader> headers = new ArrayList<>();
+        headers.add(KafkaHeader.header(ACTION, message.getAction().name()));
+        headers.add(KafkaHeader.header(STATUS, message.getStatus().name()));
         ErrorMessage error = message.getError();
         if (message.isError()) {
-            headers.add(new RecordHeader(ERROR_CODE, error.getCode().name().getBytes(StandardCharsets.UTF_8)));
-            headers.add(new RecordHeader(ERROR_MESSAGE, error.getMessage().getBytes(StandardCharsets.UTF_8)));
+            headers.add(KafkaHeader.header(ERROR_CODE, error.getCode().name()));
+            headers.add(KafkaHeader.header(ERROR_MESSAGE, error.getMessage()));
         }
         return headers;
     }
 
-    public static EventMessage apply(@NonNull Headers headers) {
+    public static List<KafkaHeader> convert(Map<String, Object> headerMaps) {
+        List<KafkaHeader> headers = new ArrayList<>();
+        if (Objects.nonNull(headerMaps)) {
+            headerMaps.forEach((key, value) -> headers.add(
+                KafkaHeader.header(key, Buffer.buffer(Strings.toString(value), StandardCharsets.UTF_8.name()))));
+        }
+        return headers;
+    }
+
+    public static EventMessage convert(@NonNull Headers headers) {
         EventAction action = getHeader(headers, ACTION, EventAction.UNKNOWN);
         EventAction prevAction = getHeader(headers, PREV_ACTION, EventAction.UNKNOWN);
         Status status = getHeader(headers, STATUS, Status.INITIAL);

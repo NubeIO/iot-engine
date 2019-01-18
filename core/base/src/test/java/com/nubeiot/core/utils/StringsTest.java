@@ -9,9 +9,7 @@ import java.io.InputStream;
 
 import org.junit.Test;
 
-import com.nubeiot.core.TestBase;
-
-public class StringsTest extends TestBase {
+public class StringsTest {
 
     @Test
     public void test_Blank() {

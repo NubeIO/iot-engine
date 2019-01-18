@@ -1,23 +1,18 @@
 package com.nubeiot.core.kafka;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.function.Supplier;
 
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.slf4j.LoggerFactory;
 
-import io.debezium.kafka.KafkaCluster;
 import io.vertx.core.http.WebSocket;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
@@ -25,37 +20,37 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.http.BaseHttpServerTest;
 import com.nubeiot.core.http.HttpServerRouter;
+import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
 import com.nubeiot.core.http.utils.Urls;
 import com.nubeiot.core.http.ws.WebsocketEventMetadata;
 import com.nubeiot.core.kafka.mock.MockKafkaConsumer;
 import com.nubeiot.core.kafka.mock.MockKafkaProducer;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-
 @RunWith(VertxUnitRunner.class)
-public class KafkaComponentTest extends BaseHttpServerTest {
+public class KafkaWebsocketTest extends HttpServerTestBase {
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
-    private KafkaCluster kafkaCluster;
-    private JsonObject producerConfig;
-    private JsonObject consumerConfig;
+    @ClassRule
+    public static TemporaryFolder tempFolder = new TemporaryFolder();
+    private KafkaConfig kafkaConfig;
     private MockKafkaConsumer consumer;
     private MockKafkaProducer producer;
 
     @BeforeClass
-    public static void beforeSuite() {
-        BaseHttpServerTest.beforeSuite();
-        ((Logger) LoggerFactory.getLogger("kafka")).setLevel(Level.WARN);
-        ((Logger) LoggerFactory.getLogger("org.apache.zookeeper")).setLevel(Level.WARN);
-        ((Logger) LoggerFactory.getLogger("org.apache.kafka")).setLevel(Level.WARN);
-        ((Logger) LoggerFactory.getLogger("org.apache.kafka.clients")).setLevel(Level.INFO);
+    public static void beforeSuite() throws IOException {
+        TestHelper.setup();
+        KafkaUnitTestBase.setUp();
+        KafkaUnitTestBase.kafkaCluster(tempFolder);
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        KafkaUnitTestBase.tearDown();
     }
 
     @Before
@@ -63,21 +58,11 @@ public class KafkaComponentTest extends BaseHttpServerTest {
         super.before(context);
         this.httpConfig.setEnabled(false);
         this.httpConfig.getWebsocketCfg().setEnabled(true);
-        File dataDir = folder.newFolder("cluster");
-        kafkaCluster = new KafkaCluster().usingDirectory(dataDir)
-                                         .withPorts(2182, 9093)
-                                         .addBrokers(1)
-                                         .deleteDataPriorToStartup(true)
-                                         .startup();
-        Properties props = kafkaCluster.useTo().getConsumerProperties("test", "consumer", OffsetResetStrategy.EARLIEST);
-        Properties producerProps = kafkaCluster.useTo().getProducerProperties("producer");
-        consumerConfig = new JsonObject((Map) props);
-        producerConfig = new JsonObject((Map) producerProps);
+        this.kafkaConfig = KafkaUnitTestBase.createKafkaConfig();
     }
 
     @After
     public void after(TestContext context) {
-        kafkaCluster.shutdown();
         if (Objects.nonNull(consumer)) {
             consumer.stop();
         }
@@ -93,8 +78,8 @@ public class KafkaComponentTest extends BaseHttpServerTest {
         startServer(context, new HttpServerRouter().registerEventBusSocket(metadata));
         startKafkaClient(metadata);
         Async async = context.async(1);
-        setupConsumer(async, metadata.getPublisher().getAddress(),
-                      o -> assertResponse(context, async, supply().get().toJson(), (JsonObject) o));
+        assertConsumerData(async, metadata.getPublisher().getAddress(),
+                           o -> JsonHelper.assertJson(context, async, supply().get().toJson(), (JsonObject) o));
     }
 
     @Test
@@ -105,14 +90,15 @@ public class KafkaComponentTest extends BaseHttpServerTest {
         startServer(context, new HttpServerRouter().registerEventBusSocket(metadata));
         startKafkaClient(metadata);
         Async async = context.async(1);
-        WebSocket ws = setupSockJsClient(async, Urls.combinePath("ws", metadata.getPath()),
+        WebSocket ws = setupSockJsClient(context, async, Urls.combinePath("ws", metadata.getPath()),
                                          clientRegister(metadata.getPublisher().getAddress()), context::fail);
         ws.handler(buffer -> assertResponse(context, async, expected, buffer));
     }
 
     private void startKafkaClient(WebsocketEventMetadata metadata) {
-        consumer = new MockKafkaConsumer(vertx.getDelegate(), consumerConfig, "nube", metadata::getPublisher);
-        producer = new MockKafkaProducer(vertx.getDelegate(), producerConfig, "nube", supply());
+        consumer = new MockKafkaConsumer(vertx.getDelegate(), kafkaConfig.getConsumerConfig(), "nube",
+                                         metadata::getPublisher);
+        producer = new MockKafkaProducer(vertx.getDelegate(), kafkaConfig.getProducerConfig(), "nube", supply());
         consumer.start();
         producer.start();
     }

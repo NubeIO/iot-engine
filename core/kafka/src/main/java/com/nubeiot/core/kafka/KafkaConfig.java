@@ -1,5 +1,7 @@
 package com.nubeiot.core.kafka;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -31,9 +34,11 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
 
 import lombok.Getter;
+import lombok.NonNull;
 
 /**
  * Kafka config
@@ -44,6 +49,10 @@ import lombok.Getter;
  * @see <a href="https://kafka.apache.org/documentation/#producerconfigs">Producer Config</a>
  */
 public final class KafkaConfig implements IConfig {
+
+    private static final Predicate<Field> CONFIG_PREDICATE = f -> f.getName().endsWith("_CONFIG");
+    private static final Predicate<Field> PROPERTY_CLASS_PREDICATE = f -> f.getName().matches(".+CLASS(ES)?_CONFIG$");
+    private static final Predicate<String> SEC_PREDICATE = key -> key.matches("^(ssl|sasl|security)\\..+");
 
     @JsonProperty(value = ClientCfg.NAME)
     private ClientCfg clientConfig = new ClientCfg();
@@ -69,6 +78,26 @@ public final class KafkaConfig implements IConfig {
     private AtomicBoolean hasMergedConsumer = new AtomicBoolean(false);
     @JsonIgnore
     private AtomicBoolean hasMergedProducer = new AtomicBoolean(false);
+
+    private static void convertPropertyClassToString(@NonNull Map<String, Object> m,
+                                                     @NonNull Set<String> propertyClassKeys) {
+        propertyClassKeys.forEach(key -> m.computeIfPresent(key, (s, o) -> convertClassToString(o)));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object convertClassToString(Object o) {
+        if (o instanceof Class) {
+            return ((Class) o).getName();
+        }
+        if (o instanceof Collection) {
+            return ((Collection) o).stream().map(KafkaConfig::convertClassToString).collect(Collectors.toList());
+        }
+        return o;
+    }
+
+    private static Set<String> filterConfig(Class configClass, Predicate<Field> predicate) {
+        return new HashSet<>(ReflectionField.getConstants(configClass, String.class, predicate));
+    }
 
     @Override
     public String name() { return "__kafka__"; }
@@ -114,13 +143,17 @@ public final class KafkaConfig implements IConfig {
     public static class ClientCfg extends HashMap<String, Object> implements IConfig {
 
         public static final String NAME = "__client__";
-
+        private static final Set<String> PROPERTY_CLASS_KEYS;
         private static final Map<String, Object> DEFAULT;
 
         static {
-            Map<String, ?> m = new AdminClientConfig(
+            PROPERTY_CLASS_KEYS = Collections.unmodifiableSet(
+                filterConfig(ProducerConfig.class, PROPERTY_CLASS_PREDICATE));
+            @SuppressWarnings("unchecked")
+            Map<String, Object> m = (Map<String, Object>) new AdminClientConfig(
                 Collections.singletonMap("bootstrap.servers", "localhost:9092")).values();
-            m.keySet().removeIf(key -> key.matches("^(ssl|sasl|security)\\..+"));
+            m.keySet().removeIf(SEC_PREDICATE);
+            convertPropertyClassToString(m, PROPERTY_CLASS_KEYS);
             DEFAULT = Collections.unmodifiableMap(m);
         }
 
@@ -140,8 +173,7 @@ public final class KafkaConfig implements IConfig {
     public static class TopicCfg extends HashMap<String, Object> implements IConfig {
 
         public static final String NAME = "__topic__";
-        private static final Set<String> KEYS = new HashSet<>(
-            ReflectionField.getConstants(TopicConfig.class, String.class, f -> f.getName().endsWith("_CONFIG")));
+        private static final Set<String> KEYS = filterConfig(TopicConfig.class, CONFIG_PREDICATE);
 
         @Override
         public String name() { return NAME; }
@@ -196,28 +228,27 @@ public final class KafkaConfig implements IConfig {
 
         public static final String NAME = "__consumer__";
 
+        private static final Set<String> PROPERTY_CLASS_KEYS;
         private static final Map<String, Object> DEFAULT;
 
         static {
+            Set<String> keys = filterConfig(ConsumerConfig.class, PROPERTY_CLASS_PREDICATE);
+            keys.add(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG);
+            PROPERTY_CLASS_KEYS = Collections.unmodifiableSet(keys);
             Serde<String> serde = Serdes.serdeFrom(String.class);
             @SuppressWarnings("unchecked")
             Map<String, Object> m = (Map<String, Object>) new ConsumerConfig(
                 ConsumerConfig.addDeserializerToConfig(new HashMap<>(), serde.deserializer(),
                                                        serde.deserializer())).values();
             m.keySet()
-             .removeIf(key -> key.matches("^(ssl|sasl|security)\\..+") || key.endsWith(".deserializer") ||
-                              ClientCfg.DEFAULT.containsKey(key));
+             .removeIf(
+                 Functions.or(SEC_PREDICATE, ClientCfg.DEFAULT::containsKey, key -> key.endsWith(".deserializer")));
             m.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
             m.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, OffsetResetStrategy.EARLIEST.name().toLowerCase());
             m.put(ConsumerConfig.GROUP_ID_CONFIG, "NubeIO");
             m.put(ConsumerConfig.CLIENT_ID_CONFIG, "consumer-" + UUID.randomUUID().toString());
-            m.computeIfPresent(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,
-                               (s, o) -> convertListClass((List) o));
+            convertPropertyClassToString(m, PROPERTY_CLASS_KEYS);
             DEFAULT = Collections.unmodifiableMap(m);
-        }
-
-        private static Object convertListClass(List o) {
-            return o.stream().map(v -> ((Class) v).getName()).collect(Collectors.toList());
         }
 
         ConsumerCfg() { this.putAll(DEFAULT); }
@@ -228,29 +259,36 @@ public final class KafkaConfig implements IConfig {
         @Override
         public Class<? extends IConfig> parent() { return KafkaConfig.class; }
 
+        @JsonIgnore
+        public String getClientId() {
+            return this.get(ConsumerConfig.GROUP_ID_CONFIG) + "/" + this.get(CommonClientConfigs.CLIENT_ID_CONFIG);
+        }
+
     }
 
 
     public static class ProducerCfg extends HashMap<String, Object> implements IConfig {
 
         public static final String NAME = "__producer__";
+        private static final Set<String> PROPERTY_CLASS_KEYS;
         private static final Map<String, Object> DEFAULT;
 
         static {
+            PROPERTY_CLASS_KEYS = Collections.unmodifiableSet(
+                filterConfig(ProducerConfig.class, PROPERTY_CLASS_PREDICATE));
             Serde<String> serde = Serdes.serdeFrom(String.class);
             @SuppressWarnings("unchecked")
             Map<String, Object> m = (Map<String, Object>) new ProducerConfig(
                 ProducerConfig.addSerializerToConfig(new HashMap<>(), serde.serializer(), serde.serializer())).values();
             m.keySet()
-             .removeIf(key -> key.matches("^(ssl|sasl|security)\\..+") || key.endsWith(".serializer") ||
-                              ClientCfg.DEFAULT.containsKey(key));
+             .removeIf(Functions.or(SEC_PREDICATE, ClientCfg.DEFAULT::containsKey, key -> key.endsWith(".serializer")));
             if (Objects.isNull(m.get(ProducerConfig.TRANSACTIONAL_ID_CONFIG))) {
                 m.remove(ProducerConfig.TRANSACTIONAL_ID_CONFIG);
             }
             m.put(ProducerConfig.ACKS_CONFIG, "1");
             m.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
             m.put(ProducerConfig.CLIENT_ID_CONFIG, "producer-" + UUID.randomUUID().toString());
-            m.computeIfPresent(ProducerConfig.PARTITIONER_CLASS_CONFIG, (s, o) -> ((Class) o).getName());
+            convertPropertyClassToString(m, PROPERTY_CLASS_KEYS);
             DEFAULT = Collections.unmodifiableMap(m);
         }
 
@@ -261,6 +299,10 @@ public final class KafkaConfig implements IConfig {
 
         @Override
         public Class<? extends IConfig> parent() { return KafkaConfig.class; }
+
+        public String getClientId() {
+            return (String) this.get(CommonClientConfigs.CLIENT_ID_CONFIG);
+        }
 
     }
 

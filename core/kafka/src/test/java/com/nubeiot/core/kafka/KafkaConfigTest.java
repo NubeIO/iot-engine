@@ -1,6 +1,7 @@
 package com.nubeiot.core.kafka;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.json.JSONException;
@@ -32,26 +33,29 @@ public class KafkaConfigTest {
     }
 
     @Test
-    public void test_topic() {
+    public void test_can_copy() {
         KafkaConfig cfg = new KafkaConfig();
-        System.out.println(cfg.getTopicConfig().toJson());
-        System.out.println(cfg.getSecurityConfig().toJson());
-        System.out.println(cfg.getClientConfig().toJson());
-        System.out.println(cfg.getProducerConfig().toJson());
-        System.out.println(cfg.getConsumerConfig().toJson());
+        cfg.getTopicConfig().toJson().copy();
+        cfg.getSecurityConfig().toJson().copy();
+        cfg.getClientConfig().toJson().copy();
+        cfg.getProducerConfig().toJson().copy();
+        cfg.getConsumerConfig().toJson().copy();
     }
 
     @Test
     public void test_from_root() {
+        List<String> hostExpected = Collections.singletonList("localhost:9092");
         KafkaConfig from = IConfig.from("{\"__app__\":{\"__kafka__\":{\"__client__\":{\"bootstrap" +
                                         ".servers\":[\"localhost:9092\"]},\"__security__\":{\"security" +
                                         ".protocol\":\"PLAINTEXT\"}}},\"__deploy__\":{\"ha\":false,\"instances\":1," +
                                         "\"maxWorkerExecuteTime\":60000000000," +
                                         "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\",\"multiThreaded\":false," +
                                         "\"worker\":false,\"workerPoolSize\":20}}", KafkaConfig.class);
+        Assert.assertEquals("PLAINTEXT", from.getSecurityConfig().get("security.protocol"));
+        Assert.assertEquals(hostExpected, from.getClientConfig().get("bootstrap.servers"));
         Assert.assertEquals("PLAINTEXT", from.getProducerConfig().get("security.protocol"));
-        Assert.assertEquals(Collections.singletonList("localhost:9092"),
-                            from.getConsumerConfig().get("bootstrap.servers"));
+        Assert.assertEquals(hostExpected, from.getConsumerConfig().get("bootstrap.servers"));
+        Assert.assertEquals(hostExpected, from.getProducerConfig().get("bootstrap.servers"));
     }
 
 }

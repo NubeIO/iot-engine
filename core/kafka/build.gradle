@@ -15,6 +15,7 @@ dependencies {
     compile "org.slf4j:log4j-over-slf4j:$project.versions.logs.slf4j"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$project.versions.jackson"
 
+    testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:httpserver")
     testCompile project(":core:httpserver").sourceSets.test.output
     testCompile "org.scala-lang:scala-library:2.12.7"

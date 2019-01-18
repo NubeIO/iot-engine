@@ -4,12 +4,14 @@ import io.vertx.kafka.client.producer.RecordMetadata;
 
 import com.nubeiot.core.exceptions.ErrorMessage;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * Responsible for logging metadata after sending Kafka record
  */
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class LogKafkaProducerHandler extends AbstractKafkaProducerHandler {
-
-    public static final KafkaProducerHandler DEFAULT = new LogKafkaProducerHandler();
 
     @Override
     public void handleSuccess(RecordMetadata metadata) {

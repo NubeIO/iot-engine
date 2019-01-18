@@ -8,6 +8,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 
 import com.nubeiot.core.component.UnitVerticle;
+import com.nubeiot.core.kafka.service.KafkaConsumerService;
+import com.nubeiot.core.kafka.service.KafkaProducerService;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -37,7 +39,8 @@ public final class KafkaUnit extends UnitVerticle<KafkaConfig> {
     public void start() {
         logger.info("Starting Kafka Unit...");
         super.start();
-        this.producerService = KafkaProducerService.create(vertx, config.getProducerConfig(), router);
+        this.producerService = KafkaProducerService.create(vertx, config.getProducerConfig(), router,
+                                                           this::getSharedData);
         this.consumerService = KafkaConsumerService.create(vertx, config.getConsumerConfig(), router,
                                                            this::getSharedData);
     }

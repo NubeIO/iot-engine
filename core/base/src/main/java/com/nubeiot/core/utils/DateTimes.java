@@ -7,10 +7,11 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
-import com.nubeiot.core.exceptions.NubeException;
-
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import com.nubeiot.core.exceptions.NubeException;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -29,6 +30,10 @@ public final class DateTimes {
 
     public static OffsetDateTime now() {
         return from(Instant.now());
+    }
+
+    public static long nowMilli() {
+        return Instant.now().toEpochMilli();
     }
 
     public static OffsetDateTime from(Instant instant) {
