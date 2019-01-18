@@ -116,10 +116,12 @@ final class AnnotationHandler<T extends EventHandler> {
     }
 
     private static Predicate<Method> filterMethod(EventAction action) {
-        return Functions.and(Reflections.hasModifiers(Modifier.PUBLIC),
+        return Functions.and(Reflections.hasModifiers(Modifier.PUBLIC), Reflections.notModifiers(Modifier.STATIC),
                              Reflections.hasAnnotation(EventContractor.class), method -> {
                 EventContractor contractor = method.getAnnotation(EventContractor.class);
-                return Stream.of(contractor.action()).anyMatch(eventType -> action == eventType);
+                return !ReflectionClass.assertDataType(method.getReturnType(), Void.class) &&
+                       ReflectionClass.assertDataType(method.getReturnType(), contractor.returnType()) &&
+                       Stream.of(contractor.action()).anyMatch(eventType -> action == eventType);
             });
     }
 
