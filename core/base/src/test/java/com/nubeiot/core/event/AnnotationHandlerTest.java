@@ -9,6 +9,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
+import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.MockEventHandler.MockEventUnsupportedHandler;
@@ -21,9 +24,6 @@ import com.nubeiot.core.exceptions.StateException;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-
-import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 public class AnnotationHandlerTest {
 
@@ -204,6 +204,16 @@ public class AnnotationHandlerTest {
     @Test(expected = ImplementationError.class)
     public void test_wrong_return_type() {
         AnnotationHandler.getMethodByAnnotation(MockEventWithDiffParam.class, EventAction.RETURN);
+    }
+
+    @Test(expected = ImplementationError.class)
+    public void test_annotated_type_extends_return_type() {
+        AnnotationHandler.getMethodByAnnotation(MockEventWithDiffParam.class, EventAction.INIT);
+    }
+
+    @Test
+    public void test_return_type_extends_annotated_type() {
+        AnnotationHandler.getMethodByAnnotation(MockEventWithDiffParam.class, EventAction.MIGRATE);
     }
 
 }

@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -12,8 +14,6 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NubeException;
-
-import io.vertx.core.json.JsonObject;
 
 import lombok.Getter;
 import lombok.NonNull;

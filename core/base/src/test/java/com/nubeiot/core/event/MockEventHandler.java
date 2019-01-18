@@ -7,11 +7,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventContractor.Param;
-
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventContractor.Param;
+import com.nubeiot.core.utils.mock.MockChild;
+import com.nubeiot.core.utils.mock.MockParent;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -131,6 +133,16 @@ public class MockEventHandler implements EventHandler {
         @EventContractor(action = EventAction.RETURN, returnType = Single.class)
         public JsonObject wrongReturnType() {
             return new JsonObject();
+        }
+
+        @EventContractor(action = EventAction.INIT, returnType = MockChild.class)
+        public MockParent annotatedExtendsReturnType() {
+            return new MockParent();
+        }
+
+        @EventContractor(action = EventAction.MIGRATE, returnType = MockParent.class)
+        public MockChild returnTypeExtendsAnnotated() {
+            return new MockChild();
         }
 
     }
