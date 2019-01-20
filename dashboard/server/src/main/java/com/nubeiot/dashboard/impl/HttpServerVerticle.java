@@ -1,5 +1,26 @@
 package com.nubeiot.dashboard.impl;
 
+import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
+import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
+import static com.nubeiot.core.common.utils.response.ResponseUtils.buildAbsoluteUri;
+import static com.nubeiot.dashboard.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
+import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
+import static com.nubeiot.dashboard.constants.Address.SERVICE_NAME;
+import static com.nubeiot.dashboard.constants.Address.SITE_COLLECTION_ADDRESS;
+import static com.nubeiot.dashboard.constants.Collection.COMPANY;
+import static com.nubeiot.dashboard.constants.Collection.MENU;
+import static com.nubeiot.dashboard.constants.Collection.SETTINGS;
+import static com.nubeiot.dashboard.constants.Collection.SITE;
+import static com.nubeiot.dashboard.constants.Collection.USER;
+import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
+import static com.nubeiot.dashboard.constants.Location.MEDIA_FILE_LOCATION;
+import static com.nubeiot.dashboard.constants.Location.WEB_SERVER_MICRO_SERVICE_LOCATION;
+import static com.nubeiot.dashboard.utils.FileUtils.appendRealFileNameWithExtension;
+import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 import com.nubeiot.core.common.HttpHelper;
 import com.nubeiot.core.common.RxRestAPIVerticle;
 import com.nubeiot.core.common.constants.Port;
@@ -8,6 +29,7 @@ import com.nubeiot.core.common.utils.CustomMessageCodec;
 import com.nubeiot.core.common.utils.SQLUtils;
 import com.nubeiot.core.common.utils.StringUtils;
 import com.nubeiot.dashboard.Role;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
@@ -39,17 +61,6 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.reactivex.ext.web.handler.StaticHandler;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.servicediscovery.Record;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-
-import static com.nubeiot.core.common.utils.response.ResponseUtils.*;
-import static com.nubeiot.dashboard.constants.Address.*;
-import static com.nubeiot.dashboard.constants.Collection.*;
-import static com.nubeiot.dashboard.constants.Location.MEDIA_FILE_LOCATION;
-import static com.nubeiot.dashboard.constants.Location.WEB_SERVER_MICRO_SERVICE_LOCATION;
-import static com.nubeiot.dashboard.utils.FileUtils.appendRealFileNameWithExtension;
-import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
 
 /**
  * Created by topsykretts on 5/4/18.
@@ -279,7 +290,6 @@ public class HttpServerVerticle<T> extends RxRestAPIVerticle {
             .put("method", ctx.request().method())
             .put("user", ctx.user().principal())
             .put("Site-Id", ctx.request().headers().get("Site-Id"))
-            .put("host", ctx.request().host())
             .put("collection", collection);
         JsonObject body;
         if (StringUtils.isNull(ctx.getBody().toString())) {
