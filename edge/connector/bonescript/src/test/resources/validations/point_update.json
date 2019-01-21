@@ -1,0 +1,17 @@
+[
+  {
+    "id": "DO1",
+    "value": 1,
+    "priority": 16
+  },
+  {
+    "id": "R1",
+    "value": "true",
+    "priority": 16
+  },
+  {
+    "id": "R2",
+    "value": "on",
+    "priority": 4
+  }
+]

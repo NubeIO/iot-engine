@@ -1,22 +1,24 @@
 package com.nubeiot.edge.connector.bonescript.constants;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Stream;
+
 
 public abstract class BBPinMapping {
 
-    public abstract List<String> getAnalogInPins();
+    public abstract Set<String> getAnalogInPins();
 
-    public abstract List<String> getAnalogOutPins();
+    public abstract Set<String> getAnalogOutPins();
 
-    public abstract List<String> getDigitalInPins();
+    public abstract Set<String> getDigitalInPins();
 
-    public abstract List<String> getDigitalOutPins();
+    public abstract Set<String> getDigitalOutPins();
 
-    public List<String> getFieldsKey(Field[] fields) {
-        List<String> values = new ArrayList<>();
+    Set<String> getFieldsKey(Field[] fields) {
+        Set<String> values = new HashSet<>();
         for (Field field : fields) {
             if (!field.isSynthetic()) {
                 values.add(field.getName());
@@ -25,68 +27,65 @@ public abstract class BBPinMapping {
         return values;
     }
 
-    public List<String> getAllPins() {
-        List<String> values = getAnalogInPins();
+    public final Set<String> getAllPins() {
+        Set<String> values = getAnalogInPins();
         values.addAll(getAnalogOutPins());
         values.addAll(getDigitalInPins());
         values.addAll(getDigitalOutPins());
         return values;
     }
 
-    public List<String> getInputPins() {
-        List<String> values = getAnalogInPins();
+    public final Set<String> getInputPins() {
+        Set<String> values = getAnalogInPins();
         values.addAll(getDigitalInPins());
         return values;
     }
 
-    public List<String> getOutputPins() {
-        List<String> values = getAnalogOutPins();
+    public final Set<String> getOutputPins() {
+        Set<String> values = getAnalogOutPins();
         values.addAll(getDigitalOutPins());
         return values;
     }
 
-    public List<String> getAnalogPins() {
-        List<String> values = getAnalogInPins();
+    public final Set<String> getAnalogPins() {
+        Set<String> values = getAnalogInPins();
         values.addAll(getAnalogOutPins());
         return values;
     }
 
-    public List<String> getDigitalPins() {
-        List<String> values = getDigitalInPins();
+    public final Set<String> getDigitalPins() {
+        Set<String> values = getDigitalInPins();
         values.addAll(getDigitalOutPins());
         return values;
     }
 
-    public List<String> getInputTypes() {
+    public final Set<String> getInputTypes() {
         String[] values = {"0-10dc", "4-20ma", "10k thermistor", "digital"};
-        return Arrays.asList(values);
+        return new HashSet<>(Arrays.asList(values));
     }
 
-    public List<String> getOutputTypes() {
+    public final Set<String> getOutputTypes() {
         String[] values = {"0-12dc", "0-10dc", "digital"};
-        return Arrays.asList(values);
+        return new HashSet<>(Arrays.asList(values));
     }
 
-    public int getOutgoingPort() {
+    public final int getOutgoingPort() {
         return 18000;
     }
 
-    // todo: test
-    public List<String> getValidTrueValues() {
-        String[] values = {"1", "true", "on", "start"};
-        return Arrays.asList(values);
+    public final Set<Object> getValidTrueValues() {
+        Object[] values = {1, true, "1", "true", "on", "start"};
+        return new HashSet<>(Arrays.asList(values));
     }
 
-    // todo: test
-    public List<String> getValidFalseValues() {
-        String[] values = {"0", "false", "off", "stop"};
-        return Arrays.asList(values);
+    public final Set<Object> getValidFalseValues() {
+        Object[] values = {0, false, "0", "false", "off", "stop"};
+        return new HashSet<>(Arrays.asList(values));
     }
 
-    // todo: test
-    public List<String> getValidPinOutputs() {
-        List<String> values = getValidTrueValues();
-        values.addAll(getValidFalseValues());
+    public final Set<Object> getValidPinOutputs() {
+        Set<Object> values = new HashSet<>();
+        Stream.of(getValidTrueValues(), getValidFalseValues()).forEach(values::addAll);
         values.add("null");
         return values;
     }

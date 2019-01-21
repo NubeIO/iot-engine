@@ -1,27 +1,27 @@
 package com.nubeiot.edge.connector.bonescript.constants;
 
-import java.util.List;
+import java.util.Set;
 
 // Edge iO BB 28 V1.4
 public class BBPinMappingV14 extends BBPinMapping {
 
     @Override
-    public List<String> getAnalogInPins() {
+    public Set<String> getAnalogInPins() {
         return getFieldsKey(AnalogIn.class.getDeclaredFields());
     }
 
     @Override
-    public List<String> getAnalogOutPins() {
+    public Set<String> getAnalogOutPins() {
         return getFieldsKey(AnalogOut.class.getDeclaredFields());
     }
 
     @Override
-    public List<String> getDigitalInPins() {
+    public Set<String> getDigitalInPins() {
         return getFieldsKey(DigitalIn.class.getDeclaredFields());
     }
 
     @Override
-    public List<String> getDigitalOutPins() {
+    public Set<String> getDigitalOutPins() {
         return getFieldsKey(DigitalOut.class.getDeclaredFields());
     }
 

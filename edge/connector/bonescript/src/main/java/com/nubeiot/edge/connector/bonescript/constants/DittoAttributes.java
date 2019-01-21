@@ -30,6 +30,7 @@ public class DittoAttributes {
     public static String DITTO_HTTP_BASIC = "dittoHttpBasic";
     public static String HISTORY_SETTINGS = "historySettings";
     public static String TYPE = "type";
+    public static String COV = "cov";
     public static String PERIODIC = "periodic";
     public static String SCHEDULE = "schedule";
     public static String DATA = "data";
@@ -44,6 +45,11 @@ public class DittoAttributes {
     public static String LAST_UPDATED = "lastUpdated";
     public static String TOLERANCE = "tolerance";
     public static String KIND = "kind";
+    public static String UNIT = "unit";
+    public static String SCALE = "scale";
+    public static String PRECISION = "precision";
+    public static String TAGS = "tags";
+    public static String ID = "id";
 
     public static String UI1 = "UI1";
 

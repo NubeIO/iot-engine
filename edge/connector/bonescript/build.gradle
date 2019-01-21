@@ -5,6 +5,7 @@ dependencies {
     compile project(':core:httpserver')
     compile project(':core:sql')
     compile project(':core:cluster:hazelcast')
+    compile project(':core:validator')
     compile project.deps.database.h2
     compile project.deps.auth0
     compile project.deps.jbcrypt
