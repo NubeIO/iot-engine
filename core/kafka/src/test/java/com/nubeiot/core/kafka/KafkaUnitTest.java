@@ -59,11 +59,11 @@ public class KafkaUnitTest extends KafkaUnitTestBase {
     public void test_consumer_can_read(TestContext context) {
         String topic = UUID.randomUUID().toString();
         Async async = context.async(2);
-        ConsumerRecord<String, String> expected = new ConsumerRecord<>(topic, 0, 0, DateTimes.nowMilli(),
-                                                                       TimestampType.CREATE_TIME, -1, -1, -1, "test",
-                                                                       topic);
+        JsonObject expected = KafkaRecord.serialize(
+            new ConsumerRecord<>(topic, 0, 0, DateTimes.nowMilli(), TimestampType.CREATE_TIME, -1, -1, -1, "test",
+                                 topic)).toJson(KafkaRecord.NO_HEADERS_MAPPER);
         setupConsumer(async, KAFKA_PUBLISHER.getAddress(), o -> {
-            EventMessage message = EventMessage.initial(EventAction.CREATE, KafkaRecord.serialize(expected).toJson());
+            EventMessage message = EventMessage.initial(EventAction.CREATE, expected);
             assertResponse(context, async, message.toJson(), (JsonObject) o);
         });
         KafkaEventMetadata consumerEvent = KafkaEventMetadata.consumer()
@@ -92,8 +92,7 @@ public class KafkaUnitTest extends KafkaUnitTestBase {
     }
 
     private static void assertResponse(TestContext context, Async async, JsonObject expected, JsonObject actual) {
-        JsonHelper.assertJson(context, async, expected, actual, IGNORE_TIMESTAMP, IGNORE_CHECKSUM, IGNORE_EPOCH,
-                              IGNORE_HEADERS);
+        JsonHelper.assertJson(context, async, expected, actual, IGNORE_TIMESTAMP, IGNORE_CHECKSUM, IGNORE_EPOCH);
     }
 
     private KafkaErrorHandler errorHandler(TestContext context, Async async) {

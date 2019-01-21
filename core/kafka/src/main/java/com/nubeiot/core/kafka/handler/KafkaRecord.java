@@ -27,6 +27,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class KafkaRecord<T> implements JsonData {
 
+    public static final ObjectMapper NO_HEADERS_MAPPER = RecordMixin.MAPPER.copy()
+                                                                           .setFilterProvider(
+                                                                               RecordMixin.ignoreHeaders());
     @Getter
     @JsonUnwrapped
     private final T record;

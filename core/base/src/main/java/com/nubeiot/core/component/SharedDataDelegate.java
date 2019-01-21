@@ -44,7 +44,7 @@ public interface SharedDataDelegate {
     static <D> D getSharedDataValue(Function<String, Object> sharedDataFunc, String dataKey) {
         final Logger logger = LoggerFactory.getLogger(SharedDataDelegate.class);
         try {
-            logger.debug(": \"{}\"", dataKey);
+            logger.debug("Shared Data Key: \"{}\"", dataKey);
             return (D) sharedDataFunc.apply(dataKey);
         } catch (ClassCastException e) {
             logger.warn("Data value Type is not matching with expected data key {}", e, dataKey);

@@ -15,12 +15,13 @@ public final class LogKafkaProducerHandler extends AbstractKafkaProducerHandler 
 
     @Override
     public void handleSuccess(RecordMetadata metadata) {
-        logger.info("Failed when sending record to Kafka cluster: ", metadata.toJson());
+        logger.info("Sent Kafka record successfully");
+        logger.debug("Record metadata: {}", metadata.toJson());
     }
 
     @Override
     public void handleFailed(ErrorMessage message) {
-        logger.error("Failed when sending record to Kafka cluster: {}", message.toJson());
+        logger.error("Sent Kafka record failed: {}", message.toJson());
     }
 
 }

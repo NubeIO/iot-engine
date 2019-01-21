@@ -3,7 +3,6 @@ dependencies {
     compile project(':core:base')
     compile "io.vertx:vertx-web:$project.versions.vertx"
 //    compile "io.vertx:vertx-web-api-contract:$project.versions.vertx"
-//    compile "org.jboss.resteasy:resteasy-vertx:3.6.2.Final"
     compile("com.zandero:rest.vertx:0.8.8") {
         exclude group: 'org.slf4j', module: 'slf4j-api'
     }

@@ -92,7 +92,7 @@ final class ProducerService implements KafkaProducerService {
                         event.getTopic(), event.getTechId(), handler.getClass().getName(),
                         handler.transformer().getClass().getName());
         });
-        logger.debug("Registered {} kind of Kafka Producer", temp.size());
+        logger.debug("Registered {} Kafka Producer(s) successfully", temp.size());
         return this;
     }
 

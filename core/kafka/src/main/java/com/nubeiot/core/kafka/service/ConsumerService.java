@@ -49,7 +49,7 @@ final class ConsumerService implements KafkaConsumerService {
         Map<ClientTechId, KafkaConsumer> temp = new HashMap<>();
         techIdMap.forEach((topic, techId) -> consumers.put(topic, temp.computeIfAbsent(techId, this::create)));
         consumerEvents.forEach((techId, metadata) -> registerHandler(temp.get(techId), sharedDataFunc, metadata));
-        logger.debug("Registered {} kind of Kafka Consumer", temp.size());
+        logger.debug("Registered {} Kafka Consumer(s) successfully", temp.size());
         return this;
     }
 

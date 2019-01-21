@@ -29,7 +29,7 @@ public class KafkaBroadcasterTransformer<K, V> implements KafkaConsumerRecordTra
         if (msg.isError()) {
             return msg;
         }
-        JsonObject data = KafkaRecord.serialize(record.record()).toJson();
+        JsonObject data = KafkaRecord.serialize(record.record()).toJson(KafkaRecord.NO_HEADERS_MAPPER);
         return EventMessage.from(msg.getStatus(), msg.getAction(), msg.getPrevAction(), data);
     }
 

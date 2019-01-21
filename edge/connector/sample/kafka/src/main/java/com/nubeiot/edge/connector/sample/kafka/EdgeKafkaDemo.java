@@ -12,6 +12,8 @@ import com.nubeiot.core.kafka.service.KafkaProducerService;
 
 public final class EdgeKafkaDemo extends ContainerVerticle {
 
+    private static final String TOPIC = "GPIO";
+
     @Override
     public void start() {
         super.start();
@@ -20,7 +22,7 @@ public final class EdgeKafkaDemo extends ContainerVerticle {
 
     private KafkaRouter initKafkaRouter() {
         return new KafkaRouter().registerKafkaEvent(
-            KafkaEventMetadata.producer().topic("GPIO").keyClass(String.class).valueClass(String.class).build());
+            KafkaEventMetadata.producer().topic(TOPIC).keyClass(String.class).valueClass(UUID.class).build());
     }
 
     private void startProducer(KafkaUnit kafkaUnit) {
@@ -28,7 +30,7 @@ public final class EdgeKafkaDemo extends ContainerVerticle {
         KafkaProducerService producerService = kafkaUnit.getProducerService();
         vertx.setPeriodic(3000, id -> {
             logger.info("Sending data...");
-            producerService.publish(EventAction.CREATE, "GPIO", 1, this.deploymentID(), UUID.randomUUID().toString());
+            producerService.publish(EventAction.CREATE, TOPIC, 0, this.deploymentID(), UUID.randomUUID());
         });
     }
 

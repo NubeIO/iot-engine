@@ -28,7 +28,8 @@ public final class HttpConfig implements IConfig {
     private String host = "0.0.0.0";
     private int port = 8080;
     private boolean enabled = true;
-    private boolean index = false;
+    private boolean sample = false;
+    private String sampleWebRoot = "sample";
     private String rootApi = ApiConstants.ROOT_API_PATH;
     @JsonProperty(value = ServerOptions.NAME)
     private ServerOptions options = (ServerOptions) new ServerOptions().setCompressionSupported(true)

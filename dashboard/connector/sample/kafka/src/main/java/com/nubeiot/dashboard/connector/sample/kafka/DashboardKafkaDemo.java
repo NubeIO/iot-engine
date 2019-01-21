@@ -1,5 +1,7 @@
 package com.nubeiot.dashboard.connector.sample.kafka;
 
+import java.util.UUID;
+
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
@@ -46,9 +48,8 @@ public class DashboardKafkaDemo extends ContainerVerticle {
 
     private KafkaRouter initKafkaRouter() {
         return new KafkaRouter().registerKafkaEvent(KafkaEventMetadata.consumer()
-                                                                      .model(KAFKA_EB_PUBLISHER)
-                                                                      .keyClass(String.class)
-                                                                      .valueClass(String.class)
+                                                                      .model(KAFKA_EB_PUBLISHER).topic("GPIO")
+                                                                      .keyClass(String.class).valueClass(UUID.class)
                                                                       .build());
     }
 

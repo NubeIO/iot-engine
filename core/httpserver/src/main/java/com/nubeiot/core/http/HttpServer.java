@@ -84,9 +84,9 @@ public final class HttpServer extends UnitVerticle<HttpConfig> {
             initWebSocketRouter(router);
             initHttp2Router(router);
             initRestRouter(router);
-            if (config.isIndex()) {
-                router.route("/index/*")
-                      .handler(StaticHandler.create().setAllowRootFileSystemAccess(false).setIncludeHidden(false));
+            if (config.isSample()) {
+                router.route(ApiConstants.SAMPLE_PATH)
+                      .handler(StaticHandler.create().setWebRoot(config.getSampleWebRoot()).setIncludeHidden(false));
             }
             router.route().last().handler(new NotFoundContextHandler());
             return router;
