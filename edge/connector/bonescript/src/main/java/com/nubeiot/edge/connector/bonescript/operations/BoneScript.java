@@ -19,18 +19,18 @@ public class BoneScript {
 
     public static void init(@NonNull Vertx vertx, @NonNull BoneScriptEntityHandler entityHandler,
                             @NonNull MultiThreadDittoDB multiThreadDittoDB, @NonNull JsonObject db) {
-        attachInterupts(db);
+        attachInterrupts(db);
     }
 
-    private static void attachInterupts(JsonObject db) {
+    private static void attachInterrupts(JsonObject db) {
         JsonObject points = db.getJsonObject(THING)
                               .getJsonObject(FEATURES)
                               .getJsonObject(POINTS)
                               .getJsonObject(PROPERTIES);
-        points.forEach(point -> attachInterupt(db, point.getKey()));
+        points.forEach(point -> attachInterrupts(db, point.getKey()));
     }
 
-    private static void attachInterupt(JsonObject db, String id) {
+    private static void attachInterrupts(JsonObject db, String id) {
         BBPinMapping bbPinMapping = BBVersion.getBbPinMapping(BB_DEFAULT_VERSION);
         if (bbPinMapping.getDigitalInPins().contains(id)) {
             // TODO: on change, BeagleBone inputs do operation

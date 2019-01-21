@@ -39,8 +39,8 @@ public class BoneScriptVerticle extends ContainerVerticle {
         final NubeConfig nubeConfig = IConfig.from(config(), NubeConfig.class);
         logger.info("BoneScript configuration: {}", this.nubeConfig.getAppConfig().toJson());
 
-        System.getProperties()
-              .setProperty(BB_VERSION, nubeConfig.getAppConfig().toJson().getString(BB_VERSION, BB_DEFAULT_VERSION));
+        // Initializing BBPinMappingInitializer for future use
+        new BBPinMappingInitializer(nubeConfig.getAppConfig().toJson().getString(BB_VERSION, BB_DEFAULT_VERSION));
 
         this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, BoneScriptEntityHandler.class),
                          this::handler);

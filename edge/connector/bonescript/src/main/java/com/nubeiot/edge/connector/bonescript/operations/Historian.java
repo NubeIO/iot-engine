@@ -35,11 +35,11 @@ import lombok.NonNull;
 
 public class Historian {
 
-    public final static String CONTEXT_VERTX = "vertx";
-    public final static String CONTEXT_ENTITY_HANDLER = "entityHandler";
-    public final static String CONTEXT_DITTO_DB = "dittoDB";
-    public final static String CONTEXT_ID = "id";
-    private final static Logger logger = LoggerFactory.getLogger(Historian.class);
+    public static final String CONTEXT_VERTX = "vertx";
+    public static final String CONTEXT_ENTITY_HANDLER = "entityHandler";
+    public static final String CONTEXT_DITTO_DB = "dittoDB";
+    public static final String CONTEXT_ID = "id";
+    private static final Logger logger = LoggerFactory.getLogger(Historian.class);
     private static List<ScheduleJob> scheduledJobs = new ArrayList<>();
 
     public static void init(@NonNull Vertx vertx, @NonNull BoneScriptEntityHandler entityHandler,
@@ -74,8 +74,7 @@ public class Historian {
             scheduler = schedulerFactory.getScheduler();
 
             // Pass those attributes on Job contexts whose values are different from one job to another
-            JobDetail jobDetail = newJob(RecordPeriodicJob.class).usingJobData(CONTEXT_ID, id)
-                                                                 .build();
+            JobDetail jobDetail = newJob(RecordPeriodicJob.class).usingJobData(CONTEXT_ID, id).build();
             Trigger trigger = newTrigger().startNow().withSchedule(cronSchedule(schedule)).build();
 
             scheduler.getContext().put(CONTEXT_VERTX, vertx);

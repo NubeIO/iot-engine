@@ -1,13 +1,11 @@
 package com.nubeiot.edge.connector.bonescript.functions;
 
-import static com.nubeiot.edge.connector.bonescript.BoneScriptVerticle.BB_VERSION;
-
 import java.util.function.Function;
 
 import com.nubeiot.core.utils.Reflections;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.connector.bonescript.BBPinMappingInitializer;
 import com.nubeiot.edge.connector.bonescript.constants.BBPinMapping;
-import com.nubeiot.edge.connector.bonescript.enums.BBVersion;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -24,10 +22,8 @@ public class InitPins implements Function<JsonObject, JsonObject> {
 
     @Override
     public JsonObject apply(JsonObject jsonObject) {
-        String version = System.getProperties().get(BB_VERSION).toString();
-        logger.info("BeagleBone version: {}", version);
-        BBPinMapping bbPinMapping = BBVersion.getBbPinMapping(version);
-
+        BBPinMapping bbPinMapping = BBPinMappingInitializer.getInstance();
+        logger.info("BeagleBone version: {}", BBPinMappingInitializer.getVersion());
         String analogInTemplate = Strings.convertToString(
             Reflections.staticClassLoader().getResourceAsStream(ANALOG_IN_TEMPLATE_RESOURCE_PATH));
         String digitalInTemplate = Strings.convertToString(
