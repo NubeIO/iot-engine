@@ -56,11 +56,11 @@ public interface Unit<C extends IConfig> extends Verticle {
     /**
      * Retrieve {@code Vertx} shared data value by key data
      *
-     * @param key given data key
-     * @param <T> T type of data value
+     * @param dataKey given data key
+     * @param <T>     T type of data value
      * @return Data value ({@code nullable})
      * @throws ClassCastException if the object is not null and is not assignable to the type {@code T}.
      */
-    <T> T getSharedData(String key);
+    <T> T getSharedData(String dataKey);
 
 }

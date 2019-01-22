@@ -9,11 +9,13 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.ResponseContentTypeHandler;
 import io.vertx.ext.web.handler.ResponseTimeHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
+import com.nubeiot.core.http.HttpConfig.CorsOptions;
 import com.nubeiot.core.http.handler.FailureContextHandler;
 import com.nubeiot.core.http.handler.NotFoundContextHandler;
 import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
@@ -33,8 +35,8 @@ public final class HttpServer extends UnitVerticle<HttpConfig> {
 
     @Override
     public void start(Future<Void> future) {
+        logger.info("Starting HTTP Server...");
         super.start();
-        logger.info("HTTP Server configuration: {}", config.toJson().encode());
         HttpServerOptions options = new HttpServerOptions(config.getOptions()).setHost(config.getHost())
                                                                               .setPort(config.getPort());
         this.httpServer = vertx.createHttpServer(options).requestHandler(initRouter()).listen(event -> {
@@ -63,7 +65,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig> {
     private Router initRouter() {
         try {
             io.vertx.ext.web.Router router = io.vertx.ext.web.Router.router(vertx);
-            HttpConfig.CorsOptions corsOptions = config.getCorsOptions();
+            CorsOptions corsOptions = config.getCorsOptions();
             CorsHandler corsHandler = CorsHandler.create(corsOptions.getAllowedOriginPattern())
                                                  .allowedMethods(corsOptions.getAllowedMethods())
                                                  .allowedHeaders(corsOptions.getAllowedHeaders())
@@ -82,6 +84,10 @@ public final class HttpServer extends UnitVerticle<HttpConfig> {
             initWebSocketRouter(router);
             initHttp2Router(router);
             initRestRouter(router);
+            if (config.isSample()) {
+                router.route(ApiConstants.SAMPLE_PATH)
+                      .handler(StaticHandler.create().setWebRoot(config.getSampleWebRoot()).setIncludeHidden(false));
+            }
             router.route().last().handler(new NotFoundContextHandler());
             return router;
         } catch (NubeException e) {

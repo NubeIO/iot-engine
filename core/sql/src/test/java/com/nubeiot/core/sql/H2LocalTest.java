@@ -45,22 +45,24 @@ public class H2LocalTest extends BaseSqlTest {
     }
 
     @Test
-    public void test_restart_app(TestContext context) throws InterruptedException {
-        startSQL(ManySchema.CATALOG, MockManyNoData.class, context);
+    public void test_restart_app(TestContext context) {
+        startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
         stopSQL(context);
-        startSQL(ManySchema.CATALOG, MockManyNoData.class, context);
+        startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
     }
 
     @Test
-    public void test_init_failed(TestContext context) throws InterruptedException {
-        startSQL(ManySchema.CATALOG, MockManyErrorData.class, t -> context.assertTrue(t instanceof InitializerError));
+    public void test_init_failed(TestContext context) {
+        startSQLFailed(context, ManySchema.CATALOG, MockManyErrorData.class,
+                       t -> context.assertTrue(t instanceof InitializerError));
     }
 
     @Test
-    public void test_migrate_failed(TestContext context) throws InterruptedException {
-        startSQL(ManySchema.CATALOG, MockManyNoData.class, context);
+    public void test_migrate_failed(TestContext context) {
+        startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
         stopSQL(context);
-        startSQL(ManySchema.CATALOG, MockManyErrorData.class, t -> context.assertTrue(t instanceof MigrationError));
+        startSQLFailed(context, ManySchema.CATALOG, MockManyErrorData.class,
+                       t -> context.assertTrue(t instanceof MigrationError));
     }
 
 }

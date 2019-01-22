@@ -1,0 +1,5 @@
+dependencies {
+    compile project(':core:httpserver')
+    compile project(':core:kafka')
+    compile project(':eventbus:edge')
+}

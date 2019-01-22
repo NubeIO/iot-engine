@@ -1,8 +1,7 @@
 package com.nubeiot.dashboard.connector.edge;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonObject;
@@ -13,7 +12,6 @@ import com.nubeiot.core.cluster.ClusterNode;
 import com.nubeiot.core.cluster.ClusterRegistry;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.cluster.IClusterDelegate;
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
@@ -27,16 +25,15 @@ public class ClusterController implements EventHandler {
     private static final Logger logger = LoggerFactory.getLogger(ClusterController.class);
 
     @NonNull
-    private final Function<String, Object> sharedDataFunc;
+    private final ClusterType clusterType;
 
     @Override
     public List<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.GET_LIST);
+        return Collections.singletonList(EventAction.GET_LIST);
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = List.class)
-    public List<JsonObject> list(RequestData data) {
-        ClusterType clusterType = (ClusterType) sharedDataFunc.apply(EdgeConnectorVerticle.SHARED_CLUSTER_TYPE);
+    public List<JsonObject> list() {
         IClusterDelegate clusterDelegate = ClusterRegistry.instance().getClusterDelegate(clusterType);
         return clusterDelegate.getAllNodes().stream().map(ClusterNode::toJson).collect(Collectors.toList());
     }

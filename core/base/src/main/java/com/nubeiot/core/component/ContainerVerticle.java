@@ -17,6 +17,7 @@ import io.vertx.reactivex.core.AbstractVerticle;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
@@ -29,21 +30,27 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, Consumer<? extends Unit>> afterSuccesses = new HashMap<>();
     private final Map<Class<? extends Unit>, String> deployments = new HashMap<>();
     private final Map<String, Object> sharedData = new HashMap<>();
-    private final String sharedDataKey = this.getClass().getName();
+    private final String sharedKey = this.getClass().getName();
+
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    @Getter
+    protected EventController eventController;
     @Getter
     protected NubeConfig nubeConfig;
 
     @Override
     public void start() {
         this.nubeConfig = IConfig.from(config(), NubeConfig.class);
+        this.eventController = new EventController(vertx);
+        this.registerEventbus(eventController);
+        this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void start(Future<Void> future) {
         this.start();
-        this.vertx.sharedData().getLocalMap(sharedDataKey).getDelegate().putAll(sharedData);
+        this.vertx.sharedData().getLocalMap(sharedKey).getDelegate().putAll(sharedData);
         this.startUnits(future);
     }
 
@@ -51,6 +58,9 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     public void stop(Future<Void> future) {
         this.stopUnits(future);
     }
+
+    @Override
+    public void registerEventbus(EventController controller) { }
 
     @Override
     public Container addSharedData(String key, Object data) {
@@ -75,13 +85,13 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     public void startUnits(Future<Void> future) {
         Flowable.fromIterable(components.entrySet()).map(entry -> {
-            Unit unit = entry.getValue().get().registerSharedData(sharedDataKey);
+            Unit unit = entry.getValue().get().registerSharedData(sharedKey);
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
             return vertx.rxDeployVerticle(unit, options)
                         .subscribe(deployId -> succeed(unit, deployId), throwable -> fail(future, unit, throwable));
         }).count().subscribe(c -> {
-            logger.info("Deployed {} verticle successfully", c);
+            logger.info("Deploying {} verticle(s)...", c);
             future.complete();
         }, future::fail);
     }
@@ -110,7 +120,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     @SuppressWarnings("unchecked")
     private void succeed(Unit unit, String deployId) {
-        logger.info("Deployed {} successful with {}", unit.getClass(), deployId);
+        logger.info("Deployed Verticle '{}' successful with ID '{}'", unit.getClass().getName(), deployId);
         deployments.put(unit.getClass(), deployId);
         Consumer<Unit> consumer = (Consumer<Unit>) this.afterSuccesses.get(unit.getClass());
         if (Objects.nonNull(consumer)) {

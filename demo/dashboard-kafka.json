@@ -1,0 +1,44 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "REQUIRED",
+      "ssl": true,
+      "clustered": false,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "__http__": {
+      "host": "0.0.0.0",
+      "port": 8100,
+      "enabled": true,
+      "sample": true,
+      "sampleWebRoot": "kafkaWebRoot",
+      "rootApi": "/api",
+      "__socket__": {
+        "enabled": true,
+        "rootWs": "/wsk"
+      }
+    },
+    "__kafka__": {
+      "__client__": {
+        "bootstrap.servers": [
+          "localhost:9092"
+        ]
+      },
+      "__security__": {
+        "security.protocol": "PLAINTEXT"
+      }
+    }
+  }
+}

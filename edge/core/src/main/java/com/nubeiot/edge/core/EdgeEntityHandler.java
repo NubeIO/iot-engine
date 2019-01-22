@@ -19,6 +19,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
@@ -95,11 +97,11 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         logger.info("Execute transaction: {}", transactionId);
         preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
         EventMessage request = EventMessage.success(action, preDeployResult.toRequestData());
-        EventController controller = (EventController) sharedDataFunc.apply(EdgeVerticle.SHARED_EVENTBUS);
-        ReplyEventHandler reply = new ReplyEventHandler("VERTX-DEPLOY", action, deploymentEvent().getAddress(),
+        EventController controller = (EventController) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
+        ReplyEventHandler reply = new ReplyEventHandler("VERTX-DEPLOY", deploymentEvent().getAddress(), action,
                                                         r -> succeedPostDeployment(serviceId, transactionId, action,
                                                                                    r.getData().getString("deploy_id")),
-                                                        t -> errorPostDeployment(serviceId, transactionId, action, t));
+                                                        e -> errorPostDeployment(serviceId, transactionId, action, e));
         controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply);
     }
 
@@ -190,11 +192,11 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     //TODO: register EventBus to send message somewhere
-    private void errorPostDeployment(String serviceId, String transId, EventAction action, Throwable error) {
-        logger.error("Handle entities after error deployment...", error);
+    private void errorPostDeployment(String serviceId, String transId, EventAction action, ErrorMessage error) {
+        logger.error("Handle entities after error deployment...");
         queryExecutor.executeAny(c -> updateTransStatus(c, transId, Status.FAILED,
                                                         Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR,
-                                                                                 ErrorMessage.parse(error).toJson())))
+                                                                                 error.toJson())))
                      .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
                                                  .map(r2 -> r1 + r2))
                      .subscribe();

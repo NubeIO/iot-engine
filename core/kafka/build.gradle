@@ -4,11 +4,22 @@ ext {
 }
 dependencies {
     compile project(":core:base")
-    compile "io.vertx:vertx-kafka-client:$project.versions.vertx"
-    compile "org.apache.kafka:kafka_2.12:${project.kafkaVersion}"
+    compile("io.vertx:vertx-kafka-client:$project.versions.vertx") {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'log4j', module: 'log4j'
+    }
+    compile "org.apache.kafka:kafka-clients:$project.kafkaVersion"
+    compile("org.apache.kafka:kafka_2.12:$project.kafkaVersion") {
+        exclude group: 'org.scala-lang', module: 'scala-library'
+    }
+    compile "org.slf4j:log4j-over-slf4j:$project.versions.logs.slf4j"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$project.versions.jackson"
 
+    testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:httpserver")
     testCompile project(":core:httpserver").sourceSets.test.output
-    testCompile "io.debezium:debezium-core:${project.debeziumVersion}"
-    testCompile group: "io.debezium", name: "debezium-core", version: "${project.debeziumVersion}", classifier: "tests"
+    testCompile "org.scala-lang:scala-library:2.12.7"
+    testCompile "io.debezium:debezium-core:$project.debeziumVersion"
+    testCompile group: "io.debezium", name: "debezium-core", version: "$project.debeziumVersion", classifier: "tests"
+
 }

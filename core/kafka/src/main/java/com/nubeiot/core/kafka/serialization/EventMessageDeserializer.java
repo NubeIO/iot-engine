@@ -5,15 +5,14 @@ import java.util.Objects;
 
 import org.apache.kafka.common.serialization.Deserializer;
 
-import com.nubeiot.core.event.EventMessage;
-
 import io.vertx.core.buffer.Buffer;
 
-public class EventMessageDeserializer implements Deserializer<EventMessage> {
+import com.nubeiot.core.event.EventMessage;
+
+public final class EventMessageDeserializer implements Deserializer<EventMessage> {
 
     @Override
-    public void configure(Map<String, ?> configs, boolean isKey) {
-    }
+    public void configure(Map<String, ?> configs, boolean isKey) { }
 
     @Override
     public EventMessage deserialize(String topic, byte[] data) {
@@ -21,7 +20,6 @@ public class EventMessageDeserializer implements Deserializer<EventMessage> {
     }
 
     @Override
-    public void close() {
-    }
+    public void close() { }
 
 }

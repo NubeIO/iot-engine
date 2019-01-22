@@ -4,6 +4,10 @@ import java.util.function.Consumer;
 
 import io.vertx.core.Future;
 
+import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventModel;
+
 /**
  * Represents a container consists a list of {@code Verticle unit} to startup application
  *
@@ -11,6 +15,16 @@ import io.vertx.core.Future;
  * @see ContainerVerticle
  */
 public interface Container {
+
+    /**
+     * Register eventbus consumer
+     *
+     * @param controller EventController
+     * @see EventController#register(EventModel, EventHandler)
+     * @see EventController#register(String, EventHandler)
+     * @see EventController#register(String, boolean, EventHandler)
+     */
+    void registerEventbus(EventController controller);
 
     /**
      * Add local shared data to between different verticles

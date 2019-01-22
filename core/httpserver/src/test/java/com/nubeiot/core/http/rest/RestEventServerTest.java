@@ -10,13 +10,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.BaseHttpServerTest;
-import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.core.http.mock.MockApiDefinition;
-import com.nubeiot.core.http.mock.MockEventBusErrorHandler;
-import com.nubeiot.core.http.mock.MockEventBusSuccessHandler;
-
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
@@ -24,18 +17,25 @@ import io.vertx.ext.unit.junit.RepeatRule;
 import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-@SuppressWarnings("unchecked")
+import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.HttpServerRouter;
+import com.nubeiot.core.http.HttpServerTestBase;
+import com.nubeiot.core.http.mock.MockApiDefinition;
+import com.nubeiot.core.http.mock.MockEventBusErrorHandler;
+import com.nubeiot.core.http.mock.MockEventBusSuccessHandler;
+
 @RunWith(VertxUnitRunner.class)
-public class RestEventServerTest extends BaseHttpServerTest {
+public class RestEventServerTest extends HttpServerTestBase {
 
     @Rule
     public RepeatRule repeatRule = new RepeatRule();
     @Rule
-    public Timeout timeoutRule = Timeout.seconds(BaseHttpServerTest.TEST_TIMEOUT);
+    public Timeout timeoutRule = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
 
     @BeforeClass
     public static void beforeSuite() {
-        BaseHttpServerTest.beforeSuite();
+        TestHelper.setup();
     }
 
     @Before

@@ -15,10 +15,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.nubeiot.core.TestBase;
+import com.nubeiot.core.TestHelper.OSHelper;
 import com.nubeiot.core.exceptions.NubeException;
 
-public class FileUtilsTest extends TestBase {
+public class FileUtilsTest {
 
     private static final URL RESOURCE = FileUtilsTest.class.getClassLoader().getResource("none_private_key.txt");
     @Rule
@@ -59,7 +59,7 @@ public class FileUtilsTest extends TestBase {
         try {
             System.out.println(FileUtils.toPath("https://postman-echo.com/post"));
         } catch (NubeException e) {
-            Assert.assertTrue(!isWin() || e.getCause() instanceof InvalidPathException);
+            Assert.assertTrue(!OSHelper.isWin() || e.getCause() instanceof InvalidPathException);
         }
     }
 
@@ -103,8 +103,8 @@ public class FileUtilsTest extends TestBase {
 
     @Test
     public void test_convertToBytes() {
-        Assert.assertNotNull(FileUtils.convertToBytes(
-                FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt")));
+        Assert.assertNotNull(
+            FileUtils.convertToBytes(FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt")));
     }
 
     @Test(expected = NullPointerException.class)
@@ -121,14 +121,14 @@ public class FileUtilsTest extends TestBase {
     @Test
     public void test_writeToOutputStream() {
         Assert.assertNotNull(FileUtils.writeToOutputStream(
-                FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt"),
-                new ByteArrayOutputStream()));
+            FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt"),
+            new ByteArrayOutputStream()));
     }
 
     @Test
     public void test_convertToByteArray() {
         Assert.assertNotNull(FileUtils.convertToByteArray(
-                FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt")));
+            FileUtilsTest.class.getClassLoader().getResourceAsStream("none_private_key.txt")));
     }
 
     private void readErrorFile(String filePath) throws Throwable {

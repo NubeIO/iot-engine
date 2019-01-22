@@ -16,18 +16,20 @@ public abstract class UnitVerticle<C extends IConfig> extends AbstractVerticle i
     public void start() {
         logger.debug("Computing component configure from {} of {}", configFile(), configClass());
         this.config = computeConfig(config());
+        logger.debug("Unit Configuration: {}", config.toJson().encode());
     }
 
     @Override
     public final Unit<C> registerSharedData(String sharedKey) {
+        logger.debug("Register SharedData with shared key: {}", sharedKey);
         this.sharedKey = sharedKey;
         return this;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public final <T> T getSharedData(String key) {
-        return (T) this.vertx.sharedData().getLocalMap(sharedKey).get(key);
+    public final <T> T getSharedData(String dataKey) {
+        logger.debug("Retrieve SharedData by SharedKey {}", sharedKey);
+        return SharedDataDelegate.getSharedDataValue(k -> vertx.sharedData().getLocalMap(sharedKey).get(k), dataKey);
     }
 
 }

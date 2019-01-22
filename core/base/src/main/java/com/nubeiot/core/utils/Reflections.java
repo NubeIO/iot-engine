@@ -27,7 +27,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Functions.Silencer;
 
 import lombok.AccessLevel;
@@ -116,19 +115,31 @@ public final class Reflections {
         }
 
         @SuppressWarnings("unchecked")
-        public static <T> T constantByName(Class<?> clazz, String fieldName) {
+        public static <T> T constantByName(@NonNull Class<?> clazz, String name) {
+            Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+                                                    f -> f.getName().equals(Strings.requireNotBlank(name)));
+            return (T) findToStream(clazz, filter).map(field -> getConstant(clazz, field)).findFirst().orElse(null);
+        }
+
+        @SuppressWarnings("unchecked")
+        public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,
+                                               Predicate<Field> predicate) {
+            Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+                                                    f -> ReflectionClass.assertDataType(fieldClass, f.getType()));
+            if (Objects.nonNull(predicate)) {
+                filter = filter.and(predicate);
+            }
+            return (List<T>) findToStream(clazz, filter).map(field -> getConstant(clazz, field))
+                                                        .collect(Collectors.toList());
+        }
+
+        @SuppressWarnings("unchecked")
+        private static <T> T getConstant(@NonNull Class<?> clazz, Field field) {
             try {
-                Field field = clazz.getDeclaredField(fieldName);
-                if (hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).test(field)) {
-                    return (T) field.get(null);
-                }
-                return null;
-            } catch (NoSuchFieldException | IllegalAccessException e) {
+                return (T) field.get(null);
+            } catch (IllegalAccessException | ClassCastException e) {
                 throw new NubeException(
-                    Strings.format("Failed to get field constant {0} of {1}", fieldName, clazz.getName()), e);
-            } catch (ClassCastException e) {
-                throw new NubeException(ErrorCode.INVALID_ARGUMENT, "The output type does not match with " + fieldName,
-                                        e);
+                    Strings.format("Failed to get field constant {0} of {1}", field.getName(), clazz.getName()), e);
             }
         }
 
