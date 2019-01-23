@@ -1,23 +1,15 @@
-package com.nubeiot.dashboard.utils;
-
+package com.nubeiot.dashboard.helpers;
 
 import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.common.utils.StringUtils;
 import com.nubeiot.dashboard.Role;
 
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class MultiTenantCustomMessageHelper {
-    public static String buildAbsoluteUri(Message<Object> message, String location) {
-        if (StringUtils.isNull(location)) {
-            return "";
-        }
-        return "http://" + getHost(message) + location;
-    }
+public class CustomMessageHelper {
 
-    private static String getHost(Message<Object> message) {
+    public static String getHost(Message<Object> message) {
         CustomMessage customMessage = (CustomMessage) message.body();
         return customMessage.getHeader().getString("host");
     }
@@ -76,4 +68,5 @@ public class MultiTenantCustomMessageHelper {
             return "";
         }
     }
+
 }

@@ -1,5 +1,7 @@
 {
   "__app__": {
+    "__micro__": {},
+    "http.scheme": "http",
     "http.port": 8085,
     "DATA_DIR": "nube-io",
     "MEDIA_ROOT": "media",
@@ -9,7 +11,7 @@
       "ssl-required": "external",
       "resource": "nube-web-api-gateway",
       "credentials": {
-        "secret": "0cc6aaa3-761e-49a1-868b-07ac8622447d"
+        "secret": "b3088f82-9b73-49c8-a89b-94102ede802c"
       },
       "confidential-port": 0,
       "policy-enforcer": {}
