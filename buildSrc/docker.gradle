@@ -1,0 +1,40 @@
+apply plugin: "com.bmuschko.docker-java-application"
+
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+loadSecretProps("$rootDir/docker.secret.properties")
+
+docker {
+    url = project.dockerHost
+    registryCredentials {
+        url = project.dockerRegistryUrl
+        username = project.dockerRegistryUser
+        password = project.dockerRegistryPwd
+        email = project.dockerRegistryEmail
+    }
+}
+
+task createDockerfile(type: Dockerfile, group: "docker", dependsOn: build) {
+    onlyIf {
+        project.hasProperty("dockerable") && project.dockerable == "true"
+    }
+    def artifactName = project.computeBaseName()
+    destFile = file("${project.distsDir}/Dockerfile")
+    from("openjdk:jre-alpine")
+    workingDir("/app")
+    addFile("${artifactName}-${project.version}.tar", "./")
+    exposePort(8080)
+    entryPoint("java")
+    defaultCommand("-jar", "${artifactName}.jar")
+}
+
+task buildDockerImage(type: DockerBuildImage, group: "docker", dependsOn: createDockerfile) {
+    onlyIf {
+        project.hasProperty("dockerable") && project.dockerable == "true"
+    }
+    def artifactName = project.computeBaseName()
+    inputDir = file("${project.distsDir}")
+    dockerFile = file("${project.distsDir}/Dockerfile")
+    tags.add("${artifactName}:latest")
+}

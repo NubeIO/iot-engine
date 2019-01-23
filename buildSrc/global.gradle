@@ -1,7 +1,12 @@
 apply from: "buildSrc/verification.gradle"
 apply from: "buildSrc/dist.gradle"
 apply plugin: "java"
+apply plugin: "com.bmuschko.docker-java-application"
 
 task jooq(group: "Build") {
     dependsOn subprojects.collect { it.tasks.withType(com.nubeiot.buildscript.jooq.JooqGenerateTask) }
+}
+
+task docker(group: "docker") {
+    dependsOn subprojects.collect { it.tasks.withType(com.bmuschko.gradle.docker.tasks.image.DockerBuildImage) }
 }

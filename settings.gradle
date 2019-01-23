@@ -33,5 +33,4 @@ include ':eventbus:edge'
 include ':eventbus:sensor'
 
 include ':ext:rx-jdbc'
-include 'edge:connector'
 

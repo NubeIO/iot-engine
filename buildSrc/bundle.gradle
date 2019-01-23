@@ -4,7 +4,7 @@ import java.util.jar.Attributes.Name
 import org.gradle.util.GradleVersion
 
 jar {
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
     doFirst {
         def classPath = configurations.runtime.isEmpty() ? "" : configurations.runtime.files.collect {
             it.getName()
@@ -55,24 +55,24 @@ distZip {
     onlyIf {
         project.hasProperty("executable") && project.executable == "true"
     }
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
 }
 
 distTar {
     onlyIf {
         project.hasProperty("executable") && project.executable == "true"
     }
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
 }
 
 task sourcesJar(type: Jar, dependsOn: classes, group: 'distribution') {
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
     from sourceSets.main.allSource
     classifier = 'sources'
 }
 
 task testsJar(type: Jar, group: 'distribution') {
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
     from sourceSets.test.output
     classifier = 'tests'
 }
@@ -86,7 +86,7 @@ task uberJar(type: Jar) {
         project.hasProperty("standalone") && project.standalone == "true"
     }
     classifier = 'fat'
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
     from sourceSets.main.output
     dependsOn configurations.runtimeClasspath
     from {

@@ -1,9 +1,14 @@
+import com.nubeiot.buildscript.ProjectUtils
+
 plugins {
     id "eclipse"
     id "idea"
-    id "org.sonarqube" version "2.6"
-    id "net.ltgt.apt" version "0.19" apply false
+    id "org.sonarqube"
+    id "net.ltgt.apt" apply false
+    id "com.bmuschko.docker-java-application" apply false
 }
+
+apply from: "buildSrc/dependencies.gradle"
 
 ext {
     baseName = "nube"
@@ -19,35 +24,18 @@ sonarqube {
 group = 'com.nubeiot'
 
 allprojects {
-    version = project.version + "-" + project.semanticVersion
+    apply plugin: "eclipse"
+    apply plugin: "idea"
 
+    repositories project.repos
+    
     configurations {
         providedRuntime
     }
 
-    repositories {
-        mavenLocal()
-        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-        mavenCentral()
-    }
-
-    apply plugin: "eclipse"
-    apply plugin: "idea"
-}
-
-def static computeGroup(project) {
-    if (project.parent == null) {
-        return project.group
-    }
-    def suffix = project.parent == project.rootProject ? "" : ("." + project.parent.name)
-    return computeGroup(project.parent) + suffix
-}
-
-def static computeBaseName(project) {
-    if (project.parent == null) {
-        return project.ext.baseName
-    }
-    return computeBaseName(project.parent) + "-" + project.name
+    version = project.version + "-" + project.semanticVersion
+    project.ext.computeBaseName = { -> ProjectUtils.computeBaseName(project) }
+    project.ext.loadSecretProps = { f -> ProjectUtils.loadSecretProps(project, f) }
 }
 
 subprojects {
@@ -56,7 +44,7 @@ subprojects {
     apply plugin: "jacoco"
     apply plugin: "net.ltgt.apt"
 
-    group = computeGroup(project)
+    group = ProjectUtils.computeGroup(project)
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -64,8 +52,6 @@ subprojects {
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
     }
-
-    apply from: "$rootDir/buildSrc/dependencies.gradle"
 
     dependencies {
         compile project.deps.vertx.core
@@ -90,6 +76,7 @@ subprojects {
     apply from: "$rootDir/buildSrc/bundle.gradle"
     apply from: "$rootDir/buildSrc/nexus.gradle"
     apply from: "$rootDir/buildSrc/misc.gradle"
+    apply from: "$rootDir/buildSrc/docker.gradle"
 }
 
 apply from: "buildSrc/global.gradle"
