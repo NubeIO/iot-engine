@@ -1,49 +1,35 @@
 package com.nubeiot.core.validator;
 
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.validator.enums.ValidationState;
+import com.nubeiot.core.exceptions.ValidationError;
 
 import io.reactivex.Single;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class ValidationResult<T> {
 
-    private ValidationState validity;
-    private String reason;
     private T data;
 
-    public ValidationResult<T> success(T data) {
-        this.validity = ValidationState.VALID;
-        this.reason = null;
-        this.data = data;
-        return this;
+    public static <E> Single<ValidationResult<E>> valid() {
+        ValidationResult<E> validationResult = new ValidationResult<>();
+        return Single.just(validationResult);
     }
 
-    public ValidationResult<T> success() {
-        return success(null);
+    public static <E> Single<ValidationResult<E>> valid(E data) {
+        ValidationResult<E> validationResult = new ValidationResult<>();
+        validationResult.data = data;
+        return Single.just(validationResult);
     }
 
-    public NubeException invalid(String reason) {
-        return new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, reason);
+    public static <E> Single<ValidationResult<E>> invalid(NubeException.ErrorCode errorCode, String message) {
+        return Single.error(new ValidationError(errorCode, message));
     }
 
-    public Single<ValidationResult<T>> asyncSuccess(T data) {
-        return Single.just(success(data));
-    }
-
-    public Single<ValidationResult<T>> asyncSuccess() {
-        return Single.just(success());
-    }
-
-    public Single<ValidationResult<T>> asyncInvalid(String reason) {
-        return Single.error(new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, reason));
-    }
-
-    public Single<ValidationResult<T>> asyncInvalid(NubeException.ErrorCode errorCode, String reason) {
-        return Single.error(new NubeException(errorCode, reason));
+    public static <E> Single<ValidationResult<E>> invalid(String message) {
+        return Single.error(new ValidationError(message));
     }
 
 }

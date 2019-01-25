@@ -15,9 +15,8 @@ public class Required<T> extends Validation<T, List<?>> {
     private final Validation<T, ?> validation;
 
     @Override
-    public Single<ValidationResult<List<?>>> validate(T s) {
-        return new Composition<>(Arrays.asList(validation, new Exist<>())).registerParentField(
-            parentField).registerField(field).validate(s);
+    public Single<ValidationResult<List<?>>> validity(T s) {
+        return new Composition<>(Arrays.asList(validation, new Exist<>())).registerInput(this.input).validate(s);
     }
 
     @Override
@@ -25,7 +24,7 @@ public class Required<T> extends Validation<T, List<?>> {
         return null;
     }
 
-    protected boolean passNullCase() {
+    protected boolean isNullable() {
         return false;
     }
 

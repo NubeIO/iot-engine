@@ -7,32 +7,33 @@ import org.junit.Test;
 
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.validations.Alternative;
-import com.nubeiot.core.validator.validations.Dbl;
-import com.nubeiot.core.validator.validations.Str;
+import com.nubeiot.core.validator.validations.NumberValidation;
+import com.nubeiot.core.validator.validations.StringValidation;
 
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class AlternativeTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(AlternativeTest.class);
+    @Test
+    public void test_string_or_number_success() {
+        List<Validation<Object, ?>> validations = new ArrayList<>();
+        validations.add(new NumberValidation<>());
+        validations.add(new StringValidation<>());
+
+        Validation<Object, ?> validation = new Alternative<>(validations);
+        validation.validate("10").test().assertValue(value -> value.getData().equals("10"));
+        validation.validate(10d).test().assertValue(value -> value.getData().equals(10d));
+    }
 
     @Test
-    public void test_alternative() {
-        JsonObject jsonObject = new JsonObject().put("a", "10");
-        JsonObject jsonObject1 = new JsonObject().put("a", 10d);
-        JsonObject jsonObject2 = new JsonObject().put("a", 10);
-
+    public void test_string_or_number_failure() {
         List<Validation<Object, ?>> validations = new ArrayList<>();
-        validations.add(new Dbl<>());
-        validations.add(new Str<>());
+        validations.add(new NumberValidation<>());
+        validations.add(new StringValidation<>());
 
-        Validation<?, ?> validation = new Alternative<>(validations);
-        validation.validate(jsonObject, "a").test().assertValue(value -> value.getData().equals("10"));
-        validation.validate(jsonObject1, "a").test().assertValue(value -> value.getData().equals(10d));
-        validation.validate(jsonObject2, "a").test().assertError(error -> {
-            logger.error(error.getMessage());
+        Validation<Object, ?> validation = new Alternative<>(validations);
+        validation.validate(new JsonObject()).test().assertError(error -> {
+            System.out.println(error.getMessage());
             return true;
         });
     }

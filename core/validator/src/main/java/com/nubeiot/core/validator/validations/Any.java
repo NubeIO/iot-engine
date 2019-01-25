@@ -5,15 +5,15 @@ import com.nubeiot.core.validator.ValidationResult;
 
 import io.reactivex.Single;
 
-public class Any extends Validation {
+public class Any<T> extends Validation<T, T> {
 
-    public Single<ValidationResult<Object>> validate() {
+    public Single<ValidationResult<T>> validate() {
         return this.validate(null);
     }
 
     @Override
-    public Single<ValidationResult<Object>> validate(Object s) {
-        return new ValidationResult<>().asyncSuccess();
+    public Single<ValidationResult<T>> validity(T s) {
+        return ValidationResult.valid(s);
     }
 
     @Override

@@ -10,27 +10,26 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Max<T> extends Validation<T, Double> {
 
-    private final Double value;
+    protected final Double value;
 
     @Override
-    public Single<ValidationResult<Double>> validate(T s) {
-        if (s instanceof Double || s instanceof Integer || s instanceof Long || s instanceof Float) {
+    public Single<ValidationResult<Double>> validity(T s) {
+        if (s instanceof Number) {
             Double d = Double.parseDouble(s.toString());
             if (condition(d)) {
-                return new ValidationResult<Double>().asyncSuccess(d);
+                return ValidationResult.valid(d);
             } else {
-                return new ValidationResult<Double>().asyncInvalid(getErrorMessage());
+                return ValidationResult.invalid(getErrorMessage());
             }
         } else {
-            return new ValidationResult<Double>().asyncInvalid(
-                Strings.format("ClassCastException: \"{0}\" field value is not parsable to Number",
-                               getAbsoluteField()));
+            return ValidationResult.invalid(
+                Strings.format("ClassCastException: {0} is not parsable to Number", getInput()));
         }
     }
 
     @Override
     protected String getErrorMessage() {
-        return Strings.format("{0}: \"{1}\" field value is not less than {2}", errorType, getAbsoluteField(), value);
+        return Strings.format("{0}: \"{1}\" is not less than or equal to {2}", getErrorType(), getInput(), value);
     }
 
     protected boolean condition(Double d) {

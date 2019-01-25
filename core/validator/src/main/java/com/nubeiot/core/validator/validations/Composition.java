@@ -16,23 +16,22 @@ public class Composition<T> extends Validation<T, List<?>> {
     private final List<Validation<T, ?>> validations;
 
     @Override
-    public Single<ValidationResult<List<?>>> validate(T s) {
+    public Single<ValidationResult<List<?>>> validity(T s) {
 
         return Observable.fromIterable(validations)
-                         .flatMapSingle(
-                             validation -> validation.registerField(field).registerParentField(parentField).validate(s))
+                         .flatMapSingle(validation -> validation.registerInput(this.input).validate(s))
                          .toList()
-                         .map(outputs -> {
+                         .flatMap(outputs -> {
                              List<Object> list = new ArrayList<>();
                              for (ValidationResult<?> output : outputs) {
                                  list.add(output.getData());
                              }
-                             return new ValidationResult<List<?>>().success(list);
+                             return ValidationResult.valid(list);
                          });
     }
 
     @Override
-    protected boolean passNullCase() {
+    protected boolean isNullable() {
         return false;
     }
 

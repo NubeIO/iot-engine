@@ -1,5 +1,6 @@
 package com.nubeiot.core.validator.validations;
 
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.ValidationResult;
 import com.nubeiot.core.validator.ValidationSupplier;
@@ -10,18 +11,22 @@ import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class KeyLoop extends Validation<JsonObject, JsonObject> {
+public class KeyLoop<T> extends Validation<T, JsonObject> {
 
     private final ValidationSupplier<Object> supplier;
-    private final String parentField;
 
     @Override
-    public Single<ValidationResult<JsonObject>> validate(JsonObject s) {
-
-        return Observable.fromIterable(s)
-                         .flatMapSingle(o -> supplier.get(o.getValue(), parentField + "." + o.getKey()))
-                         .toList()
-                         .flatMap(r -> new ValidationResult<JsonObject>().asyncSuccess(s));
+    public Single<ValidationResult<JsonObject>> validity(T s) {
+        if (s instanceof JsonObject) {
+            JsonObject jsonObject = (JsonObject) s;
+            return Observable.fromIterable(jsonObject)
+                             .flatMapSingle(o -> supplier.get(o.getValue(), this.input + "." + o.getKey()))
+                             .toList()
+                             .flatMap(r -> ValidationResult.valid(jsonObject));
+        } else {
+            return ValidationResult.invalid(
+                Strings.format("{0}: \"{1}\" must be of type JsonObject", getErrorType(), this.input));
+        }
     }
 
     @Override
