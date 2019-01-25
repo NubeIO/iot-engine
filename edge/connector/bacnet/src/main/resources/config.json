@@ -1,0 +1,23 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "ssl": true,
+      "clustered": false,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "deviceName": "NubeIOEdge28",
+    "deviceID": 4321
+  }
+}
