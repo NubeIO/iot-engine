@@ -1,0 +1,21 @@
+{
+  "details": [
+    {
+      "visited_place": [
+        "London",
+        "Melbourne"
+      ],
+      "on_list": [
+        "Sydney",
+        "New York"
+      ]
+    },
+    {
+      "movies": [
+        "Forrest Gump",
+        "Bad Man",
+        1
+      ]
+    }
+  ]
+}

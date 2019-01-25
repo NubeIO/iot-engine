@@ -7,18 +7,14 @@ import io.reactivex.Single;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
-public class When<T extends Single<ValidationResult<Object>>> extends Validation<T, Object> {
+public class When<T1, T2 extends Single<ValidationResult<Object>>> extends Validation<T1, Object> {
 
     private Single<ValidationResult<Object>> is;
     private Single<ValidationResult<Object>> then;
-    private T otherwise;
-
-    public Single<ValidationResult<Object>> validate() {
-        return this.validate(null);
-    }
+    private T2 otherwise;
 
     @Override
-    public Single<ValidationResult<Object>> validate(T s) {
+    public Single<ValidationResult<Object>> validity(T1 s) {
         return Single.create(
             source -> this.is.subscribe(ignored -> this.then.subscribe(source::onSuccess, source::onError),
                                         error -> otherwise.subscribe(source::onSuccess, source::onError)));
@@ -29,17 +25,17 @@ public class When<T extends Single<ValidationResult<Object>>> extends Validation
         return null;
     }
 
-    public When<T> registerIs(Single<ValidationResult<Object>> is) {
+    public When<T1, T2> registerIs(Single<ValidationResult<Object>> is) {
         this.is = is;
         return this;
     }
 
-    public When<T> registerThen(Single<ValidationResult<Object>> then) {
+    public When<T1, T2> registerThen(Single<ValidationResult<Object>> then) {
         this.then = then;
         return this;
     }
 
-    public When<T> registerOtherwise(T otherwise) {
+    public When<T1, T2> registerOtherwise(T2 otherwise) {
         this.otherwise = otherwise;
         return this;
     }

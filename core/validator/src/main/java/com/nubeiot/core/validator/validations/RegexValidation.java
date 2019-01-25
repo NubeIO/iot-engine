@@ -11,25 +11,23 @@ import io.reactivex.Single;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class Ptrn extends Validation<String, String> {
+public class RegexValidation extends Validation<String, String> {
 
     private final String regex;
 
     @Override
-    public Single<ValidationResult<String>> validate(String s) {
+    public Single<ValidationResult<String>> validity(String s) {
         Pattern pattern = java.util.regex.Pattern.compile(regex);
         Matcher matcher = pattern.matcher(s);
         boolean isValid = matcher.matches();
 
-        return isValid
-               ? new ValidationResult<String>().asyncSuccess((s))
-               : new ValidationResult<String>().asyncInvalid(getErrorMessage());
+        return isValid ? ValidationResult.valid(s) : ValidationResult.invalid(getErrorMessage());
     }
 
     @Override
     public String getErrorMessage() {
-        return Strings.format("{0}: \"{1}\" field value does not match with the pattern \"{2}\"", errorType,
-                              getAbsoluteField(), regex);
+        return Strings.format("{0}: \"{1}\" does not match with the pattern \"{2}\"", getErrorType(), getInput(),
+                              regex);
     }
 
 }

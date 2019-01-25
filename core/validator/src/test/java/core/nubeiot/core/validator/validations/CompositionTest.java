@@ -5,33 +5,37 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.nubeiot.core.TestBase;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.validations.Composition;
-import com.nubeiot.core.validator.validations.Dbl;
 import com.nubeiot.core.validator.validations.Max;
+import com.nubeiot.core.validator.validations.Min;
 
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
-public class CompositionTest extends TestBase {
-
-    private static final Logger logger = LoggerFactory.getLogger(CompositionTest.class);
+public class CompositionTest {
 
     @Test
-    public void test_composition() {
-        JsonObject jsonObject = new JsonObject().put("a", 10.00d);
-        JsonObject jsonObject1 = new JsonObject().put("a", 10);
-
+    public void test_number_with_min_max_success() {
         List<Validation<Object, ?>> validations = new ArrayList<>();
-        validations.add(new Dbl<>());
-        validations.add(new Max<>(10d));
+        validations.add(new Min<>(1d));
+        validations.add(new Max<>(16d));
 
-        Validation<?, List<?>> validation = new Composition<>(validations);
-        validation.validate(jsonObject, "a").test().assertValue(output -> true);
-        validation.validate(jsonObject1, "a").test().assertError(error -> {
-            logger.error(error.getMessage());
+        Validation<Object, ?> validation = new Composition<>(validations);
+
+        validation.validate(10).test().assertValue(output -> {
+            System.out.println(output.getData());
+            return true;
+        });
+    }
+
+    @Test
+    public void test_number_with_min_max_failure() {
+        List<Validation<Object, ?>> validations = new ArrayList<>();
+        validations.add(new Min<>(1d));
+        validations.add(new Max<>(16d));
+
+        Validation<Object, ?> validation = new Composition<>(validations);
+
+        validation.validate("10").test().assertError(output -> {
+            System.out.println(output.toString());
             return true;
         });
     }

@@ -14,25 +14,24 @@ public class Range<T> extends Validation<T, Double> {
     private final Double maxValue;
 
     @Override
-    public Single<ValidationResult<Double>> validate(T s) {
-        if (s instanceof Double || s instanceof Integer || s instanceof Long || s instanceof Float) {
+    public Single<ValidationResult<Double>> validity(T s) {
+        if (s instanceof Number) {
             Double d = Double.parseDouble(s.toString());
             if (minValue <= d && d <= maxValue) {
-                return new ValidationResult<Double>().asyncSuccess(d);
+                return ValidationResult.valid(d);
             } else {
-                return new ValidationResult<Double>().asyncInvalid(getErrorMessage());
+                return ValidationResult.invalid(getErrorMessage());
             }
         } else {
-            return new ValidationResult<Double>().asyncInvalid(
-                Strings.format("ClassCastException: \"{0}\" field value is not parsable to Number",
-                               getAbsoluteField()));
+            return ValidationResult.invalid(
+                Strings.format("ClassCastException: {0} is not parsable to Number", getInput()));
         }
     }
 
     @Override
     protected String getErrorMessage() {
-        return Strings.format("{0}: \"{1}\" field value should be on range {2}-{3}", errorType, getAbsoluteField(),
-                              minValue, maxValue);
+        return Strings.format("{0}: \"{1}\" should be on range {2}-{3}", getErrorType(), getInput(), minValue,
+                              maxValue);
     }
 
 }

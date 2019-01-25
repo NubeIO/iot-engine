@@ -6,23 +6,23 @@ import com.nubeiot.core.validator.ValidationResult;
 
 import io.reactivex.Single;
 
-public class Exist<T> extends Validation<T, Object> {
+public class Exist<T> extends Validation<T, T> {
 
     @Override
-    public Single<ValidationResult<Object>> validate(T s) {
+    public Single<ValidationResult<T>> validity(T s) {
         if (s != null) {
-            return new ValidationResult<>().asyncSuccess();
+            return ValidationResult.valid(s);
         }
-        return new ValidationResult<>().asyncInvalid(getErrorMessage());
+        return ValidationResult.invalid(getErrorMessage());
     }
 
     @Override
     protected String getErrorMessage() {
-        return Strings.format("{0}: \"{1}\" field value is required", errorType, getAbsoluteField());
+        return Strings.format("{0}: required value is null", getErrorType(), getInput());
     }
 
     @Override
-    protected boolean passNullCase() {
+    protected boolean isNullable() {
         return false;
     }
 
