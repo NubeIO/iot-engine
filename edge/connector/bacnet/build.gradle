@@ -1,0 +1,16 @@
+repositories {
+    mavenLocal()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url "https://maven.mangoautomation.net/repository/ias-snapshot/" }
+    maven { url "https://maven.mangoautomation.net/repository/ias-release/" }
+    mavenCentral()
+}
+
+dependencies {
+    compile project(':core:base')
+//    compile project(':core:cluster:hazelcast')
+    compile "com.infiniteautomation:bacnet4j:5.0.0-SNAPSHOT"
+
+    testCompile project(":core:base")
+    testCompile project(":core:base").sourceSets.test.output
+}
