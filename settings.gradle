@@ -28,6 +28,7 @@ include ':edge:module:installer'
 include ':edge:connector:ditto'
 include ':edge:connector:sensor'
 include ':edge:connector:sample:kafka'
+include ':edge:connector:bacnet'
 include ':edge:connector:driverapi'
 include ':edge:rule:sample'
 
