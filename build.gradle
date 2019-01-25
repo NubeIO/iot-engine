@@ -21,6 +21,7 @@ sonarqube {
     }
 }
 
+defaultTasks 'clean', 'jooq', 'build', 'uberJar'
 group = 'com.nubeiot'
 
 allprojects {

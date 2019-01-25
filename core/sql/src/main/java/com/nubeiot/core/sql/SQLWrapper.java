@@ -3,7 +3,6 @@ package com.nubeiot.core.sql;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -26,34 +25,26 @@ import org.jooq.impl.DefaultConfiguration;
 
 import io.reactivex.Single;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.exceptions.DatabaseException;
 import com.nubeiot.core.exceptions.ErrorMessage;
-import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.InitializerError.MigrationError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
-import com.nubeiot.core.utils.Functions.Silencer;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.zaxxer.hikari.HikariDataSource;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlConfig> {
+public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlConfig, SqlContext<T>> {
 
     private final Catalog catalog;
-    private final Class<T> entityHandlerClass;
     private DataSource dataSource;
-    @Getter
-    private T entityHandler;
+
+    SQLWrapper(Catalog catalog, Class<T> handlerClass) {
+        super(new SqlContext<>(handlerClass));
+        this.catalog = catalog;
+    }
 
     @Override
     public void start() {
@@ -94,24 +85,17 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
 
     private Single<EventMessage> createDatabase(Configuration jooqConfig) {
         try {
-            this.entityHandler = createHandler(jooqConfig, vertx, entityHandlerClass).registerFunc(this::getSharedData);
-            if (this.entityHandler.isNew()) {
+            EntityHandler handler = getContext().createHandler(jooqConfig, vertx).registerFunc(this::getSharedData);
+            if (handler.isNew()) {
                 createNewDatabase(jooqConfig);
                 logger.info("Initializing data...");
-                return entityHandler.initData();
+                return handler.initData();
             }
             logger.info("Migrating database...");
-            return this.entityHandler.migrate();
+            return handler.migrate();
         } catch (DataAccessException | NullPointerException | IllegalArgumentException | NubeException e) {
             return Single.error(new InitializerError("Unknown error when initializing database", e));
         }
-    }
-
-    private T createHandler(Configuration configuration, Vertx vertx, Class<T> clazz) {
-        Map<Class, Object> map = new LinkedHashMap<>();
-        map.put(Configuration.class, configuration);
-        map.put(Vertx.class, vertx);
-        return ReflectionClass.createObject(clazz, map, new CreationHandler<>()).get();
     }
 
     private void createNewDatabase(Configuration jooqConfig) {
@@ -202,18 +186,6 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
             }
         }
         return Single.just(result);
-    }
-
-    private class CreationHandler<E extends EntityHandler> extends Silencer<E> {
-
-        @Override
-        public void accept(E obj, HiddenException e) {
-            if (Objects.nonNull(e)) {
-                throw new DatabaseException("Error when creating entity handler", e);
-            }
-            object = obj;
-        }
-
     }
 
 }

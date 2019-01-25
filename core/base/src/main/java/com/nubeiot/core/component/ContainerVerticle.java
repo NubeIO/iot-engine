@@ -1,9 +1,11 @@
 package com.nubeiot.core.component;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import io.reactivex.Completable;
@@ -24,11 +26,14 @@ import com.nubeiot.core.exceptions.NubeExceptionConverter;
 
 import lombok.Getter;
 
+/**
+ * @see Container
+ */
 public abstract class ContainerVerticle extends AbstractVerticle implements Container {
 
     private final Map<Class<? extends Unit>, UnitProvider<? extends Unit>> components = new LinkedHashMap<>();
-    private final Map<Class<? extends Unit>, Consumer<? extends Unit>> afterSuccesses = new HashMap<>();
-    private final Map<Class<? extends Unit>, String> deployments = new HashMap<>();
+    private final Map<Class<? extends Unit>, Consumer<? extends UnitContext>> afterSuccesses = new HashMap<>();
+    private final Set<String> deployments = new HashSet<>();
     private final Map<String, Object> sharedData = new HashMap<>();
     private final String sharedKey = this.getClass().getName();
 
@@ -40,7 +45,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     @Override
     public void start() {
-        this.nubeConfig = IConfig.from(config(), NubeConfig.class);
+        this.nubeConfig = computeConfig(config());
         this.eventController = new EventController(vertx);
         this.registerEventbus(eventController);
         this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController);
@@ -63,19 +68,20 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     public void registerEventbus(EventController controller) { }
 
     @Override
-    public Container addSharedData(String key, Object data) {
+    public final Container addSharedData(String key, Object data) {
         this.sharedData.put(key, data);
         return this;
     }
 
     @Override
-    public <T extends Unit> Container addProvider(UnitProvider<T> provider) {
+    public final <T extends Unit> Container addProvider(UnitProvider<T> provider) {
         this.components.put(provider.unitClass(), provider);
         return this;
     }
 
     @Override
-    public <T extends Unit> Container addProvider(UnitProvider<T> provider, Consumer<T> successHandler) {
+    public final <C extends UnitContext, T extends Unit> Container addProvider(UnitProvider<T> provider,
+                                                                               Consumer<C> successHandler) {
         this.addProvider(provider);
         this.afterSuccesses.put(provider.unitClass(), successHandler);
         return this;
@@ -83,7 +89,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     @SuppressWarnings("unchecked")
     @Override
-    public void startUnits(Future<Void> future) {
+    public final void startUnits(Future<Void> future) {
         Flowable.fromIterable(components.entrySet()).map(entry -> {
             Unit unit = entry.getValue().get().registerSharedData(sharedKey);
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
@@ -97,8 +103,8 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     }
 
     @Override
-    public void stopUnits(Future<Void> future) {
-        Flowable.fromIterable(this.deployments.values())
+    public final void stopUnits(Future<Void> future) {
+        Flowable.fromIterable(this.deployments)
                 .parallel()
                 .map(vertx::rxUndeploy)
                 .reduce(Completable::mergeWith)
@@ -121,10 +127,10 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @SuppressWarnings("unchecked")
     private void succeed(Unit unit, String deployId) {
         logger.info("Deployed Verticle '{}' successful with ID '{}'", unit.getClass().getName(), deployId);
-        deployments.put(unit.getClass(), deployId);
-        Consumer<Unit> consumer = (Consumer<Unit>) this.afterSuccesses.get(unit.getClass());
+        deployments.add(deployId);
+        Consumer<UnitContext> consumer = (Consumer<UnitContext>) this.afterSuccesses.get(unit.getClass());
         if (Objects.nonNull(consumer)) {
-            consumer.accept(unit);
+            consumer.accept(unit.getContext().registerDeployId(deployId));
         }
     }
 

@@ -52,7 +52,7 @@ public class KafkaUnitTest extends KafkaUnitTestBase {
         String topic = UUID.randomUUID().toString();
         Async async = context.async(1);
         KafkaRouter router = createProducerRouter(context, async, topic, 0);
-        startKafkaUnit(context, router).getProducerService().publish(topic, 0, "test", topic);
+        startKafkaUnit(context, router).getContext().getProducerService().publish(topic, 0, "test", topic);
     }
 
     @Test
@@ -75,7 +75,7 @@ public class KafkaUnitTest extends KafkaUnitTestBase {
         KafkaRouter router = createProducerRouter(context, async, topic, 0).registerKafkaEvent(consumerEvent);
         router.addConsumerErrorHandler(consumerEvent.getTechId(), errorHandler(context, async));
         KafkaUnit unit = startKafkaUnit(context, router);
-        unit.getProducerService().publish(topic, 0, "test", topic);
+        unit.getContext().getProducerService().publish(topic, 0, "test", topic);
     }
 
     protected void setupConsumer(Async async, String address, Consumer<Object> assertOut) {
