@@ -5,15 +5,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.eventbus.EventBusOptions;
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.utils.FileUtils;
 
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.eventbus.EventBusOptions;
-import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -109,14 +110,17 @@ public final class NubeConfig implements IConfig {
         }
 
 
-        @NoArgsConstructor
         public static final class EventBusConfig extends HashMap<String, Object> implements IConfig {
 
             public static final String NAME = "__eventBus__";
 
             @Getter
             @JsonIgnore
-            private EventBusOptions options = new EventBusOptions();
+            private EventBusOptions options;
+
+            public EventBusConfig() {
+                this(null);
+            }
 
             @JsonCreator
             public EventBusConfig(Map<String, Object> map) {
@@ -124,6 +128,8 @@ public final class NubeConfig implements IConfig {
                     this.putAll(map);
                 }
                 this.computeIfPresent("clusterPublicPort", (s, o) -> (int) o == -1 ? null : o);
+                this.putIfAbsent("host", "0.0.0.0");
+                this.putIfAbsent("port", 5000);
                 options = new EventBusOptions(JsonObject.mapFrom(this));
             }
 

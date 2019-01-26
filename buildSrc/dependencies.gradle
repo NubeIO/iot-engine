@@ -15,25 +15,25 @@ def versions = [
         pgsql    : "42.2.5",
     ],
     plugin  : [
-        "apt"   : "0.20",
-        "docker": "4.3.0",
+        "apt"         : "0.20",
+        "docker"      : "4.3.0",
         "dockerClient": "3.1.0-rc-7",
-        "sonar" : "2.7",
+        "sonar"       : "2.7",
     ],
     tests   : [
         junit: "4.12"
     ],
 ]
 
-def genFolder = "generated"
+def genDir = "generated"
 
 ext.deps = [
     lombok  : "org.projectlombok:lombok:$versions.lombok",
     plugin  : [
-        "apt"   : "net.ltgt.gradle:gradle-apt-plugin:$versions.plugin.apt",
-        "docker": "com.bmuschko:gradle-docker-plugin:$versions.plugin.docker",
+        "apt"         : "net.ltgt.gradle:gradle-apt-plugin:$versions.plugin.apt",
+        "docker"      : "com.bmuschko:gradle-docker-plugin:$versions.plugin.docker",
         "dockerClient": "com.aries:docker-java-shaded:$versions.plugin.dockerClient",
-        "sonar" : "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:$versions.plugin.sonar",
+        "sonar"       : "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:$versions.plugin.sonar",
     ],
     logs    : [
         slf4j  : "org.slf4j:slf4j-api:$versions.logs.slf4j",
@@ -71,13 +71,15 @@ ext.deps = [
 
 ext.versions = versions
 
-ext.genSrc = [
-    srcFolder         : "$genFolder/main",
-    javaSrcFolder     : "$genFolder/main/java",
-    resourceFolder    : "$genFolder/main/resources",
-    testFolder        : "$genFolder/test",
-    javaTestSrcFolder : "$genFolder/test/java",
-    testResourceFolder: "$genFolder/test/resources"
+ext.genProps = [
+    genDir         : "$genDir",
+    configDir      : "$genDir/conf",
+    srcDir         : "$genDir/main",
+    javaSrcDir     : "$genDir/main/java",
+    resourceDir    : "$genDir/main/resources",
+    testDir        : "$genDir/test",
+    javaTestSrcDir : "$genDir/test/java",
+    testResourceDir: "$genDir/test/resources",
 ]
 
 ext.repos = {

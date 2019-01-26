@@ -37,7 +37,7 @@ class JooqGenerateTask extends DefaultTask {
     @Input
     public String ddlDir = "src/main/resources/ddl"
     @Input
-    public String targetDir = project.genSrc.javaSrcFolder
+    public String targetDir = project.genProps.javaSrcDir
 
     @TaskAction
     void generate() {

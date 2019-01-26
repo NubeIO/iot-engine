@@ -7,7 +7,7 @@ jar {
     baseName = project.computeBaseName()
     doFirst {
         def classPath = configurations.runtime.isEmpty() ? "" : configurations.runtime.files.collect {
-            it.getName()
+            "lib/${it.getName()}"
         }.join(' ')
         def javaVersion = System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')'
         GradleVersion gradleVersion = GradleVersion.current()
@@ -43,7 +43,9 @@ jar {
                 throw new TaskExecutionException(project.tasks.jar, new RuntimeException("Missing mainClass or " +
                                                                                          "mainVerticle"))
             }
-            manifestMap << ['Main-Class': "${project.mainClass}", 'Main-Verticle': "${project.mainVerticle}"]
+            manifestMap << ['Main-Class'   : "${project.mainClass}",
+                            'Main-Verticle': "${project.mainVerticle}",
+                            'Class-Path'   : "${classPath} conf/*"]
         }
         manifest {
             attributes(manifestMap)
@@ -56,6 +58,9 @@ distZip {
         project.hasProperty("executable") && project.executable == "true"
     }
     baseName = project.computeBaseName()
+    into("${baseName}-${project.version}/conf") {
+        from(project.genProps.configDir)
+    }
 }
 
 distTar {
@@ -63,6 +68,9 @@ distTar {
         project.hasProperty("executable") && project.executable == "true"
     }
     baseName = project.computeBaseName()
+    into("${baseName}-${project.version}/conf") {
+        from(project.genProps.configDir)
+    }
 }
 
 task sourcesJar(type: Jar, dependsOn: classes, group: 'distribution') {

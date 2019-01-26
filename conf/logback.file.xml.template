@@ -8,10 +8,10 @@
             </Pattern>
         </layout>
     </appender>
-    <!-- <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/${your-service}.log</file>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/@@project@@.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/${your-service}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>logs/@@project@@.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
 
@@ -19,15 +19,12 @@
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
-    </appender> -->
+    </appender>
 
     <root level="info">
-        <appender-ref ref="STDOUT" level="info" />
-        <!-- <appender-ref ref="FILE" level="debug"/> -->
+        <appender-ref ref="STDOUT" level="info"/>
+        <appender-ref ref="FILE" level="info"/>
     </root>
-    <logger name="com.hazelcast" level="info"/>
-    <logger name="com.zaxxer.hikari.pool" level="info"/>
-    <logger name="com.zaxxer.hikari" level="info"/>
 
     <logger name="com.nubeiot" level="info"/>
 
