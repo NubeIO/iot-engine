@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import com.nubeiot.core.NubeConfig.SystemConfig;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Configs;
@@ -66,11 +67,28 @@ public class NubeConfigTest {
     @Test(expected = NubeException.class)
     public void test_deserialize_error_decode() { IConfig.from("hello", NubeConfig.class); }
 
+    @Test(expected = NubeException.class)
+    public void test_deserialize_root_having_redundant_properties() {
+        String jsonStr = "{\"__redundant__\":{},\"__system__\":{\"__cluster__\":{\"active\":true,\"ha\":false," +
+                         "\"name\":\"nubeio-cluster\",\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\"," +
+                         "\"file\":\"\",\"options\":{}}}}";
+        IConfig.from(jsonStr, NubeConfig.class);
+    }
+
+    @Test
+    public void test_deserialize_child_with_root_having_redundant_properties() {
+        String jsonStr = "{\"__redundant__\":{},\"__system__\":{\"__cluster__\":{\"active\":true,\"ha\":false," +
+                         "\"name\":\"nubeio-cluster\",\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\"," +
+                         "\"file\":\"\",\"options\":{}}}}";
+        SystemConfig cfg = IConfig.from(jsonStr, SystemConfig.class);
+        Assert.assertNotNull(cfg);
+    }
+
     @Test
     public void test_deserialize_plain_child() {
         String jsonStr = "{\"active\":false,\"ha\":false,\"name\":\"\"," +
                          "\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\",\"file\":\"\",\"options\":{}}";
-        NubeConfig.SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, NubeConfig.SystemConfig.ClusterConfig.class);
+        SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, SystemConfig.ClusterConfig.class);
         Assert.assertNotNull(cfg);
         Assert.assertEquals(ClusterType.HAZELCAST, cfg.getType());
     }
@@ -79,7 +97,7 @@ public class NubeConfigTest {
     public void test_deserialize_child_from_parent_lvl1() {
         String jsonStr = "{\"__cluster__\":{\"active\":false,\"ha\":false,\"name\":\"\"," +
                          "\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\",\"file\":\"\",\"options\":{}}}";
-        NubeConfig.SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, NubeConfig.SystemConfig.ClusterConfig.class);
+        SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, SystemConfig.ClusterConfig.class);
         Assert.assertNotNull(cfg);
         Assert.assertEquals(ClusterType.HAZELCAST, cfg.getType());
     }
@@ -98,7 +116,7 @@ public class NubeConfigTest {
                          "\"clusterPingReplyInterval\":20000,\"port\":0,\"host\":\"localhost\",\"acceptBacklog\":-1," +
                          "\"clientAuth\":\"NONE\",\"reconnectAttempts\":0,\"reconnectInterval\":1000," +
                          "\"connectTimeout\":60000,\"trustAll\":true}}";
-        NubeConfig.SystemConfig cfg = IConfig.from(jsonStr, NubeConfig.SystemConfig.class);
+        SystemConfig cfg = IConfig.from(jsonStr, SystemConfig.class);
         Assert.assertNotNull(cfg);
         Assert.assertNotNull(cfg.getClusterConfig());
         Assert.assertNotNull(cfg.getEventBusConfig());
@@ -109,7 +127,7 @@ public class NubeConfigTest {
         String jsonStr =
                 "{\"dataDir\": \"\", \"__system__\":{\"__cluster__\":{\"active\":false,\"ha\":false,\"name\":\"\"," +
                 "\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\",\"file\":\"\",\"options\":{}}}}";
-        NubeConfig.SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, NubeConfig.SystemConfig.ClusterConfig.class);
+        SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, SystemConfig.ClusterConfig.class);
         Assert.assertNotNull(cfg);
         Assert.assertEquals(ClusterType.HAZELCAST, cfg.getType());
     }
