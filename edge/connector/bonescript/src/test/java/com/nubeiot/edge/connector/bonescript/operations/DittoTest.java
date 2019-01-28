@@ -93,7 +93,7 @@ public class DittoTest extends TestBase {
     }
 
     @Test
-    public void test_shouldDittoUpdateWithPropValue_onDittoEnableWithDifferentPriorityArray() {
+    public void test_shouldDittoUpdateWithNewValue_onDittoEnableWithDifferentPriorityArray() {
         JsonObject db = new JsonObject(FileUtils.readFileToString(DITTO_EXAMPLE_RESOURCE.toString()));
         JsonObject point = db.getJsonObject(THING)
                              .getJsonObject(FEATURES)
@@ -102,11 +102,11 @@ public class DittoTest extends TestBase {
                              .getJsonObject(UI1);
         updateDittoEnable(db, true);
         Ditto.init(db);
-        Assert.assertTrue(Ditto.getInstance().shouldDittoUpdateWithPropValue(point, 1d, new JsonObject()));
+        Assert.assertTrue(Ditto.getInstance().shouldDittoUpdateWithNewValue(point, 1d, new JsonObject()));
     }
 
     @Test
-    public void test_shouldDittoUpdateWithPropValue_onDittoEnableWithSamePriorityArray() {
+    public void test_shouldDittoUpdateWithNewValue_onDittoEnableWithSamePriorityArray() {
         JsonObject db = new JsonObject(FileUtils.readFileToString(DITTO_EXAMPLE_RESOURCE.toString()));
         JsonObject point = db.getJsonObject(THING)
                              .getJsonObject(FEATURES)
@@ -117,8 +117,9 @@ public class DittoTest extends TestBase {
         updateDittoTolerance(point, 1d);
         updateDittoLastValue(point, 2d);
         Ditto.init(db);
-        Assert.assertFalse(Ditto.getInstance().shouldDittoUpdateWithPropValue(point, 1.1d, null));
-        Assert.assertTrue(Ditto.getInstance().shouldDittoUpdateWithPropValue(point, 0.9d, null));
+        Assert.assertFalse(Ditto.getInstance().shouldDittoUpdateWithNewValue(point, 1.1d, null));
+        Assert.assertTrue(Ditto.getInstance().shouldDittoUpdateWithNewValue(point, 0.9d, null));
+        Assert.assertFalse(Ditto.getInstance().shouldDittoUpdateWithNewValue(point, "null", null));
     }
 
     private void updateDittoEnable(JsonObject db, boolean enable) {

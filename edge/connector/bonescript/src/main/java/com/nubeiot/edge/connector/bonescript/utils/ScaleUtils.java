@@ -12,9 +12,9 @@ import io.vertx.core.json.JsonObject;
 
 public class ScaleUtils {
 
-    public static void analogOutput(JsonObject point, String value) {
-        if (Strings.isNumeric(value)) {
-            double numericValue = Double.parseDouble(value);
+    public static void analogOutput(JsonObject point, Object value) {
+        if (Strings.isNumeric(value.toString())) {
+            double numericValue = Double.parseDouble(value.toString());
 
             if (point.containsKey(TYPE)) {
                 switch (point.getString(TYPE).toLowerCase()) {
@@ -40,12 +40,12 @@ public class ScaleUtils {
                 defaultNumericScaling(point, numericValue);
             }
         } else {
-            value = value.toLowerCase();
+            value = value.toString().toLowerCase();
 
             if (value.equals("null")) {
                 point.put(VALUE, value);
                 point.put(PIN_VALUE, 0);
-            } else if (SQLUtils.in(value, "true", "on", "start")) {
+            } else if (SQLUtils.in(value.toString(), "true", "on", "start")) {
                 if (point.containsKey(TYPE)) {
                     switch (point.getString(TYPE).toLowerCase()) {
                         case "0-12dc":
@@ -63,7 +63,7 @@ public class ScaleUtils {
                 } else {
                     setValueAndPinValue(point, 12d, 1d);
                 }
-            } else if (SQLUtils.in(value, "false", "off", "stop")) {
+            } else if (SQLUtils.in(value.toString(), "false", "off", "stop")) {
                 setValueAndPinValue(point, 0d, 0d);
             }
         }
@@ -73,17 +73,17 @@ public class ScaleUtils {
         }
     }
 
-    public static void digitalOutput(JsonObject point, String value) {
-        if (Strings.isNumeric(value)) {
-            double numericValue = Double.parseDouble(value);
+    public static void digitalOutput(JsonObject point, Object value) {
+        if (Strings.isNumeric(value.toString())) {
+            double numericValue = Double.parseDouble(value.toString());
             if (numericValue == 1d || numericValue == 0d) {
                 setValueAndPinValue(point, numericValue, numericValue);
             } else {
-                if (value.equalsIgnoreCase("null")) {
+                if (value.toString().equalsIgnoreCase("null")) {
                     setValueAndPinValue(point, numericValue, 0d);
-                } else if (SQLUtils.in(value, true, "true", "on", "start")) {
+                } else if (SQLUtils.in(value.toString(), true, "true", "on", "start")) {
                     setValueAndPinValue(point, 1, 1);
-                } else if (SQLUtils.in(value, true, "false", "off", "stop")) {
+                } else if (SQLUtils.in(value.toString(), true, "false", "off", "stop")) {
                     setValueAndPinValue(point, 0, 0);
                 }
             }

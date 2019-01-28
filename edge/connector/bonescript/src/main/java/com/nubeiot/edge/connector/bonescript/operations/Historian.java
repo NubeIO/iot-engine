@@ -92,4 +92,8 @@ public class Historian {
         }
     }
 
+    public static void recordCov(@NonNull MultiThreadDittoDB multiThreadDittoDB, @NonNull JsonObject db) {
+
+    }
+
 }

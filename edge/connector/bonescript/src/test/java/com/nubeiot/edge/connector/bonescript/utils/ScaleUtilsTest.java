@@ -15,17 +15,17 @@ import io.vertx.core.json.JsonObject;
 public class ScaleUtilsTest {
 
     private static final URL ANALOG_OUT_TEMPLATE_RESOURCE = FileUtilsTest.class.getClassLoader()
-                                                                               .getResource(
-                                                                                   "ditto/points/properties" +
-                                                                                   "/analog_out_template.json");
+                                                                               .getResource("ditto/points/properties" +
+                                                                                            "/analog_out_template" +
+                                                                                            ".json");
 
     @Test
     public void testAnalogOutput() {
         JsonObject point = new JsonObject(FileUtils.readFileToString(ANALOG_OUT_TEMPLATE_RESOURCE.toString()));
-        ScaleUtils.analogOutput(point, "1");
-        Assert.assertEquals(point.getDouble(VALUE).toString(), "2.0"); // 1.0 + 1.0 (12.0 + offset)
-        ScaleUtils.analogOutput(point, "15");
-        Assert.assertEquals(point.getDouble(VALUE).toString(), "13.0");
+        ScaleUtils.analogOutput(point, 1);
+        Assert.assertEquals(point.getValue(VALUE), 2.0); // 1.0 + 1.0 (12.0 + offset)
+        ScaleUtils.analogOutput(point, 15);
+        Assert.assertEquals(point.getValue(VALUE), 13.0);
     }
 
 }

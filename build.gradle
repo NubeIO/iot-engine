@@ -71,13 +71,13 @@ subprojects {
         compile project.deps.vertx.core
         compile project.deps.log.slf4j
         compile project.deps.log.logback
+        compile project.deps.tests.jsonAssert
 
         compileOnly project.deps.vertx.codegen
         compileOnly project.deps.lombok
         annotationProcessor project.deps.lombok
 
         testCompile project.deps.tests.junit
-        testCompile project.deps.tests.jsonAssert
         testCompile project.deps.vertx.junit
         testCompileOnly project.deps.lombok
         testAnnotationProcessor project.deps.lombok

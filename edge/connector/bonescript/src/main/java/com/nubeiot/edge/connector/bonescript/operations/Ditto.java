@@ -16,14 +16,13 @@ import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.TH
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.TOLERANCE;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.VALUE;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.utils.DateTimes;
+import com.nubeiot.core.utils.JsonUtils;
+import com.nubeiot.core.utils.Strings;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -109,55 +108,65 @@ public class Ditto {
      * should be updated. Limits how often true is returned when checking if the value has changed in case the tolerance
      * (if a tolerance is provided) is too low.
      */
-    public boolean shouldDittoUpdate(JsonObject point, String prop, double newValue, JsonObject oldPriorityArray) {
+    public boolean shouldDittoUpdate(JsonObject point, String prop, Object newValue, JsonObject oldPriorityArray) {
         if (this.dittoEnable && point.containsKey(DITTO) && point.getJsonObject(DITTO).getBoolean(ENABLE)) {
-            if (prop.equals(VALUE)) {
-                final Boolean x = shouldDittoUpdateWithPropValue(point, newValue, oldPriorityArray);
-                if (x != null) {
-                    return x;
+            // Only check if Ditto should update if it's been longer than the postRate since the last update
+            if (!point.getJsonObject(DITTO).containsKey(LAST_UPDATED) ||
+                isEnoughTimeToUpdateDitto(point.getJsonObject(DITTO))) {
+
+                if (prop.equals(VALUE)) {
+                    final Boolean x = shouldDittoUpdateWithNewValue(point, newValue, oldPriorityArray);
+                    if (x != null) {
+                        return x;
+                    }
+                } else {
+                    if (!point.getJsonObject(DITTO).containsKey(LAST_UPDATED)) {
+                        return true;
+                    }
+                    return point.getDouble(prop) != newValue;
                 }
-            } else {
-                if (!point.getJsonObject(DITTO).containsKey(LAST_UPDATED)) {
-                    return true;
-                }
-                return point.getDouble(prop) != newValue;
             }
         }
         return false;
     }
 
-    Boolean shouldDittoUpdateWithPropValue(JsonObject point, double newValue, JsonObject oldPriorityArray) {
+    Boolean shouldDittoUpdateWithNewValue(JsonObject point, Object newValue, JsonObject oldPriorityArray) {
         JsonObject dittoPoint = point.getJsonObject(DITTO);
-        if (!dittoPoint.containsKey(LAST_VALUE) || !dittoPoint.containsKey(LAST_UPDATED)) {
+        JsonObject priorityArray = point.getJsonObject(PRIORITY_ARRAY);
+        // If the point hasn't been updated in Ditto yet, Ditto should update
+        if (!dittoPoint.containsKey(LAST_VALUE)) {
             return true;
         }
 
-        ObjectMapper mapper = new ObjectMapper();
-
-        if (oldPriorityArray != null && point.getJsonObject(PRIORITY_ARRAY) != null) {
-            try {
-                JsonNode oldPriorityArrayNode = mapper.readTree(oldPriorityArray.encode());
-                JsonNode priorityArrayNode = mapper.readTree(point.getJsonObject(PRIORITY_ARRAY).encode());
-                if (!oldPriorityArrayNode.equals(priorityArrayNode)) {
-                    return true;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+        // If the point has a tolerance, compare the new value against the last value,
+        // if the difference is outside the tolerance, Ditto should update
+        if (dittoPoint.containsKey(TOLERANCE) && dittoPoint.getDouble(TOLERANCE) >= 0d) {
+            if (Strings.isNumeric(newValue.toString()) &&
+                Math.abs(Double.parseDouble(newValue.toString()) - dittoPoint.getDouble(LAST_VALUE)) >
+                dittoPoint.getDouble(TOLERANCE)) {
+                return true;
             }
         } else {
-            if (oldPriorityArray != point.getJsonObject(PRIORITY_ARRAY)) {
+            if (dittoPoint.getDouble(LAST_VALUE) != newValue) {
                 return true;
             }
         }
 
-        if (isEnoughTimeToUpdateDitto(dittoPoint)) {
-            if (dittoPoint.containsKey(TOLERANCE) && dittoPoint.getDouble(TOLERANCE) >= 0d) {
-                return Math.abs(newValue - dittoPoint.getDouble(LAST_VALUE)) > dittoPoint.getDouble(TOLERANCE);
-            } else {
-                return dittoPoint.getDouble(LAST_VALUE) != newValue;
+        // If the point has a tolerance, check each value in the old priority array against the new one,
+        // if the difference of any are outside the tolerance, Ditto should update
+        if (dittoPoint.containsKey(TOLERANCE) && dittoPoint.getDouble(TOLERANCE) >= 0d) {
+            if (!JsonUtils.compareJsonObject(oldPriorityArray, priorityArray)) {
+                for (int i = 1; i < 16; i++) {
+                    if (Math.abs(priorityArray.getDouble(Integer.toString(i))) -
+                        oldPriorityArray.getDouble(Integer.toString(i)) > dittoPoint.getDouble(TOLERANCE)) {
+                        return true;
+                    }
+                }
             }
+        } else {
+            return oldPriorityArray.encode().equals(priorityArray.encode());
         }
-        return null;
+        return false;
     }
 
     boolean isEnoughTimeToUpdateDitto(JsonObject dittoPoint) {
