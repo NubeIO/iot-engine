@@ -1,12 +1,8 @@
 package com.nubeiot.edge.connector.bonescript.handlers;
 
-import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.FEATURES;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.ID;
-import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.POINTS;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.PRIORITY;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.PRIORITY_ARRAY;
-import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.PROPERTIES;
-import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.THING;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.VALUE;
 
 import java.util.ArrayList;
@@ -20,11 +16,12 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.utils.JsonUtils;
 import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.edge.connector.bonescript.BoneScriptVerticle;
+import com.nubeiot.edge.connector.bonescript.DittoDBOperation;
 import com.nubeiot.edge.connector.bonescript.operations.Ditto;
-import com.nubeiot.edge.connector.bonescript.utils.DittoDBUtils;
 import com.nubeiot.edge.connector.bonescript.utils.PointUtils;
 import com.nubeiot.edge.connector.bonescript.validations.PointsUpdateValidation;
 
@@ -47,11 +44,9 @@ public class PointsEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getList(RequestData data) {
-        return DittoDBUtils.getDittoData(this.verticle.getEntityHandler())
-                           .map(value -> value.getJsonObject(THING)
-                                              .getJsonObject(FEATURES)
-                                              .getJsonObject(POINTS)
-                                              .getJsonObject(PROPERTIES));
+        return DittoDBOperation.getDittoData()
+                               .map(value -> (JsonObject) JsonUtils.getObject(value,
+                                                                              "thing.features.points.properties"));
     }
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
@@ -62,11 +57,8 @@ public class PointsEventHandler implements EventHandler {
         return validation.validate(data.getBody()).map(v -> {
             JsonArray newPoints = (JsonArray) v.getData();
 
-            JsonObject db = verticle.getMultiThreadDittoDB().getDittoData();
-            JsonObject points = db.getJsonObject(THING)
-                                  .getJsonObject(FEATURES)
-                                  .getJsonObject(POINTS)
-                                  .getJsonObject(PROPERTIES);
+            JsonObject db = DittoDBOperation.getDittoData().blockingGet();
+            JsonObject points = (JsonObject) JsonUtils.getObject(db, "thing.features.points.properties");
 
             if (points != null) {
                 newPoints.forEach(newPoint$ -> {

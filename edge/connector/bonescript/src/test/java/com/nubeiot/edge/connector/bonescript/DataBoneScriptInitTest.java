@@ -6,11 +6,11 @@ import org.junit.Test;
 import com.nubeiot.core.TestBase;
 import com.nubeiot.core.utils.Strings;
 
-public class DataInitTest extends TestBase {
+public class DataBoneScriptInitTest extends TestBase {
 
     @Test
     public void testInitDittoTemplate() {
-        Assert.assertTrue(Strings.isNotBlank(Init.initDittoTemplate().toString()));
+        Assert.assertTrue(Strings.isNotBlank(BoneScriptInit.initDittoTemplate().toString()));
     }
 
 }

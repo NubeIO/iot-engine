@@ -19,9 +19,9 @@ import io.vertx.core.logging.LoggerFactory;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class Init implements Supplier<Single<JsonObject>> {
+public class BoneScriptInit implements Supplier<Single<JsonObject>> {
 
-    private static final Logger logger = LoggerFactory.getLogger(Init.class);
+    private static final Logger logger = LoggerFactory.getLogger(BoneScriptInit.class);
     private static final String DITTO_TEMPLATE_RESOURCE_FILE = "ditto/ditto_template.json";
     private final TblDittoDao tblDittoDao;
 
@@ -43,7 +43,7 @@ public class Init implements Supplier<Single<JsonObject>> {
 
         return tblDittoDao.insert(tblDitto)
                           .map(ignore -> new JsonObject().put("message",
-                                                              "Successfully created the template JSON of " + "ditto"));
+                                                              "Successfully created the template JSON of ditto"));
     }
 
 }

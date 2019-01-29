@@ -7,7 +7,7 @@ import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.VA
 
 import com.nubeiot.core.utils.Reflections;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.connector.bonescript.BBPinMappingInitializer;
+import com.nubeiot.edge.connector.bonescript.SingletonBBPinMapping;
 import com.nubeiot.edge.connector.bonescript.constants.BBPinMapping;
 
 import io.vertx.core.json.JsonObject;
@@ -35,7 +35,7 @@ public class PointUtils {
             }
         }
 
-        BBPinMapping bbPinMapping = BBPinMappingInitializer.getInstance();
+        BBPinMapping bbPinMapping = SingletonBBPinMapping.getInstance();
 
         if (bbPinMapping.getAnalogOutPins().contains(id)) {
             ScaleUtils.analogOutput(point, value);

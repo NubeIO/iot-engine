@@ -13,11 +13,13 @@ public enum BBVersion {
     private final BBPinMapping bbPinMapping;
 
     public static BBPinMapping getBbPinMapping(String version) {
-        for (BBVersion bbVersion : BBVersion.values()) {
-            if (bbVersion.name.equals(version)) {
-                return bbVersion.bbPinMapping;
+        if (version != null) {
+            for (BBVersion bbVersion : BBVersion.values()) {
+                if (bbVersion.name.equals(version)) {
+                    return bbVersion.bbPinMapping;
+                }
             }
         }
-        return new BBPinMappingV15();
+        return new BBPinMappingV15(); // default one
     }
 }

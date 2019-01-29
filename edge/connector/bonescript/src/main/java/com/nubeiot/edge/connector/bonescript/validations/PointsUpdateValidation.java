@@ -37,7 +37,7 @@ import com.nubeiot.core.validator.validations.RegexValidation;
 import com.nubeiot.core.validator.validations.Required;
 import com.nubeiot.core.validator.validations.StringValidation;
 import com.nubeiot.core.validator.validations.When;
-import com.nubeiot.edge.connector.bonescript.BBPinMappingInitializer;
+import com.nubeiot.edge.connector.bonescript.SingletonBBPinMapping;
 import com.nubeiot.edge.connector.bonescript.constants.BBPinMapping;
 
 import io.reactivex.Single;
@@ -61,7 +61,7 @@ public class PointsUpdateValidation<T> extends Validation<T, JsonArray> {
 
         @Override
         public Single<ValidationResult<?>> get(U s, String parentField) {
-            BBPinMapping bbPinMapping = BBPinMappingInitializer.getInstance();
+            BBPinMapping bbPinMapping = SingletonBBPinMapping.getInstance();
 
             Validation<?, ?> sv = new StringValidation<>();
             Validation<?, ?> requiredStringValidation = new Required<>(sv);

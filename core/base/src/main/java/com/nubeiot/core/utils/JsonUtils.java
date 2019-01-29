@@ -8,6 +8,14 @@ import io.vertx.core.json.JsonObject;
 
 public class JsonUtils {
 
+    public static Object getObject(JsonObject s, String field, Object defaultValue) {
+        Object output = getObject(s, field);
+        if (output == null) {
+            output = defaultValue;
+        }
+        return output;
+    }
+
     public static Object getObject(JsonObject s, String field) {
         String[] fields = field.split("\\.");
         Object output = null;

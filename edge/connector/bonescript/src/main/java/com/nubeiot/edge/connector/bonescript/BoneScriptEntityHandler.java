@@ -49,7 +49,7 @@ public class BoneScriptEntityHandler extends EntityHandler {
     private Single<EventMessage> bootstrap(EventAction action) {
         return isFreshInstall().flatMap(isFreshInstall -> {
             if (isFreshInstall) {
-                return new Init(tblDittoDao).get();
+                return new BoneScriptInit(tblDittoDao).get();
             }
             return Single.just(new JsonObject());
         }).map(r -> EventMessage.success(action, r));

@@ -60,8 +60,11 @@ public class Ditto {
         logger.info("Updated Ditto Status successfully...");
     }
 
-    public static void init(@NonNull JsonObject dittoData) {
-        new Ditto(dittoData);
+    public static Ditto getInstance(@NonNull JsonObject dittoData) {
+        if (instance == null) {
+            new Ditto(dittoData);
+        }
+        return instance;
     }
 
     public static Ditto getInstance() {

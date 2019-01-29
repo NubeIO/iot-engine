@@ -11,7 +11,7 @@
   "tags": [],
   "historySettings": {
     "type": "periodic",
-    "schedule": "0 */15 * * * ?",
+    "schedule": "*/10 * * * * ?",
     "size": 672
   },
   "ditto": {

@@ -3,6 +3,7 @@ package com.nubeiot.edge.connector.bonescript.constants;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -18,7 +19,7 @@ public abstract class BBPinMapping {
     public abstract Set<String> getDigitalOutPins();
 
     Set<String> getFieldsKey(Field[] fields) {
-        Set<String> values = new HashSet<>();
+        Set<String> values = new LinkedHashSet<>();
         for (Field field : fields) {
             if (!field.isSynthetic()) {
                 values.add(field.getName());

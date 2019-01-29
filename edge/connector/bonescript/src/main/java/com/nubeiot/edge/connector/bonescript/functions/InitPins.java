@@ -4,7 +4,7 @@ import java.util.function.Function;
 
 import com.nubeiot.core.utils.Reflections;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.connector.bonescript.BBPinMappingInitializer;
+import com.nubeiot.edge.connector.bonescript.SingletonBBPinMapping;
 import com.nubeiot.edge.connector.bonescript.constants.BBPinMapping;
 
 import io.vertx.core.json.JsonArray;
@@ -22,8 +22,8 @@ public class InitPins implements Function<JsonObject, JsonObject> {
 
     @Override
     public JsonObject apply(JsonObject jsonObject) {
-        BBPinMapping bbPinMapping = BBPinMappingInitializer.getInstance();
-        logger.info("BeagleBone version: {}", BBPinMappingInitializer.getVersion());
+        BBPinMapping bbPinMapping = SingletonBBPinMapping.getInstance();
+        logger.info("BeagleBone version: {}", SingletonBBPinMapping.getVersion());
         String analogInTemplate = Strings.convertToString(
             Reflections.staticClassLoader().getResourceAsStream(ANALOG_IN_TEMPLATE_RESOURCE_PATH));
         String digitalInTemplate = Strings.convertToString(
