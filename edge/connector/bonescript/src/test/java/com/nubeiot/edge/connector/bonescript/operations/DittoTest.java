@@ -25,8 +25,8 @@ import io.vertx.core.json.JsonObject;
 
 public class DittoTest extends TestBase {
 
-    private static final URL DITTO_EXAMPLE_RESOURCE = FileUtilsTest.class.getClassLoader()
-                                                                         .getResource("ditto/ditto_example.json");
+    public static final URL DITTO_EXAMPLE_RESOURCE = FileUtilsTest.class.getClassLoader()
+                                                                        .getResource("ditto/ditto_example.json");
 
     @Test
     public void test_init_updateDittoEnable() {

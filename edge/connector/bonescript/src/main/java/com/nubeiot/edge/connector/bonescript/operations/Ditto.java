@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bonescript.operations;
 
+import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
+import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.DITTO;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.DITTO_ENABLE;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.DITTO_HOST;
@@ -24,16 +26,21 @@ import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.JsonUtils;
 import com.nubeiot.core.utils.Strings;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.core.Vertx;
 import lombok.Getter;
 import lombok.NonNull;
 
 @Getter
 public class Ditto {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger logger = LoggerFactory.getLogger(Ditto.class);
 
     private static Ditto instance;
     public final int POST_RATE = 1000;  // Limits posts to ditto to a maximum rate of 1 update per 1000 ms
@@ -45,7 +52,6 @@ public class Ditto {
     private String thingId = "";
 
     private Ditto(JsonObject db) {
-        instance = this;
         this.db = db;
 
         JsonObject properties = db.getJsonObject(THING)
@@ -57,7 +63,33 @@ public class Ditto {
         updateDittoHost(properties);
         updateDittoHttpBasic(properties);
         updateThingId(db);
+        instance = this;
         logger.info("Updated Ditto Status successfully...");
+    }
+
+    public static void pointToDitto(Vertx vertx, JsonObject point, String id, long timestamp) {
+        if (instance.dittoEnable && Strings.isNotBlank(instance.dittoHost) && Strings.isNotBlank(instance.thingId)) {
+            point.getJsonObject(DITTO).put(LAST_VALUE, point.getValue(VALUE));
+            point.getJsonObject(DITTO).put(LAST_UPDATED, timestamp);
+            String uri = Strings.format("{0}/api/2/things/{1}/features/points/properties/{2}", instance.dittoHost,
+                                        instance.thingId, id);
+
+            HttpClient client = vertx.getDelegate().createHttpClient();
+            HttpClientRequest request = client.requestAbs(HttpMethod.PUT, uri, response -> {
+                if (response.statusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+                    logger.info("Posting on Ditto been made successfully");
+                } else {
+                    logger.error("Something went wrong on posting Ditto value onto the server");
+                }
+            });
+
+            request.setChunked(true);
+            request.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+            if (Strings.isNotBlank(instance.dittoHttpBasic)) {
+                request.putHeader("Authorization", instance.dittoHttpBasic);
+            }
+            request.write(point.encode()).end();
+        }
     }
 
     public static Ditto getInstance(@NonNull JsonObject dittoData) {
@@ -82,7 +114,6 @@ public class Ditto {
 
     private void updateDittoHost(JsonObject properties) {
         String dittoHost = properties.getString(DITTO_HOST);
-        this.dittoHost = dittoHost;
         if (dittoHost != null) {
             this.dittoHost = dittoHost;
             logger.info("Ditto Host is updated to {}", dittoHost);
@@ -91,7 +122,6 @@ public class Ditto {
 
     private void updateDittoHttpBasic(JsonObject properties) {
         String dittoHttpBasic = properties.getString(DITTO_HTTP_BASIC);
-        this.dittoHttpBasic = dittoHttpBasic;
         if (dittoHttpBasic != null) {
             this.dittoHttpBasic = dittoHttpBasic;
             logger.info("Ditto HTTP Basic is updated to {}", dittoHttpBasic);
@@ -118,10 +148,7 @@ public class Ditto {
                 isEnoughTimeToUpdateDitto(point.getJsonObject(DITTO))) {
 
                 if (prop.equals(VALUE)) {
-                    final Boolean x = shouldDittoUpdateWithNewValue(point, newValue, oldPriorityArray);
-                    if (x != null) {
-                        return x;
-                    }
+                    return shouldDittoUpdateWithNewValue(point, newValue, oldPriorityArray);
                 } else {
                     if (!point.getJsonObject(DITTO).containsKey(LAST_UPDATED)) {
                         return true;
@@ -133,7 +160,11 @@ public class Ditto {
         return false;
     }
 
-    Boolean shouldDittoUpdateWithNewValue(JsonObject point, Object newValue, JsonObject oldPriorityArray) {
+    public boolean shouldDittoUpdate(JsonObject point, String prop, Object newValue) {
+        return this.shouldDittoUpdate(point, prop, newValue, null);
+    }
+
+    boolean shouldDittoUpdateWithNewValue(JsonObject point, Object newValue, JsonObject oldPriorityArray) {
         JsonObject dittoPoint = point.getJsonObject(DITTO);
         JsonObject priorityArray = point.getJsonObject(PRIORITY_ARRAY);
         // If the point hasn't been updated in Ditto yet, Ditto should update

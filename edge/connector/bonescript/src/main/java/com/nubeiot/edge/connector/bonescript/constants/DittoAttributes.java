@@ -25,6 +25,7 @@ public class DittoAttributes {
     public static String VALUE = "value";
     public static String PIN_VALUE = "pinValue";
     public static String OFFSET = "offset";
+    public static String EDGE_LOOP = "edgeLoop";
     public static String DITTO_ENABLE = "dittoEnable";
     public static String DITTO_HOST = "dittoHost";
     public static String DITTO_HTTP_BASIC = "dittoHttpBasic";

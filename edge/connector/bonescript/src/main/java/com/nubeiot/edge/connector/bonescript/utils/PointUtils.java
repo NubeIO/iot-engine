@@ -26,7 +26,7 @@ public class PointUtils {
 
         Object value = point.getValue(DEFAULT_VALUE, 0);
 
-        for (int i = 0; i <= 16; i++) {
+        for (int i = 1; i <= 16; i++) {
             Object val = point.getJsonObject(PRIORITY_ARRAY).getValue(Integer.toString(i));
             if (!val.equals("null")) {
                 value = val;

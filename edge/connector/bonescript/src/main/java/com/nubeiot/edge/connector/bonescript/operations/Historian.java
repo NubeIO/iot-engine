@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bonescript.operations;
 
+import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
+import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.DATA;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.HISTORY_SETTINGS;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.NAME;
@@ -13,7 +15,6 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.quartz.JobDetail;
@@ -24,13 +25,15 @@ import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
 import com.nubeiot.core.utils.JsonUtils;
-import com.nubeiot.edge.connector.bonescript.BoneScriptEntityHandler;
 import com.nubeiot.edge.connector.bonescript.DittoDBOperation;
 import com.nubeiot.edge.connector.bonescript.ScheduleJob;
 import com.nubeiot.edge.connector.bonescript.SingletonBBPinMapping;
 import com.nubeiot.edge.connector.bonescript.jobs.RecordPeriodicJob;
-import com.nubeiot.edge.connector.bonescript.utils.HttpUtils;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -86,9 +89,7 @@ public class Historian {
         }
     }
 
-    public static void recordCov(@NonNull BoneScriptEntityHandler entityHandler, Vertx vertx, String id,
-                                 JsonObject value) {
-        long timestamp = new Date().getTime();
+    public static void recordCov(Vertx vertx, String id, Object value, long timestamp) {
         DittoDBOperation.syncHistory(id, Historian.createHistoryData(timestamp, value), true);
         logger.info("Periodic - Point '{}' value written to history", id);
         Historian.postHistory(vertx, id, timestamp, value);
@@ -129,7 +130,18 @@ public class Historian {
 
     public static void postHistory(Vertx vertx, String id, long timestamp, Object value) {
         String uri = "http://localhost:" + SingletonBBPinMapping.getInstance().getOutgoingPort() + "/history";
-        HttpUtils.post(vertx, uri, new JsonObject().put("id", id).put("ts", timestamp).put("val", value));
+
+        HttpClient client = vertx.getDelegate().createHttpClient();
+        HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response -> {
+            if (response.statusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+                logger.info("Http request has been made successfully");
+            } else {
+                logger.info("Error on posting history value");
+            }
+        });
+        request.setChunked(true);
+        request.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+        request.write(new JsonObject().put("id", id).put("ts", timestamp).put("val", value).encode()).end();
     }
 
 }

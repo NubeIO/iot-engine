@@ -21,10 +21,8 @@ import lombok.Getter;
 public class BoneScriptVerticle extends ContainerVerticle {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    public static final String BB_VERSION = "bb_version";
+    private static final String BB_VERSION = "bb_version";
 
-    @Getter
-    private BoneScriptEntityHandler entityHandler;
     @Getter
     private EventController eventController;
 
@@ -46,7 +44,7 @@ public class BoneScriptVerticle extends ContainerVerticle {
     }
 
     private void handler(SQLWrapper component) {
-        this.entityHandler = (BoneScriptEntityHandler) component.getEntityHandler();
+        final BoneScriptEntityHandler entityHandler = (BoneScriptEntityHandler) component.getEntityHandler();
         // Initializing DittoDBOperation for future use; made one place to play with DB for some synchronization
         DittoDBOperation.getInstance(entityHandler);
 
@@ -66,7 +64,7 @@ public class BoneScriptVerticle extends ContainerVerticle {
     }
 
     private EventController registerEventBus(EventController controller) {
-        controller.consume(BoneScriptEventBus.POINTS, new PointsEventHandler(this, BoneScriptEventBus.POINTS));
+        controller.consume(BoneScriptEventBus.POINTS, new PointsEventHandler(vertx, BoneScriptEventBus.POINTS));
         return controller;
     }
 
