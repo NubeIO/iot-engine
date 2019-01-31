@@ -18,7 +18,7 @@ public abstract class DataTypeValidation<T> extends Validation<T, T> {
 
     @Override
     protected String getErrorMessage() {
-        return Strings.format("{0}: \"{1}\" is not the type of {2}", getErrorType(), getInput(), classType().getName());
+        return Strings.format("{0}: {1} is not the type of {2}", getErrorType(), getInput(), classType().getName());
     }
 
 }

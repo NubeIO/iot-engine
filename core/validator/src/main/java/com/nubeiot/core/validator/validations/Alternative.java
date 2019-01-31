@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.ValidationError;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.ValidationResult;
 
@@ -28,7 +29,14 @@ public class Alternative<T> extends Validation<T, Object> {
             }
 
             if (exception.size() == validations.size()) {
-                source.onError(exception.get(0));
+                String message = "";
+                for (int i = 0; i < exception.size(); i++) {
+                    message += exception.get(i).getMessage();
+                    if (i != exception.size() - 1) {
+                        message += " || ";
+                    }
+                }
+                source.onError(new ValidationError(message));
             }
         });
     }

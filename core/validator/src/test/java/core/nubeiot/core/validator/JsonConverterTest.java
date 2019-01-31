@@ -69,8 +69,8 @@ public class JsonConverterTest {
                      .assertError(error -> {
                          System.out.println(error.getMessage());
                          return error.getMessage()
-                                     .equals("ValidationError: \"abc[0].a\" is not the type of io.vertx.core.json" +
-                                             ".JsonArray");
+                                     .equals(
+                                         "ValidationError: abc[0].a is not the type of io.vertx.core.json.JsonArray");
                      });
     }
 

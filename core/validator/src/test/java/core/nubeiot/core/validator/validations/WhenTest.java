@@ -64,7 +64,7 @@ public class WhenTest {
 
         whenId1.test()
                .assertError(error -> error.getMessage()
-                                          .equals("ValidationError: \"value\" strictly should fall in the" + " [OFF]"));
+                                          .equals("ValidationError: value strictly should fall in the" + " [OFF]"));
     }
 
     @Test

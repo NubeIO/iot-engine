@@ -25,7 +25,7 @@ public class KeyLoop<T> extends Validation<T, JsonObject> {
                              .flatMap(r -> ValidationResult.valid(jsonObject));
         } else {
             return ValidationResult.invalid(
-                Strings.format("{0}: \"{1}\" must be of type JsonObject", getErrorType(), this.input));
+                Strings.format("{0}: {1} must be of type JsonObject", getErrorType(), this.input));
         }
     }
 

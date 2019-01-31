@@ -30,7 +30,7 @@ public class Range<T> extends Validation<T, Double> {
 
     @Override
     protected String getErrorMessage() {
-        return Strings.format("{0}: \"{1}\" should be on range {2}-{3}", getErrorType(), getInput(), minValue,
+        return Strings.format("{0}: {1} should be on range [{2}-{3}]", getErrorType(), getInput(), minValue,
                               maxValue);
     }
 

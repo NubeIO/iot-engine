@@ -121,8 +121,7 @@ public class ValidationTest {
         Validation<Object, ?> loop = new Loop<>(new DetailsJsonArrayValidation<>());
         JsonConverter.validate(loop, jsonObject, "details").test().assertError(e -> {
             System.out.println(e.getMessage());
-            return e.getMessage()
-                    .equals("ValidationError: \"details[1].movies[2]\" is not the type of java.lang.String");
+            return e.getMessage().equals("ValidationError: details[1].movies[2] is not the type of java.lang.String");
         });
     }
 
@@ -203,7 +202,7 @@ public class ValidationTest {
         JsonConverter.validate(lv, jsonArray, "").test().assertError(e -> {
             System.out.println(e.getMessage());
             return e.getMessage()
-                    .equals("ValidationError: \"[1].details.basic.interests[1].music\" is not the type " +
+                    .equals("ValidationError: [1].details.basic.interests[1].music is not the type " +
                             "of java.lang.String");
         });
     }

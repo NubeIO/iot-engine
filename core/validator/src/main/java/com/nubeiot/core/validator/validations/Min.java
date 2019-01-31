@@ -10,7 +10,7 @@ public class Min<T> extends Max<T> {
 
     @Override
     protected String getErrorMessage() {
-        return Strings.format("{0}: \"{1}\" is not greater than or equal to {2}", getErrorType(), getInput(), value);
+        return Strings.format("{0}: {1} is not greater than or equal to {2}", getErrorType(), getInput(), value);
     }
 
     protected boolean condition(Double d) {

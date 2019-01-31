@@ -35,7 +35,7 @@ public class Loop<T> extends Validation<T, JsonArray> {
             }).toList().flatMap(r -> ValidationResult.valid(jsonArray));
         } else {
             return ValidationResult.invalid(
-                Strings.format("{0}: \"{1}\" must be of type JsonArray", getErrorType(), this.input));
+                Strings.format("{0}: {1} must be of type JsonArray", getErrorType(), this.input));
         }
     }
 
