@@ -11,9 +11,9 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
 
+import com.nubeiot.core.NubeConfig.SystemConfig.ClusterConfig;
 import com.nubeiot.core.cluster.ClusterNodeListener;
 import com.nubeiot.core.cluster.ClusterRegistry;
-import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.cluster.IClusterDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.EngineException;
@@ -120,7 +120,7 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
 
     private void configCluster(VertxOptions options) {
         logger.info("Setup Cluster...");
-        NubeConfig.SystemConfig.ClusterConfig clusterCfg = config.getSystemConfig().getClusterConfig();
+        ClusterConfig clusterCfg = config.getSystemConfig().getClusterConfig();
         if (Objects.isNull(clusterCfg) || !clusterCfg.isActive()) {
             logger.info("Cluster is not activated");
             return;
@@ -129,10 +129,9 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         logger.info("Cluster type: {}", clusterCfg.getType());
         options.setClustered(true);
         options.setHAEnabled(clusterCfg.isHa());
-        ClusterType type = clusterCfg.getType();
-        this.clusterDelegate = ClusterRegistry.instance().getClusterDelegate(type);
+        this.clusterDelegate = ClusterRegistry.instance().getClusterDelegate(clusterCfg.getType());
         if (Objects.isNull(this.clusterDelegate)) {
-            throw new EngineException("Cannot load cluster config: " + type);
+            throw new EngineException("Cannot load cluster type: " + clusterCfg.getType());
         }
         options.setClusterManager(this.clusterDelegate.initClusterManager(clusterCfg));
     }

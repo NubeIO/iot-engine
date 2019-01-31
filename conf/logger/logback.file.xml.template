@@ -9,12 +9,9 @@
         </layout>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/dashboard-connector-postgresql.log</file>
+        <file>logs/{{project}}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- daily rollover -->
-            <fileNamePattern>logs/dashboard-connector-postgresql.%d{yyyy-MM-dd}.log</fileNamePattern>
-
-            <!-- keep 30 days' worth of history capped at 3GB total size -->
+            <fileNamePattern>logs/{{project}}.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
 
@@ -25,11 +22,12 @@
     </appender>
 
     <root level="info">
-        <appender-ref ref="STDOUT" />
-        <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT" level="info"/>
+        <appender-ref ref="FILE" level="info"/>
     </root>
-    <logger name="com.hazelcast" level="info"/>
 
     <logger name="com.nubeiot" level="info"/>
+    {{more_logger}}
 
 </configuration>
+

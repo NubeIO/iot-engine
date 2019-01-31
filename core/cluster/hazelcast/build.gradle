@@ -1,4 +1,11 @@
+ext {
+    hazelcastVersion = "3.10.6"
+}
+
 dependencies {
     compile project(':core:base')
-    compile "io.vertx:vertx-hazelcast:$project.versions.vertx"
+    compile("io.vertx:vertx-hazelcast:$project.versions.vertx") {
+        exclude group: 'com.hazelcast', module: 'hazelcast'
+    }
+    compile "com.hazelcast:hazelcast:$project.hazelcastVersion"
 }

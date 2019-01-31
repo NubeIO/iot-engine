@@ -2,8 +2,13 @@
   "__app__": {
     "__sql__": {
       "dialect": "H2",
-      "hikari": {
-        "jdbcUrl": "jdbc:h2:file:./bios"
+      "__hikari__": {
+        "jdbcUrl": "jdbc:h2:file:./bios",
+        "minimumIdle": 1,
+        "maximumPoolSize": 2,
+        "connectionTimeout": 30000,
+        "idleTimeout": 180000,
+        "maxLifetime": 300000
       }
     },
     "auto_install": true,
@@ -29,8 +34,13 @@
         "__app__": {
           "__sql__": {
             "dialect": "H2",
-            "hikari": {
-              "jdbcUrl": "jdbc:h2:file:./bios-installer;database_to_upper=false"
+            "__hikari__": {
+              "jdbcUrl": "jdbc:h2:file:./bios-installer",
+              "minimumIdle": 1,
+              "maximumPoolSize": 2,
+              "connectionTimeout": 30000,
+              "idleTimeout": 180000,
+              "maxLifetime": 300000
             }
           }
         }

@@ -1,7 +1,10 @@
+ext {
+    specifiedLog = project.loggers["sql"] + project.loggers["hazelcast"] + ["org.mongodb.driver": "info"]
+}
 
 dependencies {
     compile project(':core:common')
     compile project(':core:httpserver')
-    compile group: 'io.vertx', name: 'vertx-auth-oauth2', version: "$project.versions.vertx"
+    compile "io.vertx:vertx-auth-oauth2:$project.versions.vertx"
     compile "io.vertx:vertx-mongo-client:$project.versions.vertx"
 }

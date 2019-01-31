@@ -1,4 +1,6 @@
-group 'com.nubeiot.edge.module'
+ext {
+    specifiedLog = project.loggers["sql"] + ["h2database": "info"]
+}
 
 dependencies {
     compile project(':edge:core')

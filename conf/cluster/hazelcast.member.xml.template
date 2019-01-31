@@ -43,10 +43,10 @@
         <property name="hazelcast.partition.migration.timeout">10</property>
         <property name="hazelcast.migration.min.delay.on.member.removed.seconds">3</property>
     </properties>
-    <!-- <group>
+    <group>
         <name>dev</name>
         <password>dev-pass</password>
-    </group> -->
+    </group>
     <management-center enabled="false">http://localhost:8080/hazelcast-mancenter</management-center>
     <network>
         <port auto-increment="true" port-count="100">5701</port>
@@ -84,8 +84,7 @@
             </discovery-strategies>
         </join>
         <interfaces enabled="true">
-            <interface>127.0.0.1</interface>
-            <interface>192.168.7.1</interface>
+            <interface>{{your-network-interface}}</interface>
         </interfaces>
         <ssl enabled="false"/>
         <socket-interceptor enabled="false"/>

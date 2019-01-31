@@ -89,3 +89,18 @@ ext.repos = {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
     maven { url "https://plugins.gradle.org/m2/" }
 }
+
+ext.loggers = [
+    "hazelcast": [
+        "com.hazelcast": "info"
+    ],
+    "sql"      : [
+        "com.zaxxer.hikari.pool": "info",
+        "com.zaxxer.hikari"     : "info"
+    ],
+    "kafka"    : [
+        "org.apache.kafka"               : "info",
+        "org.apache.kafka.clients"       : "info",
+        "org.apache.kafka.common.network": "info"
+    ]
+]

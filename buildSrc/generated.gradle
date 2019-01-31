@@ -37,15 +37,29 @@ task generateConfigs(group: 'build') {
     doLast {
         def confDir = new FileTreeBuilder(project.projectDir).dir(project.genProps.configDir)
         def projectName = project.computeBaseName()
+        def moreLogger = project.hasProperty('specifiedLog') && project.specifiedLog ? project.specifiedLog.collect {
+            k, v -> "<logger name=\"$k\" level=\"$v\"/>"
+        }.join("\r\n") : ''
         copy {
             into confDir
-            from("${rootDir}/conf/") {
+            from("${rootDir}/conf/logger") {
                 include "*.xml.template"
-                rename '((?!console))+(\\.console)?.xml.template', '$1.xml'
-                filter { it.replaceAll('@@project@@', projectName) }
+                rename '((?!console))+(.console)?\\.xml\\.template', '$1.xml'
+                filter {
+                    it.replaceAll("\\{\\{project\\}\\}", projectName).replaceAll("\\{\\{more_logger\\}\\}", moreLogger)
+                }
             }
             from("src/main/resources") {
                 include "*.json"
+            }
+        }
+        if (configurations.runtimeClasspath.any { it.name.contains("cluster-hazelcast") }) {
+            copy {
+                into confDir
+                from("${rootDir}/conf/cluster") {
+                    include "*.xml.template"
+                    rename '((?!member))+(.member)?.xml\\.template', 'cluster.xml'
+                }
             }
         }
     }

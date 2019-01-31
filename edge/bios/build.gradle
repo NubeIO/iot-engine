@@ -1,3 +1,6 @@
+ext {
+    specifiedLog = project.loggers["hazelcast"] + project.loggers["sql"] + ["h2database": "info"]
+}
 
 dependencies {
     compile project(':edge:core')

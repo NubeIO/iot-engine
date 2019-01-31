@@ -1,0 +1,18 @@
+FROM {{IMAGE_BASE}}
+
+LABEL maintainer="Son Tran <sontt246@gmail.com>"
+
+RUN curl -L -C - -b "oraclelicense=accept-securebackup-cookie" {{JDK_URL}} -o /tmp/jdk.tar.gz \
+    && mkdir -p /usr/lib/jvm/ \
+    && tar -xvf --strip 1 /tmp/jdk.tar.gz /usr/lib/jvm/
+
+WORKDIR /app
+COPY {{ARTIFACT}} /tmp
+RUN tar --strip 1 -xvf /tmp/{{ARTIFACT}} -C /app
+
+ENV JAVA_HOME=/usr/lib/jvm/ PATH=$PATH:/usr/lib/jvm/bin JAVA_VERSION={{JDK_VERSION}}
+ENV JVM_OPTS="{{JVM_OPTS}}"
+ENV JAVA_OPTS="{{JAVA_OPTS}}"
+
+ENTRYPOINT ["java"]
+CMD [ "$JVM_OPTS", "$JAVA_OPTS", "-jar", "{{ARTIFACT}}.jar", "-conf", "conf/config.json" ]
