@@ -29,7 +29,7 @@ public class Max<T> extends Validation<T, Double> {
 
     @Override
     protected String getErrorMessage() {
-        return Strings.format("{0}: \"{1}\" is not less than or equal to {2}", getErrorType(), getInput(), value);
+        return Strings.format("{0}: {1} is not less than or equal to {2}", getErrorType(), getInput(), value);
     }
 
     protected boolean condition(Double d) {

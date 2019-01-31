@@ -26,7 +26,7 @@ public class RegexValidation extends Validation<String, String> {
 
     @Override
     public String getErrorMessage() {
-        return Strings.format("{0}: \"{1}\" does not match with the pattern \"{2}\"", getErrorType(), getInput(),
+        return Strings.format("{0}: {1} does not match with the pattern {2}", getErrorType(), getInput(),
                               regex);
     }
 

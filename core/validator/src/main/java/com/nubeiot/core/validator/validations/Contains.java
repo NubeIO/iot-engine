@@ -44,8 +44,8 @@ public class Contains<T> extends Validation<T, T> {
     @Override
     protected String getErrorMessage() {
         return strict
-               ? Strings.format("{0}: \"{1}\" strictly should fall in the {2}", getErrorType(), getInput(), items)
-               : Strings.format("{0}: \"{1}\" should fall in the {2}", getErrorType(), getInput(), items);
+               ? Strings.format("{0}: {1} strictly should fall in the {2}", getErrorType(), getInput(), items)
+               : Strings.format("{0}: {1} should fall in the {2}", getErrorType(), getInput(), items);
     }
 
 }
