@@ -17,7 +17,6 @@ import com.nubeiot.core.utils.JsonUtils;
 import com.nubeiot.edge.connector.bonescript.BoneScriptEventBus;
 import com.nubeiot.edge.connector.bonescript.operations.Ditto;
 
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
@@ -34,13 +33,13 @@ public class PointEventHandlerTest {
     @Test
     public void test_patchPoint() {
         JsonObject db = new JsonObject(FileUtils.readFileToString(DITTO_EXAMPLE_RESOURCE.toString()));
-        JsonArray newPoints = new JsonArray(FileUtils.readFileToString(VALIDATED_POINT_UPDATE.toString()));
+        JsonObject newPoints = new JsonObject(FileUtils.readFileToString(VALIDATED_POINT_UPDATE.toString()));
         Ditto.getInstance(db);
 
         JsonObject points = (JsonObject) JsonUtils.getObject(db, "thing.features.points.properties");
         AtomicBoolean updateDitto = new AtomicBoolean(false);
-        JsonObject newPoint = newPoints.getJsonObject(0);
-        String id = newPoints.getJsonObject(0).getString(ID);
+        JsonObject newPoint = newPoints.getJsonArray("points").getJsonObject(0);
+        String id = newPoint.getString(ID);
 
         pointsEventHandler.patchPoint(points, updateDitto, newPoint, id);
 

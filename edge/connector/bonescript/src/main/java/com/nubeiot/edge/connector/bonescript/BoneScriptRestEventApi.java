@@ -8,7 +8,7 @@ import com.nubeiot.core.http.rest.RestEventApi;
 
 import io.vertx.core.http.HttpMethod;
 
-public class BoneScriptRestEventApi extends AbstractRestEventApi implements RestEventApi {
+public class BoneScriptRestEventApi extends AbstractRestEventApi {
 
     @Override
     protected void initRoute() {

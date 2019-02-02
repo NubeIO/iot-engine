@@ -7,7 +7,9 @@ import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.HI
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.PROPERTIES;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.SIZE;
 import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.THING;
-import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.VALUE;
+import static com.nubeiot.edge.connector.bonescript.constants.DittoAttributes.VAL;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NotFoundException;
@@ -63,7 +65,10 @@ public class DittoDBOperation {
                                                        .execute());
     }
 
-    public static synchronized Integer syncHistory(String id, JsonObject historyLine, boolean checkWritable) {
+    private static ReentrantLock syncHistoryLock = new ReentrantLock();
+
+    public static Single<Integer> syncHistory(String id, JsonObject historyLine, boolean checkWritable) {
+        syncHistoryLock.lock();
         return getDittoData().flatMap(db -> {
             JsonObject point = (JsonObject) JsonUtils.getObject(db, "thing.features.points" + ".properties." + id);
             JsonObject history = (JsonObject) JsonUtils.getObject(db,
@@ -72,9 +77,9 @@ public class DittoDBOperation {
             if (checkWritable) {
                 Object type = JsonUtils.getObject(point, "historySettings.type");
                 if (type != null && type.toString().equalsIgnoreCase("cov")) {
-                    Object value = point.getValue(VALUE);
-                    if (Historian.isHistoryWritable(id, point, value, history)) {
-                        return Single.just(0);
+                    Object value = historyLine.getValue(VAL);
+                    if (!Historian.isHistoryWritable(id, point, value, history)) {
+                        return Single.just(0); // just ignore history writing operation
                     }
                 }
             }
@@ -101,7 +106,7 @@ public class DittoDBOperation {
               .getJsonObject(PROPERTIES)
               .put(id, history);
             return updateDittoData(db);
-        }).blockingGet();
+        }).doFinally(() -> syncHistoryLock.unlock());
     }
 
 }

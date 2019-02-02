@@ -31,6 +31,7 @@ import com.nubeiot.edge.connector.bonescript.SingletonBBPinMapping;
 import com.nubeiot.edge.connector.bonescript.jobs.RecordPeriodicJob;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.reactivex.Single;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
@@ -89,29 +90,32 @@ public class Historian {
         }
     }
 
-    public static void recordCov(Vertx vertx, String id, Object value, long timestamp) {
-        DittoDBOperation.syncHistory(id, Historian.createHistoryData(timestamp, value), true);
-        logger.info("Periodic - Point '{}' value written to history", id);
-        Historian.postHistory(vertx, id, timestamp, value);
+    public static Single<Integer> recordCov(Vertx vertx, String id, Object value, long timestamp) {
+        return DittoDBOperation.syncHistory(id, Historian.createHistoryData(timestamp, value), true)
+                               .doOnSuccess(ignored -> {
+                                   logger.info("COV - Point '{}' value written to history", id);
+                                   Historian.postHistory(vertx, id, timestamp, value);
+                               });
     }
 
     public static boolean isHistoryWritable(String id, JsonObject point, Object value, JsonObject history) {
         int historyLength = history.getJsonArray("data").size();
         if (historyLength == 0) {
-            logger.info("COV _ Point '{}' has no histories - writing value to histories");
+            logger.info("COV - Point '{}' has no histories - writing value to histories", id);
+            return true;
         } else if (history.getJsonArray(DATA).getJsonObject(historyLength - 1).getValue(VAL) != value) {
             if (point.getJsonObject(HISTORY_SETTINGS).containsKey(TOLERANCE) &&
                 point.getJsonObject(HISTORY_SETTINGS).getInteger(TOLERANCE) >= 0) {
                 logger.info("COV - Point '{}' value inside tolerance - writing value to histories", id);
+                return true;
             } else {
                 logger.info("COV - Point '{}' value outside tolerance - not writing value to histories", id);
-                return true;
+                return false;
             }
         } else {
             logger.debug("COV - Point '{}' value unchanged - not writing value to histories", id);
-            return true;
+            return false;
         }
-        return false;
     }
 
     // If the name and data variables don't exists for the point, create them

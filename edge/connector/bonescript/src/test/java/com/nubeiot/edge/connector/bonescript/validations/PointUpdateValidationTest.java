@@ -7,7 +7,7 @@ import org.junit.Test;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.validator.Validation;
 
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class PointUpdateValidationTest {
 
@@ -18,7 +18,7 @@ public class PointUpdateValidationTest {
 
     @Test
     public void test_validation() {
-        Object object = new JsonArray(FileUtils.readFileToString(VALIDATED_POINT_UPDATE.toString()));
+        Object object = new JsonObject(FileUtils.readFileToString(VALIDATED_POINT_UPDATE.toString()));
 
         Validation<Object, ?> validation = new PointsUpdateValidation<>();
         validation.validate(object).test().assertValue(v -> true);

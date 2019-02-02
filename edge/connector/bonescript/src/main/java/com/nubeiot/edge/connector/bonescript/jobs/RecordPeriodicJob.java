@@ -7,7 +7,6 @@ import static com.nubeiot.edge.connector.bonescript.operations.Historian.CONTEXT
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.SchedulerException;
 
 import com.nubeiot.core.utils.JsonUtils;
 import com.nubeiot.edge.connector.bonescript.DittoDBOperation;
@@ -24,19 +23,19 @@ public class RecordPeriodicJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        try {
-            String id = context.getJobDetail().getJobDataMap().getString(CONTEXT_ID);
-            long fireTime = context.getFireTime().getTime();
-            JsonObject db = DittoDBOperation.getDittoData().blockingGet();
+        String id = context.getJobDetail().getJobDataMap().getString(CONTEXT_ID);
+        long fireTime = context.getFireTime().getTime();
+        DittoDBOperation.getDittoData().flatMap(db -> {
             JsonObject point = (JsonObject) JsonUtils.getObject(db, "thing.features.points.properties." + id);
             Vertx vertx = (Vertx) context.getScheduler().getContext().get(CONTEXT_VERTX);
             int value = point.getInteger(VALUE);
-            DittoDBOperation.syncHistory(id, Historian.createHistoryData(fireTime, value), false);
-            logger.info("Periodic - Point '{}' value written to history", id);
-            Historian.postHistory(vertx, id, fireTime, value);
-        } catch (SchedulerException e) {
-            e.printStackTrace();
-        }
+
+            return DittoDBOperation.syncHistory(id, Historian.createHistoryData(fireTime, value), false)
+                                   .doOnSuccess(ignored -> {
+                                       logger.info("Periodic - Point '{}' value written to history", id);
+                                       Historian.postHistory(vertx, id, fireTime, value);
+                                   });
+        }).subscribe();
     }
 
 }

@@ -49,7 +49,7 @@ public class PointsUpdateValidation<T> extends Validation<T, JsonArray> {
     public Single<ValidationResult<JsonArray>> validity(T s) {
         Validation<JsonArray, JsonArray> pointsLoop = new Loop<>(new PointsValidationSupplier<>());
 
-        return JsonConverter.validate(pointsLoop, s, "");
+        return JsonConverter.validate(pointsLoop, s, "points");
     }
 
     @Override

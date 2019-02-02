@@ -66,15 +66,13 @@ public class PointsEventHandler implements EventHandler {
     private Single<JsonObject> patchPoints(JsonObject db, JsonArray newPoints) {
         JsonObject points = (JsonObject) JsonUtils.getObject(db, "thing.features.points.properties");
         return patchablePoints(newPoints, db).flatMap(
-            ignored -> Observable.fromIterable(newPoints).flatMapSingle(newPoint$ -> {
+            ignored -> Observable.fromIterable(newPoints).concatMap(newPoint$ -> {
                 AtomicBoolean updateDitto = new AtomicBoolean(false);
                 JsonObject newPoint = (JsonObject) newPoint$;
                 final String id = newPoint.getString("id");
 
                 patchPoint(points, updateDitto, newPoint, id);
-                patchAction(points, updateDitto, id);
-
-                return Single.just(true);
+                return patchAction(points, updateDitto, id).toObservable();
             }).toList()).map(ignored -> new JsonObject());
     }
 
@@ -129,13 +127,14 @@ public class PointsEventHandler implements EventHandler {
     }
 
     // Actions performed under patch requests
-    private void patchAction(JsonObject points, AtomicBoolean updateDitto, String id) {
+    private Single<Integer> patchAction(JsonObject points, AtomicBoolean updateDitto, String id) {
         long timestamp = new Date().getTime();
-        Historian.recordCov(vertx, id, points.getJsonObject(id).getValue(VALUE), timestamp);
-
-        if (updateDitto.get()) {
-            Ditto.pointToDitto(vertx, points.getJsonObject(id), id, timestamp);
-        }
+        return Historian.recordCov(vertx, id, points.getJsonObject(id).getValue(VALUE), timestamp)
+                        .doOnSuccess(ignored -> {
+                            if (updateDitto.get()) {
+                                Ditto.pointToDitto(vertx, points.getJsonObject(id), id, timestamp);
+                            }
+                        });
     }
 
 }
