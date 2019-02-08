@@ -1,37 +1,37 @@
 package com.nubeiot.core.validator.validations;
 
+import com.nubeiot.core.exceptions.ValidationError;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.ValidationResult;
 
-import io.reactivex.Single;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class Range<T> extends Validation<T, Double> {
+public class Range<T> implements Validation<T> {
 
     private final Double minValue;
     private final Double maxValue;
 
     @Override
-    public Single<ValidationResult<Double>> validity(T s) {
+    public ValidationResult validity(T s) {
         if (s instanceof Number) {
             Double d = Double.parseDouble(s.toString());
-            if (minValue <= d && d <= maxValue) {
-                return ValidationResult.valid(d);
+            if (minValue <= d && d < maxValue) {
+                return ValidationResult.valid();
             } else {
-                return ValidationResult.invalid(getErrorMessage());
+                return ValidationResult.invalid(ValidationError.builder()
+                                                               .value(s.toString())
+                                                               .message(
+                                                                   Strings.format("should be on range [{0}<= x < {1}]",
+                                                                                  minValue, maxValue)));
             }
         } else {
-            return ValidationResult.invalid(
-                Strings.format("ClassCastException: {0} is not parsable to Number", getInput()));
+            return ValidationResult.invalid(ValidationError.builder()
+                                                           .errorType("ClassCastException")
+                                                           .value(s.toString())
+                                                           .message("is not parsable to Number"));
         }
-    }
-
-    @Override
-    protected String getErrorMessage() {
-        return Strings.format("{0}: {1} should be on range [{2}-{3}]", getErrorType(), getInput(), minValue,
-                              maxValue);
     }
 
 }

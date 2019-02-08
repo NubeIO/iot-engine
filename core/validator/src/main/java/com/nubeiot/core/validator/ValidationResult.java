@@ -1,35 +1,40 @@
 package com.nubeiot.core.validator;
 
-import com.nubeiot.core.exceptions.NubeException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.nubeiot.core.exceptions.ValidationError;
 
-import io.reactivex.Single;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
-public class ValidationResult<T> {
+@NoArgsConstructor
+@AllArgsConstructor
+public class ValidationResult {
 
-    private T data;
+    List<ValidationError.Builder> errors = new ArrayList<>();
 
-    public static <E> Single<ValidationResult<E>> valid() {
-        ValidationResult<E> validationResult = new ValidationResult<>();
-        return Single.just(validationResult);
+    public static ValidationResult valid() {
+        return new ValidationResult();
     }
 
-    public static <E> Single<ValidationResult<E>> valid(E data) {
-        ValidationResult<E> validationResult = new ValidationResult<>();
-        validationResult.data = data;
-        return Single.just(validationResult);
+    public static ValidationResult invalid(List<ValidationError.Builder> validationErrorBuilders) {
+        return new ValidationResult(validationErrorBuilders);
     }
 
-    public static <E> Single<ValidationResult<E>> invalid(NubeException.ErrorCode errorCode, String message) {
-        return Single.error(new ValidationError(errorCode, message));
+    public static ValidationResult invalid(ValidationError.Builder validationErrorBuilder) {
+        return invalid(Collections.singletonList(validationErrorBuilder));
     }
 
-    public static <E> Single<ValidationResult<E>> invalid(String message) {
-        return Single.error(new ValidationError(message));
+    public boolean isValid() {
+        return errors().isEmpty();
+    }
+
+    public List<ValidationError.Builder> errors() {
+        return errors;
     }
 
 }

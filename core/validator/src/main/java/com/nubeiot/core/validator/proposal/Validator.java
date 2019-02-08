@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
-import com.nubeiot.core.exceptions.ValidationError;
-
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.NonNull;
@@ -52,7 +50,7 @@ public class Validator<T> {
         T d = mergeFunc.apply(defaultValue, data);
         if (Objects.isNull(d) && !nullable) {
             // or return ValidationResult
-            throw new ValidationError("non null");
+            // throw new ValidationError("non null");
         }
         return d;
     }

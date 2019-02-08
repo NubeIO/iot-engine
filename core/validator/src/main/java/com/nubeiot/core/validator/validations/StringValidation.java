@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 public class StringValidation<T> extends DataTypeValidation<T> {
 
     @Override
-    public Class classType() {
+    protected Class classType() {
         return String.class;
     }
 

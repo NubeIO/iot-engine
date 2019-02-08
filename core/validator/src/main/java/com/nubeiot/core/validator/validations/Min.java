@@ -1,6 +1,6 @@
 package com.nubeiot.core.validator.validations;
 
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.exceptions.ValidationError;
 
 public class Min<T> extends Max<T> {
 
@@ -8,9 +8,10 @@ public class Min<T> extends Max<T> {
         super(value);
     }
 
-    @Override
-    protected String getErrorMessage() {
-        return Strings.format("{0}: {1} is not greater than or equal to {2}", getErrorType(), getInput(), value);
+    protected ValidationError.Builder getErrorMessage(T s) {
+        return ValidationError.builder()
+                              .value(s.toString())
+                              .message("is not greater than or equal to " + value.toString());
     }
 
     protected boolean condition(Double d) {

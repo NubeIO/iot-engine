@@ -1,35 +1,37 @@
 package com.nubeiot.core.validator.validations;
 
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.exceptions.ValidationError;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.ValidationResult;
 
-import io.reactivex.Single;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class Max<T> extends Validation<T, Double> {
+public class Max<T> implements Validation<T> {
 
     protected final Double value;
 
     @Override
-    public Single<ValidationResult<Double>> validity(T s) {
+    public ValidationResult validity(T s) {
         if (s instanceof Number) {
             Double d = Double.parseDouble(s.toString());
             if (condition(d)) {
-                return ValidationResult.valid(d);
+                return ValidationResult.valid();
             } else {
-                return ValidationResult.invalid(getErrorMessage());
+                return ValidationResult.invalid(getErrorMessage(s));
             }
         } else {
-            return ValidationResult.invalid(
-                Strings.format("ClassCastException: {0} is not parsable to Number", getInput()));
+            return ValidationResult.invalid(ValidationError.builder()
+                                                           .errorType("ClassCastException")
+                                                           .value(s.toString())
+                                                           .message("is not parsable to Number"));
         }
     }
 
-    @Override
-    protected String getErrorMessage() {
-        return Strings.format("{0}: {1} is not less than or equal to {2}", getErrorType(), getInput(), value);
+    protected ValidationError.Builder getErrorMessage(T s) {
+        return ValidationError.builder()
+                              .value(s.toString())
+                              .message("is not less than or equal to " + value.toString());
     }
 
     protected boolean condition(Double d) {

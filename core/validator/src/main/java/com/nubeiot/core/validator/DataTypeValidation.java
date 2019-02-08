@@ -1,24 +1,20 @@
 package com.nubeiot.core.validator;
 
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.exceptions.ValidationError;
 
-import io.reactivex.Single;
+public abstract class DataTypeValidation<T> implements Validation<T> {
 
-public abstract class DataTypeValidation<T> extends Validation<T, T> {
-
-    public abstract Class classType();
+    protected abstract Class classType();
 
     @Override
-    public Single<ValidationResult<T>> validity(T s) {
+    public ValidationResult validity(T s) {
         if (classType().isInstance(s)) {
-            return ValidationResult.valid(s);
+            return ValidationResult.valid();
         }
-        return ValidationResult.invalid(getErrorMessage());
-    }
 
-    @Override
-    protected String getErrorMessage() {
-        return Strings.format("{0}: {1} is not the type of {2}", getErrorType(), getInput(), classType().getName());
+        return ValidationResult.invalid(ValidationError.builder()
+                                                       .value(s == null ? null : s.toString())
+                                                       .message("is not the type of " + classType().getName()));
     }
 
 }

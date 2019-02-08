@@ -5,19 +5,11 @@ import java.util.Arrays;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.ValidationResult;
 
-import io.reactivex.Single;
-
-public class NumberOrStringValidation<T> extends Validation<T, Object> {
+public class NumberOrStringValidation<T> implements Validation<T> {
 
     @Override
-    public Single<ValidationResult<Object>> validity(T s) {
-        return new Alternative<>(Arrays.asList(new NumberValidation<>(), new StringValidation<>())).registerInput(
-            this.input).validate(s);
-    }
-
-    @Override
-    protected String getErrorMessage() {
-        return null;
+    public ValidationResult validity(T s) {
+        return new Alternative<>(Arrays.asList(new NumberValidation<>(), new StringValidation<>())).validate(s);
     }
 
 }

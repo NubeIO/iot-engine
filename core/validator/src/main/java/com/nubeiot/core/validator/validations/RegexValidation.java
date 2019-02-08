@@ -3,31 +3,27 @@ package com.nubeiot.core.validator.validations;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.exceptions.ValidationError;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.ValidationResult;
 
-import io.reactivex.Single;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class RegexValidation extends Validation<String, String> {
+public class RegexValidation<T> implements Validation<T> {
 
     private final String regex;
 
     @Override
-    public Single<ValidationResult<String>> validity(String s) {
+    public ValidationResult validity(T s) {
         Pattern pattern = java.util.regex.Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(s);
+        Matcher matcher = pattern.matcher(s.toString());
         boolean isValid = matcher.matches();
 
-        return isValid ? ValidationResult.valid(s) : ValidationResult.invalid(getErrorMessage());
-    }
-
-    @Override
-    public String getErrorMessage() {
-        return Strings.format("{0}: {1} does not match with the pattern {2}", getErrorType(), getInput(),
-                              regex);
+        return isValid
+               ? ValidationResult.valid()
+               : ValidationResult.invalid(
+                   ValidationError.builder().value(s.toString()).message("does not match with the pattern " + regex));
     }
 
 }

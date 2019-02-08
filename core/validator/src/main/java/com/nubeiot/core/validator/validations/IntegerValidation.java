@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 public class IntegerValidation<T> extends DataTypeValidation<T> {
 
     @Override
-    public Class classType() {
+    protected Class classType() {
         return Integer.class;
     }
 

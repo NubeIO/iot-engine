@@ -9,7 +9,8 @@ import lombok.RequiredArgsConstructor;
 public class JsonArrayValidation<T> extends DataTypeValidation<T> {
 
     @Override
-    public Class classType() {
+    protected Class classType() {
         return JsonArray.class;
     }
+
 }

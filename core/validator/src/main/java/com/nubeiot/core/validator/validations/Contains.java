@@ -2,24 +2,23 @@ package com.nubeiot.core.validator.validations;
 
 import java.util.Set;
 
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.exceptions.ValidationError;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.ValidationResult;
 
-import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class Contains<T> extends Validation<T, T> {
+public class Contains<T> implements Validation<T> {
 
     private final Set<?> items;
     private boolean strict = true;
 
     @Override
-    public Single<ValidationResult<T>> validity(T s) {
+    public ValidationResult validity(T s) {
         boolean contains = false;
         if (s instanceof JsonArray) {
             for (Object o : (JsonArray) s) {
@@ -38,14 +37,13 @@ public class Contains<T> extends Validation<T, T> {
         } else {
             contains = items.contains(s);
         }
-        return contains ? ValidationResult.valid(s) : ValidationResult.invalid(getErrorMessage());
+        return contains ? ValidationResult.valid() : ValidationResult.invalid(buildErrorMessage(s));
     }
 
-    @Override
-    protected String getErrorMessage() {
+    private ValidationError.Builder buildErrorMessage(T s) {
         return strict
-               ? Strings.format("{0}: {1} strictly should fall in the {2}", getErrorType(), getInput(), items)
-               : Strings.format("{0}: {1} should fall in the {2}", getErrorType(), getInput(), items);
+               ? ValidationError.builder().value(s.toString()).message("strictly should fall in the " + items)
+               : ValidationError.builder().value(s.toString()).message("should fall in the " + items);
     }
 
 }

@@ -1,28 +1,21 @@
 package com.nubeiot.core.validator.validations;
 
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.exceptions.ValidationError;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.ValidationResult;
 
-import io.reactivex.Single;
-
-public class Exist<T> extends Validation<T, T> {
+public class Exist<T> implements Validation<T> {
 
     @Override
-    public Single<ValidationResult<T>> validity(T s) {
+    public ValidationResult validity(T s) {
         if (s != null) {
-            return ValidationResult.valid(s);
+            return ValidationResult.valid();
         }
-        return ValidationResult.invalid(getErrorMessage());
+        return ValidationResult.invalid(ValidationError.builder().message("required value is null"));
     }
 
     @Override
-    protected String getErrorMessage() {
-        return Strings.format("{0}: required value is null", getErrorType(), getInput());
-    }
-
-    @Override
-    protected boolean isNullable() {
+    public boolean nullable() {
         return false;
     }
 

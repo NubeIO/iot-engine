@@ -14,12 +14,24 @@
       "basic": {
         "interests": [
           {
-            "sports": "Cricket",
-            "music": "Piano"
+            "sports": [
+              "Cricket",
+              "Tennis"
+            ],
+            "music": [
+              {
+                "classical": [
+                  "Baroque",
+                  "Choral"
+                ]
+              },
+              {
+                "rock": "Arena Rock"
+              }
+            ]
           },
           {
-            "sports": "Football",
-            "music": 123
+            "sports": "Football"
           }
         ]
       }

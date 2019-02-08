@@ -3,47 +3,54 @@ package com.nubeiot.core.validator.validations;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.ValidationError;
 import com.nubeiot.core.validator.Validation;
 import com.nubeiot.core.validator.ValidationResult;
+import com.nubeiot.core.validator.utils.ValidationUtils;
 
-import io.reactivex.Single;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class Alternative<T> extends Validation<T, Object> {
+public class Alternative<T> implements Validation<T> {
 
-    private final List<Validation<T, ?>> validations;
+    private final List<Validation<T>> validations;
+    private BiFunction<ValidationResult, String, ValidationError.Builder> alternativeValidationBuilderFunc
+        = (validationResult, value) -> {
+        StringBuilder message = new StringBuilder();
+        NubeException.ErrorCode errorCode = NubeException.ErrorCode.INVALID_ARGUMENT;
+        for (int i = 0; i < validationResult.getErrors().size(); i++) {
+            ValidationError.Builder error = validationResult.getErrors().get(i);
+            // clearing errorType and value
+            NubeException nubeException = error.errorType("").value("").build().execute();
+            message.append(nubeException.getMessage());
+            if (i != validationResult.getErrors().size() - 1) {
+                message.append(" || ");
+            }
+            if (errorCode != nubeException.getErrorCode()) {
+                errorCode = nubeException.getErrorCode();
+            }
+        }
+        return ValidationError.builder().value(value).message(message.toString()).errorCode(errorCode);
+    };
 
     @Override
-    public Single<ValidationResult<Object>> validity(T s) {
-        final List<NubeException> exception = new ArrayList<>();
-        return Single.create(source -> {
-            for (Validation<T, ?> validation : new HashSet<>(validations)) {
+    public ValidationResult validity(T s) {
+        List<ValidationResult> validationResults = new ArrayList<>();
+        for (Validation<T> validation : new HashSet<>(validations)) {
+            validationResults.add(validation.validate(s));
+        }
 
-                validation.registerInput(this.input).validate(s)
-                          .subscribe(validationResult -> source.onSuccess((ValidationResult) validationResult),
-                                     error -> exception.add((NubeException) error));
-            }
+        if (validationResults.stream().filter(x -> !x.isValid()).collect(Collectors.toList()).size() ==
+            validations.size()) {
 
-            if (exception.size() == validations.size()) {
-                String message = "";
-                for (int i = 0; i < exception.size(); i++) {
-                    message += exception.get(i).getMessage();
-                    if (i != exception.size() - 1) {
-                        message += " || ";
-                    }
-                }
-                source.onError(new ValidationError(message));
-            }
-        });
-    }
-
-    @Override
-    protected String getErrorMessage() {
-        return null;
+            return ValidationResult.invalid(alternativeValidationBuilderFunc.apply(
+                ValidationUtils.mergeValidationResultsFunc.apply(validationResults), s.toString()));
+        }
+        return ValidationResult.valid();
     }
 
 }

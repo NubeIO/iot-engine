@@ -1,21 +1,14 @@
 {
-  "details": [
-    {
-      "visited_place": [
-        "London",
-        "Melbourne"
-      ],
-      "on_list": [
-        "Sydney",
-        "New York"
-      ]
-    },
-    {
-      "movies": [
-        "Forrest Gump",
-        "Bad Man",
-        1
-      ]
-    }
-  ]
+  "UI1": {
+    "type": "abc",
+    "value": 12
+  },
+  "UI2": {
+    "type": "xyz",
+    "value": "True",
+    "attributes": [
+      123,
+      "ABC"
+    ]
+  }
 }

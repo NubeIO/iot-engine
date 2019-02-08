@@ -1,8 +1,11 @@
 package core.nubeiot.core.validator.validations;
 
+import org.junit.Assert;
 import org.junit.Test;
 
+import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.validator.Validation;
+import com.nubeiot.core.validator.utils.ValidationUtils;
 import com.nubeiot.core.validator.validations.JsonObjectValidation;
 
 import io.vertx.core.json.JsonArray;
@@ -12,22 +15,20 @@ public class JsonObjectValidationTest {
 
     @Test
     public void test_json_object_success() {
-        Validation<JsonObject, JsonObject> validation = new JsonObjectValidation<>();
+        Validation<JsonObject> validation = new JsonObjectValidation<>();
 
-        validation.validate(new JsonObject().put("result", "success")).test().assertValue(value -> {
-            System.out.println(value.getData());
-            return value.getData().getValue("result").equals("success");
-        });
+        Assert.assertTrue(validation.validate(new JsonObject().put("result", "success")).isValid());
     }
 
     @Test
     public void test_json_object_failure() {
-        Validation<Object, Object> validation = new JsonObjectValidation<>();
+        Validation<Object> validation = new JsonObjectValidation<>();
 
-        validation.validate(new JsonArray().add(1).add(2)).test().assertError(error -> {
-            System.out.println(error.getMessage());
-            return true;
-        });
+        NubeException nubeException = ValidationUtils.convertValidationErrorsToException.apply(
+            validation.validate(new JsonArray().add(1).add(2)).getErrors());
+
+        Assert.assertEquals(nubeException.getMessage(),
+                            "ValidationError: [1,2] is not the type of io.vertx.core.json.JsonObject");
     }
 
 }
