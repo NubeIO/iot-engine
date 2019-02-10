@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.core.validator.JsonLoop;
+import com.nubeiot.core.validator.JsonValidationLoop;
 import com.nubeiot.core.validator.ValidationResult;
 import com.nubeiot.core.validator.utils.ValidationUtils;
 import com.nubeiot.core.validator.validations.IntegerValidation;
@@ -17,28 +17,28 @@ import com.nubeiot.core.validator.validations.StringValidation;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class JsonLoopingTest {
+public class JsonValidationLoopingTest {
 
     @Test
     public void test_jsonArrayLoop() {
-        URL resource = JsonLoopingTest.class.getClassLoader().getResource("example.json");
+        URL resource = JsonValidationLoopingTest.class.getClassLoader().getResource("example.json");
         JsonArray jsonArray = new JsonArray(FileUtils.readFileToString(resource.toString()));
 
-        JsonLoop<Object> outerLoop = new JsonLoop<>("");
+        JsonValidationLoop<Object> outerLoop = new JsonValidationLoop<>("");
         outerLoop.add("first_name", new StringValidation<>());
         outerLoop.add("last_name", new StringValidation<>());
         outerLoop.add("siblings", new JsonArrayValidation<>());
 
-        JsonLoop<Object> interestsLoop = new JsonLoop<>("details.basic.interests");
+        JsonValidationLoop<Object> interestsLoop = new JsonValidationLoop<>("details.basic.interests");
         interestsLoop.add("sports", new JsonArrayValidation<>());
 
-        JsonLoop<Object> musicsLoop = new JsonLoop<>("music");
+        JsonValidationLoop<Object> musicsLoop = new JsonValidationLoop<>("music");
         musicsLoop.add("classical", new JsonArrayValidation<>());
         musicsLoop.add("rock", new JsonArrayValidation<>());
 
-        interestsLoop.add(musicsLoop); // adding JsonLoop inside JsonLoop
+        interestsLoop.add(musicsLoop); // adding JsonValidationLoop inside JsonValidationLoop
 
-        outerLoop.add(interestsLoop); // adding JsonLoop inside JsonLoop
+        outerLoop.add(interestsLoop); // adding JsonValidationLoop inside JsonValidationLoop
 
         ValidationResult validationResult = outerLoop.validate(jsonArray);
         System.out.println(validationResult.getErrors());
@@ -53,15 +53,15 @@ public class JsonLoopingTest {
 
     @Test
     public void test_jsonArrayAndJsonObject() {
-        URL resource = JsonLoopingTest.class.getClassLoader().getResource("loop_and_key_loop_example.json");
+        URL resource = JsonValidationLoopingTest.class.getClassLoader().getResource("loop_and_key_loop_example.json");
         JsonObject jsonObject = new JsonObject(FileUtils.readFileToString(resource.toString()));
 
-        JsonLoop<Object> outerLoop = new JsonLoop<>("");
+        JsonValidationLoop<Object> outerLoop = new JsonValidationLoop<>("");
         outerLoop.add("type", new StringValidation<>());
         outerLoop.add("value", new IntegerValidation<>());
         outerLoop.add("attributes", new JsonArrayValidation<>());
 
-        JsonLoop<Object> attributesLoop = new JsonLoop<>("attributes");
+        JsonValidationLoop<Object> attributesLoop = new JsonValidationLoop<>("attributes");
         attributesLoop.add("", new StringValidation<>());
 
         outerLoop.add(attributesLoop);

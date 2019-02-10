@@ -5,14 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.nubeiot.core.utils.JsonUtils;
-import com.nubeiot.core.utils.Strings;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
 
-public class JsonValidationHolder<T> implements ValidationHolder<T> {
+public class JsonValidationHolder<T> implements JsonValidation, ValidationHolder<T> {
 
     protected Map<String, List<Validation<Object>>> validations = new HashMap<>();
 
@@ -34,13 +29,7 @@ public class JsonValidationHolder<T> implements ValidationHolder<T> {
 
     @Override
     public Object get(Object data, String key) {
-        if (Strings.isBlank(key) || data instanceof JsonArray) {
-            return data;
-        }
-        if (!(data instanceof JsonObject)) {
-            return null;
-        }
-        return JsonUtils.getObject((JsonObject) data, key);
+        return JsonValidation.super.get(data, key);
     }
 
 }

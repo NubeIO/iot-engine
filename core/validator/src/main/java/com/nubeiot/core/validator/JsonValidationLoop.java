@@ -14,14 +14,14 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class JsonLoop<T> extends JsonValidationHolder<T> {
+public class JsonValidationLoop<T> extends JsonValidationHolder<T> {
 
     protected final String parentField;
-    private List<JsonLoop<Object>> jsonLoops = new ArrayList<>();
+    private List<JsonValidationLoop<Object>> jsonValidationLoops = new ArrayList<>();
     private String previousParentField;
 
-    public void add(@NonNull JsonLoop<Object> validation) {
-        jsonLoops.add(validation);
+    public void add(@NonNull JsonValidationLoop<Object> validation) {
+        jsonValidationLoops.add(validation);
     }
 
     @Override
@@ -29,7 +29,7 @@ public class JsonLoop<T> extends JsonValidationHolder<T> {
         return validate(this, data);
     }
 
-    protected ValidationResult validate(JsonLoop<?> looper, T data) {
+    protected ValidationResult validate(JsonValidationLoop<?> looper, T data) {
         if (nullable() && data == null) {
             return ValidationResult.valid();
         }
@@ -73,7 +73,7 @@ public class JsonLoop<T> extends JsonValidationHolder<T> {
                 }
             }
 
-            for (JsonLoop<Object> validation : looper.jsonLoops) {
+            for (JsonValidationLoop<Object> validation : looper.jsonValidationLoops) {
                 validation.previousParentField = actualParentField;
                 validationResults.add(validation.validate(validation, this.get(loopedValue, validation.parentField)));
             }
