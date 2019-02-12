@@ -1,9 +1,9 @@
 import org.jooq.meta.jaxb.ForcedType
 
+import com.nubeiot.buildscript.Strings
 import com.nubeiot.buildscript.jooq.DB
 import com.nubeiot.buildscript.jooq.JooqGenerateTask
 import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
-import com.nubeiot.buildscript.jooq.Utils
 
 dependencies {
     compile project(':core:base')
@@ -18,7 +18,7 @@ task jooqGen(type: JooqGenerateTask) {
     enumTypes = project(':core:sql').ext.enumTypes
     dbTypes = project(':core:sql').ext.dbTypes + [
         new ForcedType(userType: "com.nubeiot.edge.core.loader.ModuleType", types: DB.TYPES.varchar,
-                       expression: Utils.toRegexIgnoreCase("service_type"),
+                       expression: Strings.toRegexIgnoreCase("service_type"),
                        converter: "com.nubeiot.edge.core.model.converter.ModuleTypeConverter")
     ]
     javaTypes = project(':core:sql').ext.javaTypes + [

@@ -1,11 +1,11 @@
 import com.nubeiot.buildscript.ProjectUtils
+import com.nubeiot.buildscript.docker.DockerBuildTask
 
 plugins {
     id "eclipse"
     id "idea"
     id "org.sonarqube"
     id "net.ltgt.apt" apply false
-    id "com.bmuschko.docker-java-application" apply false
 }
 
 apply from: "buildSrc/dependencies.gradle"
@@ -29,7 +29,7 @@ allprojects {
     apply plugin: "idea"
 
     repositories project.repos
-    
+
     configurations {
         providedRuntime
     }
@@ -72,12 +72,18 @@ subprojects {
         testAnnotationProcessor project.deps.lombok
     }
 
+    task dockerBuild(type: DockerBuildTask) {
+        onlyIf {
+            project.hasProperty("dockerable") && project.dockerable == "true"
+        }
+        javaVersion.set("8u201")
+    }
+
     apply from: "$rootDir/buildSrc/generated.gradle"
     apply from: "$rootDir/buildSrc/javadoc.gradle"
     apply from: "$rootDir/buildSrc/bundle.gradle"
     apply from: "$rootDir/buildSrc/nexus.gradle"
     apply from: "$rootDir/buildSrc/misc.gradle"
-    apply from: "$rootDir/buildSrc/docker.gradle"
 }
 
 apply from: "buildSrc/global.gradle"

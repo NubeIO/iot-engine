@@ -40,9 +40,7 @@ jar {
                                                                                          "mainVerticle"))
             }
             def classPath = configurations.runtimeClasspath.isEmpty() ? "" :
-                            configurations.runtimeClasspath.files.collect {
-                                "lib/${it.getName()}"
-                            }.join(" ")
+                            configurations.runtimeClasspath.files.collect { "lib/${it.getName()}" }.join(" ")
             manifestMap << ['Main-Class'   : "${project.mainClass}",
                             'Main-Verticle': "${project.mainVerticle}",
                             'Class-Path'   : "${classPath} conf/"]

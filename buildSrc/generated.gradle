@@ -44,7 +44,7 @@ task generateConfigs(group: 'build') {
             into confDir
             from("${rootDir}/conf/logger") {
                 include "*.xml.template"
-                rename '((?!console))+(.console)?\\.xml\\.template', '$1.xml'
+                rename '((?!console))+(\\.console)?\\.xml\\.template', '$1.xml'
                 filter {
                     it.replaceAll("\\{\\{project\\}\\}", projectName).replaceAll("\\{\\{more_logger\\}\\}", moreLogger)
                 }
@@ -58,7 +58,7 @@ task generateConfigs(group: 'build') {
                 into confDir
                 from("${rootDir}/conf/cluster") {
                     include "*.xml.template"
-                    rename '((?!member))+(.member)?.xml\\.template', 'cluster.xml'
+                    rename '((?!member))+(\\.member)?\\.xml\\.template', '$1.xml'
                 }
             }
         }

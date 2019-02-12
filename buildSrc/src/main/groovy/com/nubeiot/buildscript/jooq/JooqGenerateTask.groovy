@@ -7,6 +7,8 @@ import org.gradle.api.tasks.TaskAction
 import org.jooq.codegen.GenerationTool
 import org.jooq.meta.jaxb.ForcedType
 
+import com.nubeiot.buildscript.Strings
+
 class JooqGenerateTask extends DefaultTask {
 
     @Input
@@ -51,7 +53,7 @@ class JooqGenerateTask extends DefaultTask {
                 expression = "event|action|event_action"
             }
             dbTypes.add(new ForcedType(types: DB.TYPES.varchar, userType: s, enumConverter: true,
-                                       expression: Utils.toSnakeCase(expression)))
+                                       expression: Strings.toSnakeCase(expression)))
         }
         def config = JooqProvider.createConfiguration(JooqProvider.createDatabase(input, dbTypes),
                                                       JooqProvider.createTarget(output, packageName),

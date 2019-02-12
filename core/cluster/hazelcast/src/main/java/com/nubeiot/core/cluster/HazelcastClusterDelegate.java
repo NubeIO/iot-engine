@@ -7,6 +7,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.spi.cluster.ClusterManager;
+import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
+
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
@@ -17,15 +22,11 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
-
 @ClusterDelegate
 public final class HazelcastClusterDelegate implements IClusterDelegate {
 
     private static final Logger logger = LoggerFactory.getLogger(HazelcastClusterDelegate.class);
+    private static final String DEFAULT_CFG_FILE = "hazelcast.xml";
     private HazelcastClusterManager manager;
 
     @Override
@@ -39,7 +40,7 @@ public final class HazelcastClusterDelegate implements IClusterDelegate {
             if (Objects.nonNull(url)) {
                 return new XmlConfigBuilder(url).build();
             } else {
-                Path path = FileUtils.toPath(clusterConfig.getFile(), "cluster.xml");
+                Path path = FileUtils.toPath(clusterConfig.getFile(), DEFAULT_CFG_FILE);
                 return new XmlConfigBuilder(path.toAbsolutePath().toString()).build();
             }
         } catch (IOException | NubeException | IllegalArgumentException ex) {

@@ -1,4 +1,7 @@
 package com.nubeiot.buildscript.docker
 
-class DockerComposeTask {
+import org.gradle.api.DefaultTask
+
+class DockerComposeTask extends DefaultTask {
+
 }

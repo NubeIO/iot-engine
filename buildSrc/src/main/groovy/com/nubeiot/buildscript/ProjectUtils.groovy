@@ -3,7 +3,15 @@ package com.nubeiot.buildscript
 import org.gradle.api.Project
 
 class ProjectUtils {
-    def static computeGroup(Project project) {
+
+    static boolean isSubProject(Project project, String projectName) {
+        if (project.parent == null) {
+            return project.name == projectName
+        }
+        return project.parent.name == projectName || isSubProject(project.parent, projectName)
+    }
+
+    static String computeGroup(Project project) {
         if (project.parent == null) {
             return project.group
         }
@@ -11,9 +19,9 @@ class ProjectUtils {
         return computeGroup(project.parent) + suffix
     }
 
-    def static computeBaseName(Project project) {
+    static String computeBaseName(Project project) {
         if (project.parent == null) {
-            return project.ext.baseName
+            return extraProp(project, "baseName", project.name)
         }
         return computeBaseName(project.parent) + "-" + project.name
     }
@@ -25,5 +33,9 @@ class ProjectUtils {
             sf.withInputStream { props.load(it) }
             props.each { k, v -> project.ext.set(k, v) }
         }
+    }
+
+    static String extraProp(Project project, String key, String fallback) {
+        return project.ext.has(key) ? (String) project.ext.get(key) : fallback
     }
 }

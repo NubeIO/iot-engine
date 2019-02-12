@@ -18,7 +18,7 @@ RUN tar -xvf /tmp/{{ARTIFACT}}.tar --strip 1 -C /app \
     && rm -rf /tmp/*
 
 ENV JAVA_HOME=/usr/lib/jvm/ PATH=$PATH:/usr/lib/jvm/bin JAVA_VERSION={{JAVA_VERSION}} LANG=C.UTF-8
-ENV JVM_OPTS="{{JVM_OPTS}}" JAVA_PROPS="{{JAVA_PROPS}}"
+ENV JVM_OPTS="{{JVM_OPTS}}" JAVA_PROPS="{{JAVA_PROPS}}" VERSION={{VERSION}}
 
 EXPOSE 8080 5000 5701
 VOLUME ["/data"]
