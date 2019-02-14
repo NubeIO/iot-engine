@@ -84,7 +84,7 @@
             </discovery-strategies>
         </join>
         <interfaces enabled="true">
-            <interface>{{your-network-interface}}</interface>
+            <interface>127.0.0.1</interface>
         </interfaces>
         <ssl enabled="false"/>
         <socket-interceptor enabled="false"/>
