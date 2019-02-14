@@ -40,6 +40,5 @@ gradle-app.setting
 settings*.xml
 cluster*.xml
 demo/*.md
-demo/webroot
 !demo/cluster.xml
 *.secret.properties
