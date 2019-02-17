@@ -64,6 +64,7 @@ ext.deps = [
         assertj    : "org.assertj:assertj-core:3.5.2",
         awaitility : "com.jayway.awaitility:awaitility:1.7.0",
         restAssured: "com.jayway.restassured:rest-assured:2.9.0",
+        hamcrest   : 'org.hamcrest:hamcrest-library:2.1'
     ]
 ]
 

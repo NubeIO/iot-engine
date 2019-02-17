@@ -73,10 +73,8 @@ subprojects {
     }
 
     task dockerBuild(type: DockerBuildTask) {
-        onlyIf {
-            project.hasProperty("dockerable") && project.dockerable == "true"
-        }
-        javaVersion.set("8u201")
+        javaVersion = "8u201"
+        vcsBranch = ProjectUtils.extraProp(project, "vcsBranch", "")
     }
 
     apply from: "$rootDir/buildSrc/generated.gradle"

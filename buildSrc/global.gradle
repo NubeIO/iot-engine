@@ -9,3 +9,7 @@ task jooq(group: "Build") {
 task docker(group: "docker") {
     dependsOn subprojects.collect { it.tasks.withType(com.nubeiot.buildscript.docker.DockerBuildTask) }
 }
+
+task dockerPublish(type: com.nubeiot.buildscript.docker.DockerPushTask) {
+    cloud = "gcr"
+}

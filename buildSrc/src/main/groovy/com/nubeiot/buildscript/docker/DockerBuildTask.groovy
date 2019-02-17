@@ -3,7 +3,7 @@ package com.nubeiot.buildscript.docker
 import java.nio.file.Path
 import java.util.stream.Collectors
 
-import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -16,21 +16,33 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskExecutionException
 
 import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
-import com.github.dockerjava.core.DockerClientConfig
 import com.github.dockerjava.core.command.BuildImageResultCallback
 import com.nubeiot.buildscript.ProjectUtils
+import com.nubeiot.buildscript.Strings
+import com.nubeiot.buildscript.docker.internal.BaseImage
+import com.nubeiot.buildscript.docker.internal.DockerHostAware
+import com.nubeiot.buildscript.docker.internal.OperatingSystem
+import com.nubeiot.buildscript.docker.internal.rule.ArchTagRule
+import com.nubeiot.buildscript.docker.internal.rule.CustomImageTagRule
+import com.nubeiot.buildscript.docker.internal.rule.DockerImageTagRule
+import com.nubeiot.buildscript.docker.internal.rule.GitFlowImageTagRule
+import com.nubeiot.buildscript.docker.internal.rule.ProjectImageTagRule
 
 import groovy.json.JsonSlurper
 
-class DockerBuildTask extends DefaultTask {
+class DockerBuildTask extends DockerTask implements DockerHostAware {
 
-    static final def JAVA_VERSIONS = new JsonSlurper().
-        parse(DockerBuildTask.class.getClassLoader().getResourceAsStream("oracle-jdk.json")) as Map
+    static final def JAVA_VERSIONS
+
+    static {
+        InputStream stream = DockerBuildTask.class.classLoader.getResourceAsStream("oracle-jdk.json")
+        JAVA_VERSIONS = new JsonSlurper().parse(stream) as Map
+    }
 
     @InputDirectory
     final DirectoryProperty buildDir = newInputDirectory()
+    @Input
+    final Property<OperatingSystem> defaultOS = project.objects.property(OperatingSystem)
     @Input
     final Property<String> javaVersion = project.objects.property(String)
     @Input
@@ -42,35 +54,45 @@ class DockerBuildTask extends DefaultTask {
     @Input
     @Optional
     final Property<String> javaProps = project.objects.property(String)
+    @Input
+    final Property<String> vcsBranch = project.objects.property(String)
     @OutputFile
     final RegularFileProperty out = newOutputFile()
 
+    @Override
+    DockerClient createDockerClient(Project project) {
+        return create().createDockerClient(project)
+    }
+
+    @Override
+    String description() {
+        return "Docker Build Image"
+    }
+
     DockerBuildTask() {
-        ProjectUtils.loadSecretProps(project, "$project.rootDir/docker.secret.properties")
-        setGroup("docker")
-        setDescription("Docker Build Image")
         dependsOn(project.tasks.findByName("build"))
+        defaultOS.set(OperatingSystem.ALPINE)
         buildDir.set(project.distsDir)
         out.set(project.rootProject.buildDir.toPath().resolve("docker.txt").toFile())
         javaVersion.set("8u201")
         jvmOptions.set("-Xms1g -Xmx1g")
         javaProps.set("")
+        vcsBranch.set("")
     }
 
     @TaskAction
     void start() {
         println("Build docker image for ${project}")
-        def baseImages = ProjectUtils.isSubProject(project, "edge") ? BaseImage.EDGE : BaseImage.SERVER
-        def artifact = ProjectUtils.computeBaseName(project)
-        def client = createDockerClient()
+        def baseImages = ProjectUtils.isSubProject(project, "edge") ? BaseImage.EDGES : BaseImage.SERVERS
+        ProjectImageTagRule tagRule = new ProjectImageTagRule(project)
+        List<DockerImageTagRule> rules = rules(tagRule)
         baseImages.each { it ->
-            def dockerfile = createDockerFile(it, artifact + "-" + project.version)
-            def tags = computeTags(it, artifact)
+            def dockerfile = createDockerFile(it, tagRule.repository() + "-" + project.version)
+            def tags = computeTags(it, rules)
             String imageId = client.buildImageCmd()
                                    .withBaseDirectory(buildDir.asFile.get())
                                    .withDockerfile(dockerfile.toFile())
                                    .withPull(true).withForcerm(true).withRemove(true)
-                                   .withQuiet(false)
                                    .withTags(tags)
                                    .exec(new BuildImageResultCallback()).awaitImageId()
             println("- Build Docker image successfully with image id ${imageId} - Tags: ${tags}")
@@ -80,21 +102,26 @@ class DockerBuildTask extends DefaultTask {
     }
 
     @Internal
-    Set<String> computeTags(BaseImage it, String artifactName) {
-        def imageName = "${it.arch.canonicalName}/${artifactName}"
-        def version = project.version + (it.os.tag ? ("-" + it.os.tag) : "") + "-" + project.property("buildNumber")
-        def versions = ProjectUtils.extraProp(project, "docker.tags", "").split()
-        return Arrays.stream(versions)
-                     .map { t -> "${imageName}:${t}${it.os.tag ? '-' + it.os.tag : ''}".toString() }
-                     .collect(Collectors.toSet()) + ["${imageName}:${version}".toString()]
+    List<DockerImageTagRule> rules(ProjectImageTagRule rule) {
+        List<DockerImageTagRule> rules = []
+        String customTags = ProjectUtils.extraProp(project, "docker.tags")
+        if (!Strings.isBlank(customTags)) {
+            rules.add(new CustomImageTagRule(project, customTags))
+        }
+        if (!Strings.isBlank(vcsBranch.getOrElse(""))) {
+            rules.add(new GitFlowImageTagRule(project, vcsBranch.get()))
+        }
+        if (rules.isEmpty()) {
+            rules.add(rule)
+        }
+        return rules
     }
 
     @Internal
-    DockerClient createDockerClient() {
-        DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                                                             .withDockerHost((String) project.property("dockerHost"))
-                                                             .build()
-        return DockerClientBuilder.getInstance(config).build()
+    Set<String> computeTags(BaseImage baseImage, List<DockerImageTagRule> rules) {
+        return rules.stream()
+                    .map { rule -> new ArchTagRule(rule, baseImage.arch, baseImage.os, defaultOS.get()).images() }
+                    .flatMap { x -> x.stream() }.collect(Collectors.toSet())
     }
 
     @Internal
@@ -105,7 +132,7 @@ class DockerBuildTask extends DefaultTask {
             find { v -> it.arch.isAlias((String) v.key) }?.value
         def jdkUrl = jdkUrl.getOrElse(defaultUrl)
         if (!jdkUrl) {
-            throw new TaskExecutionException(this, new RuntimeException("Not found jdk url"))
+            throw new TaskExecutionException(this, new RuntimeException("Not found Oracle jdk url"))
         }
         def arch = it.arch.canonicalName
         project.copy {

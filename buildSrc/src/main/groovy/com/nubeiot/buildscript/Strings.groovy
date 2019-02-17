@@ -6,6 +6,10 @@ class Strings {
         return text == null || "" == text.trim()
     }
 
+    static String requireNotBlank(String text) {
+        return requireNotBlank(text, "Not blank")
+    }
+
     static String requireNotBlank(String text, String message) {
         if (isBlank(text)) {
             throw new IllegalArgumentException(message)

@@ -31,8 +31,13 @@ class ProjectUtils {
         if (sf.exists()) {
             def props = new Properties()
             sf.withInputStream { props.load(it) }
-            props.each { k, v -> project.ext.set(k, v) }
+            props.findAll { Strings.isBlank(extraProp(project, it.key.toString())) }
+                 .each { k, v -> project.ext.set(k, v) }
         }
+    }
+
+    static String extraProp(Project project, String key) {
+        return project.ext.has(key) ? (String) project.ext.get(key) : null
     }
 
     static String extraProp(Project project, String key, String fallback) {

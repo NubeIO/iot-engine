@@ -1,4 +1,4 @@
-package com.nubeiot.buildscript.docker
+package com.nubeiot.buildscript.docker.internal
 
 import groovy.transform.CompileStatic
 import groovy.transform.TupleConstructor
