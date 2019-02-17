@@ -75,6 +75,19 @@ pipeline {
             }
         }
 
+        stage("Docker") {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: "gcr-nubeio-ci", variable = "GCR_JSON_FILE"),
+                                     string(credentialsId: "gcr-nubeio-project", variable = "GCR_PROJECT")])
+                    sh "set +x"
+                    sh "gradle docker dockerPublish -PvcsBranch=${BRANCH_NAME} -PdockerHost=unix:///var/run/docker.sock " +
+                       "-PdockerRegistryUrl=gcr.io -PdockerRegistryProject=\$GCR_PROJECT -PdockerRegistryUser=_json_key " +
+                       "-PdockerRegistryPwd=\"`cat \$GCR_JSON_FILE`\""
+                }
+            }
+        }
+
         stage("Publish") {
             when {
                 expression { BRANCH_NAME ==~ /^master|v.+/ }
