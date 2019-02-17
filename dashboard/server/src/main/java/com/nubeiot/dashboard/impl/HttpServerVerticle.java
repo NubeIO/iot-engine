@@ -32,7 +32,8 @@ import com.nubeiot.core.http.utils.Urls;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.helpers.SiteHelper;
+import com.nubeiot.dashboard.utils.MongoUtils;
+import com.nubeiot.dashboard.utils.ResourceUtils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Observable;
@@ -254,7 +255,8 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         router.route("/api/widget_image/*").handler(ctx -> this.handleDynamicSiteCollection(ctx, "widget_image"));
         router.route("/api/query_pg/*").handler(ctx -> this.handleSiteCollection(ctx, "query_pg"));
         router.route("/api/query_hive/*").handler(ctx -> this.handleSiteCollection(ctx, "query_hive"));
-        router.post("/api/upload_image").handler(this::handleUploadImage);
+        router.post("/api/media_file").handler(this::handlePostMediaFile);
+        router.get("/api/media_file/:id").handler(this::handleGetMediaFile);
         router.get("/api/menu_for_user_group/*").handler(this::handleMenuForUserGroup);
     }
 
@@ -303,7 +305,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         });
     }
 
-    private void handleUploadImage(RoutingContext ctx) {
+    private void handlePostMediaFile(RoutingContext ctx) {
         if (!ctx.fileUploads().isEmpty()) {
             JsonObject output = new JsonObject();
             Observable.fromIterable(ctx.fileUploads()).flatMapSingle(fileUpload -> {
@@ -321,6 +323,23 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         } else {
             ctx.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
         }
+    }
+
+    private void handleGetMediaFile(RoutingContext ctx) {
+        String id = ctx.request().getParam("id");
+        mongoClient.rxFindOne(MEDIA_FILES, MongoUtils.idQuery(id), null)
+                   .map(mediaRecord -> {
+                       JsonObject record = new JsonObject();
+                       if (mediaRecord != null) {
+                           record.put("absolute_path", ResourceUtils.buildAbsolutePath(ctx.request().host(), mediaRoot,
+                                                                                       mediaRecord.getString("name")));
+                       }
+                       return record;
+                   })
+                   .subscribe(record -> ctx.response()
+                                           .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                           .setStatusCode(HttpResponseStatus.OK.code())
+                                           .end(record.encode()));
     }
 
     private void handleMenuForUserGroup(RoutingContext ctx) {
@@ -541,28 +560,18 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
             if (Strings.isNotBlank(siteId)) {
                 return mongoClient.rxFindOne(SITE, idQuery(siteId), null).flatMap(site -> {
                     if (site != null) {
-                        return SiteHelper.buildAbs(mongoClient, ctx.request().host(), site, mediaRoot)
-                                         .map(absSite -> group.put("site", absSite));
+                        return Single.just(group.put("site", site));
                     } else {
-                        return assignAdminIfAvailable(ctx, group);
+                        return assignSiteOnAvailability(ctx, group);
                     }
                 });
             } else {
-                return assignAdminIfAvailable(ctx, group);
+                return assignSiteOnAvailability(ctx, group);
             }
         }).flatMap(groupAndSite -> {
             if (sitesIds.size() > 0) {
                 return mongoClient.rxFind(SITE, new JsonObject().put("_id", new JsonObject().put("$in", sitesIds)))
-                                  .flatMap(respondSites -> Observable.fromIterable(respondSites)
-                                                                     .flatMapSingle(
-                                                                         respondSite -> SiteHelper.buildAbs(mongoClient,
-                                                                                                            ctx.request()
-                                                                                                               .host(),
-                                                                                                            respondSite,
-                                                                                                            mediaRoot))
-                                                                     .toList()
-                                                                     .map(absSites -> groupAndSite.put("sites",
-                                                                                                       absSites)));
+                                  .map(respondSites -> groupAndSite.put("sites", respondSites));
             } else {
                 return Single.just(groupAndSite);
             }
@@ -579,14 +588,13 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                 return Single.just(groupAndSite);
             }
         }).subscribe(groupAndSiteAndCompany -> {
-            ctx.response()
-               .putHeader("username", user.principal().getString("username"))
+            ctx.response().putHeader("username", user.principal().getString("username")) // Use case: ditto NGINX
                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                .end(Json.encodePrettily(user.principal().mergeIn(groupAndSiteAndCompany)));
         });
     }
 
-    private SingleSource<? extends JsonObject> assignAdminIfAvailable(RoutingContext ctx, JsonObject group) {
+    private SingleSource<? extends JsonObject> assignSiteOnAvailability(RoutingContext ctx, JsonObject group) {
         String role = ctx.user().principal().getString("role");
         if (SQLUtils.in(role, Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
             // If we have already a site for its respective role, then we will assign it
@@ -599,10 +607,8 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                     JsonObject update$ = new JsonObject().put("$set", new JsonObject().put("site_id", siteId$));
                     return mongoClient.rxUpdateCollectionWithOptions(USER, query, update$,
                                                                      new UpdateOptions(false, true))
-                                      .map(ignored -> SiteHelper.buildAbs(mongoClient, ctx.request().host(), site$,
-                                                                          mediaRoot))
                                       .map(absSite -> group.put("site",
-                                                                site$.put("site", absSite).put("site_id", siteId$)));
+                                                                site$.put("site", site$).put("site_id", siteId$)));
                 } else {
                     return Single.just(group);
                 }
