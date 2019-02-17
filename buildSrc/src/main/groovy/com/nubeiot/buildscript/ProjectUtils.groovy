@@ -37,10 +37,11 @@ class ProjectUtils {
     }
 
     static String extraProp(Project project, String key) {
-        return project.ext.has(key) ? (String) project.ext.get(key) : null
+        return extraProp(project, key, null)
     }
 
     static String extraProp(Project project, String key, String fallback) {
-        return project.ext.has(key) ? (String) project.ext.get(key) : fallback
+        return project.ext.has(key) && !Strings.isBlank((String) project.ext.get(key)) ? (String) project.ext.get(key) :
+               fallback
     }
 }
