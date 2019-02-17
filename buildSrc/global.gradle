@@ -12,4 +12,5 @@ task docker(group: "docker") {
 
 task dockerPublish(type: com.nubeiot.buildscript.docker.DockerPushTask) {
     cloud = "gcr"
+    dependsOn docker
 }
