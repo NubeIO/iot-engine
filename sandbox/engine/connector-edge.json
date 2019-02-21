@@ -1,4 +1,5 @@
 {
+  "dataDir": "/data",
   "__system__": {
     "__eventBus__": {
       "clientAuth": "REQUIRED",
@@ -21,8 +22,6 @@
   },
   "__app__": {
     "__http__": {
-      "host": "0.0.0.0",
-      "port": 8086,
       "enabled": true,
       "rootApi": "/api"
     },

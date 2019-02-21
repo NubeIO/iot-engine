@@ -1,4 +1,5 @@
 {
+  "dataDir": "/data",
   "__system__": {
     "__eventBus__": {
       "ssl": true,
@@ -32,9 +33,9 @@
         "java": {
           "credentials": {},
           "urls": [
-            "http://127.0.0.1:8081/repository/maven-releases/",
-            "http://127.0.0.1:8081/repository/maven-snapshots/",
-            "http://127.0.0.1:8081/repository/maven-central/"
+            "http://nexus:8081/repository/maven-releases/",
+            "http://nexus:8081/repository/maven-snapshots/",
+            "http://nexus:8081/repository/maven-central/"
           ]
         }
       }

@@ -1,15 +1,17 @@
 version: '2'
 services:
   keycloak:
-    image: jboss/keycloak
+    image: jboss/keycloak:${KEYCLOAK_VERSION}
     environment:
       DB_VENDOR: H2
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: admin
+      KEYCLOAK_IMPORT: /tmp/sandbox-realm.json
     volumes:
+      - ./keycloak/sandbox-realm.json:/tmp/sandbox-realm.json
       - keycloak-data:/opt/jboss/keycloak/standalone/data
     ports:
-      - 9000:8080
+      - ${KEYCLOAK_PORT}:8080
 volumes:
   keycloak-data:
     driver: local
