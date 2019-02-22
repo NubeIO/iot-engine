@@ -18,9 +18,13 @@ Build docker images:
 ### Server information
 
 - [keycloak](http://localhost:9000): admin/admin
-- [mongo](localhost:27017): Port `27017` - mongo/mongo -  Database: sandbox
+- [mongo](localhost:27017): Port `27017`
+  - DB Admin: `mongo/mongo`
+  - Database: `sandbox` - `sandbox/111`
+  - Database: `ditto` - `ditto/ditto`
 - [dashboard](http://localhost:81): sandbox/111
 - [dashboard-api](http://localhost:8080): sandbox/111
+- [ditto](http://localhost:7000): sandbox/111
 
 ## Edge stack
 
@@ -72,3 +76,23 @@ Build docker images:
 - [connector-kafka](http://localhost:8280/sample/index.html): dashboard kafka demo
 - [nexus](http://localhost:8081): Nexus server - admin/admin123
 - [kafka](http://localhost:9092): Kafka server
+
+## Cleanup your environment
+
+- Remove `sandbox container`
+
+```bash
+docker rm -f $(docker ps -a | grep sandbox | awk '{print $1}')
+```
+
+- Remove `sandbox images`
+
+```bash
+docker rmi -f $(docker images | grep "nube\|iot" | awk '{print $3}')
+```
+
+- Remove `sandbox volume` - **Note**: becareful, it will erase all your container data
+
+```bash
+docker volume rm $(docker volume ls | grep sandbox)
+```

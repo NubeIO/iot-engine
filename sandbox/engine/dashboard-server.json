@@ -41,9 +41,9 @@
           }
         ],
         "db_name": "sandbox",
-        "username": "mongo",
-        "password": "mongo",
-        "authSource": "admin",
+        "username": "sandbox",
+        "password": "111",
+        "authSource": "sandbox",
         "maxPoolSize": 50,
         "minPoolSize": 25,
         "maxIdleTimeMS": 300000,

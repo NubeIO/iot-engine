@@ -1,3 +1,16 @@
+db = db.getSiblingDB("sandbox");
+
+db.createUser({
+    user: "sandbox",
+    pwd: "111",
+    roles:[
+        {
+            role: "readWrite",
+            db:   "sandbox"
+        }
+    ]
+});
+
 db.company.save({
 	"_id": "EnviroServices",
 	"name": "EnviroServices",

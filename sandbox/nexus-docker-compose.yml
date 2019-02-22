@@ -1,4 +1,4 @@
-version: '2'
+version: "2.4"
 services:
   nexus:
     image: sonatype/nexus3:${NEXUS_VERSION}

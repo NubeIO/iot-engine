@@ -1,32 +1,36 @@
 [CmdletBinding()]
-param($H, $services=$(throw "services parameter is required."))
+param($H, $services = $(throw "services parameter is required."))
 
-$files=""
+$files = ""
+$dashboard = "dashboard mongo keycloak ditto postgres"
+$edge = "edge nexus kafka ditto postgres"
+
+if ($services -contains '*dashboard*') { $services = "$dashboard $services" }
+if ($services -contains '*edge*') { $services = "$edge $services" }
+
+$services = Invoke-Expression "($services -split ' ' | Select-Object -Unique) -join ' '"
+
 foreach ($service In $services) {
-	$file="$service-docker-compose.yml"
-	if(Test-Path -Path $file){
-        $files="$files -f $file"
-        if ($service == "dashboard") {
-            $files="$files -f mongo-docker-compose.yml -f keycloak-docker-compose.yml"
-        } 
-        if ($service == "edge") {
-            $files="$files -f nexus-docker-compose.yml -f kafka-docker-compose.yml"
-        }
-	} else {
-		echo ("File $file does not exist")
-	}
+    $file = "$service-docker-compose.yml"
+    if (Test-Path -Path $file) {
+        $files = "$files -f $file"
+    }
+    else {
+        Write-Output "File $file does not exist"
+    }
 }
-if (-not ([string]::IsNullOrEmpty($files)))
-{
-	if ([string]::IsNullOrEmpty($H)) {
-		$CMD="docker-compose $files up"
-	} else {
-		$CMD="docker-compose -H $H $files up"
-	}
+if (-not ([string]::IsNullOrEmpty($files))) {
+    if ([string]::IsNullOrEmpty($H)) {
+        $CMD = "docker-compose $files up"
+    }
+    else {
+        $CMD = "docker-compose -H $H $files up"
+    }
 	
-	echo $CMD
-	iex $CMD
-} else {
-	echo "No available component to execute"
+    Write-Output $CMD
+    Invoke-Expression $CMD
+}
+else {
+    Write-Output "No available component to execute"
 }
 
