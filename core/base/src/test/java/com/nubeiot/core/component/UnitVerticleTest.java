@@ -16,16 +16,16 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.reactivex.core.Vertx;
-import io.vertx.reactivex.core.shareddata.LocalMap;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.utils.mock.MockConfig;
+import com.nubeiot.core.utils.mock.MockUnitVerticle;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import lombok.NonNull;
 
 @RunWith(VertxUnitRunner.class)
 public class UnitVerticleTest {
@@ -79,48 +79,21 @@ public class UnitVerticleTest {
         });
     }
 
+    @Test
+    public void throw_unexpected_error_cannot_start(TestContext context) {
+        MockUnitVerticle unitVerticle = new MockUnitVerticle(true);
+        Async async = context.async();
+        DeploymentOptions options = new DeploymentOptions();
+        VertxHelper.deployFailed(vertx.getDelegate(), context, options, unitVerticle, t -> {
+            TestHelper.testComplete(async);
+            Assert.assertTrue(t instanceof RuntimeException);
+            Assert.assertEquals(vertx.getDelegate().deploymentIDs().size(), 0);
+        });
+    }
+
     @After
     public void after(TestContext context) {
         vertx.close();
-    }
-
-    static class MockUnitVerticle extends UnitVerticle<MockConfig, UnitContext> {
-
-        public MockUnitVerticle() {
-            super(UnitContext.VOID);
-        }
-
-        @Override
-        public @NonNull Class<MockConfig> configClass() {
-            return MockConfig.class;
-        }
-
-        @Override
-        public @NonNull String configFile() {
-            return "config.json";
-        }
-
-        @Override
-        public void start() {
-            logger.info("Starting Mock Config Unit...");
-            super.start();
-        }
-
-    }
-
-
-    static class MockConfig implements IConfig {
-
-        @Override
-        public String name() {
-            return "mock";
-        }
-
-        @Override
-        public Class<? extends IConfig> parent() {
-            return null;
-        }
-
     }
 
 }
