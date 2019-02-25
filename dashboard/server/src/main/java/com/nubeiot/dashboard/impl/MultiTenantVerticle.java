@@ -25,7 +25,6 @@ import com.nubeiot.core.common.utils.StringUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.helpers.CustomMessageHelper;
-import com.nubeiot.dashboard.helpers.SiteHelper;
 import com.nubeiot.dashboard.impl.models.Company;
 import com.nubeiot.dashboard.impl.models.KeycloakUserRepresentation;
 import com.nubeiot.dashboard.impl.models.MongoUser;
@@ -55,11 +54,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
 
     private MongoClient mongoClient;
     private static final String DEFAULT_PASSWORD = "helloworld";
-    private String mediaRoot;
 
     @Override
     protected Single<String> onStartComplete() {
-        mediaRoot = appConfig.getString("MEDIA_ROOT");
         mongoClient = MongoClient.createNonShared(vertx, this.appConfig.getJsonObject("mongo").getJsonObject("config"));
         EventBus eventBus = getVertx().eventBus();
 
@@ -413,7 +410,8 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             if (childGroups.size() > 0) {
                 // 5.1 Creating user on MongoDB
                 body.put("company_id", companyId)
-                    .put("associated_company_id", companyId).put("site_id", CustomMessageHelper.getSiteId(user))
+                    .put("associated_company_id", companyId)
+                    .put("site_id", CustomMessageHelper.getSiteId(user))
                     .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""),
                                                                         StringUtils.getIds(childGroups)));
                 JsonObject mongoUser = new MongoUser(body, user, keycloakUser).toJsonObject();
@@ -471,8 +469,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             } else {
                 Company company = new Company(CustomMessageHelper.getBodyAsJson(message)
                                                                  .put("associated_company_id",
-                                                                      CustomMessageHelper.getCompanyId(
-                                                                                     user))
+                                                                      CustomMessageHelper.getCompanyId(user))
                                                                  .put("role", Role.ADMIN.toString()));
                 mongoClient.rxSave(COMPANY, company.toJsonObject())
                            .subscribe(ignore -> message.reply(
@@ -482,8 +479,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         } else if (role == Role.ADMIN) {
             Company company = new Company(CustomMessageHelper.getBodyAsJson(message)
                                                              .put("associated_company_id",
-                                                                  CustomMessageHelper.getCompanyId(
-                                                                                 user))
+                                                                  CustomMessageHelper.getCompanyId(user))
                                                              .put("role", Role.MANAGER.toString()));
 
             mongoClient.rxSave(COMPANY, company.toJsonObject())
@@ -735,8 +731,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             }
         }).flatMap(sites -> Observable.fromIterable(sites).flatMapSingle(site -> {
             String associatedCompanyId = site.getString("associated_company_id");
-            return associatedCompanyRepresentation(site, associatedCompanyId).flatMap(
-                site$ -> SiteHelper.buildAbs(mongoClient, CustomMessageHelper.getHost(message), site$, mediaRoot));
+            return associatedCompanyRepresentation(site, associatedCompanyId);
         }).toList()).subscribe(sites -> {
             message.reply(new CustomMessage<>(null, sites, HttpResponseStatus.OK.code()));
         }, throwable -> handleHttpException(message, throwable));
@@ -766,16 +761,12 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                    String associatedCompanyId = userGroup.getString(
                                                        "associated_company_id");
                                                    return associatedCompanyRepresentation(userGroup,
-                                                                                          associatedCompanyId).flatMap(
+                                                                                          associatedCompanyId).map(
                                                        ignored -> {
                                                            if (site != null) {
-                                                               return SiteHelper.buildAbs(mongoClient,
-                                                                                          CustomMessageHelper.getHost(
-                                                                                              message), site, mediaRoot)
-                                                                                .map(site$ -> userGroup.put("site",
-                                                                                                            site$));
+                                                               return userGroup.put("site", site);
                                                            }
-                                                           return Single.just(userGroup);
+                                                           return userGroup;
                                                        });
                                                }))
                                                .toList())
@@ -1104,12 +1095,13 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                            return byAdminCompanyGetAdminWithManagerSelectionList(CustomMessageHelper.getCompanyId(user))
                                       .flatMap(response -> {
                                           if (SQLUtils.inList(CustomMessageHelper.getCompanyId(user), response)) {
-                                   return UserUtils.updateUser(userId, keycloakUserRepresentation, accessToken,
-                                                               authServerUrl, realmName, client);
-                               } else {
-                                   throw HttpHelper.forbidden();
-                               }
-                           });
+                                              return UserUtils.updateUser(userId, keycloakUserRepresentation,
+                                                                          accessToken, authServerUrl, realmName,
+                                                                          client);
+                                          } else {
+                                              throw HttpHelper.forbidden();
+                                          }
+                                      });
                        } else {
                            throw HttpHelper.forbidden();
                        }
@@ -1264,7 +1256,8 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         return mongoClient.rxFind(USER, query).flatMap(childGroups -> {
             if (childGroups.size() > 0) {
                 body.put("company_id", companyId)
-                    .put("associated_company_id", companyId).put("site_id", CustomMessageHelper.getSiteId(ctxUser))
+                    .put("associated_company_id", companyId)
+                    .put("site_id", CustomMessageHelper.getSiteId(ctxUser))
                     .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""),
                                                                         StringUtils.getIds(childGroups)));
                 MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
@@ -1478,9 +1471,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                } else {
                                    return Single.just(new UserGroup(body.put("associated_company_id", userCompanyId)
                                                                         .put("site_id", CustomMessageHelper.getSiteId(
-                                                                                 user))).toJsonObject()
-                                                                                        .put("_id", userGroup.getString(
-                                                                                            "_id")));
+                                                                            user))).toJsonObject()
+                                                                                   .put("_id",
+                                                                                        userGroup.getString("_id")));
                                }
                            })
                            .subscribe(source::onSuccess, source::onError);
@@ -1654,13 +1647,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     mongoClient.rxFindOne(SITE, query, null).flatMap(respondSite -> {
                         if (respondSite != null) {
                             if (respondSite.getString("associated_company_id").equals(companyId)) {
-                                Site site = new Site(
-                                    CustomMessageHelper.getBodyAsJson(message)
-                                                       .put("associated_company_id",
-                                                                                        respondSite.getString(
-                                                                                            "associated_company_id"))
-                                                       .put("role",
-                                                            respondSite.getString("role")));
+                                Site site = new Site(CustomMessageHelper.getBodyAsJson(message)
+                                                                        .put("associated_company_id",
+                                                                             respondSite.getString(
+                                                                                 "associated_company_id"))
+                                                                        .put("role", respondSite.getString("role")));
                                 return mongoClient.rxSave(SITE, site.toJsonObject().put("_id", siteId));
                             } else {
                                 throw HttpHelper.forbidden();
@@ -1719,12 +1710,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                                                                  object.put("group",
                                                                                                             group);
                                                                                              }
-                                                                                             return respondSiteWithAbsolutePath(
-                                                                                                 message, object);
+                                                                                             return buildSite(message,
+                                                                                                              object);
                                                                                          });
                                                                    } else {
-                                                                       return respondSiteWithAbsolutePath(message,
-                                                                                                          object);
+                                                                       return buildSite(message, object);
                                                                    }
                                                                });
                                          });
@@ -1736,12 +1726,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                    }, throwable -> handleHttpException(message, throwable));
     }
 
-    private SingleSource<? extends JsonObject> respondSiteWithAbsolutePath(Message<Object> message, JsonObject object) {
+    private SingleSource<? extends JsonObject> buildSite(Message<Object> message, JsonObject object) {
         if (Strings.isNotBlank(object.getString("site_id"))) {
             return mongoClient.rxFindOne(SITE, idQuery(object.getString("site_id")), null).map(site -> {
                 if (site != null) {
-                    object.put("site",
-                               SiteHelper.buildAbs(mongoClient, CustomMessageHelper.getHost(message), site, mediaRoot));
+                    object.put("site", site);
                 }
                 return object;
             });

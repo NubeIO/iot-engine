@@ -84,6 +84,11 @@ public class UrlsTest {
     }
 
     @Test
+    public void test_validUrl_LocalIpWithPort() {
+        assertTrue(Urls.validateURL("https://123.456.789.1:8080/"));
+    }
+
+    @Test
     public void test_validUrl_LocalWithTopLabel() {
         assertTrue(Urls.validateURL("https://localhost.com"));
     }
