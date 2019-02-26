@@ -8,7 +8,7 @@ $edge = "edge nexus kafka ditto postgres"
 if ($services -contains '*dashboard*') { $services = "$dashboard $services" }
 if ($services -contains '*edge*') { $services = "$edge $services" }
 
-$services = Invoke-Expression "($services -split ' ' | Select-Object -Unique) -join ' '"
+$services = ($services -split ' ' | Select-Object -Unique) -join ' '
 
 foreach ($service In $services) {
     $file = "$service-docker-compose.yml"
