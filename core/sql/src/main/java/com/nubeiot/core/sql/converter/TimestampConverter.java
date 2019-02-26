@@ -20,7 +20,7 @@ public final class TimestampConverter implements Converter<Timestamp, LocalDateT
 
     @Override
     public Timestamp to(LocalDateTime userObject) {
-        return Objects.isNull(userObject) ? null : new Timestamp(userObject.toEpochSecond(ZoneOffset.UTC));
+        return Objects.isNull(userObject) ? null : Timestamp.valueOf(userObject);
     }
 
     @Override

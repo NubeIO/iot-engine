@@ -3,9 +3,12 @@ package com.nubeiot.core.utils;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Objects;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -14,6 +17,7 @@ import com.nubeiot.core.exceptions.NubeException;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DateTimes {
@@ -26,6 +30,23 @@ public final class DateTimes {
 
     public static LocalDateTime fromUTC(Instant instant) {
         return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    public static LocalDateTime toUTC(LocalDateTime time) {
+        return DateTimes.toUTC(time, ZoneId.systemDefault());
+    }
+
+    public static LocalDateTime toUTC(LocalDateTime time, @NonNull ZoneId fromZone) {
+        return DateTimes.toZone(time, fromZone, ZoneOffset.UTC);
+    }
+
+    public static LocalDateTime toZone(LocalDateTime time, @NonNull ZoneId fromZone, @NonNull ZoneId toZone) {
+        if (Objects.isNull(time)) {
+            return null;
+        }
+        ZonedDateTime zonedTime = time.atZone(fromZone);
+        ZonedDateTime converted = zonedTime.withZoneSameInstant(toZone);
+        return converted.toLocalDateTime();
     }
 
     public static OffsetDateTime now() {

@@ -1,7 +1,9 @@
 package com.nubeiot.core.sql.converter;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import org.jooq.Converter;
 
@@ -12,12 +14,12 @@ public final class DateConverter implements Converter<java.sql.Date, LocalDate> 
         if (Objects.isNull(databaseObject)) {
             return null;
         }
-        return LocalDate.ofEpochDay(databaseObject.getTime());
+        return LocalDate.ofEpochDay(TimeUnit.MILLISECONDS.toDays(databaseObject.getTime()));
     }
 
     @Override
     public java.sql.Date to(LocalDate userObject) {
-        return Objects.isNull(userObject) ? null : new java.sql.Date(userObject.toEpochDay());
+        return Objects.isNull(userObject) ? null : Date.valueOf(userObject);
     }
 
     @Override
