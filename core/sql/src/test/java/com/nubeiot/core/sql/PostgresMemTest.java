@@ -29,7 +29,7 @@ public class PostgresMemTest extends BaseSqlTest {
     private void pgBuilder(Builder builder) {
         //        builder.setDataDirectory(folder.getRoot().toPath().resolve("pgsql")).setCleanDataDirectory(true)
         //        .setPort(5432);
-        builder.setCleanDataDirectory(true).setPort(5555);
+        builder.setCleanDataDirectory(true).setPort(10000);
     }
 
     @BeforeClass

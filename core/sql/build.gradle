@@ -42,7 +42,7 @@ ext {
         new JsonDataType(className: LocalDate.class.getName(), converter: "%s.toString()",
                          parser: "java.time.LocalDate.parse((String)%s, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)"),
         new JsonDataType(className: LocalTime.class.getName(), converter: "%s.toString()",
-                         parser: "java.time.LocalTime.parse((String)%s), java.time.format.DateTimeFormatter.ISO_LOCAL_TIME)"),
+                         parser: "java.time.LocalTime.parse((String)%s, java.time.format.DateTimeFormatter.ISO_LOCAL_TIME)"),
         new JsonDataType(className: Duration.class.getName(), converter: "%s.toString()",
                          parser: "java.time.Duration.parse((String)%s)"),
         new JsonDataType(className: Period.class.getName(), converter: "%s.toString()",

@@ -20,6 +20,7 @@ import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.sql.mock.manyschema.mock0.tables.TblSample_00;
 import com.nubeiot.core.sql.mock.manyschema.mock1.tables.TblSample_01;
 import com.nubeiot.core.utils.Configs;
+import com.nubeiot.core.utils.Reflections.ReflectionField;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -98,6 +99,24 @@ abstract class BaseSqlTest {
             context.assertEquals(expected, rs.size());
         } catch (AssertionError e) {
             context.fail(e);
+        } finally {
+            TestHelper.testComplete(async);
+        }
+    }
+
+    void assertValue(TestContext context, Async async,
+                     com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01 tblSample_01,
+                     String assertFieldName, Object expect, Class expectedClass) {
+        try {
+            context.assertNotNull(tblSample_01);
+            context.assertEquals(expect, ReflectionField.getFieldValue(tblSample_01,
+                                                                       com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01.class
+                                                                           .getDeclaredField(assertFieldName),
+                                                                       expectedClass));
+        } catch (AssertionError ex) {
+            context.fail(ex);
+        } catch (NoSuchFieldException ex) {
+            context.fail(ex);
         } finally {
             TestHelper.testComplete(async);
         }
