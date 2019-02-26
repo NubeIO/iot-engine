@@ -25,6 +25,6 @@ db.layout_grid.find().forEach(function (line) {
                 widgets[i].backgroundImage = store_image(widgets[i].backgroundImage);
             }
         }
-        db.layout_grid.update({_id: line._id}, {widgets: widgets});
+        db.layout_grid.update({_id: line._id}, {$set: {widgets: widgets}});
     }
 });
