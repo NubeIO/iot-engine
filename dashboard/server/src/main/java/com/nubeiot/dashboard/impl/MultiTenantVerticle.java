@@ -1861,7 +1861,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             });
             toReq.setChunked(true);
             for (String header : headers.fieldNames()) {
-                toReq.getDelegate().putHeader(header, headers.getValue(header).toString());
+                if (headers.getValue(header) != null) {
+                    toReq.getDelegate().putHeader(header, headers.getValue(header).toString());
+                }
             }
             if (payload == null) {
                 toReq.end();
