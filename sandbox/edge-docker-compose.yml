@@ -1,0 +1,59 @@
+version: "2.4"
+services:
+  nexus:
+    image: sonatype/nexus3:${MONGO_VERSION}
+
+  zookeeper:
+    image: wurstmeister/zookeeper:${ZOOKEEPER_VERSION}
+
+  kafka:
+    image: wurstmeister/kafka:${KAFKA_VERSION}
+
+  connector-edge:
+    image: amd64/nube-dashboard-connector-edge:${IOT_VERSION}
+    ports:
+      - ${CONNECTOR_EDGE_PORT}:8080
+      - ${CONNECTOR_EDGE_EVENTBUS_PORT}:5000
+      - ${CONNECTOR_EDGE_CLUSTER_PORT}:5701
+    environment:
+      JAVA_PROPS: -Dvertx.cluster.public.host=172.18.0.1 -Dvertx.cluster.public.host=${CONNECTOR_EDGE_EVENTBUS_PORT} -Dhazelcast.local.publicAddress=172.18.0.1:${CONNECTOR_EDGE_CLUSTER_PORT}
+    volumes:
+      - connector-edge-data:/data
+      - ./engine/connector-edge.json:/app/conf/config.json
+      - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
+      - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
+
+  connector-kafka:
+    image: amd64/nube-dashboard-connector-sample-kafka:${IOT_VERSION}
+    ports:
+      - ${CONNECTOR_KAFKA_PORT}:8080
+    volumes:
+      - connector-kafka-data:/data
+      - ./engine/connector-kafka.json:/app/conf/config.json
+      - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
+      - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
+    depends_on:
+      - kafka
+
+  bios:
+    image: amd64/nube-edge-bios:${IOT_VERSION}
+    ports:
+      - ${BIOS_EVENTBUS_PORT}:5000
+      - ${BIOS_CLUSTER_PORT}:5701
+    environment:
+      JAVA_PROPS: -Dvertx.cluster.public.host=172.18.0.1 -Dvertx.cluster.public.host=${BIOS_EVENTBUS_PORT} -Dhazelcast.local.publicAddress=172.18.0.1:${BIOS_CLUSTER_PORT}
+    volumes:
+      - bios-data:/data
+      - ./engine/bios.json:/app/conf/config.json
+      - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
+      - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
+    depends_on:
+      - nexus
+
+volumes:
+  connector-edge-data:
+    driver: local
+  connector-kafka-data:
+    driver: local
+  bios-data:
+    driver: local

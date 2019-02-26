@@ -2,5 +2,5 @@ dependencies {
     compile project(':core:micro')
     compile project(':core:httpserver')
     compile project(':core:cluster:hazelcast')
-    compile group: 'commons-codec', name: 'commons-codec', version: '1.9'
+    compile "commons-codec:commons-codec:1.9"
 }

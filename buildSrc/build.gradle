@@ -6,9 +6,8 @@ plugins {
 apply from: "dependencies.gradle"
 
 repositories {
-    mavenLocal()
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-    mavenCentral()
+    project.repos
+    gradlePluginPortal()
 }
 
 dependencies {
@@ -19,6 +18,9 @@ dependencies {
     compile project.deps.database.jooqMetaExt
     compile project.deps.database.jooqCodegen
     compile project.deps.database.jooqVertxCodegen
+    compile project.deps.plugin.apt
+    compile project.deps.plugin.docker
+    compile project.deps.plugin.sonar
 
     testCompile project.deps.tests.junit
 }

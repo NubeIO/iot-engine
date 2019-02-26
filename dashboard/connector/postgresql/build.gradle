@@ -1,3 +1,6 @@
+ext {
+    specifiedLog = project.loggers["hazelcast"] + ["com.github.mauricio": "info"]
+}
 
 dependencies {
     compile project(':core:common')

@@ -8,10 +8,8 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.HiddenException;
@@ -145,9 +143,6 @@ public interface IConfig extends JsonData {
                 JsonObject values = Strings.isNotBlank(name) && entries.containsKey(name)
                                     ? entries.getJsonObject(name)
                                     : entries;
-                ObjectMapper mapper = Json.mapper.copy();
-                mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
-                      .setVisibility(PropertyAccessor.SETTER, JsonAutoDetect.Visibility.ANY);
                 return values.mapTo(clazz);
             } catch (IllegalArgumentException | ClassCastException e) {
                 throw new HiddenException(NubeException.ErrorCode.INVALID_ARGUMENT, e);

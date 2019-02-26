@@ -18,6 +18,7 @@ import io.github.jklingsporn.vertx.jooq.shared.JsonArrayConverter
 import io.github.jklingsporn.vertx.jooq.shared.JsonObjectConverter
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
+import com.nubeiot.buildscript.Strings
 import com.nubeiot.buildscript.jooq.JooqGenerateTask.APIType
 import com.nubeiot.buildscript.jooq.JooqGenerateTask.JDBCType
 
@@ -66,8 +67,8 @@ abstract class JooqProvider {
     }
 
     static Target createTarget(String targetDir, String packageName) {
-        return new Target().withPackageName(Utils.requireNotBlank(packageName, "packageName cannot be blank"))
-                           .withDirectory(Utils.requireNotBlank(targetDir, "targetDir cannot be blank"))
+        return new Target().withPackageName(Strings.requireNotBlank(packageName, "packageName cannot be blank"))
+                           .withDirectory(Strings.requireNotBlank(targetDir, "targetDir cannot be blank"))
                            .withClean(true).withEncoding(StandardCharsets.UTF_8.name())
     }
 

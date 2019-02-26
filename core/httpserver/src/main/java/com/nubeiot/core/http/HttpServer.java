@@ -11,6 +11,7 @@ import io.vertx.ext.web.handler.ResponseContentTypeHandler;
 import io.vertx.ext.web.handler.ResponseTimeHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
+import com.nubeiot.core.component.UnitContext;
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
@@ -22,16 +23,18 @@ import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
 import com.nubeiot.core.http.rest.RestApiBuilder;
 import com.nubeiot.core.http.ws.WebsocketEventBuilder;
 
-import lombok.AccessLevel;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class HttpServer extends UnitVerticle<HttpConfig> {
+public final class HttpServer extends UnitVerticle<HttpConfig, UnitContext> {
 
     @NonNull
     private final HttpServerRouter httpRouter;
     private io.vertx.core.http.HttpServer httpServer;
+
+    HttpServer(HttpServerRouter httpRouter) {
+        super(UnitContext.VOID);
+        this.httpRouter = httpRouter;
+    }
 
     @Override
     public void start(Future<Void> future) {

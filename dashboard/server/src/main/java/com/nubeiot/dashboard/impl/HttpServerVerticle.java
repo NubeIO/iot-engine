@@ -20,21 +20,6 @@ import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import com.nubeiot.core.common.HttpHelper;
-import com.nubeiot.core.common.RxRestAPIVerticle;
-import com.nubeiot.core.common.constants.Port;
-import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.common.utils.CustomMessageCodec;
-import com.nubeiot.core.common.utils.SQLUtils;
-import com.nubeiot.core.http.HttpScheme;
-import com.nubeiot.core.http.RegisterScheme;
-import com.nubeiot.core.http.utils.Urls;
-import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.core.utils.Strings;
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.utils.MongoUtils;
-import com.nubeiot.dashboard.utils.ResourceUtils;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -66,6 +51,21 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.reactivex.ext.web.handler.StaticHandler;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.servicediscovery.Record;
+
+import com.nubeiot.core.common.HttpHelper;
+import com.nubeiot.core.common.RxRestAPIVerticle;
+import com.nubeiot.core.common.constants.Port;
+import com.nubeiot.core.common.utils.CustomMessage;
+import com.nubeiot.core.common.utils.CustomMessageCodec;
+import com.nubeiot.core.common.utils.SQLUtils;
+import com.nubeiot.core.http.HttpScheme;
+import com.nubeiot.core.http.RegisterScheme;
+import com.nubeiot.core.http.utils.Urls;
+import com.nubeiot.core.utils.FileUtils;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.dashboard.Role;
+import com.nubeiot.dashboard.utils.MongoUtils;
+import com.nubeiot.dashboard.utils.ResourceUtils;
 
 /**
  * Created by topsykretts on 5/4/18.
@@ -588,7 +588,8 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                 return Single.just(groupAndSite);
             }
         }).subscribe(groupAndSiteAndCompany -> {
-            ctx.response().putHeader("username", user.principal().getString("username")) // Use case: ditto NGINX
+            ctx.response()
+               .putHeader("username", user.principal().getString("username")) // Use case: ditto NGINX
                .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                .end(Json.encodePrettily(user.principal().mergeIn(groupAndSiteAndCompany)));
         });

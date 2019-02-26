@@ -38,7 +38,5 @@ gradle-app.setting
 .gradletasknamecache
 
 settings*.xml
-cluster*.xml
 demo/*.md
-!demo/cluster.xml
 *.secret.properties

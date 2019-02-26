@@ -1,0 +1,21 @@
+version: "2.4"
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper:${ZOOKEEPER_VERSION}
+    ports:
+      - ${ZOOKEEPER_PORT}:2181
+  kafka:
+    image: wurstmeister/kafka:${KAFKA_VERSION}
+    ports:
+      - ${KAFKA_PORT}:9092
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      HOSTNAME_COMMAND: "getent hosts `hostname` | cut -d' ' -f1"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://_{HOSTNAME_COMMAND}:9092
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - kafka-log:/kafka
+volumes:
+  kafka-log:
+    driver: local

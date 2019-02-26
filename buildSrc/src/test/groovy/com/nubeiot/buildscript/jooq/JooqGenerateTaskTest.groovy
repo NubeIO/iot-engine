@@ -15,7 +15,7 @@ class JooqGenerateTaskTest {
         def genFolder = "src/generated"
         def genSrc = [srcFolder: genFolder, javaSrcFolder: "$genFolder/java", resourceFolder: "$genFolder/resources"]
         project = ProjectBuilder.builder().build()
-        project.extensions.add("genSrc", genSrc)
+        project.extensions.add("genProps", genSrc)
     }
 
     @Test

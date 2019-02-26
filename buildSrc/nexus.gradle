@@ -2,12 +2,7 @@ apply plugin: "java-library"
 apply plugin: "maven-publish"
 apply plugin: "signing"
 
-def nexusFile = file("$rootDir/nexus.secret.properties")
-if (nexusFile.exists()) {
-    def props = new Properties()
-    nexusFile.withInputStream { props.load(it) }
-    props.each { k, v -> project.ext.set(k, v) }
-}
+loadSecretProps("$rootDir/nexus.secret.properties")
 
 publishing {
     publications {

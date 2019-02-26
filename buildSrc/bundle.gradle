@@ -4,11 +4,8 @@ import java.util.jar.Attributes.Name
 import org.gradle.util.GradleVersion
 
 jar {
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
     doFirst {
-        def classPath = configurations.runtime.isEmpty() ? "" : configurations.runtime.files.collect {
-            it.getName()
-        }.join(' ')
         def javaVersion = System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')'
         GradleVersion gradleVersion = GradleVersion.current()
 
@@ -21,7 +18,7 @@ jar {
         println '- Java Version:     ' + javaVersion
         println '- Gradle Version:   ' + gradleVersion.version
         println '- Vertx Version:    ' + project.versions.vertx
-
+        
         def manifestMap = [
             (Name.MANIFEST_VERSION.toString())      : '1.0',
             (Name.IMPLEMENTATION_TITLE.toString())  : "${baseName}",
@@ -35,15 +32,18 @@ jar {
             'Build-By'                              : "${project.buildBy}",
             'Java-Version'                          : "${javaVersion}",
             'Gradle-Version'                        : "${gradleVersion.version}",
-            'Vertx-Version'                         : "${project.versions.vertx}",
-            'Class-Path'                            : "${classPath}"
+            'Vertx-Version'                         : "${project.versions.vertx}"
         ]
         if (project.hasProperty("executable") && project.executable == "true") {
             if (project.mainClass.trim() == "" || project.mainVerticle.trim() == "") {
                 throw new TaskExecutionException(project.tasks.jar, new RuntimeException("Missing mainClass or " +
                                                                                          "mainVerticle"))
             }
-            manifestMap << ['Main-Class': "${project.mainClass}", 'Main-Verticle': "${project.mainVerticle}"]
+            def classPath = configurations.runtimeClasspath.isEmpty() ? "" :
+                            configurations.runtimeClasspath.files.collect { "lib/${it.getName()}" }.join(" ")
+            manifestMap << ['Main-Class'   : "${project.mainClass}",
+                            'Main-Verticle': "${project.mainVerticle}",
+                            'Class-Path'   : "${classPath} conf/"]
         }
         manifest {
             attributes(manifestMap)
@@ -55,24 +55,30 @@ distZip {
     onlyIf {
         project.hasProperty("executable") && project.executable == "true"
     }
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
+    into("${baseName}-${project.version}/conf") {
+        from(project.genProps.configDir)
+    }
 }
 
 distTar {
     onlyIf {
         project.hasProperty("executable") && project.executable == "true"
     }
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
+    into("${baseName}-${project.version}/conf") {
+        from(project.genProps.configDir)
+    }
 }
 
 task sourcesJar(type: Jar, dependsOn: classes, group: 'distribution') {
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
     from sourceSets.main.allSource
     classifier = 'sources'
 }
 
 task testsJar(type: Jar, group: 'distribution') {
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
     from sourceSets.test.output
     classifier = 'tests'
 }
@@ -86,7 +92,7 @@ task uberJar(type: Jar) {
         project.hasProperty("standalone") && project.standalone == "true"
     }
     classifier = 'fat'
-    baseName = computeBaseName(project)
+    baseName = project.computeBaseName()
     from sourceSets.main.output
     dependsOn configurations.runtimeClasspath
     from {

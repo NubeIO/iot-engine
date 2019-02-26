@@ -1,0 +1,60 @@
+{
+  "dataDir": "/data",
+  "__system__": {
+    "__eventBus__": {
+      "ssl": true,
+      "clientAuth": "REQUIRED",
+      "clustered": true,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
+    },
+    "__cluster__": {
+      "active": true,
+      "ha": true
+    }
+  },
+  "__app__": {
+    "__sql__": {
+      "dialect": "H2",
+      "__hikari__": {
+        "jdbcUrl": "jdbc:h2:file:./bios"
+      }
+    },
+    "auto_install": true,
+    "repository": {
+      "local": "",
+      "remote": {
+        "java": {
+          "credentials": {},
+          "urls": [
+            "http://nexus:8081/repository/maven-releases/",
+            "http://nexus:8081/repository/maven-snapshots/",
+            "http://nexus:8081/repository/maven-central/"
+          ]
+        }
+      }
+    },
+    "default_app": {
+      "group_id": "com.nubeiot.edge.module",
+      "artifact_id": "installer",
+      "version": "1.0.0-SNAPSHOT",
+      "service_name": "bios-installer",
+      "deploy_config": {
+        "__app__": {
+          "__sql__": {
+            "dialect": "H2",
+            "__hikari__": {
+              "jdbcUrl": "jdbc:h2:file:./bios-installer"
+            }
+          }
+        }
+      }
+    }
+  }
+}

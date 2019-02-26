@@ -1,5 +1,5 @@
 dependencies {
-    compile "io.github.classgraph:classgraph:4.6.2"
+    compile "io.github.classgraph:classgraph:4.6.23"
     compile "io.vertx:vertx-rx-java2:$project.versions.vertx"
     compile "io.vertx:vertx-config:$project.versions.vertx"
     testCompile project(":core:cluster:hazelcast")

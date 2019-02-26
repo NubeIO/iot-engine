@@ -6,12 +6,12 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.FileUtils;
-
-import io.vertx.core.json.JsonObject;
 
 public class NubeConfigTest {
 
@@ -30,8 +30,8 @@ public class NubeConfigTest {
                                 "\"clusterPingReplyInterval\":20000,\"clusterPublicPort\":-1,\"clustered\":true," +
                                 "\"connectTimeout\":60000,\"crlPaths\":[],\"crlValues\":[]," +
                                 "\"enabledCipherSuites\":[],\"enabledSecureTransportProtocols\":[\"TLSv1\",\"TLSv1" +
-                                ".1\",\"TLSv1.2\"],\"host\":\"localhost\",\"idleTimeout\":0," +
-                                "\"idleTimeoutUnit\":\"SECONDS\",\"logActivity\":false,\"port\":0," +
+                                ".1\",\"TLSv1.2\"],\"host\":\"0.0.0.0\",\"idleTimeout\":0," +
+                                "\"idleTimeoutUnit\":\"SECONDS\",\"logActivity\":false,\"port\":5000," +
                                 "\"receiveBufferSize\":-1,\"reconnectAttempts\":0,\"reconnectInterval\":1000," +
                                 "\"reuseAddress\":true,\"reusePort\":false,\"sendBufferSize\":-1,\"soLinger\":-1," +
                                 "\"ssl\":false,\"tcpCork\":false,\"tcpFastOpen\":false,\"tcpKeepAlive\":false," +
@@ -50,6 +50,7 @@ public class NubeConfigTest {
     @Test
     public void test_init() {
         NubeConfig from = new NubeConfig();
+        System.out.println(from.toJson());
         Assert.assertNotNull(from.getDataDir());
         Assert.assertNull(from.getSystemConfig());
         Assert.assertNotNull(from.getAppConfig());
@@ -107,8 +108,8 @@ public class NubeConfigTest {
     @Test
     public void test_deserialize_child_from_root() {
         String jsonStr =
-                "{\"dataDir\": \"\", \"__system__\":{\"__cluster__\":{\"active\":false,\"ha\":false,\"name\":\"\"," +
-                "\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\",\"file\":\"\",\"options\":{}}}}";
+            "{\"dataDir\": \"\", \"__system__\":{\"__cluster__\":{\"active\":false,\"ha\":false,\"name\":\"\"," +
+            "\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\",\"file\":\"\",\"options\":{}}}}";
         NubeConfig.SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, NubeConfig.SystemConfig.ClusterConfig.class);
         Assert.assertNotNull(cfg);
         Assert.assertEquals(ClusterType.HAZELCAST, cfg.getType());
@@ -146,8 +147,7 @@ public class NubeConfigTest {
     @Test
     public void test_deserialize_appCfg_limitation() {
         NubeConfig.AppConfig from = IConfig.from(
-                "{\"__system__\":{\"__cluster__\":{},\"__eventbus__\":{},\"__micro__\":{}}}",
-                NubeConfig.AppConfig.class);
+            "{\"__system__\":{\"__cluster__\":{},\"__eventbus__\":{},\"__micro__\":{}}}", NubeConfig.AppConfig.class);
         Assert.assertNotNull(from);
     }
 
@@ -193,9 +193,11 @@ public class NubeConfigTest {
                            "\"__app__\":{\"__http__\":{\"host\":\"0.0.0.0\",\"port\":8086,\"enabled\":true," +
                            "\"rootApi\":\"/api\"},\"api.name\":\"edge-connector\"}}";
         NubeConfig input = IConfig.from(jsonInput, NubeConfig.class);
+        Assert.assertEquals("0.0.0.0", input.getSystemConfig().getEventBusConfig().getOptions().getHost());
+        Assert.assertEquals(5000, input.getSystemConfig().getEventBusConfig().getOptions().getPort());
         JsonObject mergeJson = nubeConfig.toJson().mergeIn(input.toJson(), true);
-
         JsonObject mergeToJson = nubeConfig.mergeToJson(input);
+
         JSONAssert.assertEquals(mergeJson.encode(), mergeToJson.encode(), JSONCompareMode.STRICT);
         NubeConfig merge = IConfig.from(mergeToJson, NubeConfig.class);
         JSONAssert.assertEquals(mergeJson.encode(), merge.toJson().encode(), JSONCompareMode.STRICT);
