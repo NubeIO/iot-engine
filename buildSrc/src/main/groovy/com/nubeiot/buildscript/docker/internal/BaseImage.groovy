@@ -20,13 +20,12 @@ class BaseImage {
 //                                               image(Arch.ARM64V8, OperatingSystem.SLIM),
 //                                               image(Arch.ARM64V8, OperatingSystem.ALPINE)] as LinkedHashSet
 
-    public static final Set<BaseImage> EDGES = [image(Arch.LINUX64, OperatingSystem.DEBIAN),
-                                                image(Arch.LINUX64, OperatingSystem.SLIM),
-                                                image(Arch.LINUX64, OperatingSystem.ALPINE)] as LinkedHashSet
+    public static final Set<BaseImage> EDGES = [image(Arch.LINUX64, OperatingSystem.ALPINE)] as LinkedHashSet
 
-    public static final Set<BaseImage> SERVERS = [image(Arch.LINUX64, OperatingSystem.DEBIAN),
-                                                  image(Arch.LINUX64, OperatingSystem.SLIM),
-                                                  image(Arch.LINUX64, OperatingSystem.ALPINE)] as LinkedHashSet
+//    public static final Set<BaseImage> SERVERS = [image(Arch.LINUX64, OperatingSystem.DEBIAN),
+//                                                  image(Arch.LINUX64, OperatingSystem.SLIM),
+//                                                  image(Arch.LINUX64, OperatingSystem.ALPINE)] as LinkedHashSet
+    public static final Set<BaseImage> SERVERS = [image(Arch.LINUX64, OperatingSystem.ALPINE)] as LinkedHashSet
 
 
     private static BaseImage image(Arch arch, OperatingSystem os) {

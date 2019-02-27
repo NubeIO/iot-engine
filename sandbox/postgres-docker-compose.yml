@@ -1,7 +1,6 @@
 version: "2.4"
 
 services:
-
   pg-db:
     image: ${POSTGRES_IMAGE}:${POSTGRES_VERSION}
     environment:

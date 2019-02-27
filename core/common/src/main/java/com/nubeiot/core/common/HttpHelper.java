@@ -39,7 +39,6 @@ public class HttpHelper {
     }
 
     public static void badGateway(Throwable ex, RoutingContext context) {
-        ex.printStackTrace();
         context.response()
                 .setStatusCode(502)
                 .putHeader("content-type", "application/json")

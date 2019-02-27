@@ -1,28 +1,27 @@
 version: "2.4"
 services:
-    mongo:
-        image: mongo:${MONGO_VERSION}
-        environment:
-            MONGO_INITDB_ROOT_USERNAME: mongo
-            MONGO_INITDB_ROOT_PASSWORD: mongo
-            # MONGO_INITDB_DATABASE: sandbox
-            TZ: UTC
-        ports:
-            - ${MONGO_PORT}:27017
-        volumes:
-            - ./mongo/:/docker-entrypoint-initdb.d/
-            - mongo-data:/data/db
-            - mongo-cfg:/data/configdb
-        ulimits:
-            nproc:
-                soft: 64000
-                hard: 64000
-            nofile:
-                soft: 64000
-                hard: 64000
+  mongo:
+    image: mongo:${MONGO_VERSION}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: mongo
+      TZ: UTC
+    ports:
+      - ${MONGO_PORT}:27017
+    volumes:
+      - ./mongo/:/docker-entrypoint-initdb.d/
+      - mongo-data:/data/db
+      - mongo-cfg:/data/configdb
+    ulimits:
+      nproc:
+        soft: 64000
+        hard: 64000
+      nofile:
+        soft: 64000
+        hard: 64000
 
 volumes:
-    mongo-data:
-        driver: local
-    mongo-cfg:
-        driver: local
+  mongo-data:
+    driver: local
+  mongo-cfg:
+    driver: local

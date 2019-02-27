@@ -18,15 +18,15 @@
   },
   "__app__": {
     "__micro__": {},
-    "http.port": 8090,
+    "http.port": 8080,
     "api.name": "sql-pg",
     "pgConfig": {
-      "host": "localhost",
+      "host": "pg-db",
       "port": 5432,
       "maxPoolSize": 10,
-      "username": "root",
-      "password": "root",
-      "database": "nube",
+      "username": "sandbox",
+      "password": "111",
+      "database": "sandbox_db",
       "charset": "UTF-8",
       "queryTimeout": 10000
     }

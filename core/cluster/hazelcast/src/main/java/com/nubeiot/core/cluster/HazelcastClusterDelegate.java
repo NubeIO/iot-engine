@@ -12,10 +12,11 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 
+import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
-import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.NubeConfig.SystemConfig.ClusterConfig;
 import com.nubeiot.core.exceptions.ClusterException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
@@ -34,7 +35,7 @@ public final class HazelcastClusterDelegate implements IClusterDelegate {
         return ClusterType.HAZELCAST;
     }
 
-    private com.hazelcast.config.Config parseConfig(NubeConfig.SystemConfig.ClusterConfig clusterConfig) {
+    private Config parseConfig(ClusterConfig clusterConfig) {
         URL url = FileUtils.toUrl(clusterConfig.getUrl());
         try {
             if (Objects.nonNull(url)) {
@@ -50,9 +51,13 @@ public final class HazelcastClusterDelegate implements IClusterDelegate {
     }
 
     @Override
-    public ClusterManager initClusterManager(NubeConfig.SystemConfig.ClusterConfig clusterConfig) {
-        com.hazelcast.config.Config hazelcastCfg = parseConfig(clusterConfig).setProperty("hazelcast.logging.type",
-                                                                                          "slf4j");
+    public ClusterManager initClusterManager(ClusterConfig clusterConfig) {
+        Config hazelcastCfg = parseConfig(clusterConfig).setProperty("hazelcast.logging.type", "slf4j");
+        String publicAddr = System.getProperty("cluster.public.addr", null);
+        if (Strings.isNotBlank(publicAddr)) {
+            logger.info("Add cluster public address: " + publicAddr);
+            hazelcastCfg.getNetworkConfig().setPublicAddress(publicAddr);
+        }
         String clusterName = clusterConfig.getName();
         if (Strings.isNotBlank(clusterName)) {
             hazelcastCfg.setInstanceName(clusterName);

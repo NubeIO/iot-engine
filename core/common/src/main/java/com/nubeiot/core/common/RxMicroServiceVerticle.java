@@ -16,6 +16,7 @@ import io.vertx.servicediscovery.Record;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
+import com.nubeiot.core.utils.Networks;
 
 import lombok.Getter;
 
@@ -55,7 +56,8 @@ public abstract class RxMicroServiceVerticle extends ContainerVerticle {
 
     protected final Single<Record> publishHttpEndpoint(String name, String host, int port) {
         String apiName = this.appConfig.getString("api.name", "");
-        Record record = HttpEndpoint.createRecord(name, host, port, "/", new JsonObject().put("api.name", apiName));
+        Record record = HttpEndpoint.createRecord(name, Networks.getDefaultAddress(host), port, "/",
+                                                  new JsonObject().put("api.name", apiName));
         return context.register(record);
     }
 
