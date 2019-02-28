@@ -1,0 +1,25 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "ssl": true,
+      "clustered": true,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
+    }
+  },
+  "__app__": {
+    "__http__": {
+      "host": "0.0.0.0",
+      "port": 8091,
+      "enabled": true,
+      "rootApi": "/api"
+    },
+    "api.name": "driver-api"
+  }
+}
