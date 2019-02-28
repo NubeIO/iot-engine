@@ -1,0 +1,9 @@
+dependencies {
+    compile project(':core:base')
+    compile project(':core:httpserver')
+
+    testCompile project(":core:base")
+    testCompile project(":core:base").sourceSets.test.output
+    testCompile project(":core:httpserver")
+    testCompile project(":core:httpserver").sourceSets.test.output
+}
