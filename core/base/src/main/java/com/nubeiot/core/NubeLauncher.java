@@ -1,5 +1,6 @@
 package com.nubeiot.core;
 
+import java.net.InetSocketAddress;
 import java.util.Objects;
 
 import io.vertx.core.DeploymentOptions;
@@ -117,7 +118,14 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     private void configEventBus(VertxOptions options) {
         logger.info("Setup EventBus...");
         EventBusOptions option = this.config.getSystemConfig().getEventBusConfig().getOptions();
-        option.setHost(Networks.getDefaultAddress(option.getHost()));
+        option.setHost(Networks.computeNATAddress(option.getHost()));
+        InetSocketAddress address = Networks.computeClusterEventbusUrl(option.getClusterPublicHost(),
+                                                                       Networks.validPort(option.getClusterPublicPort(),
+                                                                                          option.getPort()));
+        if (Objects.nonNull(address)) {
+            option.setClusterPublicHost(address.getHostName());
+            option.setClusterPublicPort(address.getPort());
+        }
         logger.info("Configure EventBus with options: {}", option.toJson().encode());
         options.setEventBusOptions(option);
     }

@@ -23,7 +23,7 @@
     "__sql__": {
       "dialect": "H2",
       "__hikari__": {
-        "jdbcUrl": "jdbc:h2:file:./bios"
+        "jdbcUrl": "jdbc:h2:file:/data/db/bios"
       }
     },
     "auto_install": true,
@@ -50,7 +50,7 @@
           "__sql__": {
             "dialect": "H2",
             "__hikari__": {
-              "jdbcUrl": "jdbc:h2:file:./bios-installer"
+              "jdbcUrl": "jdbc:h2:file:/data/db/bios-installer"
             }
           }
         }

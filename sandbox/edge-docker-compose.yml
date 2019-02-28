@@ -35,6 +35,8 @@ services:
 
   bios:
     image: amd64/nube-edge-bios:${IOT_VERSION}
+    command: >-
+      ./wait-for-it.sh nexus:8081 --timeout=60 -s -- ./entrypoint.sh
     ports:
       - ${BIOS_EVENTBUS_PORT}:5000
       - ${BIOS_CLUSTER_PORT}:5701

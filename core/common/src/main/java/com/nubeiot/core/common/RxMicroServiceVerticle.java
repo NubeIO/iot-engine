@@ -56,7 +56,7 @@ public abstract class RxMicroServiceVerticle extends ContainerVerticle {
 
     protected final Single<Record> publishHttpEndpoint(String name, String host, int port) {
         String apiName = this.appConfig.getString("api.name", "");
-        Record record = HttpEndpoint.createRecord(name, Networks.getDefaultAddress(host), port, "/",
+        Record record = HttpEndpoint.createRecord(name, Networks.computeNATAddress(host), port, "/",
                                                   new JsonObject().put("api.name", apiName));
         return context.register(record);
     }

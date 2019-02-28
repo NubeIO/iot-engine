@@ -2,17 +2,18 @@
 
 files=""
 dashboard="dashboard mongo keycloak ditto postgres"
-edge="edge nexus kafka ditto postgres"
+edge="edge nexus kafka"
 ditto="mongo"
 
 stack="$@"
-[[ $stack == *"dashboard"* ]] && stack="$dashboard $stack"
-[[ $stack == *"edge"* ]] && stack="$edge $stack"
-[[ $stack == *"ditto"* ]] && stack="$ditto $stack"
+[[ ${stack} == *"dashboard"* ]] && stack="$dashboard $stack"
+[[ ${stack} == *"edge"* ]] && stack="$edge $stack"
+[[ ${stack} == *"ditto"* ]] && stack="$ditto $stack"
 
+#`ip route get 8.8.8.8 | awk '{print $3; exit}'`
 stack=$(echo "$stack" | awk '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}{printf("\n")}')
 
-for var in $stack
+for var in ${stack}
 do
     file="$var-docker-compose.yml"
     if [[ -e "$file" ]]; then

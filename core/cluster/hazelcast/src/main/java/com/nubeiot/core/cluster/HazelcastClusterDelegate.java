@@ -1,6 +1,7 @@
 package com.nubeiot.core.cluster;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
@@ -21,6 +22,7 @@ import com.nubeiot.core.exceptions.ClusterException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.FileUtils;
+import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 
 @ClusterDelegate
@@ -53,10 +55,10 @@ public final class HazelcastClusterDelegate implements IClusterDelegate {
     @Override
     public ClusterManager initClusterManager(ClusterConfig clusterConfig) {
         Config hazelcastCfg = parseConfig(clusterConfig).setProperty("hazelcast.logging.type", "slf4j");
-        String publicAddr = System.getProperty("cluster.public.addr", null);
-        if (Strings.isNotBlank(publicAddr)) {
-            logger.info("Add cluster public address: " + publicAddr);
-            hazelcastCfg.getNetworkConfig().setPublicAddress(publicAddr);
+        InetSocketAddress addr = Networks.computeClusterPublicUrl(hazelcastCfg.getNetworkConfig().getPublicAddress());
+        if (Objects.nonNull(addr)) {
+            logger.info("Add cluster public address: {}", addr);
+            hazelcastCfg.getNetworkConfig().setPublicAddress(addr.toString());
         }
         String clusterName = clusterConfig.getName();
         if (Strings.isNotBlank(clusterName)) {

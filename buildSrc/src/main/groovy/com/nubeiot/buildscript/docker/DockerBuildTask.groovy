@@ -153,6 +153,7 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
                 }
             }
             from("${project.rootDir}/docker/entrypoint.sh")
+            from("${project.rootDir}/docker/wait-for-it.sh")
         }
         return buildDir.get().asFile.toPath().resolve(dockerfile.replaceAll("(.+)\\.template", "\$1.${arch}"))
     }
