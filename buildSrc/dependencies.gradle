@@ -71,14 +71,16 @@ ext.deps = [
 ext.versions = versions
 
 ext.genProps = [
-    genDir         : "$genDir",
-    configDir      : "$genDir/conf",
-    srcDir         : "$genDir/main",
-    javaSrcDir     : "$genDir/main/java",
-    resourceDir    : "$genDir/main/resources",
-    testDir        : "$genDir/test",
-    javaTestSrcDir : "$genDir/test/java",
-    testResourceDir: "$genDir/test/resources",
+    genDir               : "$genDir",
+    configDir            : "$genDir/conf",
+    srcDir               : "$genDir/main",
+    javaSrcDir           : "$genDir/main/java",
+    resourceDir          : "$genDir/main/resources",
+    testDir              : "$genDir/test",
+    javaTestSrcDir       : "$genDir/test/java",
+    testResourceDir      : "$genDir/test/resources",
+    nativeHeaderSrcFolder: "$genDir/main/native/headers",
+    nativeLibsSrcFolder  : "~/.nubeio/",
 ]
 
 ext.repos = {

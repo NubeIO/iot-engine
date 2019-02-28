@@ -1,0 +1,8 @@
+{
+  "__app__": {
+    "__jni__": {
+      "libDir": "/home/",
+      "lib": "example"
+    }
+  }
+}
