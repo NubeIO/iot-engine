@@ -12,7 +12,7 @@ public class DriverRouteDefinitions extends AbstractRestEventApi {
 
     @Override
     protected void initRoute() {
-        addRouter(DriverEventModels.POINTS, "/point", "");
+        addRouter(DriverEventModels.POINTS, "/points", "");
     }
 
     @Override
