@@ -29,7 +29,7 @@ public class DriverEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.GET_LIST, returnType = JsonObject.class)
     public JsonObject getList(RequestData data) {
-        return new JsonObject("yeet");
+        return new JsonObject("{\"test\":\"test test\"}");
     }
 
 }
