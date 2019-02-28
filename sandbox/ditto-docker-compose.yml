@@ -137,8 +137,3 @@ services:
     depends_on:
       - gateway
       - swagger-ui
-# volumes:
-#   dittodb-data:
-#     driver: local
-#   dittodb-cfg:
-#     driver: local

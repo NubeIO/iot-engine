@@ -18,13 +18,12 @@
   },
   "__app__": {
     "__micro__": {},
-    "http.port": 8088,
-    "http.host": "0.0.0.0",
+    "http.port": 8080,
     "api.name": "ditto",
-    "ditto.http.port": 8080,
-    "ditto.http.host": "localhost",
-    "ditto.http.username": "ditto",
-    "ditto.http.password": "ditto",
+    "ditto.http.port": 80,
+    "ditto.http.host": "ditto",
+    "ditto.http.username": "sandbox",
+    "ditto.http.password": "111",
     "ditto-policy": false
   }
 }
