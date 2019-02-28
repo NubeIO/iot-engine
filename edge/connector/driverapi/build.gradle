@@ -1,7 +1,6 @@
 dependencies {
     compile project(':core:base')
     compile project(':core:httpserver')
-    compile project(':core:cluster:hazelcast')
 
     testCompile project(":core:base")
     testCompile project(":core:base").sourceSets.test.output
