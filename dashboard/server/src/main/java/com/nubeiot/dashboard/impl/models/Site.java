@@ -2,29 +2,37 @@ package com.nubeiot.dashboard.impl.models;
 
 import com.nubeiot.core.common.GeoPoint;
 import com.nubeiot.core.common.Model;
+
 import io.vertx.core.json.JsonObject;
 
 public class Site extends Model {
-    public String associated_company_id;
-    public String logo_sm;
-    public String logo_md;
-    public String site_title;
-    public String issue_address;
-    public GeoPoint issue_location;
-    public String site_footer;
-    public String primary_color;
-    public String secondary_color;
-    public String text_color;
-    public String text_color_secondary;
-    public String heading_color;
-    public String layout_body_background;
-    public String btn_primary_bg;
-    public String layout_header_background;
-    public String rating_query;
-    public String rating_label;
-    public String role; // ADMIN or MANAGER or USER; defining the company level
+
+    private String associated_company_id;
+    private String logo_sm;
+    private String logo_md;
+    private String site_title;
+    private String issue_address;
+    private GeoPoint issue_location;
+    private String site_footer;
+    private String primary_color;
+    private String secondary_color;
+    private String text_color;
+    private String text_color_secondary;
+    private String heading_color;
+    private String layout_body_background;
+    private String btn_primary_bg;
+    private String layout_header_background;
+    private String rating_query;
+    private String rating_label;
+    private String role; // ADMIN or MANAGER or USER; defining the company level
+    private String menu_layout;
+    private String content_width;
+    private Boolean fixed_sidebar;
+    private Boolean fixed_header;
+    private Boolean auto_hide_header;
 
     public Site(JsonObject body) {
         super(body);
     }
+
 }
