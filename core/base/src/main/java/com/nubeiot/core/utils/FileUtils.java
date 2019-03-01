@@ -23,10 +23,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.nubeiot.core.exceptions.NubeException;
-
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import com.nubeiot.core.exceptions.NubeException;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -238,7 +239,9 @@ public final class FileUtils {
      */
     public static String createFolder(String parentDir, String... paths) {
         Path path = resolveDataFolder(parentDir);
-        Arrays.stream(paths).filter(Strings::isNotBlank).forEach(path::resolve);
+        Path[] ps = new Path[] {path};
+        Arrays.stream(paths).filter(Strings::isNotBlank).forEach(p -> ps[0] = ps[0].resolve(p));
+        path = ps[0];
         File folder = path.toFile();
         if (!folder.exists() && !folder.mkdirs()) {
             throw new NubeException("Cannot create folder with path: " + path.toString());

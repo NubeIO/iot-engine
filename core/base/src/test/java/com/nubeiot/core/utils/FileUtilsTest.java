@@ -159,4 +159,13 @@ public class FileUtilsTest {
         Assert.assertEquals(dataDir.toString(), FileUtils.resolveDataFolder(dataDir.toString()).toString());
     }
 
+    @Test
+    public void test_create_dir_with_absolute_given_path() throws IOException {
+        Path dataDir = tempFolder.newFolder().toPath().resolve("test");
+        Path subFolder = dataDir.resolve("123");
+        Assert.assertEquals(subFolder.toString(), FileUtils.createFolder(dataDir.toString(), "123"));
+        Assert.assertTrue(subFolder.toFile().exists());
+        Assert.assertTrue(subFolder.toFile().isDirectory());
+    }
+
 }

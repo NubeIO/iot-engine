@@ -21,8 +21,7 @@
     "__micro__": {},
     "http.scheme": "http",
     "http.port": 8080,
-    "DATA_DIR": "/data",
-    "MEDIA_ROOT": "media",
+    "mediaPath": "media",
     "keycloak": {
       "realm": "sandbox",
       "auth-server-url": "http://keycloak:8080/auth",

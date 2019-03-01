@@ -4,8 +4,8 @@ import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
 import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 import static com.nubeiot.core.http.HttpScheme.HTTPS;
 import static com.nubeiot.dashboard.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
+import static com.nubeiot.dashboard.constants.Address.MAIN_ADDR;
 import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
-import static com.nubeiot.dashboard.constants.Address.SERVICE_NAME;
 import static com.nubeiot.dashboard.constants.Address.SITE_COLLECTION_ADDRESS;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.MEDIA_FILES;
@@ -60,7 +60,6 @@ import com.nubeiot.core.common.utils.CustomMessageCodec;
 import com.nubeiot.core.common.utils.SQLUtils;
 import com.nubeiot.core.http.HttpScheme;
 import com.nubeiot.core.http.RegisterScheme;
-import com.nubeiot.core.http.utils.Urls;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
@@ -75,77 +74,42 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
     private OAuth2Auth loginAuth;
     private EventBus eventBus;
     private MongoClient mongoClient;
-    private String workingDir = "";
-    private String mediaRoot = "";
+    private String mediaPath;
+    private String mediaDir;
 
     @Override
     protected Single<String> onStartComplete() {
         registerHttpScheme();
         mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo").getJsonObject("config"));
         eventBus = getVertx().eventBus();
-
+        logger.info("Config on HttpWebServer is: {}", config().encodePrettily());
         // Register codec for custom message
         eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
-        workingDir = FileUtils.createFolder(appConfig.getString("DATA_DIR"));
-        mediaRoot = appConfig.getString("MEDIA_ROOT");
+        mediaPath = appConfig.getString("mediaPath", "media");
+        mediaDir = FileUtils.createFolder(nubeConfig.getDataDir().toString(), mediaPath);
+        logger.info("Media Dir: {}", mediaDir);
 
-        logger.info("Config on HttpWebServer is:");
-        logger.info(Json.encodePrettily(config()));
-        return startWebApp().flatMap(httpServer -> publishHttp())
-                            .flatMap(ignored -> Single.create(
-                                source -> getVertx().deployVerticle(MultiTenantVerticle.class.getName(),
-                                                                    new DeploymentOptions().setConfig(config()),
-                                                                    deployResult -> {
-                                                                        // Deploy succeed
-                                                                        if (deployResult.succeeded()) {
-                                                                            source.onSuccess(
-                                                                                "Deployment of MultiTenantVerticle is" +
-                                                                                " successful.");
-                                                                            logger.info(
-                                                                                "Deployment of MultiTenantVerticle is" +
-                                                                                " successful.");
-                                                                        } else {
-                                                                            // Deploy failed
-                                                                            source.onError(deployResult.cause());
-                                                                            deployResult.cause().printStackTrace();
-                                                                        }
-                                                                    })))
-                            .flatMap(ignored -> Single.create(
-                                source -> getVertx().deployVerticle(DynamicSiteCollectionHandleVerticle.class.getName(),
-                                                                    new DeploymentOptions().setConfig(config()),
-                                                                    deployResult -> {
-                                                                        // Deploy succeed
-                                                                        if (deployResult.succeeded()) {
-                                                                            source.onSuccess("Deployment of " +
-                                                                                             "DynamicSiteCollectionHandleVerticle " +
-                                                                                             "is successful.");
-                                                                            logger.info("Deployment of " +
-                                                                                        "DynamicSiteCollectionHandleVerticle " +
-                                                                                        "is successful.");
-                                                                        } else {
-                                                                            // Deploy failed
-                                                                            source.onError(deployResult.cause());
-                                                                            deployResult.cause().printStackTrace();
-                                                                        }
-                                                                    })))
-                            .flatMap(ignored -> Single.create(
-                                source -> getVertx().deployVerticle(SiteCollectionHandleVerticle.class.getName(),
-                                                                    new DeploymentOptions().setConfig(config()),
-                                                                    deployResult -> {
-                                                                        // Deploy succeed
-                                                                        if (deployResult.succeeded()) {
-                                                                            source.onSuccess("Deployment of " +
-                                                                                             "SiteCollectionHandleVerticle is " +
-                                                                                             "successful.");
-                                                                            logger.info("Deployment of " +
-                                                                                        "SiteCollectionHandleVerticle" +
-                                                                                        " is " + "successful.");
-                                                                        } else {
-                                                                            // Deploy failed
-                                                                            source.onError(deployResult.cause());
-                                                                            deployResult.cause().printStackTrace();
-                                                                        }
-                                                                    })));
+        String host = appConfig.getString("http.host", "0.0.0.0");
+        Integer port = appConfig.getInteger("http.port", Port.HTTP_WEB_SERVER_PORT);
+        return startWebApp(host, port).flatMap(server -> publishHttp(host, server.actualPort()))
+                                      .flatMap(ignored -> deployVerticle(MultiTenantVerticle.class))
+                                      .flatMap(ignored -> deployVerticle(DynamicSiteCollectionHandleVerticle.class))
+                                      .flatMap(ignored -> deployVerticle(SiteCollectionHandleVerticle.class));
+    }
+
+    private Single<String> deployVerticle(Class<? extends RxRestAPIVerticle> verticleClass) {
+        return Single.create(
+            source -> getVertx().deployVerticle(verticleClass, new DeploymentOptions().setConfig(config()), r -> {
+                // Deploy succeed
+                if (r.succeeded()) {
+                    source.onSuccess("Deployment of " + verticleClass + " is successful.");
+                    logger.info("Deployment of {} is successful.", verticleClass);
+                } else {
+                    // Deploy failed
+                    source.onError(r.cause());
+                    logger.error("Cannot deploy {}", r.cause(), verticleClass);
+                }
+            }));
     }
 
     private void registerHttpScheme() {
@@ -157,18 +121,15 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private Single<HttpServer> startWebApp() {
+    private Single<HttpServer> startWebApp(String host, int port) {
         loginAuth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, appConfig.getJsonObject("keycloak"));
 
         // Create a router object.
         Router router = Router.router(vertx);
 
         // creating body handler
-        FileUtils.createFolder(workingDir, mediaRoot);
         router.route()
-              .handler(BodyHandler.create()
-                                  .setUploadsDirectory(Urls.combinePath(workingDir, mediaRoot))
-                                  .setBodyLimit(5000000)); // limited to 5 MB
+              .handler(BodyHandler.create().setUploadsDirectory(mediaDir).setBodyLimit(5000000)); // limited to 5 MB
         // handle the form
 
         enableCorsSupport(router);
@@ -180,14 +141,9 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         handleStaticResource(router);
 
         // Create the HTTP server and pass the "accept" method to the request handler.
-        return createHttpServer(router, appConfig.getString("http.host", "0.0.0.0"),
-                                appConfig.getInteger("http.port", Port.HTTP_WEB_SERVER_PORT)).doOnSuccess(
-            httpServer -> logger.info("Web Server started at " + httpServer.actualPort()))
-                                                                                             .doOnError(
-                                                                                                 throwable -> logger.error(
-                                                                                                     "Cannot start " +
-                                                                                                     "server: " +
-                                                                                                     throwable.getLocalizedMessage()));
+        return createHttpServer(router, host, port).doOnSuccess(
+            server -> logger.info("Web Server started at {}", server.actualPort()))
+                                                   .doOnError(t -> logger.error("Cannot start server", t));
     }
 
     private void handleStaticResource(Router router) {
@@ -195,18 +151,12 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
               .handler(StaticHandler.create()
                                     .setCachingEnabled(false)
                                     .setAllowRootFileSystemAccess(true)
-                                    .setWebRoot(workingDir));
+                                    .setWebRoot(nubeConfig.getDataDir().toString()));
     }
 
-    private Single<Record> publishHttp() {
-        return publishHttpEndpoint(SERVICE_NAME, "0.0.0.0", appConfig.getInteger("http.port", 8085)).doOnSubscribe(
-            res -> logger.info("Publish successful HttpWebServer."))
-                                                                                                    .doOnError(
-                                                                                                        throwable -> logger
-                                                                                                                         .error(
-                                                                                                                             "Cannot publish HttpWebServer: " +
-                                                                                                                             throwable
-                                                                                                                                 .getLocalizedMessage()));
+    private Single<Record> publishHttp(String host, int port) {
+        return publishHttpEndpoint(MAIN_ADDR, host, port).doOnSuccess(r -> logger.info("Publish server successful"))
+                                                         .doOnError(t -> logger.error("Cannot publish webServer", t));
     }
 
     private void handleGateway(Router router) {
@@ -217,14 +167,11 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
             if (values.length > 2) {
                 gatewayAPIPrefix = "/" + values[1] + "/" + values[2] + ".*";
             }
-            logger.info("Query: " +
-                        new JsonObject().put("gatewayAPIPrefix", new JsonObject().put("$regex", gatewayAPIPrefix))
-                                        .put("site_id", ctx.request().headers().getDelegate().get("Site-Id")));
-            mongoClient.rxFindOne(SETTINGS, new JsonObject().put("gatewayAPIPrefix",
-                                                                 new JsonObject().put("$regex", gatewayAPIPrefix))
-                                                            .put("site_id",
-                                                                 ctx.request().headers().getDelegate().get("Site-Id")),
-                                  null).subscribe(settings -> {
+            JsonObject query = new JsonObject().put("gatewayAPIPrefix",
+                                                    new JsonObject().put("$regex", gatewayAPIPrefix))
+                                               .put("site_id", ctx.request().headers().getDelegate().get("Site-Id"));
+            logger.info("Query: {}", query);
+            mongoClient.rxFindOne(SETTINGS, query, null).subscribe(settings -> {
                 if (settings != null) {
                     this.dispatchRequests(ctx, settings);
                 } else {
@@ -306,23 +253,28 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
     }
 
     private void handlePostMediaFile(RoutingContext ctx) {
-        if (!ctx.fileUploads().isEmpty()) {
-            JsonObject output = new JsonObject();
-            Observable.fromIterable(ctx.fileUploads()).flatMapSingle(fileUpload -> {
-                String name = appendRealFileNameWithExtension(fileUpload).replace(
-                    Urls.combinePath(workingDir, mediaRoot) + "/", "");
-                return mongoClient.rxInsert(MEDIA_FILES,
-                                            new JsonObject().put("name", name).put("title", fileUpload.name()))
-                                  .map(id -> output.put(fileUpload.name(), id));
-            }).toList().subscribe(ignored -> {
-                ctx.response()
-                   .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
-                   .setStatusCode(HttpResponseStatus.CREATED.code())
-                   .end(Json.encodePrettily(output));
-            }, e -> ctx.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end(e.getMessage()));
-        } else {
+        if (ctx.fileUploads().isEmpty()) {
             ctx.response().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()).end();
+            return;
         }
+        JsonObject output = new JsonObject();
+        Observable.fromIterable(ctx.fileUploads())
+                  .flatMapSingle(fileUpload -> {
+                      String name = appendRealFileNameWithExtension(fileUpload).replace(mediaDir + "/", "");
+                      String link = ResourceUtils.buildAbsolutePath(ctx.request().host(), mediaPath, name);
+                      return mongoClient.rxInsert(MEDIA_FILES,
+                                                  new JsonObject().put("name", name).put("title", fileUpload.name()))
+                                        .map(id -> output.put(fileUpload.name(), id).put("link", link));
+                  })
+                  .toList()
+                  .subscribe(ignored -> ctx.response()
+                                           .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                           .setStatusCode(HttpResponseStatus.CREATED.code())
+                                           .end(output.encodePrettily()), throwable -> ctx.response()
+                                                                                          .setStatusCode(
+                                                                                              HttpResponseStatus.INTERNAL_SERVER_ERROR
+                                                                                                  .code())
+                                                                                          .end(throwable.getMessage()));
     }
 
     private void handleGetMediaFile(RoutingContext ctx) {
@@ -331,7 +283,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                    .map(mediaRecord -> {
                        JsonObject record = new JsonObject();
                        if (mediaRecord != null) {
-                           record.put("absolute_path", ResourceUtils.buildAbsolutePath(ctx.request().host(), mediaRoot,
+                           record.put("absolute_path", ResourceUtils.buildAbsolutePath(ctx.request().host(), mediaPath,
                                                                                        mediaRecord.getString("name")));
                        }
                        return record;
@@ -446,7 +398,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
     private void setAuthenticUser(RoutingContext ctx, String authorization) {
         loginAuth.introspectToken(authorization, res -> {
             if (res.succeeded()) {
-                System.out.println("Auth Success");
+                logger.info("Auth Success");
                 AccessToken token = res.result();
 
                 String username = token.principal().getString("username");
@@ -459,7 +411,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                     ctx.next();
                 }, throwable -> HttpHelper.serviceUnavailable(ctx, throwable));
             } else {
-                System.out.println("Auth Fail");
+                logger.info("Auth Fail");
                 res.cause().printStackTrace();
                 HttpHelper.failAuthentication(ctx);
             }
@@ -507,7 +459,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         String authorization = ctx.request().getDelegate().getHeader(HttpHeaders.AUTHORIZATION);
         if (authorization != null) {
             authorization = authorization.substring("Bearer ".length());
-            System.out.println(authorization);
+            logger.info(authorization);
             setAuthenticUser(ctx, authorization);
         } else {
             // Web pages WebSocket authentication
