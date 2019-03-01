@@ -18,7 +18,10 @@ public final class TimestampZConverter implements Converter<Timestamp, Instant> 
 
     @Override
     public Timestamp to(Instant userObject) {
-        return Objects.isNull(userObject) ? null : new Timestamp(userObject.getEpochSecond());
+        if (Objects.isNull(userObject)) {
+            return null;
+        }
+        return Timestamp.from(userObject);
     }
 
     @Override

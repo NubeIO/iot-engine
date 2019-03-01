@@ -1,5 +1,11 @@
 package com.nubeiot.core.sql;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
+
 import org.jooq.Configuration;
 
 import io.reactivex.Single;
@@ -76,6 +82,51 @@ public class MockManyEntityHandler extends EntityHandler {
         @Override
         public Single<EventMessage> migrate() {
             return Single.just(EventMessage.error(EventAction.MIGRATE, new DatabaseException("Migrate error")));
+        }
+
+    }
+
+
+    public static class MockManyInsertData extends MockManyEntityHandler {
+
+        public MockManyInsertData(Configuration jooqConfig, Vertx vertx) {
+            super(jooqConfig, vertx);
+        }
+
+        @Override
+        public Single<EventMessage> initData() {
+            Single<Integer> insert00 = getSample01Dao().insert(new TblSample_01().setId(1)
+                                                                                 .setFDate_1(LocalDate.of(2018, 1, 1))
+                                                                                 .setFTimestamp(
+                                                                                     LocalDateTime.of(2018, 1, 1, 10,
+                                                                                                      15, 00))
+                                                                                 .setFTimestampz(
+                                                                                     LocalDateTime.of(2018, 1, 1, 10,
+                                                                                                      15, 00))
+                                                                                 .setFTime(LocalTime.of(10, 15, 00))
+                                                                                 .setFDuration(Duration.ofHours(2)
+                                                                                                       .plusMinutes(2)
+                                                                                                       .plusSeconds(2))
+                                                                                 .setFPeriod(Period.ofYears(1)
+                                                                                                   .plusMonths(2)
+                                                                                                   .plusDays(3)));
+            Single<Integer> insert01 = getSample01Dao().insert(new TblSample_01().setId(2)
+                                                                                 .setFDate_1(LocalDate.of(2018, 1, 1))
+                                                                                 .setFTimestamp(
+                                                                                     LocalDateTime.of(2018, 1, 1, 10,
+                                                                                                      15, 00))
+                                                                                 .setFTimestampz(
+                                                                                     LocalDateTime.of(2018, 1, 1, 10,
+                                                                                                      15, 00))
+                                                                                 .setFTime(LocalTime.of(10, 15, 00))
+                                                                                 .setFDuration(Duration.ofHours(2)
+                                                                                                       .plusMinutes(2)
+                                                                                                       .plusSeconds(2))
+                                                                                 .setFPeriod(Period.ofYears(1)
+                                                                                                   .plusMonths(2)
+                                                                                                   .plusDays(3)));
+            return Single.zip(insert00, insert01, (r1, r2) -> r1 + r2)
+                         .map(r -> EventMessage.success(EventAction.INIT, new JsonObject().put("records", r)));
         }
 
     }

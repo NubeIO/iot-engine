@@ -1,7 +1,5 @@
 package com.nubeiot.core.sql;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import org.jooq.Table;
@@ -71,23 +69,19 @@ public class H2MemTest extends BaseSqlTest {
                                                         .setFBool(false)
                                                         .setFStr("hola")
                                                         .setFValue(new JsonObject().put("key", "spanish"))).toJson();
-        List<String> excludes = Collections.singletonList(ManySchema.TBL_SAMPLE_00.F_DATE.getName().toLowerCase());
+
         MockManyEntityHandler entityHandler = startSQL(context, ManySchema.CATALOG, MockManyEntityHandler.class);
         Async async = context.async(4);
-        fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_00, e0, excludes);
-        fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_01, e1, excludes);
+        fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_00, e0);
+        fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_01, e1);
         async.awaitSuccess();
     }
 
     private void fetch(TestContext context, Async async, JDBCRXGenericQueryExecutor queryExecutor,
-                       Table<? extends VertxPojo> table, JsonObject expected, List<String> excludes) {
+                       Table<? extends VertxPojo> table, JsonObject expected) {
         queryExecutor.executeAny(dsl -> dsl.fetch(table)).subscribe(rs -> {
             assertSize(context, async, 1, rs);
             JsonObject record = JsonPojo.from(rs.get(0)).toJson();
-            excludes.forEach(c -> {
-                context.assertNotNull(record.getValue(c));
-                record.remove(c);
-            });
             JsonHelper.assertJson(context, async, expected, record);
         });
     }
