@@ -3,6 +3,14 @@ package com.nubeiot.edge.core.loader;
 import java.util.Arrays;
 import java.util.List;
 
+import io.reactivex.CompletableObserver;
+import io.reactivex.Single;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.core.Vertx;
+
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
@@ -11,13 +19,6 @@ import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.edge.core.PreDeploymentResult;
 
-import io.reactivex.CompletableObserver;
-import io.reactivex.Single;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.Vertx;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

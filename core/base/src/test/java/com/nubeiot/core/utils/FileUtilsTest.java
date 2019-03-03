@@ -168,4 +168,66 @@ public class FileUtilsTest {
         Assert.assertTrue(subFolder.toFile().isDirectory());
     }
 
+    @Test
+    public void test_is_child() throws IOException {
+        Path dataDir = tempFolder.newFolder().toPath().resolve("test");
+        Path subFolder = dataDir.resolve("123");
+        Assert.assertTrue(FileUtils.isChild(dataDir, subFolder));
+        Assert.assertFalse(FileUtils.isChild(subFolder, dataDir));
+        Assert.assertFalse(Paths.get("test").isAbsolute());
+        Assert.assertTrue(subFolder.isAbsolute());
+        final Path path = Paths.get(tempFolder.newFolder().toPath().toString(), "ab:cd");
+        System.out.println(path.toFile().mkdirs());
+    }
+
+    @Test
+    public void test_normalize_fileName() {
+        Assert.assertEquals("a_b_c_d_e_f_g_h_i_j", FileUtils.normalize("a\\b:c_d**e\"f<g>h|i__j"));
+        Assert.assertEquals("a_b_c/d_e_f_g_h_i_j", FileUtils.normalize("a\\b:c/d**e\"f<g>h|i__j"));
+    }
+
+    @Test
+    public void test_recompute_datadir_1() {
+        Assert.assertEquals(FileUtils.DEFAULT_DATADIR.resolve("test"),
+                            FileUtils.recomputeDataDir(FileUtils.DEFAULT_DATADIR, "test"));
+    }
+
+    @Test
+    public void test_recompute_datadir_2() {
+        Path path = FileUtils.recomputeDataDir(Paths.get("/data"),
+                                               FileUtils.DEFAULT_DATADIR.resolve("test").toString());
+        Assert.assertEquals("/data/test", path.toString());
+    }
+
+    @Test
+    public void test_recompute_datadir_3() {
+        Path path = FileUtils.recomputeDataDir(Paths.get("/data"),
+                                               FileUtils.DEFAULT_DATADIR.resolve("test/xyz").toString());
+        Assert.assertEquals("/data/test/xyz", path.toString());
+    }
+
+    @Test
+    public void test_recompute_datadir_4() {
+        Path path = FileUtils.recomputeDataDir(Paths.get("/data"), "test");
+        Assert.assertEquals("/data/test", path.toString());
+    }
+
+    @Test
+    public void test_recompute_datadir_5() {
+        Path path = FileUtils.recomputeDataDir(Paths.get("/data"), "/data/test");
+        Assert.assertEquals("/data/test", path.toString());
+    }
+
+    @Test
+    public void test_recompute_datadir_6() {
+        Path path = FileUtils.recomputeDataDir(Paths.get("/data"), "/home/test");
+        Assert.assertEquals("/home/test", path.toString());
+    }
+
+    @Test
+    public void test_recompute_datadir_7() {
+        Path path = FileUtils.recomputeDataDir(FileUtils.DEFAULT_DATADIR.resolve("test"), "/home/test");
+        Assert.assertEquals("/home/test", path.toString());
+    }
+
 }

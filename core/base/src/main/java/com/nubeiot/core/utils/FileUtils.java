@@ -30,6 +30,7 @@ import com.nubeiot.core.exceptions.NubeException;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 /**
  * File Utilities.
@@ -101,10 +102,10 @@ public final class FileUtils {
         if (fileInWorkingDir.toFile().exists()) {
             return fileInWorkingDir;
         }
-        logger.warn("Not found in working dir. Try to get file {} in classloader", classpathFile);
+        logger.debug("Not found in working dir. Try to get file {} in classloader", classpathFile);
         final URL resource = FileUtils.class.getClassLoader().getResource(Strings.requireNotBlank(classpathFile));
         if (Objects.isNull(resource)) {
-            logger.warn("File not found {}", classpathFile);
+            logger.debug("File not found {}", classpathFile);
             throw new NubeException("File not found " + classpathFile);
         }
         try {
@@ -128,7 +129,7 @@ public final class FileUtils {
         try {
             return Paths.get(URI.create(filePath));
         } catch (IllegalArgumentException | FileSystemNotFoundException | SecurityException ex) {
-            logger.warn(ex, "Invalid parse URI: {0}. Try to parse plain text", strPath);
+            logger.debug("Invalid parse URI: {}. Try to parse plain text", ex, strPath);
             try {
                 return Paths.get(strPath);
             } catch (InvalidPathException ex1) {
@@ -261,6 +262,46 @@ public final class FileUtils {
             return path.isAbsolute() ? path : DEFAULT_DATADIR.resolve(dir);
         }
         return DEFAULT_DATADIR;
+    }
+
+    public static boolean isChild(@NonNull Path parent, @NonNull Path child) {
+        return child.toAbsolutePath().startsWith(parent);
+    }
+
+    /**
+     * Escape all invalid character in file name to {@code underscore (_)}"
+     *
+     * @param fileName given file name
+     * @return normalization file name
+     */
+    public static String normalize(@NonNull String fileName) {
+        return fileName.replaceAll("[\\\\:*?\"<>|]", "_").replaceAll("_+", "_");
+    }
+
+    /**
+     * Recompute data dir
+     *
+     * @param dataDir     Given data dir
+     * @param resolvePath Current folder might in absolute or relative to
+     * @return new data dir path with normalize file name
+     * @see #normalize(String)
+     */
+    public static Path recomputeDataDir(@NonNull Path dataDir, @NonNull String resolvePath) {
+        final Path path = toPath(resolvePath);
+        if (!path.isAbsolute()) {
+            return dataDir.resolve(normalize(resolvePath));
+        }
+        if (isChild(DEFAULT_DATADIR, path)) {
+            if (DEFAULT_DATADIR.equals(dataDir)) {
+                return path;
+            }
+            String other = path.toAbsolutePath()
+                               .toString()
+                               .replaceAll(DEFAULT_DATADIR.toAbsolutePath().toString(), "")
+                               .replaceAll("^/", "");
+            return dataDir.resolve(other);
+        }
+        return path;
     }
 
 }

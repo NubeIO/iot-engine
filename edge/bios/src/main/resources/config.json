@@ -11,40 +11,49 @@
         "maxLifetime": 300000
       }
     },
-    "auto_install": true,
-    "repository": {
-      "local": "",
-      "remote": {
-        "java": {
-          "credentials": {},
-          "urls": [
-            "http://127.0.0.1:8081/repository/maven-releases/",
-            "http://127.0.0.1:8081/repository/maven-snapshots/",
-            "http://127.0.0.1:8081/repository/maven-central/"
-          ]
+    "__installer__": {
+      "auto_install": true,
+      "repository": {
+        "local": "",
+        "remote": {
+          "urls": {
+            "java": [
+              {
+                "url": "http://127.0.0.1:8081/repository/maven-releases/"
+              },
+              {
+                "url": "http://127.0.0.1:8081/repository/maven-snapshots/"
+              },
+              {
+                "url": "http://127.0.0.1:8081/repository/maven-central/"
+              }
+            ]
+          }
         }
-      }
-    },
-    "default_app": {
-      "group_id": "com.nubeiot.edge.module",
-      "artifact_id": "bios-installer",
-      "version": "1.0.0-SNAPSHOT",
-      "service_name": "bios-installer",
-      "deploy_config": {
-        "__app__": {
-          "__sql__": {
-            "dialect": "H2",
-            "__hikari__": {
-              "jdbcUrl": "jdbc:h2:file:./bios-installer",
-              "minimumIdle": 1,
-              "maximumPoolSize": 2,
-              "connectionTimeout": 30000,
-              "idleTimeout": 180000,
-              "maxLifetime": 300000
+      },
+      "builtin_app": [
+        {
+          "metadata": {
+            "group_id": "com.nubeiot.edge.module",
+            "artifact_id": "installer",
+            "version": "1.0.0-SNAPSHOT",
+            "service_name": "bios-installer"
+          },
+          "appConfig": {
+            "__sql__": {
+              "dialect": "H2",
+              "__hikari__": {
+                "jdbcUrl": "jdbc:h2:file:./bios-installer",
+                "minimumIdle": 1,
+                "maximumPoolSize": 2,
+                "connectionTimeout": 30000,
+                "idleTimeout": 180000,
+                "maxLifetime": 300000
+              }
             }
           }
         }
-      }
+      ]
     }
   }
 }

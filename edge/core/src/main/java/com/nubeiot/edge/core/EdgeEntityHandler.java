@@ -20,6 +20,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
@@ -126,17 +127,21 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<PreDeploymentResult> handlePreDeployment(ITblModule module, EventAction event) {
         logger.info("Handle entities before do deployment...");
+        InstallerConfig config = IConfig.from(sharedDataFunc.apply(EdgeVerticle.SHARED_INSTALLER_CFG),
+                                              InstallerConfig.class);
         return validateModuleState(module.getServiceId(), event).flatMap(o -> {
             if (EventAction.INIT == event || EventAction.CREATE == event) {
                 module.setState(State.NONE);
-                return markModuleInsert(new TblModule(module)).flatMap(
+                return markModuleInsert(
+                    new TblModule(module).setDeployLocation(config.getRepoConfig().getLocal())).flatMap(
                     key -> createTransaction(key.getServiceId(), event, module.toJson()).map(
                         transId -> createPreDeployResult(module, transId, event, module.getState())));
             }
             final ITblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
             final boolean isUpdated = EventAction.UPDATE == event;
             if (isUpdated || EventAction.HALT == event) {
-                return markModuleModify(module, new TblModule(oldOne), isUpdated).flatMap(
+                return markModuleModify(module.setDeployLocation(config.getRepoConfig().getLocal()),
+                                        new TblModule(oldOne), isUpdated).flatMap(
                     key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
                         transId -> createPreDeployResult(key, transId, event, oldOne.getState())));
             }
@@ -158,6 +163,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                   .serviceId(module.getServiceId())
                                   .deployId(module.getDeployId())
                                   .deployCfg(module.getDeployConfig())
+                                  .dataDir((String) this.getSharedDataFunc().apply(EdgeVerticle.SHARED_DATA_DIR))
                                   .build();
     }
 
