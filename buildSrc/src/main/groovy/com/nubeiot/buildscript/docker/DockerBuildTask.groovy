@@ -78,7 +78,7 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
         buildDir.set(project.distsDir)
         out.set(project.rootProject.buildDir.toPath().resolve("docker.txt").toFile())
         javaVersion.set("8u201")
-        jvmOptions.set("-Xms1g -Xmx1g")
+        jvmOptions.set("")
         javaProps.set("")
         vcsBranch.set("")
     }
