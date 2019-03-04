@@ -101,7 +101,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         EventController controller = (EventController) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
         ReplyEventHandler reply = new ReplyEventHandler("VERTX-DEPLOY", deploymentEvent().getAddress(), action,
                                                         r -> succeedPostDeployment(serviceId, transactionId, action,
-                                                                                   r.getData().getString("deploy_id")),
+                                                                                   r.getData().getString("deploy_id"),
+                                                                                   preDeployResult.getTargetState()),
                                                         e -> errorPostDeployment(serviceId, transactionId, action, e));
         controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply);
     }
@@ -129,37 +130,44 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         logger.info("Handle entities before do deployment...");
         InstallerConfig config = IConfig.from(sharedDataFunc.apply(EdgeVerticle.SHARED_INSTALLER_CFG),
                                               InstallerConfig.class);
-        return validateModuleState(module.getServiceId(), event).flatMap(o -> {
+        return validateModuleState(module, event).flatMap(o -> {
             if (EventAction.INIT == event || EventAction.CREATE == event) {
                 module.setState(State.NONE);
                 return markModuleInsert(
                     new TblModule(module).setDeployLocation(config.getRepoConfig().getLocal())).flatMap(
                     key -> createTransaction(key.getServiceId(), event, module.toJson()).map(
-                        transId -> createPreDeployResult(module, transId, event, module.getState())));
+                        transId -> createPreDeployResult(module, transId, event, module.getState(), State.ENABLED)));
             }
-            final ITblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
-            final boolean isUpdated = EventAction.UPDATE == event;
-            if (isUpdated || EventAction.HALT == event) {
+
+            ITblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
+            if (Objects.isNull(module.getState())) {
+                //re-use previous state
+                module.setState(oldOne.getState());
+            }
+
+            boolean isUpdated = EventAction.UPDATE == event;
+            if (isUpdated || EventAction.PATCH == event) {
                 return markModuleModify(module.setDeployLocation(config.getRepoConfig().getLocal()),
                                         new TblModule(oldOne), isUpdated).flatMap(
                     key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
-                        transId -> createPreDeployResult(key, transId, event, oldOne.getState())));
+                        transId -> createPreDeployResult(key, transId, event, oldOne.getState(), module.getState())));
             }
             if (EventAction.REMOVE == event) {
                 return markModuleDelete(new TblModule(oldOne)).flatMap(
                     key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
-                        transId -> createPreDeployResult(key, transId, event, oldOne.getState())));
+                        transId -> createPreDeployResult(key, transId, event, oldOne.getState(), module.getState())));
             }
             throw new UnsupportedOperationException("Unsupported event " + event);
         });
     }
 
     private PreDeploymentResult createPreDeployResult(ITblModule module, String transactionId, EventAction event,
-                                                      State prevState) {
+                                                      State prevState, State targetState) {
         return PreDeploymentResult.builder()
                                   .transactionId(transactionId)
                                   .action(event)
                                   .prevState(prevState)
+                                  .targetState(targetState)
                                   .serviceId(module.getServiceId())
                                   .deployId(module.getDeployId())
                                   .deployCfg(module.getDeployConfig())
@@ -167,16 +175,18 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                   .build();
     }
 
-    private Single<Optional<ITblModule>> validateModuleState(String serviceId, EventAction eventAction) {
-        logger.info("Validate {}::::{} ...", serviceId, eventAction);
-        return moduleDao.findOneById(serviceId).map(o -> validateModuleState(o.orElse(null), eventAction));
+    private Single<Optional<ITblModule>> validateModuleState(ITblModule tblModule, EventAction eventAction) {
+        logger.info("Validate {}::::{} ...", tblModule.getServiceId(), eventAction);
+        return moduleDao.findOneById(tblModule.getServiceId())
+                        .map(o -> validateModuleState(o.orElse(null), eventAction, tblModule.getState()));
     }
 
     //TODO: register EventBus to send message somewhere
-    private void succeedPostDeployment(String serviceId, String transId, EventAction eventAction, String deployId) {
+    private void succeedPostDeployment(String serviceId, String transId, EventAction eventAction, String deployId,
+                                       State targetState) {
         logger.info("Handle entities after success deployment...");
         final Status status = Status.SUCCESS;
-        final State state = StateMachine.instance().transition(eventAction, status);
+        final State state = StateMachine.instance().transition(eventAction, status, targetState);
         if (State.UNAVAILABLE == state) {
             logger.info("Remove module id {} and its transactions", serviceId);
             transDao.findOneById(transId)
@@ -232,9 +242,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     private Single<ITblModule> markModuleModify(ITblModule module, ITblModule oldOne, boolean isUpdated) {
-        //TODO: handleEvent merge data
         logger.debug("Mark service {} to modify...", module.getServiceId());
-        ITblModule into = isUpdated ? module.into(oldOne) : oldOne.into(module);
+        ITblModule into = isUpdated ? module.into(oldOne) : oldOne.setState(module.getState());
         return moduleDao.update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
                         .map(ignore -> oldOne);
     }
@@ -245,12 +254,15 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                         .map(ignore -> module);
     }
 
-    private Optional<ITblModule> validateModuleState(ITblModule findModule, EventAction eventAction) {
+    private Optional<ITblModule> validateModuleState(ITblModule findModule, EventAction eventAction,
+                                                     State targetState) {
         logger.info("StateMachine is validating...");
         StateMachine.instance().validate(findModule, eventAction, "service");
         if (Objects.nonNull(findModule)) {
+            logger.info("Module in database is found, validate conflict ");
             StateMachine.instance()
-                        .validateConflict(findModule.getState(), eventAction, "service " + findModule.getServiceId());
+                        .validateConflict(findModule.getState(), eventAction, "service " + findModule.getServiceId(),
+                                          targetState);
             return Optional.of(findModule);
         }
         return Optional.empty();

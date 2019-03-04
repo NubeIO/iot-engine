@@ -17,13 +17,63 @@ public class StateMachineTest {
     }
 
     @Test(expected = StateException.class)
-    public void test_Halt_Conflict() {
-        StateMachine.instance().validateConflict(State.DISABLED, EventAction.HALT, "module");
+    public void test_Halt_From_Disable_To_Disable() {
+        StateMachine.instance().validateConflict(State.DISABLED, EventAction.HALT, "module", State.DISABLED);
+    }
+
+    @Test(expected = StateException.class)
+    public void test_Halt_From_Enable_To_Enable() {
+        StateMachine.instance().validateConflict(State.ENABLED, EventAction.HALT, "module", State.ENABLED);
+    }
+
+    @Test(expected = StateException.class)
+    public void test_Halt_From_Disable_To_Enable() {
+        StateMachine.instance().validateConflict(State.DISABLED, EventAction.HALT, "module", State.ENABLED);
     }
 
     @Test
-    public void test_Halt_From_StateEnable() {
-        StateMachine.instance().validateConflict(State.ENABLED, EventAction.HALT, "module");
+    public void test_Halt_From_Enable_To_Disable_State() {
+        StateMachine.instance().validateConflict(State.ENABLED, EventAction.HALT, "module", State.DISABLED);
+    }
+
+    @Test
+    public void test_Patch_From_Enable_To_Enable() {
+        StateMachine.instance().validateConflict(State.ENABLED, EventAction.PATCH, "module", State.ENABLED);
+    }
+
+    @Test
+    public void test_Patch_From_Disable_To_Enable() {
+        StateMachine.instance().validateConflict(State.DISABLED, EventAction.PATCH, "module", State.ENABLED);
+    }
+
+    @Test
+    public void test_Patch_From_Disable_To_Disable() {
+        StateMachine.instance().validateConflict(State.DISABLED, EventAction.PATCH, "module", State.DISABLED);
+    }
+
+    @Test
+    public void test_Patch_From_Enable_To_Disable() {
+        StateMachine.instance().validateConflict(State.ENABLED, EventAction.PATCH, "module", State.DISABLED);
+    }
+
+    @Test
+    public void test_Update_From_Enable_To_Enable() {
+        StateMachine.instance().validateConflict(State.ENABLED, EventAction.UPDATE, "module", State.ENABLED);
+    }
+
+    @Test
+    public void test_Update_From_Disable_To_Enable() {
+        StateMachine.instance().validateConflict(State.DISABLED, EventAction.UPDATE, "module", State.ENABLED);
+    }
+
+    @Test
+    public void test_Update_From_Disable_To_Disable() {
+        StateMachine.instance().validateConflict(State.DISABLED, EventAction.UPDATE, "module", State.DISABLED);
+    }
+
+    @Test
+    public void test_Update_From_Enable_To_Disable() {
+        StateMachine.instance().validateConflict(State.ENABLED, EventAction.UPDATE, "module", State.DISABLED);
     }
 
     @Test

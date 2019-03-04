@@ -22,7 +22,7 @@ public class PreDeploymentResultTest {
         PreDeploymentResult preResult = PreDeploymentResult.builder()
                                                            .transactionId("1")
                                                            .action(EventAction.REMOVE)
-                                                           .prevState(State.ENABLED)
+                                                           .prevState(State.ENABLED).targetState(State.ENABLED)
                                                            .serviceId("serviceId")
                                                            .deployId("deployId")
                                                            .deployCfg(JsonObject.mapFrom(
@@ -31,9 +31,10 @@ public class PreDeploymentResultTest {
         NubeConfig deployCfg = preResult.getDeployCfg();
         JsonObject preResultJson = preResult.toJson();
         preResultJson.remove("deploy_cfg");
-        JSONAssert.assertEquals("{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\"," +
-                                "\"service_id\":\"serviceId\",\"deploy_id\":\"deployId\",\"silent\":false}",
-                                preResultJson.encode(), JSONCompareMode.STRICT);
+        JSONAssert.assertEquals(
+            "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
+            "\"service_id\":\"serviceId\",\"deploy_id\":\"deployId\",\"silent\":false}", preResultJson.encode(),
+            JSONCompareMode.STRICT);
         Assert.assertNotNull(deployCfg);
         Assert.assertNull(deployCfg.getSystemConfig());
         Assert.assertNotNull(deployCfg.getDataDir());
@@ -48,16 +49,16 @@ public class PreDeploymentResultTest {
         PreDeploymentResult preResult = PreDeploymentResult.builder()
                                                            .transactionId("1")
                                                            .action(EventAction.REMOVE)
-                                                           .prevState(State.ENABLED)
+                                                           .prevState(State.ENABLED).targetState(State.ENABLED)
                                                            .serviceId("serviceId")
                                                            .build();
         JsonObject preResultJson = preResult.toJson();
         preResultJson.remove("deploy_cfg");
         NubeConfig deployCfg = preResult.getDeployCfg();
         System.out.println(deployCfg.toJson());
-        JSONAssert.assertEquals("{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\"," +
-                                "\"service_id\":\"serviceId\",\"silent\":false}", preResultJson.encode(),
-                                JSONCompareMode.STRICT);
+        JSONAssert.assertEquals(
+            "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
+            "\"service_id\":\"serviceId\",\"silent\":false}", preResultJson.encode(), JSONCompareMode.STRICT);
         Assert.assertNotNull(deployCfg);
         Assert.assertNotNull(deployCfg.getAppConfig());
         Assert.assertTrue(deployCfg.getAppConfig().isEmpty());
@@ -70,7 +71,7 @@ public class PreDeploymentResultTest {
         JsonObject jsonObject = PreDeploymentResult.builder()
                                                    .transactionId("1")
                                                    .action(EventAction.REMOVE)
-                                                   .prevState(State.ENABLED)
+                                                   .prevState(State.ENABLED).targetState(State.ENABLED)
                                                    .serviceId("serviceId")
                                                    .deployId("deployId")
                                                    .deployCfg(
@@ -85,6 +86,7 @@ public class PreDeploymentResultTest {
         Assert.assertEquals("deployId", preResult.getDeployId());
         Assert.assertEquals(EventAction.REMOVE, preResult.getAction());
         Assert.assertEquals(State.ENABLED, preResult.getPrevState());
+        Assert.assertEquals(State.ENABLED, preResult.getTargetState());
         Assert.assertEquals("{\"testAbc\":\"ab\"}", preResult.getDeployCfg().getAppConfig().toJson().encode());
     }
 

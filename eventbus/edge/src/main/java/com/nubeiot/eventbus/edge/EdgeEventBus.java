@@ -40,7 +40,7 @@ public final class EdgeEventBus {
                                                               .pattern(EventPattern.REQUEST_RESPONSE)
                                                               .events(
                                                                   Arrays.asList(EventAction.UPDATE, EventAction.GET_ONE,
-                                                                                EventAction.GET_LIST,
+                                                                                EventAction.GET_LIST, EventAction.PATCH,
                                                                                 EventAction.UPDATE))
                                                               .build();
     public static final EventModel BIOS_TRANSACTION = EventModel.builder()

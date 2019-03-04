@@ -10,5 +10,5 @@ Go through [Dev-SQL](https://github.com/NubeIO/iot-engine/wiki/Dev-%7C-SQL)
 
 ## Current limitations
 
-- Timestamp with timezone (timestamptz) data type is not supported.
-- Function CURRENT_TIMESTAMP doesn't work with postgres.
+- Timestamp with timezone (`timestamptz`) data type is not supported.
+- Function `CURRENT_TIMESTAMP` doesn't work with `PostgreSQL`.
