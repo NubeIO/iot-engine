@@ -11,13 +11,14 @@ public class DriverEventModels {
     public static final EventModel POINTS = EventModel.builder()
                                                       .address("nubeiot.edge.connector.driverapi.points")
                                                       .pattern(EventPattern.REQUEST_RESPONSE)
-                                                      .events(Arrays.asList(EventAction.GET_LIST))
+                                                      .events(Arrays.asList(EventAction.GET_LIST)).local(true)
                                                       .build();
 
     public static final EventModel ENDPOINTS = EventModel.builder()
                                                          .address("nubeiot.edge.connector.driverapi.endpoints")
                                                          .pattern(EventPattern.REQUEST_RESPONSE)
                                                          .events(Arrays.asList(EventAction.CREATE, EventAction.REMOVE))
+                                                         .local(true)
                                                          .build();
 
     private static final EventModel[] httpEventModels = {POINTS};
