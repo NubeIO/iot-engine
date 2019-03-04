@@ -32,9 +32,6 @@ public class JniUnit extends UnitVerticle<JniConfig, UnitContext> {
     }
 
     private void loadLib(JniConfig config) {
-        // Runtime load native lib
-        // For example when `config.getLib() = Example` then it will search for:
-        // `Example.dll` in Windows, libExample.so in Unix, and libExample.dylib in Mac machine
         String filename = config.getLibDir() + "/" + getDynamicLib(config.getLib());
         try {
             System.load(filename);
@@ -43,6 +40,10 @@ public class JniUnit extends UnitVerticle<JniConfig, UnitContext> {
         }
     }
 
+    /**
+     * @param library For example when library is {@code Example}
+     * @return {@code Example.dll} for Windows, {@code libExample.so} for Linux and {@code libExample.dylib} for Mac
+     */
     private String getDynamicLib(String library) {
         String osName = System.getProperty("os.name").toLowerCase();
         String prefix;
