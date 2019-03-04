@@ -1,7 +1,5 @@
 package com.nubeiot.edge.connector.driverapi;
 
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.HttpServerProvider;
@@ -18,7 +16,6 @@ public class DriverVerticle extends ContainerVerticle {
     public void start() {
         super.start();
 
-        final NubeConfig nubeConfig = IConfig.from(config(), NubeConfig.class);
         logger.info("DriverAPI configuration: {}", this.nubeConfig.getAppConfig().toJson());
 
         this.endpointsMapper = new EndpointsMapper();
