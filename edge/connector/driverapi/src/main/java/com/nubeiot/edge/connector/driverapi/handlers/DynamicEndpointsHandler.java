@@ -12,6 +12,7 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.edge.connector.driverapi.EndpointsMapper;
 import com.nubeiot.edge.connector.driverapi.models.DriverEventModels;
 
@@ -33,36 +34,35 @@ public class DynamicEndpointsHandler implements EventHandler {
     }
 
     @EventContractor(action = EventAction.CREATE, returnType = JsonObject.class)
-    public JsonObject addEndpoint(EventMessage message) {
+    public EventMessage addEndpoint(JsonObject data) {
 
         System.out.println("\n\n\n\n\n\n\n");
         System.out.println("REQUEST RECIEVED TO ADD ENDPOINT");
         System.out.println("\n\n\n\n\n\n\n");
 
-        JsonObject data = message.getData();
         EventModel eventModel = DriverEventModels.getModel(data.getString("endpoint"));
         EventAction eventAction = EventAction.valueOf(data.getString("action"));
         String driver = data.getString("driver");
         String handlerAddress = data.getString("handlerAddress");
-        //
-        //        JsonObject errorMsg = checkMessage(eventModel, eventAction, driver, handlerAddress);
-        //        if (errorMsg != null) {
-        //            return errorMsg;
-        //        }
 
-        //        if (endpointsMapper.addEndpointHandler(eventModel, eventAction, driver, handlerAddress)) {
-            return getSuccess("Endpoint successfully added");
-        //        } else {
-        //            return getError("Error adding endpoint");
-        //        }
+        JsonObject errorMsg = checkMessage(eventModel, eventAction, driver, handlerAddress);
+        if (errorMsg != null) {
+            return EventMessage.error(EventAction.RETURN, ErrorCode.UNKNOWN_ERROR, "REQUEST ERROR");
+        }
+
+        if (endpointsMapper.addEndpointHandler(eventModel, eventAction, driver, handlerAddress)) {
+            return EventMessage.success(EventAction.RETURN, getSuccess("Endpoint successfully added"));
+        } else {
+            return EventMessage.error(EventAction.RETURN, ErrorCode.UNKNOWN_ERROR, "ERROR ADDING ENDPOINT");
+        }
 
         //TODO: try catch with replies
     }
 
-    @EventContractor(action = EventAction.REMOVE, returnType = JsonObject.class)
-    public JsonObject removeEndpoint(EventMessage message) {
 
-        JsonObject data = message.getData();
+    @EventContractor(action = EventAction.REMOVE, returnType = JsonObject.class)
+    public EventMessage removeEndpoint(JsonObject data) {
+
         EventModel eventModel = DriverEventModels.getModel(data.getString("endpoint"));
         EventAction eventAction = EventAction.valueOf(data.getString("action")); //TODO: check what this returns
         String driver = data.getString("driver");
@@ -70,13 +70,13 @@ public class DynamicEndpointsHandler implements EventHandler {
 
         JsonObject errorMsg = checkMessage(eventModel, eventAction, driver, handlerAddress);
         if (errorMsg != null) {
-            return errorMsg;
+            return EventMessage.error(EventAction.RETURN, ErrorCode.UNKNOWN_ERROR, "REQUEST ERROR");
         }
 
         if (endpointsMapper.removeEndpointHandler(eventModel, eventAction, driver, handlerAddress)) {
-            return getSuccess("Endpoint successfully removed");
+            return EventMessage.success(EventAction.RETURN, getSuccess("Endpoint successfully removed"));
         } else {
-            return getError("Error removing endpoint");
+            return EventMessage.error(EventAction.RETURN, ErrorCode.UNKNOWN_ERROR, "ERROR REMOVING ENDPOINT");
         }
     }
 

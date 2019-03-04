@@ -2,7 +2,7 @@
   "__system__": {
     "__eventBus__": {
       "ssl": true,
-      "clustered": true,
+      "clustered": false,
       "keyStoreOptions": {
         "path": "eventBusKeystore.jks",
         "password": "nubesparkEventBus"
@@ -11,6 +11,9 @@
         "path": "eventBusKeystore.jks",
         "password": "nubesparkEventBus"
       }
+    },
+    "__cluster__": {
+      "active": false
     }
   },
   "__app__": {

@@ -11,7 +11,8 @@ public class DriverEventModels {
     public static final EventModel POINTS = EventModel.builder()
                                                       .address("nubeiot.edge.connector.driverapi.points")
                                                       .pattern(EventPattern.REQUEST_RESPONSE)
-                                                      .events(Arrays.asList(EventAction.GET_LIST)).local(true)
+                                                      .events(Arrays.asList(EventAction.GET_LIST))
+                                                      .local(true)
                                                       .build();
 
     public static final EventModel ENDPOINTS = EventModel.builder()
