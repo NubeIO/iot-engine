@@ -16,36 +16,28 @@ import com.nubeiot.edge.connector.bacnet.handlers.DeviceEventHandler;
 /*
  * Main BACnet verticle
  */
-
-public class BACnetVerticle extends ContainerVerticle{
+public class BACnetVerticle extends ContainerVerticle {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     BACnet bacnetInstance;
 
+    public void start() {
+        super.start();
+        logger.info("BACNet configuration: {}", this.nubeConfig.getAppConfig().toJson());
+        registerEventbus(new EventController(vertx));
+    }
+
     @Override
     public void start(Future<Void> future) {
-        super.start();
-
         try {
-            logger.info("BACnet configuration: {}", this.nubeConfig.getAppConfig().toJson());
-            String deviceName = this.nubeConfig.getAppConfig().toJson().getString("deviceName");
-            int deviceID = this.nubeConfig.getAppConfig().toJson().getInteger("deviceID");
-
-            registerEventbus(new EventController(vertx));
-            //TODO: get all local points and init BACnet object
-
-            bacnetInstance = new BACnet(Constants.DeviceName, deviceID, future, eventController);
-            //TODO: send event bus endpoints
-
+            bacnetInstance = new BACnet(Constants.DeviceName,
+                                        this.nubeConfig.getAppConfig().toJson().getInteger("deviceID"), future,
+                                        eventController);
             sendAPIEndpoints();
-
             future.complete();
         } catch (Exception ex) {
             future.fail(ex);
         }
-
-
-
     }
 
     @Override
