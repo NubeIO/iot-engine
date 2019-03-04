@@ -1,7 +1,5 @@
 package com.nubeiot.core.jni;
 
-import java.lang.reflect.Field;
-
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.utils.Strings;
@@ -33,30 +31,32 @@ public class JniUnit extends UnitVerticle<JniConfig, JniContext> {
     }
 
     private void loadLib(JniConfig config) {
-
-        try {
-            this.setLibraryPath(config.getLibDir());
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new InitializerError(e.getMessage());
-        }
         // Runtime load native lib
         // For example when `config.getLib() = Example` then it will search for:
         // `Example.dll` in Windows, libExample.so in Unix, and libExample.dylib in Mac machine
+        String filename = config.getLibDir() + "/" + getDynamicLib(config.getLib());
         try {
-            System.loadLibrary(config.getLib());
+            System.load(filename);
         } catch (UnsatisfiedLinkError e) {
-            throw new InitializerError(
-                Strings.format("Library `{0}` does not seems to be in folder `{1}`", config.getLib(),
-                               config.getLibDir()));
+            throw new InitializerError(Strings.format("It seems like, we do not have file `{0}`", filename));
         }
     }
 
-    private void setLibraryPath(String path) throws NoSuchFieldException, IllegalAccessException {
-        System.setProperty("java.library.path", path);
-        // Set sys_paths to null so that java.library.path will be reevaluated next time it is needed
-        final Field sysPathsField = ClassLoader.class.getDeclaredField("sys_paths");
-        sysPathsField.setAccessible(true);
-        sysPathsField.set(null, null);
+    private String getDynamicLib(String library) {
+        String osName = System.getProperty("os.name").toLowerCase();
+        String prefix;
+        String postfix;
+        if (osName.startsWith("linux")) {
+            prefix = "lib";
+            postfix = "so";
+        } else if (osName.startsWith("mac os x")) {
+            prefix = "lib";
+            postfix = "dylib";
+        } else {
+            prefix = "";
+            postfix = "dll";
+        }
+        return prefix + library + "." + postfix;
     }
 
 }
