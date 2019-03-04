@@ -4,9 +4,9 @@ import java.util.UUID;
 
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.kafka.KafkaContext;
 import com.nubeiot.core.kafka.KafkaEventMetadata;
 import com.nubeiot.core.kafka.KafkaRouter;
-import com.nubeiot.core.kafka.KafkaUnit;
 import com.nubeiot.core.kafka.KafkaUnitProvider;
 import com.nubeiot.core.kafka.service.KafkaProducerService;
 
@@ -25,9 +25,9 @@ public final class EdgeKafkaDemo extends ContainerVerticle {
             KafkaEventMetadata.producer().topic(TOPIC).keyClass(String.class).valueClass(UUID.class).build());
     }
 
-    private void startProducer(KafkaUnit kafkaUnit) {
+    private void startProducer(KafkaContext context) {
         logger.info("Starting Producer Service...");
-        KafkaProducerService producerService = kafkaUnit.getProducerService();
+        KafkaProducerService producerService = context.getProducerService();
         vertx.setPeriodic(3000, id -> {
             logger.info("Sending data...");
             producerService.publish(EventAction.CREATE, TOPIC, 0, this.deploymentID(), UUID.randomUUID());

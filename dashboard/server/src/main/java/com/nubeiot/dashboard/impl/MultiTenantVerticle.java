@@ -22,14 +22,15 @@ import com.nubeiot.core.common.utils.HttpException;
 import com.nubeiot.core.common.utils.JSONUtils;
 import com.nubeiot.core.common.utils.SQLUtils;
 import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
+import com.nubeiot.dashboard.helpers.CustomMessageHelper;
 import com.nubeiot.dashboard.impl.models.Company;
 import com.nubeiot.dashboard.impl.models.KeycloakUserRepresentation;
 import com.nubeiot.dashboard.impl.models.MongoUser;
 import com.nubeiot.dashboard.impl.models.Site;
 import com.nubeiot.dashboard.impl.models.UserGroup;
 import com.nubeiot.dashboard.utils.DittoUtils;
-import com.nubeiot.dashboard.utils.MultiTenantCustomMessageHelper;
 import com.nubeiot.dashboard.utils.UserUtils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -166,15 +167,15 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handlePostUser(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
-        JsonObject headers = MultiTenantCustomMessageHelper.getHeaders(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
+        JsonObject headers = CustomMessageHelper.getHeaders(message);
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-            JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
+            JsonObject body = CustomMessageHelper.getBodyAsJson(message);
             KeycloakUserRepresentation userRepresentation = new KeycloakUserRepresentation(body);
             String accessToken = user.getString("access_token");
-            JsonObject keycloakConfig = MultiTenantCustomMessageHelper.getKeycloakConfig(message);
+            JsonObject keycloakConfig = CustomMessageHelper.getKeycloakConfig(message);
             String authServerUrl = keycloakConfig.getString("auth-server-url");
             String realmName = keycloakConfig.getString("realm");
 
@@ -246,7 +247,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                 Role.GUEST.toString(), "")) {
 
                     JsonArray sitesIds = body.getJsonArray("sites_ids", new JsonArray());
-                    if (sitesIds.size() == 0 && StringUtils.isNotNull(body.getString("site_id"))) {
+                    if (sitesIds.size() == 0 && Strings.isNotBlank(body.getString("site_id"))) {
                         sitesIds = new JsonArray().add(body.getString("site_id"));
                     } else if (sitesIds.size() == 0) {
                         return UserUtils.deleteUser(keycloakUser.getString("id"), accessToken, authServerUrl, realmName,
@@ -410,7 +411,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 // 5.1 Creating user on MongoDB
                 body.put("company_id", companyId)
                     .put("associated_company_id", companyId)
-                    .put("site_id", MultiTenantCustomMessageHelper.getSiteId(user))
+                    .put("site_id", CustomMessageHelper.getSiteId(user))
                     .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""),
                                                                         StringUtils.getIds(childGroups)));
                 JsonObject mongoUser = new MongoUser(body, user, keycloakUser).toJsonObject();
@@ -444,13 +445,13 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handlePostCompany(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
 
         if (role == Role.SUPER_ADMIN) {
-            JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
+            JsonObject body = CustomMessageHelper.getBodyAsJson(message);
             String associatedCompanyId = body.getString("associated_company_id", "");
-            if (StringUtils.isNotNull(associatedCompanyId)) {
+            if (Strings.isNotBlank(associatedCompanyId)) {
                 mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
                            .flatMap(companyResponse -> {
                                if (companyResponse == null) {
@@ -466,22 +467,20 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.OK.code())),
                                       throwable -> handleHttpException(message, throwable));
             } else {
-                Company company = new Company(MultiTenantCustomMessageHelper.getBodyAsJson(message)
-                                                                            .put("associated_company_id",
-                                                                                 MultiTenantCustomMessageHelper.getCompanyId(
-                                                                                     user))
-                                                                            .put("role", Role.ADMIN.toString()));
+                Company company = new Company(CustomMessageHelper.getBodyAsJson(message)
+                                                                 .put("associated_company_id",
+                                                                      CustomMessageHelper.getCompanyId(user))
+                                                                 .put("role", Role.ADMIN.toString()));
                 mongoClient.rxSave(COMPANY, company.toJsonObject())
                            .subscribe(ignore -> message.reply(
                                new CustomMessage<>(null, new JsonObject(), HttpResponseStatus.OK.code())),
                                       throwable -> handleHttpException(message, throwable));
             }
         } else if (role == Role.ADMIN) {
-            Company company = new Company(MultiTenantCustomMessageHelper.getBodyAsJson(message)
-                                                                        .put("associated_company_id",
-                                                                             MultiTenantCustomMessageHelper.getCompanyId(
-                                                                                 user))
-                                                                        .put("role", Role.MANAGER.toString()));
+            Company company = new Company(CustomMessageHelper.getBodyAsJson(message)
+                                                             .put("associated_company_id",
+                                                                  CustomMessageHelper.getCompanyId(user))
+                                                             .put("role", Role.MANAGER.toString()));
 
             mongoClient.rxSave(COMPANY, company.toJsonObject())
                        .subscribe(ignore -> message.reply(
@@ -493,11 +492,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handlePostSite(Message<Object> message) {
-        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
-        JsonObject headers = MultiTenantCustomMessageHelper.getHeaders(message);
+        JsonObject body = CustomMessageHelper.getBodyAsJson(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
+        JsonObject headers = CustomMessageHelper.getHeaders(message);
 
         if (role == Role.SUPER_ADMIN || role == Role.ADMIN) {
             String associatedCompanyId = body.getString("associated_company_id");
@@ -583,10 +582,10 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handlePostUserGroup(Message<Object> message) {
-        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String userCompanyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject body = CustomMessageHelper.getBodyAsJson(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String userCompanyId = CustomMessageHelper.getCompanyId(user);
 
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             Single.create(source -> {
@@ -596,13 +595,13 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                             if (childSitesResponse.size() > 0) {
                                 String[] availableSites = StringUtils.getIds(childSitesResponse);
                                 String siteId = SQLUtils.getMatchValue(
-                                    MultiTenantCustomMessageHelper.getBodyAsJson(message).getString("site_id", ""),
+                                    CustomMessageHelper.getBodyAsJson(message).getString("site_id", ""),
                                     availableSites);
                                 if (siteId == null) {
                                     throw HttpHelper.badRequest("Site doesn't match up Exception!");
                                 }
                                 String associatedCompanyId = body.getString("associated_company_id", "");
-                                if (StringUtils.isNotNull(associatedCompanyId)) {
+                                if (Strings.isNotBlank(associatedCompanyId)) {
                                     return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null)
                                                       .map(response -> {
                                                           if (response != null) {
@@ -636,8 +635,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                         })).subscribe(source::onSuccess, source::onError);
                 } else {
                     source.onSuccess(new UserGroup(body.put("associated_company_id", userCompanyId)
-                                                       .put("site_id",
-                                                            MultiTenantCustomMessageHelper.getSiteId(user))));
+                                                       .put("site_id", CustomMessageHelper.getSiteId(user))));
                 }
             })
                   .flatMap(userGroup -> mongoClient.rxSave(USER_GROUP, ((UserGroup) userGroup).toJsonObject()))
@@ -650,9 +648,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleGetCompanies(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
 
         Single.just(new JsonObject()).flatMap(ignore -> {
             if (role == Role.SUPER_ADMIN) {
@@ -666,21 +664,18 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             } else {
                 throw HttpHelper.forbidden();
             }
-        }).flatMap(response -> Observable.fromIterable(response).flatMapSingle(res -> {
-            JsonObject object = new JsonObject(res.toString());
-            String associatedCompanyId = object.getString("associated_company_id");
-            return associatedCompanyRepresentation(object, associatedCompanyId);
+        }).flatMap(response -> Observable.fromIterable(response).flatMapSingle(company -> {
+            String associatedCompanyId = company.getString("associated_company_id");
+            return associatedCompanyRepresentation(company, associatedCompanyId);
         }).toList()).subscribe(response -> {
-            JsonArray array = new JsonArray();
-            response.forEach(jsonObject -> array.add(buildSiteWithAbsoluteImageUri(message, jsonObject)));
-            message.reply(new CustomMessage<>(null, array, HttpResponseStatus.OK.code()));
+            message.reply(new CustomMessage<>(null, response, HttpResponseStatus.OK.code()));
         }, throwable -> handleHttpException(message, throwable));
     }
 
     private void handleGetUsers(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
         if (role == Role.SUPER_ADMIN) {
             respondRequestWithCompanyAssociateCompanyGroupAndSiteRepresentation(message, new JsonObject().put("role",
                                                                                                               new JsonObject()
@@ -720,9 +715,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleGetSites(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
         Single.just(new JsonObject()).flatMap(ignored -> {
             if (role == Role.SUPER_ADMIN) {
                 return mongoClient.rxFind(SITE, new JsonObject().put("role", Role.MANAGER.toString()));
@@ -734,21 +729,18 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             } else {
                 throw HttpHelper.forbidden();
             }
-        }).flatMap(sites -> Observable.fromIterable(sites).flatMapSingle(res -> {
-            JsonObject object = new JsonObject(res.toString());
-            String associatedCompanyId = object.getString("associated_company_id");
-            return associatedCompanyRepresentation(object, associatedCompanyId);
-        }).toList()).subscribe(response -> {
-            JsonArray array = new JsonArray();
-            response.forEach(jsonObject -> array.add(buildSiteWithAbsoluteImageUri(message, jsonObject)));
-            message.reply(new CustomMessage<>(null, array, HttpResponseStatus.OK.code()));
+        }).flatMap(sites -> Observable.fromIterable(sites).flatMapSingle(site -> {
+            String associatedCompanyId = site.getString("associated_company_id");
+            return associatedCompanyRepresentation(site, associatedCompanyId);
+        }).toList()).subscribe(sites -> {
+            message.reply(new CustomMessage<>(null, sites, HttpResponseStatus.OK.code()));
         }, throwable -> handleHttpException(message, throwable));
     }
 
     private void handleGetUserGroups(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
         Single.just(new JsonObject())
               .flatMap(ignore -> {
                   if (role == Role.SUPER_ADMIN) {
@@ -763,14 +755,19 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                   }
               })
               .flatMap(userGroups -> Observable.fromIterable(userGroups)
-                                               .flatMapSingle(object -> mongoClient.rxFindOne(SITE, idQuery(
-                                                   object.getString("site_id")), null).flatMap(site -> {
-                                                   if (site != null) {
-                                                       object.put("site", buildSiteWithAbsoluteImageUri(message, site));
-                                                   }
-                                                   String associatedCompanyId = object.getString(
+                                               .flatMapSingle(userGroup -> mongoClient.rxFindOne(SITE, idQuery(
+                                                   userGroup.getString("site_id")), null).flatMap(site -> {
+
+                                                   String associatedCompanyId = userGroup.getString(
                                                        "associated_company_id");
-                                                   return associatedCompanyRepresentation(object, associatedCompanyId);
+                                                   return associatedCompanyRepresentation(userGroup,
+                                                                                          associatedCompanyId).map(
+                                                       ignored -> {
+                                                           if (site != null) {
+                                                               return userGroup.put("site", site);
+                                                           }
+                                                           return userGroup;
+                                                       });
                                                }))
                                                .toList())
               .subscribe(response -> {
@@ -781,13 +778,13 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleDeleteUsers(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
 
         // Model level permission; this is limited to SUPER_ADMIN, ADMIN and MANAGER
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-            JsonArray queryInput = MultiTenantCustomMessageHelper.getBodyAsJsonArray(message);
+            JsonArray queryInput = CustomMessageHelper.getBodyAsJsonArray(message);
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
 
@@ -813,10 +810,10 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
 
     private SingleSource<? extends Integer> deleteUserFromKeycloakAndMongo(Message<Object> message, Object userObject) {
         JsonObject userObjectJson = (JsonObject) (userObject);
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        String accessToken = MultiTenantCustomMessageHelper.getAccessToken(user);
-        JsonObject keycloakConfig = MultiTenantCustomMessageHelper.getKeycloakConfig(message);
-        JsonObject headers = MultiTenantCustomMessageHelper.getHeaders(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        String accessToken = CustomMessageHelper.getAccessToken(user);
+        JsonObject keycloakConfig = CustomMessageHelper.getKeycloakConfig(message);
+        JsonObject headers = CustomMessageHelper.getHeaders(message);
 
         HttpClient client = vertx.createHttpClient();
 
@@ -874,13 +871,13 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleDeleteCompanies(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
 
         // Model level permission; this is limited to SUPER_ADMIN and ADMIN
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-            JsonArray queryInput = MultiTenantCustomMessageHelper.getBodyAsJsonArray(message);
+            JsonArray queryInput = CustomMessageHelper.getBodyAsJsonArray(message);
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
             mongoClient.rxFind(COMPANY, query)
@@ -915,14 +912,14 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleDeleteSites(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
-        JsonObject headers = MultiTenantCustomMessageHelper.getHeaders(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
+        JsonObject headers = CustomMessageHelper.getHeaders(message);
 
         // Model level permission
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-            JsonArray queryInput = MultiTenantCustomMessageHelper.getBodyAsJsonArray(message);
+            JsonArray queryInput = CustomMessageHelper.getBodyAsJsonArray(message);
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
             mongoClient.rxFind(SITE, query)
@@ -953,13 +950,13 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleDeleteUserGroups(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
 
         // Model level permission
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-            JsonArray queryInput = MultiTenantCustomMessageHelper.getBodyAsJsonArray(message);
+            JsonArray queryInput = CustomMessageHelper.getBodyAsJsonArray(message);
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
             mongoClient.rxFind(USER_GROUP, query)
@@ -980,13 +977,13 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleCheckUser(Message<Object> message) {
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        JsonObject body = CustomMessageHelper.getBodyAsJson(message);
         String username = body.getString("username", "");
         String email = body.getString("email", "");
         String query = "username=" + username + "&email=" + email;
-        String accessToken = MultiTenantCustomMessageHelper.getAccessToken(user);
-        JsonObject keycloakConfig = MultiTenantCustomMessageHelper.getKeycloakConfig(message);
+        String accessToken = CustomMessageHelper.getAccessToken(user);
+        JsonObject keycloakConfig = CustomMessageHelper.getKeycloakConfig(message);
         String authServerUrl = keycloakConfig.getString("auth-server-url");
         String realmName = keycloakConfig.getString("realm");
         HttpClient client = vertx.createHttpClient();
@@ -995,9 +992,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             logger.info("Users: " + users);
             int usersSize = users.stream().filter(userObject -> {
                 JsonObject jsonUser = (JsonObject) userObject;
-                if (StringUtils.isNull(username)) {
+                if (Strings.isBlank(username)) {
                     return jsonUser.getString("email").equals(email);
-                } else if (StringUtils.isNull(email)) {
+                } else if (Strings.isBlank(email)) {
                     return jsonUser.getString("username").equals(username);
                 } else {
                     return jsonUser.getString("username").equals(username) && jsonUser.getString("email").equals(email);
@@ -1015,18 +1012,18 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleUpdatePassword(Message<Object> message) {
-        JsonObject ctxUser = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(ctxUser);
-        String userId = MultiTenantCustomMessageHelper.getParamsId(message);
-        String password = MultiTenantCustomMessageHelper.getBodyAsJson(message).getString("password", "");
-        String accessToken = MultiTenantCustomMessageHelper.getAccessToken(ctxUser);
-        JsonObject keycloakConfig = MultiTenantCustomMessageHelper.getKeycloakConfig(message);
+        JsonObject ctxUser = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(ctxUser);
+        String userId = CustomMessageHelper.getParamsId(message);
+        String password = CustomMessageHelper.getBodyAsJson(message).getString("password", "");
+        String accessToken = CustomMessageHelper.getAccessToken(ctxUser);
+        JsonObject keycloakConfig = CustomMessageHelper.getKeycloakConfig(message);
         String authServerUrl = keycloakConfig.getString("auth-server-url");
         String realmName = keycloakConfig.getString("realm");
 
         HttpClient client = vertx.createHttpClient();
 
-        if (StringUtils.isNotNull(password)) {
+        if (Strings.isNotBlank(password)) {
             mongoClient.rxFindOne(USER, idQuery(userId), null)
                        .map(response -> {
                            if (response == null) {
@@ -1062,14 +1059,14 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleUpdateUser(Message<Object> message) {
-        JsonObject ctxUser = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(ctxUser);
-        String userId = MultiTenantCustomMessageHelper.getParamsId(message);
-        String accessToken = MultiTenantCustomMessageHelper.getAccessToken(ctxUser);
-        JsonObject keycloakConfig = MultiTenantCustomMessageHelper.getKeycloakConfig(message);
+        JsonObject ctxUser = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(ctxUser);
+        String userId = CustomMessageHelper.getParamsId(message);
+        String accessToken = CustomMessageHelper.getAccessToken(ctxUser);
+        JsonObject keycloakConfig = CustomMessageHelper.getKeycloakConfig(message);
         String authServerUrl = keycloakConfig.getString("auth-server-url");
         String realmName = keycloakConfig.getString("realm");
-        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
+        JsonObject body = CustomMessageHelper.getBodyAsJson(message);
         KeycloakUserRepresentation keycloakUserRepresentation = new KeycloakUserRepresentation(body);
 
         HttpClient client = vertx.createHttpClient();
@@ -1088,22 +1085,23 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                        if (ctxUser.getString("user_id").equals(userId) || (role == Role.MANAGER) &&
                                                                           ctxUser.getString("company_id")
                                                                                  .equals(
-                                                                                     MultiTenantCustomMessageHelper.getAssociatedCompanyId(
+                                                                                     CustomMessageHelper.getAssociatedCompanyId(
                                                                                          user)) ||
                            role.toString().equals(Role.SUPER_ADMIN.toString())) {
 
                            return UserUtils.updateUser(userId, keycloakUserRepresentation, accessToken, authServerUrl,
                                                        realmName, client);
                        } else if (role == Role.ADMIN) {
-                           return byAdminCompanyGetAdminWithManagerSelectionList(
-                               MultiTenantCustomMessageHelper.getCompanyId(user)).flatMap(response -> {
-                               if (SQLUtils.inList(MultiTenantCustomMessageHelper.getCompanyId(user), response)) {
-                                   return UserUtils.updateUser(userId, keycloakUserRepresentation, accessToken,
-                                                               authServerUrl, realmName, client);
-                               } else {
-                                   throw HttpHelper.forbidden();
-                               }
-                           });
+                           return byAdminCompanyGetAdminWithManagerSelectionList(CustomMessageHelper.getCompanyId(user))
+                                      .flatMap(response -> {
+                                          if (SQLUtils.inList(CustomMessageHelper.getCompanyId(user), response)) {
+                                              return UserUtils.updateUser(userId, keycloakUserRepresentation,
+                                                                          accessToken, authServerUrl, realmName,
+                                                                          client);
+                                          } else {
+                                              throw HttpHelper.forbidden();
+                                          }
+                                      });
                        } else {
                            throw HttpHelper.forbidden();
                        }
@@ -1127,7 +1125,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                                                                                                   .toString()))));
                            } else if (role == Role.ADMIN) {
                                return byAdminCompanyGetAdminWithManagerSelectionListQuery(
-                                   MultiTenantCustomMessageHelper.getCompanyId(ctxUser)).flatMap(
+                                   CustomMessageHelper.getCompanyId(ctxUser)).flatMap(
                                    query -> updateMongoUser(ctxUser, role, body, keycloakUser, query));
                            } else {
                                // Only child <User Groups> can be added by the parent
@@ -1156,7 +1154,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     SQLUtils.in(body.getString("role", ""), Role.MANAGER.toString(), Role.USER.toString(),
                                 Role.GUEST.toString(), "")) {
                     JsonArray sitesIds = body.getJsonArray("sites_ids", new JsonArray());
-                    if (sitesIds.size() == 0 && StringUtils.isNotNull(body.getString("site_id"))) {
+                    if (sitesIds.size() == 0 && Strings.isNotBlank(body.getString("site_id"))) {
                         sitesIds = new JsonArray().add(body.getString("site_id"));
                     } else if (sitesIds.size() == 0) {
                         throw HttpHelper.badRequest("You must include site_id on the request data.");
@@ -1259,7 +1257,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             if (childGroups.size() > 0) {
                 body.put("company_id", companyId)
                     .put("associated_company_id", companyId)
-                    .put("site_id", MultiTenantCustomMessageHelper.getSiteId(ctxUser))
+                    .put("site_id", CustomMessageHelper.getSiteId(ctxUser))
                     .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""),
                                                                         StringUtils.getIds(childGroups)));
                 MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
@@ -1286,13 +1284,13 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleUpdateSite(Message<Object> message) {
-        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject body = CustomMessageHelper.getBodyAsJson(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
 
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-            String siteId = MultiTenantCustomMessageHelper.getParamsId(message);
+            String siteId = CustomMessageHelper.getParamsId(message);
             mongoClient.rxFindOne(SITE, idQuery(siteId), null)
                        .flatMap(site -> {
                            if (site != null) {
@@ -1362,14 +1360,14 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleUpdateUserGroup(Message<Object> message) {
-        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String userCompanyId = MultiTenantCustomMessageHelper.getCompanyId(user);
+        JsonObject body = CustomMessageHelper.getBodyAsJson(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String userCompanyId = CustomMessageHelper.getCompanyId(user);
 
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             Single.create(source -> {
-                String userGroupId = MultiTenantCustomMessageHelper.getParamsId(message);
+                String userGroupId = CustomMessageHelper.getParamsId(message);
                 mongoClient.rxFindOne(USER_GROUP, idQuery(userGroupId), null)
                            .map(userGroup -> {
                                if (userGroup != null) {
@@ -1472,11 +1470,10 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                                       }));
                                } else {
                                    return Single.just(new UserGroup(body.put("associated_company_id", userCompanyId)
-                                                                        .put("site_id",
-                                                                             MultiTenantCustomMessageHelper.getSiteId(
-                                                                                 user))).toJsonObject()
-                                                                                        .put("_id", userGroup.getString(
-                                                                                            "_id")));
+                                                                        .put("site_id", CustomMessageHelper.getSiteId(
+                                                                            user))).toJsonObject()
+                                                                                   .put("_id",
+                                                                                        userGroup.getString("_id")));
                                }
                            })
                            .subscribe(source::onSuccess, source::onError);
@@ -1491,12 +1488,12 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleUpdateCompany(Message<Object> message) {
-        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
+        JsonObject body = CustomMessageHelper.getBodyAsJson(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
 
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
-            String companyId = MultiTenantCustomMessageHelper.getParamsId(message);
+            String companyId = CustomMessageHelper.getParamsId(message);
             Single.create(source -> {
                 if (role == Role.SUPER_ADMIN) {
                     mongoClient.rxFindOne(COMPANY, idQuery(companyId), null).flatMap(company -> {
@@ -1531,8 +1528,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                 } else {
                     mongoClient.rxFindOne(COMPANY, idQuery(companyId), null).map(company -> {
                         if (company != null && company.getString("role").equals(Role.MANAGER.toString()) &&
-                            company.getString("associated_company_id")
-                                   .equals(MultiTenantCustomMessageHelper.getCompanyId(user))) {
+                            company.getString("associated_company_id").equals(CustomMessageHelper.getCompanyId(user))) {
 
                             return new Company(body.put("role", company.getString("role"))
                                                    .put("associated_company_id",
@@ -1554,9 +1550,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
     }
 
     private void handleChangeDefaultSite(Message<Object> message) {
-        JsonObject body = MultiTenantCustomMessageHelper.getBodyAsJson(message);
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
+        JsonObject body = CustomMessageHelper.getBodyAsJson(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
 
         if (role == Role.MANAGER) {
             String siteId = body.getString("site_id");
@@ -1576,11 +1572,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
 
     private void handlePutSite(Message<Object> message) {
         // This will call on the first time site initialization and update site
-        JsonObject user = MultiTenantCustomMessageHelper.getUser(message);
-        Role role = MultiTenantCustomMessageHelper.getRole(user);
-        String companyId = MultiTenantCustomMessageHelper.getCompanyId(user);
-        String siteId = MultiTenantCustomMessageHelper.getHeaders(message).getString("Site-Id");
-        JsonObject headers = MultiTenantCustomMessageHelper.getHeaders(message);
+        JsonObject user = CustomMessageHelper.getUser(message);
+        Role role = CustomMessageHelper.getRole(user);
+        String companyId = CustomMessageHelper.getCompanyId(user);
+        String siteId = CustomMessageHelper.getHeaders(message).getString("Site-Id");
+        JsonObject headers = CustomMessageHelper.getHeaders(message);
 
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             Single.create(source -> {
@@ -1588,9 +1584,9 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     // Create or Update by SUPER_ADMIN/ADMIN
                     JsonObject query = new JsonObject().put("associated_company_id", companyId);
                     mongoClient.rxFind(SITE, query).flatMap(respondSites -> {
-                        Site site = new Site(MultiTenantCustomMessageHelper.getBodyAsJson(message)
-                                                                           .put("associated_company_id", companyId)
-                                                                           .put("role", role.toString()));
+                        Site site = new Site(CustomMessageHelper.getBodyAsJson(message)
+                                                                .put("associated_company_id", companyId)
+                                                                .put("role", role.toString()));
                         if (respondSites.size() > 0) {
                             return mongoClient.rxSave(SITE, site.toJsonObject()
                                                                 .put("_id", respondSites.get(0).getString("_id")));
@@ -1651,12 +1647,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                     mongoClient.rxFindOne(SITE, query, null).flatMap(respondSite -> {
                         if (respondSite != null) {
                             if (respondSite.getString("associated_company_id").equals(companyId)) {
-                                Site site = new Site(MultiTenantCustomMessageHelper.getBodyAsJson(message)
-                                                                                   .put("associated_company_id",
-                                                                                        respondSite.getString(
-                                                                                            "associated_company_id"))
-                                                                                   .put("role",
-                                                                                        respondSite.getString("role")));
+                                Site site = new Site(CustomMessageHelper.getBodyAsJson(message)
+                                                                        .put("associated_company_id",
+                                                                             respondSite.getString(
+                                                                                 "associated_company_id"))
+                                                                        .put("role", respondSite.getString("role")));
                                 return mongoClient.rxSave(SITE, site.toJsonObject().put("_id", siteId));
                             } else {
                                 throw HttpHelper.forbidden();
@@ -1675,9 +1670,8 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         }
     }
 
-    private SingleSource<? extends JsonObject> associatedCompanyRepresentation(JsonObject object,
-                                                                               String associatedCompanyId) {
-        if (StringUtils.isNotNull(associatedCompanyId)) {
+    private Single<JsonObject> associatedCompanyRepresentation(JsonObject object, String associatedCompanyId) {
+        if (Strings.isNotBlank(associatedCompanyId)) {
             return mongoClient.rxFindOne(COMPANY, idQuery(associatedCompanyId), null).map(associatedCompany -> {
                 if (associatedCompany != null) {
                     return object.put("associated_company", associatedCompany);
@@ -1707,7 +1701,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                                    if (company != null) {
                                                                        object.put("company", company);
                                                                    }
-                                                                   if (StringUtils.isNotNull(
+                                                                   if (Strings.isNotBlank(
                                                                        object.getString("group_id"))) {
                                                                        return mongoClient.rxFindOne(USER_GROUP, idQuery(
                                                                            object.getString("group_id")), null)
@@ -1716,12 +1710,11 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                                                                  object.put("group",
                                                                                                             group);
                                                                                              }
-                                                                                             return respondSiteWithAbsolutePath(
-                                                                                                 message, object);
+                                                                                             return buildSite(message,
+                                                                                                              object);
                                                                                          });
                                                                    } else {
-                                                                       return respondSiteWithAbsolutePath(message,
-                                                                                                          object);
+                                                                       return buildSite(message, object);
                                                                    }
                                                                });
                                          });
@@ -1733,27 +1726,16 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                    }, throwable -> handleHttpException(message, throwable));
     }
 
-    private SingleSource<? extends JsonObject> respondSiteWithAbsolutePath(Message<Object> message, JsonObject object) {
-        if (StringUtils.isNotNull(object.getString("site_id"))) {
+    private SingleSource<? extends JsonObject> buildSite(Message<Object> message, JsonObject object) {
+        if (Strings.isNotBlank(object.getString("site_id"))) {
             return mongoClient.rxFindOne(SITE, idQuery(object.getString("site_id")), null).map(site -> {
                 if (site != null) {
-                    object.put("site", buildSiteWithAbsoluteImageUri(message, site));
+                    object.put("site", site);
                 }
                 return object;
             });
         } else {
             return Single.just(object);
-        }
-    }
-
-    private JsonObject buildSiteWithAbsoluteImageUri(Message<Object> message, JsonObject site) {
-        if (StringUtils.isNotNull(site.getString("logo_sm")) || StringUtils.isNotNull(site.getString("logo_md"))) {
-            return site.put("logo_sm",
-                            MultiTenantCustomMessageHelper.buildAbsoluteUri(message, site.getString("logo_sm")))
-                       .put("logo_md",
-                            MultiTenantCustomMessageHelper.buildAbsoluteUri(message, site.getString("logo_md")));
-        } else {
-            return site;
         }
     }
 

@@ -47,6 +47,21 @@ pipeline {
             }
         }
 
+        stage("Docker") {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: "gcr-nubeio-ci", variable: "GCR_JSON_PWD"),
+                                     string(credentialsId: "gcr-nubeio-project", variable: "GCR_PROJECT")]) {
+                        sh "set +x"
+                        sh "gradle -x test dockerPublish -PvcsBranch=${BRANCH_NAME} -PbuildNumber=${BUILD_NUMBER} " +
+                           "-PdockerHost=unix:///var/run/docker.sock -PdockerRegistryUrl=gcr.io " +
+                           "-PdockerRegistryUser=_json_key -PdockerRegistryPwd='${GCR_JSON_PWD}' " +
+                           "-PdockerRegistryProject=${GCR_PROJECT}"
+                    }
+                }
+            }
+        }
+
         stage("Analysis") {
             steps {
                 echo "Update Sonar Server"
@@ -74,7 +89,6 @@ pipeline {
 
     post {
         always {
-//            sh "apk add git"
             script {
                 currentBuild.result = currentBuild.currentResult
             }

@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 
 import io.vertx.core.Future;
 
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventModel;
@@ -12,9 +13,20 @@ import com.nubeiot.core.event.EventModel;
  * Represents a container consists a list of {@code Verticle unit} to startup application
  *
  * @see Unit
+ * @see HasConfig
  * @see ContainerVerticle
  */
-public interface Container {
+public interface Container extends HasConfig<NubeConfig> {
+
+    @Override
+    default Class<NubeConfig> configClass() {
+        return NubeConfig.class;
+    }
+
+    @Override
+    default String configFile() {
+        return "config.json";
+    }
 
     /**
      * Register eventbus consumer
@@ -52,7 +64,7 @@ public interface Container {
      * @param successHandler Success handler after system start component successfully
      * @return a reference to this, so the API can be used fluently
      */
-    <T extends Unit> Container addProvider(UnitProvider<T> provider, Consumer<T> successHandler);
+    <C extends UnitContext, T extends Unit> Container addProvider(UnitProvider<T> provider, Consumer<C> successHandler);
 
     /**
      * Start a list of register unit verticle based on the order of given providers of {@link

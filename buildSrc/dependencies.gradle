@@ -14,15 +14,25 @@ def versions = [
         h2       : "1.4.197",
         pgsql    : "42.2.5",
     ],
+    plugin  : [
+        "apt"   : "0.20",
+        "docker": "3.1.1",
+        "sonar" : "2.7",
+    ],
     tests   : [
         junit: "4.12"
     ],
 ]
 
-ext.versions = versions
+def genDir = "generated"
 
 ext.deps = [
     lombok  : "org.projectlombok:lombok:$versions.lombok",
+    plugin  : [
+        "apt"   : "net.ltgt.gradle:gradle-apt-plugin:$versions.plugin.apt",
+        "docker": "com.github.docker-java:docker-java:$versions.plugin.docker",
+        "sonar" : "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:$versions.plugin.sonar",
+    ],
     logs    : [
         slf4j  : "org.slf4j:slf4j-api:$versions.logs.slf4j",
         logback: "ch.qos.logback:logback-classic:$versions.logs.logback"
@@ -54,16 +64,41 @@ ext.deps = [
         assertj    : "org.assertj:assertj-core:3.5.2",
         awaitility : "com.jayway.awaitility:awaitility:1.7.0",
         restAssured: "com.jayway.restassured:rest-assured:2.9.0",
+        hamcrest   : 'org.hamcrest:hamcrest-library:2.1'
     ]
 ]
 
-def genFolder = "generated"
+ext.versions = versions
 
-ext.genSrc = [
-    srcFolder         : "$genFolder/main",
-    javaSrcFolder     : "$genFolder/main/java",
-    resourceFolder    : "$genFolder/main/resources",
-    testFolder        : "$genFolder/test",
-    javaTestSrcFolder : "$genFolder/test/java",
-    testResourceFolder: "$genFolder/test/resources"
+ext.genProps = [
+    genDir         : "$genDir",
+    configDir      : "$genDir/conf",
+    srcDir         : "$genDir/main",
+    javaSrcDir     : "$genDir/main/java",
+    resourceDir    : "$genDir/main/resources",
+    testDir        : "$genDir/test",
+    javaTestSrcDir : "$genDir/test/java",
+    testResourceDir: "$genDir/test/resources",
+]
+
+ext.repos = {
+    mavenLocal()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    mavenCentral()
+    jcenter()
+}
+
+ext.loggers = [
+    "hazelcast": [
+        "com.hazelcast": "info"
+    ],
+    "sql"      : [
+        "com.zaxxer.hikari.pool": "info",
+        "com.zaxxer.hikari"     : "info"
+    ],
+    "kafka"    : [
+        "org.apache.kafka"               : "info",
+        "org.apache.kafka.clients"       : "info",
+        "org.apache.kafka.common.network": "info"
+    ]
 ]

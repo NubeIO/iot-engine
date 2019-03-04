@@ -85,7 +85,7 @@ abstract class BaseSqlTest {
         SQLWrapper<T> verticle = VertxHelper.deploy(vertx, context, options, new SQLWrapper<>(catalog, handlerClass),
                                                     TEST_TIMEOUT);
         deployId = verticle.deploymentID();
-        return verticle.getEntityHandler();
+        return verticle.getContext().getEntityHandler();
     }
 
     <T extends EntityHandler> void startSQLFailed(TestContext context, Catalog catalog, Class<T> handlerClass,

@@ -2,6 +2,7 @@ ext {
     debeziumVersion = "0.8.3.Final"
     kafkaVersion = "2.1.0"
 }
+
 dependencies {
     compile project(":core:base")
     compile("io.vertx:vertx-kafka-client:$project.versions.vertx") {

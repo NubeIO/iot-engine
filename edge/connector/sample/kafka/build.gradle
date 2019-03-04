@@ -1,3 +1,6 @@
+ext {
+    specifiedLog = project.loggers["kafka"]
+}
 
 dependencies {
     compile project(':core:kafka')

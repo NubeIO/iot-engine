@@ -22,7 +22,8 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 
 public class BaseCollectionHandler {
 
-    public void handleGetUrl(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient) {
+    public void handleGetUrl(Message<Object> message, CustomMessage customMessage, MongoClient mongoClient,
+                             JsonObject appConfig) {
         String collection = customMessage.getHeader().getString("collection");
         String siteId = customMessage.getHeader().getString("Site-Id");
         String id = customMessage.getHeader().getString("url");

@@ -37,7 +37,7 @@ public final class Urls {
      *
      * @see <a href="https://tools.ietf.org/html/rfc3986#section-3.2">Authority syntax</a>
      */
-    public static final String AUTHORITY_PATTERN = "(www\\.)?(([\\w-]+\\.)+[\\w]{2,63}|[\\w-]+)(:[1-9]\\d{1,4})?/?";
+    public static final String AUTHORITY_PATTERN = "(www\\.)?(([\\w-]+\\.)+[\\w]{2,63}|[\\w-\\.]+)(:[1-9]\\d{1,4})?/?";
     /**
      * Path syntax.
      *

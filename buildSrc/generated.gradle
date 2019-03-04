@@ -1,14 +1,11 @@
-import java.nio.file.Paths
-
 task annotationProcessing(type: JavaCompile, group: 'build') {
     onlyIf {
         project.hasProperty('generated') && project.generated == "true"
     }
-    def outputDir = file Paths.get(project.projectDir.absolutePath, project.genSrc.srcFolder)
-    outputDir.mkdirs()
+    def outputDir = new FileTreeBuilder(project.projectDir).dir(project.genProps.srcDir)
     source = sourceSets.main.java
     classpath = configurations.compile + configurations.compileOnly
-    destinationDir = project.file(project.genSrc.javaSrcFolder)
+    destinationDir = project.file(project.genProps.javaSrcDir)
     options.compilerArgs = [
         "-proc:only",
         "-processor", "io.vertx.codegen.CodeGenProcessor",
@@ -27,25 +24,63 @@ task generateServiceDescriptor(group: 'build') {
                                              new RuntimeException("Missing mainVerticle or serviceDescriptor"))
         }
         def contents = "{ \"main\": \"$project.mainVerticle\" }"
-        def outFolder = new File(project.projectDir.absolutePath, project.genSrc.resourceFolder)
-        outFolder.mkdirs()
-        new File(outFolder.absolutePath, project.serviceDescriptor + ".json").text = contents
+        new FileTreeBuilder(project.projectDir).dir(project.genProps.resourceDir) {
+            file(project.serviceDescriptor + ".json") { write contents }
+        }
     }
 }
 
-processResources.dependsOn(generateServiceDescriptor)
+task generateConfigs(group: 'build') {
+    onlyIf {
+        project.hasProperty('executable') && project.executable == "true"
+    }
+    doLast {
+        def confDir = new FileTreeBuilder(project.projectDir).dir(project.genProps.configDir)
+        def projectName = project.computeBaseName()
+        def moreLogger = project.hasProperty('specifiedLog') && project.specifiedLog ? project.specifiedLog.collect {
+            k, v -> "<logger name=\"$k\" level=\"$v\"/>"
+        }.join("\r\n") : ''
+        copy {
+            into confDir
+            from("${rootDir}/conf/logger") {
+                include "*.xml.template"
+                rename '((?!console))+(\\.console)?\\.xml\\.template', '$1.xml'
+                filter {
+                    it.replaceAll("\\{\\{project\\}\\}", projectName).replaceAll("\\{\\{more_logger\\}\\}", moreLogger)
+                }
+            }
+            from("src/main/resources") {
+                include "*.json"
+            }
+        }
+        if (configurations.runtimeClasspath.any { it.name.contains("cluster-hazelcast") }) {
+            copy {
+                into confDir
+                from("${rootDir}/conf/cluster") {
+                    include "*.xml.template"
+                    rename '((?!member))+(\\.member)?\\.xml\\.template', '$1.xml'
+                }
+            }
+        }
+    }
+}
+
+processResources.dependsOn(generateServiceDescriptor, generateConfigs)
+clean.doFirst {
+    delete project.projectDir.toPath().resolve(project.genProps.genDir)
+}
 
 sourceSets {
     main {
         java {
-            srcDirs += project.genSrc.javaSrcFolder
-            resources.srcDirs += new File(project.projectDir.absolutePath, project.genSrc.resourceFolder)
+            srcDirs += project.genProps.javaSrcDir
+            resources.srcDirs += new File(project.projectDir.absolutePath, project.genProps.resourceDir)
         }
     }
     test {
         java {
-            srcDirs += project.genSrc.javaTestSrcFolder
-            resources.srcDirs += new File(project.projectDir.absolutePath, project.genSrc.testResourceFolder)
+            srcDirs += project.genProps.javaTestSrcDir
+            resources.srcDirs += new File(project.projectDir.absolutePath, project.genProps.testResourceDir)
         }
     }
 }

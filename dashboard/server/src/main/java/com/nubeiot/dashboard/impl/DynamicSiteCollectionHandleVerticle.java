@@ -50,7 +50,7 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
             customMessage.getHeader().getString("collection"));
         switch (method.toUpperCase()) {
             case "GET":
-                baseCollection.handleGetUrl(message, customMessage, mongoClient);
+                baseCollection.handleGetUrl(message, customMessage, mongoClient, this.appConfig);
                 break;
             case "POST":
                 baseCollection.handlePostUrl(message, customMessage, mongoClient);

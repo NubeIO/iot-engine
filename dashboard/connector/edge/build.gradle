@@ -1,3 +1,7 @@
+ext {
+    specifiedLog = project.loggers["hazelcast"] + project.loggers["sql"]
+}
+
 dependencies {
     compile project(':core:base')
     compile project(':core:micro')

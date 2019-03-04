@@ -3,6 +3,7 @@ package com.nubeiot.buildscript.jooq
 
 import java.util.function.Function
 
+import com.nubeiot.buildscript.Strings
 import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
 
 class CacheDataType {
@@ -58,14 +59,14 @@ class CacheDataType {
     }
 
     def addDataType(String customClass, String convertCommand, String parseCommand, String defaultValue = "null") {
-        String className = Utils.requireNotBlank(customClass, "Class cannot be blank")
+        String className = Strings.requireNotBlank(customClass, "Class cannot be blank")
         converters.put(className, Objects.isNull(convertCommand) ? Function.identity() : toFunc(convertCommand))
         parsers.put(className, Objects.isNull(parseCommand) ? Function.identity() : toFunc(parseCommand))
-        defaultValues.put(className, Utils.isBlank(defaultValue) ? "null" : defaultValue)
+        defaultValues.put(className, Strings.isBlank(defaultValue) ? "null" : defaultValue)
     }
 
     private static Function<String, String> toFunc(String command) {
-        return { s -> String.format(Utils.requireNotBlank(command, "Command cannot be blank"), s) }
+        return { s -> String.format(Strings.requireNotBlank(command, "Command cannot be blank"), s) }
     }
 
 }

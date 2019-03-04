@@ -1,0 +1,53 @@
+version: "2.4"
+
+services:
+
+  pg-db:
+    image: ${POSTGRES_IMAGE}:${POSTGRES_VERSION}
+    environment:
+      POSTGRES_DB: sandbox_db
+      POSTGRES_USER: sandbox
+      POSTGRES_PASSWORD: 111
+    ports:
+      - ${PG_PORT}:5432
+    restart: always
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
+  pg-dba:
+    image: dpage/pgadmin4:${PG_DBA_VERSION}
+    environment:
+      PGADMIN_DEFAULT_EMAIL: sandbox@nubeio.com
+      PGADMIN_DEFAULT_PASSWORD: 111
+    ports:
+      - ${PG_DBA_PORT}:80
+    restart: always
+    volumes:
+      - pg-dba-data:/var/lib/pgadmin
+
+  pg-dbr:
+    image: postgrest/postgrest:${PG_DBR_VERSION}
+    environment:
+      PGRST_DB_URI: "postgres://pg-db:5432/sandbox_db?user=sandbox&password=111"
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: postgres
+    ports:
+      - ${PG_DBR_PORT}:3000
+    depends_on:
+      - pg-db
+    restart: always
+
+  pg-swagger:
+    image: swaggerapi/swagger-ui:${PG_SWAGGER_VERSION}
+    ports:
+      - ${PG_SWAGGER_PORT}:8080
+    depends_on:
+      - pg-dbr
+    environment:
+      API_URL: http://localhost:${PG_DBR_PORT}
+
+volumes:
+  pg-data:
+    driver: local
+  pg-dba-data:
+    driver: local

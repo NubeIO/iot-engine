@@ -1,0 +1,30 @@
+{
+  "dataDir": "/data",
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "REQUIRED",
+      "ssl": true,
+      "clustered": true,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
+    },
+    "__cluster__": {
+      "active": true,
+      "ha": true,
+      "listenerAddress": "com.nubeiot.dashboard.connector.edge.cluster"
+    }
+  },
+  "__app__": {
+    "__http__": {
+      "enabled": true,
+      "rootApi": "/api"
+    },
+    "api.name": "edge-connector"
+  }
+}

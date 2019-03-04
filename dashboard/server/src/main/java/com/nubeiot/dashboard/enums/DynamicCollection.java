@@ -2,10 +2,9 @@ package com.nubeiot.dashboard.enums;
 
 import com.nubeiot.dashboard.impl.handlers.BaseCollectionHandler;
 import com.nubeiot.dashboard.impl.handlers.MenuCollectionHandler;
-import com.nubeiot.dashboard.impl.handlers.WidgetImageCollectionHandler;
 
 public enum DynamicCollection {
-    MENU("menu", new MenuCollectionHandler()), WIDGET_IMAGE("widget_image", new WidgetImageCollectionHandler());
+    MENU("menu", new MenuCollectionHandler());
 
     private final String menu;
     private final BaseCollectionHandler menuCollection;

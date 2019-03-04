@@ -3,7 +3,7 @@ package com.nubeiot.edge.core;
 import java.util.function.Supplier;
 
 import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.sql.SQLWrapper;
+import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.DefaultCatalog;
@@ -27,7 +27,7 @@ public abstract class EdgeVerticle extends ContainerVerticle {
         this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass()), this::handler);
     }
 
-    private void handler(SQLWrapper component) {
+    private void handler(SqlContext component) {
         this.entityHandler = ((EdgeEntityHandler) component.getEntityHandler());
     }
 

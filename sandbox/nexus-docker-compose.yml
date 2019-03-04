@@ -1,0 +1,11 @@
+version: "2.4"
+services:
+  nexus:
+    image: sonatype/nexus3:${NEXUS_VERSION}
+    ports:
+      - ${NEXUS_PORT}:8081
+    volumes:
+      - nexus-data:/nexus-data
+volumes:
+  nexus-data:
+    driver: local

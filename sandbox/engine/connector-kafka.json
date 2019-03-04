@@ -1,0 +1,32 @@
+{
+  "dataDir": "/data",
+  "__system__": {
+    "__eventBus__": {
+      "clustered": false
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "__http__": {
+      "host": "0.0.0.0",
+      "enabled": true,
+      "rootApi": "/api",
+      "__socket__": {
+        "enabled": true,
+        "rootWs": "/wsk"
+      }
+    },
+    "__kafka__": {
+      "__client__": {
+        "bootstrap.servers": [
+          "kafka:9092"
+        ]
+      },
+      "__security__": {
+        "security.protocol": "PLAINTEXT"
+      }
+    }
+  }
+}

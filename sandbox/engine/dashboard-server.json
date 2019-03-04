@@ -1,0 +1,58 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "ssl": true,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
+    },
+    "__cluster__": {
+      "active": true,
+      "ha": true
+    }
+  },
+  "__app__": {
+    "__micro__": {},
+    "http.scheme": "http",
+    "http.port": 8080,
+    "DATA_DIR": "/data",
+    "MEDIA_ROOT": "media",
+    "keycloak": {
+      "realm": "sandbox",
+      "auth-server-url": "http://keycloak:8080/auth",
+      "ssl-required": "external",
+      "resource": "sandbox-client",
+      "credentials": {
+        "secret": "69be18ef-e43d-4840-8d02-eeaa5573a488"
+      },
+      "confidential-port": 0
+    },
+    "mongo": {
+      "config": {
+        "hosts": [
+          {
+            "host": "mongo",
+            "port": 27017
+          }
+        ],
+        "db_name": "sandbox",
+        "username": "sandbox",
+        "password": "111",
+        "authSource": "sandbox",
+        "maxPoolSize": 50,
+        "minPoolSize": 25,
+        "maxIdleTimeMS": 300000,
+        "maxLifeTimeMS": 3600000,
+        "maintenanceFrequencyMS": 2000,
+        "maintenanceInitialDelayMS": 500,
+        "waitQueueMultiple": 100
+      }
+    },
+    "ditto-policy": false
+  }
+}

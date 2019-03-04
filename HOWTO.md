@@ -36,7 +36,6 @@
   - `cp -rf dashboard/connector/edge/build/libs/nube-dashboard-connector-edge-1.0.0-SNAPSHOT-fat.jar demo/bios-connector.jar`
   - `cp -rf edge/bios/build/libs/nube-edge-bios-1.0.0-SNAPSHOT-fat.jar demo/bios.jar`
   - `cp -rf dashboard/server/build/libs/nube-dashboard-server-1.0.0-SNAPSHOT-fat.jar demo/dashboard.jar`
-  - `cp -rf dashboard/server/webroot demo/`
 
 - Start services (replace `${your-ip}`)
 

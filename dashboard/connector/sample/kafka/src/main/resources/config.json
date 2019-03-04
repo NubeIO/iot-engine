@@ -1,8 +1,18 @@
 {
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "NONE",
+      "ssl": true,
+      "clustered": false
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
   "__app__": {
     "__http__": {
       "host": "0.0.0.0",
-      "port": 9000,
+      "port": 8080,
       "enabled": true,
       "sample": true,
       "sampleWebRoot": "kafkaWebRoot",
@@ -10,6 +20,16 @@
       "__socket__": {
         "enabled": true,
         "rootWs": "/wsk"
+      }
+    },
+    "__kafka__": {
+      "__client__": {
+        "bootstrap.servers": [
+          "localhost:9092"
+        ]
+      },
+      "__security__": {
+        "security.protocol": "PLAINTEXT"
       }
     }
   }

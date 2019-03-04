@@ -70,7 +70,7 @@ dependencies {
 task jooqGen1(type: JooqGenerateTask) {
     ddlDir = "src/test/resources/default_schema.sql"
     packageName = "com.nubeiot.core.sql.mock.oneschema"
-    targetDir = project.genSrc.javaTestSrcFolder
+    targetDir = project.genProps.javaTestSrcDir
     enumTypes = project.enumTypes
     dbTypes = project.dbTypes
     javaTypes = project.javaTypes
@@ -79,7 +79,7 @@ task jooqGen1(type: JooqGenerateTask) {
 task jooqGen2(type: JooqGenerateTask) {
     ddlDir = "src/test/resources/many_schema.sql"
     packageName = "com.nubeiot.core.sql.mock.manyschema"
-    targetDir = project.genSrc.javaTestSrcFolder
+    targetDir = project.genProps.javaTestSrcDir
     enumTypes = project.enumTypes
     dbTypes = project.dbTypes
     javaTypes = project.javaTypes

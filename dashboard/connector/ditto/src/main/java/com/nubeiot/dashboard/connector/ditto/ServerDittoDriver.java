@@ -89,7 +89,6 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
     }
 
     private void proxyDittoResponse(JsonObject dittoRes, RoutingContext ctx) {
-        ctx.response().setChunked(true);
         JsonObject headers = dittoRes.getJsonObject("headers");
         Map<String, String> headerMap = new HashMap<>();
         for (String header : headers.fieldNames()) {
@@ -99,6 +98,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         ctx.response().setStatusCode(dittoRes.getInteger("statusCode"));
         byte[] responseBody = dittoRes.getBinary("body");
         if (responseBody != null) {
+            ctx.response().setChunked(true);
             ctx.response().write(new String(responseBody, StandardCharsets.UTF_8));
         }
         ctx.response().end();
