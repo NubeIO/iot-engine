@@ -295,11 +295,7 @@ public final class FileUtils {
             if (DEFAULT_DATADIR.equals(dataDir)) {
                 return path;
             }
-            String other = path.toAbsolutePath()
-                               .toString()
-                               .replaceAll(DEFAULT_DATADIR.toAbsolutePath().toString(), "")
-                               .replaceAll("^/", "");
-            return dataDir.resolve(other);
+            return dataDir.resolve(DEFAULT_DATADIR.relativize(path).toString().replaceAll("^/", ""));
         }
         return path;
     }
