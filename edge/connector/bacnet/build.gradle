@@ -1,9 +1,7 @@
 repositories {
-    mavenLocal()
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    project.repos
     maven { url "https://maven.mangoautomation.net/repository/ias-snapshot/" }
     maven { url "https://maven.mangoautomation.net/repository/ias-release/" }
-    mavenCentral()
 }
 
 dependencies {
