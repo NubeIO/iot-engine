@@ -1,15 +1,16 @@
 package com.nubeiot.core.jni;
 
+import com.nubeiot.core.component.UnitContext;
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
-public class JniUnit extends UnitVerticle<JniConfig, JniContext> {
+public class JniUnit extends UnitVerticle<JniConfig, UnitContext> {
 
     JniUnit() {
-        super(new JniContext());
+        super(UnitContext.VOID);
     }
 
     @Override
