@@ -1,3 +1,9 @@
+repositories {
+    project.repos
+    maven { url "https://maven.mangoautomation.net/repository/ias-snapshot/" }
+    maven { url "https://maven.mangoautomation.net/repository/ias-release/" }
+}
+
 dependencies {
     compile project(':edge:connector:bacnet')
     compile project(':edge:connector:driverapi')
