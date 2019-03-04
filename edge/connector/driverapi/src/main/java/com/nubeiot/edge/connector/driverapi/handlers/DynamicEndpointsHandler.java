@@ -35,22 +35,28 @@ public class DynamicEndpointsHandler implements EventHandler {
     @EventContractor(action = EventAction.CREATE, returnType = JsonObject.class)
     public JsonObject addEndpoint(EventMessage message) {
 
+        System.out.println("\n\n\n\n\n\n\n");
+        System.out.println("REQUEST RECIEVED TO ADD ENDPOINT");
+        System.out.println("\n\n\n\n\n\n\n");
+
         JsonObject data = message.getData();
         EventModel eventModel = DriverEventModels.getModel(data.getString("endpoint"));
         EventAction eventAction = EventAction.valueOf(data.getString("action"));
         String driver = data.getString("driver");
-        String handlerAddress = data.getString("handler");
+        String handlerAddress = data.getString("handlerAddress");
+        //
+        //        JsonObject errorMsg = checkMessage(eventModel, eventAction, driver, handlerAddress);
+        //        if (errorMsg != null) {
+        //            return errorMsg;
+        //        }
 
-        JsonObject errorMsg = checkMessage(eventModel, eventAction, driver, handlerAddress);
-        if (errorMsg != null) {
-            return errorMsg;
-        }
-
-        if (endpointsMapper.addEndpointHandler(eventModel, eventAction, driver, handlerAddress)) {
+        //        if (endpointsMapper.addEndpointHandler(eventModel, eventAction, driver, handlerAddress)) {
             return getSuccess("Endpoint successfully added");
-        } else {
-            return getError("Error adding endpoint");
-        }
+        //        } else {
+        //            return getError("Error adding endpoint");
+        //        }
+
+        //TODO: try catch with replies
     }
 
     @EventContractor(action = EventAction.REMOVE, returnType = JsonObject.class)
