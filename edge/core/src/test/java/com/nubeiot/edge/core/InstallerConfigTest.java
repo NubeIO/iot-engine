@@ -1,6 +1,5 @@
 package com.nubeiot.edge.core;
 
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +9,7 @@ import org.junit.Test;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.IConfig;
-import com.nubeiot.core.utils.FileUtils;
+import com.nubeiot.core.TestHelper;
 import com.nubeiot.edge.core.InstallerConfig.Credential;
 import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
@@ -21,8 +20,9 @@ public class InstallerConfigTest {
     @Test
     public void test_override_local_dir() {
         InstallerConfig installerConfig = new InstallerConfig();
-        installerConfig.getRepoConfig().recomputeLocal(Paths.get("/data"));
-        Assert.assertEquals("/data/repositories", installerConfig.getRepoConfig().getLocal());
+        installerConfig.getRepoConfig().recomputeLocal(TestHelper.getAbsolutePathByOs("/data"));
+        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/repositories").toString(),
+                            installerConfig.getRepoConfig().getLocal());
     }
 
     @Test
@@ -38,8 +38,9 @@ public class InstallerConfigTest {
 
     @Test
     public void test_parse_default() {
+        String localPath = TestHelper.getAbsolutePathByOs("/abc").toString();
         InstallerConfig installerConfig = IConfig.from(
-            "{\"auto_install\":true,\"repository\":{\"local\":\"file:///repository\"," +
+            "{\"auto_install\":true,\"repository\":{\"local\":\"" + localPath.replaceAll("\\\\", "\\\\\\\\") + "\"," +
             "\"remote\":{\"credential\":{\"user\":\"user\",\"password\":\"password\"}," +
             "\"urls\":{\"java\":[{\"url\":\"abc\"}, {\"credential\":{\"user\":\"u1\",\"password\":\"p1\"}," +
             "\"url\":\"xyz\"}]}}},\"builtin_app\":[{\"metadata\":{\"group_id\":\"com.nubeiot.edge.module\"," +
@@ -47,13 +48,12 @@ public class InstallerConfigTest {
             "\"appConfig\":{\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:" +
             "./bios-installer\",\"minimumIdle\":1,\"maximumPoolSize\":2,\"connectionTimeout\":30000," +
             "\"idleTimeout\":180000,\"maxLifetime\":300000}}}}]}", InstallerConfig.class);
-        System.out.println(installerConfig.toJson().encodePrettily());
         Assert.assertTrue(installerConfig.isAutoInstall());
         Assert.assertNotNull(installerConfig.getRepoConfig());
 
-        Assert.assertEquals("file:///repository", installerConfig.getRepoConfig().getLocal());
-        Assert.assertEquals(FileUtils.toPath("file:///repository").toString(),
-                            installerConfig.getRepoConfig().recomputeLocal(Paths.get("/data")));
+        Assert.assertEquals(localPath, installerConfig.getRepoConfig().getLocal());
+        Assert.assertEquals(localPath,
+                            installerConfig.getRepoConfig().recomputeLocal(TestHelper.getAbsolutePathByOs("/data")));
 
         Assert.assertNotNull(installerConfig.getRepoConfig().getRemoteConfig());
         Credential credential = installerConfig.getRepoConfig().getRemoteConfig().getCredential();
@@ -78,22 +78,16 @@ public class InstallerConfigTest {
 
     @Test
     public void test_missing_repository_credential() {
-        InstallerConfig installerConfig = IConfig.from("{\"__sql__\":{\"dialect\":\"H2\"," +
-                                                       "\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:/data/db/bios\"}}," +
-                                                       "\"__installer__\":{\"auto_install\":true," +
-                                                       "\"repository\":{\"remote\":{\"urls\":{\"java\":[{\"url" +
-                                                       "\":\"http://127.0.0.1:8081/repository/maven-releases/\"}," +
-                                                       "{\"url\":\"http://127.0.0" +
-                                                       ".1:8081/repository/maven-snapshots/\"},{\"url\":\"http://127" +
-                                                       ".0.0.1:8081/repository/maven-central/\"}]}}}," +
-                                                       "\"builtin_app\":[{\"metadata\":{\"group_id\":\"com.nubeiot" +
-                                                       ".edge.module\",\"artifact_id\":\"bios-installer\"," +
-                                                       "\"version\":\"1.0.0-SNAPSHOT\"," +
-                                                       "\"service_name\":\"bios-installer\"}," +
-                                                       "\"appConfig\":{\"__sql__\":{\"dialect\":\"H2\"," +
-                                                       "\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:/data/db/bios" +
-                                                       "-installer\"}}}}]}}",
-                                                       InstallerConfig.class);
+        InstallerConfig installerConfig = IConfig.from(
+            "{\"__sql__\":{\"dialect\":\"H2\"," + "\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:/data/db/bios\"}}," +
+            "\"__installer__\":{\"auto_install\":true," + "\"repository\":{\"remote\":{\"urls\":{\"java\":[{\"url" +
+            "\":\"http://127.0.0.1:8081/repository/maven-releases/\"}," + "{\"url\":\"http://127.0.0" +
+            ".1:8081/repository/maven-snapshots/\"},{\"url\":\"http://127" +
+            ".0.0.1:8081/repository/maven-central/\"}]}}}," +
+            "\"builtin_app\":[{\"metadata\":{\"group_id\":\"com.nubeiot" +
+            ".edge.module\",\"artifact_id\":\"bios-installer\"," + "\"version\":\"1.0.0-SNAPSHOT\"," +
+            "\"service_name\":\"bios-installer\"}," + "\"appConfig\":{\"__sql__\":{\"dialect\":\"H2\"," +
+            "\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:/data/db/bios" + "-installer\"}}}}]}}", InstallerConfig.class);
     }
 
 }

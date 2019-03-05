@@ -287,7 +287,7 @@ public final class FileUtils {
      * @see #normalize(String)
      */
     public static Path recomputeDataDir(@NonNull Path dataDir, @NonNull String resolvePath) {
-        final Path path = toPath(resolvePath);
+        Path path = toPath(resolvePath);
         if (!path.isAbsolute()) {
             return dataDir.resolve(normalize(resolvePath));
         }
