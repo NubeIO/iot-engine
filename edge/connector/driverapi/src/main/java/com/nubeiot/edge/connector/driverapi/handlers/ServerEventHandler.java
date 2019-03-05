@@ -10,8 +10,11 @@ import io.vertx.reactivex.core.Vertx;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.edge.connector.driverapi.EndpointsMapper;
 import com.nubeiot.edge.connector.driverapi.models.DriverEventModels;
 
@@ -23,14 +26,29 @@ public class ServerEventHandler implements EventHandler {
     private final Vertx vertx;
     @Getter
     private final List<EventAction> availableEvents;
+    private EventController eventController;
     private EndpointsMapper endpointsMapper;
 
     public ServerEventHandler(@NonNull Vertx vertx, @NonNull EventModel eventModel,
-                              @NonNull EndpointsMapper endpointsMapper) {
+                              @NonNull EventController eventController, @NonNull EndpointsMapper endpointsMapper) {
         this.vertx = vertx;
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
+        this.eventController = eventController;
         this.endpointsMapper = endpointsMapper;
     }
+
+
+
+
+    /* HEY SON! welcome :)
+     *
+     * this is the handler for http /api/points
+     * it needs to make a request to BACnet module
+     * and then return that data back over the http request
+     *
+     * only problem is that the handler for the BACnet request can't return any data or can't access the original
+     * http request to reply to it when it receives a reply from BACnet
+     */
 
     @EventContractor(action = EventAction.GET_LIST, returnType = JsonObject.class)
     public JsonObject getList(RequestData data) {
@@ -38,10 +56,18 @@ public class ServerEventHandler implements EventHandler {
             String driver = data.getBody().getString("driver").toLowerCase();
             String handlerAddress = endpointsMapper.getDriverHandler(DriverEventModels.POINTS, EventAction.GET_LIST,
                                                                      driver);
-            return getSuccess(handlerAddress);
+            if (handlerAddress == null) {
+                return getError("Driver handler doesn't exist");
+            }
+
+            eventController.request(handlerAddress, EventPattern.REQUEST_RESPONSE,
+                                    EventMessage.initial(EventAction.GET_LIST), response -> {
+                    //THIS HANDLER HERE - HOW CAN IT RETURN THE DATA?
+                });
         } else {
             return getError("Driver handler doesn't exist");
         }
+        return null; //TEMPORARY
     }
 
     private boolean checkRequest(JsonObject body) {
