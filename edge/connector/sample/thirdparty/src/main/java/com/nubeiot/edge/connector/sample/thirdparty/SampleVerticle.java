@@ -13,7 +13,7 @@ public class SampleVerticle extends ContainerVerticle {
     @Override
     public void start(Future<Void> future) {
         super.start(future);
-        deployVerticle(BACnetVerticle.class).flatMap(ignore -> deployVerticle(DriverVerticle.class)).subscribe(s -> {
+        deployVerticle(DriverVerticle.class).flatMap(ignore -> deployVerticle(BACnetVerticle.class)).subscribe(s -> {
             logger.info("Deploy success");
             future.complete();
         }, throwable -> {

@@ -10,6 +10,8 @@ import java.util.function.Consumer;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.edge.connector.bacnet.Util.LocalPointObjectUtils;
@@ -55,13 +57,13 @@ import com.serotonin.bacnet4j.util.RequestUtils;
 public class BACnet {
 
     //TODO: be able to search for single remote device
-    //TODO: configure (name, id, transport modes)
     //TODO: implement MTSP support
 
 
     private LocalDevice localDevice;
     private Vertx vertx;
     private EventController eventController;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public BACnet(String name, int id, Future<Void> future, EventController eventController) {
 
@@ -164,7 +166,6 @@ public class BACnet {
             propValuesFinal.put(pid, val);
             d.setObjectProperty(oid, pid, val);
         });
-        //TODO: test json mapFrom
         c.accept(JsonObject.mapFrom(propValuesFinal));
     }
 

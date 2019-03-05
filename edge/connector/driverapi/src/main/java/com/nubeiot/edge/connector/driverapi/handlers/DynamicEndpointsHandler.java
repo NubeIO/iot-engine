@@ -3,8 +3,11 @@ package com.nubeiot.edge.connector.driverapi.handlers;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.event.EventAction;
@@ -25,6 +28,7 @@ public class DynamicEndpointsHandler implements EventHandler {
     @Getter
     private final List<EventAction> availableEvents;
     private EndpointsMapper endpointsMapper;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public DynamicEndpointsHandler(@NonNull Vertx vertx, @NonNull EventModel eventModel,
                                    @NonNull EndpointsMapper endpointsMapper) {
@@ -33,13 +37,10 @@ public class DynamicEndpointsHandler implements EventHandler {
         this.endpointsMapper = endpointsMapper;
     }
 
-    @EventContractor(action = EventAction.CREATE, returnType = JsonObject.class)
-    public EventMessage addEndpoint(JsonObject data) {
+    @EventContractor(action = EventAction.CREATE, returnType = EventMessage.class)
+    public EventMessage addEndpoint(Map<String, Object> message) {
 
-        System.out.println("\n\n\n\n\n\n\n");
-        System.out.println("REQUEST RECIEVED TO ADD ENDPOINT");
-        System.out.println("\n\n\n\n\n\n\n");
-
+        JsonObject data = JsonObject.mapFrom(message);
         EventModel eventModel = DriverEventModels.getModel(data.getString("endpoint"));
         EventAction eventAction = EventAction.valueOf(data.getString("action"));
         String driver = data.getString("driver");
@@ -47,12 +48,15 @@ public class DynamicEndpointsHandler implements EventHandler {
 
         JsonObject errorMsg = checkMessage(eventModel, eventAction, driver, handlerAddress);
         if (errorMsg != null) {
+            logger.warn("Request Error");
             return EventMessage.error(EventAction.RETURN, ErrorCode.UNKNOWN_ERROR, "REQUEST ERROR");
         }
 
         if (endpointsMapper.addEndpointHandler(eventModel, eventAction, driver, handlerAddress)) {
+            logger.info("Added endpoint " + driver + ":" + handlerAddress);
             return EventMessage.success(EventAction.RETURN, getSuccess("Endpoint successfully added"));
         } else {
+            logger.info("Error adding endpoint");
             return EventMessage.error(EventAction.RETURN, ErrorCode.UNKNOWN_ERROR, "ERROR ADDING ENDPOINT");
         }
 
@@ -61,8 +65,9 @@ public class DynamicEndpointsHandler implements EventHandler {
 
 
     @EventContractor(action = EventAction.REMOVE, returnType = JsonObject.class)
-    public EventMessage removeEndpoint(JsonObject data) {
+    public EventMessage removeEndpoint(Map<String, Object> message) {
 
+        JsonObject data = JsonObject.mapFrom(message);
         EventModel eventModel = DriverEventModels.getModel(data.getString("endpoint"));
         EventAction eventAction = EventAction.valueOf(data.getString("action")); //TODO: check what this returns
         String driver = data.getString("driver");
@@ -96,11 +101,11 @@ public class DynamicEndpointsHandler implements EventHandler {
     }
 
     private JsonObject getSuccess(String message) {
-        return new JsonObject("\"success\": \"" + message + "\"");
+        return new JsonObject("{\"success\": \"" + message + "\"}");
     }
 
     private JsonObject getError(String message) {
-        return new JsonObject("\"error\": \"" + message + "\"");
+        return new JsonObject("{\"error\": \"" + message + "\"}");
     }
 
 }
