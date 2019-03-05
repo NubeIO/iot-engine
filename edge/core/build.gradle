@@ -11,6 +11,8 @@ dependencies {
     compile project(':eventbus:edge')
     compile project.deps.database.h2
     compile "io.vertx:vertx-maven-service-factory:$project.versions.vertx"
+    testCompile project(":core:base").sourceSets.test.output
+
 }
 
 task jooqGen(type: JooqGenerateTask) {
@@ -24,7 +26,7 @@ task jooqGen(type: JooqGenerateTask) {
     javaTypes = project(':core:sql').ext.javaTypes + [
         new JsonDataType(className: "com.nubeiot.edge.core.loader.ModuleType",
                          converter: "%s.name()",
-                         parser: "com.nubeiot.edge.core.loader.ModuleTypeFactory.factory((String)%s)",
-                         defVal: "com.nubeiot.edge.core.loader.ModuleTypeFactory.getDefault()")
+                         parser: "com.nubeiot.edge.core.loader.ModuleType.factory((String)%s)",
+                         defVal: "com.nubeiot.edge.core.loader.ModuleType.getDefault()")
     ]
 }

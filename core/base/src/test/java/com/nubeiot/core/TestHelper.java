@@ -2,6 +2,8 @@ package com.nubeiot.core;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -58,6 +60,13 @@ public interface TestHelper {
                 completeAction.handle(null);
             }
         }
+    }
+
+    static Path getAbsolutePathByOs(String path) {
+        if (TestHelper.OSHelper.isWin()) {
+            return Paths.get("C:", path);
+        }
+        return Paths.get(path);
     }
 
     interface VertxHelper {

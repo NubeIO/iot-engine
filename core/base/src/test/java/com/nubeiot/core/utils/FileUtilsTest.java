@@ -15,6 +15,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.OSHelper;
 import com.nubeiot.core.exceptions.NubeException;
 
@@ -157,6 +158,77 @@ public class FileUtilsTest {
         Path dataDir = tempFolder.newFolder().toPath().resolve("test");
         System.out.println(dataDir);
         Assert.assertEquals(dataDir.toString(), FileUtils.resolveDataFolder(dataDir.toString()).toString());
+    }
+
+    @Test
+    public void test_create_dir_with_absolute_given_path() throws IOException {
+        Path dataDir = tempFolder.newFolder().toPath().resolve("test");
+        Path subFolder = dataDir.resolve("123");
+        Assert.assertEquals(subFolder.toString(), FileUtils.createFolder(dataDir.toString(), "123"));
+        Assert.assertTrue(subFolder.toFile().exists());
+        Assert.assertTrue(subFolder.toFile().isDirectory());
+    }
+
+    @Test
+    public void test_is_child() throws IOException {
+        Path dataDir = tempFolder.newFolder().toPath().resolve("test");
+        Path subFolder = dataDir.resolve("123");
+        Assert.assertTrue(FileUtils.isChild(dataDir, subFolder));
+        Assert.assertFalse(FileUtils.isChild(subFolder, dataDir));
+        Assert.assertTrue(subFolder.isAbsolute());
+    }
+
+    @Test
+    public void test_normalize_fileName() {
+        Assert.assertEquals("a_b_c_d_e_f_g_h_i_j", FileUtils.normalize("a\\b:c_d**e\"f<g>h|i__j"));
+        Assert.assertEquals("a_b_c/d_e_f_g_h_i_j", FileUtils.normalize("a\\b:c/d**e\"f<g>h|i__j"));
+    }
+
+    @Test
+    public void test_recompute_datadir_1() {
+        Assert.assertEquals(FileUtils.DEFAULT_DATADIR.resolve("test"),
+                            FileUtils.recomputeDataDir(FileUtils.DEFAULT_DATADIR, "test"));
+    }
+
+    @Test
+    public void test_recompute_datadir_2() {
+        Path path = FileUtils.recomputeDataDir(TestHelper.getAbsolutePathByOs("/data"),
+                                               FileUtils.DEFAULT_DATADIR.resolve("test").toString());
+        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/test"), path);
+    }
+
+    @Test
+    public void test_recompute_datadir_3() {
+        Path path = FileUtils.recomputeDataDir(TestHelper.getAbsolutePathByOs("/data"),
+                                               FileUtils.DEFAULT_DATADIR.resolve("test/xyz").toString());
+        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/test/xyz"), path);
+    }
+
+    @Test
+    public void test_recompute_datadir_4() {
+        Path path = FileUtils.recomputeDataDir(TestHelper.getAbsolutePathByOs("/data"), "test");
+        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/test"), path);
+    }
+
+    @Test
+    public void test_recompute_datadir_5() {
+        Path path = FileUtils.recomputeDataDir(TestHelper.getAbsolutePathByOs("/data"),
+                                               TestHelper.getAbsolutePathByOs("/data/test").toString());
+        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/test"), path);
+    }
+
+    @Test
+    public void test_recompute_datadir_6() {
+        Path path = FileUtils.recomputeDataDir(Paths.get("/data"),
+                                               TestHelper.getAbsolutePathByOs("/home/test").toString());
+        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/home/test"), path);
+    }
+
+    @Test
+    public void test_recompute_datadir_7() {
+        Path path = FileUtils.recomputeDataDir(FileUtils.DEFAULT_DATADIR.resolve("test"),
+                                               TestHelper.getAbsolutePathByOs("/home/test").toString());
+        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/home/test"), path);
     }
 
 }

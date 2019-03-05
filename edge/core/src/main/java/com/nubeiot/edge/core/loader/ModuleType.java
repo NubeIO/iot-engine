@@ -2,14 +2,40 @@ package com.nubeiot.edge.core.loader;
 
 import java.util.Objects;
 
+import io.vertx.core.json.JsonObject;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.json.JsonObject;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 //TODO Later for other languages (except JAVA)
 public interface ModuleType {
+
+    static ModuleType getDefault() {
+        return JAVA;
+    }
+
+    @JsonCreator
+    static ModuleType factory(String type) {
+        if (JAVASCRIPT.name().equalsIgnoreCase(type)) {
+            return JAVASCRIPT;
+        }
+        if (RUBY.name().equalsIgnoreCase(type)) {
+            return RUBY;
+        }
+        if (GROOVY.name().equalsIgnoreCase(type)) {
+            return GROOVY;
+        }
+        if (SCALA.name().equalsIgnoreCase(type)) {
+            return SCALA;
+        }
+        if (KOTLIN.name().equalsIgnoreCase(type)) {
+            return KOTLIN;
+        }
+        return getDefault();
+    }
 
     String name();
 

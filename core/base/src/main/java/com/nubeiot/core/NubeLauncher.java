@@ -1,5 +1,6 @@
 package com.nubeiot.core;
 
+import java.net.InetSocketAddress;
 import java.util.Objects;
 
 import io.vertx.core.DeploymentOptions;
@@ -11,6 +12,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
 
+import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.NubeConfig.DeployConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig.ClusterConfig;
 import com.nubeiot.core.cluster.ClusterNodeListener;
 import com.nubeiot.core.cluster.ClusterRegistry;
@@ -19,6 +22,7 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.Configs;
+import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 
 public final class NubeLauncher extends io.vertx.core.Launcher {
@@ -75,7 +79,7 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         super.beforeDeployingVerticle(options);
     }
 
-    private NubeConfig.DeployConfig mergeDeployConfig(DeploymentOptions deploymentOptions) {
+    private DeployConfig mergeDeployConfig(DeploymentOptions deploymentOptions) {
         JsonObject input = deploymentOptions.toJson();
         input.remove("config");
         logger.debug("CONFIG::INPUT DEPLOYMENT CFG: {}", input.encode());
@@ -83,7 +87,7 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         return IConfig.merge(config.getDeployConfig(), input, NubeConfig.DeployConfig.class);
     }
 
-    private NubeConfig.AppConfig mergeAppConfig(DeploymentOptions deploymentOptions) {
+    private AppConfig mergeAppConfig(DeploymentOptions deploymentOptions) {
         JsonObject input = deploymentOptions.getConfig();
         logger.debug("CONFIG::INPUT APP CFG: {}", input.encode());
         logger.debug("CONFIG::CURRENT APP CFG: {}", config.getAppConfig().toJson().encode());
@@ -114,6 +118,14 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     private void configEventBus(VertxOptions options) {
         logger.info("Setup EventBus...");
         EventBusOptions option = this.config.getSystemConfig().getEventBusConfig().getOptions();
+        option.setHost(Networks.computeNATAddress(option.getHost()));
+        InetSocketAddress address = Networks.computeClusterEventbusUrl(option.getClusterPublicHost(),
+                                                                       Networks.validPort(option.getClusterPublicPort(),
+                                                                                          option.getPort()));
+        if (Objects.nonNull(address)) {
+            option.setClusterPublicHost(address.getHostName());
+            option.setClusterPublicPort(address.getPort());
+        }
         logger.info("Configure EventBus with options: {}", option.toJson().encode());
         options.setEventBusOptions(option);
     }

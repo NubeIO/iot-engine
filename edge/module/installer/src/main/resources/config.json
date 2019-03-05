@@ -2,8 +2,8 @@
   "__app__": {
     "__sql__": {
       "dialect": "H2",
-      "hikari": {
-        "jdbcUrl": "jdbc:h2:file:./bios-installer;database_to_upper=false"
+      "__hikari__": {
+        "jdbcUrl": "jdbc:h2:file:./bios-installer"
       }
     }
   }

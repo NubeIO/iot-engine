@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Functions {
 
-    private static final Logger logger = LoggerFactory.getLogger(Reflections.class);
+    private static final Logger logger = LoggerFactory.getLogger(Functions.class);
 
     @SafeVarargs
     public static <T> Predicate<T> and(Predicate<T>... predicates) {

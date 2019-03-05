@@ -5,13 +5,12 @@ import java.util.Objects;
 import org.jooq.Converter;
 
 import com.nubeiot.edge.core.loader.ModuleType;
-import com.nubeiot.edge.core.loader.ModuleTypeFactory;
 
 public final class ModuleTypeConverter implements Converter<String, ModuleType> {
 
     @Override
     public ModuleType from(String databaseObject) {
-        return ModuleTypeFactory.factory(databaseObject);
+        return ModuleType.factory(databaseObject);
     }
 
     @Override

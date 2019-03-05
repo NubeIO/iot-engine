@@ -3,8 +3,7 @@
     "__micro__": {},
     "http.scheme": "http",
     "http.port": 8080,
-    "DATA_DIR": "nube-io",
-    "MEDIA_ROOT": "media",
+    "mediaPath": "media",
     "keycloak": {
       "realm": "nube_iot",
       "auth-server-url": "http://localhost:8082/auth",

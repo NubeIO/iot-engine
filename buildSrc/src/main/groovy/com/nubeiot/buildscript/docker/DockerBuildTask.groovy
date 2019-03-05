@@ -44,6 +44,8 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
     @Input
     final Property<OperatingSystem> defaultOS = project.objects.property(OperatingSystem)
     @Input
+    final Property<Boolean> pull = project.objects.property(Boolean)
+    @Input
     final Property<String> javaVersion = project.objects.property(String)
     @Input
     @Optional
@@ -71,11 +73,12 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
 
     DockerBuildTask() {
         dependsOn(project.tasks.findByName("build"))
+        pull.set(false)
         defaultOS.set(OperatingSystem.ALPINE)
         buildDir.set(project.distsDir)
         out.set(project.rootProject.buildDir.toPath().resolve("docker.txt").toFile())
         javaVersion.set("8u201")
-        jvmOptions.set("-Xms1g -Xmx1g")
+        jvmOptions.set("")
         javaProps.set("")
         vcsBranch.set("")
     }
@@ -92,7 +95,7 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
             String imageId = client.buildImageCmd()
                                    .withBaseDirectory(buildDir.asFile.get())
                                    .withDockerfile(dockerfile.toFile())
-                                   .withPull(true).withForcerm(true).withRemove(true)
+                                   .withPull(pull.get()).withForcerm(true).withRemove(true)
                                    .withTags(tags)
                                    .exec(new BuildImageResultCallback()).awaitImageId()
             println("- Build Docker image successfully with image id ${imageId} - Tags: ${tags}")
@@ -143,11 +146,14 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
                     it.replaceAll("\\{\\{IMAGE_BASE\\}\\}", imageBase)
                       .replaceAll("\\{\\{JDK_URL\\}\\}", jdkUrl)
                       .replaceAll("\\{\\{ARTIFACT\\}\\}", artifactName)
+                      .replaceAll("\\{\\{VERSION\\}\\}", project.version)
                       .replaceAll("\\{\\{JAVA_VERSION\\}\\}", javaVersion.get())
                       .replaceAll("\\{\\{JVM_OPTS\\}\\}", jvmOptions.get())
                       .replaceAll("\\{\\{JAVA_PROPS\\}\\}", javaProps.get())
                 }
             }
+            from("${project.rootDir}/docker/entrypoint.sh")
+            from("${project.rootDir}/docker/wait-for-it.sh")
         }
         return buildDir.get().asFile.toPath().resolve(dockerfile.replaceAll("(.+)\\.template", "\$1.${arch}"))
     }

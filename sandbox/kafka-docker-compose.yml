@@ -4,6 +4,10 @@ services:
     image: wurstmeister/zookeeper:${ZOOKEEPER_VERSION}
     ports:
       - ${ZOOKEEPER_PORT}:2181
+    volumes:
+      - zk-data:/opt/zookeeper-3.4.13/data
+      - zk-conf:/opt/zookeeper-3.4.13/conf
+
   kafka:
     image: wurstmeister/kafka:${KAFKA_VERSION}
     ports:
@@ -18,4 +22,8 @@ services:
       - kafka-log:/kafka
 volumes:
   kafka-log:
+    driver: local
+  zk-data:
+    driver: local
+  zk-conf:
     driver: local

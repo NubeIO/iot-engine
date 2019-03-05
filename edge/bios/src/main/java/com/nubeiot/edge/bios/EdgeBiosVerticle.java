@@ -13,14 +13,12 @@ import com.nubeiot.eventbus.edge.EdgeEventBus;
 
 public final class EdgeBiosVerticle extends EdgeVerticle {
 
-    static final String SHARED_APP_CFG = "app_cfg";
-    static final String SHARED_MODULE_RULE = "module_rule";
+    static final String SHARED_MODULE_RULE = "MODULE_RULE";
 
     @Override
     public void start() {
         super.start();
-        this.addSharedData(SHARED_APP_CFG, this.nubeConfig.getAppConfig().toJson())
-            .addSharedData(SHARED_MODULE_RULE, this.getModuleRule());
+        this.addSharedData(SHARED_MODULE_RULE, this.getModuleRule());
     }
 
     @Override
