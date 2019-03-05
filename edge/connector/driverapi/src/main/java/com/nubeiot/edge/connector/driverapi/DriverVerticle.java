@@ -30,7 +30,7 @@ public class DriverVerticle extends ContainerVerticle {
 
     private EventController registerEventBus(EventController controller) {
         controller.register(DriverEventModels.POINTS,
-                            new ServerEventHandler(vertx, DriverEventModels.POINTS, endpointsMapper));
+                            new ServerEventHandler(vertx, DriverEventModels.POINTS, eventController, endpointsMapper));
         controller.register(DriverEventModels.ENDPOINTS,
                             new DynamicEndpointsHandler(vertx, DriverEventModels.ENDPOINTS, endpointsMapper));
 
