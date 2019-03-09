@@ -31,6 +31,7 @@ import lombok.Setter;
 public class ContainerVerticleTest {
 
     private Vertx vertx;
+    private MockContainerVerticle containerVerticle;
 
     @BeforeClass
     public static void beforeSuite() {
@@ -39,80 +40,83 @@ public class ContainerVerticleTest {
     }
 
     @Before
-    public void before(TestContext context) {
+    public void before() {
         vertx = Vertx.vertx();
+        containerVerticle = new MockContainerVerticle();
     }
 
     @Test
     public void test_contain_two_unit_vertical_having_same_type_should_deploy_only_one(TestContext context) {
-        ContainerVerticle containerVerticle = new MockContainerVerticle();
-        MockProvider providerFirst = new MockProvider();
-        providerFirst.setUnitVerticle(new MockUnitVerticle());
-        MockProvider providerSecond = new MockProvider();
-        providerSecond.setUnitVerticle(new MockUnitVerticle());
-        containerVerticle.addProvider(providerFirst);
-        containerVerticle.addProvider(providerSecond);
+        addDummyUnit();
+        addDummyUnit();
 
         Async async = context.async();
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions(), containerVerticle, deployId -> {
             context.assertNotNull(deployId);
             TestHelper.testComplete(async);
-            Assert.assertEquals(vertx.deploymentIDs().size(), 2);
+            Assert.assertEquals(2, vertx.deploymentIDs().size());
         });
     }
 
     @Test
     public void test_contain_two_unit_vertical_having_different_type_should_deploy_both(TestContext context) {
-        ContainerVerticle containerVerticle = new MockContainerVerticle();
-        DummyProvider providerFirst = new DummyProvider();
-        providerFirst.setUnitVerticle(new DummyUnitVerticle());
-        MockProvider providerSecond = new MockProvider();
-        providerSecond.setUnitVerticle(new MockUnitVerticle());
-        containerVerticle.addProvider(providerFirst);
-        containerVerticle.addProvider(providerSecond);
+        addDummyUnit();
+        addMockUnit();
 
         Async async = context.async();
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions(), containerVerticle, deployId -> {
             context.assertNotNull(deployId);
             TestHelper.testComplete(async);
-            Assert.assertEquals(vertx.deploymentIDs().size(), 3);
+            Assert.assertEquals(3, vertx.deploymentIDs().size());
         });
     }
 
     @Test
     public void test_container_throw_exception_cannot_start(TestContext context) {
-        MockContainerVerticle containerVerticle = new MockContainerVerticle(true);
-
-        DummyProvider providerFirst = new DummyProvider();
-        providerFirst.setUnitVerticle(new DummyUnitVerticle());
-        containerVerticle.addProvider(providerFirst);
+        containerVerticle.setError(true);
+        addDummyUnit();
 
         Async async = context.async();
         VertxHelper.deployFailed(vertx.getDelegate(), context, new DeploymentOptions(), containerVerticle, deployId -> {
             TestHelper.testComplete(async);
-            Assert.assertEquals(vertx.deploymentIDs().size(), 0);
+            Assert.assertEquals(0, vertx.deploymentIDs().size());
         });
     }
 
     @Test
     public void test_unit_throw_exception_cannot_start(TestContext context) {
-        MockContainerVerticle containerVerticle = new MockContainerVerticle();
-        DummyProvider providerFirst = new DummyProvider();
-        providerFirst.setUnitVerticle(new DummyUnitVerticle());
-        MockProvider providerSecond = new MockProvider();
-        providerSecond.setUnitVerticle(new MockUnitVerticle(true));
-        containerVerticle.addProvider(providerFirst);
-        containerVerticle.addProvider(providerSecond);
+        addDummyUnit();
+        addMockUnitHavingException();
 
         Async async = context.async();
         VertxHelper.deployFailed(vertx.getDelegate(), context, new DeploymentOptions(), containerVerticle, deployId -> {
             TestHelper.testComplete(async);
-            Assert.assertEquals(vertx.deploymentIDs().size(), 0);
+            Assert.assertEquals(0, vertx.deploymentIDs().size());
         });
     }
 
+    private void addMockUnit() {
+        addMockUnit(false);
+    }
+
+    private void addMockUnitHavingException() {
+        addMockUnit(true);
+    }
+
+    private void addMockUnit(boolean error) {
+        MockProvider provider = new MockProvider();
+        provider.setUnitVerticle(new MockUnitVerticle(error));
+        containerVerticle.addProvider(provider);
+    }
+
+    private void addDummyUnit() {
+        DummyProvider provider = new DummyProvider();
+        provider.setUnitVerticle(new DummyUnitVerticle());
+        containerVerticle.addProvider(provider);
+    }
+
     @After
-    public void after(TestContext context) {
+    public void after() {
         vertx.close();
     }
 

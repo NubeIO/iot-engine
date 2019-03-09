@@ -36,7 +36,7 @@ public class UnitVerticleTest {
     }
 
     @Before
-    public void before(TestContext context) {
+    public void before() {
         vertx = Vertx.vertx();
     }
 
@@ -58,7 +58,7 @@ public class UnitVerticleTest {
         VertxHelper.deployFailed(vertx.getDelegate(), context, options, unitVerticle, t -> {
             TestHelper.testComplete(async);
             Assert.assertTrue(t instanceof NubeException);
-            Assert.assertEquals(t.getMessage(), "Invalid config format");
+            Assert.assertEquals("Invalid config format", t.getMessage());
         });
     }
 
@@ -85,12 +85,12 @@ public class UnitVerticleTest {
         VertxHelper.deployFailed(vertx.getDelegate(), context, options, unitVerticle, t -> {
             TestHelper.testComplete(async);
             Assert.assertTrue(t instanceof RuntimeException);
-            Assert.assertEquals(vertx.getDelegate().deploymentIDs().size(), 0);
+            Assert.assertEquals(0, vertx.getDelegate().deploymentIDs().size());
         });
     }
 
     @After
-    public void after(TestContext context) {
+    public void after() {
         vertx.close();
     }
 
