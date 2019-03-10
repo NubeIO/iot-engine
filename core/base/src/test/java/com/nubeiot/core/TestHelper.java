@@ -71,6 +71,11 @@ public interface TestHelper {
 
     interface VertxHelper {
 
+        static <T extends Verticle> void deploy(Vertx vertx, TestContext context, DeploymentOptions options, T verticle,
+                                                Handler<String> handlerSuccess) {
+            vertx.deployVerticle(verticle, options, context.asyncAssertSuccess(handlerSuccess));
+        }
+
         static <T extends Verticle> T deploy(Vertx vertx, TestContext context, DeploymentOptions options, T verticle) {
             return deploy(vertx, context, options, verticle, TEST_TIMEOUT_SEC);
         }

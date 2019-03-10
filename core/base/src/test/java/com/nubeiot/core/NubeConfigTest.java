@@ -8,6 +8,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.NubeConfig.SystemConfig;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Configs;
@@ -66,6 +67,23 @@ public class NubeConfigTest {
 
     @Test(expected = NubeException.class)
     public void test_deserialize_error_decode() { IConfig.from("hello", NubeConfig.class); }
+
+    @Test(expected = NubeException.class)
+    public void test_deserialize_root_having_redundant_properties() {
+        String jsonStr = "{\"__redundant__\":{},\"__system__\":{\"__cluster__\":{\"active\":true,\"ha\":false," +
+                         "\"name\":\"nubeio-cluster\",\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\"," +
+                         "\"file\":\"\",\"options\":{}}}}";
+        IConfig.from(jsonStr, NubeConfig.class);
+    }
+
+    @Test
+    public void test_deserialize_child_with_root_having_redundant_properties() {
+        String jsonStr = "{\"__redundant__\":{},\"__system__\":{\"__cluster__\":{\"active\":true,\"ha\":false," +
+                         "\"name\":\"nubeio-cluster\",\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\"," +
+                         "\"file\":\"\",\"options\":{}}}}";
+        SystemConfig cfg = IConfig.from(jsonStr, SystemConfig.class);
+        Assert.assertNotNull(cfg);
+    }
 
     @Test
     public void test_deserialize_plain_child() {

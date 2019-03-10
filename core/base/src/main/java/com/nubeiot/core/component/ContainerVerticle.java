@@ -3,13 +3,16 @@ package com.nubeiot.core.component;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
+import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -20,7 +23,6 @@ import io.vertx.reactivex.core.AbstractVerticle;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
 
@@ -31,13 +33,12 @@ import lombok.Getter;
  */
 public abstract class ContainerVerticle extends AbstractVerticle implements Container {
 
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final Map<Class<? extends Unit>, UnitProvider<? extends Unit>> components = new LinkedHashMap<>();
     private final Map<Class<? extends Unit>, Consumer<? extends UnitContext>> afterSuccesses = new HashMap<>();
     private final Set<String> deployments = new HashSet<>();
     private final Map<String, Object> sharedData = new HashMap<>();
     private final String sharedKey = this.getClass().getName();
-
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Getter
     protected EventController eventController;
     @Getter
@@ -87,19 +88,21 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
         return this;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     public final void startUnits(Future<Void> future) {
-        Flowable.fromIterable(components.entrySet()).map(entry -> {
+        final List<Single<String>> collect = components.entrySet().stream().map(entry -> {
             Unit unit = entry.getValue().get().registerSharedData(sharedKey);
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
             return vertx.rxDeployVerticle(unit, options)
-                        .subscribe(deployId -> succeed(unit, deployId), throwable -> fail(future, unit, throwable));
-        }).count().subscribe(c -> {
-            logger.info("Deploying {} verticle(s)...", c);
+                        .doOnSuccess(deployId -> succeed(unit, deployId))
+                        .doOnError(t -> logger.error("Cannot start unit verticle {}", t, unit.getClass().getName()));
+        }).collect(Collectors.toList());
+        Single.zip(collect, objects -> objects.length).subscribe(count -> {
+            logger.info("Deployed {} verticle(s)...", count);
             future.complete();
-        }, future::fail);
+        }, throwable -> fail(future, throwable));
     }
 
     @Override
@@ -115,13 +118,10 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
                 }, future::fail);
     }
 
-    private void fail(Future<Void> future, Unit unit, Throwable throwable) {
+    private void fail(Future<Void> future, Throwable throwable) {
         NubeException t = NubeExceptionConverter.from(throwable);
-        if (t instanceof InitializerError) {
-            future.fail(t);
-            return;
-        }
-        logger.warn("Some issues when starting unit verticle {}", t, unit.getClass().getName());
+        logger.error("Cannot start container verticle {}", t, this.getClass().getName());
+        future.fail(t);
     }
 
     @SuppressWarnings("unchecked")
