@@ -10,6 +10,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.DeviceEventHandler;
 
 /*
@@ -74,11 +75,19 @@ public class BACnetVerticle extends ContainerVerticle {
 
     private void getPoints() {
         EventMessage message = EventMessage.initial(EventAction.GET_LIST);
-        this.eventController.fire("nubeiot.edge.connector.bonescript.points", EventPattern.REQUEST_RESPONSE, message,
-                                  response -> {
-                                      logger.info(response.result().body());
-                                      //                                      //TODO: handle response and initialise bacnet objects
-                                  });
+
+        ReplyEventHandler handler = new ReplyEventHandler("BACnet-pointsAPI", EventAction.GET_LIST,
+                                                          "nubeiot.edge.connector.bonescript.points", eventMessage -> {
+            JsonObject points = eventMessage.getData();
+            bacnetInstance.initialiseLocalObjectsFromJson(points);
+        }, error -> {
+            logger.error(error);
+        });
+
+        eventController.fire("nubeiot.edge.connector.bonescript.points", EventPattern.REQUEST_RESPONSE, message,
+                             response -> {
+                                 handler.accept(response);
+                             });
     }
 
 }
