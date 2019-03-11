@@ -12,7 +12,6 @@ import com.serotonin.bacnet4j.obj.AnalogOutputObject;
 import com.serotonin.bacnet4j.obj.BACnetObject;
 import com.serotonin.bacnet4j.obj.BinaryInputObject;
 import com.serotonin.bacnet4j.obj.BinaryOutputObject;
-import com.serotonin.bacnet4j.type.constructed.BACnetArray;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import com.serotonin.bacnet4j.type.constructed.ValueSource;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
@@ -31,7 +30,7 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
  */
 public class LocalPointObjectUtils {
 
-    public static void createLocalObject(JsonObject json, String pointID, LocalDevice localDevice) {
+    public static BACnetObject createLocalObject(JsonObject json, String pointID, LocalDevice localDevice) {
         BACnetObject obj;
         ArrayList<PropertyValue> proplist = new ArrayList<>();
         String name = "NAME_ERROR";
@@ -85,12 +84,12 @@ public class LocalPointObjectUtils {
                 }
                 default: {
                     //TODO: what to do for virtual points?
-                    return;
+                    return null;
                 }
             }
         } catch (BACnetServiceException ex) {
             ex.printStackTrace();
-            return;
+            return null;
         }
 
         for (int i = 0; i < proplist.size(); i++) {
@@ -98,27 +97,29 @@ public class LocalPointObjectUtils {
             obj.writePropertyInternal(p.getPropertyIdentifier(), p.getValue());
         }
         writePriorityArray(obj, json.getJsonObject("priorityArray"));
+        return obj;
     }
 
-    public static PropertyValue getProperyValue(String key, Object val) {
+    private static PropertyValue getProperyValue(String key, Object val) {
         switch (key) {
             case "name": {
                 return new PropertyValue(PropertyIdentifier.objectName, new CharacterString((String) val));
             }
             case "value": {
-                return getValue(val);
+                return new PropertyValue(PropertyIdentifier.presentValue, getValue(val));
             }
+            //            case "tags": {
             //TODO: can't write tags , certain objects don't allow... does this matter?
-            case "tags": {
-                return getTags(val);
-            }
+            //                return new PropertyValue(PropertyIdentifier.tags, new BACnetArray<CharacterString>
+            //                (getTags(val)));
+            //            }
             //TODO: work out units converter/mapper
             default:
                 return null;
         }
     }
 
-    private static PropertyValue getValue(Object val) {
+    private static Real getValue(Object val) {
         try {
             float f = 0;
             if (val instanceof Integer) {
@@ -127,11 +128,9 @@ public class LocalPointObjectUtils {
                 f = new Float((java.lang.Double) val);
             } else if (val instanceof Float) {
                 f = (Float) val;
-            } else {
-                new PropertyValue(PropertyIdentifier.presentValue, new Real(0));
             }
 
-            return new PropertyValue(PropertyIdentifier.presentValue, new Real(f));
+            return new Real(f);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -144,12 +143,11 @@ public class LocalPointObjectUtils {
         }
         try {
             for (int i = 1; i <= priorityArray.size(); i++) {
-                if (priorityArray.getString(Integer.toString(i)).equalsIgnoreCase("null")) {
+                if (priorityArray.getValue(Integer.toString(i)) instanceof String)
                     continue;
-                }
-                double v = priorityArray.getInteger(Integer.toString(i));
+                float v = priorityArray.getFloat(Integer.toString(i));
                 obj.writeProperty(new ValueSource(),
-                                  new PropertyValue(PropertyIdentifier.presentValue, null, new Double(v),
+                                  new PropertyValue(PropertyIdentifier.presentValue, null, new Real(v),
                                                     new UnsignedInteger(i)));
             }
         } catch (BACnetServiceException ex) {
@@ -157,13 +155,13 @@ public class LocalPointObjectUtils {
         }
     }
 
-    private static PropertyValue getTags(Object val) {
+    private static CharacterString[] getTags(Object val) {
         JsonArray tagsTmp = ((JsonArray) val);
         CharacterString[] tags = new CharacterString[tagsTmp.size()];
         for (int i = 0; i < tagsTmp.size(); i++) {
             tags[i] = new CharacterString(tagsTmp.getString(i));
         }
-        return new PropertyValue(PropertyIdentifier.tags, new BACnetArray<CharacterString>(tags));
+        return tags;
     }
 
 }

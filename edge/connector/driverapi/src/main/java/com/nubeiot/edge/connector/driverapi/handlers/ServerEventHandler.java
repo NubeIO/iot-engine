@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
@@ -12,9 +13,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventHandler;
-import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.edge.connector.driverapi.EndpointsMapper;
 import com.nubeiot.edge.connector.driverapi.models.DriverEventModels;
 
@@ -37,37 +36,35 @@ public class ServerEventHandler implements EventHandler {
         this.endpointsMapper = endpointsMapper;
     }
 
-
-
-
-    /* HEY SON! welcome :)
-     *
-     * this is the handler for http /api/points
-     * it needs to make a request to BACnet module
-     * and then return that data back over the http request
-     *
-     * only problem is that the handler for the BACnet request can't return any data or can't access the original
-     * http request to reply to it when it receives a reply from BACnet
-     */
-
     @EventContractor(action = EventAction.GET_LIST, returnType = JsonObject.class)
-    public JsonObject getList(RequestData data) {
+    public Single<JsonObject> getList(RequestData data) {
         if (checkRequest(data.getBody())) {
             String driver = data.getBody().getString("driver").toLowerCase();
             String handlerAddress = endpointsMapper.getDriverHandler(DriverEventModels.POINTS, EventAction.GET_LIST,
                                                                      driver);
             if (handlerAddress == null) {
-                return getError("Driver handler doesn't exist");
+                return Single.just(getError("Driver handler doesn't exist"));
             }
 
-            eventController.request(handlerAddress, EventPattern.REQUEST_RESPONSE,
-                                    EventMessage.initial(EventAction.GET_LIST), response -> {
-                    //THIS HANDLER HERE - HOW CAN IT RETURN THE DATA?
-                });
+            //            return SingleHelper.toObserver(Future.future(future -> {
+            //                ReplyEventHandler handler = new ReplyEventHandler("DriverAPI", EventAction.GET_LIST,
+            //                handlerAddress,
+            //                                                                  eventMessage -> {
+            //                                                                      future.complete(eventMessage
+            //                                                                      .getData());
+            //                                                                  }, error -> {
+            //                    future.fail(error);
+            //                });
+            //
+            //                eventController.request(handlerAddress, EventPattern.REQUEST_RESPONSE,
+            //                                        EventMessage.initial(EventAction.GET_LIST), response -> {
+            //                        handler.accept(response);
+            //                    });
+            //            }).completer());
         } else {
-            return getError("Driver handler doesn't exist");
+            return Single.just(getError("Driver handler doesn't exist"));
         }
-        return null; //TEMPORARY
+        return null;
     }
 
     private boolean checkRequest(JsonObject body) {
