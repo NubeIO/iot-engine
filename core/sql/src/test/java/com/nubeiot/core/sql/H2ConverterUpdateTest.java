@@ -98,7 +98,7 @@ public class H2ConverterUpdateTest extends BaseSqlTest {
 
     @After
     public void after(TestContext context) {
-        //super.after(context);
+        super.after(context);
     }
 
     @Override

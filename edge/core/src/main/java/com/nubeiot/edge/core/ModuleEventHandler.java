@@ -55,15 +55,14 @@ public final class ModuleEventHandler implements EventHandler {
                                 String.format("Not found service id '%s'", module.getServiceId()))));
     }
 
-    @EventContractor(action = EventAction.HALT, returnType = Single.class)
-    public Single<JsonObject> halt(RequestData data) {
+    @EventContractor(action = EventAction.PATCH, returnType = Single.class)
+    public Single<JsonObject> updatePartly(RequestData data) {
         ITblModule module = new TblModule(data.getBody());
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
-        return this.verticle.getEntityHandler()
-                            .processDeploymentTransaction(new TblModule().setServiceId(module.getServiceId()),
-                                                          EventAction.HALT);
+        return this.verticle.getEntityHandler().processDeploymentTransaction(new TblModule().fromJson(data.getBody()),
+                                                                             EventAction.PATCH);
     }
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)

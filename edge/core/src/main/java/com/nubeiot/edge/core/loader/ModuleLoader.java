@@ -13,6 +13,7 @@ import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
@@ -52,9 +53,12 @@ public final class ModuleLoader implements EventHandler {
         }).andThen(Single.just(new JsonObject().put("deploy_id", deployId)));
     }
 
-    @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
+    @EventContractor(action = {EventAction.UPDATE, EventAction.PATCH}, returnType = Single.class)
     public Single<JsonObject> reloadModule(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.getBody(), PreDeploymentResult.class);
+        if (preResult.getTargetState() == State.DISABLED) {
+            this.removeModule(data);
+        }
         logger.info("Vertx reload module {}...", preResult.getDeployId());
         return vertx.rxUndeploy(preResult.getDeployId()).onErrorResumeNext(throwable -> {
             logger.debug("Module {} is gone in Vertx. Just installing...", throwable, preResult.getDeployId());
@@ -65,7 +69,7 @@ public final class ModuleLoader implements EventHandler {
     @Override
     public List<EventAction> getAvailableEvents() {
         return Arrays.asList(EventAction.INIT, EventAction.CREATE, EventAction.UPDATE, EventAction.HALT,
-                             EventAction.REMOVE);
+                             EventAction.PATCH, EventAction.REMOVE);
     }
 
 }
