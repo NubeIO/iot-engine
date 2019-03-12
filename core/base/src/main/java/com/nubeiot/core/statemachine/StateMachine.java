@@ -123,7 +123,8 @@ public final class StateMachine {
                                         ((eventAction == EventAction.PATCH || eventAction == EventAction.UPDATE) &&
                                          targetState == state))) {
             throw new StateException(
-                String.format("%s is in state %s, cannot execute action %s", objName, state, eventAction));
+                String.format("%s is in state %s, cannot execute action %s to state %s", objName, state, eventAction,
+                              targetState));
         }
     }
 

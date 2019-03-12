@@ -39,27 +39,17 @@ public interface ModuleType {
 
     String name();
 
-    JsonObject serialize(@NonNull JsonObject input, @NonNull ModuleTypeRule rule) throws InvalidModuleType;
-
-    @EqualsAndHashCode
-    abstract class AbstractModuleType implements ModuleType {
-
-        @EqualsAndHashCode.Include
-        public abstract String name();
-
-        @Override
-        public final String toString() {
-            return this.name();
-        }
-
-    }
-
-
     ModuleType JAVA = new AbstractModuleType() {
 
         @Override
         public String name() {
             return "JAVA";
+        }
+
+        @Override
+        public String generateFQN(String serviceId, String version, String serviceName) {
+            return String.format("maven:%s:%s::%s", serviceId, Strings.isBlank(version) ? DEFAULT_VERSION : version,
+                                 serviceName);
         }
 
         private static final String DEFAULT_GROUP_ID = "com.nubeiot.edge.connector";
@@ -76,15 +66,13 @@ public interface ModuleType {
             if (Objects.nonNull(rule) && !rule.getRule(this).test(groupId + "." + artifactId)) {
                 throw new InvalidModuleType("Artifact is not valid");
             }
-            String serviceId = String.format("maven:%s:%s:%s::%s", groupId, artifactId,
-                                             input.getString("version", DEFAULT_VERSION), serviceName);
+            String serviceId = String.format("%s:%s", groupId, artifactId);
             return input.mergeIn(new JsonObject(), true)
                         .put("service_id", serviceId)
                         .put("service_name", serviceName)
                         .put("service_type", name());
         }
     };
-
     ModuleType JAVASCRIPT = new AbstractModuleType() {
         @Override
         public String name() {
@@ -92,11 +80,15 @@ public interface ModuleType {
         }
 
         @Override
+        public String generateFQN(String serviceId, String version, String serviceName) {
+            return null;
+        }
+
+        @Override
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
     };
-
     ModuleType GROOVY = new AbstractModuleType() {
         @Override
         public String name() {
@@ -104,11 +96,29 @@ public interface ModuleType {
         }
 
         @Override
+        public String generateFQN(String serviceId, String version, String serviceName) {
+            return null;
+        }
+
+        @Override
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
     };
 
+
+    @EqualsAndHashCode
+    abstract class AbstractModuleType implements ModuleType {
+
+        @EqualsAndHashCode.Include
+        public abstract String name();
+
+        @Override
+        public final String toString() {
+            return this.name();
+        }
+
+    }
     ModuleType SCALA = new AbstractModuleType() {
         @Override
         public String name() {
@@ -116,11 +126,15 @@ public interface ModuleType {
         }
 
         @Override
+        public String generateFQN(String serviceId, String version, String serviceName) {
+            return null;
+        }
+
+        @Override
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
     };
-
     ModuleType KOTLIN = new AbstractModuleType() {
         @Override
         public String name() {
@@ -128,11 +142,15 @@ public interface ModuleType {
         }
 
         @Override
+        public String generateFQN(String serviceId, String version, String serviceName) {
+            return null;
+        }
+
+        @Override
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
     };
-
     ModuleType RUBY = new AbstractModuleType() {
         @Override
         public String name() {
@@ -140,9 +158,19 @@ public interface ModuleType {
         }
 
         @Override
+        public String generateFQN(String serviceId, String version, String serviceName) {
+            return null;
+        }
+
+        @Override
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
     };
+
+    String generateFQN(String serviceId, String version, String serviceName);
+
+    JsonObject serialize(@NonNull JsonObject input, @NonNull ModuleTypeRule rule) throws InvalidModuleType;
+
 
 }

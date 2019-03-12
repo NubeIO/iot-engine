@@ -22,8 +22,10 @@ public class PreDeploymentResultTest {
         PreDeploymentResult preResult = PreDeploymentResult.builder()
                                                            .transactionId("1")
                                                            .action(EventAction.REMOVE)
-                                                           .prevState(State.ENABLED).targetState(State.ENABLED)
+                                                           .prevState(State.ENABLED)
+                                                           .targetState(State.ENABLED)
                                                            .serviceId("serviceId")
+                                                           .serviceFQN("serviceFQN")
                                                            .deployId("deployId")
                                                            .deployCfg(JsonObject.mapFrom(
                                                                Collections.singletonMap("testAbc", "ab")))
@@ -33,8 +35,8 @@ public class PreDeploymentResultTest {
         preResultJson.remove("deploy_cfg");
         JSONAssert.assertEquals(
             "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
-            "\"service_id\":\"serviceId\",\"deploy_id\":\"deployId\",\"silent\":false}", preResultJson.encode(),
-            JSONCompareMode.STRICT);
+            "\"service_id\":\"serviceId\",\"service_fqn\":\"serviceFQN\",\"deploy_id\":\"deployId\"," +
+            "\"silent\":false}", preResultJson.encode(), JSONCompareMode.STRICT);
         Assert.assertNotNull(deployCfg);
         Assert.assertNull(deployCfg.getSystemConfig());
         Assert.assertNotNull(deployCfg.getDataDir());
@@ -49,8 +51,10 @@ public class PreDeploymentResultTest {
         PreDeploymentResult preResult = PreDeploymentResult.builder()
                                                            .transactionId("1")
                                                            .action(EventAction.REMOVE)
-                                                           .prevState(State.ENABLED).targetState(State.ENABLED)
+                                                           .prevState(State.ENABLED)
+                                                           .targetState(State.ENABLED)
                                                            .serviceId("serviceId")
+                                                           .serviceFQN("serviceFQN")
                                                            .build();
         JsonObject preResultJson = preResult.toJson();
         preResultJson.remove("deploy_cfg");
@@ -58,7 +62,8 @@ public class PreDeploymentResultTest {
         System.out.println(deployCfg.toJson());
         JSONAssert.assertEquals(
             "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
-            "\"service_id\":\"serviceId\",\"silent\":false}", preResultJson.encode(), JSONCompareMode.STRICT);
+            "\"service_id\":\"serviceId\",\"service_fqn\":\"serviceFQN\",\"silent\":false}", preResultJson.encode(),
+            JSONCompareMode.STRICT);
         Assert.assertNotNull(deployCfg);
         Assert.assertNotNull(deployCfg.getAppConfig());
         Assert.assertTrue(deployCfg.getAppConfig().isEmpty());
@@ -71,8 +76,10 @@ public class PreDeploymentResultTest {
         JsonObject jsonObject = PreDeploymentResult.builder()
                                                    .transactionId("1")
                                                    .action(EventAction.REMOVE)
-                                                   .prevState(State.ENABLED).targetState(State.ENABLED)
+                                                   .prevState(State.ENABLED)
+                                                   .targetState(State.ENABLED)
                                                    .serviceId("serviceId")
+                                                   .serviceFQN("serviceFQN")
                                                    .deployId("deployId")
                                                    .deployCfg(
                                                        JsonObject.mapFrom(Collections.singletonMap("testAbc", "ab")))
@@ -83,6 +90,7 @@ public class PreDeploymentResultTest {
         Assert.assertNotNull(preResult);
         Assert.assertEquals("1", preResult.getTransactionId());
         Assert.assertEquals("serviceId", preResult.getServiceId());
+        Assert.assertEquals("serviceFQN", preResult.getServiceFQN());
         Assert.assertEquals("deployId", preResult.getDeployId());
         Assert.assertEquals(EventAction.REMOVE, preResult.getAction());
         Assert.assertEquals(State.ENABLED, preResult.getPrevState());
