@@ -1,8 +1,8 @@
 package com.nubeiot.dashboard.impl.models;
 
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
-import com.nubeiot.core.common.Model;
-import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.Model;
 import com.nubeiot.dashboard.utils.UserUtils;
 
 import io.vertx.core.json.JsonObject;
@@ -50,10 +50,10 @@ public class MongoUser extends Model {
         // Role business logic
         Role userRole = Role.GUEST;
         Role setRole = null;
-        if (StringUtils.isNotNull(user.getString("role"))) {
+        if (Strings.isNotBlank(user.getString("role"))) {
             userRole = Role.valueOf(user.getString("role").toUpperCase());
         }
-        if (StringUtils.isNotNull(body.getString("role"))) {
+        if (Strings.isNotBlank(body.getString("role"))) {
             setRole = Role.valueOf(body.getString("role").toUpperCase());
         }
         responseUser.put("role", UserUtils.getRole(userRole, setRole));

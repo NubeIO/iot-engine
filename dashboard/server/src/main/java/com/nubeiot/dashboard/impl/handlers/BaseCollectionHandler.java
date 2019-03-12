@@ -8,8 +8,7 @@ import java.util.UUID;
 
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.HttpException;
-import com.nubeiot.core.common.utils.SQLUtils;
-import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.utils.MongoUtils;
@@ -34,7 +33,7 @@ public class BaseCollectionHandler {
                     mongoClient.rxFindOne(collection, new JsonObject().put("site_id", siteId).put("id", id), null)
                                .subscribe(response -> {
                                    CustomMessage<JsonObject> replyMessage = new CustomMessage<>(null,
-                                                                                                SQLUtils.getFirstNotNull(
+                                                                                                (JsonObject) SQLUtils.getFirstNotNull(
                                                                                                     response,
                                                                                                     new JsonObject()),
                                                                                                 HttpResponseStatus.OK.code());
@@ -172,7 +171,7 @@ public class BaseCollectionHandler {
     protected JsonArray getSitesIds(CustomMessage customMessage) {
         JsonObject user = customMessage.getHeader().getJsonObject("user");
         JsonArray sitesIds = user.getJsonArray("sites_ids", new JsonArray());
-        if (sitesIds.size() == 0 && StringUtils.isNotNull(user.getString("site_id"))) {
+        if (sitesIds.size() == 0 && Strings.isNotBlank(user.getString("site_id"))) {
             sitesIds = new JsonArray().add(user.getString("site_id"));
         }
         return sitesIds;

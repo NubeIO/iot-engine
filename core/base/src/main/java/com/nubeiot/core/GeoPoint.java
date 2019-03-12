@@ -1,4 +1,4 @@
-package com.nubeiot.core.common;
+package com.nubeiot.core;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -7,7 +7,7 @@ public class GeoPoint {
     private Double lng;
     private Double lat;
 
-    GeoPoint(double lng, double lat) {
+    public GeoPoint(double lng, double lat) {
         this.lng = lng;
         this.lat = lat;
     }

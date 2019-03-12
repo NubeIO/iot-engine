@@ -1,4 +1,4 @@
-package com.nubeiot.core.common;
+package com.nubeiot.core;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -7,7 +7,6 @@ import java.util.Map;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-@Deprecated
 public abstract class Model {
     public Map<String, JsonObject> input = new HashMap<>();
 

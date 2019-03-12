@@ -19,8 +19,8 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 import com.nubeiot.core.common.RxRestAPIVerticle;
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.HttpException;
-import com.nubeiot.core.common.utils.SQLUtils;
-import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.utils.SQLUtils;
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.dashboard.Role;
 
@@ -51,7 +51,7 @@ public class SiteCollectionHandleVerticle extends ContainerVerticle implements R
         String method = customMessage.getHeader().getString("method");
         switch (method.toUpperCase()) {
             case "GET":
-                if (StringUtils.isNull(url)) {
+                if (Strings.isBlank(url)) {
                     this.handleGetAll(message, customMessage);
                 } else {
                     this.handleGetId(message, customMessage);
@@ -75,7 +75,7 @@ public class SiteCollectionHandleVerticle extends ContainerVerticle implements R
     private JsonArray getSitesIds(CustomMessage customMessage) {
         JsonObject user = customMessage.getHeader().getJsonObject("user");
         JsonArray sitesIds = user.getJsonArray("sites_ids", new JsonArray());
-        if (sitesIds.size() == 0 && StringUtils.isNotNull(user.getString("site_id"))) {
+        if (sitesIds.size() == 0 && Strings.isNotBlank(user.getString("site_id"))) {
             sitesIds = new JsonArray().add(user.getString("site_id"));
         }
         return sitesIds;
@@ -122,8 +122,8 @@ public class SiteCollectionHandleVerticle extends ContainerVerticle implements R
             if (sitesIds.contains(siteId)) {
                 mongoClient.rxFindOne(collection, new JsonObject().put("_id", id), null).subscribe(response -> {
                     CustomMessage<JsonObject> replyMessage = new CustomMessage<>(null,
-                                                                                 SQLUtils.getFirstNotNull(response,
-                                                                                                          new JsonObject()),
+                                                                                 (JsonObject) SQLUtils.getFirstNotNull(
+                                                                                     response, new JsonObject()),
                                                                                  HttpResponseStatus.OK.code());
                     message.reply(replyMessage);
                 }, throwable -> handleException(message, throwable));
@@ -141,7 +141,7 @@ public class SiteCollectionHandleVerticle extends ContainerVerticle implements R
         String url = customMessage.getHeader().getString("url");
         String siteId = customMessage.getHeader().getString("Site-Id");
 
-        if (StringUtils.isNotNull(url)) {
+        if (Strings.isNotBlank(url)) {
             handleNotFoundResponse(message);
         }
 
@@ -231,7 +231,7 @@ public class SiteCollectionHandleVerticle extends ContainerVerticle implements R
     }
 
     private boolean validateData(CustomMessage customMessage) {
-        return StringUtils.isNotNull(customMessage.getHeader().getString("Site-Id"));
+        return Strings.isNotBlank(customMessage.getHeader().getString("Site-Id"));
     }
 
 }

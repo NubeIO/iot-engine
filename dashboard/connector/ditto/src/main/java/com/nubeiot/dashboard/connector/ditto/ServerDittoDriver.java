@@ -8,8 +8,8 @@ import java.util.Map;
 import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.constants.Services;
-import com.nubeiot.core.common.utils.StringUtils;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
+import com.nubeiot.core.utils.Strings;
 
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
@@ -143,8 +143,8 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         if (appConfig.getBoolean("ditto-policy")) {
             req.putHeader(HttpHeaders.AUTHORIZATION.toString(),
                           ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
-            if (StringUtils.isNotNull(ctx.getBody().toString())) {
-                if (StringUtils.isNull(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
+            if (Strings.isNotBlank(ctx.getBody().toString())) {
+                if (Strings.isBlank(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
                     // This means we are we are PUTing device value for the first time or going to updated whole data
                     JsonObject body = ctx.getBodyAsJson();
                     body.put("policyId", Services.POLICY_NAMESPACE_PREFIX + ":" +
@@ -158,7 +158,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
             }
         } else {
             req.putHeader(HttpHeaders.AUTHORIZATION.toString(), "Basic " + getAuthKey());
-            if (StringUtils.isNotNull(ctx.getBody().toString())) {
+            if (Strings.isNotBlank(ctx.getBody().toString())) {
                 req.write(ctx.getBody());
             }
         }

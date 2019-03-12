@@ -30,9 +30,8 @@ import com.nubeiot.core.common.HttpHelper;
 import com.nubeiot.core.common.RxRestAPIVerticle;
 import com.nubeiot.core.common.constants.Services;
 import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.common.utils.JSONUtils;
-import com.nubeiot.core.common.utils.SQLUtils;
-import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.utils.SQLUtils;
+import com.nubeiot.core.utils.MongoUtils;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.micro.MicroContext;
@@ -239,10 +238,10 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
         return mongoClient.rxFind(COMPANY, query).flatMap(childCompanies -> {
             if (childCompanies.size() > 0) {
                 // 5.1 Proceed for creating MongoDB user
-                String[] childCompaniesIds = StringUtils.getIds(childCompanies);
-                String companyId = SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""),
-                                                                      childCompaniesIds);
-                JsonObject companyJsonObject = JSONUtils.getMatchValueOrDefaultOne(childCompanies, companyId);
+                String[] childCompaniesIds = MongoUtils.getIds(childCompanies);
+                String companyId = SQLUtils.getMatchValueOrFirstOne(body.getString("company_id", ""),
+                                                                    childCompaniesIds);
+                JsonObject companyJsonObject = MongoUtils.getMatchValueOrFirstOne(childCompanies, companyId);
 
                 body.put("company_id", companyJsonObject.getString("_id"));
                 if (companyJsonObject.getString("role").equals(Role.MANAGER.toString()) &&
@@ -309,8 +308,8 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                                                                                                                        )))
                                                                 .flatMap(childUserGroups -> {
                                                                     if (childUserGroups.size() > 0) {
-                                                                        if (StringUtils.getIdsList(childUserGroups)
-                                                                                       .contains(groupId)) {
+                                                                        if (MongoUtils.getIdsOnList(childUserGroups)
+                                                                                      .contains(groupId)) {
                                                                             return Single.just(
                                                                                 siteEditedBody.put("group_id", groupId)
                                                                                               .put(
@@ -416,8 +415,8 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                 body.put("company_id", companyId)
                     .put("associated_company_id", companyId)
                     .put("site_id", CustomMessageHelper.getSiteId(user))
-                    .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""),
-                                                                        StringUtils.getIds(childGroups)));
+                    .put("group_id", SQLUtils.getMatchValueOrFirstOne(body.getString("group_id", ""),
+                                                                      MongoUtils.getIds(childGroups)));
                 JsonObject mongoUser = new MongoUser(body, user, keycloakUser).toJsonObject();
                 return mongoClient.rxSave(USER, mongoUser).flatMap(ignored -> {
                     if (appConfig.getBoolean("ditto-policy")) {
@@ -598,7 +597,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                     getManagerSiteQuery(role, userCompanyId).flatMap(
                         managerSiteQuery -> mongoClient.rxFind(SITE, managerSiteQuery).flatMap(childSitesResponse -> {
                             if (childSitesResponse.size() > 0) {
-                                String[] availableSites = StringUtils.getIds(childSitesResponse);
+                                String[] availableSites = MongoUtils.getIds(childSitesResponse);
                                 String siteId = SQLUtils.getMatchValue(
                                     CustomMessageHelper.getBodyAsJson(message).getString("site_id", ""),
                                     availableSites);
@@ -704,8 +703,8 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                                                                                                                     new JsonObject()
                                                                                                                         .put(
                                                                                                                             "$in",
-                                                                                                                            StringUtils
-                                                                                                                                .getIdsJsonArray(
+                                                                                                                            MongoUtils
+                                                                                                                                .getIdsOnJsonArray(
                                                                                                                                     companies)
                                                                                                                                 .add(
                                                                                                                                     companyId))),
@@ -1101,7 +1100,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                        } else if (role == Role.ADMIN) {
                            return byAdminCompanyGetAdminWithManagerSelectionList(CustomMessageHelper.getCompanyId(user))
                                       .flatMap(response -> {
-                                          if (SQLUtils.inList(CustomMessageHelper.getCompanyId(user), response)) {
+                                          if (response.contains(CustomMessageHelper.getCompanyId(user))) {
                                               return UserUtils.updateUser(userId, keycloakUserRepresentation,
                                                                           accessToken, authServerUrl, realmName,
                                                                           client);
@@ -1151,9 +1150,9 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                                                             JsonObject keycloakUser, JsonObject query) {
         return mongoClient.rxFind(COMPANY, query).flatMap(childCompanies -> {
             if (childCompanies.size() > 0) {
-                String[] _ids = StringUtils.getIds(childCompanies);
-                String companyId = SQLUtils.getMatchValueOrDefaultOne(body.getString("company_id", ""), _ids);
-                JsonObject companyJsonObject = JSONUtils.getMatchValueOrDefaultOne(childCompanies, companyId);
+                String[] _ids = MongoUtils.getIds(childCompanies);
+                String companyId = SQLUtils.getMatchValueOrFirstOne(body.getString("company_id", ""), _ids);
+                JsonObject companyJsonObject = MongoUtils.getMatchValueOrFirstOne(childCompanies, companyId);
 
                 body.put("company_id", companyJsonObject.getString("_id"));
 
@@ -1205,8 +1204,8 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                                                                                                                        )))
                                                                 .flatMap(childUserGroups -> {
                                                                     if (childUserGroups.size() > 0) {
-                                                                        if (StringUtils.getIdsList(childUserGroups)
-                                                                                       .contains(groupId)) {
+                                                                        if (MongoUtils.getIdsOnList(childUserGroups)
+                                                                                      .contains(groupId)) {
                                                                             return Single.just(
                                                                                 siteEditedBody.put("group_id", groupId)
                                                                                               .put(
@@ -1265,8 +1264,8 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                 body.put("company_id", companyId)
                     .put("associated_company_id", companyId)
                     .put("site_id", CustomMessageHelper.getSiteId(ctxUser))
-                    .put("group_id", SQLUtils.getMatchValueOrDefaultOne(body.getString("group_id", ""),
-                                                                        StringUtils.getIds(childGroups)));
+                    .put("group_id", SQLUtils.getMatchValueOrFirstOne(body.getString("group_id", ""),
+                                                                      MongoUtils.getIds(childGroups)));
                 MongoUser mongoUser = new MongoUser(body, ctxUser, keycloakUser);
                 return mongoClient.rxSave(USER, mongoUser.toJsonObject())
                                   .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
@@ -1399,7 +1398,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                                                                       .flatMap(childSitesResponse -> {
                                                                           if (childSitesResponse.size() > 0) {
                                                                               String[] availableSites
-                                                                                  = StringUtils.getIds(
+                                                                                  = MongoUtils.getIds(
                                                                                   childSitesResponse);
                                                                               String siteId = SQLUtils.getMatchValue(
                                                                                   body.getString("site_id", ""),
@@ -1412,7 +1411,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
                                                                               String associatedCompanyId
                                                                                   = body.getString(
                                                                                   "associated_company_id", "");
-                                                                              if (StringUtils.isNotNull(
+                                                                              if (Strings.isNotBlank(
                                                                                   associatedCompanyId)) {
                                                                                   return mongoClient.rxFindOne(COMPANY,
                                                                                                                idQuery(
@@ -1752,23 +1751,23 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
         return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", companyId)
                                                            .put("role", Role.MANAGER.toString()))
                           .map(response -> new JsonObject().put("associated_company_id", new JsonObject().put("$in",
-                                                                                                              StringUtils
-                                                                                                                  .getIdsJsonArray(
+                                                                                                              MongoUtils
+                                                                                                                  .getIdsOnJsonArray(
                                                                                                                       response))));
     }
 
     private Single<List<String>> byAdminCompanyGetManagerSelectionList(String companyId) {
         return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", companyId)
                                                            .put("role", Role.MANAGER.toString()))
-                          .map(StringUtils::getIdsList);
+                          .map(MongoUtils::getIdsOnList);
     }
 
     private Single<JsonObject> byAdminCompanyGetAdminWithManagerSelectionListQuery(String companyId) {
         return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", companyId)
                                                            .put("role", Role.MANAGER.toString()))
                           .map(response -> new JsonObject().put("associated_company_id", new JsonObject().put("$in",
-                                                                                                              StringUtils
-                                                                                                                  .getIdsJsonArray(
+                                                                                                              MongoUtils
+                                                                                                                  .getIdsOnJsonArray(
                                                                                                                       response)
                                                                                                                   .add(
                                                                                                                       companyId))));
@@ -1777,7 +1776,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
     private Single<List<String>> byAdminCompanyGetAdminWithManagerSelectionList(String companyId) {
         return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", companyId)
                                                            .put("role", Role.MANAGER.toString())).map(response -> {
-            List<String> companies = StringUtils.getIdsList(response);
+            List<String> companies = MongoUtils.getIdsOnList(response);
             companies.add(companyId);
             return companies;
         });
@@ -1790,8 +1789,8 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
             return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", userCompanyId)
                                                                .put("role", Role.MANAGER.toString()))
                               .map(response -> new JsonObject().put("associated_company_id", new JsonObject().put("$in",
-                                                                                                                  StringUtils
-                                                                                                                      .getIdsJsonArray(
+                                                                                                                  MongoUtils
+                                                                                                                      .getIdsOnJsonArray(
                                                                                                                           response))));
         }
     }

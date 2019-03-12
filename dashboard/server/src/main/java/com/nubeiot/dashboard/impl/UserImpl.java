@@ -1,7 +1,7 @@
 package com.nubeiot.dashboard.impl;
 
 import com.nubeiot.dashboard.Role;
-import com.nubeiot.core.common.Model;
+import com.nubeiot.core.Model;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

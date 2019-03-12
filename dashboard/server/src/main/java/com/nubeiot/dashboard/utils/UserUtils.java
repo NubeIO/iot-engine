@@ -1,12 +1,14 @@
 package com.nubeiot.dashboard.utils;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
+import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 
 import com.nubeiot.core.common.utils.HttpException;
-import com.nubeiot.core.common.utils.SQLUtils;
+import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.impl.models.KeycloakUserRepresentation;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -14,9 +16,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
-
-import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
-import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 
 public class UserUtils {
     public static Role getReverseRole(Role userRole) {

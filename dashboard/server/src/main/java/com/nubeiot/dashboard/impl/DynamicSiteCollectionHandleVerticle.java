@@ -10,7 +10,7 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 
 import com.nubeiot.core.common.RxRestAPIVerticle;
 import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.dashboard.enums.DynamicCollection;
 import com.nubeiot.dashboard.impl.handlers.BaseCollectionHandler;
@@ -76,7 +76,7 @@ public class DynamicSiteCollectionHandleVerticle extends ContainerVerticle imple
     }
 
     private boolean validateData(CustomMessage customMessage) {
-        return StringUtils.isNotNull(customMessage.getHeader().getString("Site-Id"));
+        return Strings.isNotBlank(customMessage.getHeader().getString("Site-Id"));
     }
 
 }

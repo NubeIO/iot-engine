@@ -1,7 +1,7 @@
 package com.nubeiot.dashboard.impl.models;
 
-import com.nubeiot.core.common.GeoPoint;
-import com.nubeiot.core.common.Model;
+import com.nubeiot.core.GeoPoint;
+import com.nubeiot.core.Model;
 
 import io.vertx.core.json.JsonObject;
 

@@ -8,7 +8,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.nio.Address;
 import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.constants.Port;
-import com.nubeiot.core.common.utils.Runner;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
 
 import io.reactivex.Single;
@@ -39,12 +38,6 @@ public class EdgeDittoDriver extends RxMicroServiceVerticle {
 
     private static final String EDGE_DITTO_DRIVER = "io.nubespark.edge.ditto.driver";
     private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
-
-    // Convenience method so you can run it in your IDE
-    public static void main(String[] args) {
-        String JAVA_DIR = "nube-edge-ditto-driver/src/main/java/";
-        Runner.runExample(JAVA_DIR, EdgeDittoDriver.class);
-    }
 
     @Override
     protected Single<String> onStartComplete() {
