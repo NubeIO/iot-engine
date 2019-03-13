@@ -1,10 +1,11 @@
 package com.nubeiot.core.common.utils;
 
-import com.nubeiot.core.exceptions.HttpStatusMapping;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.exceptions.HttpException;
+import com.nubeiot.core.exceptions.HttpStatusMapping;
 
 /**
  * @deprecated use @{@link HttpStatusMapping}
@@ -33,7 +34,7 @@ public class CustomMessageResponseHelper {
     public static void handleHttpException(Message<Object> message, Throwable throwable) {
         HttpException exception = (HttpException) throwable;
         CustomMessage<JsonObject> replyMessage = new CustomMessage<>(
-                new JsonObject().put("message", exception.getMessage()), exception.getStatusCode().code());
+            new JsonObject().put("message", exception.getMessage()), exception.getStatusCode().code());
         message.reply(replyMessage);
     }
 

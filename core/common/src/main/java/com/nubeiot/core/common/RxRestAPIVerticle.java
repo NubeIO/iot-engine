@@ -1,32 +1,33 @@
 package com.nubeiot.core.common;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.Set;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.http.HttpClient;
-import io.vertx.reactivex.core.http.HttpClientRequest;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.CorsHandler;
-import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
-import io.vertx.servicediscovery.Record;
+
+import com.nubeiot.core.exceptions.HttpException;
+import com.nubeiot.core.micro.MicroContext;
 
 @Deprecated
-public abstract class RxRestAPIVerticle extends RxMicroServiceVerticle {
+public interface RxRestAPIVerticle {
 
     /**
      * Enable CORS support.
      *
      * @param router router instance
      */
-    protected void enableCorsSupport(Router router) {
+    default void enableCorsSupport(Router router) {
         Set<String> allowHeaders = new HashSet<>();
         allowHeaders.add("Access-Control-Request-Method");
         allowHeaders.add("Access-Control-Allow-Credentials");
@@ -52,116 +53,46 @@ public abstract class RxRestAPIVerticle extends RxMicroServiceVerticle {
                                   .allowedMethod(HttpMethod.PATCH));
     }
 
-    protected void dispatchRequests(RoutingContext context, JsonObject settings) {
-        System.out.println("Dispatch Requests called");
+    default Single<Buffer> dispatchRequests(MicroContext microContext, HttpMethod method, JsonObject headers,
+                                            String path, JsonObject payload) {
+        Logger logger = LoggerFactory.getLogger(this.getClass());
         int initialOffset = 5; // length of `/api/`
-        // run with circuit breaker in order to deal with failure
-        circuitBreaker.execute(future -> {
-            getAllEndpoints().setHandler(ar -> {
-                if (ar.succeeded()) {
-                    List<Record> recordList = ar.result();
-                    // get relative path and retrieve prefix to dispatch client
-                    String path = context.request().uri();
-
-                    if (path.length() <= initialOffset) {
-                        HttpHelper.notFound(context);
-                        future.complete();
-                        return;
-                    }
-                    String prefix = (path.substring(initialOffset).split("/"))[0];
-                    System.out.println("prefix = " + prefix);
-                    // generate new relative path
-                    String newPath = path.substring(initialOffset + prefix.length());
-                    // get one relevant HTTP client, may not exist
-                    System.out.println("new path = " + newPath);
-                    Optional<Record> client = recordList.stream()
-                                                        .filter(record -> record.getMetadata().getString("api.name") !=
-                                                                          null)
-                                                        .filter(record -> record.getMetadata()
-                                                                                .getString("api.name")
-                                                                                .equals(prefix))
-                                                        .findAny(); // simple load balance
-
-                    if (client.isPresent()) {
-                        System.out.println("Found client for uri: " + path);
-                        Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery, rec -> rec.getType()
-                                                                                                            .equals(
-                                                                                                                io.vertx.servicediscovery.types.HttpEndpoint.TYPE) &&
-                                                                                                         rec.getMetadata()
-                                                                                                            .getString(
-                                                                                                                "api.name")
-                                                                                                            .equals(
-                                                                                                                prefix));
-                        doDispatch(context, settings, newPath, httpClientSingle, future);
-                    } else {
-                        System.out.println("Client endpoint not found for uri " + path);
-                        HttpHelper.notFound(context);
-                        future.complete();
-                    }
-                } else {
-                    future.fail(ar.cause());
-                }
-            });
-        }).setHandler(ar -> {
-            if (ar.failed()) {
-                HttpHelper.badGateway(ar.cause(), context);
-            }
-        });
+        if (path.length() <= initialOffset) {
+            return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found"));
+        }
+        String prefix = (path.substring(initialOffset).split("/"))[0];
+        logger.info("Prefix: {}", prefix);
+        String newPath = path.substring(initialOffset + prefix.length());
+        logger.info("New path: {}", newPath);
+        return microContext.getClusterController()
+                           .executeHttpService(r -> prefix.equals(r.getMetadata().getString("api.name")), newPath,
+                                               method, headers, payload);
     }
 
-    /**
-     * Dispatch the request to the downstream REST layers.
-     *
-     * @param context          routing context instance
-     * @param path             relative path
-     * @param httpClientSingle relevant HTTP client
-     */
-    private void doDispatch(RoutingContext context, JsonObject settings, String path,
-                            Single<HttpClient> httpClientSingle, io.vertx.reactivex.core.Future<Object> cbFuture) {
-        httpClientSingle.subscribe(client -> {
-            HttpClientRequest toReq = client.request(context.request().method(), path, response -> {
-                response.bodyHandler(body -> {
-                    if (response.statusCode() >= 500) { // api endpoint server error, circuit breaker should fail
-                        cbFuture.fail(response.statusCode() + ": " + body.toString());
-                    } else {
-                        HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
-                        response.headers().getDelegate().forEach(header -> {
-                            if (!header.getKey().equals(HttpHeaders.TRANSFER_ENCODING.toString())) {
-                                toRsp.putHeader(header.getKey(), header.getValue());
-                            }
-                        });
-                        // send response
-                        toRsp.end(body);
-                        client.close();
-                        cbFuture.complete();
-                    }
-                    io.vertx.servicediscovery.ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
-                });
-            });
-            // set headers
-            context.request().headers().getDelegate().forEach(header -> {
-                toReq.putHeader(header.getKey(), header.getValue());
-            });
-            toReq.putHeader("user", context.user().principal().toString());
-            toReq.putHeader("settings", settings.toString());
-            if (context.getBody() == null) {
-                toReq.end();
-            } else {
-                toReq.end(context.getBody());
-            }
-        });
+    default void dispatchRequests(MicroContext microContext, RoutingContext context, JsonObject settings) {
+        HttpMethod method = context.request().method();
+        JsonObject headers = new JsonObject();
+        context.request().headers().getDelegate().forEach(header -> headers.put(header.getKey(), header.getValue()));
+        headers.put("user", context.user().principal().toString());
+        //TODO fix it
+        headers.put("settings", Objects.isNull(settings) ? "{}" : settings.encode());
+        JsonObject payload = (method == HttpMethod.DELETE || method == HttpMethod.GET) ? null : context.getBodyAsJson();
+        dispatchRequests(microContext, method, headers, context.request().uri(), payload).subscribe(
+            buffer -> handleResponse(context, buffer), t -> HttpHelper.badGateway(t, context));
     }
 
-    /**
-     * Get all REST endpoints from the service discovery infrastructure.
-     *
-     * @return async result
-     */
-    private io.vertx.reactivex.core.Future<List<Record>> getAllEndpoints() {
-        io.vertx.reactivex.core.Future<List<Record>> future = io.vertx.reactivex.core.Future.future();
-        discovery.getRecords(record -> record.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE),
-                             future.completer());
-        return future;
+    default void handleResponse(RoutingContext context, Buffer buffer) {
+        //        HttpServerResponse toRsp = context.response().setStatusCode(response.statusCode());
+        //        response.headers().entries().forEach(header -> {
+        //            if (!header.getKey().equals(HttpHeaders.TRANSFER_ENCODING.toString())) {
+        //                toRsp.putHeader(header.getKey(), header.getValue());
+        //            }
+        //        });
+        //        // send response
+        //        toRsp.end(body);
+
+        HttpServerResponse toRsp = context.response().setStatusCode(200);
+        toRsp.end(buffer);
     }
 
 }

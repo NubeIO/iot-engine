@@ -7,15 +7,7 @@ import static com.nubeiot.dashboard.constants.Address.SITE_COLLECTION_ADDRESS;
 
 import java.util.List;
 
-import com.nubeiot.core.common.RxRestAPIVerticle;
-import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.common.utils.HttpException;
-import com.nubeiot.core.common.utils.SQLUtils;
-import com.nubeiot.core.common.utils.StringUtils;
-import com.nubeiot.dashboard.Role;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.Single;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -24,19 +16,28 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
-public class SiteCollectionHandleVerticle extends RxRestAPIVerticle {
+import com.nubeiot.core.common.RxRestAPIVerticle;
+import com.nubeiot.core.common.utils.CustomMessage;
+import com.nubeiot.core.common.utils.HttpException;
+import com.nubeiot.core.common.utils.SQLUtils;
+import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.dashboard.Role;
+
+public class SiteCollectionHandleVerticle extends ContainerVerticle implements RxRestAPIVerticle {
 
     private Logger logger = LoggerFactory.getLogger(SiteCollectionHandleVerticle.class);
     private MongoClient mongoClient;
 
     @Override
-    protected Single<String> onStartComplete() {
-        mongoClient = MongoClient.createNonShared(vertx, this.appConfig.getJsonObject("mongo").getJsonObject("config"));
+    public void start() {
+        super.start();
+        final JsonObject appConfig = this.nubeConfig.getAppConfig().toJson();
+        mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo").getJsonObject("config"));
         EventBus eventBus = getVertx().eventBus();
 
         // Receive message
         eventBus.consumer(SITE_COLLECTION_ADDRESS, this::handleRequest);
-        return Single.just("Deployed successfully...");
     }
 
     private void handleRequest(Message<Object> message) {

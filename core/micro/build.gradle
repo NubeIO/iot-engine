@@ -4,4 +4,7 @@ dependencies {
     compile "io.vertx:vertx-service-proxy:$project.versions.vertx"
     compile "io.vertx:vertx-service-discovery:$project.versions.vertx"
     compile "io.vertx:vertx-circuit-breaker:$project.versions.vertx"
+
+    testCompile project(":core:base").sourceSets.test.output
+    testCompile project(":core:httpserver").sourceSets.test.output
 }

@@ -5,18 +5,15 @@ import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
 import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.ext.web.Router;
-import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
-import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
 import io.vertx.reactivex.servicediscovery.types.MessageSource;
 import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.core.utils.Networks;
 
 import lombok.Getter;
 
@@ -28,16 +25,14 @@ public abstract class RxMicroServiceVerticle extends ContainerVerticle {
 
     @Getter
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private MicroContext context;
-    protected ServiceDiscovery discovery;
-    protected CircuitBreaker circuitBreaker;
     protected JsonObject appConfig;
+    protected MicroContext microContext;
 
     @Override
     public void start() {
         super.start();
         this.appConfig = this.nubeConfig.getAppConfig().toJson();
-        this.addProvider(new MicroserviceProvider(), this::setContext);
+        this.addProvider(new MicroserviceProvider(), this::setMicroContext);
     }
 
     protected abstract Single<String> onStartComplete();
@@ -56,19 +51,16 @@ public abstract class RxMicroServiceVerticle extends ContainerVerticle {
 
     protected final Single<Record> publishHttpEndpoint(String name, String host, int port) {
         String apiName = this.appConfig.getString("api.name", "");
-        Record record = HttpEndpoint.createRecord(name, Networks.computeNATAddress(host), port, "/",
-                                                  new JsonObject().put("api.name", apiName));
-        return context.register(record);
+        return microContext.getClusterController().addHttpRecord(name, new HttpLocation().setHost(host).setPort(port).setRoot("/"),
+                                                 new JsonObject().put("api.name", apiName));
     }
 
     protected final Single<Record> publishMessageSource(String name, String address) {
-        return context.register(MessageSource.createRecord(name, address));
+        return microContext.getClusterController().addRecord(MessageSource.createRecord(name, address));
     }
 
-    private void setContext(MicroContext context) {
-        this.context = context;
-        this.discovery = context.getDiscovery();
-        this.circuitBreaker = context.getCircuitBreaker();
+    private void setMicroContext(MicroContext context) {
+        this.microContext = context;
         this.onStartComplete()
             .subscribe(logger::info, error -> logger.error("Caused issue due to: {}", error.getCause()));
     }

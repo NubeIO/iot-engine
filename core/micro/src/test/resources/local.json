@@ -1,13 +1,6 @@
 {
   "__app__": {
     "__micro__": {
-      "__gateway__": {
-        "enabled": false,
-        "clusterAnnounceMonitorClass": "com.nubeiot.core.micro.ServiceGatewayAnnounceMonitor",
-        "clusterUsageMonitorClass": "com.nubeiot.core.micro.ServiceGatewayUsageMonitor",
-        "localAnnounceMonitorClass": "com.nubeiot.core.micro.ServiceGatewayAnnounceMonitor",
-        "localUsageMonitorClass": "com.nubeiot.core.micro.ServiceGatewayUsageMonitor"
-      },
       "__serviceDiscovery__": {
         "announceAddress": "nubeio.service.discovery.announce",
         "autoRegistrationOfImporters": true,
@@ -15,7 +8,7 @@
           "className": "io.vertx.servicediscovery.impl.DefaultServiceDiscoveryBackend"
         },
         "usageAddress": "nubeio.service.discovery.usage",
-        "enabled": true
+        "enabled": false
       },
       "__localServiceDiscovery__": {
         "announceAddress": "nubeio.service.local.discovery.announce",
@@ -24,10 +17,10 @@
           "className": "io.vertx.servicediscovery.impl.DefaultServiceDiscoveryBackend"
         },
         "usageAddress": "nubeio.service.local.discovery.usage",
-        "enabled": false
+        "enabled": true
       },
       "__circuitBreaker__": {
-        "enabled": false,
+        "enabled": true,
         "options": {
           "timeout": 10000,
           "maxFailures": 5,

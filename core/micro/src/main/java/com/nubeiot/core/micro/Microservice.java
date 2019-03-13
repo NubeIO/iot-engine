@@ -1,8 +1,6 @@
 package com.nubeiot.core.micro;
 
-import io.reactivex.Completable;
 import io.vertx.core.Future;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.component.UnitVerticle;
 
@@ -16,12 +14,12 @@ public final class Microservice extends UnitVerticle<MicroConfig, MicroContext> 
     public void start() {
         super.start();
         logger.info("Setup micro-service...");
-        getContext().create(Vertx.newInstance(vertx), config);
+        getContext().create(vertx, config);
     }
 
     @Override
     public void stop(Future<Void> future) {
-        Completable.merge(getContext().unregister()).doOnComplete(future::complete).doOnError(future::fail).subscribe();
+        getContext().unregister(future);
     }
 
     @Override
