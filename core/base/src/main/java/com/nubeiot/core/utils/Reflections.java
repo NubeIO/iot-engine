@@ -359,6 +359,18 @@ public final class Reflections {
             }
         }
 
+        public static <T> T createObject(String clazz) {
+            Silencer<T> silencer = new Silencer<>();
+            try {
+                Class<T> aClass = (Class<T>) Class.forName(clazz, true, Reflections.contextClassLoader());
+                return createObject(aClass, silencer).get();
+            } catch (ClassNotFoundException | ClassCastException e) {
+                silencer.accept(null, new HiddenException(NubeException.ErrorCode.INITIALIZER_ERROR,
+                                                          "Not found class " + clazz, e));
+                return silencer.get();
+            }
+        }
+
         public static <T> T createObject(Class<T> clazz) {
             return createObject(clazz, new Silencer<>()).get();
         }

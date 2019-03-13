@@ -12,7 +12,25 @@ task annotationProcessing(type: JavaCompile, group: 'build') {
         "-Acodegen.output=${outputDir.absolutePath}"
     ]
 }
+
+task annotationTestProcessing(type: JavaCompile, group: 'build') {
+    onlyIf {
+        project.hasProperty('generated') && project.generated == "true"
+    }
+    def outputDir = new FileTreeBuilder(project.projectDir).dir(project.genProps.testDir)
+    source = sourceSets.main.java + sourceSets.test.java
+    classpath = configurations.compile + configurations.compileOnly + configurations.testCompile +
+                configurations.testCompileOnly
+    destinationDir = project.file(project.genProps.javaTestSrcDir)
+    options.compilerArgs = [
+        "-proc:only",
+        "-processor", "io.vertx.codegen.CodeGenProcessor",
+        "-Acodegen.output=${outputDir.absolutePath}"
+    ]
+}
+
 compileJava.dependsOn(annotationProcessing)
+compileTestJava.dependsOn(annotationTestProcessing)
 
 task generateServiceDescriptor(group: 'build') {
     onlyIf {

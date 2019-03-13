@@ -5,15 +5,15 @@ import java.util.Map;
 import java.util.Objects;
 
 import io.vertx.core.json.DecodeException;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.Functions.Silencer;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
@@ -24,39 +24,10 @@ import lombok.RequiredArgsConstructor;
 
 public interface IConfig extends JsonData {
 
-    ObjectMapper MAPPER = Json.mapper.copy().setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+    ObjectMapper MAPPER = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
 
-    @JsonIgnore
-    String name();
-
-    @JsonIgnore
-    Class<? extends IConfig> parent();
-
-    @JsonIgnore
-    default boolean isRoot() {
-        return Objects.isNull(parent());
-    }
-
-    @SuppressWarnings("unchecked")
-    default <T extends IConfig> T merge(@NonNull T to) {
-        return (T) merge(toJson(), to.toJson(), getClass());
-    }
-
-    default <T extends IConfig> JsonObject mergeToJson(@NonNull T to) {
-        return this.toJson().mergeIn(to.toJson(), true);
-    }
-
-    default ObjectMapper mapper() {
-        return MAPPER;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    default JsonObject toJson() {
-        List<? extends IConfig> fieldValues = ReflectionField.getFieldValuesByType(this, IConfig.class);
-        JsonObject json = new JsonObject();
-        fieldValues.forEach(val -> json.put(val.name(), val.toJson()));
-        return new JsonObject(mapper().convertValue(this, Map.class)).mergeIn(json);
+    static <T extends IConfig> T fromClasspath(String jsonFile, Class<T> clazz) {
+        return IConfig.from(Configs.loadJsonConfig(jsonFile), clazz);
     }
 
     static <T extends IConfig> T from(Object data, Class<T> clazz) {
@@ -77,7 +48,7 @@ public interface IConfig extends JsonData {
             JsonObject entries = data instanceof String
                                  ? new JsonObject((String) data)
                                  : JsonObject.mapFrom(Objects.requireNonNull(data));
-            return ReflectionClass.createObject(clazz, new CreateConfig<>(clazz, entries)).get();
+            return ReflectionClass.createObject(clazz, new CreateConfig<>(clazz, entries, MAPPER)).get();
         } catch (IllegalArgumentException | NullPointerException | DecodeException | HiddenException ex) {
             HiddenException hidden = ex instanceof HiddenException ? (HiddenException) ex : new HiddenException(ex);
             if (Objects.nonNull(cause)) {
@@ -109,11 +80,45 @@ public interface IConfig extends JsonData {
         return from(from, clazz).merge(from(to, clazz));
     }
 
+    @JsonIgnore
+    String name();
+
+    @JsonIgnore
+    Class<? extends IConfig> parent();
+
+    @JsonIgnore
+    default boolean isRoot() {
+        return Objects.isNull(parent());
+    }
+
+    @SuppressWarnings("unchecked")
+    default <T extends IConfig> T merge(@NonNull T to) {
+        return (T) merge(toJson(), to.toJson(), getClass());
+    }
+
+    default <T extends IConfig> JsonObject mergeToJson(@NonNull T to) {
+        return this.toJson().mergeIn(to.toJson(), true);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    default JsonObject toJson() {
+        List<? extends IConfig> fieldValues = ReflectionField.getFieldValuesByType(this, IConfig.class);
+        JsonObject jsonObject = new JsonObject(mapper().convertValue(this, Map.class));
+        fieldValues.forEach(val -> jsonObject.put(val.name(), val.toJson()));
+        return jsonObject;
+    }
+
+    default ObjectMapper mapper() {
+        return MAPPER;
+    }
+
     @RequiredArgsConstructor
     class CreateConfig<T extends IConfig> extends Silencer<T> {
 
         private final Class<T> clazz;
         private final JsonObject entries;
+        private final ObjectMapper mapper;
 
         @Override
         public void accept(T temp, HiddenException throwable) {
@@ -143,7 +148,7 @@ public interface IConfig extends JsonData {
                 JsonObject values = Strings.isNotBlank(name) && entries.containsKey(name)
                                     ? entries.getJsonObject(name)
                                     : entries;
-                return values.mapTo(clazz);
+                return mapper.convertValue(values.getMap(), clazz);
             } catch (IllegalArgumentException | ClassCastException e) {
                 throw new HiddenException(NubeException.ErrorCode.INVALID_ARGUMENT, e);
             }

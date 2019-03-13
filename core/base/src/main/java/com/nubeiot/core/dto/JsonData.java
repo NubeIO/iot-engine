@@ -25,18 +25,7 @@ import lombok.NonNull;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public interface JsonData {
 
-    default JsonObject toJson() {
-        return toJson(mapper());
-    }
-
-    @SuppressWarnings("unchecked")
-    default JsonObject toJson(ObjectMapper mapper) {
-        return new JsonObject((Map<String, Object>) mapper.convertValue(this, Map.class));
-    }
-
-    default ObjectMapper mapper() {
-        return Json.mapper;
-    }
+    ObjectMapper MAPPER = Json.mapper.copy().registerModule(Deserializer.SIMPLE_MODULE);
 
     static <T extends JsonData> T from(Object object, Class<T> clazz) {
         return from(object, clazz, "Invalid data format");
@@ -62,6 +51,17 @@ public interface JsonData {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, errorMsg, new HiddenException(ex));
         }
     }
+
+    default JsonObject toJson() {
+        return toJson(mapper());
+    }
+
+    @SuppressWarnings("unchecked")
+    default JsonObject toJson(ObjectMapper mapper) {
+        return new JsonObject((Map<String, Object>) mapper.convertValue(this, Map.class));
+    }
+
+    default ObjectMapper mapper() { return MAPPER; }
 
     @NoArgsConstructor
     class DefaultJsonData extends HashMap<String, Object> implements JsonData {

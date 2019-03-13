@@ -91,7 +91,11 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     @SuppressWarnings("unchecked")
     public final void startUnits(Future<Void> future) {
-        final List<Single<String>> collect = components.entrySet().stream().map(entry -> {
+        if (components.isEmpty()) {
+            future.complete();
+            return;
+        }
+        List<Single<String>> collect = components.entrySet().stream().map(entry -> {
             Unit unit = entry.getValue().get().registerSharedData(sharedKey);
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);

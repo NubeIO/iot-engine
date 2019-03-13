@@ -102,6 +102,10 @@ public interface TestHelper {
 
     interface EventbusHelper {
 
+        static void assertConsumerData(Vertx vertx, Async async, String address, Consumer<Object> assertData) {
+            assertConsumerData(vertx, async, address, assertData, null);
+        }
+
         static void assertConsumerData(Vertx vertx, Async async, String address, Consumer<Object> assertData,
                                        Handler<Void> testCompleted) {
             MessageConsumer<Object> consumer = vertx.eventBus().consumer(address);
