@@ -33,7 +33,7 @@ public final class TransactionEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
-        ITblTransaction transaction = new TblTransaction().fromJson(data.getBody());
+        ITblTransaction transaction = new TblTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getTransactionId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");
         }

@@ -13,6 +13,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Handle Eventbus data
+ */
 @RequiredArgsConstructor
 public class RestEventResultHandler implements Handler<RoutingContext> {
 

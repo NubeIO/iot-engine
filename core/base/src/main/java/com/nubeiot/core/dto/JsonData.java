@@ -32,7 +32,7 @@ public interface JsonData {
     }
 
     static <T extends JsonData> T from(Object object, Class<T> clazz, String errorMsg) {
-        return from(object, clazz, Json.mapper, errorMsg);
+        return from(object, clazz, MAPPER, errorMsg);
     }
 
     static <T extends JsonData> T from(Object object, Class<T> clazz, ObjectMapper mapper) {
@@ -43,10 +43,12 @@ public interface JsonData {
     static <T extends JsonData> T from(@NonNull Object object, @NonNull Class<T> clazz, @NonNull ObjectMapper mapper,
                                        String errorMsg) {
         try {
-            JsonObject entries = object instanceof String
-                                 ? new JsonObject((String) object)
-                                 : new JsonObject((Map<String, Object>) mapper.convertValue(object, Map.class));
-            return entries.mapTo(clazz);
+            JsonObject entries = object instanceof JsonObject
+                                 ? (JsonObject) object
+                                 : object instanceof String
+                                   ? new JsonObject((String) object)
+                                   : new JsonObject((Map<String, Object>) mapper.convertValue(object, Map.class));
+            return mapper.convertValue(entries.getMap(), clazz);
         } catch (IllegalArgumentException | NullPointerException | DecodeException ex) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, errorMsg, new HiddenException(ex));
         }

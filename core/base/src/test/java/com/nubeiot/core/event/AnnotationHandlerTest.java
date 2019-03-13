@@ -149,7 +149,7 @@ public class AnnotationHandlerTest {
                                                 RequestData.builder().body(new JsonObject().put("id", 1)).build());
         JsonObject r = MPH.get().execute(msg).blockingGet();
         RequestData from = JsonData.from(r, RequestData.class);
-        Assert.assertEquals(1, from.getBody().getInteger("id").intValue());
+        Assert.assertEquals(1, from.body().getInteger("id").intValue());
     }
 
     @Test
@@ -158,7 +158,7 @@ public class AnnotationHandlerTest {
                                                 RequestData.builder().body(new JsonObject().put("key", "1")).build());
         JsonObject r = MPH.get().execute(msg).blockingGet();
         RequestData from = JsonData.from(r, RequestData.class);
-        Assert.assertEquals("1", from.getBody().getString("key"));
+        Assert.assertEquals("1", from.body().getString("key"));
     }
 
     @Test
@@ -174,7 +174,7 @@ public class AnnotationHandlerTest {
         RequestData from = JsonData.from(r.getValue("request"), RequestData.class);
         Assert.assertEquals(1, mock.getId());
         Assert.assertEquals("hey", mock.getName());
-        Assert.assertEquals("o", from.getBody().getValue("o"));
+        Assert.assertEquals("o", from.body().getValue("o"));
     }
 
     @Test
@@ -188,7 +188,7 @@ public class AnnotationHandlerTest {
         JsonObject r = MPH.get().execute(msg).blockingGet();
         Assert.assertEquals(10, r.getValue("id"));
         RequestData from = JsonData.from(r.getValue("request"), RequestData.class);
-        Assert.assertEquals("o", from.getBody().getString("o"));
+        Assert.assertEquals("o", from.body().getString("o"));
     }
 
     @Test

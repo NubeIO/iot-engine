@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.http.WebSocket;
@@ -39,6 +40,11 @@ public class HttpServerTestBase {
     protected HttpClient client;
     protected RequestOptions requestOptions;
 
+    protected static void assertResponse(TestContext context, Async async, JsonObject expected,
+                                         io.vertx.core.buffer.Buffer actual) {
+        JsonHelper.assertJson(context, async, expected, actual.toJsonObject());
+    }
+
     public void before(TestContext context) throws IOException {
         vertx = Vertx.vertx();
         httpConfig = new HttpConfig();
@@ -64,7 +70,7 @@ public class HttpServerTestBase {
                                       JsonObject bodyExpected) {
         Async async = context.async();
         client.request(method, requestOptions.setURI(path), resp -> {
-            context.assertEquals(ApiConstants.DEFAULT_CONTENT_TYPE, resp.getHeader(ApiConstants.CONTENT_TYPE));
+            context.assertEquals(ApiConstants.DEFAULT_CONTENT_TYPE, resp.getHeader(HttpHeaders.CONTENT_TYPE));
             context.assertNotNull(resp.getHeader("x-response-time"));
             context.assertEquals(codeExpected, resp.statusCode());
             resp.bodyHandler(body -> JsonHelper.assertJson(context, bodyExpected, body));
@@ -96,11 +102,6 @@ public class HttpServerTestBase {
 
     private Handler<Void> closeClient() {
         return e -> client.close();
-    }
-
-    protected static void assertResponse(TestContext context, Async async, JsonObject expected,
-                                         io.vertx.core.buffer.Buffer actual) {
-        JsonHelper.assertJson(context, async, expected, actual.toJsonObject());
     }
 
     protected void assertConsumerData(Async async, String address, Consumer<Object> assertData) {

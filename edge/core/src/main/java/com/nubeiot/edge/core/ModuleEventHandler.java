@@ -45,7 +45,7 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
-        ITblModule module = new TblModule(data.getBody());
+        ITblModule module = new TblModule(data.body());
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
@@ -57,17 +57,17 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> updatePartly(RequestData data) {
-        ITblModule module = new TblModule(data.getBody());
+        ITblModule module = new TblModule(data.body());
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
-        return this.verticle.getEntityHandler().processDeploymentTransaction(new TblModule().fromJson(data.getBody()),
+        return this.verticle.getEntityHandler().processDeploymentTransaction(new TblModule().fromJson(data.body()),
                                                                              EventAction.PATCH);
     }
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData data) {
-        JsonObject body = data.getBody();
+        JsonObject body = data.body();
         ITblModule module = new TblModule().fromJson(body);
         if (Strings.isBlank(module.getServiceId())) {
             ModuleType moduleType = module.getServiceType();
@@ -84,7 +84,7 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> remove(RequestData data) {
-        ITblModule module = new TblModule().fromJson(data.getBody());
+        ITblModule module = new TblModule().fromJson(data.body());
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
@@ -93,7 +93,7 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData data) {
-        JsonObject body = data.getBody();
+        JsonObject body = data.body();
         ModuleType moduleType = new TblModule().fromJson(body).getServiceType();
         JsonObject moduleJson = moduleType.serialize(body, this.verticle.getModuleRule());
         ITblModule module = new TblModule().fromJson(moduleJson);

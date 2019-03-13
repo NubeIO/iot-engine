@@ -108,13 +108,9 @@ public final class HttpServer extends UnitVerticle<HttpConfig, UnitContext> {
                                          .build();
     }
 
-    private Router initUploadRouter(Router router) {
-        return router;
-    }
+    private Router initUploadRouter(Router router)   { return router; }
 
-    private Router initDownloadRouter(Router router) {
-        return router;
-    }
+    private Router initDownloadRouter(Router router) { return router; }
 
     private Router initWebSocketRouter(Router router) {
         if (!config.getWebsocketCfg().isEnabled()) {
@@ -127,8 +123,6 @@ public final class HttpServer extends UnitVerticle<HttpConfig, UnitContext> {
                                                        .build();
     }
 
-    private Router initHttp2Router(Router router) {
-        return router;
-    }
+    private Router initHttp2Router(Router router) { return router; }
 
 }

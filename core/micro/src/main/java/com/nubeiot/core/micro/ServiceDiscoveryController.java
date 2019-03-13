@@ -23,6 +23,8 @@ import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.types.HttpLocation;
 
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.ServiceException;
@@ -101,6 +103,20 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
                     .doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
+    public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
+                                                   RequestData requestData) {
+        return get().rxGetRecord(r -> HttpEndpoint.TYPE.equals(r.getType()) && filter.apply(r))
+                    .switchIfEmpty(Single.error(
+                        new ServiceException("Service Unavailable", new NotFoundException("Not found HTTP endpoint"))))
+                    .flatMap(record -> {
+                        ServiceReference reference = get().getReference(record);
+                        return circuitController.wrap(
+                            execute(reference.getAs(HttpClient.class), path, method, requestData,
+                                    v -> reference.release()));
+                    })
+                    .doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
+    }
+
     private Single<Record> addDecoratorRecord(@NonNull Record record) {
         return get().rxPublish(record)
                     .doOnSuccess(rec -> logger.info("Published {} Service: {}", kind(), rec.toJson()))
@@ -116,6 +132,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return record.setLocation(location.toJson());
     }
 
+    //TODO move into HTTPClient
     private Single<Buffer> execute(HttpClient httpClient, String path, HttpMethod method, JsonObject headers,
                                    JsonObject payload, Handler<Void> closeHandler) {
         return Single.create(source -> {
@@ -142,6 +159,37 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
                 request.end();
             } else {
                 request.write(payload.encode()).end();
+            }
+        });
+    }
+
+    //TODO move into HTTPClient
+    private Single<ResponseData> execute(HttpClient httpClient, String path, HttpMethod method, RequestData requestData,
+                                         Handler<Void> closeHandler) {
+        return Single.create(source -> {
+            HttpClientRequest request = httpClient.request(method, path, response -> response.bodyHandler(body -> {
+                logger.debug("Response status {}", response.statusCode());
+                if (response.statusCode() >= 400) {
+                    source.onError(new HttpException(response.statusCode(), body.toString()));
+                    logger.warn("Failed to execute: {}", response.toString());
+                } else {
+                    source.onSuccess(new ResponseData().setBody(body.toJsonObject()));
+                }
+            })).endHandler(v -> {
+                httpClient.close();
+                closeHandler.handle(v);
+            });
+            logger.info("Make HTTP request {} :: {} | <{}> | <{}>", request.method(), request.absoluteURI(),
+                        requestData.toJson());
+            //TODO why need it?
+            request.setChunked(true);
+            for (String header : requestData.headers().fieldNames()) {
+                request.putHeader(header, requestData.headers().getValue(header).toString());
+            }
+            if (requestData.body() == null) {
+                request.end();
+            } else {
+                request.write(requestData.body().encode()).end();
             }
         });
     }

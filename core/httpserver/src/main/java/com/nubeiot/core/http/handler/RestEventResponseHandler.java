@@ -9,6 +9,7 @@ import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.CommonParamParser;
 
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
 
@@ -20,7 +21,7 @@ public final class RestEventResponseHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext context) {
         context.addHeadersEndHandler(
-                v -> context.response().putHeader(ApiConstants.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE));
+                v -> context.response().putHeader(HttpHeaders.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE));
         HttpMethod method = context.request().method();
         EventMessage eventMessage = context.get(EventAction.RETURN.name());
         if (Objects.isNull(eventMessage)) {

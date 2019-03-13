@@ -56,7 +56,7 @@ public class RestApiBuilder {
         if (restApiClass.isEmpty() && restEventApiClass.isEmpty()) {
             throw new InitializerError("No REST API given, register at least one.");
         }
-        String wildCards = Urls.combinePath(rootApi, ApiConstants.PATH_WILDCARDS);
+        String wildCards = Urls.combinePath(rootApi, ApiConstants.WILDCARDS_ANY_PATH);
         Router router = initRestApiRouter(initEventBusApiRouter(this.router));
         router.route(wildCards).handler(new RestEventResponseHandler()).produces(ApiConstants.DEFAULT_CONTENT_TYPE);
         return router;

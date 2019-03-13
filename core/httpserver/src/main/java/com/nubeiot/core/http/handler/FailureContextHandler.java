@@ -8,6 +8,7 @@ import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.CommonParamParser;
 
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -25,7 +26,7 @@ public final class FailureContextHandler implements Handler<RoutingContext> {
             logger.error("API exception", throwable);
             ErrorMessage errorMessage = ErrorMessage.parse(throwable);
             failureContext.response()
-                          .putHeader(ApiConstants.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE)
+                          .putHeader(HttpHeaders.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE)
                           .setStatusCode(HttpStatusMapping.error(method, errorMessage.getThrowable()).code())
                           .end(CommonParamParser.prettify(errorMessage, failureContext.request()));
         }

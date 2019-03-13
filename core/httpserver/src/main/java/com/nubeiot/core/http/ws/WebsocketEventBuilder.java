@@ -90,7 +90,7 @@ public final class WebsocketEventBuilder {
         SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockJsOption.getSockjsOptions());
         EventController controller = new EventController(vertx);
         validate().forEach((path, socketMapping) -> {
-            String fullPath = Urls.combinePath(rootWs, path, ApiConstants.PATH_WILDCARDS);
+            String fullPath = Urls.combinePath(rootWs, path, ApiConstants.WILDCARDS_ANY_PATH);
             router.route(fullPath)
                   .handler(sockJSHandler.bridge(createBridgeOptions(fullPath, socketMapping),
                                                 createHandler(controller, socketMapping)));
