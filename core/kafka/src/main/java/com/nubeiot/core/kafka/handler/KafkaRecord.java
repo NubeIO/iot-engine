@@ -34,11 +34,6 @@ public final class KafkaRecord<T> implements JsonData {
     @JsonUnwrapped
     private final T record;
 
-    @Override
-    public ObjectMapper mapper() {
-        return RecordMixin.MAPPER;
-    }
-
     public static <K, V> KafkaRecord<ConsumerRecord<K, V>> serialize(ConsumerRecord<K, V> record) {
         return new KafkaRecord<>(record);
     }
@@ -55,6 +50,11 @@ public final class KafkaRecord<T> implements JsonData {
     @SuppressWarnings("unchecked")
     public static <K, V> KafkaRecord<ProducerRecord<K, V>> toProducer(@NonNull JsonObject data) {
         return new KafkaRecord<>(JsonData.from(data, ProducerRecordMixin.class, RecordMixin.MAPPER));
+    }
+
+    @Override
+    public ObjectMapper mapper() {
+        return RecordMixin.MAPPER;
     }
 
 }

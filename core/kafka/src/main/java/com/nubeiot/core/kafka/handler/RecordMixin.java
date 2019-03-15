@@ -13,15 +13,12 @@ import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.record.DefaultRecord;
 import org.apache.kafka.common.record.TimestampType;
 
-import io.vertx.core.json.Json;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -30,6 +27,19 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.nubeiot.core.dto.JsonData;
 
 interface RecordMixin extends JsonData {
+
+    ObjectMapper MAPPER = JsonData.MAPPER.copy()
+                                         .addMixIn(ConsumerRecord.class, ConsumerRecordMixin.class)
+                                         .addMixIn(ProducerRecord.class, ProducerRecordMixin.class)
+                                         .addMixIn(Headers.class, HeadersMixin.class)
+                                         .addMixIn(Header.class, HeaderMixin.class)
+                                         .addMixIn(ByteBuffer.class, ByteBufferIgnoreMixin.class)
+                                         .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
+                                         .setVisibility(PropertyAccessor.SETTER, Visibility.NONE)
+                                         .setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
+                                         .setVisibility(PropertyAccessor.CREATOR, Visibility.NONE)
+                                         .setFilterProvider(ignoreSerializedSize())
+                                         .registerModule(new Jdk8Module());
 
     static FilterProvider createFilterProvider(String... ignoreKeys) {
         return new SimpleFilterProvider().addFilter("kafkaRecordIgnores",
@@ -43,20 +53,6 @@ interface RecordMixin extends JsonData {
     static FilterProvider ignoreHeaders() {
         return createFilterProvider("serializedKeySize", "serializedValueSize", "headers");
     }
-
-    ObjectMapper MAPPER = Json.mapper.copy()
-                                     .addMixIn(ConsumerRecord.class, ConsumerRecordMixin.class)
-                                     .addMixIn(ProducerRecord.class, ProducerRecordMixin.class)
-                                     .addMixIn(Headers.class, HeadersMixin.class)
-                                     .addMixIn(Header.class, HeaderMixin.class)
-                                     .addMixIn(ByteBuffer.class, ByteBufferIgnoreMixin.class)
-                                     .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
-                                     .setVisibility(PropertyAccessor.SETTER, Visibility.NONE)
-                                     .setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
-                                     .setVisibility(PropertyAccessor.CREATOR, Visibility.NONE)
-                                     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                     .setFilterProvider(ignoreSerializedSize())
-                                     .registerModule(new Jdk8Module());
 
     @Override
     default ObjectMapper mapper() {
@@ -100,8 +96,11 @@ interface RecordMixin extends JsonData {
     @JsonFilter("kafkaRecordIgnores")
     class ProducerRecordMixin<K, V> extends ProducerRecord<K, V> implements RecordMixin {
 
-        ProducerRecordMixin(@JsonProperty(value = "topic", required = true) String topic, @JsonProperty(value = "partition", required = true) Integer partition,
-                            @JsonProperty("key") K key, @JsonProperty("value") V value, @JsonProperty("timestamp") Long timestamp, @JsonProperty("headers") HeadersMixin headers) {
+        @JsonCreator
+        ProducerRecordMixin(@JsonProperty(value = "topic", required = true) String topic,
+                            @JsonProperty(value = "partition", required = true) Integer partition,
+                            @JsonProperty("key") K key, @JsonProperty("value") V value,
+                            @JsonProperty("timestamp") Long timestamp, @JsonProperty("headers") HeadersMixin headers) {
             super(topic, partition, timestamp, key, value, headers);
         }
 
