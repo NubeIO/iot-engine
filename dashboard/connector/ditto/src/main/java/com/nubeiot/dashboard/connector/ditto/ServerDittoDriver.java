@@ -148,7 +148,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
                     // This means we are we are PUTing device value for the first time or going to updated whole data
                     JsonObject body = ctx.getBodyAsJson();
                     body.put("policyId", Services.POLICY_NAMESPACE_PREFIX + ":" +
-                                         new JsonObject(ctx.request().headers().getDelegate().get("user")).getString(
+                                         new JsonObject(ctx.request().headers().getDelegate().get("User")).getString(
                                              "site_id"));
                     logger.info("Body ::: " + body);
                     req.write(body.toString());

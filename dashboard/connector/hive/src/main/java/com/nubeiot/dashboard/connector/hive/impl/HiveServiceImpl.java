@@ -1,7 +1,10 @@
 package com.nubeiot.dashboard.connector.hive.impl;
 
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.nubeiot.dashboard.connector.hive.HiveService;
-import com.nubeiot.core.common.BaseService;
+
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.annotations.NonNull;
@@ -18,10 +21,8 @@ import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 
-import java.util.Collections;
-import java.util.concurrent.atomic.AtomicBoolean;
+public class HiveServiceImpl implements HiveService {
 
-public class HiveServiceImpl implements HiveService, BaseService {
     private final Logger logger = LoggerFactory.getLogger(HiveServiceImpl.class);
     private final JDBCClient client;
 
@@ -29,10 +30,8 @@ public class HiveServiceImpl implements HiveService, BaseService {
         this.client = JDBCClient.createNonShared(vertx, config);
     }
 
-    @Override
     public Single<HiveService> initializeService() {
-        logger.info("Initializing ...");
-
+        logger.info("Initializing...");
         return Single.just(this);
     }
 
@@ -58,22 +57,23 @@ public class HiveServiceImpl implements HiveService, BaseService {
 
     private Single<SQLConnection> getConnection() {
         return client.rxGetConnection()
-            .flatMap(conn -> Single.just(conn)
-                .doOnError(throwable -> logger.error("Cannot get connection object."))
-                .doFinally(conn::close));
+                     .flatMap(conn -> Single.just(conn)
+                                            .doOnError(throwable -> logger.error("Cannot get connection object."))
+                                            .doFinally(conn::close));
     }
 
     @Override
-    public HiveService executeQueryWithParams(String sqlQuery, @Nullable JsonArray params, Handler<AsyncResult<JsonObject>> resultHandler) {
-        getConnection()
-            .flatMap(conn -> {
-                if (params == null) {
-                    return conn.rxQuery(sqlQuery);
-                }
-                return conn.rxQueryWithParams(sqlQuery, params);
-            })
-            .map(result -> new JsonArray(result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()))
-            .subscribe(toObserverFromArray(resultHandler));
+    public HiveService executeQueryWithParams(String sqlQuery, @Nullable JsonArray params,
+                                              Handler<AsyncResult<JsonObject>> resultHandler) {
+        getConnection().flatMap(conn -> {
+            if (params == null) {
+                return conn.rxQuery(sqlQuery);
+            }
+            return conn.rxQueryWithParams(sqlQuery, params);
+        })
+                       .map(result -> new JsonArray(
+                           result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()))
+                       .subscribe(toObserverFromArray(resultHandler));
 
         return this;
     }
@@ -84,14 +84,11 @@ public class HiveServiceImpl implements HiveService, BaseService {
     }
 
     private JsonObject failureMessage(Throwable t) {
-        return new JsonObject()
-            .put("status", "FAILED")
-            .put("error", t.getMessage());
+        return new JsonObject().put("status", "FAILED").put("error", t.getMessage());
     }
 
     private JsonObject successMessage(JsonArray jsonArray) {
-        return new JsonObject()
-            .put("status", "OK")
-            .put("message", jsonArray);
+        return new JsonObject().put("status", "OK").put("message", jsonArray);
     }
+
 }

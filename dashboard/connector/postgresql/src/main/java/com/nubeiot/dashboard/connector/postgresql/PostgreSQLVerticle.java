@@ -12,6 +12,7 @@ import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.utils.ErrorCodeException;
 import com.nubeiot.core.common.utils.ErrorHandler;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
+import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.dashboard.connector.postgresql.controller.RulesController;
 
 import io.reactivex.Single;
@@ -28,7 +29,6 @@ import io.vertx.serviceproxy.ServiceBinder;
 /**
  * Created by topsykretts on 4/26/18.
  */
-@SuppressWarnings("ResultOfMethodCallIgnored")
 public class PostgreSQLVerticle extends RxMicroServiceVerticle {
 
     private RulesController controller;
@@ -89,7 +89,8 @@ public class PostgreSQLVerticle extends RxMicroServiceVerticle {
             // Return query not specified error
             ErrorHandler.handleError(new ErrorCodeException(NO_QUERY_SPECIFIED), routingContext);
         } else {
-            controller.getPostgreSQLData(query, new JsonObject(routingContext.request().headers().get("settings")))
+            controller.getPostgreSQLData(query, new JsonObject(
+                SQLUtils.getFirstNotNull(routingContext.request().headers().get("Settings"), "{}")))
                       .subscribe(replyJson -> routingContext.response()
                                                             .putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON)
                                                             .end(Json.encodePrettily(replyJson)),

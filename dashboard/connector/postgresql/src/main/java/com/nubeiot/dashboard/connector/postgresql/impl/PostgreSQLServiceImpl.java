@@ -1,7 +1,13 @@
 package com.nubeiot.dashboard.connector.postgresql.impl;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.connector.postgresql.PostgreSQLService;
-import com.nubeiot.core.common.BaseService;
 
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
@@ -21,13 +27,8 @@ import io.vertx.reactivex.ext.asyncsql.PostgreSQLClient;
 import io.vertx.reactivex.ext.sql.SQLClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+public class PostgreSQLServiceImpl implements PostgreSQLService {
 
-public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
     private final Logger logger = LoggerFactory.getLogger(PostgreSQLService.class);
     private Vertx vertx;
     private JsonObject config;
@@ -38,11 +39,9 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
         this.config = config;
     }
 
-    @Override
     public Single<PostgreSQLService> initializeService() {
-        logger.info("Initializing ...");
+        logger.info("Initializing...");
         clients = new HashMap<>();
-
         return Single.just(this);
     }
 
@@ -69,18 +68,19 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
     private Single<SQLConnection> getConnection(JsonObject settings) {
         SQLClient client;
         JsonObject pgConfig = new JsonObject(config.toString());
+        // Example: Settings={"url": "localhost:5432/test", "userName": "postgres", "password": "123"}
         if (!settings.toString().equals("{}")) {
             URL url = new URL(settings.getString("url"));
-            pgConfig
-                .put("host", url.getHost())
-                .put("port", url.getPort())
-                .put("database", url.getDatabase())
-                .put("username", settings.getString("userName"))
-                .put("password", settings.getString("password"));
+            pgConfig.put("host", url.getHost())
+                    .put("port", url.getPort())
+                    .put("database", url.getDatabase())
+                    .put("username", settings.getString("userName"))
+                    .put("password", settings.getString("password"));
         }
 
-        String key = pgConfig.getString("host") + ":" + pgConfig.getInteger("port") + ":" + pgConfig.getString("username") + ":" +
-            pgConfig.getString("password") + ":" + pgConfig.getString("database");
+        String key = pgConfig.getString("host") + ":" + pgConfig.getInteger("port") + ":" +
+                     pgConfig.getString("username") + ":" + pgConfig.getString("password") + ":" +
+                     pgConfig.getString("database");
 
         if (clients.containsKey(key)) {
             client = clients.get(key);
@@ -90,73 +90,72 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
         }
 
         return client.rxGetConnection()
-            .flatMap(conn -> Single.just(conn)
-                .doOnError(throwable -> logger.error("Cannot get connection object."))
-                .doFinally(conn::close));
+                     .flatMap(conn -> Single.just(conn)
+                                            .doOnError(throwable -> logger.error("Cannot get connection object."))
+                                            .doFinally(conn::close));
     }
 
     @Override
-    public PostgreSQLService executeQueryWithParams(String sqlQuery, @Nullable JsonArray params, JsonObject settings, Handler<AsyncResult<JsonObject>> resultHandler) {
-        executeQueryWithParams(sqlQuery, params, settings)
-            .map(result -> new JsonArray(result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()))
-            .subscribe(toObserverFromArray(resultHandler));
+    public PostgreSQLService executeQueryWithParams(String sqlQuery, @Nullable JsonArray params, JsonObject settings,
+                                                    Handler<AsyncResult<JsonObject>> resultHandler) {
+        executeQueryWithParams(sqlQuery, params, settings).map(
+            result -> new JsonArray(result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()))
+                                                          .subscribe(toObserverFromArray(resultHandler));
         return this;
     }
 
-    private Single<ResultSet> executeQueryWithParams(String sqlQuery, @Nullable JsonArray params, JsonObject settings) {
-        return getConnection(settings)
-            .flatMap(conn -> {
-                if (params == null) {
-                    return conn.rxQuery(sqlQuery);
-                }
-                return conn.rxQueryWithParams(sqlQuery, params);
-            })
-            .onErrorResumeNext(throwable -> {
-                if (throwable.getMessage().contains("race -> false")) {
-                    return Single.timer(100, TimeUnit.MILLISECONDS)
-                        .flatMap(ignore -> executeQueryWithParams(sqlQuery, params, settings))
-                        .map(result -> result);
-                } else {
-                    return Single.error(throwable);
-                }
-            })
-            .map(result -> result);
-    }
-
     @Override
-    public PostgreSQLService executeQuery(String query, JsonObject settings, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public PostgreSQLService executeQuery(String query, JsonObject settings,
+                                          Handler<AsyncResult<JsonObject>> resultHandler) {
         return executeQueryWithParams(query, null, settings, resultHandler);
     }
 
+    private Single<ResultSet> executeQueryWithParams(String sqlQuery, @Nullable JsonArray params, JsonObject settings) {
+        return getConnection(settings).flatMap(conn -> {
+            if (params == null) {
+                return conn.rxQuery(sqlQuery);
+            }
+            return conn.rxQueryWithParams(sqlQuery, params);
+        }).onErrorResumeNext(throwable -> {
+            // TODO: Find a better way of handling pooling
+            if (throwable.getMessage().contains("race -> false")) {
+                return Single.timer(100, TimeUnit.MILLISECONDS)
+                             .flatMap(ignore -> executeQueryWithParams(sqlQuery, params, settings))
+                             .map(result -> result);
+            } else {
+                return Single.error(throwable);
+            }
+        }).map(result -> result);
+    }
+
     private JsonObject failureMessage(Throwable t) {
-        return new JsonObject()
-            .put("status", "FAILED")
-            .put("error", t.getMessage());
+        return new JsonObject().put("status", "FAILED").put("error", t.getMessage());
     }
 
     private JsonObject successMessage(JsonArray jsonArray) {
-        return new JsonObject()
-            .put("status", "OK")
-            .put("message", jsonArray);
+        return new JsonObject().put("status", "OK").put("message", jsonArray);
     }
 
     private class URL {
+
         private String host;
         private int port = 5432;
         private String database = "test";
 
         URL(String url) {
-            String[] values = url.split(":");
-            host = values[0];
-            if (values.length > 1) {
-                String[] values$ = values[1].split("/");
-                try {
-                    port = Integer.parseInt(values$[0]);
-                } catch (Exception ignored) {
-                }
+            if (Strings.isNotBlank(url)) {
+                String[] values = url.split(":");
+                host = values[0];
+                if (values.length > 1) {
+                    String[] values$ = values[1].split("/");
+                    try {
+                        port = Integer.parseInt(values$[0]);
+                    } catch (Exception ignored) {
+                    }
 
-                if (values$.length > 1) {
-                    database = values$[1];
+                    if (values$.length > 1) {
+                        database = values$[1];
+                    }
                 }
             }
         }
@@ -172,5 +171,7 @@ public class PostgreSQLServiceImpl implements PostgreSQLService, BaseService {
         String getDatabase() {
             return database;
         }
+
     }
+
 }

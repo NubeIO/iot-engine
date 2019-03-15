@@ -4,6 +4,9 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.nubeiot.core.exceptions.HttpException;
+import com.nubeiot.core.micro.MicroContext;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.vertx.core.http.HttpMethod;
@@ -15,9 +18,6 @@ import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.CorsHandler;
-
-import com.nubeiot.core.exceptions.HttpException;
-import com.nubeiot.core.micro.MicroContext;
 
 @Deprecated
 public interface RxRestAPIVerticle {
@@ -73,9 +73,9 @@ public interface RxRestAPIVerticle {
         HttpMethod method = context.request().method();
         JsonObject headers = new JsonObject();
         context.request().headers().getDelegate().forEach(header -> headers.put(header.getKey(), header.getValue()));
-        headers.put("user", context.user().principal().toString());
+        headers.put("User", context.user().principal().toString());
         //TODO fix it
-        headers.put("settings", Objects.isNull(settings) ? "{}" : settings.encode());
+        headers.put("Settings", Objects.isNull(settings) ? "{}" : settings.encode());
         JsonObject payload = (method == HttpMethod.DELETE || method == HttpMethod.GET) ? null : context.getBodyAsJson();
         dispatchRequests(microContext, method, headers, context.request().uri(), payload).subscribe(
             buffer -> handleResponse(context, buffer), t -> HttpHelper.badGateway(t, context));
