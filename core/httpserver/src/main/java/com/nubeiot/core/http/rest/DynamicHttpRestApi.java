@@ -5,7 +5,7 @@ import io.vertx.servicediscovery.types.HttpEndpoint;
 public interface DynamicHttpRestApi extends DynamicRestApi {
 
     @Override
-    default String byType() {
+    default String type() {
         return HttpEndpoint.TYPE;
     }
 

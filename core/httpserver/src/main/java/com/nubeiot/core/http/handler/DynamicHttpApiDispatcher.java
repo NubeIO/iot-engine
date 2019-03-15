@@ -1,7 +1,10 @@
 package com.nubeiot.core.http.handler;
 
+import java.util.Objects;
+
 import io.reactivex.Single;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
@@ -13,7 +16,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class DynamicContextHttpApiDispatcher<T extends DynamicHttpRestApi> implements DynamicContextDispatcher<T> {
+public class DynamicHttpApiDispatcher<T extends DynamicHttpRestApi> implements DynamicContextDispatcher<T> {
 
     private final T dynamicHttpRestApi;
     @Getter
@@ -29,10 +32,13 @@ public class DynamicContextHttpApiDispatcher<T extends DynamicHttpRestApi> imple
     @Override
     public Single<ResponseData> process(ServiceDiscoveryController dispatcher, HttpMethod httpMethod, String path,
                                         RequestData requestData) {
-        //TODO enhance filter record
-        return dispatcher.executeHttpService(
-            r -> r.getName().equals(get().byName()) && get().byMetadata().equals(r.getMetadata()), path, httpMethod,
-            requestData);
+        return dispatcher.executeHttpService(this::filter, path, httpMethod, requestData);
+    }
+
+    //TODO enhance filter record
+    public boolean filter(Record record) {
+        return record.getName().equals(get().name()) &&
+               (Objects.isNull(get().byMetadata()) || get().byMetadata().equals(record.getMetadata()));
     }
 
 }

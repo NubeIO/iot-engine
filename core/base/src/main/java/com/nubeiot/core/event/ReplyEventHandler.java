@@ -11,7 +11,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.HiddenException;
-import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.exceptions.ServiceException;
 import com.nubeiot.core.utils.Strings;
 
@@ -19,6 +19,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 //TODO More optimize
+//TODO Mark address+action is optional
 @RequiredArgsConstructor
 public class ReplyEventHandler implements Consumer<AsyncResult<Message<Object>>> {
 
@@ -60,7 +61,7 @@ public class ReplyEventHandler implements Consumer<AsyncResult<Message<Object>>>
     private Single<EventMessage> handleEventReply(AsyncResult<Message<Object>> reply) {
         if (reply.failed()) {
             String msg = Strings.format("No reply from action {0} from \"{1}\"", action, address);
-            HiddenException hidden = new HiddenException(NubeException.ErrorCode.EVENT_ERROR, msg, reply.cause());
+            HiddenException hidden = new HiddenException(ErrorCode.EVENT_ERROR, msg, reply.cause());
             return Single.error(new ServiceException("Service unavailable", hidden));
         }
         return Single.just(EventMessage.from(reply.result().body()));

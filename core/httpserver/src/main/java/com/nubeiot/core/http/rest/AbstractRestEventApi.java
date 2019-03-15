@@ -24,7 +24,7 @@ public abstract class AbstractRestEventApi implements RestEventApi {
     protected abstract void initRoute();
 
     protected Map<EventAction, HttpMethod> initHttpEventMap() {
-        return RestEventApi.defaultEventHttpMap();
+        return ActionMethodMapping.defaultEventHttpMap();
     }
 
     protected void addRouter(RestEventMetadata metadata) {

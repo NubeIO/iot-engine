@@ -5,7 +5,7 @@ import io.vertx.servicediscovery.types.EventBusService;
 public interface DynamicRestEventApi extends DynamicRestApi {
 
     @Override
-    default String byType() {
+    default String type() {
         return EventBusService.TYPE;
     }
 

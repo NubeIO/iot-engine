@@ -30,6 +30,8 @@ import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.ServiceException;
 import com.nubeiot.core.micro.MicroConfig.BackendConfig;
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
+import com.nubeiot.core.micro.type.EventMessagePusher;
+import com.nubeiot.core.micro.type.EventMessageService;
 import com.nubeiot.core.utils.Networks;
 
 import lombok.AccessLevel;
@@ -89,32 +91,46 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return addDecoratorRecord(record);
     }
 
+    public Single<Record> addEventMessageRecord(String name, String address, JsonObject metadata) {
+        return addDecoratorRecord(EventMessageService.createRecord(name, address, metadata));
+    }
+
+    /**
+     * Will be removed soon
+     *
+     * @deprecated Use {@link #executeHttpService(Function, String, HttpMethod, RequestData)}
+     */
     public Single<Buffer> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
                                              JsonObject headers, JsonObject payload) {
-        return get().rxGetRecord(r -> HttpEndpoint.TYPE.equals(r.getType()) && filter.apply(r))
-                    .switchIfEmpty(Single.error(
-                        new ServiceException("Service Unavailable", new NotFoundException("Not found HTTP endpoint"))))
-                    .flatMap(record -> {
-                        ServiceReference reference = get().getReference(record);
-                        return circuitController.wrap(
-                            execute(reference.getAs(HttpClient.class), path, method, headers, payload,
-                                    v -> reference.release()));
-                    })
-                    .doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
+        return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
+            ServiceReference reference = get().getReference(record);
+            return circuitController.wrap(
+                execute(reference.getAs(HttpClient.class), path, method, headers, payload, v -> reference.release()));
+        }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
     public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
                                                    RequestData requestData) {
-        return get().rxGetRecord(r -> HttpEndpoint.TYPE.equals(r.getType()) && filter.apply(r))
+        return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
+            ServiceReference reference = get().getReference(record);
+            return circuitController.wrap(
+                execute(reference.getAs(HttpClient.class), path, method, requestData, v -> reference.release()));
+        }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
+    }
+
+    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
+                                                           HttpMethod method, RequestData requestData) {
+        return findRecord(filter, EventMessageService.TYPE).flatMap(record -> {
+            ServiceReference reference = get().getReference(record);
+            return circuitController.wrap(execute(reference.getAs(EventMessagePusher.class), path, method, requestData,
+                                                  v -> reference.release()));
+        }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
+    }
+
+    private Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
+        return get().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r))
                     .switchIfEmpty(Single.error(
-                        new ServiceException("Service Unavailable", new NotFoundException("Not found HTTP endpoint"))))
-                    .flatMap(record -> {
-                        ServiceReference reference = get().getReference(record);
-                        return circuitController.wrap(
-                            execute(reference.getAs(HttpClient.class), path, method, requestData,
-                                    v -> reference.release()));
-                    })
-                    .doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
+                        new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
     }
 
     private Single<Record> addDecoratorRecord(@NonNull Record record) {
@@ -144,10 +160,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
                 } else {
                     source.onSuccess(body);
                 }
-            })).endHandler(v -> {
-                httpClient.close();
-                closeHandler.handle(v);
-            });
+            })).endHandler(closeHandler);
             logger.info("Make HTTP request {} :: {} | <{}> | <{}>", request.method(), request.absoluteURI(), headers,
                         payload);
             //TODO why need it?
@@ -175,10 +188,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
                 } else {
                     source.onSuccess(new ResponseData().setBody(body.toJsonObject()));
                 }
-            })).endHandler(v -> {
-                httpClient.close();
-                closeHandler.handle(v);
-            });
+            })).endHandler(closeHandler);
             logger.info("Make HTTP request {} :: {} | <{}> | <{}>", request.method(), request.absoluteURI(),
                         requestData.toJson());
             //TODO why need it?
@@ -192,6 +202,14 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
                 request.write(requestData.body().encode()).end();
             }
         });
+    }
+
+    private Single<ResponseData> execute(EventMessagePusher pusher, String path, HttpMethod method,
+                                         RequestData requestData, Handler<Void> closeHandler) {
+
+        return Single.<ResponseData>create(
+            source -> pusher.push(path, method, requestData, source::onSuccess, source::onError)).doFinally(
+            () -> closeHandler.handle(null));
     }
 
 }

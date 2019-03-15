@@ -4,42 +4,58 @@ import java.util.Set;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.types.HttpEndpoint;
+
+import com.nubeiot.core.http.ApiConstants;
 
 import lombok.NonNull;
 
 /**
- * Service Discovery
+ * Dynamic REST API that backed by {@code Service Discovery}
+ * <p>
+ * To use it, your project must depends on {@code :core:micro}
  */
 public interface DynamicRestApi {
 
     /**
-     * Http endpoint path to redirect
+     * HTTP path for Gateway server
      *
-     * @return HTTP endpoint path
+     * @return HTTP path for gateway server
      */
-    @NonNull String byPath();
+    @NonNull String path();
 
     /**
-     * To getFilter in ServiceDiscovery
+     * Service type
      *
-     * @return ServiceDiscovery Type
+     * @return Service Type
+     * @see Record#getType()
+     * @see HttpEndpoint#TYPE
      */
-    @NonNull String byType();
+    @NonNull String type();
 
     /**
-     * To getFilter in ServiceDiscovery
+     * Service name
      *
-     * @return ServiceDiscovery Name
+     * @return Service Name
+     * @see Record#getName()
      */
-    @NonNull String byName();
+    @NonNull String name();
 
     /**
-     * To getFilter in ServiceDiscovery
+     * Metadata to help reaching out service
      *
-     * @return ServiceDiscovery Metadata, it might {@code null}
+     * @return service metadata, it might be {@code null}
      */
     JsonObject byMetadata();
 
-    Set<HttpMethod> availableMethods();
+    /**
+     * Supported {@code HTTP methods} by service. {@code Default: } all http methods
+     *
+     * @return set of {@code HTTP methods}
+     */
+    default Set<HttpMethod> availableMethods() {
+        return ApiConstants.DEFAULT_CORS_HTTP_METHOD;
+    }
 
 }
