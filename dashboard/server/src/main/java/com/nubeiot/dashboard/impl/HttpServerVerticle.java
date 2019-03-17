@@ -55,7 +55,6 @@ import io.vertx.servicediscovery.Record;
 import com.nubeiot.core.common.HttpHelper;
 import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.RxRestAPIVerticle;
-import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.CustomMessageCodec;
 import com.nubeiot.core.component.ContainerVerticle;
@@ -94,7 +93,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle implements RxRest
         logger.info("Media Dir: {}", mediaDir);
 
         String host = appConfig.getString("http.host", "0.0.0.0");
-        Integer port = appConfig.getInteger("http.port", Port.HTTP_WEB_SERVER_PORT);
+        Integer port = appConfig.getInteger("http.port", 8080);
         return startWebApp(host, port).flatMap(server -> publishHttp(host, server.actualPort()))
                                       .flatMap(i -> deployVerticle(new MultiTenantVerticle(microContext)))
                                       .flatMap(i -> deployVerticle(new DynamicSiteCollectionHandleVerticle()))

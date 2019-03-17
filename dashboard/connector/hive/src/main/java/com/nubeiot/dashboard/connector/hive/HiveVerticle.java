@@ -8,7 +8,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 import com.nubeiot.core.common.RxMicroServiceVerticle;
-import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.utils.ErrorCodeException;
 import com.nubeiot.core.common.utils.ErrorHandler;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
@@ -29,7 +28,6 @@ import io.vertx.serviceproxy.ServiceBinder;
 /**
  * Created by topsykretts on 4/26/18.
  */
-@SuppressWarnings("ResultOfMethodCallIgnored")
 public class HiveVerticle extends RxMicroServiceVerticle {
 
     private RulesController controller;
@@ -57,7 +55,7 @@ public class HiveVerticle extends RxMicroServiceVerticle {
 
     private Single<Record> publishHttp() {
         return publishHttpEndpoint("io.nubespark.sql-hive.engine", "0.0.0.0",
-                                   appConfig.getInteger("http.port", Port.HIVE_SERVER_PORT)).doOnError(
+                                   appConfig.getInteger("http.port", 8080)).doOnError(
             throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
@@ -75,7 +73,7 @@ public class HiveVerticle extends RxMicroServiceVerticle {
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
                     .requestHandler(router::accept)
-                    .rxListen(appConfig.getInteger("http.port", Port.HIVE_SERVER_PORT))
+                    .rxListen(appConfig.getInteger("http.port", 8080))
                     .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
                     .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()));
     }

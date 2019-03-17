@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.nubeiot.core.common.RxMicroServiceVerticle;
-import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.constants.Services;
 import com.nubeiot.core.common.utils.response.ResponseUtils;
 import com.nubeiot.core.utils.Strings;
@@ -67,7 +66,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
         // Create the HTTP server and pass the "accept" method to the request handler.
         return vertx.createHttpServer()
                     .requestHandler(router::accept)
-                    .rxListen(appConfig.getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT))
+                    .rxListen(appConfig.getInteger("http.port", 8080))
                     .doOnSuccess(
                         httpServer -> logger.info("Ditto Server Driver started at port: " + httpServer.actualPort()))
                     .doOnError(throwable -> logger.error(
@@ -76,7 +75,7 @@ public class ServerDittoDriver extends RxMicroServiceVerticle {
 
     private Single<Record> publishHttp() {
         return publishHttpEndpoint("io.nubespark.server-ditto-driver", "0.0.0.0",
-                                   appConfig.getInteger("http.port", Port.SERVER_DITTO_DRIVER_PORT)).doOnError(
+                                   appConfig.getInteger("http.port", 8080)).doOnError(
             throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 

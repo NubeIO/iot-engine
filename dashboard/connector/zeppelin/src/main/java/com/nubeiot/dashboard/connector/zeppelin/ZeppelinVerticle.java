@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.nubeiot.core.common.RxMicroServiceVerticle;
-import com.nubeiot.core.common.constants.Port;
 
 import io.reactivex.Single;
 import io.vertx.core.http.HttpClientOptions;
@@ -19,7 +18,6 @@ import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.Record;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
 public class ZeppelinVerticle extends RxMicroServiceVerticle {
 
     private HttpClient client;
@@ -35,7 +33,7 @@ public class ZeppelinVerticle extends RxMicroServiceVerticle {
 
         return vertx.createHttpServer()
                     .requestHandler(router)
-                    .rxListen(appConfig.getInteger("http.port", Port.ZEPPELIN_PORT))
+                    .rxListen(appConfig.getInteger("http.port", 8080))
                     .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
                     .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()))
                     .flatMap(httpServer -> publishHttp())
@@ -44,7 +42,7 @@ public class ZeppelinVerticle extends RxMicroServiceVerticle {
 
     private Single<Record> publishHttp() {
         return publishHttpEndpoint("zeppelin-api", "0.0.0.0",
-                                   appConfig.getInteger("http.port", Port.ZEPPELIN_PORT)).doOnError(
+                                   appConfig.getInteger("http.port", 8080)).doOnError(
             throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
     }
 
