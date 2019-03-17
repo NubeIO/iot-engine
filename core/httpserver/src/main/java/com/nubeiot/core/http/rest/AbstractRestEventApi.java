@@ -54,8 +54,9 @@ public abstract class AbstractRestEventApi implements RestEventApi {
     }
 
     @Override
-    public List<RestEventMetadata> getRestMetadata() {
-        return Collections.unmodifiableList(restMetadata);
-    }
+    public List<RestEventMetadata> getRestMetadata() { return Collections.unmodifiableList(restMetadata); }
+
+    @Override
+    public Map<EventAction, HttpMethod> get() { return httpEventMapping; }
 
 }

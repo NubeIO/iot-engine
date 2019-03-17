@@ -14,18 +14,14 @@ public final class Microservice extends UnitVerticle<MicroConfig, MicroContext> 
     public void start() {
         super.start();
         logger.info("Setup micro-service...");
-        getContext().create(vertx, config);
+        getContext().create(vertx, config, getSharedKey());
     }
 
     @Override
-    public void stop(Future<Void> future) {
-        getContext().unregister(future);
-    }
+    public void stop(Future<Void> future) { getContext().unregister(future); }
 
     @Override
-    public Class<MicroConfig> configClass() {
-        return MicroConfig.class;
-    }
+    public Class<MicroConfig> configClass() { return MicroConfig.class; }
 
     @Override
     public String configFile() { return "micro.json"; }

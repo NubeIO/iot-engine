@@ -2,10 +2,12 @@ package com.nubeiot.core.component;
 
 import java.util.function.Function;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -20,6 +22,23 @@ public interface SharedDataDelegate {
      * @see EventController
      */
     String SHARED_EVENTBUS = "EVENTBUS_CONTROLLER";
+
+    @SuppressWarnings("unchecked")
+    static <D> D getSharedDataValue(Function<String, Object> sharedDataFunc, String dataKey) {
+        final Logger logger = LoggerFactory.getLogger(SharedDataDelegate.class);
+        try {
+            logger.debug("Shared Data Key: \"{}\"", dataKey);
+            return (D) sharedDataFunc.apply(dataKey);
+        } catch (ClassCastException e) {
+            logger.warn("Data value Type is not matching with expected data key {}", e, dataKey);
+            return null;
+        }
+    }
+
+    static <D> D getLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey) {
+        return SharedDataDelegate.getSharedDataValue(
+            k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).get(k), dataKey);
+    }
 
     /**
      * Get shared data value by data key
@@ -39,18 +58,6 @@ public interface SharedDataDelegate {
      * @return a reference to this, so the API can be used fluently
      */
     <T extends SharedDataDelegate> T registerSharedData(@NonNull Function<String, Object> sharedDataFunc);
-
-    @SuppressWarnings("unchecked")
-    static <D> D getSharedDataValue(Function<String, Object> sharedDataFunc, String dataKey) {
-        final Logger logger = LoggerFactory.getLogger(SharedDataDelegate.class);
-        try {
-            logger.debug("Shared Data Key: \"{}\"", dataKey);
-            return (D) sharedDataFunc.apply(dataKey);
-        } catch (ClassCastException e) {
-            logger.warn("Data value Type is not matching with expected data key {}", e, dataKey);
-            return null;
-        }
-    }
 
     abstract class AbstractSharedDataDelegate implements SharedDataDelegate {
 

@@ -6,10 +6,11 @@ import io.vertx.reactivex.core.Vertx;
 import com.nubeiot.core.micro.MicroConfig.LocalServiceDiscoveryConfig;
 import com.nubeiot.core.utils.Strings;
 
-public class LocalSDController extends ServiceDiscoveryController {
+class LocalSDController extends ServiceDiscoveryController {
 
-    LocalSDController(Vertx vertx, LocalServiceDiscoveryConfig config, CircuitBreakerController circuitController) {
-        super(config, createServiceDiscovery(vertx, config, "Local", v -> true), circuitController);
+    LocalSDController(Vertx vertx, LocalServiceDiscoveryConfig config, String sharedKey,
+                      CircuitBreakerController circuitController) {
+        super(config, sharedKey, createServiceDiscovery(vertx, config, "Local", v -> true), circuitController);
     }
 
     @Override

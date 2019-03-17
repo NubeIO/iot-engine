@@ -26,14 +26,20 @@ public final class MicroContext extends UnitContext {
     private ServiceDiscoveryController localController;
 
     MicroContext create(io.vertx.core.Vertx vertx, MicroConfig config) {
-        create(Vertx.newInstance(vertx), config);
+        return create(vertx, config, null);
+    }
+
+    MicroContext create(io.vertx.core.Vertx vertx, MicroConfig config, String sharedKey) {
+        create(Vertx.newInstance(vertx), config, sharedKey);
         return this;
     }
 
-    private void create(Vertx vertx, MicroConfig config) {
+    private void create(Vertx vertx, MicroConfig config, String sharedKey) {
         this.breakerController = CircuitBreakerController.create(vertx, config.getCircuitConfig());
-        this.clusterController = new ClusterSDController(vertx, config.getDiscoveryConfig(), this.breakerController);
-        this.localController = new LocalSDController(vertx, config.getLocalDiscoveryConfig(), this.breakerController);
+        this.clusterController = new ClusterSDController(vertx, config.getDiscoveryConfig(), sharedKey,
+                                                         this.breakerController);
+        this.localController = new LocalSDController(vertx, config.getLocalDiscoveryConfig(), sharedKey,
+                                                     this.breakerController);
         setupGateway(vertx, config.getGatewayConfig(), clusterController, localController);
     }
 

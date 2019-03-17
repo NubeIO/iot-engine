@@ -6,8 +6,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.spi.ServiceType;
 
-import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.utils.Strings;
+
+import lombok.NonNull;
 
 public interface EventMessageService extends ServiceType {
 
@@ -15,19 +16,20 @@ public interface EventMessageService extends ServiceType {
      * Name of the type.
      */
     String TYPE = "eventbus-message-service";
-    String EVENTBUS_KEY = "eventbus.controller";
+    String SHARED_KEY_CONFIG = "sharedKey";
+    String EVENT_METHOD_CONFIG = "eventMethods";
+    String DELIVERY_OPTIONS_CONFIG = "options";
 
-    static Record createRecord(String name, String address, JsonObject metadata) {
+    static Record createRecord(String name, String address, @NonNull EventMethodDefinition definition,
+                               JsonObject metadata) {
         JsonObject meta = Objects.isNull(metadata) ? new JsonObject() : metadata.copy();
         return new Record().setType(TYPE)
                            .setName(Strings.requireNotBlank(name))
                            .setLocation(new JsonObject().put(Record.ENDPOINT, Strings.requireNotBlank(address)))
-                           .setMetadata(meta.put(EVENTBUS_KEY, SharedDataDelegate.SHARED_EVENTBUS));
+                           .setMetadata(meta.put(EVENT_METHOD_CONFIG, definition.toJson()));
     }
 
     @Override
-    default String name() {
-        return TYPE;
-    }
+    default String name() { return TYPE; }
 
 }

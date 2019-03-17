@@ -2,6 +2,8 @@ package com.nubeiot.core.dto;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.event.EventMessage;
+
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +13,11 @@ public class ResponseData implements DataTransferObject {
 
     private JsonObject headers = new JsonObject();
     private JsonObject body = new JsonObject();
+
+    //TODO convert EventMessage to ResponseData
+    public static ResponseData from(EventMessage message) {
+        return null;
+    }
 
     @Override
     public JsonObject body() {

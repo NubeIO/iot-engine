@@ -7,6 +7,7 @@ import io.vertx.core.logging.LoggerFactory;
 import com.nubeiot.core.IConfig;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +19,7 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
     @NonNull
     private final T unitContext;
     protected C config;
+    @Getter(value = AccessLevel.PROTECTED)
     private String sharedKey;
 
     @Override
@@ -42,7 +44,7 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
     @Override
     public final <R> R getSharedData(String dataKey) {
         logger.debug("Retrieve SharedData by SharedKey {}", sharedKey);
-        return SharedDataDelegate.getSharedDataValue(k -> vertx.sharedData().getLocalMap(sharedKey).get(k), dataKey);
+        return SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
     }
 
 }

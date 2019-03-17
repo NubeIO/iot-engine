@@ -6,10 +6,12 @@ import io.vertx.reactivex.core.Vertx;
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
 import com.nubeiot.core.utils.Strings;
 
-public class ClusterSDController extends ServiceDiscoveryController {
+class ClusterSDController extends ServiceDiscoveryController {
 
-    ClusterSDController(Vertx vertx, ServiceDiscoveryConfig config, CircuitBreakerController circuitController) {
-        super(config, createServiceDiscovery(vertx, config, "Cluster", Vertx::isClustered), circuitController);
+    ClusterSDController(Vertx vertx, ServiceDiscoveryConfig config, String sharedKey,
+                        CircuitBreakerController circuitController) {
+        super(config, sharedKey, createServiceDiscovery(vertx, config, "Cluster", Vertx::isClustered),
+              circuitController);
     }
 
     @Override
