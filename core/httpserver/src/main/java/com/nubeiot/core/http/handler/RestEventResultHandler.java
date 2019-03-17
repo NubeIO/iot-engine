@@ -9,8 +9,8 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.ReplyEventHandler;
-import com.nubeiot.core.http.rest.RestEventMetadata;
-import com.nubeiot.core.http.utils.RequestConverter;
+import com.nubeiot.core.http.base.event.RestEventMetadata;
+import com.nubeiot.core.http.utils.RequestDataConverter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,7 +28,7 @@ public class RestEventResultHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext context) {
-        EventMessage msg = EventMessage.success(metadata.getAction(), RequestConverter.convert(context));
+        EventMessage msg = EventMessage.success(metadata.getAction(), RequestDataConverter.convert(context));
         logger.info("REST::Request data: {}", msg.toJson().encode());
         ReplyEventHandler replyEventHandler = new ReplyEventHandler("REST", metadata.getAction(), metadata.getAddress(),
                                                                     message -> response(context, message),

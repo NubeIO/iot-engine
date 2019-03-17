@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nubeiot.core.event.EventMessage;
 
 import lombok.Getter;
 
@@ -27,6 +28,10 @@ public final class RequestData extends ResponseData {
     }
 
     public static Builder builder() { return new Builder(); }
+
+    public static RequestData from(EventMessage msg) {
+        return builder().body(msg.getData()).build();
+    }
 
     public static class Builder {
 

@@ -27,7 +27,7 @@ import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.http.utils.Urls;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.ws.WebsocketEventMessage;
 import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.RestRouter;

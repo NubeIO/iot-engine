@@ -1,4 +1,4 @@
-package com.nubeiot.core.http.rest;
+package com.nubeiot.core.http.base.event;
 
 import java.util.Collections;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.base;
 
 import com.nubeiot.core.exceptions.NubeException;
 

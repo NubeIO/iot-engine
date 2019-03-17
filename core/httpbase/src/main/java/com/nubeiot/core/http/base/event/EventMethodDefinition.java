@@ -1,4 +1,4 @@
-package com.nubeiot.core.micro.type;
+package com.nubeiot.core.http.base.event;
 
 import java.util.HashMap;
 import java.util.HashSet;

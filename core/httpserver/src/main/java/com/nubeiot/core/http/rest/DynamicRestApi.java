@@ -4,8 +4,6 @@ import java.util.Set;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.servicediscovery.Record;
-import io.vertx.servicediscovery.types.HttpEndpoint;
 
 import com.nubeiot.core.http.ApiConstants;
 
@@ -29,8 +27,6 @@ public interface DynamicRestApi {
      * Service type
      *
      * @return Service Type
-     * @see Record#getType()
-     * @see HttpEndpoint#TYPE
      */
     @NonNull String type();
 
@@ -38,7 +34,6 @@ public interface DynamicRestApi {
      * Service name
      *
      * @return Service Name
-     * @see Record#getName()
      */
     @NonNull String name();
 

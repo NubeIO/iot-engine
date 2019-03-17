@@ -1,5 +1,5 @@
 
 dependencies {
     compile project(':core:base')
-    compile "io.vertx:vertx-web:$project.versions.vertx"
+    compile project(':core:httpbase')
 }

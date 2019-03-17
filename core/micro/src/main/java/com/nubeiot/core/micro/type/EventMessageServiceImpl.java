@@ -12,6 +12,7 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;

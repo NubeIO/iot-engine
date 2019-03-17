@@ -9,11 +9,11 @@ import io.vertx.ext.web.Router;
 
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.http.InvalidUrlException;
+import com.nubeiot.core.http.base.InvalidUrlException;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.ApiExceptionHandler;
 import com.nubeiot.core.http.handler.ApiJsonWriter;
 import com.nubeiot.core.http.handler.RestEventResponseHandler;
-import com.nubeiot.core.http.utils.Urls;
 import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.RestBuilder;
 
@@ -21,7 +21,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class RestApiBuilder {
+public class RestApisBuilder {
 
     @NonNull
     private final Router router;
@@ -31,17 +31,17 @@ public class RestApiBuilder {
     private final Set<Class<? extends RestEventApi>> restEventApiClass = new HashSet<>();
     private String rootApi = ApiConstants.ROOT_API_PATH;
 
-    public RestApiBuilder registerApi(Collection<Class<? extends RestApi>> apiClass) {
+    public RestApisBuilder registerApi(Collection<Class<? extends RestApi>> apiClass) {
         restApiClass.addAll(apiClass);
         return this;
     }
 
-    public RestApiBuilder registerEventBusApi(Collection<Class<? extends RestEventApi>> eventBusApiClasses) {
+    public RestApisBuilder registerEventBusApi(Collection<Class<? extends RestEventApi>> eventBusApiClasses) {
         restEventApiClass.addAll(eventBusApiClasses);
         return this;
     }
 
-    public RestApiBuilder rootApi(String rootApi) {
+    public RestApisBuilder rootApi(String rootApi) {
         if (Strings.isNotBlank(rootApi)) {
             String root = Urls.combinePath(rootApi);
             if (!Urls.validatePath(root)) {
@@ -77,7 +77,7 @@ public class RestApiBuilder {
         if (restEventApiClass.isEmpty()) {
             return router;
         }
-        return new RestEventBuilder(router).rootApi(rootApi).register(restEventApiClass).build();
+        return new RestEventApisBuilder(router).rootApi(rootApi).register(restEventApiClass).build();
     }
 
 }

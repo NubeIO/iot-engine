@@ -1,6 +1,7 @@
 
 dependencies {
     compile project(':core:base')
+    compile project(':core:httpbase')
     compile "io.vertx:vertx-web:$project.versions.vertx"
 //    compile "io.vertx:vertx-web-api-contract:$project.versions.vertx"
     compile("com.zandero:rest.vertx:0.8.8") {

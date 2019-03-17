@@ -20,7 +20,7 @@ import com.nubeiot.core.http.HttpConfig.CorsOptions;
 import com.nubeiot.core.http.handler.FailureContextHandler;
 import com.nubeiot.core.http.handler.NotFoundContextHandler;
 import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
-import com.nubeiot.core.http.rest.RestApiBuilder;
+import com.nubeiot.core.http.rest.RestApisBuilder;
 import com.nubeiot.core.http.ws.WebsocketEventBuilder;
 
 import lombok.NonNull;
@@ -102,10 +102,10 @@ public final class HttpServer extends UnitVerticle<HttpConfig, UnitContext> {
         if (!config.isEnabled()) {
             return router;
         }
-        return new RestApiBuilder(router).rootApi(config.getRootApi())
-                                         .registerApi(httpRouter.getRestApiClass())
-                                         .registerEventBusApi(httpRouter.getRestEventApiClass())
-                                         .build();
+        return new RestApisBuilder(router).rootApi(config.getRootApi())
+                                          .registerApi(httpRouter.getRestApiClass())
+                                          .registerEventBusApi(httpRouter.getRestEventApiClass())
+                                          .build();
     }
 
     private Router initUploadRouter(Router router)   { return router; }

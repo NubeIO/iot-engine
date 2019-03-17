@@ -12,6 +12,7 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.ReplyEventHandler;
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

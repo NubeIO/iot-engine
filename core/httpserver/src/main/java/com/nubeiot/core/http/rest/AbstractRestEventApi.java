@@ -10,6 +10,8 @@ import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.http.base.event.ActionMethodMapping;
+import com.nubeiot.core.http.base.event.RestEventMetadata;
 
 public abstract class AbstractRestEventApi implements RestEventApi {
 

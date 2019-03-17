@@ -29,9 +29,9 @@ import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
 import com.nubeiot.core.http.mock.MockWebsocketEvent.MockWebsocketEventServerHandler;
-import com.nubeiot.core.http.utils.Urls;
 
 @RunWith(VertxUnitRunner.class)
 public class WebsocketEventServerTest extends HttpServerTestBase {

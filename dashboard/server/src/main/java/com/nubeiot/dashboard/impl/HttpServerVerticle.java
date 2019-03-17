@@ -2,7 +2,7 @@ package com.nubeiot.dashboard.impl;
 
 import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
 import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
-import static com.nubeiot.core.http.HttpScheme.HTTPS;
+import static com.nubeiot.core.http.base.HttpScheme.HTTPS;
 import static com.nubeiot.dashboard.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
 import static com.nubeiot.dashboard.constants.Address.MAIN_ADDR;
 import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
@@ -60,8 +60,8 @@ import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.CustomMessageCodec;
 import com.nubeiot.core.common.utils.SQLUtils;
 import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.http.HttpScheme;
 import com.nubeiot.core.http.RegisterScheme;
+import com.nubeiot.core.http.base.HttpScheme;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;

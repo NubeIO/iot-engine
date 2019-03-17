@@ -1,12 +1,12 @@
 package com.nubeiot.core.http.rest;
 
-import io.vertx.servicediscovery.types.EventBusService;
+import com.nubeiot.core.micro.type.EventMessageService;
 
 public interface DynamicRestEventApi extends DynamicRestApi {
 
     @Override
     default String type() {
-        return EventBusService.TYPE;
+        return EventMessageService.TYPE;
     }
 
 }

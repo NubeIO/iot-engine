@@ -1,6 +1,5 @@
-package com.nubeiot.core.http.rest;
+package com.nubeiot.core.http.base.event;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -9,7 +8,8 @@ import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.http.utils.Urls;
+import com.nubeiot.core.http.base.HttpUtils.HttpMethods;
+import com.nubeiot.core.http.base.Urls;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -26,8 +26,6 @@ import lombok.Singular;
 @EqualsAndHashCode(doNotUseGetters = true, onlyExplicitlyIncluded = true)
 public final class RestEventMetadata {
 
-    private static final List<HttpMethod> SINGULAR_HTTP_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.DELETE,
-                                                                                HttpMethod.PUT, HttpMethod.PATCH);
     private static final Function<RestEventMetadata, String> DEFAULT_GEN_PATH = metadata -> {
         HttpMethod method = metadata.method;
         EventAction action = metadata.action;
@@ -37,7 +35,7 @@ public final class RestEventMetadata {
         if (HttpMethod.POST == method || (HttpMethod.GET == method && EventAction.GET_LIST == action)) {
             return metadata.rawPath() + "s";
         }
-        if (SINGULAR_HTTP_METHODS.contains(method)) {
+        if (HttpMethods.isSingular(method)) {
             return Urls.capturePath(metadata.rawPath(), metadata.paramNames.toArray(new String[] {}));
         }
         return metadata.rawPath();

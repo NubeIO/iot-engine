@@ -5,7 +5,7 @@ import java.util.Objects;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.http.utils.Urls;
+import com.nubeiot.core.http.base.Urls;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

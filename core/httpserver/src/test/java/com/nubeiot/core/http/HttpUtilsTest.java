@@ -1,4 +1,4 @@
-package com.nubeiot.core.http.utils;
+package com.nubeiot.core.http;
 
 import java.io.IOException;
 
@@ -16,8 +16,6 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.core.http.HttpServerTestBase;
 
 @RunWith(VertxUnitRunner.class)
 public class HttpUtilsTest extends HttpServerTestBase {

@@ -1,4 +1,4 @@
-package com.nubeiot.core.http;
+package com.nubeiot.core.http.base;
 
 import lombok.AccessLevel;
 import lombok.Getter;

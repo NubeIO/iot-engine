@@ -1,4 +1,4 @@
-package com.nubeiot.core.http.utils;
+package com.nubeiot.core.http.base;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -13,8 +13,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.HttpScheme;
-import com.nubeiot.core.http.InvalidUrlException;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;

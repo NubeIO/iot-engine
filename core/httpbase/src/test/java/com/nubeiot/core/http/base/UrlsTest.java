@@ -1,12 +1,10 @@
-package com.nubeiot.core.http.utils;
+package com.nubeiot.core.http.base;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-
-import com.nubeiot.core.http.InvalidUrlException;
 
 public class UrlsTest {
 
@@ -111,7 +109,7 @@ public class UrlsTest {
     @Test
     public void test_validUrl_Remote_WithSpecialChar() {
         assertTrue(Urls.validateURL(
-                "https://jenkins.org/blue/organizations/jenkins/zos%2Foauth-apis-client/,();$!a+bc=d:@&!*xy/"));
+            "https://jenkins.org/blue/organizations/jenkins/zos%2Foauth-apis-client/,();$!a+bc=d:@&!*xy/"));
     }
 
     @Test(expected = IllegalArgumentException.class)

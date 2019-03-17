@@ -13,9 +13,9 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
-import com.nubeiot.core.http.CommonParamParser;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.rest.DynamicRestApi;
-import com.nubeiot.core.http.utils.RequestConverter;
+import com.nubeiot.core.http.utils.RequestDataConverter;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 
@@ -36,7 +36,7 @@ public interface DynamicContextDispatcher<T extends DynamicRestApi> extends Hand
         ServiceDiscoveryController dispatcher = isLocal()
                                                 ? getMicroContext().getLocalController()
                                                 : getMicroContext().getClusterController();
-        RequestData requestData = RequestConverter.convert(context);
+        RequestData requestData = RequestDataConverter.convert(context);
         String path = context.request().path();
         this.process(dispatcher, httpMethod, path, requestData)
             .subscribe(responseData -> handleResponse(context, responseData),
@@ -46,14 +46,14 @@ public interface DynamicContextDispatcher<T extends DynamicRestApi> extends Hand
     default void handleResponse(RoutingContext context, ResponseData responseData) {
         context.response()
                .setStatusCode(HttpStatusMapping.success(context.request().method()).code())
-               .end(CommonParamParser.prettify(responseData.body(), context.request()));
+               .end(HttpUtils.prettify(responseData.body(), context.request()));
     }
 
     default void handleError(RoutingContext context, Throwable t) {
         ErrorMessage errorMessage = ErrorMessage.parse(t);
         context.response()
                .setStatusCode(HttpStatusMapping.error(context.request().method(), errorMessage.getCode()).code())
-               .end(CommonParamParser.prettify(errorMessage.toJson(), context.request()));
+               .end(HttpUtils.prettify(errorMessage.toJson(), context.request()));
     }
 
     default HttpMethod validateMethod(HttpMethod method) {

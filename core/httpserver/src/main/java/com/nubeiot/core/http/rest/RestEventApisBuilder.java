@@ -8,24 +8,26 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.http.InvalidUrlException;
-import com.nubeiot.core.http.handler.RestEventResultHandler;
-import com.nubeiot.core.http.utils.Urls;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Strings;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
+
+import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.base.InvalidUrlException;
+import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.base.event.RestEventMetadata;
+import com.nubeiot.core.http.handler.RestEventResultHandler;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.core.utils.Strings;
+
 import lombok.Getter;
 import lombok.NonNull;
 
-public final class RestEventBuilder {
+public final class RestEventApisBuilder {
 
-    private final Logger logger = LoggerFactory.getLogger(RestEventBuilder.class);
+    private final Logger logger = LoggerFactory.getLogger(RestEventApisBuilder.class);
     private final Router router;
     private final Set<Class<? extends RestEventApi>> apis = new HashSet<>();
     private final Map<Class<? extends RestEventApi>, RestEventResultHandler> restHandlers = new HashMap<>();
@@ -35,27 +37,27 @@ public final class RestEventBuilder {
     /**
      * For test
      */
-    RestEventBuilder() {
+    RestEventApisBuilder() {
         this.router = null;
     }
 
-    public RestEventBuilder(Vertx vertx) {
+    public RestEventApisBuilder(Vertx vertx) {
         this.router = Router.router(vertx);
     }
 
-    public RestEventBuilder(io.vertx.reactivex.core.Vertx vertx) {
+    public RestEventApisBuilder(io.vertx.reactivex.core.Vertx vertx) {
         this(vertx.getDelegate());
     }
 
-    public RestEventBuilder(Router router) {
+    public RestEventApisBuilder(Router router) {
         this.router = router;
     }
 
-    public RestEventBuilder(io.vertx.reactivex.ext.web.Router router) {
+    public RestEventApisBuilder(io.vertx.reactivex.ext.web.Router router) {
         this(router.getDelegate());
     }
 
-    public RestEventBuilder rootApi(String rootApi) {
+    public RestEventApisBuilder rootApi(String rootApi) {
         if (Strings.isNotBlank(rootApi)) {
             String root = Urls.combinePath(rootApi);
             if (!Urls.validatePath(root)) {
@@ -66,22 +68,23 @@ public final class RestEventBuilder {
         return this;
     }
 
-    public RestEventBuilder register(@NonNull Class<? extends RestEventApi> restApi) {
+    public RestEventApisBuilder register(@NonNull Class<? extends RestEventApi> restApi) {
         apis.add(restApi);
         return this;
     }
 
     @SafeVarargs
-    public final RestEventBuilder register(Class<? extends RestEventApi>... restApi) {
+    public final RestEventApisBuilder register(Class<? extends RestEventApi>... restApi) {
         return this.register(Arrays.asList(restApi));
     }
 
-    public RestEventBuilder register(@NonNull Collection<Class<? extends RestEventApi>> restApis) {
+    public RestEventApisBuilder register(@NonNull Collection<Class<? extends RestEventApi>> restApis) {
         restApis.stream().filter(Objects::nonNull).forEach(apis::add);
         return this;
     }
 
-    public RestEventBuilder addHandler(@NonNull Class<? extends RestEventApi> restApi, RestEventResultHandler handler) {
+    public RestEventApisBuilder addHandler(@NonNull Class<? extends RestEventApi> restApi,
+                                           RestEventResultHandler handler) {
         apis.add(restApi);
         restHandlers.put(restApi, handler);
         return this;

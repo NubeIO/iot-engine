@@ -15,7 +15,7 @@ import com.nubeiot.core.http.ws.WebsocketEventMetadata;
 
 import lombok.Getter;
 
-//TODO: Use Builder: WebsocketEventBuilder, RestEventBuilder
+//TODO: Use Builder: WebsocketEventBuilder, RestEventApisBuilder
 @Getter
 public final class HttpServerRouter {
 

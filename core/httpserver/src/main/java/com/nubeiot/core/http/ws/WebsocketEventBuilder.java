@@ -9,17 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.http.HttpConfig;
-import com.nubeiot.core.http.InvalidUrlException;
-import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
-import com.nubeiot.core.http.utils.Urls;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Strings;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -27,6 +16,18 @@ import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+
+import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.HttpConfig;
+import com.nubeiot.core.http.base.InvalidUrlException;
+import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.core.utils.Strings;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
