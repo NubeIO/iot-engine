@@ -35,10 +35,12 @@ public class BACnetVerticle extends ContainerVerticle {
         try {
             String deviceName = this.nubeConfig.getAppConfig().toJson().getString("deviceName");
             int deviceID = this.nubeConfig.getAppConfig().toJson().getInteger("deviceID");
-            bacnetInstance = new BACnet(deviceName, deviceID, future, eventController);
-            sendAPIEndpoints();
+            bacnetInstance = new BACnet(deviceName, deviceID, future, eventController, vertx);
+            //            sendAPIEndpoints();
             future.complete();
+            vertx.setTimer(2000, handler -> bacnetInstance.BEGIN_TEST());
         } catch (Exception ex) {
+            logger.error("\n\nSTARTUP FAILURE\n\n");
             future.fail(ex);
         }
     }
@@ -52,25 +54,6 @@ public class BACnetVerticle extends ContainerVerticle {
                             new DeviceEventHandler(vertx, bacnetInstance, BACnetEventModels.POINTS));
 
         this.eventController = controller;
-    }
-
-    private void sendAPIEndpoints() {
-        vertx.setTimer(1000, id -> {
-            JsonObject data = new JsonObject();
-            data.put("endpoint", "points");
-            data.put("handlerAddress", "nubeiot.edge.connector.bacnet.device.points");
-            data.put("driver", "bacnet");
-            data.put("action", "GET_LIST");
-            EventMessage message = EventMessage.initial(EventAction.CREATE, data);
-            eventController.request("nubeiot.edge.connector.driverapi.endpoints", EventPattern.REQUEST_RESPONSE,
-                                    message, response -> {
-                    //TODO: handle responses
-                    logger.info(response.result().body());
-                    //                                      if(reply.isSuccess())
-                    //                                          System.out.println("Added points/GET_LIST");
-                    //                                      else System.out.println("Failed points/GET_LIST");
-                });
-        });
     }
 
     private void getPoints() {
