@@ -12,6 +12,8 @@ import com.serotonin.bacnet4j.obj.AnalogOutputObject;
 import com.serotonin.bacnet4j.obj.BACnetObject;
 import com.serotonin.bacnet4j.obj.BinaryInputObject;
 import com.serotonin.bacnet4j.obj.BinaryOutputObject;
+import com.serotonin.bacnet4j.obj.BinaryValueObject;
+import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import com.serotonin.bacnet4j.type.constructed.ValueSource;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
@@ -35,8 +37,13 @@ public class LocalPointObjectUtils {
         ArrayList<PropertyValue> proplist = new ArrayList<>();
         String name = "NAME_ERROR";
         float presentValue = 0;
-        int inst = Integer.parseInt(pointID.substring(pointID.length() - 1, pointID.length()));
-
+        int inst;
+        try {
+            inst = Integer.parseInt(pointID.substring(pointID.length() - 1, pointID.length()));
+        } catch (Exception e) {
+            //TODO: handle virtual points
+            return null;
+        }
         //Have to get the name and present value first to create specific BACnet Object instance
         String[] jsonkeys = json.getMap().keySet().toArray(new String[json.size()]);
         for (int i = 0; i < jsonkeys.length; i++) {
@@ -56,7 +63,6 @@ public class LocalPointObjectUtils {
                 e.printStackTrace();
             }
         }
-
         String pointPrefix = pointID.substring(0, pointID.length() - 1);
         try {
             switch (pointPrefix) {
@@ -77,6 +83,7 @@ public class LocalPointObjectUtils {
                     break;
                 }
                 case "R": {
+                    inst += 10;
                     BinaryPV binaryVal = presentValue == 0 ? BinaryPV.inactive : BinaryPV.active;
                     obj = new BinaryOutputObject(localDevice, inst, name, binaryVal, false, Polarity.normal,
                                                  BinaryPV.inactive);
@@ -141,17 +148,32 @@ public class LocalPointObjectUtils {
         if (priorityArray == null) {
             return;
         }
-        try {
-            for (int i = 1; i <= priorityArray.size(); i++) {
-                if (priorityArray.getValue(Integer.toString(i)) instanceof String)
-                    continue;
-                float v = priorityArray.getFloat(Integer.toString(i));
-                obj.writeProperty(new ValueSource(),
-                                  new PropertyValue(PropertyIdentifier.presentValue, null, new Real(v),
-                                                    new UnsignedInteger(i)));
+        Encodable val;
+        for (int i = 1; i <= 16; i++) {
+            Object o = priorityArray.getValue(Integer.toString(i));
+            try {
+                if (isBinary(obj) && !(o instanceof String)) {
+                    val = BinaryPV.forId((Integer) o);
+                } else if (o instanceof String) {
+                    if (((String) o).equalsIgnoreCase("null")) {
+                        continue;
+                    } else {
+                        val = new CharacterString((String) o);
+                    }
+                } else {
+                    val = new Real(priorityArray.getFloat(Integer.toString(i)));
+                }
+                obj.writeProperty(new ValueSource(), new PropertyValue(PropertyIdentifier.presentValue, null, val,
+                                                                       new UnsignedInteger(i)));
+            } catch (Exception ex) {
+                System.err.println(
+                    "Object: " + obj.getInstanceId() + "  - Issue writing value " + o + " of type " + o.getClass() +
+                    " @ priority " + i);
+                System.out.println(
+                    "Object: " + obj.getInstanceId() + "  - Issue writing value " + o + " of type " + o.getClass() +
+                    " @ priority " + i);
+                ex.printStackTrace();
             }
-        } catch (BACnetServiceException ex) {
-            ex.printStackTrace();
         }
     }
 
@@ -162,6 +184,11 @@ public class LocalPointObjectUtils {
             tags[i] = new CharacterString(tagsTmp.getString(i));
         }
         return tags;
+    }
+
+    private static boolean isBinary(BACnetObject obj) {
+        return (obj instanceof BinaryInputObject || obj instanceof BinaryOutputObject ||
+                obj instanceof BinaryValueObject);
     }
 
 }

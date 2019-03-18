@@ -1,40 +1,21 @@
 package com.nubeiot.edge.connector.driverapi;
 
 import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.edge.connector.driverapi.handlers.DynamicEndpointsHandler;
-import com.nubeiot.edge.connector.driverapi.handlers.ServerEventHandler;
-import com.nubeiot.edge.connector.driverapi.models.DriverEventModels;
+import com.nubeiot.core.micro.MicroserviceProvider;
 
 public class DriverVerticle extends ContainerVerticle {
-
-    private EndpointsMapper endpointsMapper;
 
     @Override
     public void start() {
         super.start();
-
         logger.info("DriverAPI configuration: {}", this.nubeConfig.getAppConfig().toJson());
 
-        this.endpointsMapper = new EndpointsMapper();
-
-        this.addProvider(new HttpServerProvider(initHttpRouter()));
-        this.eventController = registerEventBus(new EventController(vertx));
+        this.addProvider(new HttpServerProvider(new HttpServerRouter())).addProvider(new MicroserviceProvider());
     }
 
-    private HttpServerRouter initHttpRouter() {
-        return new HttpServerRouter().registerEventBusApi(ServerRouteDefinitions.class);
-    }
+    public String configFile() { return "driverapi.json"; }
 
-    private EventController registerEventBus(EventController controller) {
-        controller.register(DriverEventModels.POINTS,
-                            new ServerEventHandler(vertx, DriverEventModels.POINTS, eventController, endpointsMapper));
-        controller.register(DriverEventModels.ENDPOINTS,
-                            new DynamicEndpointsHandler(vertx, DriverEventModels.ENDPOINTS, endpointsMapper));
-
-        return controller;
-    }
 
 }
