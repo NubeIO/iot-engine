@@ -35,9 +35,14 @@ public class DeviceEventHandler implements EventHandler {
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
 
+    //GET ALL DEVICES
     @EventContractor(action = EventAction.GET_LIST, returnType = JsonObject.class)
     public JsonObject getList(RequestData data) {
         return JsonObject.mapFrom(bacnetInstance.getRemoteDevices());
     }
 
+    //GET ALL SAVED DEVICES
+    //SAVE DEVICE
+    //REMOVE DEVICE
+    //GET DEVICE
 }

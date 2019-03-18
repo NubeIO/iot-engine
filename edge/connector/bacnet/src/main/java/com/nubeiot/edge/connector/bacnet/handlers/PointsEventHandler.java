@@ -3,11 +3,16 @@ package com.nubeiot.edge.connector.bacnet.handlers;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.edge.connector.bacnet.BACnet;
 
@@ -31,5 +36,18 @@ public class PointsEventHandler implements EventHandler {
         this.bacnetInstance = bacnetInstance;
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
+
+    @EventContractor(action = EventAction.GET_LIST, returnType = EventMessage.class)
+    public Single<EventMessage> getRemoteDevicePoints(Map<String, Object> message) {
+        int instanceNumber = JsonObject.mapFrom(message).getInteger("deviceID");
+        return bacnetInstance.getRemoteDeviceObjectList(instanceNumber)
+                             .flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
+    }
+
+    //    @EventContractor(action = EventAction.GET_ONE, returnType = EventMessage.class)
+    //    public Single<EventMessage> getRemoteDevicePoints(Map<String, Object> message) {
+    //        int instanceNumber = JsonObject.mapFrom(message).getInteger("deviceID");
+    //        return bacnetInstance.getRemoteDeviceObjectList(instanceNumber).flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
+    //    }
 
 }

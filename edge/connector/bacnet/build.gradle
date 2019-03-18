@@ -6,7 +6,6 @@ repositories {
 
 dependencies {
     compile project(':core:base')
-//    compile project(':core:cluster:hazelcast')
     compile "com.infiniteautomation:bacnet4j:5.0.0-SNAPSHOT"
 
     testCompile project(":core:base")
