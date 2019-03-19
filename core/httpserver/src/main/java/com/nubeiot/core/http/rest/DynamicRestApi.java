@@ -4,8 +4,11 @@ import java.util.Set;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.types.HttpEndpoint;
 
 import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.micro.type.EventMessageService;
 
 import lombok.NonNull;
 
@@ -15,6 +18,17 @@ import lombok.NonNull;
  * To use it, your project must depends on {@code :core:micro}
  */
 public interface DynamicRestApi {
+
+    @SuppressWarnings("unchecked")
+    static <T extends DynamicRestApi> T create(@NonNull Record record) {
+        if (HttpEndpoint.TYPE.equals(record.getType())) {
+            return (T) DynamicHttpRestApi.create(record);
+        }
+        if (EventMessageService.TYPE.equals(record.getType())) {
+            return (T) DynamicEventRestApi.create(record);
+        }
+        return null;
+    }
 
     /**
      * HTTP path for Gateway server
@@ -45,7 +59,7 @@ public interface DynamicRestApi {
     JsonObject byMetadata();
 
     /**
-     * Supported {@code HTTP methods} by service. {@code Default: } all http methods
+     * Supported {@code HTTP methods} by service. {@code Default: all http methods}
      *
      * @return set of {@code HTTP methods}
      */

@@ -56,8 +56,7 @@ public class KafkaWebsocketTest extends HttpServerTestBase {
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
-        this.httpConfig.setEnabled(false);
-        this.httpConfig.getWebsocketCfg().setEnabled(true);
+        this.enableWebsocket();
         this.kafkaConfig = KafkaUnitTestBase.createKafkaConfig();
     }
 

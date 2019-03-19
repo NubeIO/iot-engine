@@ -47,8 +47,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
-        this.httpConfig.setEnabled(false);
-        this.httpConfig.getWebsocketCfg().setEnabled(true);
+        this.enableWebsocket();
         try {
             new MockWebsocketEventServerHandler(vertx.eventBus()).start();
         } catch (Exception e) {

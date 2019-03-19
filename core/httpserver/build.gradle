@@ -12,5 +12,6 @@ dependencies {
     compileOnly "io.vertx:vertx-service-discovery:$project.versions.vertx"
 
     testCompile project(":core:base").sourceSets.test.output
+    testCompile project(":core:micro")
 
 }

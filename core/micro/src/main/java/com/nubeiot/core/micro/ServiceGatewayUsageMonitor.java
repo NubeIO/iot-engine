@@ -1,17 +1,24 @@
 package com.nubeiot.core.micro;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
-public class ServiceGatewayUsageMonitor implements ServiceGatewayMonitor {
+import com.nubeiot.core.micro.ServiceGatewayMonitor.AbstractServiceGatewayMonitor;
 
-    private static final ServiceGatewayUsageMonitor DEFAULT = new ServiceGatewayUsageMonitor();
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+import lombok.Getter;
+
+@Getter
+public class ServiceGatewayUsageMonitor extends AbstractServiceGatewayMonitor {
+
+    public ServiceGatewayUsageMonitor(Vertx vertx, ServiceDiscoveryController controller, String sharedKey) {
+        super(vertx, controller, sharedKey);
+    }
 
     @SuppressWarnings("unchecked")
-    static <T extends ServiceGatewayUsageMonitor> T create(String className) {
-        return (T) ServiceGatewayMonitor.create(className, DEFAULT);
+    static <T extends ServiceGatewayUsageMonitor> T create(Vertx vertx, ServiceDiscoveryController controller,
+                                                           String sharedKey, String className) {
+        return (T) ServiceGatewayMonitor.create(vertx, controller, sharedKey, className,
+                                                ServiceGatewayUsageMonitor.class);
     }
 
     @Override

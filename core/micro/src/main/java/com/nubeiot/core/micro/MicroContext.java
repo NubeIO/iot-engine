@@ -1,7 +1,6 @@
 package com.nubeiot.core.micro;
 
 import io.vertx.core.Future;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.Vertx;
@@ -50,12 +49,12 @@ public final class MicroContext extends UnitContext {
             return;
         }
         logger.info("Service Discovery Gateway Config : {}", config.toJson().encode());
-        EventBus eventBus = vertx.getDelegate().eventBus();
         if (vertx.isClustered()) {
-            clusterController.subscribe(eventBus, config.getClusterAnnounceMonitorClass(),
+            clusterController.subscribe(vertx.getDelegate(), config.getClusterAnnounceMonitorClass(),
                                         config.getClusterUsageMonitorClass());
         }
-        localController.subscribe(eventBus, config.getLocalAnnounceMonitorClass(), config.getLocalUsageMonitorClass());
+        localController.subscribe(vertx.getDelegate(), config.getLocalAnnounceMonitorClass(),
+                                  config.getLocalUsageMonitorClass());
     }
 
     void unregister(Future future) {

@@ -62,13 +62,6 @@ public interface TestHelper {
         }
     }
 
-    static Path getAbsolutePathByOs(String path) {
-        if (TestHelper.OSHelper.isWin()) {
-            return Paths.get("C:", path);
-        }
-        return Paths.get(path);
-    }
-
     interface VertxHelper {
 
         static <T extends Verticle> void deploy(Vertx vertx, TestContext context, DeploymentOptions options, T verticle,
@@ -137,6 +130,13 @@ public interface TestHelper {
 
         static boolean isSolaris() {
             return OS.contains("sunos");
+        }
+
+        static Path getAbsolutePathByOs(String path) {
+            if (isWin()) {
+                return Paths.get("C:", path);
+            }
+            return Paths.get(path);
         }
 
     }

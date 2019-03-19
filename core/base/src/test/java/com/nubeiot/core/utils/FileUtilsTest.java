@@ -15,7 +15,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.OSHelper;
 import com.nubeiot.core.exceptions.NubeException;
 
@@ -192,43 +191,43 @@ public class FileUtilsTest {
 
     @Test
     public void test_recompute_datadir_2() {
-        Path path = FileUtils.recomputeDataDir(TestHelper.getAbsolutePathByOs("/data"),
+        Path path = FileUtils.recomputeDataDir(OSHelper.getAbsolutePathByOs("/data"),
                                                FileUtils.DEFAULT_DATADIR.resolve("test").toString());
-        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/test"), path);
+        Assert.assertEquals(OSHelper.getAbsolutePathByOs("/data/test"), path);
     }
 
     @Test
     public void test_recompute_datadir_3() {
-        Path path = FileUtils.recomputeDataDir(TestHelper.getAbsolutePathByOs("/data"),
+        Path path = FileUtils.recomputeDataDir(OSHelper.getAbsolutePathByOs("/data"),
                                                FileUtils.DEFAULT_DATADIR.resolve("test/xyz").toString());
-        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/test/xyz"), path);
+        Assert.assertEquals(OSHelper.getAbsolutePathByOs("/data/test/xyz"), path);
     }
 
     @Test
     public void test_recompute_datadir_4() {
-        Path path = FileUtils.recomputeDataDir(TestHelper.getAbsolutePathByOs("/data"), "test");
-        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/test"), path);
+        Path path = FileUtils.recomputeDataDir(OSHelper.getAbsolutePathByOs("/data"), "test");
+        Assert.assertEquals(OSHelper.getAbsolutePathByOs("/data/test"), path);
     }
 
     @Test
     public void test_recompute_datadir_5() {
-        Path path = FileUtils.recomputeDataDir(TestHelper.getAbsolutePathByOs("/data"),
-                                               TestHelper.getAbsolutePathByOs("/data/test").toString());
-        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/test"), path);
+        Path path = FileUtils.recomputeDataDir(OSHelper.getAbsolutePathByOs("/data"),
+                                               OSHelper.getAbsolutePathByOs("/data/test").toString());
+        Assert.assertEquals(OSHelper.getAbsolutePathByOs("/data/test"), path);
     }
 
     @Test
     public void test_recompute_datadir_6() {
         Path path = FileUtils.recomputeDataDir(Paths.get("/data"),
-                                               TestHelper.getAbsolutePathByOs("/home/test").toString());
-        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/home/test"), path);
+                                               OSHelper.getAbsolutePathByOs("/home/test").toString());
+        Assert.assertEquals(OSHelper.getAbsolutePathByOs("/home/test"), path);
     }
 
     @Test
     public void test_recompute_datadir_7() {
         Path path = FileUtils.recomputeDataDir(FileUtils.DEFAULT_DATADIR.resolve("test"),
-                                               TestHelper.getAbsolutePathByOs("/home/test").toString());
-        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/home/test"), path);
+                                               OSHelper.getAbsolutePathByOs("/home/test").toString());
+        Assert.assertEquals(OSHelper.getAbsolutePathByOs("/home/test"), path);
     }
 
 }

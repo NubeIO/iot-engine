@@ -9,7 +9,7 @@ import org.junit.Test;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.IConfig;
-import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.OSHelper;
 import com.nubeiot.edge.core.InstallerConfig.Credential;
 import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
@@ -20,8 +20,8 @@ public class InstallerConfigTest {
     @Test
     public void test_override_local_dir() {
         InstallerConfig installerConfig = new InstallerConfig();
-        installerConfig.getRepoConfig().recomputeLocal(TestHelper.getAbsolutePathByOs("/data"));
-        Assert.assertEquals(TestHelper.getAbsolutePathByOs("/data/repositories").toString(),
+        installerConfig.getRepoConfig().recomputeLocal(OSHelper.getAbsolutePathByOs("/data"));
+        Assert.assertEquals(OSHelper.getAbsolutePathByOs("/data/repositories").toString(),
                             installerConfig.getRepoConfig().getLocal());
     }
 
@@ -38,7 +38,7 @@ public class InstallerConfigTest {
 
     @Test
     public void test_parse_default() {
-        String localPath = TestHelper.getAbsolutePathByOs("/abc").toString();
+        String localPath = OSHelper.getAbsolutePathByOs("/abc").toString();
         InstallerConfig installerConfig = IConfig.from(
             "{\"auto_install\":true,\"repository\":{\"local\":\"" + localPath.replaceAll("\\\\", "\\\\\\\\") + "\"," +
             "\"remote\":{\"credential\":{\"user\":\"user\",\"password\":\"password\"}," +
@@ -53,7 +53,7 @@ public class InstallerConfigTest {
 
         Assert.assertEquals(localPath, installerConfig.getRepoConfig().getLocal());
         Assert.assertEquals(localPath,
-                            installerConfig.getRepoConfig().recomputeLocal(TestHelper.getAbsolutePathByOs("/data")));
+                            installerConfig.getRepoConfig().recomputeLocal(OSHelper.getAbsolutePathByOs("/data")));
 
         Assert.assertNotNull(installerConfig.getRepoConfig().getRemoteConfig());
         Credential credential = installerConfig.getRepoConfig().getRemoteConfig().getCredential();

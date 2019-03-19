@@ -17,7 +17,7 @@ import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
-import com.nubeiot.core.http.base.event.RestEventMetadata;
+import com.nubeiot.core.http.base.event.RestEventApiMetadata;
 import com.nubeiot.core.http.handler.RestEventResultHandler;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
@@ -106,7 +106,7 @@ public final class RestEventApisBuilder {
         restApi.getRestMetadata().parallelStream().forEach(metadata -> this.createRouter(metadata, restApi));
     }
 
-    private void createRouter(RestEventMetadata metadata, RestEventApi api) {
+    private void createRouter(RestEventApiMetadata metadata, RestEventApi api) {
         RestEventResultHandler restHandler = restHandlers.getOrDefault(api.getClass(),
                                                                        new RestEventResultHandler(metadata));
         String path = Urls.combinePath(rootApi, metadata.getPath());

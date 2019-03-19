@@ -14,31 +14,40 @@ import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
 import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.rest.DynamicEventRestApi;
+import com.nubeiot.core.http.rest.DynamicHttpRestApi;
 import com.nubeiot.core.http.rest.DynamicRestApi;
 import com.nubeiot.core.http.utils.RequestDataConverter;
-import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
+
+import lombok.NonNull;
 
 public interface DynamicContextDispatcher<T extends DynamicRestApi> extends Handler<RoutingContext>, Supplier<T> {
 
-    MicroContext getMicroContext();
+    @SuppressWarnings("unchecked")
+    static <T extends DynamicRestApi> DynamicContextDispatcher<T> create(@NonNull T api,
+                                                                         ServiceDiscoveryController dispatcher) {
+        if (api instanceof DynamicHttpRestApi) {
+            return new DynamicHttpApiDispatcher((DynamicHttpRestApi) api, dispatcher);
+        }
+        if (api instanceof DynamicEventRestApi) {
+            return new DynamicEventApiDispatcher((DynamicEventRestApi) api, dispatcher);
+        }
+        return null;
+    }
 
-    boolean isLocal();
+    @NonNull ServiceDiscoveryController getDispatcher();
 
-    Single<ResponseData> process(ServiceDiscoveryController dispatcher, HttpMethod httpMethod, String path,
-                                 RequestData requestData);
+    Single<ResponseData> process(HttpMethod httpMethod, String path, RequestData requestData);
 
     boolean filter(Record record);
 
     @Override
     default void handle(RoutingContext context) {
         HttpMethod httpMethod = validateMethod(context.request().method());
-        ServiceDiscoveryController dispatcher = isLocal()
-                                                ? getMicroContext().getLocalController()
-                                                : getMicroContext().getClusterController();
         RequestData requestData = RequestDataConverter.convert(context);
         String path = context.request().path();
-        this.process(dispatcher, httpMethod, path, requestData)
+        this.process(httpMethod, path.substring(path.indexOf(get().path())), requestData)
             .subscribe(responseData -> handleResponse(context, responseData),
                        throwable -> handleError(context, throwable));
     }

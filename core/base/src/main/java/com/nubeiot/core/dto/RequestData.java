@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.event.EventMessage;
 
 import lombok.Getter;
+import lombok.NonNull;
 
 @Getter
 public final class RequestData extends ResponseData {
@@ -29,7 +30,7 @@ public final class RequestData extends ResponseData {
 
     public static Builder builder() { return new Builder(); }
 
-    public static RequestData from(EventMessage msg) {
+    public static RequestData from(@NonNull EventMessage msg) {
         return builder().body(msg.getData()).build();
     }
 

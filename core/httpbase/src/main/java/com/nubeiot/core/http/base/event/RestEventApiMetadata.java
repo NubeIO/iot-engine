@@ -24,9 +24,9 @@ import lombok.Singular;
 @Getter
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(doNotUseGetters = true, onlyExplicitlyIncluded = true)
-public final class RestEventMetadata {
+public final class RestEventApiMetadata {
 
-    private static final Function<RestEventMetadata, String> DEFAULT_GEN_PATH = metadata -> {
+    private static final Function<RestEventApiMetadata, String> DEFAULT_GEN_PATH = metadata -> {
         HttpMethod method = metadata.method;
         EventAction action = metadata.action;
         if (metadata.pathPattern) {
@@ -52,9 +52,6 @@ public final class RestEventMetadata {
     @NonNull
     private final EventPattern pattern;
 
-    @Default
-    private final boolean local = false;
-
     @NonNull
     private final HttpMethod method;
 
@@ -69,7 +66,7 @@ public final class RestEventMetadata {
     private final List<String> paramNames;
 
     @Default
-    private final Function<RestEventMetadata, String> generatePath = DEFAULT_GEN_PATH;
+    private final Function<RestEventApiMetadata, String> generatePath = DEFAULT_GEN_PATH;
 
     public String rawPath() {
         return this.path;

@@ -2,19 +2,18 @@ package com.nubeiot.core.http.rest;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
-import io.vertx.servicediscovery.types.HttpEndpoint;
-import io.vertx.servicediscovery.types.HttpLocation;
+
+import com.nubeiot.core.micro.type.EventMessageService;
 
 import lombok.NonNull;
 
-public interface DynamicHttpRestApi extends DynamicRestApi {
+public interface DynamicEventRestApi extends DynamicRestApi {
 
-    static DynamicHttpRestApi create(@NonNull Record record) {
-        HttpLocation location = record.getLocation().mapTo(HttpLocation.class);
-        return new DynamicHttpRestApi() {
+    static DynamicEventRestApi create(Record record) {
+        return new DynamicEventRestApi() {
             @Override
             public @NonNull String path() {
-                return location.getRoot();
+                return record.getLocation().getString("endpoint");
             }
 
             @Override
@@ -30,6 +29,8 @@ public interface DynamicHttpRestApi extends DynamicRestApi {
     }
 
     @Override
-    default String type() { return HttpEndpoint.TYPE; }
+    default String type() {
+        return EventMessageService.TYPE;
+    }
 
 }

@@ -4,7 +4,8 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.micro.MicroConfig.LocalServiceDiscoveryConfig;
-import com.nubeiot.core.utils.Strings;
+
+import lombok.NonNull;
 
 class LocalSDController extends ServiceDiscoveryController {
 
@@ -14,16 +15,23 @@ class LocalSDController extends ServiceDiscoveryController {
     }
 
     @Override
+    public <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, T announceMonitor) {
+        eventBus.localConsumer(config.getAnnounceAddress(), announceMonitor);
+    }
+
+    @Override
+    public <T extends ServiceGatewayUsageMonitor> void subscribe(EventBus eventBus, @NonNull T usageMonitor) {
+        eventBus.localConsumer(config.getUsageAddress(), usageMonitor);
+    }
+
+    @Override
     String kind() {
         return "Local";
     }
 
     @Override
-    void subscribe(EventBus eventBus, String announceMonitorClass, String usageMonitorClass) {
-        eventBus.localConsumer(config.getAnnounceAddress(), ServiceGatewayAnnounceMonitor.create(announceMonitorClass));
-        if (Strings.isNotBlank(config.getUsageAddress())) {
-            eventBus.localConsumer(config.getUsageAddress(), ServiceGatewayUsageMonitor.create(usageMonitorClass));
-        }
+    String computeINet(String host) {
+        return host;
     }
 
 }

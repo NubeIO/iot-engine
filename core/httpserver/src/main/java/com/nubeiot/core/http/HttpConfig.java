@@ -13,15 +13,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Setter(value = AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class HttpConfig implements IConfig {
 
     public static final String NAME = "__http__";
@@ -40,6 +39,8 @@ public final class HttpConfig implements IConfig {
     private Http2Config http2Cfg = new Http2Config();
     @JsonProperty(value = CorsOptions.NAME)
     private CorsOptions corsOptions = new CorsOptions();
+    @JsonProperty(value = DynamicRouteConfig.NAME)
+    private DynamicRouteConfig dynamicRouteConfig = new DynamicRouteConfig();
 
     @Override
     public String name() { return NAME; }
@@ -65,9 +66,8 @@ public final class HttpConfig implements IConfig {
 
 
     @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
+    @Setter(value = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PACKAGE)
     public static class WebsocketConfig implements IConfig {
 
         public static final String NAME = "__socket__";
@@ -114,9 +114,8 @@ public final class HttpConfig implements IConfig {
 
 
     @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
+    @Setter(value = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PACKAGE)
     public static class Http2Config implements IConfig {
 
         public static final String NAME = "__http2__";
@@ -134,9 +133,8 @@ public final class HttpConfig implements IConfig {
 
 
     @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
+    @Setter(value = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PACKAGE)
     public static class CorsOptions implements IConfig {
 
         public static final String NAME = "__cors__";
@@ -153,6 +151,19 @@ public final class HttpConfig implements IConfig {
 
         @Override
         public Class<? extends IConfig> parent() { return HttpConfig.class; }
+
+    }
+
+
+    @Getter
+    @Setter(value = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PACKAGE)
+    public static class DynamicRouteConfig {
+
+        public static final String NAME = "__dynamic__";
+
+        private boolean enabled = false;
+        private String path = ApiConstants.DYNAMIC_API_PATH;
 
     }
 

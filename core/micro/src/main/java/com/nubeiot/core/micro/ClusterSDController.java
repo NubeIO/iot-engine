@@ -4,7 +4,10 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
+import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
+
+import lombok.NonNull;
 
 class ClusterSDController extends ServiceDiscoveryController {
 
@@ -15,16 +18,25 @@ class ClusterSDController extends ServiceDiscoveryController {
     }
 
     @Override
+    <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, @NonNull T announceMonitor) {
+        eventBus.consumer(config.getAnnounceAddress(), announceMonitor);
+    }
+
+    @Override
+    <T extends ServiceGatewayUsageMonitor> void subscribe(EventBus eventBus, @NonNull T usageMonitor) {
+        if (Strings.isNotBlank(config.getUsageAddress())) {
+            eventBus.consumer(config.getUsageAddress(), usageMonitor);
+        }
+    }
+
+    @Override
     String kind() {
         return "Cluster";
     }
 
     @Override
-    void subscribe(EventBus eventBus, String announceMonitorClass, String usageMonitorClass) {
-        eventBus.consumer(config.getAnnounceAddress(), ServiceGatewayAnnounceMonitor.create(announceMonitorClass));
-        if (Strings.isNotBlank(config.getUsageAddress())) {
-            eventBus.consumer(config.getUsageAddress(), ServiceGatewayUsageMonitor.create(usageMonitorClass));
-        }
+    String computeINet(String host) {
+        return Networks.computeNATAddress(host);
     }
 
 }

@@ -3,13 +3,16 @@ package com.nubeiot.core.component;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * Unit context after deployment
  *
  * @see Unit
  */
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UnitContext {
 
     public static final UnitContext VOID = new UnitContext();

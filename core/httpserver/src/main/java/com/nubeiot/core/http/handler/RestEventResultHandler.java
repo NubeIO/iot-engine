@@ -9,7 +9,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.ReplyEventHandler;
-import com.nubeiot.core.http.base.event.RestEventMetadata;
+import com.nubeiot.core.http.base.event.RestEventApiMetadata;
 import com.nubeiot.core.http.utils.RequestDataConverter;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class RestEventResultHandler implements Handler<RoutingContext> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final RestEventMetadata metadata;
+    private final RestEventApiMetadata metadata;
 
     @Override
     public void handle(RoutingContext context) {

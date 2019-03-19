@@ -35,7 +35,6 @@ import com.nubeiot.core.micro.MicroConfig.BackendConfig;
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
 import com.nubeiot.core.micro.type.EventMessagePusher;
 import com.nubeiot.core.micro.type.EventMessageService;
-import com.nubeiot.core.utils.Networks;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -46,7 +45,6 @@ import lombok.RequiredArgsConstructor;
 public abstract class ServiceDiscoveryController implements Supplier<ServiceDiscovery> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceDiscoveryController.class);
-
     @Getter(value = AccessLevel.PACKAGE)
     protected final ServiceDiscoveryConfig config;
     private final String sharedKey;
@@ -66,9 +64,22 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return ServiceDiscovery.create(vertx, config);
     }
 
+    abstract <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, @NonNull T announceMonitor);
+
+    abstract <T extends ServiceGatewayUsageMonitor> void subscribe(EventBus eventBus, @NonNull T usageMonitor);
+
     abstract String kind();
 
-    abstract void subscribe(EventBus eventBus, String announceMonitorClass, String usageMonitorClass);
+    abstract String computeINet(String host);
+
+    final void subscribe(io.vertx.core.Vertx vertx, String announceMonitorClass, String usageMonitorClass) {
+        subscribe(vertx.eventBus(), ServiceGatewayAnnounceMonitor.create(vertx, this, sharedKey, announceMonitorClass));
+        subscribe(vertx.eventBus(), ServiceGatewayUsageMonitor.create(vertx, this, sharedKey, usageMonitorClass));
+    }
+
+    public boolean isEnabled() {
+        return this.config.isEnabled();
+    }
 
     @Override
     public ServiceDiscovery get() {
@@ -80,7 +91,10 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
             serviceDiscovery.rxGetRecords(r -> true, true)
                             .flattenAsObservable(rs -> rs)
                             .flatMapCompletable(r -> serviceDiscovery.rxUnpublish(r.getRegistration()))
-                            .subscribe(future::succeeded, future::fail);
+                            .subscribe(future::complete, err -> {
+                                logger.warn("Cannot un-deployed", err);
+                                future.complete();
+                            });
         }
     }
 
@@ -88,10 +102,9 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return addDecoratorRecord(decorator(record));
     }
 
-    public Single<Record> addHttpRecord(String name, HttpLocation httpLocation, JsonObject metadata) {
-        Record record = HttpEndpoint.createRecord(name, httpLocation.isSsl(),
-                                                  Networks.computeNATAddress(httpLocation.getHost()),
-                                                  httpLocation.getPort(), httpLocation.getRoot(), metadata);
+    public Single<Record> addHttpRecord(String name, HttpLocation location, JsonObject metadata) {
+        Record record = HttpEndpoint.createRecord(name, location.isSsl(), computeINet(location.getHost()),
+                                                  location.getPort(), location.getRoot(), metadata);
         return addDecoratorRecord(record);
     }
 
@@ -165,7 +178,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
             return record;
         }
         HttpLocation location = new HttpLocation(record.getLocation());
-        location.setHost(Networks.computeNATAddress(location.getHost()));
+        location.setHost(computeINet(location.getHost()));
         return record.setLocation(location.toJson());
     }
 

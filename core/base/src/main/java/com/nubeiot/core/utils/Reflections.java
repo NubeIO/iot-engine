@@ -35,6 +35,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+@SuppressWarnings("unchecked")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Reflections {
 
@@ -114,14 +115,12 @@ public final class Reflections {
             return findToStream(clazz, predicate).collect(Collectors.toList());
         }
 
-        @SuppressWarnings("unchecked")
         public static <T> T constantByName(@NonNull Class<?> clazz, String name) {
             Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
                                                     f -> f.getName().equals(Strings.requireNotBlank(name)));
             return (T) findToStream(clazz, filter).map(field -> getConstant(clazz, field)).findFirst().orElse(null);
         }
 
-        @SuppressWarnings("unchecked")
         public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,
                                                Predicate<Field> predicate) {
             Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
@@ -133,7 +132,6 @@ public final class Reflections {
                                                         .collect(Collectors.toList());
         }
 
-        @SuppressWarnings("unchecked")
         private static <T> T getConstant(@NonNull Class<?> clazz, Field field) {
             try {
                 return (T) field.get(null);
@@ -184,7 +182,6 @@ public final class Reflections {
             return executeMethod(instance, method, outputType, Collections.singletonList(paramType), paramData);
         }
 
-        @SuppressWarnings("unchecked")
         public static <O> O executeMethod(@NonNull Object instance, @NonNull Method method,
                                           @NonNull Class<O> outputType, Collection<Class<?>> inputTypes,
                                           Object... inputData) {
@@ -359,16 +356,29 @@ public final class Reflections {
             }
         }
 
-        public static <T> T createObject(String clazz) {
-            Silencer<T> silencer = new Silencer<>();
+        public static <T> Class<T> findClass(String clazz) {
             try {
-                Class<T> aClass = (Class<T>) Class.forName(clazz, true, Reflections.contextClassLoader());
-                return createObject(aClass, silencer).get();
+                return (Class<T>) Class.forName(clazz, true, Reflections.contextClassLoader());
             } catch (ClassNotFoundException | ClassCastException e) {
-                silencer.accept(null, new HiddenException(NubeException.ErrorCode.INITIALIZER_ERROR,
-                                                          "Not found class " + clazz, e));
-                return silencer.get();
+                logger.debug("Not found class {}", e, clazz);
+                return null;
             }
+        }
+
+        public static <T> T createObject(String clazz) {
+            final Class<Object> aClass = findClass(clazz);
+            if (Objects.isNull(aClass)) {
+                return null;
+            }
+            return (T) createObject(aClass);
+        }
+
+        public static <T> T createObject(String clazz, @NonNull Map<Class, Object> inputs) {
+            final Class<Object> aClass = findClass(clazz);
+            if (Objects.isNull(aClass)) {
+                return null;
+            }
+            return (T) createObject(aClass, inputs);
         }
 
         public static <T> T createObject(Class<T> clazz) {
@@ -391,7 +401,8 @@ public final class Reflections {
             return silencer;
         }
 
-        public static <T> Silencer<T> createObject(Class<T> clazz, Map<Class, Object> inputs, Silencer<T> silencer) {
+        public static <T> Silencer<T> createObject(Class<T> clazz, @NonNull Map<Class, Object> inputs,
+                                                   Silencer<T> silencer) {
             if (!(inputs instanceof LinkedHashMap)) {
                 throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
             }

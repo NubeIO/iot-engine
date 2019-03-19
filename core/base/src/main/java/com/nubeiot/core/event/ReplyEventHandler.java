@@ -19,7 +19,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 //TODO More optimize
-//TODO Mark address+action is optional
 @RequiredArgsConstructor
 public class ReplyEventHandler implements Consumer<AsyncResult<Message<Object>>> {
 

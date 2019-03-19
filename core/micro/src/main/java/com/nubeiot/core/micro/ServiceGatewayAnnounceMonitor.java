@@ -1,23 +1,35 @@
 package com.nubeiot.core.micro;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.json.JsonObject;
+import io.vertx.servicediscovery.Record;
 
-public class ServiceGatewayAnnounceMonitor implements ServiceGatewayMonitor {
+import com.nubeiot.core.micro.ServiceGatewayMonitor.AbstractServiceGatewayMonitor;
 
-    private static final ServiceGatewayAnnounceMonitor DEFAULT = new ServiceGatewayAnnounceMonitor();
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+import lombok.Getter;
 
-    @SuppressWarnings("unchecked")
-    static <T extends ServiceGatewayAnnounceMonitor> T create(String className) {
-        return (T) ServiceGatewayMonitor.create(className, DEFAULT);
+@Getter
+public class ServiceGatewayAnnounceMonitor extends AbstractServiceGatewayMonitor {
+
+    public ServiceGatewayAnnounceMonitor(Vertx vertx, ServiceDiscoveryController controller, String sharedKey) {
+        super(vertx, controller, sharedKey);
     }
 
+    @SuppressWarnings("unchecked")
+    static <T extends ServiceGatewayAnnounceMonitor> T create(Vertx vertx, ServiceDiscoveryController controller,
+                                                              String sharedKey, String className) {
+        return (T) ServiceGatewayMonitor.create(vertx, controller, sharedKey, className,
+                                                ServiceGatewayAnnounceMonitor.class);
+    }
+
+    protected void handle(Record record) { }
+
     @Override
-    public void handle(Message<Object> message) {
-        logger.info("SERVICE ANNOUNCEMENT GATEWAY::Receive message from: \"{}\" - Headers: \"{}\" - Body: \"{}\"",
+    public final void handle(Message<Object> message) {
+        logger.info("SERVICE ANNOUNCEMENT GATEWAY::Receive message from: \"{}\" - Headers: \"{}\" - Record: \"{}\"",
                     message.address(), message.headers(), message.body());
+        handle(new Record((JsonObject) message.body()));
     }
 
 }

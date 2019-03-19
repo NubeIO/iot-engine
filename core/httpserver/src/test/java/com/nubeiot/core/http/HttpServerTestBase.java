@@ -22,6 +22,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.core.http.HttpClient;
 
+import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
@@ -47,11 +48,20 @@ public class HttpServerTestBase {
 
     public void before(TestContext context) throws IOException {
         vertx = Vertx.vertx();
-        httpConfig = new HttpConfig();
+        httpConfig = IConfig.fromClasspath(httpConfigFile(), HttpConfig.class);
         httpConfig.setHost(DEFAULT_HOST);
         httpConfig.setPort(TestHelper.getRandomPort());
         client = vertx.createHttpClient(createClientOptions());
         requestOptions = new RequestOptions().setHost(DEFAULT_HOST).setPort(httpConfig.getPort());
+    }
+
+    protected String httpConfigFile() {
+        return "httpServer.json";
+    }
+
+    protected void enableWebsocket() {
+        this.httpConfig.setEnabled(false);
+        this.httpConfig.getWebsocketCfg().setEnabled(true);
     }
 
     public void after(TestContext context) {
@@ -70,6 +80,7 @@ public class HttpServerTestBase {
                                       JsonObject bodyExpected) {
         Async async = context.async();
         client.request(method, requestOptions.setURI(path), resp -> {
+            System.out.println("Client asserting...");
             context.assertEquals(ApiConstants.DEFAULT_CONTENT_TYPE, resp.getHeader(HttpHeaders.CONTENT_TYPE));
             context.assertNotNull(resp.getHeader("x-response-time"));
             context.assertEquals(codeExpected, resp.statusCode());
