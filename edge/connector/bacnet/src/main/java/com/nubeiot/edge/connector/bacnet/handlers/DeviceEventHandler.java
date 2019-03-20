@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
@@ -37,12 +38,22 @@ public class DeviceEventHandler implements EventHandler {
 
     //GET ALL DEVICES
     @EventContractor(action = EventAction.GET_LIST, returnType = JsonObject.class)
-    public JsonObject getList(RequestData data) {
-        return JsonObject.mapFrom(bacnetInstance.getRemoteDevices());
+    public Single<JsonObject> getList(RequestData data) {
+        return bacnetInstance.getRemoteDevices();
     }
 
-    //GET ALL SAVED DEVICES
-    //SAVE DEVICE
-    //REMOVE DEVICE
-    //GET DEVICE
+    //    @EventContractor(action = EventAction.GET_ONE, returnType = EventMessage.class)
+    //    public Single<EventMessage> getRemoteDeviceExtendedInfo(Map<String, Object> message) {
+    //
+    //    }
+    //
+    //    @EventContractor(action = EventAction.CREATE, returnType = EventMessage.class)
+    //    public Single<EventMessage> createRemoteDevicePoint(Map<String, Object> message) {
+    //
+    //    }
+    //
+    //    @EventContractor(action = EventAction.REMOVE, returnType = EventMessage.class)
+    //    public Single<EventMessage> removeRemoteDevicePoint(Map<String, Object> message) {
+    //
+    //    }
 }

@@ -38,8 +38,8 @@ public class ServerEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.GET_LIST, returnType = JsonObject.class)
     public Single<JsonObject> getList(RequestData data) {
-        if (checkRequest(data.getBody())) {
-            String driver = data.getBody().getString("driver").toLowerCase();
+        if (checkRequest(data.body())) {
+            String driver = data.body().getString("driver").toLowerCase();
             String handlerAddress = endpointsMapper.getDriverHandler(DriverEventModels.POINTS, EventAction.GET_LIST,
                                                                      driver);
             if (handlerAddress == null) {
