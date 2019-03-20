@@ -8,12 +8,14 @@ using namespace std;
 JNIEXPORT void JNICALL Java_com_nubeiot_edge_connector_sample_jni_nativeclass_JniDemo_sayHello
   (JNIEnv *, jobject) {
    cout << "Hello World!\n" << endl;
+   return;
 }
 
 JNIEXPORT void JNICALL Java_com_nubeiot_edge_connector_sample_jni_nativeclass_JniDemo_printSum
   (JNIEnv *, jobject, jint a, jint b) {
   int sum = a + b;
   cout << "Sum is: " << sum << endl;
+  return;
 }
 
 JNIEXPORT jint JNICALL Java_com_nubeiot_edge_connector_sample_jni_nativeclass_JniDemo_getDefaultValue
@@ -25,4 +27,13 @@ JNIEXPORT jint JNICALL Java_com_nubeiot_edge_connector_sample_jni_nativeclass_Jn
 JNIEXPORT jint JNICALL Java_com_nubeiot_edge_connector_sample_jni_nativeclass_JniDemo_sum
   (JNIEnv *, jobject, jint a, jint b) {
     return a + b;
+}
+
+JNIEXPORT jint JNICALL Java_com_nubeiot_edge_connector_sample_jni_nativeclass_JniDemo_getException
+  (JNIEnv * env, jobject) {
+    // throwing exception
+    jclass jcls = env->FindClass("java/lang/Exception");
+    env->ExceptionClear();
+    env->ThrowNew(jcls, "Error Message");
+    return 0;
 }

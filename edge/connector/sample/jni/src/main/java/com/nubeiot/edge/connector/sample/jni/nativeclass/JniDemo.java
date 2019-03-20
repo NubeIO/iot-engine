@@ -1,8 +1,8 @@
 package com.nubeiot.edge.connector.sample.jni.nativeclass;
 
-import com.nubeiot.core.jni.JniBase;
+import com.nubeiot.core.jni.Jni;
 
-public class JniDemo extends JniBase {
+public class JniDemo implements Jni {
 
     public native void sayHello();
 
@@ -11,4 +11,6 @@ public class JniDemo extends JniBase {
     public native int getDefaultValue();
 
     public native int sum(int a, int b);
+
+    public native int getException();
 }

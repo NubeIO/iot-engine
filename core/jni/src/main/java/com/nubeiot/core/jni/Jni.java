@@ -1,3 +1,3 @@
 package com.nubeiot.core.jni;
 
-public class JniBase {}
+public interface Jni {}
