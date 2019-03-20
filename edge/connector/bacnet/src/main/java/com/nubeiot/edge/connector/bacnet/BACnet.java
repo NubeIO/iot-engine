@@ -5,7 +5,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Vector;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -61,21 +64,24 @@ import com.serotonin.bacnet4j.util.RequestUtils;
  */
 public class BACnet {
 
-    //TODO: be able to search for single remote device
+    //TODO: be able to search for single remote device? doubts cuz dat not how de bacnetty work brethren
     //TODO: implement MTSP support
     //TODO execute blocking will throw warnings after 10 seconds. is it possible for this to happen on local network
     // requests?
 
-    private LocalDevice localDevice;
     private Vertx vertx;
     private EventController eventController;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final String POINTS_API = "nubeio.edge.connector.pointsapi";
 
+    private LocalDevice localDevice;
+    private HashMap<RemoteDevice, Vector<ObjectIdentifier>> points;
+
     public BACnet(String name, int id, Future<Void> future, EventController eventController, Vertx vertx) {
 
         this.eventController = eventController;
         this.vertx = vertx;
+        this.points = new HashMap<>();
 
         String broadcastAddress = null;
         int networkPrefixLength = 24;
@@ -88,40 +94,28 @@ public class BACnet {
             return;
         }
 
-        IpNetwork network = new IpNetworkBuilder().withBroadcast(broadcastAddress, networkPrefixLength)
-                                                  .build();
+        IpNetwork network = new IpNetworkBuilder().withBroadcast(broadcastAddress, networkPrefixLength).build();
         Transport transport = new DefaultTransport(network);
-
         localDevice = new LocalDevice(id, transport);
         localDevice.writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(name));
-
         try {
             localDevice.initialize();
-            logger.info("STARTING REMOTE DEVICE DISCOVERY");
-            //            localDevice.startRemoteDeviceDiscovery(remoteDevice -> {handleDeviceDiscovered
-            //            (remoteDevice);});
             localDevice.startRemoteDeviceDiscovery();
 
             if (!localDevice.isInitialized()) {
                 throw new BACnetServiceException(ErrorClass.device, ErrorCode.internalError);
             }
         } catch (Exception ex) {
-            logger.error("\n\nBACNET FAILURE\n\n");
-            ex.printStackTrace();
+            logger.error("\n\nBACNET FAILURE\n\n", ex);
             future.fail(ex);
             return;
         }
-
     }
 
     public void terminate() {
         localDevice.terminate();
     }
 
-    //    public void handleDeviceDiscovered(RemoteDevice remoteDevice){
-    //        System.out.println("\n\n Discovery Handler for " + remoteDevice.getName());
-    //        getRemoteDeviceObjectList(remoteDevice).subscribe(data -> System.out.println(data));
-    //    }
 
     public void BEGIN_TEST() {
         //        logger.info("\n\n\nBEGINING TEST\n\n");
@@ -133,10 +127,12 @@ public class BACnet {
         //        });
     }
 
+    //TODO: test new RxJava
     public void initialiseLocalObjectsFromJson(JsonObject json) {
-        json.getMap().forEach((key, obj) -> {
-            JsonObject pointJson = JsonObject.mapFrom((LinkedHashMap) obj);
-            LocalPointObjectUtils.createLocalObject(pointJson, key, localDevice);
+        Observable<Entry<String, Object>> newPoints = Observable.fromIterable(json.getMap().entrySet());
+        newPoints.subscribe(entry -> {
+            JsonObject pointJson = JsonObject.mapFrom((LinkedHashMap) entry.getValue());
+            LocalPointObjectUtils.createLocalObject(pointJson, entry.getKey(), localDevice);
         });
     }
 
@@ -148,8 +144,15 @@ public class BACnet {
 
     //REMOTE DEVICE FUNCTIONS
 
-    public List<RemoteDevice> getRemoteDevices() {
-        return localDevice.getRemoteDeviceCache().getEntities();
+    public Single<JsonObject> getRemoteDevices() {
+        return Single.fromObservable(
+            Observable.fromIterable(localDevice.getRemoteDeviceCache().getEntities()).flatMap(remoteDevice -> {
+                JsonObject json = new JsonObject();
+                json.put("instanceNumber", remoteDevice.getInstanceNumber());
+                json.put("name", remoteDevice.getName());
+                json.put("address", remoteDevice.getAddress());
+                return Observable.just(json);
+            }));
     }
 
     public Single<JsonObject> getRemoteDeviceObjectList(int instanceNumber) {
@@ -216,10 +219,13 @@ public class BACnet {
                         propValuesFinal.put(pid, val);
                         d.setObjectProperty(oid, pid, val);
                     });
-                    //TODO: custom mapping to Json
-                    //                    JsonObject.mapFrom(propValuesFinal);
-                    //                    future.complete(data);
-                    //                    source.onSuccess(new JsonObject().put("points",data));
+
+                    //TODO: test mapping of encodable
+                    JsonObject data = new JsonObject();
+                    propValuesFinal.forEach(
+                        (propertyIdentifier, encodable) -> data.put(propertyIdentifier.toString(), encodable));
+                    future.complete(data);
+                    source.onSuccess(new JsonObject().put("points", data));
                 } catch (BACnetException e) {
                     future.fail(e);
                     source.onError(e);
@@ -247,7 +253,6 @@ public class BACnet {
         while (!correctID) {
             try {
                 int subID = (int) Math.floor((Math.random() * 100) + 1);
-                ;
                 UnsignedInteger subProcessID = new UnsignedInteger(subID);
                 UnsignedInteger lifetime = new UnsignedInteger(0);
                 SubscribeCOVRequest request = new SubscribeCOVRequest(subProcessID, obj, Boolean.TRUE, lifetime);

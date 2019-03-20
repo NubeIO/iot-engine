@@ -44,10 +44,28 @@ public class PointsEventHandler implements EventHandler {
                              .flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
     }
 
-    //    @EventContractor(action = EventAction.GET_ONE, returnType = EventMessage.class)
-    //    public Single<EventMessage> getRemoteDevicePoints(Map<String, Object> message) {
-    //        int instanceNumber = JsonObject.mapFrom(message).getInteger("deviceID");
-    //        return bacnetInstance.getRemoteDeviceObjectList(instanceNumber).flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
+    @EventContractor(action = EventAction.GET_ONE, returnType = EventMessage.class)
+    public Single<EventMessage> getRemoteDevicePointExtended(Map<String, Object> message) {
+        JsonObject data = JsonObject.mapFrom(message);
+        int instanceNumber = data.getInteger("deviceID");
+        String objectID = data.getString("objectID");
+        return bacnetInstance.getRemoteObjectProperties(instanceNumber, objectID)
+                             .flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
+    }
+    //
+    //    @EventContractor(action = EventAction.CREATE, returnType = EventMessage.class)
+    //    public Single<EventMessage> saveRemoteDevicePoint(Map<String, Object> message) {
+    //
+    //    }
+    //
+    //    @EventContractor(action = EventAction.REMOVE, returnType = EventMessage.class)
+    //    public Single<EventMessage> removeRemoteDevicePoint(Map<String, Object> message) {
+    //
+    //    }
+    //
+    //    @EventContractor(action = EventAction.PATCH, returnType = EventMessage.class)
+    //    public Single<EventMessage> writeRemoteDevicePoint(Map<String, Object> message) {
+    //
     //    }
 
 }
