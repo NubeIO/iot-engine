@@ -17,6 +17,9 @@ public class EdgeJniDemo extends ContainerVerticle {
 
     private void handler(UnitContext ignored) {
         jniDemo.sayHello();
+        jniDemo.printSum(5, 5);
+        System.out.println(jniDemo.getDefaultValue());
+        System.out.println(jniDemo.sum(4, 5));
     }
 
 }

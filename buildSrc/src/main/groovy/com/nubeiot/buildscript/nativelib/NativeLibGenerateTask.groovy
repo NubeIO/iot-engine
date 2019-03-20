@@ -38,9 +38,7 @@ $nativeLibsSrcFolder/$dynamicLibName $file""".execute()
 
                 } else if (os.startsWith("win")) {
                     def dynamicLibName = "${file.toString().tokenize("/").last().replace(extension, "")}.dll"
-                    proc = """x86_64-w64-mingw32-g++ -std=c++0x -I$javaHome\\include -I$javaHome\\include\\win32 
--dynamiclib 
--o $nativeLibsSrcFolder/$dynamicLibName $file""".execute()
+                    proc = """x86_64-w64-mingw32-g++ -std=c++0x -I$javaHome\\include -I$javaHome\\include\\win32 -dynamiclib -o $nativeLibsSrcFolder/$dynamicLibName $file""".execute()
                 } else {
                     println "Error > OS must be Linux, MAC, or Windows"
                     return

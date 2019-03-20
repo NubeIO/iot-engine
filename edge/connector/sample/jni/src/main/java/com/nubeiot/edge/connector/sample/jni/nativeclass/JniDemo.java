@@ -6,4 +6,9 @@ public class JniDemo extends JniBase {
 
     public native void sayHello();
 
+    public native void printSum(int a, int b);
+
+    public native int getDefaultValue();
+
+    public native int sum(int a, int b);
 }
