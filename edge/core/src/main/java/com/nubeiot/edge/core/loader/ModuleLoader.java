@@ -31,10 +31,10 @@ public final class ModuleLoader implements EventHandler {
     @EventContractor(action = {EventAction.CREATE, EventAction.INIT}, returnType = Single.class)
     public Single<JsonObject> installModule(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.getBody(), PreDeploymentResult.class);
-        logger.info("Vertx install module {}...", preResult.getServiceId());
+        logger.info("Vertx install module {}...", preResult.getServiceFQN());
         DeploymentOptions options = new DeploymentOptions(preResult.getDeployCfg().getDeployConfig()).setConfig(
             preResult.getDeployCfg().toJson());
-        return vertx.rxDeployVerticle(preResult.getServiceId(), options).doOnError(throwable -> {
+        return vertx.rxDeployVerticle(preResult.getServiceFQN(), options).doOnError(throwable -> {
             throw new EngineException(throwable);
         }).map(id -> new JsonObject().put("deploy_id", id));
     }

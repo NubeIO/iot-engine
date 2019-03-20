@@ -31,6 +31,7 @@ import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
@@ -47,6 +48,7 @@ import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
 import com.nubeiot.edge.core.model.tables.records.TblModuleRecord;
 
 import lombok.Getter;
+import lombok.NonNull;
 
 @Getter
 public abstract class EdgeEntityHandler extends EntityHandler {
@@ -140,22 +142,19 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             }
 
             ITblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
-            if (Objects.isNull(module.getState())) {
-                //re-use previous state
-                module.setState(oldOne.getState());
-            }
 
             boolean isUpdated = EventAction.UPDATE == event;
+            State targetState = Objects.isNull(module.getState()) ? oldOne.getState() : module.getState();
             if (isUpdated || EventAction.PATCH == event) {
                 return markModuleModify(module.setDeployLocation(config.getRepoConfig().getLocal()),
                                         new TblModule(oldOne), isUpdated).flatMap(
                     key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
-                        transId -> createPreDeployResult(key, transId, event, oldOne.getState(), module.getState())));
+                        transId -> createPreDeployResult(key, transId, event, oldOne.getState(), targetState)));
             }
             if (EventAction.REMOVE == event) {
                 return markModuleDelete(new TblModule(oldOne)).flatMap(
                     key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
-                        transId -> createPreDeployResult(key, transId, event, oldOne.getState(), module.getState())));
+                        transId -> createPreDeployResult(key, transId, event, oldOne.getState(), targetState)));
             }
             throw new UnsupportedOperationException("Unsupported event " + event);
         });
@@ -169,6 +168,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                   .prevState(prevState)
                                   .targetState(targetState)
                                   .serviceId(module.getServiceId())
+                                  .serviceFQN(module.getServiceType()
+                                                    .generateFQN(module.getServiceId(), module.getVersion(),
+                                                                 module.getServiceName()))
                                   .deployId(module.getDeployId())
                                   .deployCfg(module.getDeployConfig())
                                   .dataDir((String) this.getSharedDataFunc().apply(EdgeVerticle.SHARED_DATA_DIR))
@@ -243,9 +245,35 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<ITblModule> markModuleModify(ITblModule module, ITblModule oldOne, boolean isUpdated) {
         logger.debug("Mark service {} to modify...", module.getServiceId());
-        ITblModule into = isUpdated ? module.into(oldOne) : oldOne.setState(module.getState());
+        ITblModule into = this.updateModule(oldOne, module, isUpdated);
         return moduleDao.update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
                         .map(ignore -> oldOne);
+    }
+
+    private ITblModule updateModule(@NonNull ITblModule oldOne, @NonNull ITblModule newOne, boolean isUpdated) {
+        if (Objects.nonNull(newOne.getVersion())) {
+            oldOne.setVersion(newOne.getVersion());
+        } else if (isUpdated) {
+            throw new NubeException("Version is required!");
+        }
+
+        if (Objects.nonNull(newOne.getDeployConfig())) {
+            oldOne.setDeployConfig(newOne.getDeployConfig());
+        } else if (isUpdated) {
+            throw new NubeException("Deploy config is required!");
+        }
+
+        if (Objects.nonNull(newOne.getPublishedBy())) {
+            oldOne.setPublishedBy(newOne.getPublishedBy());
+        }
+
+        if (Objects.nonNull(newOne.getState())) {
+            oldOne.setState(newOne.getState());
+        } else if (isUpdated) {
+            throw new NubeException("State is required!");
+        }
+
+        return oldOne;
     }
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {
@@ -262,7 +290,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             logger.info("Module in database is found, validate conflict ");
             StateMachine.instance()
                         .validateConflict(findModule.getState(), eventAction, "service " + findModule.getServiceId(),
-                                          targetState);
+                                          targetState == null ? findModule.getState() : targetState);
             return Optional.of(findModule);
         }
         return Optional.empty();
