@@ -9,16 +9,15 @@ class NativeLibsGenerateTask extends DefaultTask {
     @Input
     public String projectDir
     @Input
-    public String nativeLibsSrcFolder
-
+    public String nativeLibDir
 
     @TaskAction
     void generate() {
         def javaHome = "${System.getenv("JAVA_HOME")}"
         def dir = new File(projectDir)
         String os = System.getProperty("os.name").toLowerCase()
-        nativeLibsSrcFolder = nativeLibsSrcFolder.replaceFirst("^~", System.getProperty("user.home"))
-        def outputDir = new File("$nativeLibsSrcFolder")
+        nativeLibDir = nativeLibDir.replaceFirst("^~", System.getProperty("user.home"))
+        def outputDir = new File("$nativeLibDir")
         if (!outputDir.exists()) {
             outputDir.mkdir()
         }
@@ -30,15 +29,16 @@ class NativeLibsGenerateTask extends DefaultTask {
                 if (os.startsWith("linux")) {
                     def dynamicLibName = "lib${file.toString().tokenize("/").last().replace(extension, "")}.so"
                     proc = """g++ -fPIC -std=c++0x -I$javaHome/include -I$javaHome/incldue/linux -dynamiclib -o 
-$nativeLibsSrcFolder/$dynamicLibName $file""".execute()
+$nativeLibDir/$dynamicLibName $file""".execute()
                 } else if (os.startsWith("mac os x")) {
                     def dynamicLibName = "lib${file.toString().tokenize("/").last().replace(extension, "")}.dylib"
                     proc = """g++ -fPIC -std=c++0x -I$javaHome/include -I$javaHome/include/darwin -dynamiclib -o 
-$nativeLibsSrcFolder/$dynamicLibName $file""".execute()
+$nativeLibDir/$dynamicLibName $file""".execute()
 
                 } else if (os.startsWith("win")) {
                     def dynamicLibName = "${file.toString().tokenize("/").last().replace(extension, "")}.dll"
-                    proc = """x86_64-w64-mingw32-g++ -std=c++0x -I$javaHome\\include -I$javaHome\\include\\win32 -dynamiclib -o $nativeLibsSrcFolder/$dynamicLibName $file""".execute()
+                    proc = """x86_64-w64-mingw32-g++ -std=c++0x -I$javaHome\\include -I$javaHome\\include\\win32 
+-dynamiclib -o $nativeLibDir/$dynamicLibName $file""".execute()
                 } else {
                     println "Error > OS must be Linux, MAC, or Windows"
                     return

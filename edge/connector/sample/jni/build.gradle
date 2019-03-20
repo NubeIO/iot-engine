@@ -7,18 +7,18 @@ dependencies {
 import com.nubeiot.buildscript.nativelib.NativeHeadersGenerateTask
 import com.nubeiot.buildscript.nativelib.NativeLibsGenerateTask
 
-task nativeHeadersGen(type: NativeHeadersGenerateTask) {
+task nativeHeaderGen(type: NativeHeadersGenerateTask) {
     projectDir = project.projectDir
     srcFiles = sourceSets.main.java.srcDirs
-    nativeHeaderSrcFolder = project.genProps.nativeHeaderSrcFolder
+    nativeHeaderDir = project.genProps.nativeHeaderDir
 }
 
-task nativeLibsGen(type: NativeLibsGenerateTask) {
+task nativeLibGen(type: NativeLibsGenerateTask) {
     projectDir = project.projectDir
-    nativeLibsSrcFolder = project.genProps.nativeLibsSrcFolder
+    nativeLibDir = project.genProps.nativeLibDir
 }
 
 task nativeGen {
-    dependsOn nativeHeadersGen
-    dependsOn nativeLibsGen
+    dependsOn nativeHeaderGen
+    dependsOn nativeLibGen
 }

@@ -11,7 +11,7 @@ class NativeHeadersGenerateTask extends DefaultTask {
     @Input
     public Set<File> srcFiles
     @Input
-    public String nativeHeaderSrcFolder
+    public String nativeHeaderDir
 
     @TaskAction
     void generate() {
@@ -24,7 +24,7 @@ class NativeHeadersGenerateTask extends DefaultTask {
                     println values
                     def classpath = values[0] + classpathSplitter
                     def javaClass = values[1].replace(".java", "").replaceAll("/", ".")
-                    def proc = "javah -d $projectDir/$nativeHeaderSrcFolder -classpath $classpath $javaClass".execute()
+                    def proc = "javah -d $projectDir/$nativeHeaderDir -classpath $classpath $javaClass".execute()
                     proc.consumeProcessOutput(sout, serr)
                     proc.waitForOrKill(1000)
                     if (sout) {
