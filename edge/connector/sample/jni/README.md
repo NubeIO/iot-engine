@@ -6,10 +6,6 @@ This module is mock `edge` service:
 
 ### How To Create Library
 
-- ***Edit gradle.properties as your requirement (IMPORTANT):***
-   - `jni.include.dir`: Java SDK where JNI file resides
-   - `system.include.dir`: System dir where we can find headers files
-   - `local.include.dir`: Local dir where we can put our custom headers files
 - Create Java class with native function (it must be on inside folder `nativeclass`)
 - Generate header file with command:
    - `gradle nativeHeadersGen`

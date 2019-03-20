@@ -5,7 +5,6 @@ plugins {
     id "eclipse"
     id "idea"
     id "org.sonarqube"
-    id 'cpp-application'
     id "net.ltgt.apt" apply false
 }
 

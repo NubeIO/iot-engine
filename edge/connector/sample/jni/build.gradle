@@ -7,16 +7,6 @@ dependencies {
 import com.nubeiot.buildscript.nativelib.NativeHeadersGenerateTask
 import com.nubeiot.buildscript.nativelib.NativeLibsGenerateTask
 
-println "Building on OS: " + System.properties['os.name']
-
-def SYSTEM_INCLUDE_DIR = this.properties['system.include.dir']
-def LOCAL_INCLUDE_DIR = this.properties['local.include.dir']
-def JNI_INCLUDE_DIR = this.properties['jni.include.dir']
-
-println "Using system include directory: $SYSTEM_INCLUDE_DIR"
-println "Using system local include directory: $LOCAL_INCLUDE_DIR"
-println "Using JNI include directory: $JNI_INCLUDE_DIR"
-
 task nativeHeadersGen(type: NativeHeadersGenerateTask) {
     projectDir = project.projectDir
     srcFiles = sourceSets.main.java.srcDirs
@@ -25,9 +15,6 @@ task nativeHeadersGen(type: NativeHeadersGenerateTask) {
 
 task nativeLibsGen(type: NativeLibsGenerateTask) {
     projectDir = project.projectDir
-    jniIncludeDir = JNI_INCLUDE_DIR
-    systemIncludeDir = SYSTEM_INCLUDE_DIR
-    localIncludeDir = LOCAL_INCLUDE_DIR
     nativeLibsSrcFolder = project.genProps.nativeLibsSrcFolder
 }
 

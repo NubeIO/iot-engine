@@ -27,7 +27,12 @@ class NativeHeadersGenerateTask extends DefaultTask {
                     def proc = "javah -d $projectDir/$nativeHeaderSrcFolder -classpath $classpath $javaClass".execute()
                     proc.consumeProcessOutput(sout, serr)
                     proc.waitForOrKill(1000)
-                    println "out> $sout err > $serr"
+                    if (sout) {
+                        println "System Output > $sout"
+                    }
+                    if (serr) {
+                        println "Error > $serr"
+                    }
                 }
             }
         }

@@ -9,17 +9,12 @@ class NativeLibsGenerateTask extends DefaultTask {
     @Input
     public String projectDir
     @Input
-    public String jniIncludeDir
-    @Input
-    public String systemIncludeDir
-    @Input
-    public String localIncludeDir
-    @Input
     public String nativeLibsSrcFolder
 
 
     @TaskAction
     void generate() {
+        def javaHome = "${System.getenv("JAVA_HOME")}"
         def dir = new File(projectDir)
         String os = System.getProperty("os.name").toLowerCase()
         nativeLibsSrcFolder = nativeLibsSrcFolder.replaceFirst("^~", System.getProperty("user.home"))
@@ -34,29 +29,30 @@ class NativeLibsGenerateTask extends DefaultTask {
                 def sout = new StringBuilder(), serr = new StringBuilder(), proc
                 if (os.startsWith("linux")) {
                     def dynamicLibName = "lib${file.toString().tokenize("/").last().replace(extension, "")}.so"
-                    proc = """g++ -fPIC -std=c++0x -I$jniIncludeDir -I$jniIncludeDir/linux -I$systemIncludeDir 
--I$localIncludeDir -dynamiclib -o $nativeLibsSrcFolder/$dynamicLibName $file"""
-                        .execute()
+                    proc = """g++ -fPIC -std=c++0x -I$javaHome/include -I$javaHome/incldue/linux -dynamiclib -o 
+$nativeLibsSrcFolder/$dynamicLibName $file""".execute()
                 } else if (os.startsWith("mac os x")) {
                     def dynamicLibName = "lib${file.toString().tokenize("/").last().replace(extension, "")}.dylib"
-                    proc = """g++ -fPIC -std=c++0x -I$jniIncludeDir -I$jniIncludeDir/darwin -I$systemIncludeDir 
--I$localIncludeDir -dynamiclib -o $nativeLibsSrcFolder/$dynamicLibName $file"""
-                        .execute()
+                    proc = """g++ -fPIC -std=c++0x -I$javaHome/include -I$javaHome/include/darwin -dynamiclib -o 
+$nativeLibsSrcFolder/$dynamicLibName $file""".execute()
 
                 } else if (os.startsWith("win")) {
                     def dynamicLibName = "${file.toString().tokenize("/").last().replace(extension, "")}.dll"
-
-                    proc = """x86_64-w64-mingw32-g++ -std=c++0x -I$jniIncludeDir -I$jniIncludeDir/linux -I$systemIncludeDir 
--I$localIncludeDir -dynamiclib -o $nativeLibsSrcFolder/$dynamicLibName $file"""
-                        .execute()
+                    proc = """x86_64-w64-mingw32-g++ -std=c++0x -I$javaHome\\include -I$javaHome\\include\\win32 
+-dynamiclib 
+-o $nativeLibsSrcFolder/$dynamicLibName $file""".execute()
                 } else {
-                    println "err> OS must be Linux, MAC, or Windows"
+                    println "Error > OS must be Linux, MAC, or Windows"
                     return
                 }
                 proc.consumeProcessOutput(sout, serr)
                 proc.waitForOrKill(1000)
-                println "out> $sout"
-                println "err> $serr"
+                if (sout) {
+                    println "System Output > $sout"
+                }
+                if (serr) {
+                    println "Error > $serr"
+                }
             }
         }
     }
