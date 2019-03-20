@@ -1,30 +1,45 @@
 package com.nubeiot.core.http.rest;
 
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
+import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
+import com.nubeiot.core.http.base.event.EventMethodDefinition.EventMethodMapping;
 import com.nubeiot.core.micro.type.EventMessageService;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
 public interface DynamicEventRestApi extends DynamicRestApi {
 
     static DynamicEventRestApi create(Record record) {
+        EventMethodDefinition definition = JsonData.from(
+            record.getMetadata().getJsonObject(EventMessageService.EVENT_METHOD_CONFIG, new JsonObject()),
+            EventMethodDefinition.class);
+        Set<String> paths = Collections.unmodifiableSet(definition.getMapping()
+                                                                  .stream()
+                                                                  .filter(m -> Strings.isNotBlank(m.getCapturePath()))
+                                                                  .map(EventMethodMapping::getCapturePath)
+                                                                  .collect(Collectors.toSet()));
         return new DynamicEventRestApi() {
-            @Override
-            public @NonNull String path() {
-                return record.getLocation().getString("endpoint");
-            }
 
             @Override
-            public @NonNull String name() {
-                return record.getName();
-            }
+            public String path() { return definition.getServicePath(); }
 
             @Override
-            public JsonObject byMetadata() {
-                return record.getMetadata();
-            }
+            public Optional<Set<String>> alternativePaths() { return Optional.of(paths); }
+
+            @Override
+            public @NonNull String name() { return record.getName(); }
+
+            @Override
+            public JsonObject byMetadata() { return record.getMetadata(); }
         };
     }
 

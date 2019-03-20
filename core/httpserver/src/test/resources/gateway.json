@@ -3,7 +3,7 @@
     "__micro__": {
       "__gateway__": {
         "enabled": true,
-        "localAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouteGatewayAnnounceHandler"
+        "localAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
       },
       "__serviceDiscovery__": {
         "enabled": false
@@ -12,7 +12,7 @@
         "enabled": true
       },
       "__circuitBreaker__": {
-        "enabled": false
+        "enabled": true
       }
     },
     "__http__": {

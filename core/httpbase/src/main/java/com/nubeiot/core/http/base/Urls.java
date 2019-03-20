@@ -120,7 +120,7 @@ public final class Urls {
         return normalize("/" + Arrays.stream(path).filter(Strings::isNotBlank).collect(Collectors.joining("/")));
     }
 
-    private static String normalize(@NonNull String url) {
+    public static String normalize(@NonNull String url) {
         return url.replaceAll("/+", "/").replaceFirst("(https?:)/", "$1//");
     }
 

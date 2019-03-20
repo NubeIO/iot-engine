@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import org.skyscreamer.jsonassert.Customization;
+
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientOptions;
@@ -77,20 +79,23 @@ public class HttpServerTestBase {
     }
 
     protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected,
-                                      JsonObject bodyExpected) {
-        Async async = context.async();
+                                      JsonObject bodyExpected, Customization... customizations) {
+        Async async = context.async(2);
         client.request(method, requestOptions.setURI(path), resp -> {
             System.out.println("Client asserting...");
             context.assertEquals(ApiConstants.DEFAULT_CONTENT_TYPE, resp.getHeader(HttpHeaders.CONTENT_TYPE));
             context.assertNotNull(resp.getHeader("x-response-time"));
             context.assertEquals(codeExpected, resp.statusCode());
-            resp.bodyHandler(body -> JsonHelper.assertJson(context, bodyExpected, body));
+            resp.bodyHandler(
+                body -> JsonHelper.assertJson(context, async, bodyExpected, body.toJsonObject(), customizations));
         }).endHandler(event -> testComplete(async)).end();
     }
 
     protected HttpServer startServer(TestContext context, HttpServerRouter httpRouter) {
+        final HttpServer verticle = new HttpServer(httpRouter);
+        verticle.registerSharedData(HttpServerTestBase.class.getName());
         return VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(httpConfig.toJson()),
-                                  new HttpServer(httpRouter));
+                                  verticle);
     }
 
     protected void startServer(TestContext context, HttpServerRouter httpRouter, Consumer<Throwable> consumer) {

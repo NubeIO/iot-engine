@@ -1,5 +1,6 @@
 package com.nubeiot.core.event;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
@@ -52,6 +53,15 @@ public final class EventModel {
 
     public Set<EventAction> getEvents() {
         return Collections.unmodifiableSet(this.events.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
+    }
+
+    public static class Builder {
+
+        public Builder addEvents(EventAction... actions) {
+            Arrays.stream(actions).filter(Objects::nonNull).forEach(this::event);
+            return this;
+        }
+
     }
 
 }

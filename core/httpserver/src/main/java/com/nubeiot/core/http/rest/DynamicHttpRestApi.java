@@ -1,5 +1,8 @@
 package com.nubeiot.core.http.rest;
 
+import java.util.Optional;
+import java.util.Set;
+
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpEndpoint;
@@ -13,7 +16,7 @@ public interface DynamicHttpRestApi extends DynamicRestApi {
         HttpLocation location = record.getLocation().mapTo(HttpLocation.class);
         return new DynamicHttpRestApi() {
             @Override
-            public @NonNull String path() {
+            public String path() {
                 return location.getRoot();
             }
 
@@ -28,6 +31,9 @@ public interface DynamicHttpRestApi extends DynamicRestApi {
             }
         };
     }
+
+    @Override
+    default Optional<Set<String>> alternativePaths() { return Optional.empty(); }
 
     @Override
     default String type() { return HttpEndpoint.TYPE; }

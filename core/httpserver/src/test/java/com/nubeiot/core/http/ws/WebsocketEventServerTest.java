@@ -37,7 +37,7 @@ import com.nubeiot.core.http.mock.MockWebsocketEvent.MockWebsocketEventServerHan
 public class WebsocketEventServerTest extends HttpServerTestBase {
 
     @Rule
-    public Timeout timeoutRule = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
+    public Timeout timeout = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
 
     @BeforeClass
     public static void beforeSuite() {

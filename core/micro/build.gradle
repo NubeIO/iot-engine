@@ -2,6 +2,7 @@
 dependencies {
     compile project(':core:base')
     compile project(':core:httpbase')
+    compile project(':core:httpclient')
     compile "io.vertx:vertx-service-proxy:$project.versions.vertx"
     compile "io.vertx:vertx-service-discovery:$project.versions.vertx"
     compile "io.vertx:vertx-circuit-breaker:$project.versions.vertx"

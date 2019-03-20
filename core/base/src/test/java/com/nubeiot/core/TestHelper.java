@@ -31,7 +31,7 @@ import ch.qos.logback.classic.Logger;
 
 public interface TestHelper {
 
-    int TEST_TIMEOUT_SEC = 3000;
+    int TEST_TIMEOUT_SEC = 8;
 
     static int getRandomPort() throws IOException {
         try (ServerSocket socket = new ServerSocket(0)) {

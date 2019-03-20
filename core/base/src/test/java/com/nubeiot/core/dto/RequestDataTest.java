@@ -22,8 +22,8 @@ public class RequestDataTest {
         assertEquals("test", requestData.getFilter().getString("x"));
         assertEquals(1, requestData.getPagination().getPage());
         assertEquals(20, requestData.getPagination().getPerPage());
-        assertEquals("{\"body\":{\"name\":\"hello\"},\"filter\":{\"x\":\"test\"},\"pagination\":{\"page\":1," +
-                     "\"perPage\":20}}", requestData.toJson().encode());
+        assertEquals("{\"headers\":{},\"body\":{\"name\":\"hello\"},\"filter\":{\"x\":\"test\"}," +
+                     "\"pagination\":{\"page\":1,\"perPage\":20}}", requestData.toJson().encode());
     }
 
     @Test
@@ -35,7 +35,7 @@ public class RequestDataTest {
         assertEquals("hello", requestData.body().getString("name"));
         assertEquals("test", requestData.getFilter().getString("x"));
         assertNull(requestData.getPagination());
-        assertEquals("{\"body\":{\"name\":\"hello\"},\"filter\":{\"x\":\"test\"}}",
+        assertEquals("{\"headers\":{},\"body\":{\"name\":\"hello\"},\"filter\":{\"x\":\"test\"}}",
                      requestData.toJson().encode());
     }
 

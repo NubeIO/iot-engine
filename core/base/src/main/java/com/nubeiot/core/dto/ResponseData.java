@@ -22,7 +22,14 @@ public class ResponseData implements DataTransferObject {
 
     //TODO convert EventMessage to ResponseData
     public static ResponseData from(@NonNull EventMessage message) {
-        return new ResponseData().setBody(message.getData());
+        ResponseData responseData = new ResponseData();
+        responseData.setHeaders(new JsonObject().put("status", message.getStatus())
+                                                .put("action", message.getAction())
+                                                .put("prevAction", message.getPrevAction()));
+        if (message.isError()) {
+            return responseData.setBody(message.getError().toJson());
+        }
+        return responseData.setBody(message.getData());
     }
 
     @Override

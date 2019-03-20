@@ -26,8 +26,8 @@ public interface EventMessageService extends ServiceType {
         JsonObject meta = Objects.isNull(metadata) ? new JsonObject() : metadata.copy();
         return new Record().setType(TYPE)
                            .setName(Strings.requireNotBlank(name))
-                           .setLocation(new JsonObject().put(Record.ENDPOINT, Strings.requireNotBlank(address)))
-                           .setMetadata(meta.put(EVENT_METHOD_CONFIG, definition.toJson()));
+                           .setMetadata(meta.put(EVENT_METHOD_CONFIG, definition.toJson()))
+                           .setLocation(new JsonObject().put(Record.ENDPOINT, Strings.requireNotBlank(address)));
     }
 
     @Override

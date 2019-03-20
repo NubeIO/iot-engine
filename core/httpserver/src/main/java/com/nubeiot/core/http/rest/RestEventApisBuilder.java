@@ -2,6 +2,7 @@ package com.nubeiot.core.http.rest;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -103,7 +104,10 @@ public final class RestEventApisBuilder {
     }
 
     private void createRouter(RestEventApi restApi) {
-        restApi.getRestMetadata().parallelStream().forEach(metadata -> this.createRouter(metadata, restApi));
+        restApi.getRestMetadata()
+               .stream()
+               .sorted(Comparator.comparingInt(o -> o.getPath().length()))
+               .forEach(metadata -> this.createRouter(metadata, restApi));
     }
 
     private void createRouter(RestEventApiMetadata metadata, RestEventApi api) {

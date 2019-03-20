@@ -18,7 +18,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
-import io.vertx.reactivex.core.http.HttpClientRequest;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.reactivex.servicediscovery.ServiceReference;
 import io.vertx.servicediscovery.Record;
@@ -27,10 +26,10 @@ import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.ServiceException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
+import com.nubeiot.core.http.client.ClientUtils;
 import com.nubeiot.core.micro.MicroConfig.BackendConfig;
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
 import com.nubeiot.core.micro.type.EventMessagePusher;
@@ -92,7 +91,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
                             .flattenAsObservable(rs -> rs)
                             .flatMapCompletable(r -> serviceDiscovery.rxUnpublish(r.getRegistration()))
                             .subscribe(future::complete, err -> {
-                                logger.warn("Cannot un-deployed", err);
+                                logger.warn("Cannot un-published record", err);
                                 future.complete();
                             });
         }
@@ -123,7 +122,8 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
             ServiceReference reference = get().getReference(record);
             return circuitController.wrap(
-                execute(reference.getAs(HttpClient.class), path, method, headers, payload, v -> reference.release()));
+                ClientUtils.execute(reference.getAs(HttpClient.class), path, method, headers, payload,
+                                    v -> reference.release()));
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
@@ -139,7 +139,8 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
                                                                                      ? null
                                                                                      : options.toJson());
             return circuitController.wrap(
-                execute(reference.getAs(HttpClient.class), path, method, requestData, v -> reference.release()));
+                ClientUtils.execute(reference.getAs(HttpClient.class), path, method, requestData,
+                                    v -> reference.release()));
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
@@ -154,7 +155,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return findRecord(filter, EventMessageService.TYPE).flatMap(record -> {
             JsonObject config = new JsonObject().put(EventMessageService.SHARED_KEY_CONFIG, this.sharedKey)
                                                 .put(EventMessageService.DELIVERY_OPTIONS_CONFIG,
-                                                     Objects.isNull(options) ? null : options.toJson());
+                                                     Objects.isNull(options) ? new JsonObject() : options.toJson());
             ServiceReference reference = get().getReferenceWithConfiguration(record, config);
             return circuitController.wrap(execute(reference.getAs(EventMessagePusher.class), path, method, requestData,
                                                   v -> reference.release()));
@@ -180,62 +181,6 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         HttpLocation location = new HttpLocation(record.getLocation());
         location.setHost(computeINet(location.getHost()));
         return record.setLocation(location.toJson());
-    }
-
-    //TODO move into HTTPClient
-    private Single<Buffer> execute(HttpClient httpClient, String path, HttpMethod method, JsonObject headers,
-                                   JsonObject payload, Handler<Void> closeHandler) {
-        return Single.create(source -> {
-            HttpClientRequest request = httpClient.request(method, path, response -> response.bodyHandler(body -> {
-                logger.debug("Response status {}", response.statusCode());
-                if (response.statusCode() >= 400) {
-                    source.onError(new HttpException(response.statusCode(), body.toString()));
-                    logger.warn("Failed to execute: {}", response.toString());
-                } else {
-                    source.onSuccess(body);
-                }
-            })).endHandler(closeHandler);
-            logger.info("Make HTTP request {} :: {} | <{}> | <{}>", request.method(), request.absoluteURI(), headers,
-                        payload);
-            //TODO why need it?
-            request.setChunked(true);
-            for (String header : headers.fieldNames()) {
-                request.putHeader(header, headers.getValue(header).toString());
-            }
-            if (payload == null) {
-                request.end();
-            } else {
-                request.write(payload.encode()).end();
-            }
-        });
-    }
-
-    //TODO move into HTTPClient
-    private Single<ResponseData> execute(HttpClient httpClient, String path, HttpMethod method, RequestData requestData,
-                                         Handler<Void> closeHandler) {
-        return Single.create(source -> {
-            HttpClientRequest request = httpClient.request(method, path, response -> response.bodyHandler(body -> {
-                logger.debug("Response status {}", response.statusCode());
-                if (response.statusCode() >= 400) {
-                    source.onError(new HttpException(response.statusCode(), body.toString()));
-                    logger.warn("Failed to execute: {}", response.toString());
-                } else {
-                    source.onSuccess(new ResponseData().setBody(body.toJsonObject()));
-                }
-            })).endHandler(closeHandler);
-            logger.info("Make HTTP request {} :: {} | <{}> | <{}>", request.method(), request.absoluteURI(),
-                        requestData.toJson());
-            //TODO why need it?
-            request.setChunked(true);
-            for (String header : requestData.headers().fieldNames()) {
-                request.putHeader(header, requestData.headers().getValue(header).toString());
-            }
-            if (requestData.body() == null) {
-                request.end();
-            } else {
-                request.write(requestData.body().encode()).end();
-            }
-        });
     }
 
     private Single<ResponseData> execute(EventMessagePusher pusher, String path, HttpMethod method,

@@ -1,4 +1,4 @@
-package com.nubeiot.core.http.dynamic;
+package com.nubeiot.core.http.dynamic.mock;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,9 +38,7 @@ public class HttpServiceServer extends ContainerVerticle {
         });
     }
 
-    public String configFile() {
-        return "httpService.json";
-    }
+    public String configFile() { return "httpService.json"; }
 
     @Path("/rest/test")
     public static class MockAPI implements RestApi {

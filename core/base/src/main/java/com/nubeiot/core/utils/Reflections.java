@@ -202,7 +202,9 @@ public final class Reflections {
                     if (targetException instanceof NubeException) {
                         throw (NubeException) targetException;
                     }
-                    throw new NubeException(targetException);
+                    if (Objects.nonNull(targetException)) {
+                        throw new NubeException(targetException);
+                    }
                 }
                 throw new NubeException(e);
             }

@@ -17,7 +17,7 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
-class EventMessageServiceImpl implements EventMessageService {
+public class EventMessageServiceImpl implements EventMessageService {
 
     @Override
     public ServiceReference get(Vertx vertx, ServiceDiscovery discovery, Record record, JsonObject configuration) {

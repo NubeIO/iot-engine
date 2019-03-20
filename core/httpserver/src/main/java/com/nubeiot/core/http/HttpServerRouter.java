@@ -41,9 +41,4 @@ public final class HttpServerRouter {
         return this;
     }
 
-    public HttpServerRouter registerDynamicApi(DynamicRestApi... restApis) {
-        Arrays.stream(restApis).filter(Objects::nonNull).forEach(r -> dynamicRestApi.putIfAbsent(r.path(), r));
-        return this;
-    }
-
 }

@@ -15,7 +15,7 @@ import com.nubeiot.core.utils.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-//TODO should convert HEADER also
+//TODO should convert only useful HEADER also
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class RequestDataConverter {
 
@@ -33,8 +33,10 @@ public final class RequestDataConverter {
         if (Objects.nonNull(pagination)) {
             builder.pagination(pagination);
         }
-
-        return builder.body(mergeInput).filter(HttpParams.query(context.request())).build();
+        return builder.headers(JsonObject.mapFrom(context.request().headers()))
+                      .body(mergeInput)
+                      .filter(HttpParams.query(context.request()))
+                      .build();
     }
 
     public static RequestData convert(io.vertx.reactivex.ext.web.RoutingContext context) {

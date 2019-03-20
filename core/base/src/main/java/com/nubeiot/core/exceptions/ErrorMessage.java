@@ -2,8 +2,12 @@ package com.nubeiot.core.exceptions;
 
 import java.io.Serializable;
 
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,7 +25,7 @@ public final class ErrorMessage implements Serializable, JsonData {
 
     @JsonIgnore
     private NubeException throwable;
-    private NubeException.ErrorCode code;
+    private ErrorCode code;
     private String message;
 
     private ErrorMessage(@NonNull NubeException throwable) {
@@ -30,7 +34,7 @@ public final class ErrorMessage implements Serializable, JsonData {
         this.message = throwable.getMessage();
     }
 
-    private ErrorMessage(@NonNull NubeException.ErrorCode code, @NonNull String message) {
+    private ErrorMessage(@NonNull ErrorCode code, @NonNull String message) {
         this.code = code;
         this.message = message;
     }
@@ -39,8 +43,18 @@ public final class ErrorMessage implements Serializable, JsonData {
         return new ErrorMessage(NubeExceptionConverter.friendly(throwable));
     }
 
-    public static ErrorMessage parse(@NonNull NubeException.ErrorCode code, @NonNull String message) {
+    public static ErrorMessage parse(@NonNull ErrorCode code, @NonNull String message) {
         return new ErrorMessage(code, message);
+    }
+
+    @Override
+    public JsonObject toJson() {
+        final JsonObject jsonObject = JsonData.super.toJson();
+        try {
+            return jsonObject.put("message", new JsonObject(message));
+        } catch (DecodeException e) {
+            return jsonObject;
+        }
     }
 
 }

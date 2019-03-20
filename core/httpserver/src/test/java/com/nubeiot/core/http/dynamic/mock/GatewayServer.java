@@ -1,4 +1,4 @@
-package com.nubeiot.core.http.dynamic;
+package com.nubeiot.core.http.dynamic.mock;
 
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpServerProvider;
@@ -13,8 +13,6 @@ public class GatewayServer extends ContainerVerticle {
         this.addProvider(new HttpServerProvider(new HttpServerRouter())).addProvider(new MicroserviceProvider());
     }
 
-    public String configFile() {
-        return "gateway.json";
-    }
+    public String configFile() { return "gateway.json"; }
 
 }

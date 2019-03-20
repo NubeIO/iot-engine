@@ -1,14 +1,15 @@
 package com.nubeiot.core.http.base.event;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import io.vertx.core.http.HttpMethod;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
@@ -22,81 +23,90 @@ import lombok.EqualsAndHashCode;
 import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 
 /**
- * It helps define a mapping between dynamic route by {@code regex path} and {@code HttpMethod} with {@code
- * EventAction}
+ * It helps define a mapping between dynamic route by {@code regex path} and {@code HttpMethod} with {@code EventAction}
+ * that used by specific {@code EventBus address}
  */
+@Getter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class EventMethodDefinition implements JsonData {
 
-    @JsonUnwrapped
-    private final Map<String, Set<EventMethodMapping>> eventPaths = new HashMap<>();
+    @EqualsAndHashCode.Include
+    private final String servicePath;
+    private Set<EventMethodMapping> mapping = new HashSet<>();
+
+    @JsonCreator
+    public EventMethodDefinition(@JsonProperty(value = "servicePath") String servicePath) {
+        this.servicePath = Strings.requireNotBlank(servicePath);
+    }
 
     /**
      * Create default definition with default {@link ActionMethodMapping#defaultEventHttpMap()}.
      *
-     * @param servicePath       Origin service path that represents for manipulating {@code resource} in all given
-     *                          {@code HTTPMethod}
-     * @param singularRegexPath Singular actual regex path to distinguish path for manipulating {@code single resource}
-     *                          or {@code resource list}
+     * @param servicePath Origin service path that represents for manipulating {@code resource} in all given {@code
+     *                    HTTPMethod}
+     * @param capturePath Capturing path parameters for manipulating single resource. E.g: {@code
+     *                    /catalogue/products/:producttype/:productid/}
      * @return new instance of {@link EventMethodDefinition}
      * @see ActionMethodMapping#defaultEventHttpMap()
      * @see HttpMethods#isSingular(HttpMethod)
      */
-    public static EventMethodDefinition createDefault(String servicePath, String singularRegexPath) {
-        return create(servicePath, singularRegexPath, ActionMethodMapping.defaultEventHttpMap());
+    public static EventMethodDefinition createDefault(String servicePath, String capturePath) {
+        return create(servicePath, capturePath, ActionMethodMapping.defaultEventHttpMap());
     }
 
-    public static EventMethodDefinition create(String servicePath, String singularRegexPath,
+    /**
+     * @see #createDefault(String, String)
+     */
+    public static EventMethodDefinition create(String servicePath, String capturePath,
                                                @NonNull ActionMethodMapping mapping) {
-        return create(servicePath, singularRegexPath, mapping.get());
+        return create(servicePath, capturePath, mapping.get());
     }
 
-    private static EventMethodDefinition create(String servicePath, String singularRegexPath,
+    private static EventMethodDefinition create(String servicePath, String capturePath,
                                                 @NonNull Map<EventAction, HttpMethod> actionMethodMap) {
-        Strings.requireNotBlank(servicePath);
-        Strings.requireNotBlank(singularRegexPath);
-        EventMethodDefinition definition = new EventMethodDefinition();
+        String patternPath = actionMethodMap.size() > 1 ? Strings.requireNotBlank(capturePath) : capturePath;
+        EventMethodDefinition definition = new EventMethodDefinition(servicePath);
         actionMethodMap.forEach((action, method) -> {
-            String regex = null;
+            String path = servicePath;
             if (action == EventAction.GET_ONE || (HttpMethods.isSingular(method) && action != EventAction.GET_LIST)) {
-                regex = singularRegexPath;
+                path = patternPath;
             }
-            definition.add(servicePath,
-                           EventMethodMapping.builder().action(action).method(method).regexPath(regex).build());
+            definition.add(EventMethodMapping.builder().action(action).method(method).capturePath(path).build());
         });
         return definition;
     }
 
-    public EventMethodDefinition add(String servicePath, @NonNull EventMethodMapping mapping) {
-        this.eventPaths.computeIfAbsent(Strings.requireNotBlank(servicePath), s -> new HashSet<>()).add(mapping);
+    public EventMethodDefinition add(EventMethodMapping mapping) {
+        this.mapping.add(mapping);
         return this;
     }
 
     public EventAction search(String actualPath, @NonNull HttpMethod method) {
-        String path = Strings.requireNotBlank(actualPath);
-        return eventPaths.entrySet()
-                         .stream()
-                         .filter(entry -> path.startsWith(entry.getKey()))
-                         .map(entry -> entry.getValue()
-                                            .stream()
-                                            .filter(mapping -> mapping.method == method &&
-                                                               (Strings.isBlank(mapping.regexPath) ||
-                                                                path.matches(mapping.regexPath)))
-                                            .findFirst())
-                         .map(m -> m.orElseThrow(() -> new NotFoundException(
-                             Strings.format("Not found '{0}' with HTTP method {1}", actualPath, method))).action)
-                         .findFirst()
-                         .orElseThrow(() -> new NotFoundException("Not found path " + actualPath));
+        final String path = Strings.requireNotBlank(actualPath);
+        if (!path.startsWith(this.servicePath)) {
+            throw new NotFoundException("Not found path " + actualPath);
+        }
+        return mapping.stream()
+                      .filter(mapping -> {
+                          String regex = Strings.isBlank(mapping.regexPath) ? servicePath : mapping.regexPath;
+                          return mapping.method == method && path.matches(regex);
+                      })
+                      .map(EventMethodMapping::getAction)
+                      .findFirst()
+                      .orElseThrow(() -> new NotFoundException(
+                          Strings.format("Not found '{0}' with HTTP method {1}", actualPath, method)));
     }
 
     @Getter
     @Builder(builderClassName = "Builder")
+    @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonDeserialize(builder = EventMethodMapping.Builder.class)
-    //TODO make it works with `capture_path`
-    public final static class EventMethodMapping {
+    public final static class EventMethodMapping implements JsonData {
 
         @Include
         @NonNull
@@ -104,6 +114,7 @@ public final class EventMethodDefinition implements JsonData {
         @Include
         @NonNull
         private final HttpMethod method;
+        private String capturePath;
         /**
          * Optional
          */
@@ -111,7 +122,16 @@ public final class EventMethodDefinition implements JsonData {
 
 
         @JsonPOJOBuilder(withPrefix = "")
-        public static class Builder {}
+        public static class Builder {
+
+            public EventMethodMapping build() {
+                if (Objects.nonNull(capturePath) && Objects.isNull(regexPath)) {
+                    regexPath = capturePath.replaceAll("/:[^/]+", "/.+");
+                }
+                return new EventMethodMapping(action, method, capturePath, regexPath);
+            }
+
+        }
 
     }
 

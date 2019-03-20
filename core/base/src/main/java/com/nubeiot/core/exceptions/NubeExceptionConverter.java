@@ -109,7 +109,8 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
         if (Strings.isBlank(cause.getMessage())) {
             return message;
         }
-        return Strings.format("{0} | Cause: {1}", message, cause.getMessage());
+        String mc = cause.getMessage().equals("null") ? cause.toString() : cause.getMessage();
+        return Strings.format("{0} | Cause: {1}", message, mc);
     }
 
     private String includeCauseMessage(NubeException cause, @NonNull String message) {

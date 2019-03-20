@@ -31,26 +31,28 @@ public class EventMethodDefinitionTest {
 
     @Test
     public void test_to_json() throws JSONException {
-        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/abc/.+");
+        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/abc/:id");
         System.out.println(definition.toJson());
-        JSONAssert.assertEquals("{\"eventPaths\":{\"/abc\":[{\"action\":\"PATCH\",\"method\":\"PATCH\"," +
-                                "\"regexPath\":\"/abc/.+\"},{\"action\":\"GET_ONE\",\"method\":\"GET\"," +
-                                "\"regexPath\":\"/abc/.+\"},{\"action\":\"GET_LIST\",\"method\":\"GET\"}," +
-                                "{\"action\":\"UPDATE\",\"method\":\"PUT\",\"regexPath\":\"/abc/.+\"}," +
-                                "{\"action\":\"CREATE\",\"method\":\"POST\"},{\"action\":\"REMOVE\"," +
-                                "\"method\":\"DELETE\",\"regexPath\":\"/abc/.+\"}]}}", definition.toJson().encode(),
-                                JSONCompareMode.LENIENT);
+        JSONAssert.assertEquals("{\"servicePath\":\"/abc\",\"mapping\":[{\"action\":\"GET_LIST\",\"method\":\"GET\"}," +
+                                "{\"action\":\"CREATE\",\"method\":\"POST\"},{\"action\":\"UPDATE\"," +
+                                "\"method\":\"PUT\",\"capturePath\":\"/abc/:id\",\"regexPath\":\"/abc/.+\"}," +
+                                "{\"action\":\"GET_ONE\",\"method\":\"GET\",\"capturePath\":\"/abc/:id\"," +
+                                "\"regexPath\":\"/abc/.+\"},{\"action\":\"PATCH\",\"method\":\"PATCH\"," +
+                                "\"capturePath\":\"/abc/:id\",\"regexPath\":\"/abc/.+\"},{\"action\":\"REMOVE\"," +
+                                "\"method\":\"DELETE\",\"capturePath\":\"/abc/:id\",\"regexPath\":\"/abc/.+\"}]}\n",
+                                definition.toJson().encode(), JSONCompareMode.LENIENT);
     }
 
     @Test
     public void test_from_json() {
         EventMethodDefinition definition = JsonData.from(
-            "{\"eventPaths\":{\"/abc\":[{\"action\":\"PATCH\",\"method\":\"PATCH\"," +
-            "\"regexPath\":\"/abc/.+\"},{\"action\":\"GET_ONE\",\"method\":\"GET\"," +
-            "\"regexPath\":\"/abc/.+\"},{\"action\":\"GET_LIST\",\"method\":\"GET\"}," +
-            "{\"action\":\"UPDATE\",\"method\":\"PUT\",\"regexPath\":\"/abc/.+\"}," +
-            "{\"action\":\"CREATE\",\"method\":\"POST\"},{\"action\":\"REMOVE\"," +
-            "\"method\":\"DELETE\",\"regexPath\":\"/abc/.+\"}]}}", EventMethodDefinition.class);
+            "{\"servicePath\":\"/abc\",\"mapping\":[{\"action\":\"GET_LIST\",\"method\":\"GET\"}," +
+            "{\"action\":\"CREATE\",\"method\":\"POST\"},{\"action\":\"UPDATE\",\"method\":\"PUT\"," +
+            "\"capturePath\":\"/abc/:id\"},{\"action\":\"GET_ONE\",\"method\":\"GET\"," +
+            "\"capturePath\":\"/abc/:id\"},{\"action\":\"PATCH\",\"method\":\"PATCH\"," +
+            "\"capturePath\":\"/abc/:id\"},{\"action\":\"REMOVE\",\"method\":\"DELETE\"," +
+            "\"capturePath\":\"/abc/:id\"}]}\n", EventMethodDefinition.class);
+        System.out.println(definition.toJson());
         Assert.assertEquals(EventAction.GET_LIST, definition.search("/abc", HttpMethod.GET));
         Assert.assertEquals(EventAction.GET_ONE, definition.search("/abc/xyz", HttpMethod.GET));
         Assert.assertEquals(EventAction.CREATE, definition.search("/abc", HttpMethod.POST));

@@ -1,5 +1,6 @@
 package com.nubeiot.core.http.rest;
 
+import java.util.Optional;
 import java.util.Set;
 
 import io.vertx.core.http.HttpMethod;
@@ -31,11 +32,18 @@ public interface DynamicRestApi {
     }
 
     /**
-     * HTTP path for Gateway server
+     * Service root path
      *
-     * @return HTTP path for gateway server
+     * @return HTTP path for dynamic service
      */
-    @NonNull String path();
+    String path();
+
+    /**
+     * It is capturePath paths. It might be empty
+     *
+     * @return alternative paths
+     */
+    Optional<Set<String>> alternativePaths();
 
     /**
      * Service type
