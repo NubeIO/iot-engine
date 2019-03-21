@@ -3,13 +3,13 @@ package com.nubeiot.core.http.client;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
-import io.vertx.reactivex.core.http.HttpClientRequest;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
@@ -23,6 +23,7 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
  */
 public class ClientUtils {
 
+    public static final DecoratorHttpRequest DEFAULT_DECORATOR = new DecoratorHttpRequest();
     private static final Logger logger = LoggerFactory.getLogger(ClientUtils.class);
 
     public static Single<ResponseData> execute(HttpClient httpClient, String path, HttpMethod method,
@@ -39,19 +40,12 @@ public class ClientUtils {
                     source.onSuccess(new ResponseData().setHeaders(JsonObject.mapFrom(response.headers()))
                                                        .setBody(body.toJsonObject()));
                 }
-            })).endHandler(closeHandler);
+            })).endHandler(closeHandler).getDelegate();
             logger.info("Make HTTP request {} :: {} | <{}> | <{}>", request.method(), request.absoluteURI(),
                         requestData.toJson());
             //TODO why need it?
             request.setChunked(true);
-            for (String header : requestData.headers().fieldNames()) {
-                request.putHeader(header, requestData.headers().getValue(header).toString());
-            }
-            if (requestData.body() == null) {
-                request.end();
-            } else {
-                request.write(requestData.body().encode()).end();
-            }
+            DEFAULT_DECORATOR.apply(request, requestData).end();
         });
     }
 
@@ -69,7 +63,7 @@ public class ClientUtils {
                 } else {
                     source.onSuccess(body);
                 }
-            })).endHandler(closeHandler);
+            })).endHandler(closeHandler).getDelegate();
             logger.info("Make HTTP request {} :: {} | <{}> | <{}>", request.method(), request.absoluteURI(), headers,
                         payload);
             //TODO why need it?

@@ -6,7 +6,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -17,6 +20,7 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class HttpUtils {
@@ -51,9 +55,9 @@ public final class HttpUtils {
         return pretty ? jsonObject.encodePrettily() : jsonObject.encode();
     }
 
-    public static final class HttpParams {
+    public static final class HttpRequests {
 
-        public static String language(HttpServerRequest request) {
+        public static String language(@NonNull HttpServerRequest request) {
             String lang = request.getParam("lang");
             if (Strings.isBlank(lang)) {
                 return "en";
@@ -61,7 +65,7 @@ public final class HttpUtils {
             return lang;
         }
 
-        public static Pagination pagination(HttpServerRequest request) {
+        public static Pagination pagination(@NonNull HttpServerRequest request) {
             if (request.method() == HttpMethod.GET) {
                 return Pagination.builder()
                                  .page(request.getParam("page"))
@@ -71,9 +75,43 @@ public final class HttpUtils {
             return null;
         }
 
-        public static JsonObject query(HttpServerRequest request) {
+        public static JsonObject query(@NonNull HttpServerRequest request) {
             String query = request.query();
             return Strings.isBlank(query) ? new JsonObject() : JsonObject.mapFrom(HttpUtils.deserializeQuery(query));
+        }
+
+        public static JsonObject serializeHeaders(@NonNull HttpServerRequest request) {
+            return serializeHeaders(request.headers());
+        }
+
+        public static JsonObject serializeHeaders(@NonNull MultiMap multiMap) {
+            JsonObject headers = new JsonObject();
+            multiMap.names().forEach(name -> {
+                final List<String> byNames = multiMap.getAll(name);
+                if (byNames.isEmpty()) {
+                    return;
+                }
+                headers.put(name, byNames.size() > 1 ? byNames : byNames.get(0));
+            });
+            return headers;
+        }
+
+        public static MultiMap deserializeHeaders(@NonNull JsonObject headers) {
+            final MultiMap map = MultiMap.caseInsensitiveMultiMap();
+            if (headers.isEmpty()) {
+                return map;
+            }
+            headers.stream().filter(entry -> Objects.nonNull(entry.getValue())).forEach(entry -> {
+                if (entry.getValue() instanceof JsonArray) {
+                    List<String> values = ((JsonArray) entry.getValue()).stream()
+                                                                        .map(Object::toString)
+                                                                        .collect(Collectors.toList());
+                    map.add(entry.getKey(), values);
+                } else {
+                    map.add(entry.getKey(), entry.getValue().toString());
+                }
+            });
+            return map;
         }
 
     }

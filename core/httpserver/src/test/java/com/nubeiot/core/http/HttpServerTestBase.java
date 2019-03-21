@@ -12,6 +12,7 @@ import org.skyscreamer.jsonassert.Customization;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
@@ -29,8 +30,10 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.client.ClientUtils;
 import com.nubeiot.core.http.ws.WebsocketEventMessage;
 import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.RestRouter;
@@ -80,15 +83,21 @@ public class HttpServerTestBase {
 
     protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected,
                                       JsonObject bodyExpected, Customization... customizations) {
+        assertRestByClient(context, method, path, null, codeExpected, bodyExpected, customizations);
+    }
+
+    protected void assertRestByClient(TestContext context, HttpMethod method, String path, RequestData data,
+                                      int codeExpected, JsonObject bodyExpected, Customization... customizations) {
         Async async = context.async(2);
-        client.request(method, requestOptions.setURI(path), resp -> {
+        HttpClientRequest request = client.request(method, requestOptions.setURI(path), resp -> {
             System.out.println("Client asserting...");
             context.assertEquals(ApiConstants.DEFAULT_CONTENT_TYPE, resp.getHeader(HttpHeaders.CONTENT_TYPE));
             context.assertNotNull(resp.getHeader("x-response-time"));
             context.assertEquals(codeExpected, resp.statusCode());
             resp.bodyHandler(
                 body -> JsonHelper.assertJson(context, async, bodyExpected, body.toJsonObject(), customizations));
-        }).endHandler(event -> testComplete(async)).end();
+        }).endHandler(event -> testComplete(async)).getDelegate();
+        ClientUtils.DEFAULT_DECORATOR.apply(request, data).end();
     }
 
     protected HttpServer startServer(TestContext context, HttpServerRouter httpRouter) {

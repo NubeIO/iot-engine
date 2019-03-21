@@ -9,7 +9,7 @@ import io.vertx.ext.web.RoutingContext;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.base.HttpUtils.HttpParams;
+import com.nubeiot.core.http.base.HttpUtils.HttpRequests;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
@@ -29,18 +29,13 @@ public final class RequestDataConverter {
             }
         }
         final RequestData.Builder builder = RequestData.builder();
-        Pagination pagination = HttpParams.pagination(context.request());
+        Pagination pagination = HttpRequests.pagination(context.request());
         if (Objects.nonNull(pagination)) {
             builder.pagination(pagination);
         }
-        return builder.headers(JsonObject.mapFrom(context.request().headers()))
-                      .body(mergeInput)
-                      .filter(HttpParams.query(context.request()))
+        return builder.headers(HttpRequests.serializeHeaders(context.request()))
+                      .body(mergeInput).filter(HttpRequests.query(context.request()))
                       .build();
-    }
-
-    public static RequestData convert(io.vertx.reactivex.ext.web.RoutingContext context) {
-        return convert(context.getDelegate());
     }
 
     public static RequestData convert(ServerWebSocket context) {
