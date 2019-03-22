@@ -17,6 +17,20 @@
     }
   },
   "__app__": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": false
+      },
+      "__localServiceDiscovery__": {
+        "enabled": true
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
+    },
     "deviceName": "NubeIOEdge28",
     "deviceID": 4321
   }
