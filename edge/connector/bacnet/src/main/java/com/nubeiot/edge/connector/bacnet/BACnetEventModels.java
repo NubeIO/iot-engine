@@ -19,10 +19,21 @@ public final class BACnetEventModels {
 
     public static final EventModel POINTS = EventModel.builder()
                                                       .address("nubeiot.edge.connector.bacnet.device.points")
-                                                      .pattern(EventPattern.REQUEST_RESPONSE).local(true)
+                                                      .pattern(EventPattern.REQUEST_RESPONSE)
+                                                      .local(true)
                                                       .events(Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE,
                                                                             EventAction.CREATE, EventAction.REMOVE,
                                                                             EventAction.PATCH))
                                                       .build();
+
+    public static final EventModel POINTS_CACHING = EventModel.builder()
+                                                              .address(
+                                                                  "nubeiot.edge.connector.bacnet.device.points.caching")
+                                                              .pattern(EventPattern.REQUEST_RESPONSE)
+                                                              .local(true)
+                                                              .events(Arrays.asList(EventAction.GET_LIST,
+                                                                                    EventAction.CREATE,
+                                                                                    EventAction.REMOVE))
+                                                              .build();
 
 }

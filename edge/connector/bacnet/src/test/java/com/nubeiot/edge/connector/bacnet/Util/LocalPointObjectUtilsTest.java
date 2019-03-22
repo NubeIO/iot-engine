@@ -12,7 +12,6 @@ import org.junit.Test;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.core.utils.FileUtilsTest;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 import com.serotonin.bacnet4j.npdu.ip.IpNetworkBuilder;
@@ -28,6 +27,8 @@ import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.Real;
 
+//import com.nubeiot.core.utils.FileUtilsTest;
+
 public class LocalPointObjectUtilsTest {
 
     private LocalDevice localDevice;
@@ -41,7 +42,7 @@ public class LocalPointObjectUtilsTest {
         Transport transport = new DefaultTransport(network);
         localDevice = new LocalDevice(1234, transport);
 
-        final URL POINTS_RESOURCE = FileUtilsTest.class.getClassLoader().getResource("points.json");
+        final URL POINTS_RESOURCE = FileUtils.class.getClassLoader().getResource("points.json");
         points = new JsonObject(FileUtils.readFileToString(POINTS_RESOURCE.toString()));
     }
 

@@ -52,8 +52,8 @@ import com.serotonin.bacnet4j.type.primitive.Boolean;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
-import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
+import com.serotonin.bacnet4j.util.DiscoveryUtils;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
 /*
@@ -150,9 +150,46 @@ public class BACnet {
                 JsonObject json = new JsonObject();
                 json.put("instanceNumber", remoteDevice.getInstanceNumber());
                 json.put("name", remoteDevice.getName());
-                json.put("address", remoteDevice.getAddress());
+                json.put("address", remoteDevice.getAddress().toString());
                 return Observable.just(json);
             }));
+    }
+
+    public Single<JsonObject> getRemoteDeviceExtendedInfo(int instanceNumber) {
+        RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
+        if (remoteDevice == null) {
+            return Single.error(new BACnetException("Remote device not found"));
+        } else {
+            return getRemoteDeviceExtendedInfo(localDevice.getCachedRemoteDevice(instanceNumber));
+        }
+    }
+
+    public Single<JsonObject> getRemoteDeviceExtendedInfo(RemoteDevice remoteDevice) {
+        return Single.create(source -> {
+            vertx.executeBlocking(future -> {
+                try {
+                    //TODO: might need to build own discovery util for this
+                    DiscoveryUtils.getExtendedDeviceInformation(localDevice, remoteDevice);
+                    JsonObject data = new JsonObject();
+                    data.put("instanceNumber", remoteDevice.getInstanceNumber());
+                    data.put("name", remoteDevice.getName());
+                    data.put("address", remoteDevice.getAddress().toString());
+                    data.put("maxAPDULengthAccepted",
+                             remoteDevice.getCharacterStringProperty(PropertyIdentifier.maxApduLengthAccepted));
+                    data.put("segmentationSupported",
+                             remoteDevice.getCharacterStringProperty(PropertyIdentifier.segmentationSupported));
+                    data.put("vendorId", remoteDevice.getCharacterStringProperty(PropertyIdentifier.vendorIdentifier));
+                    data.put("vendorName", remoteDevice.getCharacterStringProperty(PropertyIdentifier.vendorName));
+                    data.put("servicesSupported",
+                             remoteDevice.getCharacterStringProperty(PropertyIdentifier.protocolServicesSupported));
+                    future.complete(data);
+                    source.onSuccess(data);
+                } catch (BACnetException e) {
+                    future.fail(e);
+                    source.onError(e);
+                }
+            }, res -> {});
+        });
     }
 
     public Single<JsonObject> getRemoteDeviceObjectList(int instanceNumber) {
@@ -266,9 +303,19 @@ public class BACnet {
         }
     }
 
+    public Single<JsonObject> writeAtPriority(int instanceNumber, String obj, Encodable val, int priority) {
+        RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
+        if (remoteDevice == null) {
+            return Single.error(new BACnetException("Remote device not found"));
+        }
+        ObjectIdentifier oid = getObjectIdentifier(obj);
+        writeAtPriority(remoteDevice, oid, val, priority);
+        return Single.just(new JsonObject());
+    }
+
     //TODO: check if throws error or just nothing when not writable
-    public void writeAtPriority(RemoteDevice rd, ObjectIdentifier obj, int val, int priority) {
-        WritePropertyRequest req = new WritePropertyRequest(obj, PropertyIdentifier.presentValue, null, new Real(val),
+    public void writeAtPriority(RemoteDevice rd, ObjectIdentifier obj, Encodable val, int priority) {
+        WritePropertyRequest req = new WritePropertyRequest(obj, PropertyIdentifier.presentValue, null, val,
                                                             new UnsignedInteger(priority));
         localDevice.send(rd, req);
     }
@@ -277,6 +324,13 @@ public class BACnet {
         WritePropertyRequest req = new WritePropertyRequest(obj, PropertyIdentifier.presentValue, null, Null.instance,
                                                             new UnsignedInteger(priority));
         localDevice.send(rd, req);
+    }
+
+    public ObjectIdentifier getObjectIdentifier(String idString) {
+        String[] arr = idString.split(":");
+        ObjectType type = ObjectType.forId(Integer.parseInt(arr[0]));
+        int objNum = Integer.parseInt(arr[1]);
+        return new ObjectIdentifier(type, objNum);
     }
 
     private class listener extends DeviceEventAdapter {
