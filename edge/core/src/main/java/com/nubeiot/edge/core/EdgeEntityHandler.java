@@ -82,17 +82,17 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     protected Single<JsonObject> startupModules() {
         return this.getModulesWhenBootstrap()
-                   .flattenAsObservable(tblModules -> tblModules)
-                   .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.UPDATE))
-                   .collect(JsonArray::new, JsonArray::add)
-                   .map(results -> new JsonObject().put("results", results));
+            .flattenAsObservable(tblModules -> tblModules)
+            .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.UPDATE))
+            .collect(JsonArray::new, JsonArray::add)
+            .map(results -> new JsonObject().put("results", results));
     }
 
     protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
         logger.info("{} module with data {}", action, module.toJson().encode());
         return this.handlePreDeployment(module, action)
-                   .doAfterSuccess(this::deployModule)
-                   .map(result -> result.toJson().put("message", "Work in progress").put("status", Status.WIP));
+            .doAfterSuccess(this::deployModule)
+            .map(result -> result.toJson().put("message", "Work in progress").put("status", Status.WIP));
     }
 
     private void deployModule(PreDeploymentResult preDeployResult) {
@@ -129,9 +129,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     public Single<Optional<JsonObject>> findTransactionById(String transactionId) {
         return transDao.findOneById(transactionId)
-                       .flatMap(optional -> optional.isPresent()
-                                            ? Single.just(Optional.of(optional.get().toJson()))
-                                            : this.findHistoryTransactionById(transactionId));
+            .flatMap(optional -> optional.isPresent()
+                                 ? Single.just(Optional.of(optional.get().toJson()))
+                                 : this.findHistoryTransactionById(transactionId));
     }
 
     private Single<PreDeploymentResult> handlePreDeployment(ITblModule module, EventAction event) {
@@ -172,24 +172,24 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private PreDeploymentResult createPreDeployResult(ITblModule module, String transactionId, EventAction event,
                                                       State prevState, State targetState) {
         return PreDeploymentResult.builder()
-                                  .transactionId(transactionId)
-                                  .action(event)
-                                  .prevState(prevState)
-                                  .targetState(targetState)
-                                  .serviceId(module.getServiceId())
-                                  .serviceFQN(module.getServiceType()
-                                                    .generateFQN(module.getServiceId(), module.getVersion(),
-                                                                 module.getServiceName()))
-                                  .deployId(module.getDeployId())
-                                  .deployCfg(module.getDeployConfig())
-                                  .dataDir((String) this.getSharedDataFunc().apply(EdgeVerticle.SHARED_DATA_DIR))
-                                  .build();
+            .transactionId(transactionId)
+            .action(event)
+            .prevState(prevState)
+            .targetState(targetState)
+            .serviceId(module.getServiceId())
+            .serviceFQN(module.getServiceType()
+                            .generateFQN(module.getServiceId(), module.getVersion(),
+                                         module.getServiceName()))
+            .deployId(module.getDeployId())
+            .deployCfg(module.getDeployConfig())
+            .dataDir((String) this.getSharedDataFunc().apply(EdgeVerticle.SHARED_DATA_DIR))
+            .build();
     }
 
     private Single<Optional<ITblModule>> validateModuleState(ITblModule tblModule, EventAction eventAction) {
         logger.info("Validate {}::::{} ...", tblModule.getServiceId(), eventAction);
         return moduleDao.findOneById(tblModule.getServiceId())
-                        .map(o -> validateModuleState(o.orElse(null), eventAction, tblModule.getState()));
+            .map(o -> validateModuleState(o.orElse(null), eventAction, tblModule.getState()));
     }
 
     //TODO: register EventBus to send message somewhere
@@ -201,19 +201,19 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         if (State.UNAVAILABLE == state) {
             logger.info("Remove module id {} and its transactions", serviceId);
             transDao.findOneById(transId)
-                    .flatMap(o -> this.createRemovedServiceRecord(o.orElse(
-                        new TblTransaction().setTransactionId(transId).setModuleId(serviceId).setEvent(eventAction))
-                                                                   .setStatus(status)))
-                    .map(history -> transDao)
-                    .flatMap(transDao -> transDao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(serviceId))
-                                                 .flatMap(ignore -> moduleDao.deleteById(serviceId)))
-                    .subscribe();
+                .flatMap(o -> this.createRemovedServiceRecord(o.orElse(
+                    new TblTransaction().setTransactionId(transId).setModuleId(serviceId).setEvent(eventAction))
+                                                                  .setStatus(status)))
+                .map(history -> transDao)
+                .flatMap(transDao -> transDao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(serviceId))
+                    .flatMap(ignore -> moduleDao.deleteById(serviceId)))
+                .subscribe();
         } else {
             Map<TableField, String> values = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
             queryExecutor.executeAny(c -> updateTransStatus(c, transId, status, null))
-                         .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, values))
-                                                     .map(r2 -> r1 + r2))
-                         .subscribe();
+                .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, values))
+                    .map(r2 -> r1 + r2))
+                .subscribe();
         }
     }
 
@@ -223,9 +223,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         queryExecutor.executeAny(c -> updateTransStatus(c, transId, Status.FAILED,
                                                         Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR,
                                                                                  error.toJson())))
-                     .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
-                                                 .map(r2 -> r1 + r2))
-                     .subscribe();
+            .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
+                .map(r2 -> r1 + r2))
+            .subscribe();
     }
 
     private Single<String> createTransaction(String moduleId, EventAction action, JsonObject prevState) {
@@ -234,13 +234,13 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         final LocalDateTime now = DateTimes.nowUTC();
         final String transactionId = UUID.randomUUID().toString();
         final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)
-                                                               .setModuleId(moduleId)
-                                                               .setStatus(Status.WIP)
-                                                               .setEvent(action)
-                                                               .setIssuedAt(now)
-                                                               .setModifiedAt(now)
-                                                               .setRetry(0)
-                                                               .setPrevState(prevState);
+            .setModuleId(moduleId)
+            .setStatus(Status.WIP)
+            .setEvent(action)
+            .setIssuedAt(now)
+            .setModifiedAt(now)
+            .setRetry(0)
+            .setPrevState(prevState);
         return transDao.insert(transaction).map(i -> transactionId);
     }
 
@@ -248,14 +248,14 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         logger.debug("Mark service {} to create...", module.getServiceId());
         LocalDateTime now = DateTimes.nowUTC();
         return moduleDao.insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
-                        .map(i -> module);
+            .map(i -> module);
     }
 
     private Single<ITblModule> markModuleModify(ITblModule module, ITblModule oldOne, boolean isUpdated) {
         logger.debug("Mark service {} to modify...", module.getServiceId());
         ITblModule into = this.updateModule(oldOne, module, isUpdated);
         return moduleDao.update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
-                        .map(ignore -> oldOne);
+            .map(ignore -> oldOne);
     }
 
     private ITblModule updateModule(@NonNull ITblModule old, @NonNull ITblModule newOne, boolean isUpdated) {
@@ -294,7 +294,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private Single<ITblModule> markModuleDelete(ITblModule module) {
         logger.debug("Mark service {} to delete...", module.getServiceId());
         return moduleDao.update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
-                        .map(ignore -> module);
+            .map(ignore -> module);
     }
 
     private Optional<ITblModule> validateModuleState(ITblModule findModule, EventAction eventAction,
@@ -304,8 +304,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         if (Objects.nonNull(findModule)) {
             logger.info("Module in database is found, validate conflict ");
             StateMachine.instance()
-                        .validateConflict(findModule.getState(), eventAction, "service " + findModule.getServiceId(),
-                                          targetState == null ? findModule.getState() : targetState);
+                .validateConflict(findModule.getState(), eventAction, "service " + findModule.getServiceId(),
+                                  targetState == null ? findModule.getState() : targetState);
             return Optional.of(findModule);
         }
         return Optional.empty();
@@ -313,20 +313,20 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private int updateModuleState(DSLContext context, String serviceId, State state, Map<?, ?> values) {
         return context.update(Tables.TBL_MODULE)
-                      .set(Tables.TBL_MODULE.STATE, state)
-                      .set(Tables.TBL_MODULE.MODIFIED_AT, DateTimes.nowUTC())
-                      .set(Objects.isNull(values) ? new HashMap<>() : values)
-                      .where(Tables.TBL_MODULE.SERVICE_ID.eq(serviceId))
-                      .execute();
+            .set(Tables.TBL_MODULE.STATE, state)
+            .set(Tables.TBL_MODULE.MODIFIED_AT, DateTimes.nowUTC())
+            .set(Objects.isNull(values) ? new HashMap<>() : values)
+            .where(Tables.TBL_MODULE.SERVICE_ID.eq(serviceId))
+            .execute();
     }
 
     private int updateTransStatus(DSLContext context, String transId, Status status, Map<?, ?> values) {
         return context.update(Tables.TBL_TRANSACTION)
-                      .set(Tables.TBL_TRANSACTION.STATUS, status)
-                      .set(Tables.TBL_TRANSACTION.MODIFIED_AT, DateTimes.nowUTC())
-                      .set(Objects.isNull(values) ? new HashMap<>() : values)
-                      .where(Tables.TBL_TRANSACTION.TRANSACTION_ID.eq(transId))
-                      .execute();
+            .set(Tables.TBL_TRANSACTION.STATUS, status)
+            .set(Tables.TBL_TRANSACTION.MODIFIED_AT, DateTimes.nowUTC())
+            .set(Objects.isNull(values) ? new HashMap<>() : values)
+            .where(Tables.TBL_TRANSACTION.TRANSACTION_ID.eq(transId))
+            .execute();
     }
 
     private Single<ITblRemoveHistory> createRemovedServiceRecord(ITblTransaction transaction) {

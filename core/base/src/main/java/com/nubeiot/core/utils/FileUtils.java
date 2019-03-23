@@ -125,11 +125,11 @@ public final class FileUtils {
      * @throws NubeException            if error when parsing file path or reading file
      */
     public static Path toPath(String filePath) {
-        String strPath = Strings.requireNotBlank(filePath);
-        strPath = strPath.replaceFirst("^(?:file:/)([^/])", "/".equals(File.separator) ? "/$1" : "$1");
         try {
             return Paths.get(URI.create(filePath));
         } catch (IllegalArgumentException | FileSystemNotFoundException | SecurityException ex) {
+            String strPath = Strings.requireNotBlank(filePath);
+            strPath = strPath.replaceFirst("^(?:file:/)([^/])", "/".equals(File.separator) ? "/$1" : "$1");
             logger.debug("Invalid parse URI: {}. Try to parse plain text", ex, strPath);
             try {
                 return Paths.get(strPath);

@@ -1,0 +1,10 @@
+{
+  "__app__": {
+    "__sql__": {
+
+    },
+    "__installer__": {
+      "auto_install": false
+    }
+  }
+}
