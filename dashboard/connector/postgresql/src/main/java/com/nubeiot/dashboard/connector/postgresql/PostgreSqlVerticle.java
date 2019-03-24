@@ -1,4 +1,4 @@
-package com.nubeiot.dashboard.connector.ditto;
+package com.nubeiot.dashboard.connector.postgresql;
 
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpServerContext;
@@ -13,7 +13,7 @@ import com.zandero.rest.RestRouter;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.types.HttpLocation;
 
-public class ServerDittoDriver extends ContainerVerticle {
+public class PostgreSqlVerticle extends ContainerVerticle {
 
     private HttpServerContext httpContext;
     private MicroContext microContext;
@@ -22,7 +22,7 @@ public class ServerDittoDriver extends ContainerVerticle {
     @SuppressWarnings("Duplicates")
     public void start() {
         super.start();
-        HttpServerRouter router = new HttpServerRouter().registerApi(ServerDittoRestController.class);
+        HttpServerRouter router = new HttpServerRouter().registerApi(PostgreSqlRestController.class);
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 

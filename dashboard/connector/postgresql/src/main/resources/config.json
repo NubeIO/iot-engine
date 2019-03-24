@@ -1,14 +1,33 @@
 {
   "__app__": {
-    "http.port": 8090,
-    "api.name": "sql-pg",
-    "pgConfig": {
-      "host": "localhost",
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": true
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
+    },
+    "__http__": {
+      "port": 8080,
+      "rootApi": "/api/sql-pg",
+      "__dynamic__": {
+        "enabled": true
+      }
+    },
+    "__pg__": {
+      "host": "pg-db",
       "port": 5432,
       "maxPoolSize": 10,
-      "username": "root",
-      "password": "root",
-      "database": "nube",
+      "username": "sandbox",
+      "password": "111",
+      "database": "sandbox_db",
       "charset": "UTF-8",
       "queryTimeout": 10000
     }

@@ -40,7 +40,7 @@
       }
     },
     "__ditto__": {
-      "host": "infiniabiz.com",
+      "host": "localhost",
       "port": "8080",
       "username": "ditto",
       "password": "ditto",

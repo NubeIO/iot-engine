@@ -13,6 +13,7 @@ import javax.ws.rs.core.Context;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.HttpConfig;
+import com.nubeiot.core.http.RestConfigProvider;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.utils.Strings;
@@ -33,7 +34,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
-@SuppressWarnings("Duplicates")
 @Path("/api/ditto")
 public class ServerDittoRestController implements RestApi {
 
@@ -51,34 +51,33 @@ public class ServerDittoRestController implements RestApi {
     @GET
     @Path("/api/*")
     @ResponseWriter(ResponseDataWriter.class)
-    public Future<ResponseData> dittoGet(@Context ServerDittoDriver.ConfigProvider config, @Context Vertx vertx,
-                                         @Context RoutingContext ctx) {
+    public Future<ResponseData> dittoGet(@Context Vertx vertx, @Context RoutingContext ctx,
+                                         @Context RestConfigProvider config) {
         return dittoRequestDispatcher(vertx, ctx, config);
     }
 
     @POST
     @Path("/api/*")
-    public Future<ResponseData> dittoPost(@Context ServerDittoDriver.ConfigProvider config, @Context Vertx vertx,
-                                         @Context RoutingContext ctx) {
+    public Future<ResponseData> dittoPost(@Context Vertx vertx, @Context RoutingContext ctx,
+                                          @Context RestConfigProvider config) {
         return dittoRequestDispatcher(vertx, ctx, config);
     }
 
     @PUT
     @Path("/api/*")
-    public Future<ResponseData> dittoPut(@Context ServerDittoDriver.ConfigProvider config, @Context Vertx vertx,
-                                         @Context RoutingContext ctx) {
+    public Future<ResponseData> dittoPut(@Context Vertx vertx, @Context RoutingContext ctx,
+                                         @Context RestConfigProvider config) {
         return dittoRequestDispatcher(vertx, ctx, config);
     }
 
     @DELETE
     @Path("/api/*")
-    public Future<ResponseData> dittoDelete(@Context ServerDittoDriver.ConfigProvider config, @Context Vertx vertx,
-                                         @Context RoutingContext ctx) {
+    public Future<ResponseData> dittoDelete(@Context Vertx vertx, @Context RoutingContext ctx,
+                                            @Context RestConfigProvider config) {
         return dittoRequestDispatcher(vertx, ctx, config);
     }
 
-    private Future<ResponseData> dittoRequestDispatcher(Vertx vertx, RoutingContext ctx,
-                                                        ServerDittoDriver.ConfigProvider config) {
+    private Future<ResponseData> dittoRequestDispatcher(Vertx vertx, RoutingContext ctx, RestConfigProvider config) {
         Future<ResponseData> future = Future.future();
         HttpClient client = vertx.createHttpClient(
             new HttpClientOptions().setVerifyHost(false).setTrustAll(true).setTcpKeepAlive(true));

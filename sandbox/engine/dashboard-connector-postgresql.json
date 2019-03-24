@@ -18,10 +18,28 @@
     }
   },
   "__app__": {
-    "__micro__": {},
-    "http.port": 8080,
-    "api.name": "sql-pg",
-    "pgConfig": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": true
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
+    },
+    "__http__": {
+      "port": 8080,
+      "rootApi": "/api/sql-pg",
+      "__dynamic__": {
+        "enabled": true
+      }
+    },
+    "__pg__": {
       "host": "pg-db",
       "port": 5432,
       "maxPoolSize": 10,
