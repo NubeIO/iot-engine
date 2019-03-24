@@ -12,11 +12,8 @@ import javax.ws.rs.core.Context;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.RestConfigProvider;
-import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.utils.SQLUtils;
-import com.nubeiot.core.utils.Strings;
-import com.zandero.rest.annotation.ResponseWriter;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
@@ -32,6 +29,7 @@ import io.vertx.reactivex.ext.asyncsql.PostgreSQLClient;
 import io.vertx.reactivex.ext.sql.SQLClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 
+@SuppressWarnings("Duplicates")
 @Path("/api/sql-pg")
 public class PostgreSqlRestController implements RestApi {
 
@@ -49,15 +47,13 @@ public class PostgreSqlRestController implements RestApi {
 
     @POST
     @Path("/engine")
-    @ResponseWriter(ResponseDataWriter.class)
-    public Future<ResponseData> dittoGet(@Context io.vertx.core.Vertx vertx, @Context RoutingContext ctx,
-                                         @Context RestConfigProvider config) {
+    public Future<ResponseData> engine(@Context io.vertx.core.Vertx vertx, @Context RoutingContext ctx,
+                                       @Context RestConfigProvider config) {
         PostgreSqlConfig pgConfig = IConfig.from(config.getConfig(), PostgreSqlConfig.class);
-        return enginePostgreSqlPostHandler(new Vertx(vertx), pgConfig, ctx);
+        return postgreSqlQuery(new Vertx(vertx), pgConfig, ctx);
     }
 
-    private Future<ResponseData> enginePostgreSqlPostHandler(Vertx vertx, PostgreSqlConfig pgConfig,
-                                                             RoutingContext ctx) {
+    private Future<ResponseData> postgreSqlQuery(Vertx vertx, PostgreSqlConfig pgConfig, RoutingContext ctx) {
         Future<ResponseData> future = Future.future();
         ResponseData responseData = new ResponseData();
         // Check if we have a query in body
@@ -67,7 +63,6 @@ public class PostgreSqlRestController implements RestApi {
         if (body != null) {
             query = body.getString("query", null);
         }
-        logger.info("Query: {}", query);
 
         if (query == null) {
             // Return query not specified error
@@ -77,14 +72,12 @@ public class PostgreSqlRestController implements RestApi {
             responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.UNAUTHORIZED.code()));
             future.complete(responseData);
         } else {
-            JsonObject settings = new JsonObject(
-                SQLUtils.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
+            JsonObject settings = new JsonObject(SQLUtils.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
             final String finalQuery = query;
             executeQuery(vertx, settings, pgConfig, query).subscribe(result -> {
                 responseData.setBody(
                     new JsonObject().put("message", messageWrapper(finalQuery, successMessage(result)).encode()));
                 responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.OK.code()));
-                logger.info("Response Data {}", responseData.body());
                 future.complete(responseData);
             }, error -> {
                 responseData.setBody(
@@ -96,22 +89,7 @@ public class PostgreSqlRestController implements RestApi {
         return future;
     }
 
-    private JsonObject messageWrapper(String query, JsonObject message) {
-        return new JsonObject().put("action", "PostgreSql Data").put("query", query).put("resultSet", message);
-    }
-
-    private JsonObject successMessage(ResultSet result) {
-        return new JsonObject().put("status", "OK")
-                               .put("message", new JsonArray(
-                                   result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()));
-    }
-
-    private JsonObject failureMessage(Throwable throwable) {
-        return new JsonObject().put("status", "OK").put("message", throwable.getMessage());
-    }
-
-    private Single<ResultSet> executeQuery(Vertx vertx, JsonObject settings, PostgreSqlConfig pgConfig,
-                                           String sqlQuery) {
+    private Single<ResultSet> executeQuery(Vertx vertx, JsonObject settings, PostgreSqlConfig pgConfig, String sqlQuery) {
         return getConnection(vertx, settings, pgConfig).flatMap(conn -> conn.rxQuery(sqlQuery))
                                                        .onErrorResumeNext(throwable -> {
                                                            // TODO: Find a better way of handling pooling
@@ -134,7 +112,7 @@ public class PostgreSqlRestController implements RestApi {
         JsonObject pgConfigJson = pgConfig.toJson();
         // Example: Settings={"url": "localhost:5432/test", "userName": "postgres", "password": "123"}
         if (!settings.toString().equals("{}")) {
-            URL url = new URL(settings.getString("url"));
+            PostgreSqlUrl url = new PostgreSqlUrl(settings.getString("url"));
             pgConfigJson.put("host", url.getHost())
                         .put("port", url.getPort())
                         .put("database", url.getDatabase())
@@ -159,42 +137,18 @@ public class PostgreSqlRestController implements RestApi {
                                             .doFinally(conn::close));
     }
 
-    private class URL {
+    private JsonObject messageWrapper(String query, JsonObject message) {
+        return new JsonObject().put("action", "PostgreSql Data").put("query", query).put("resultSet", message);
+    }
 
-        private String host;
-        private int port = 5432;
-        private String database = "test";
+    private JsonObject successMessage(ResultSet result) {
+        return new JsonObject().put("status", "OK")
+                               .put("message", new JsonArray(
+                                   result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()));
+    }
 
-        URL(String url) {
-            if (Strings.isNotBlank(url)) {
-                String[] values = url.split(":");
-                host = values[0];
-                if (values.length > 1) {
-                    String[] values$ = values[1].split("/");
-                    try {
-                        port = Integer.parseInt(values$[0]);
-                    } catch (Exception ignored) {
-                    }
-
-                    if (values$.length > 1) {
-                        database = values$[1];
-                    }
-                }
-            }
-        }
-
-        String getHost() {
-            return host;
-        }
-
-        int getPort() {
-            return port;
-        }
-
-        String getDatabase() {
-            return database;
-        }
-
+    private JsonObject failureMessage(Throwable throwable) {
+        return new JsonObject().put("status", "OK").put("message", throwable.getMessage());
     }
 
 }

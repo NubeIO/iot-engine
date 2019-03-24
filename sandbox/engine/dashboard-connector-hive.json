@@ -18,14 +18,32 @@
     }
   },
   "__app__": {
-    "__micro__": {},
-    "http.port": 8084,
-    "api.name": "sql-hive",
-    "hiveConfig": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": true
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
+    },
+    "__http__": {
+      "port": 8084,
+      "rootApi": "/api/sql-hive",
+      "__dynamic__": {
+        "enabled": true
+      }
+    },
+    "__hive__": {
       "url": "jdbc:hive2://localhost:10000/filo_db",
       "driver_class": "org.apache.hive.jdbc.HiveDriver",
       "user": "root",
-      "password": ""
+      "password": "root"
     }
   }
 }
