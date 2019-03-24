@@ -1,192 +1,50 @@
 package com.nubeiot.dashboard.connector.ditto;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.http.HttpServerContext;
+import com.nubeiot.core.http.HttpServerProvider;
+import com.nubeiot.core.http.HttpServerRouter;
+import com.nubeiot.core.http.ServerInfo;
+import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.core.micro.MicroserviceProvider;
+import com.zandero.rest.RestRouter;
 
-import com.nubeiot.core.common.RxMicroServiceVerticle;
-import com.nubeiot.core.common.constants.Services;
-import com.nubeiot.core.common.utils.response.ResponseUtils;
-import com.nubeiot.core.utils.Strings;
-
-import io.reactivex.Single;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.buffer.impl.BufferImpl;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.RequestOptions;
-import io.vertx.core.http.impl.headers.VertxHttpHeaders;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.MultiMap;
-import io.vertx.reactivex.core.http.HttpClient;
-import io.vertx.reactivex.core.http.HttpClientRequest;
-import io.vertx.reactivex.core.http.HttpServer;
-import io.vertx.reactivex.core.http.HttpServerResponse;
-import io.vertx.reactivex.ext.web.Router;
-import io.vertx.reactivex.ext.web.RoutingContext;
-import io.vertx.reactivex.ext.web.handler.BodyHandler;
-import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.types.HttpLocation;
+import lombok.Getter;
 
-/**
- * Created by topsykretts on 5/11/18.
- */
-public class ServerDittoDriver extends RxMicroServiceVerticle {
+public class ServerDittoDriver extends ContainerVerticle {
 
-    private static final String SERVER_DITTO_DRIVER = "io.nubespark.server.ditto.driver";
-
-    private HttpClient client;
+    private HttpServerContext httpContext;
+    private MicroContext microContext;
 
     @Override
-    protected Single<String> onStartComplete() {
-        return startWebApp().flatMap(httpServer -> publishHttp())
-                            .flatMap(ignored -> publishMessageSource(SERVER_DITTO_DRIVER, SERVER_DITTO_DRIVER))
-                            .map(record -> {
-                                client = vertx.createHttpClient(new HttpClientOptions().setVerifyHost(false)
-                                                                                       .setTrustAll(true)
-                                                                                       .setTcpKeepAlive(true));
-                                return "Deployed successfully...";
-                            });
-    }
+    public void start() {
+        super.start();
+        HttpServerRouter router = new HttpServerRouter().registerApi(ServerDittoRestController.class);
+        this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
+            .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
-    private Single<HttpServer> startWebApp() {
-        // Create a router object.
-        Router router = Router.router(vertx);
-        router.route("/").handler(this::indexHandler);
-        router.route().handler(BodyHandler.create());
-        router.route("/*").handler(this::handleWebServer);
-        // This is last handler that gives not found body
-        router.route().last().handler(this::handlePageNotFound);
+        RestRouter.addProvider(ConfigProvider.class, ctx -> new ConfigProvider());
 
-        // Create the HTTP server and pass the "accept" method to the request handler.
-        return vertx.createHttpServer()
-                    .requestHandler(router::accept)
-                    .rxListen(appConfig.getInteger("http.port", 8080))
-                    .doOnSuccess(
-                        httpServer -> logger.info("Ditto Server Driver started at port: " + httpServer.actualPort()))
-                    .doOnError(throwable -> logger.error(
-                        "Cannot start Ditto Server Driver: " + throwable.getLocalizedMessage()));
-    }
-
-    private Single<Record> publishHttp() {
-        return publishHttpEndpoint("io.nubespark.server-ditto-driver", "0.0.0.0",
-                                   appConfig.getInteger("http.port", 8080)).doOnError(
-            throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
-    }
-
-    private void handleWebServer(RoutingContext ctx) {
-        logger.info("Proxying request: " + ctx.request().uri());
-        requestDittoServer(client, ctx, dittoResHandler -> {
-            JsonObject dittoRes = dittoResHandler.result();
-            proxyDittoResponse(dittoRes, ctx);
+        this.registerSuccessHandler(event -> {
+            ServerInfo info = this.httpContext.getServerInfo();
+            microContext.getClusterController()
+                        .addHttpRecord("httpService", new HttpLocation(info.toJson()).setRoot(info.getApiPath()),
+                                       new JsonObject())
+                        .subscribe();
         });
     }
 
-    private void proxyDittoResponse(JsonObject dittoRes, RoutingContext ctx) {
-        JsonObject headers = dittoRes.getJsonObject("headers");
-        Map<String, String> headerMap = new HashMap<>();
-        for (String header : headers.fieldNames()) {
-            headerMap.put(header, headers.getString(header));
-        }
-        ctx.response().headers().setAll(new MultiMap(new VertxHttpHeaders().addAll(headerMap)));
-        ctx.response().setStatusCode(dittoRes.getInteger("statusCode"));
-        byte[] responseBody = dittoRes.getBinary("body");
-        if (responseBody != null) {
-            ctx.response().setChunked(true);
-            ctx.response().write(new String(responseBody, StandardCharsets.UTF_8));
-        }
-        ctx.response().end();
-    }
+    class ConfigProvider {
 
-    private void requestDittoServer(HttpClient client, RoutingContext ctx, Handler<AsyncResult<JsonObject>> next) {
-        String uri = ctx.request().uri();
-        HttpMethod httpMethod = ctx.request().method();
-        String host = appConfig.getString("ditto.http.host", "localhost");
-        Integer port = appConfig.getInteger("ditto.http.port", 8080);
-        boolean ssl = false;
-        if (port == 443 || port == 8443) {
-            ssl = true;
+        @Getter
+        private JsonObject config;
+
+        ConfigProvider() {
+            config = config();
         }
 
-        HttpClientRequest req = client.request(httpMethod, new RequestOptions().setHost(host)
-                                                                               .setPort(port)
-                                                                               .setURI(uri)
-                                                                               .setSsl(ssl));
-
-        req.toFlowable().subscribe(res -> {
-            logger.info("Proxying response: " + res.statusCode());
-            JsonObject response = new JsonObject();
-            response.put("statusCode", res.statusCode());
-            JsonObject headers = new JsonObject();
-            for (Map.Entry<String, String> entry : res.getDelegate().headers()) {
-                headers.put(entry.getKey(), entry.getValue());
-            }
-            response.put("headers", headers);
-
-            Buffer data = new BufferImpl();
-            res.handler(x -> data.appendBytes(x.getDelegate().getBytes()));
-            res.endHandler((v) -> {
-                response.put("body", data.getBytes());
-                logger.info("Proxy Response Completed.");
-                next.handle(Future.succeededFuture(response));
-            });
-        });
-
-        req.setChunked(true);
-        //Adding ditto authorization
-        if (appConfig.getBoolean("ditto-policy")) {
-            req.putHeader(HttpHeaders.AUTHORIZATION.toString(),
-                          ctx.request().headers().get(HttpHeaders.AUTHORIZATION.toString()));
-            if (Strings.isNotBlank(ctx.getBody().toString())) {
-                if (Strings.isBlank(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
-                    // This means we are we are PUTing device value for the first time or going to updated whole data
-                    JsonObject body = ctx.getBodyAsJson();
-                    body.put("policyId", Services.POLICY_NAMESPACE_PREFIX + ":" +
-                                         new JsonObject(ctx.request().headers().getDelegate().get("User")).getString(
-                                             "site_id"));
-                    logger.info("Body ::: " + body);
-                    req.write(body.toString());
-                } else {
-                    req.write(ctx.getBody());
-                }
-            }
-        } else {
-            req.putHeader(HttpHeaders.AUTHORIZATION.toString(), "Basic " + getAuthKey());
-            if (Strings.isNotBlank(ctx.getBody().toString())) {
-                req.write(ctx.getBody());
-            }
-        }
-        req.end();
-    }
-
-    private String getAuthKey() {
-        String apiKey = appConfig.getString("ditto.http.username", "ditto");
-        String secretKey = appConfig.getString("ditto.http.password", "ditto");
-        String auth = apiKey + ":" + secretKey;
-        return Base64.getEncoder().encodeToString(auth.getBytes());
-    }
-
-    private void handlePageNotFound(RoutingContext routingContext) {
-        String uri = routingContext.request().absoluteURI();
-        routingContext.response()
-                      .putHeader(ResponseUtils.CONTENT_TYPE, ResponseUtils.CONTENT_TYPE_JSON)
-                      .setStatusCode(404)
-                      .end(Json.encodePrettily(
-                          new JsonObject().put("uri", uri).put("status", 404).put("message", "Resource Not Found")));
-    }
-
-    private void indexHandler(RoutingContext routingContext) {
-        HttpServerResponse response = routingContext.response();
-        response.putHeader("content-type", "application/json; charset=utf-8")
-                .end(Json.encodePrettily(new JsonObject().put("name", "server-ditto-driver")
-                                                         .put("version", "1.0")
-                                                         .put("vert.x_version", "3.4.1")
-                                                         .put("java_version", "8.0")));
     }
 
 }
