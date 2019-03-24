@@ -1,6 +1,7 @@
 package com.nubeiot.dashboard.connector.ditto;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE;
+import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE_JSON;
 
 import java.util.Base64;
 import javax.ws.rs.DELETE;
@@ -21,8 +22,6 @@ import com.zandero.rest.annotation.ResponseWriter;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
@@ -103,16 +102,18 @@ public class ServerDittoRestController implements RestApi {
         ResponseData responseData = new ResponseData();
         req.handler(res -> {
             logger.info("Proxying Response StatusCode: {}", res.statusCode());
-            responseData.setHeaders(new JsonObject().put("statusCode", res.statusCode()));
-            Buffer data = new BufferImpl();
-            res.handler(x -> data.appendBytes(x.getBytes())).endHandler((v) -> {
-                responseData.setBody(new JsonObject().put("message", new String(data.getBytes(), UTF_8)));
+            responseData.setStatusCode(res.statusCode());
+            res.bodyHandler(data -> {
+                responseData.setBodyMessage(data.toString());
+                if (res.statusCode() < 400) {
+                    responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
+                }
                 logger.info("Proxy Response Completed.");
                 future.complete(responseData);
             });
         }).exceptionHandler(e -> {
-            responseData.setHeaders(new JsonObject().put("statusCode", 500));
-            responseData.setBody(new JsonObject().put("message", e.getMessage()));
+            responseData.setStatusCode(500);
+            responseData.setBodyMessage(e.getMessage());
             future.complete(responseData);
         });
 

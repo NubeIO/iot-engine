@@ -1,8 +1,29 @@
 {
   "__app__": {
-    "http.port": 8087,
-    "api.name": "zeppelin",
-    "server.host": "localhost",
-    "server.port": 18080
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": true
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
+    },
+    "__http__": {
+      "port": 8087,
+      "rootApi": "/api/zeppelin",
+      "__dynamic__": {
+        "enabled": true
+      }
+    },
+    "__zeppelin__": {
+      "server.host": "0.0.0.0",
+      "server.port": 18080
+    }
   }
 }

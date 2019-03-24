@@ -1,5 +1,8 @@
 package com.nubeiot.dashboard.connector.postgresql;
 
+import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE;
+import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE_JSON;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,30 +69,32 @@ public class PostgreSqlRestController implements RestApi {
 
         if (query == null) {
             // Return query not specified error
-            responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.BAD_REQUEST.code()));
+            responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
             future.complete(responseData);
         } else if (!query.toUpperCase().trim().startsWith("SELECT")) {
-            responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.UNAUTHORIZED.code()));
+            responseData.setStatusCode(HttpResponseStatus.UNAUTHORIZED.code());
             future.complete(responseData);
         } else {
-            JsonObject settings = new JsonObject(SQLUtils.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
+            JsonObject settings = new JsonObject(
+                SQLUtils.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
             final String finalQuery = query;
             executeQuery(vertx, settings, pgConfig, query).subscribe(result -> {
-                responseData.setBody(
-                    new JsonObject().put("message", messageWrapper(finalQuery, successMessage(result)).encode()));
-                responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.OK.code()));
+                responseData.setBodyMessage(messageWrapper(finalQuery, successMessage(result)).encode());
+                responseData.setStatusCode(HttpResponseStatus.OK.code());
+                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
                 future.complete(responseData);
             }, error -> {
-                responseData.setBody(
-                    new JsonObject().put("message", messageWrapper(finalQuery, failureMessage(error)).encode()));
-                responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.BAD_REQUEST.code()));
+                responseData.setBodyMessage(messageWrapper(finalQuery, failureMessage(error)).encode());
+                responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
+                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
                 future.complete(responseData);
             });
         }
         return future;
     }
 
-    private Single<ResultSet> executeQuery(Vertx vertx, JsonObject settings, PostgreSqlConfig pgConfig, String sqlQuery) {
+    private Single<ResultSet> executeQuery(Vertx vertx, JsonObject settings, PostgreSqlConfig pgConfig,
+                                           String sqlQuery) {
         return getConnection(vertx, settings, pgConfig).flatMap(conn -> conn.rxQuery(sqlQuery))
                                                        .onErrorResumeNext(throwable -> {
                                                            // TODO: Find a better way of handling pooling

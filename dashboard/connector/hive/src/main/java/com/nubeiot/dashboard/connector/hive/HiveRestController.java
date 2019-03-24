@@ -1,5 +1,8 @@
 package com.nubeiot.dashboard.connector.hive;
 
+import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE;
+import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE_JSON;
+
 import java.util.Collections;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -60,22 +63,22 @@ public class HiveRestController implements RestApi {
 
         if (query == null) {
             // Return query not specified error
-            responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.BAD_REQUEST.code()));
+            responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
             future.complete(responseData);
         } else if (!query.toUpperCase().trim().startsWith("SELECT")) {
-            responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.UNAUTHORIZED.code()));
+            responseData.setStatusCode(HttpResponseStatus.UNAUTHORIZED.code());
             future.complete(responseData);
         } else {
             final String finalQuery = query;
             executeQuery(vertx, hiveConfig, query).subscribe(result -> {
-                responseData.setBody(
-                    new JsonObject().put("message", messageWrapper(finalQuery, successMessage(result)).encode()));
-                responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.OK.code()));
+                responseData.setBodyMessage(messageWrapper(finalQuery, successMessage(result)).encode());
+                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
+                responseData.setStatusCode(HttpResponseStatus.OK.code());
                 future.complete(responseData);
             }, error -> {
-                responseData.setBody(
-                    new JsonObject().put("message", messageWrapper(finalQuery, failureMessage(error)).encode()));
-                responseData.setHeaders(new JsonObject().put("statusCode", HttpResponseStatus.BAD_REQUEST.code()));
+                responseData.setBodyMessage(messageWrapper(finalQuery, failureMessage(error)).encode());
+                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
+                responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
                 future.complete(responseData);
             });
         }

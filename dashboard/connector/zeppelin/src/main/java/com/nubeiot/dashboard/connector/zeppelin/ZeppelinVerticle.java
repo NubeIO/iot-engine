@@ -1,115 +1,40 @@
 package com.nubeiot.dashboard.connector.zeppelin;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.http.HttpServerContext;
+import com.nubeiot.core.http.HttpServerProvider;
+import com.nubeiot.core.http.HttpServerRouter;
+import com.nubeiot.core.http.RestConfigProvider;
+import com.nubeiot.core.http.ServerInfo;
+import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.core.micro.MicroserviceProvider;
+import com.zandero.rest.RestRouter;
 
-import com.nubeiot.core.common.RxMicroServiceVerticle;
-
-import io.reactivex.Single;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.buffer.Buffer;
-import io.vertx.reactivex.core.http.HttpClient;
-import io.vertx.reactivex.core.http.HttpClientRequest;
-import io.vertx.reactivex.core.http.HttpClientResponse;
-import io.vertx.reactivex.core.http.HttpServerResponse;
-import io.vertx.reactivex.ext.web.Router;
-import io.vertx.reactivex.ext.web.RoutingContext;
-import io.vertx.reactivex.ext.web.handler.BodyHandler;
-import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.types.HttpLocation;
 
-public class ZeppelinVerticle extends RxMicroServiceVerticle {
+public class ZeppelinVerticle extends ContainerVerticle {
 
-    private HttpClient client;
-    private String COOKIE_NAME = "JSESSIONID";
+    private HttpServerContext httpContext;
+    private MicroContext microContext;
 
     @Override
-    protected Single<String> onStartComplete() {
-        client = vertx.createHttpClient(new HttpClientOptions());
-        Router router = Router.router(vertx);
-        // creating body handler
-        router.route().handler(BodyHandler.create());
-        handleRoutes(router);
+    @SuppressWarnings("Duplicates")
+    public void start() {
+        super.start();
+        HttpServerRouter router = new HttpServerRouter().registerApi(ZeppelinRestController.class);
+        this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
+            .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
-        return vertx.createHttpServer()
-                    .requestHandler(router)
-                    .rxListen(appConfig.getInteger("http.port", 8080))
-                    .doOnSuccess(httpServer -> logger.info("Web server started at " + httpServer.actualPort()))
-                    .doOnError(throwable -> logger.error("Cannot start server: " + throwable.getLocalizedMessage()))
-                    .flatMap(httpServer -> publishHttp())
-                    .map(record -> "Deployed successfully...");
-    }
+        RestRouter.addProvider(RestConfigProvider.class, ctx -> new RestConfigProvider(config()));
 
-    private Single<Record> publishHttp() {
-        return publishHttpEndpoint("zeppelin-api", "0.0.0.0",
-                                   appConfig.getInteger("http.port", 8080)).doOnError(
-            throwable -> logger.error("Cannot publish: " + throwable.getLocalizedMessage()));
-    }
-
-    private void handleRoutes(Router router) {
-        // api dispatcher
-        router.route("/api/*").handler(this::dispatchRequests);
-    }
-
-    private void dispatchRequests(RoutingContext context) {
-        HttpClientRequest toReq = client.request(context.request().method(), appConfig.getInteger("server.port"),
-                                                 appConfig.getString("server.host"), context.request().uri(),
-                                                 response -> {
-                                                     response.bodyHandler(body -> {
-                                                         HttpServerResponse toRsp = context.response()
-                                                                                           .setStatusCode(
-                                                                                               response.statusCode());
-                                                         if (response.statusCode() < 500) {
-                                                             response.headers().getDelegate().forEach(header -> {
-                                                                 if (!header.getKey().equalsIgnoreCase("Set-Cookie")) {
-                                                                     // Ignore cookies; on login it will send cookie
-                                                                     toRsp.putHeader(header.getKey(),
-                                                                                     header.getValue());
-                                                                 }
-                                                             });
-                                                             body = cookieHandler(response, toRsp, body);
-                                                         }
-                                                         toRsp.end(body);
-                                                     });
-                                                 });
-        // set headers
-        context.request().headers().getDelegate().forEach(header -> {
-            if (header.getKey().equalsIgnoreCase(COOKIE_NAME)) {
-                // Sending as an cookie for authentication parameter
-                toReq.putHeader("Cookie", header.getValue());
-            } else {
-                toReq.putHeader(header.getKey(), header.getValue());
-            }
+        this.registerSuccessHandler(event -> {
+            ServerInfo info = this.httpContext.getServerInfo();
+            microContext.getClusterController()
+                        .addHttpRecord("httpService", new HttpLocation(info.toJson()).setRoot(info.getApiPath()),
+                                       new JsonObject())
+                        .subscribe();
         });
-
-        if (context.getBody() == null) {
-            toReq.end();
-        } else {
-            toReq.end(context.getBody());
-        }
-    }
-
-    private Buffer cookieHandler(HttpClientResponse response, HttpServerResponse toRsp, Buffer body) {
-        final Map<String, String> cookie = new HashMap<>();
-        response.headers().getDelegate().forEach(header -> {
-            if (header.getKey().equalsIgnoreCase("Set-Cookie")) {
-                if (header.getValue().contains(COOKIE_NAME)) {
-                    // Two JSESSIONID= will be available and we need the last one
-                    cookie.put(COOKIE_NAME, (header.getValue().split(";")[0]).split("=")[1]);
-                }
-            }
-        });
-        if (body.length() != 0) {
-            System.out.println(new JsonObject(body.getDelegate()).toString());
-            if (cookie.keySet().contains(COOKIE_NAME)) {
-                JsonObject responseJsonObject = new JsonObject(body.getDelegate());
-                JsonObject body$ = responseJsonObject.getJsonObject("body").put(COOKIE_NAME, cookie.get(COOKIE_NAME));
-                responseJsonObject = responseJsonObject.put("body", body$);
-                body = Buffer.buffer(responseJsonObject.toString());
-                toRsp.putHeader("Content-Length", Integer.toString(body.toString().toCharArray().length));
-            }
-        }
-        return body;
     }
 
 }
