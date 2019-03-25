@@ -13,6 +13,7 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.edge.connector.bacnet.BACnet;
 import com.serotonin.bacnet4j.exception.BACnetException;
@@ -39,7 +40,7 @@ public class PointsEventHandlerTest {
         when(bacnetInstance.writeAtPriority(any(Integer.class), any(String.class), any(Encodable.class),
                                             any(Integer.class))).thenReturn(Single.just(new JsonObject()));
 
-        JsonObject data = writeMessage(1234, "analogInput:1", 16, "1");
+        RequestData data = writeMessage(1234, "analogInput:1", 16, "1");
         Single<EventMessage> reply = eventHandler.writeRemoteDevicePointValue(data);
         reply.test().assertNoErrors().assertComplete();
 
@@ -54,13 +55,8 @@ public class PointsEventHandlerTest {
 
     @Test
     public void writeRemoteDevicePointValueTest_invalidPriority() throws Exception {
-        //        when(bacnetInstance.writeAtPriority(any(Integer.class), any(String.class), any(Encodable.class),
-        //        any(Integer.class)))
-        //            .thenReturn(Single.error(BACnetException::new));
-
-        JsonObject data = writeMessage(1234, "analogInput:1", 0, "1");
+        RequestData data = writeMessage(1234, "analogInput:1", 0, "1");
         Single<EventMessage> reply = eventHandler.writeRemoteDevicePointValue(data);
-        System.out.println(reply);
         reply.test().assertError(BACnetException.class);
 
         data = writeMessage(1234, "analogInput:1", 17, "1");
@@ -68,13 +64,21 @@ public class PointsEventHandlerTest {
         reply.test().assertError(BACnetException.class);
     }
 
-    private JsonObject writeMessage(int id, String obj, int priority, String value) {
+    @Test
+    public void writeRemoteDevicePointValueTest_invalidValue() throws Exception {
+        RequestData data = writeMessage(1234, "analogInput:1", 16, "bad_value");
+        Single<EventMessage> reply = eventHandler.writeRemoteDevicePointValue(data);
+        reply.test().assertError(NumberFormatException.class);
+    }
+
+    private RequestData writeMessage(int id, String obj, int priority, String value) {
         JsonObject data = new JsonObject();
         data.put("deviceID", id);
         data.put("objectID", obj);
         data.put("priority", priority);
         data.put("value", value);
-        return data;
+        RequestData d = RequestData.builder().body(data).build();
+        return d;
     }
 
 }

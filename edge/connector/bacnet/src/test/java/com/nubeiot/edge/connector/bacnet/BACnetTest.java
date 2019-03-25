@@ -2,6 +2,8 @@ package com.nubeiot.edge.connector.bacnet;
 
 public class BACnetTest {
 
+    //TODO: should this test for things like IP address will work or if udp port is in use?
+
     //    BACnet baCnetInstance;
     //
     //    @Before

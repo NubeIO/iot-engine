@@ -8,6 +8,7 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
@@ -40,22 +41,17 @@ public class PointsEventHandler implements EventHandler {
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(BACnetEventModels.POINTS.getEvents()));
     }
 
-    //TODO: should these be eventActions or HttpMethods since they're only ever going to be accessed over the http
-    // rest api
     @EventContractor(action = EventAction.GET_LIST, returnType = EventMessage.class)
-    //    public Single<EventMessage> getRemoteDevicePoints(Map<String, Object> message) {
-    public Single<EventMessage> getRemoteDevicePoints(JsonObject message) {
-        int instanceNumber = JsonObject.mapFrom(message).getInteger("deviceID");
+    public Single<EventMessage> getRemoteDevicePoints(RequestData data) {
+        int instanceNumber = data.body().getInteger("deviceID");
         return bacnetInstance.getRemoteDeviceObjectList(instanceNumber)
                              .flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
     }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = EventMessage.class)
-    //    public Single<EventMessage> getRemoteDevicePointExtended(Map<String, Object> message) {
-    public Single<EventMessage> getRemoteDevicePointExtended(JsonObject message) {
-        JsonObject data = JsonObject.mapFrom(message);
-        int instanceNumber = data.getInteger("deviceID");
-        String objectID = data.getString("objectID");
+    public Single<EventMessage> getRemoteDevicePointExtended(RequestData data) {
+        int instanceNumber = data.body().getInteger("deviceID");
+        String objectID = data.body().getString("objectID");
         return bacnetInstance.getRemoteObjectProperties(instanceNumber, objectID)
                              .flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
     }
@@ -71,13 +67,12 @@ public class PointsEventHandler implements EventHandler {
     //    }
 
     @EventContractor(action = EventAction.PATCH, returnType = EventMessage.class)
-    //    public Single<EventMessage> writeRemoteDevicePointValue(Map<String, Object> message) {
-    public Single<EventMessage> writeRemoteDevicePointValue(JsonObject message) {
-        JsonObject data = JsonObject.mapFrom(message);
-        int instanceNumber = data.getInteger("deviceID");
-        String objectID = data.getString("objectID");
-        int priority = data.getInteger("priority");
-        String str = data.getString("value");
+    public Single<EventMessage> writeRemoteDevicePointValue(RequestData data) {
+        JsonObject body = data.body();
+        int instanceNumber = body.getInteger("deviceID");
+        String objectID = body.getString("objectID");
+        int priority = body.getInteger("priority");
+        String str = body.getString("value");
         Encodable val;
 
         if (priority < 1 || priority > 16) {
@@ -89,7 +84,7 @@ public class PointsEventHandler implements EventHandler {
         } else {
             try {
                 val = new Real(Float.parseFloat(str));
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 return Single.error(e);
             }
         }
@@ -97,8 +92,5 @@ public class PointsEventHandler implements EventHandler {
         return bacnetInstance.writeAtPriority(instanceNumber, objectID, val, priority)
                              .flatMap(json -> Single.just(EventMessage.success(EventAction.RETURN, json)));
     }
-
-
-
 
 }

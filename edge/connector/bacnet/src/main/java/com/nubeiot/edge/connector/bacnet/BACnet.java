@@ -11,7 +11,6 @@ import java.util.Vector;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -21,6 +20,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.edge.connector.bacnet.Util.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.Util.LocalPointObjectUtils;
 import com.nubeiot.edge.connector.bacnet.Util.NetworkUtils;
 import com.serotonin.bacnet4j.LocalDevice;
@@ -77,7 +77,7 @@ public class BACnet {
     private LocalDevice localDevice;
     private HashMap<RemoteDevice, Vector<ObjectIdentifier>> points;
 
-    public BACnet(String name, int id, Future<Void> future, EventController eventController, Vertx vertx) {
+    private BACnet(String name, int id, Future<Void> future, EventController eventController, Vertx vertx) {
 
         this.eventController = eventController;
         this.vertx = vertx;
@@ -112,10 +112,14 @@ public class BACnet {
         }
     }
 
+    public static BACnet createBACnet(String name, int id, Future<Void> future, EventController eventController,
+                                      Vertx vertx) {
+        return new BACnet(name, id, future, eventController, vertx);
+    }
+
     public void terminate() {
         localDevice.terminate();
     }
-
 
     public void BEGIN_TEST() {
         //        logger.info("\n\n\nBEGINING TEST\n\n");
@@ -145,14 +149,9 @@ public class BACnet {
     //REMOTE DEVICE FUNCTIONS
 
     public Single<JsonObject> getRemoteDevices() {
-        return Single.fromObservable(
-            Observable.fromIterable(localDevice.getRemoteDeviceCache().getEntities()).flatMap(remoteDevice -> {
-                JsonObject json = new JsonObject();
-                json.put("instanceNumber", remoteDevice.getInstanceNumber());
-                json.put("name", remoteDevice.getName());
-                json.put("address", remoteDevice.getAddress().toString());
-                return Observable.just(json);
-            }));
+        return Single.fromObservable(Observable.fromIterable(localDevice.getRemoteDeviceCache().getEntities())
+                                               .flatMap(remoteDevice -> Observable.just(
+                                                   BACnetDataConversions.deviceMinimal(remoteDevice))));
     }
 
     public Single<JsonObject> getRemoteDeviceExtendedInfo(int instanceNumber) {
@@ -170,18 +169,7 @@ public class BACnet {
                 try {
                     //TODO: might need to build own discovery util for this
                     DiscoveryUtils.getExtendedDeviceInformation(localDevice, remoteDevice);
-                    JsonObject data = new JsonObject();
-                    data.put("instanceNumber", remoteDevice.getInstanceNumber());
-                    data.put("name", remoteDevice.getName());
-                    data.put("address", remoteDevice.getAddress().toString());
-                    data.put("maxAPDULengthAccepted",
-                             remoteDevice.getCharacterStringProperty(PropertyIdentifier.maxApduLengthAccepted));
-                    data.put("segmentationSupported",
-                             remoteDevice.getCharacterStringProperty(PropertyIdentifier.segmentationSupported));
-                    data.put("vendorId", remoteDevice.getCharacterStringProperty(PropertyIdentifier.vendorIdentifier));
-                    data.put("vendorName", remoteDevice.getCharacterStringProperty(PropertyIdentifier.vendorName));
-                    data.put("servicesSupported",
-                             remoteDevice.getCharacterStringProperty(PropertyIdentifier.protocolServicesSupported));
+                    JsonObject data = BACnetDataConversions.deviceExtended(remoteDevice);
                     future.complete(data);
                     source.onSuccess(data);
                 } catch (BACnetException e) {
@@ -207,12 +195,9 @@ public class BACnet {
                 try {
                     SequenceOf<ObjectIdentifier> list = RequestUtils.getObjectList(localDevice, remoteDevice);
                     remoteDevice.setDeviceProperty(PropertyIdentifier.objectList, list);
-                    JsonArray data = new JsonArray();
-                    list.forEach(item -> {
-                        data.add(item.toString());
-                    });
+                    JsonObject data = BACnetDataConversions.deviceObjectList(list);
                     future.complete(data);
-                    source.onSuccess(new JsonObject().put("points", data));
+                    source.onSuccess(data);
                 } catch (BACnetException e) {
                     future.fail(e);
                     source.onError(e);
@@ -221,16 +206,13 @@ public class BACnet {
         });
     }
 
-    //TODO: work out final format
+    //TODO: work out final format public Single<JsonObject> getRemoteObjectProperties (
     public Single<JsonObject> getRemoteObjectProperties(int instanceNumber, String objectID) {
         RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
         if (remoteDevice == null) {
             return Single.error(new BACnetException("Remote device not found"));
         }
-        String[] arr = objectID.split(":");
-        ObjectType type = ObjectType.forId(Integer.parseInt(arr[0]));
-        int objNum = Integer.parseInt(arr[1]);
-        ObjectIdentifier oid = new ObjectIdentifier(type, objNum);
+        ObjectIdentifier oid = getObjectIdentifier(objectID);
         return getRemoteObjectProperties(remoteDevice, oid);
     }
 
@@ -257,12 +239,9 @@ public class BACnet {
                         d.setObjectProperty(oid, pid, val);
                     });
 
-                    //TODO: test mapping of encodable
-                    JsonObject data = new JsonObject();
-                    propValuesFinal.forEach(
-                        (propertyIdentifier, encodable) -> data.put(propertyIdentifier.toString(), encodable));
+                    JsonObject data = BACnetDataConversions.objectProperties(propValuesFinal);
                     future.complete(data);
-                    source.onSuccess(new JsonObject().put("points", data));
+                    source.onSuccess(data);
                 } catch (BACnetException e) {
                     future.fail(e);
                     source.onError(e);
@@ -333,6 +312,22 @@ public class BACnet {
         return new ObjectIdentifier(type, objNum);
     }
 
+    //    public Single<JsonObject> callAsyncBlocking(Callable callable) {
+    //        return Single.create(source -> {
+    //            vertx.executeBlocking(future -> {
+    //                try {
+    //                    Object result = callable.call();
+    //                    future.complete(result);
+    //                    source.onSuccess(JsonObject.mapFrom(result));
+    //                } catch (Exception e) {
+    //                    future.fail(e);
+    //                    source.onError(e);
+    //                }
+    //            }, res -> {});
+    //        });
+    //    }
+
+
     private class listener extends DeviceEventAdapter {
 
         @Override
@@ -341,12 +336,9 @@ public class BACnet {
                                             ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
                                             SequenceOf<PropertyValue> listOfValues) {
             String address = "edge.connector.bacnet.cov." + subscriberProcessIdentifier + "." +
-                             initiatingDeviceIdentifier + "." +
-                             monitoredObjectIdentifier;
-            JsonObject json = new JsonObject();
-            json.put("subscriberProcessID", subscriberProcessIdentifier);
-            json.put("objectID", monitoredObjectIdentifier);
-            json.put("value", listOfValues);
+                             initiatingDeviceIdentifier + "." + monitoredObjectIdentifier;
+            JsonObject json = BACnetDataConversions.CovNotification(subscriberProcessIdentifier,
+                                                                    monitoredObjectIdentifier, listOfValues);
             //TODO: Check address, pattern and action
             EventMessage message = EventMessage.initial(EventAction.UPDATE, json);
             eventController.fire(POINTS_API + "points." + monitoredObjectIdentifier, EventPattern.POINT_2_POINT,

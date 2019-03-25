@@ -15,6 +15,7 @@ import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.edge.connector.bacnet.BACnet;
+import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
 
 import lombok.Getter;
 
@@ -34,7 +35,7 @@ public class DeviceEventHandler implements EventHandler {
     public DeviceEventHandler(Vertx vertx, BACnet bacnetInstance, EventModel eventModel) {
         this.vertx = vertx;
         this.bacnetInstance = bacnetInstance;
-        this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
+        this.availableEvents = Collections.unmodifiableList(new ArrayList<>(BACnetEventModels.POINTS.getEvents()));
     }
 
     //GET ALL DEVICES

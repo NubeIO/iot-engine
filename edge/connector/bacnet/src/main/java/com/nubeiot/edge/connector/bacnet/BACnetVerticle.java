@@ -15,6 +15,7 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.edge.connector.bacnet.handlers.DeviceEventHandler;
+import com.nubeiot.edge.connector.bacnet.handlers.PointsEventHandler;
 
 /*
  * Main BACnet verticle
@@ -33,7 +34,7 @@ public class BACnetVerticle extends ContainerVerticle {
         try {
             String deviceName = this.nubeConfig.getAppConfig().toJson().getString("deviceName");
             int deviceID = this.nubeConfig.getAppConfig().toJson().getInteger("deviceID");
-            bacnetInstance = new BACnet(deviceName, deviceID, future, eventController, vertx);
+            bacnetInstance = BACnet.createBACnet(deviceName, deviceID, future, eventController, vertx);
         } catch (Exception ex) {
             logger.error("\n\nSTARTUP FAILURE\n\n");
             future.fail(ex);
@@ -55,8 +56,7 @@ public class BACnetVerticle extends ContainerVerticle {
         controller.register(BACnetEventModels.DEVICES,
                             new DeviceEventHandler(vertx, bacnetInstance, BACnetEventModels.DEVICES));
 
-        controller.register(BACnetEventModels.POINTS,
-                            new DeviceEventHandler(vertx, bacnetInstance, BACnetEventModels.POINTS));
+        controller.register(BACnetEventModels.POINTS, new PointsEventHandler(vertx, bacnetInstance));
 
         this.eventController = controller;
     }
