@@ -104,6 +104,10 @@
         "exposedHeaders": [],
         "allowCredentials": false,
         "maxAgeSeconds": 3600
+      },
+      "__dynamic__": {
+        "enabled": false,
+        "path": "/s"
       }
     }
   }

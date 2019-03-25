@@ -12,9 +12,12 @@ import com.nubeiot.core.component.UnitContext;
 import com.nubeiot.core.kafka.service.KafkaConsumerService;
 import com.nubeiot.core.kafka.service.KafkaProducerService;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class KafkaContext extends UnitContext {
 
     private static final long DEFAULT_CLOSE_TIMEOUT_MS = 30 * 1000;

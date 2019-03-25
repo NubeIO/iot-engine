@@ -3,16 +3,17 @@ package com.nubeiot.core.http.ws;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.ReplyEventHandler;
-import com.nubeiot.core.http.utils.RequestConverter;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +26,7 @@ public class WebsocketEventExecutor {
     public void execute(@NonNull WebsocketEventMessage socketMessage, @NonNull WebsocketEventMetadata metadata,
                         @NonNull Consumer<EventMessage> callback) {
         EventMessage msg = EventMessage.success(socketMessage.getBody().getAction(),
-                                                RequestConverter.convert(socketMessage.getBody()));
+                                                RequestData.from(socketMessage.getBody()));
         logger.info("WEBSOCKET::Client Request: {}", msg.toJson().encode());
         EventModel processor = metadata.getProcessor();
         if (processor.getPattern() == EventPattern.REQUEST_RESPONSE) {

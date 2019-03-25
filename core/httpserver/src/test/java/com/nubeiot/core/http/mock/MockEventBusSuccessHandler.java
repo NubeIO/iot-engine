@@ -32,7 +32,7 @@ public class MockEventBusSuccessHandler extends MockEventBusHandler {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Integer.class)
     public int get(RequestData data) {
-        return Integer.valueOf(data.getBody().getString("event_id"));
+        return Integer.valueOf(data.body().getString("event_id"));
     }
 
     @EventContractor(action = EventAction.CREATE)
@@ -48,7 +48,7 @@ public class MockEventBusSuccessHandler extends MockEventBusHandler {
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData data) {
         return Single.just(new JsonObject().put("patch", "success")
-                                           .put("event_id", Integer.valueOf(data.getBody().getString("event_id"))));
+                                           .put("event_id", Integer.valueOf(data.body().getString("event_id"))));
     }
 
 }

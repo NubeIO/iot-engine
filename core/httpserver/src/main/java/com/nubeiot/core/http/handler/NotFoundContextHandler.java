@@ -1,13 +1,14 @@
 package com.nubeiot.core.http.handler;
 
-import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.http.CommonParamParser;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+
+import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.base.HttpUtils;
 
 public final class NotFoundContextHandler implements Handler<RoutingContext> {
 
@@ -17,8 +18,8 @@ public final class NotFoundContextHandler implements Handler<RoutingContext> {
         JsonObject result = new JsonObject().put("uri", request.absoluteURI()).put("message", "Resource not found");
         event.response()
              .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
-             .putHeader(ApiConstants.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE)
-             .end(CommonParamParser.prettify(result, request));
+             .putHeader(HttpHeaders.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE)
+             .end(HttpUtils.prettify(result, request));
     }
 
 }

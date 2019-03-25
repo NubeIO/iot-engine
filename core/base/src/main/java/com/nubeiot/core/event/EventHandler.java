@@ -9,6 +9,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.core.utils.Strings;
@@ -40,9 +41,9 @@ public interface EventHandler extends Consumer<Message<Object>> {
     /**
      * Jackson Object mapper for serialize/deserialize data
      *
-     * @return Object mapper. Default: {@link Json#mapper}
+     * @return Object mapper. Default: {@link JsonData#MAPPER}
      */
-    default ObjectMapper mapper() { return Json.mapper; }
+    default ObjectMapper mapper() { return JsonData.MAPPER; }
 
     /**
      * Fallback json key if output is {@code collection/primitive}  value

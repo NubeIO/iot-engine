@@ -26,8 +26,8 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
-import com.nubeiot.core.http.utils.Urls;
 import com.nubeiot.core.http.ws.WebsocketEventMetadata;
 import com.nubeiot.core.kafka.mock.MockKafkaConsumer;
 import com.nubeiot.core.kafka.mock.MockKafkaProducer;
@@ -56,8 +56,7 @@ public class KafkaWebsocketTest extends HttpServerTestBase {
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
-        this.httpConfig.setEnabled(false);
-        this.httpConfig.getWebsocketCfg().setEnabled(true);
+        this.enableWebsocket();
         this.kafkaConfig = KafkaUnitTestBase.createKafkaConfig();
     }
 

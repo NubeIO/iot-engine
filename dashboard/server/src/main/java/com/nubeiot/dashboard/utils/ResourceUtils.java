@@ -3,7 +3,7 @@ package com.nubeiot.dashboard.utils;
 import javax.validation.constraints.NotNull;
 
 import com.nubeiot.core.http.RegisterScheme;
-import com.nubeiot.core.http.utils.Urls;
+import com.nubeiot.core.http.base.Urls;
 
 public class ResourceUtils {
 

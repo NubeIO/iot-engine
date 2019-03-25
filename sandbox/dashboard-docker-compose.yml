@@ -21,7 +21,7 @@ services:
   connector-psql:
     image: amd64/nube-dashboard-connector-postgresql:${IOT_VERSION}
     ports:
-      # - ${DASHBOARD_CONNECTOR_PSQL_PORT}:8080
+      - ${DASHBOARD_CONNECTOR_PSQL_PORT}:8080
       - ${DASHBOARD_CONNECTOR_PSQL_EVENTBUS_PORT}:5000
       - ${DASHBOARD_CONNECTOR_PSQL_CLUSTER_PORT}:5701
     volumes:
@@ -33,7 +33,7 @@ services:
   connector-ditto:
     image: amd64/nube-dashboard-connector-ditto:${IOT_VERSION}
     ports:
-      # - ${DASHBOARD_CONNECTOR_DITTO_PORT}:8080
+      - ${DASHBOARD_CONNECTOR_DITTO_PORT}:8080
       - ${DASHBOARD_CONNECTOR_DITTO_EVENTBUS_PORT}:5000
       - ${DASHBOARD_CONNECTOR_DITTO_CLUSTER_PORT}:5701
     volumes:

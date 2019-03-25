@@ -3,8 +3,8 @@ package com.nubeiot.dashboard.utils;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.nubeiot.core.http.HttpScheme;
 import com.nubeiot.core.http.RegisterScheme;
+import com.nubeiot.core.http.base.HttpScheme;
 
 public class ResourceUtilsTest {
 

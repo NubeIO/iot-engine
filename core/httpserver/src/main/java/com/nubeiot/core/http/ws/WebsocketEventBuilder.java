@@ -9,17 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.http.HttpConfig;
-import com.nubeiot.core.http.InvalidUrlException;
-import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
-import com.nubeiot.core.http.utils.Urls;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Strings;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -27,6 +16,18 @@ import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+
+import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.HttpConfig.WebsocketConfig;
+import com.nubeiot.core.http.base.InvalidUrlException;
+import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.core.utils.Strings;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -39,10 +40,10 @@ public final class WebsocketEventBuilder {
     private final Vertx vertx;
     private final Router router;
     private final Map<String, List<WebsocketEventMetadata>> socketsByPath = new HashMap<>();
+    private WebsocketConfig websocketConfig;
     private Class<? extends WebsocketBridgeEventHandler> bridgeHandlerClass = WebsocketBridgeEventHandler.class;
     @Getter(AccessLevel.PACKAGE)
     private String rootWs = ApiConstants.ROOT_WS_PATH;
-    private HttpConfig.WebsocketConfig sockJsOption = new HttpConfig.WebsocketConfig();
 
     /**
      * For test
@@ -81,16 +82,16 @@ public final class WebsocketEventBuilder {
         return this;
     }
 
-    public WebsocketEventBuilder options(@NonNull HttpConfig.WebsocketConfig sockJsOptions) {
-        this.sockJsOption = sockJsOptions;
+    public WebsocketEventBuilder options(@NonNull WebsocketConfig websocketConfig) {
+        this.websocketConfig = websocketConfig;
         return this;
     }
 
     public Router build() {
-        SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockJsOption.getSockjsOptions());
+        SockJSHandler sockJSHandler = SockJSHandler.create(vertx, config().getSockjsOptions());
         EventController controller = new EventController(vertx);
         validate().forEach((path, socketMapping) -> {
-            String fullPath = Urls.combinePath(rootWs, path, ApiConstants.PATH_WILDCARDS);
+            String fullPath = Urls.combinePath(rootWs, path, ApiConstants.WILDCARDS_ANY_PATH);
             router.route(fullPath)
                   .handler(sockJSHandler.bridge(createBridgeOptions(fullPath, socketMapping),
                                                 createHandler(controller, socketMapping)));
@@ -106,7 +107,7 @@ public final class WebsocketEventBuilder {
     }
 
     private BridgeOptions createBridgeOptions(String fullPath, List<WebsocketEventMetadata> metadata) {
-        BridgeOptions opts = new BridgeOptions(sockJsOption.getBridgeOptions());
+        BridgeOptions opts = new BridgeOptions(config().getBridgeOptions());
         metadata.forEach(m -> {
             EventModel listener = m.getListener();
             EventModel publisher = m.getPublisher();
@@ -130,6 +131,10 @@ public final class WebsocketEventBuilder {
         map.put(List.class, socketMapping);
         WebsocketBridgeEventHandler handler = ReflectionClass.createObject(bridgeHandlerClass, map);
         return Objects.isNull(handler) ? new WebsocketBridgeEventHandler(controller, socketMapping) : handler;
+    }
+
+    private WebsocketConfig config() {
+        return Objects.requireNonNull(websocketConfig);
     }
 
 }

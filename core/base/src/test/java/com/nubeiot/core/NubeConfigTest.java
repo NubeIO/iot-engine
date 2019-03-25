@@ -22,7 +22,7 @@ public class NubeConfigTest {
         System.out.println(from.toJson());
         Assert.assertEquals(FileUtils.DEFAULT_DATADIR, from.getDataDir());
         Assert.assertNotNull(from.getSystemConfig());
-        Assert.assertNotNull(from.getSystemConfig().getClusterConfig());
+        System.out.println(from.getSystemConfig().getClusterConfig().toJson().encode());
         JSONAssert.assertEquals("{\"active\":true,\"ha\":false,\"name\":\"nubeio-cluster\",\"type\":\"HAZELCAST\"," +
                                 "\"listenerAddress\":\"\",\"url\":\"\",\"file\":\"\",\"options\":{}}",
                                 from.getSystemConfig().getClusterConfig().toJson().encode(), JSONCompareMode.STRICT);

@@ -4,29 +4,32 @@ import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleFo
 import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleNotFoundResponse;
 import static com.nubeiot.dashboard.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
 
-import com.nubeiot.core.common.RxRestAPIVerticle;
-import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.common.utils.StringUtils;
-import com.nubeiot.dashboard.enums.DynamicCollection;
-import com.nubeiot.dashboard.impl.handlers.BaseCollectionHandler;
-
-import io.reactivex.Single;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
-public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
+import com.nubeiot.core.common.RxRestAPIVerticle;
+import com.nubeiot.core.common.utils.CustomMessage;
+import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.dashboard.enums.DynamicCollection;
+import com.nubeiot.dashboard.impl.handlers.BaseCollectionHandler;
+
+public class DynamicSiteCollectionHandleVerticle extends ContainerVerticle implements RxRestAPIVerticle {
 
     private MongoClient mongoClient;
 
     @Override
-    protected Single<String> onStartComplete() {
-        mongoClient = MongoClient.createNonShared(vertx, this.appConfig.getJsonObject("mongo").getJsonObject("config"));
+    public void start() {
+        super.start();
+        mongoClient = MongoClient.createNonShared(vertx, this.nubeConfig.getAppConfig()
+                                                                        .toJson()
+                                                                        .getJsonObject("mongo")
+                                                                        .getJsonObject("config"));
         EventBus eventBus = getVertx().eventBus();
 
         // Receive message
         eventBus.consumer(DYNAMIC_SITE_COLLECTION_ADDRESS, this::handleRequest);
-        return Single.just("Deployed successfully...");
     }
 
     private void handleRequest(Message<Object> message) {
@@ -50,7 +53,8 @@ public class DynamicSiteCollectionHandleVerticle extends RxRestAPIVerticle {
             customMessage.getHeader().getString("collection"));
         switch (method.toUpperCase()) {
             case "GET":
-                baseCollection.handleGetUrl(message, customMessage, mongoClient, this.appConfig);
+                baseCollection.handleGetUrl(message, customMessage, mongoClient,
+                                            this.nubeConfig.getAppConfig().toJson());
                 break;
             case "POST":
                 baseCollection.handlePostUrl(message, customMessage, mongoClient);

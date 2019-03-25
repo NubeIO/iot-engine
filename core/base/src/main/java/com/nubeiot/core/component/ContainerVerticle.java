@@ -15,6 +15,7 @@ import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -43,6 +44,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     protected EventController eventController;
     @Getter
     protected NubeConfig nubeConfig;
+    private Handler<Void> successHandler;
 
     @Override
     public void start() {
@@ -52,12 +54,12 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
         this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void start(Future<Void> future) {
         this.start();
-        this.vertx.sharedData().getLocalMap(sharedKey).getDelegate().putAll(sharedData);
-        this.startUnits(future);
+        this.vertx.getDelegate().sharedData().getLocalMap(sharedKey).putAll(sharedData);
+        this.sharedData.clear();
+        this.installUnits(future);
     }
 
     @Override
@@ -72,6 +74,10 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     public final Container addSharedData(String key, Object data) {
         this.sharedData.put(key, data);
         return this;
+    }
+
+    public void registerSuccessHandler(Handler<Void> successHandler) {
+        this.successHandler = successHandler;
     }
 
     @Override
@@ -90,8 +96,12 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     @Override
     @SuppressWarnings("unchecked")
-    public final void startUnits(Future<Void> future) {
-        final List<Single<String>> collect = components.entrySet().stream().map(entry -> {
+    public final void installUnits(Future<Void> future) {
+        if (components.isEmpty()) {
+            future.complete();
+            return;
+        }
+        List<Single<String>> collect = components.entrySet().stream().map(entry -> {
             Unit unit = entry.getValue().get().registerSharedData(sharedKey);
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
@@ -99,7 +109,11 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
                         .doOnSuccess(deployId -> succeed(unit, deployId))
                         .doOnError(t -> logger.error("Cannot start unit verticle {}", t, unit.getClass().getName()));
         }).collect(Collectors.toList());
-        Single.zip(collect, objects -> objects.length).subscribe(count -> {
+        Single.zip(collect, objects -> objects.length).doOnSuccess(i -> {
+            if (Objects.nonNull(successHandler)) {
+                this.successHandler.handle(null);
+            }
+        }).subscribe(count -> {
             logger.info("Deployed {} verticle(s)...", count);
             future.complete();
         }, throwable -> fail(future, throwable));

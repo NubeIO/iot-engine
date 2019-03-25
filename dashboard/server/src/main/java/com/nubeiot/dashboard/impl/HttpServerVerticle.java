@@ -2,7 +2,7 @@ package com.nubeiot.dashboard.impl;
 
 import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
 import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
-import static com.nubeiot.core.http.HttpScheme.HTTPS;
+import static com.nubeiot.core.http.base.HttpScheme.HTTPS;
 import static com.nubeiot.dashboard.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
 import static com.nubeiot.dashboard.constants.Address.MAIN_ADDR;
 import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
@@ -53,23 +53,27 @@ import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.common.HttpHelper;
+import com.nubeiot.core.common.RxMicroServiceVerticle;
 import com.nubeiot.core.common.RxRestAPIVerticle;
 import com.nubeiot.core.common.constants.Port;
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.CustomMessageCodec;
 import com.nubeiot.core.common.utils.SQLUtils;
-import com.nubeiot.core.http.HttpScheme;
+import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.RegisterScheme;
+import com.nubeiot.core.http.base.HttpScheme;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.utils.MongoUtils;
 import com.nubeiot.dashboard.utils.ResourceUtils;
 
+import lombok.NonNull;
+
 /**
  * Created by topsykretts on 5/4/18.
  */
-public class HttpServerVerticle extends RxRestAPIVerticle {
+public class HttpServerVerticle extends RxMicroServiceVerticle implements RxRestAPIVerticle {
 
     private OAuth2Auth loginAuth;
     private EventBus eventBus;
@@ -82,7 +86,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         registerHttpScheme();
         mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo").getJsonObject("config"));
         eventBus = getVertx().eventBus();
-        logger.info("Config on HttpWebServer is: {}", config().encodePrettily());
+        logger.info("Config on HttpWebServer is: {}", nubeConfig.toJson());
         // Register codec for custom message
         eventBus.registerDefaultCodec(CustomMessage.class, new CustomMessageCodec());
         mediaPath = appConfig.getString("mediaPath", "media");
@@ -92,22 +96,23 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         String host = appConfig.getString("http.host", "0.0.0.0");
         Integer port = appConfig.getInteger("http.port", Port.HTTP_WEB_SERVER_PORT);
         return startWebApp(host, port).flatMap(server -> publishHttp(host, server.actualPort()))
-                                      .flatMap(ignored -> deployVerticle(MultiTenantVerticle.class))
-                                      .flatMap(ignored -> deployVerticle(DynamicSiteCollectionHandleVerticle.class))
-                                      .flatMap(ignored -> deployVerticle(SiteCollectionHandleVerticle.class));
+                                      .flatMap(i -> deployVerticle(new MultiTenantVerticle(microContext)))
+                                      .flatMap(i -> deployVerticle(new DynamicSiteCollectionHandleVerticle()))
+                                      .flatMap(i -> deployVerticle(new SiteCollectionHandleVerticle()))
+                                      .map(i -> "Finish deployed " + this.getClass().getName());
     }
 
-    private Single<String> deployVerticle(Class<? extends RxRestAPIVerticle> verticleClass) {
+    private <T extends ContainerVerticle> Single<String> deployVerticle(@NonNull T verticle) {
         return Single.create(
-            source -> getVertx().deployVerticle(verticleClass, new DeploymentOptions().setConfig(config()), r -> {
+            source -> getVertx().deployVerticle(verticle, new DeploymentOptions().setConfig(config()), r -> {
                 // Deploy succeed
                 if (r.succeeded()) {
-                    source.onSuccess("Deployment of " + verticleClass + " is successful.");
-                    logger.info("Deployment of {} is successful.", verticleClass);
+                    source.onSuccess("Deployment of " + verticle.getClass() + " is successful.");
+                    logger.info("Deployment of {} is successful.", verticle.getClass());
                 } else {
                     // Deploy failed
                     source.onError(r.cause());
-                    logger.error("Cannot deploy {}", r.cause(), verticleClass);
+                    logger.error("Cannot deploy {}", r.cause(), verticle.getClass());
                 }
             }));
     }
@@ -155,8 +160,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
     }
 
     private Single<Record> publishHttp(String host, int port) {
-        return publishHttpEndpoint(MAIN_ADDR, host, port).doOnSuccess(r -> logger.info("Publish server successful"))
-                                                         .doOnError(t -> logger.error("Cannot publish webServer", t));
+        return publishHttpEndpoint(MAIN_ADDR, host, port);
     }
 
     private void handleGateway(Router router) {
@@ -169,15 +173,10 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
             }
             JsonObject query = new JsonObject().put("gatewayAPIPrefix",
                                                     new JsonObject().put("$regex", gatewayAPIPrefix))
-                                               .put("site_id", ctx.request().headers().getDelegate().get("Site-Id"));
-            logger.info("Query: {}", query);
-            mongoClient.rxFindOne(SETTINGS, query, null).subscribe(settings -> {
-                if (settings != null) {
-                    this.dispatchRequests(ctx, settings);
-                } else {
-                    this.dispatchRequests(ctx, new JsonObject());
-                }
-            });
+                                               .put("site_id", ctx.request().headers().get("Site-Id"));
+            logger.info("Query: {}", query.toString());
+            mongoClient.rxFindOne(SETTINGS, query, null)
+                       .subscribe(settings -> this.dispatchRequests(microContext, ctx, settings));
         });
     }
 
@@ -411,8 +410,7 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
                     ctx.next();
                 }, throwable -> HttpHelper.serviceUnavailable(ctx, throwable));
             } else {
-                logger.info("Auth Fail");
-                res.cause().printStackTrace();
+                logger.error("Auth Fail", res.cause());
                 HttpHelper.failAuthentication(ctx);
             }
         });
@@ -459,7 +457,6 @@ public class HttpServerVerticle extends RxRestAPIVerticle {
         String authorization = ctx.request().getDelegate().getHeader(HttpHeaders.AUTHORIZATION);
         if (authorization != null) {
             authorization = authorization.substring("Bearer ".length());
-            logger.info(authorization);
             setAuthenticUser(ctx, authorization);
         } else {
             // Web pages WebSocket authentication

@@ -31,7 +31,7 @@ import ch.qos.logback.classic.Logger;
 
 public interface TestHelper {
 
-    int TEST_TIMEOUT_SEC = 3000;
+    int TEST_TIMEOUT_SEC = 8;
 
     static int getRandomPort() throws IOException {
         try (ServerSocket socket = new ServerSocket(0)) {
@@ -60,13 +60,6 @@ public interface TestHelper {
                 completeAction.handle(null);
             }
         }
-    }
-
-    static Path getAbsolutePathByOs(String path) {
-        if (TestHelper.OSHelper.isWin()) {
-            return Paths.get("C:", path);
-        }
-        return Paths.get(path);
     }
 
     interface VertxHelper {
@@ -102,6 +95,10 @@ public interface TestHelper {
 
     interface EventbusHelper {
 
+        static void assertConsumerData(Vertx vertx, Async async, String address, Consumer<Object> assertData) {
+            assertConsumerData(vertx, async, address, assertData, null);
+        }
+
         static void assertConsumerData(Vertx vertx, Async async, String address, Consumer<Object> assertData,
                                        Handler<Void> testCompleted) {
             MessageConsumer<Object> consumer = vertx.eventBus().consumer(address);
@@ -133,6 +130,13 @@ public interface TestHelper {
 
         static boolean isSolaris() {
             return OS.contains("sunos");
+        }
+
+        static Path getAbsolutePathByOs(String path) {
+            if (isWin()) {
+                return Paths.get("C:", path);
+            }
+            return Paths.get(path);
         }
 
     }

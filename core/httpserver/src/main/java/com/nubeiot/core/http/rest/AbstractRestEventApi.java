@@ -10,10 +10,12 @@ import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.http.base.event.ActionMethodMapping;
+import com.nubeiot.core.http.base.event.RestEventApiMetadata;
 
 public abstract class AbstractRestEventApi implements RestEventApi {
 
-    private final List<RestEventMetadata> restMetadata = new ArrayList<>();
+    private final List<RestEventApiMetadata> restMetadata = new ArrayList<>();
     private final Map<EventAction, HttpMethod> httpEventMapping;
 
     protected AbstractRestEventApi() {
@@ -24,10 +26,10 @@ public abstract class AbstractRestEventApi implements RestEventApi {
     protected abstract void initRoute();
 
     protected Map<EventAction, HttpMethod> initHttpEventMap() {
-        return RestEventApi.defaultEventHttpMap();
+        return ActionMethodMapping.defaultEventHttpMap();
     }
 
-    protected void addRouter(RestEventMetadata metadata) {
+    protected void addRouter(RestEventApiMetadata metadata) {
         restMetadata.add(metadata);
     }
 
@@ -41,21 +43,21 @@ public abstract class AbstractRestEventApi implements RestEventApi {
             if (Objects.isNull(httpMethod)) {
                 return;
             }
-            restMetadata.add(RestEventMetadata.builder()
-                                              .address(eventModel.getAddress())
-                                              .pattern(eventModel.getPattern())
-                                              .local(eventModel.isLocal())
-                                              .action(event)
-                                              .path(api)
-                                              .method(httpMethod)
-                                              .paramName(paramName)
-                                              .build());
+            restMetadata.add(RestEventApiMetadata.builder()
+                                                 .address(eventModel.getAddress())
+                                                 .pattern(eventModel.getPattern())
+                                                 .action(event)
+                                                 .path(api)
+                                                 .method(httpMethod)
+                                                 .paramName(paramName)
+                                                 .build());
         });
     }
 
     @Override
-    public List<RestEventMetadata> getRestMetadata() {
-        return Collections.unmodifiableList(restMetadata);
-    }
+    public List<RestEventApiMetadata> getRestMetadata() { return Collections.unmodifiableList(restMetadata); }
+
+    @Override
+    public Map<EventAction, HttpMethod> get() { return httpEventMapping; }
 
 }

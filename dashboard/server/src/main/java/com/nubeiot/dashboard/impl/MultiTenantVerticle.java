@@ -11,27 +11,7 @@ import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
 import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-
-import com.nubeiot.core.common.HttpHelper;
-import com.nubeiot.core.common.RxRestAPIVerticle;
-import com.nubeiot.core.common.constants.Services;
-import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.common.utils.HttpException;
-import com.nubeiot.core.common.utils.JSONUtils;
-import com.nubeiot.core.common.utils.SQLUtils;
-import com.nubeiot.core.common.utils.StringUtils;
-import com.nubeiot.core.utils.Strings;
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.helpers.CustomMessageHelper;
-import com.nubeiot.dashboard.impl.models.Company;
-import com.nubeiot.dashboard.impl.models.KeycloakUserRepresentation;
-import com.nubeiot.dashboard.impl.models.MongoUser;
-import com.nubeiot.dashboard.impl.models.Site;
-import com.nubeiot.dashboard.impl.models.UserGroup;
-import com.nubeiot.dashboard.utils.DittoUtils;
-import com.nubeiot.dashboard.utils.UserUtils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Observable;
@@ -43,26 +23,49 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.UpdateOptions;
-import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
-import io.vertx.reactivex.core.http.HttpClientRequest;
 import io.vertx.reactivex.ext.mongo.MongoClient;
-import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
-import io.vertx.servicediscovery.Record;
 
-public class MultiTenantVerticle extends RxRestAPIVerticle {
+import com.nubeiot.core.common.HttpHelper;
+import com.nubeiot.core.common.RxRestAPIVerticle;
+import com.nubeiot.core.common.constants.Services;
+import com.nubeiot.core.common.utils.CustomMessage;
+import com.nubeiot.core.common.utils.JSONUtils;
+import com.nubeiot.core.common.utils.SQLUtils;
+import com.nubeiot.core.common.utils.StringUtils;
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.exceptions.HttpException;
+import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.dashboard.Role;
+import com.nubeiot.dashboard.helpers.CustomMessageHelper;
+import com.nubeiot.dashboard.impl.models.Company;
+import com.nubeiot.dashboard.impl.models.KeycloakUserRepresentation;
+import com.nubeiot.dashboard.impl.models.MongoUser;
+import com.nubeiot.dashboard.impl.models.Site;
+import com.nubeiot.dashboard.impl.models.UserGroup;
+import com.nubeiot.dashboard.utils.DittoUtils;
+import com.nubeiot.dashboard.utils.UserUtils;
 
-    private MongoClient mongoClient;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIVerticle {
+
     private static final String DEFAULT_PASSWORD = "helloworld";
+    private final MicroContext microContext;
+    private MongoClient mongoClient;
+    private JsonObject appConfig;
 
     @Override
-    protected Single<String> onStartComplete() {
+    public void start() {
+        super.start();
+        this.appConfig = this.nubeConfig.getAppConfig().toJson();
         mongoClient = MongoClient.createNonShared(vertx, this.appConfig.getJsonObject("mongo").getJsonObject("config"));
         EventBus eventBus = getVertx().eventBus();
 
         // Receive message
         eventBus.consumer(MULTI_TENANT_ADDRESS, this::handleRequest);
-        return Single.just("Deployed successfully...");
     }
 
     private void handleRequest(Message<Object> message) {
@@ -378,6 +381,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                               .flatMap(sites -> Observable.fromIterable(sites)
                                                                                           .flatMapSingle(
                                                                                               site -> dispatchRequests(
+                                                                                                  microContext,
                                                                                                   HttpMethod.PUT,
                                                                                                   headers,
                                                                                                   Services.POLICY_PREFIX +
@@ -438,7 +442,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
         if (entry.equals(Role.GUEST.toString().toLowerCase())) {
             entry = "user";
         }
-        return dispatchRequests(HttpMethod.PUT, headers,
+        return dispatchRequests(microContext, HttpMethod.PUT, headers,
                                 Services.POLICY_PREFIX + mongoUser.getString("site_id") + "/entries/" + entry +
                                 "/subjects/nginx:" + mongoUser.getString("username"),
                                 new JsonObject().put("type", mongoUser.getString("role").toLowerCase()));
@@ -556,6 +560,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                                                                                                                              "_id")))))
                                                                                                                          .flatMap(
                                                                                                                              users -> dispatchRequests(
+                                                                                                                                 microContext,
                                                                                                                                  HttpMethod.PUT,
                                                                                                                                  headers,
                                                                                                                                  Services.POLICY_PREFIX +
@@ -835,6 +840,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                                        .flatMap(sites -> Observable.fromIterable(sites)
                                                                                                    .flatMapSingle(
                                                                                                        site -> dispatchRequests(
+                                                                                                           microContext,
                                                                                                            HttpMethod.DELETE,
                                                                                                            headers,
                                                                                                            Services.POLICY_PREFIX +
@@ -854,7 +860,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                             if (entry.equals(Role.GUEST.toString().toLowerCase())) {
                                 entry = "user";
                             }
-                            return dispatchRequests(HttpMethod.DELETE, headers,
+                            return dispatchRequests(microContext, HttpMethod.DELETE, headers,
                                                     Services.POLICY_PREFIX + userObjectJson.getString("site_id") +
                                                     "/entries/" + entry + "/subjects/nginx:" +
                                                     userObjectJson.getString("username"), null);
@@ -934,7 +940,8 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                      .flatMapSingle(id -> mongoClient.rxRemoveDocument(SITE, idQuery(
                                                          id.toString())).flatMap(ign -> {
                                                          if (appConfig.getBoolean("ditto-policy")) {
-                                                             return dispatchRequests(HttpMethod.DELETE, headers,
+                                                             return dispatchRequests(microContext, HttpMethod.DELETE,
+                                                                                     headers,
                                                                                      Services.POLICY_PREFIX + id, null);
                                                          } else {
                                                              return Single.just("");
@@ -1027,7 +1034,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             mongoClient.rxFindOne(USER, idQuery(userId), null)
                        .map(response -> {
                            if (response == null) {
-                               throw new HttpException(HttpResponseStatus.BAD_REQUEST);
+                               throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found");
                            } else {
                                return response;
                            }
@@ -1610,7 +1617,8 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                                                                              Role.SUPER_ADMIN
                                                                                                                  .toString()))
                                                                                 .flatMap(users -> dispatchRequests(
-                                                                                    HttpMethod.PUT, headers,
+                                                                                    microContext, HttpMethod.PUT,
+                                                                                    headers,
                                                                                     Services.POLICY_PREFIX + siteId$,
                                                                                     DittoUtils.createPolicy(users)));
                                                           } else {
@@ -1630,7 +1638,8 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                                                                                              companyId))))
 
                                                                                 .flatMap(users -> dispatchRequests(
-                                                                                    HttpMethod.PUT, headers,
+                                                                                    microContext, HttpMethod.PUT,
+                                                                                    headers,
                                                                                     Services.POLICY_PREFIX + siteId$,
                                                                                     DittoUtils.createPolicy(users)));
                                                           }
@@ -1797,85 +1806,6 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
             return Single.just(companyId.equals(toCheckCompanyId));
         }
         return Single.just(false);
-    }
-
-    protected Single<Buffer> dispatchRequests(HttpMethod method, JsonObject headers, String path, JsonObject payload) {
-        int initialOffset = 5; // length of `/api/`
-        // run with circuit breaker in order to deal with failure
-        return circuitBreaker.rxExecuteCommand(future -> {
-            getRxAllEndpoints().flatMap(recordList -> {
-                if (path.length() <= initialOffset) {
-                    return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));
-                }
-                String prefix = (path.substring(initialOffset).split("/"))[0];
-                getLogger().info("Prefix: " + prefix);
-                // generate new relative path
-                String newPath = path.substring(initialOffset + prefix.length());
-                // get one relevant HTTP client, may not exist
-                getLogger().info("New path: " + newPath);
-                Optional<Record> client = recordList.stream()
-                                                    .filter(
-                                                        record -> record.getMetadata().getString("api.name") != null)
-                                                    .filter(record -> record.getMetadata()
-                                                                            .getString("api.name")
-                                                                            .equals(prefix))
-                                                    .findAny(); // simple load balance
-
-                if (client.isPresent()) {
-                    getLogger().info("Found client for uri: " + path);
-                    Single<HttpClient> httpClientSingle = HttpEndpoint.rxGetClient(discovery, rec -> rec.getType()
-                                                                                                        .equals(
-                                                                                                            io.vertx.servicediscovery.types.HttpEndpoint.TYPE) &&
-                                                                                                     rec.getMetadata()
-                                                                                                        .getString(
-                                                                                                            "api.name")
-                                                                                                        .equals(
-                                                                                                            prefix));
-                    return doDispatch(newPath, method, headers, payload, httpClientSingle);
-                } else {
-                    getLogger().info("Client endpoint not found for uri: " + path);
-                    return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found."));
-                }
-            }).subscribe(future::complete, future::fail);
-        });
-    }
-
-    /**
-     * Dispatch the request to the downstream REST layers.
-     */
-    private Single<Buffer> doDispatch(String path, HttpMethod method, JsonObject headers, JsonObject payload,
-                                      Single<HttpClient> httpClientSingle) {
-        return Single.create(source -> httpClientSingle.subscribe(client -> {
-            HttpClientRequest toReq = client.request(method, path, response -> {
-                response.bodyHandler(body -> {
-                    if (response.statusCode() >= 400) { // api endpoint server error, circuit breaker should fail
-                        source.onError(new HttpException(HttpResponseStatus.valueOf(response.statusCode()),
-                                                         response.statusCode() + ": " + body.toString()));
-                        getLogger().info("Failed to dispatch: " + response.toString());
-                    } else {
-                        source.onSuccess(body);
-                        client.close();
-                    }
-                    io.vertx.servicediscovery.ServiceDiscovery.releaseServiceObject(discovery.getDelegate(), client);
-                });
-            });
-            toReq.setChunked(true);
-            for (String header : headers.fieldNames()) {
-                if (headers.getValue(header) != null) {
-                    toReq.getDelegate().putHeader(header, headers.getValue(header).toString());
-                }
-            }
-            if (payload == null) {
-                toReq.end();
-            } else {
-                toReq.write(payload.encode()).end();
-            }
-        }));
-    }
-
-    private Single<List<Record>> getRxAllEndpoints() {
-        return discovery.rxGetRecords(
-            record -> record.getType().equals(io.vertx.servicediscovery.types.HttpEndpoint.TYPE));
     }
 
 }

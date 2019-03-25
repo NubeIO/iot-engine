@@ -1,6 +1,7 @@
 package com.nubeiot.core.http;
 
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.base.HttpScheme;
 
 import lombok.Getter;
 

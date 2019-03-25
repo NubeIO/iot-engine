@@ -29,15 +29,15 @@ import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
 import com.nubeiot.core.http.mock.MockWebsocketEvent.MockWebsocketEventServerHandler;
-import com.nubeiot.core.http.utils.Urls;
 
 @RunWith(VertxUnitRunner.class)
 public class WebsocketEventServerTest extends HttpServerTestBase {
 
     @Rule
-    public Timeout timeoutRule = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
+    public Timeout timeout = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
 
     @BeforeClass
     public static void beforeSuite() {
@@ -47,8 +47,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
-        this.httpConfig.setEnabled(false);
-        this.httpConfig.getWebsocketCfg().setEnabled(true);
+        this.enableWebsocket();
         try {
             new MockWebsocketEventServerHandler(vertx.eventBus()).start();
         } catch (Exception e) {

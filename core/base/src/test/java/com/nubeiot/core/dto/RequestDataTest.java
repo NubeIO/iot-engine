@@ -3,10 +3,10 @@ package com.nubeiot.core.dto;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
 public class RequestDataTest {
@@ -16,26 +16,27 @@ public class RequestDataTest {
         RequestData requestData = RequestData.builder()
                                              .pagination(Pagination.builder().build())
                                              .body(new JsonObject().put("name", "hello"))
-                                             .filter(new JsonObject().put("filter", "test"))
+                                             .filter(new JsonObject().put("x", "test"))
                                              .build();
-        assertEquals("hello", requestData.getBody().getString("name"));
-        assertEquals("test", requestData.getFilter().getString("filter"));
+        assertEquals("hello", requestData.body().getString("name"));
+        assertEquals("test", requestData.getFilter().getString("x"));
         assertEquals(1, requestData.getPagination().getPage());
         assertEquals(20, requestData.getPagination().getPerPage());
-        assertEquals("{\"body\":{\"name\":\"hello\"},\"filter\":{\"filter\":\"test\"},\"pagination\":{\"page\":1," +
-                     "\"perPage\":20}}", requestData.toJson().encode());
+        assertEquals("{\"headers\":{},\"body\":{\"name\":\"hello\"},\"filter\":{\"x\":\"test\"}," +
+                     "\"pagination\":{\"page\":1,\"perPage\":20}}", requestData.toJson().encode());
     }
 
     @Test
     public void test_to_json_without_pagination() {
         RequestData requestData = RequestData.builder()
                                              .body(new JsonObject().put("name", "hello"))
-                                             .filter(new JsonObject().put("filter", "test"))
+                                             .filter(new JsonObject().put("x", "test"))
                                              .build();
-        assertEquals("hello", requestData.getBody().getString("name"));
-        assertEquals("test", requestData.getFilter().getString("filter"));
+        assertEquals("hello", requestData.body().getString("name"));
+        assertEquals("test", requestData.getFilter().getString("x"));
         assertNull(requestData.getPagination());
-        assertEquals("{\"body\":{\"name\":\"hello\"},\"filter\":{\"filter\":\"test\"}}", requestData.toJson().encode());
+        assertEquals("{\"headers\":{},\"body\":{\"name\":\"hello\"},\"filter\":{\"x\":\"test\"}}",
+                     requestData.toJson().encode());
     }
 
     @Test
@@ -43,10 +44,10 @@ public class RequestDataTest {
         final JsonObject pagination = new JsonObject().put("page", 5).put("perPage", 10);
         final JsonObject data = new JsonObject().put("pagination", pagination)
                                                 .put("body", new JsonObject())
-                                                .put("filter", (String) null);
+                                                .put("filter", new JsonObject());
         final RequestData requestData = data.mapTo(RequestData.class);
-        assertEquals("{}", requestData.getBody().encode());
-        assertEquals("{}", requestData.getFilter().encode());
+        assertTrue(requestData.body().isEmpty());
+        assertTrue(requestData.getFilter().isEmpty());
         assertNotNull(requestData.getPagination());
         assertEquals(5, requestData.getPagination().getPage());
         assertEquals(10, requestData.getPagination().getPerPage());
@@ -58,13 +59,8 @@ public class RequestDataTest {
         final JsonObject data = new JsonObject().put("pagination", pagination)
                                                 .put("body", new JsonObject().put("name", "xyz"))
                                                 .put("filter", new JsonObject().put("key", "1"));
-        JsonObject body = Json.mapper.convertValue(data.getJsonObject("body").encode(), JsonObject.class);
-        assertEquals("xyz", body.getString("name"));
-        //        assertEquals("{}", requestData.getBody().encode());
-        //        assertNull(requestData.getFilter());
-        //        assertNotNull(requestData.getPagination());
-        //        assertEquals(5, requestData.getPagination().getPage());
-        //        assertEquals(10, requestData.getPagination().getPerPage());
+        RequestData requestData = JsonData.from(data, RequestData.class);
+        assertEquals("xyz", requestData.body().getString("name"));
     }
 
 }

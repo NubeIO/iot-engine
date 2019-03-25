@@ -1,45 +1,50 @@
 package com.nubeiot.core.dto;
 
-import java.io.Serializable;
-import java.util.Map;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
-
 import io.vertx.core.json.JsonObject;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nubeiot.core.event.EventMessage;
+
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public final class RequestData implements Serializable, JsonData {
+@Getter
+public final class RequestData extends ResponseData {
 
-    private Map<String, Object> body;
-    private Map<String, Object> filter;
+    @JsonProperty(value = "filter")
+    private JsonObject filter;
     @Getter
     private Pagination pagination;
 
-    public static Builder builder() {return new Builder();}
-
-    public JsonObject getBody() {
-        return Objects.isNull(this.body) ? new JsonObject() : JsonObject.mapFrom(this.body);
+    @JsonCreator
+    RequestData(@JsonProperty(value = "headers") JsonObject headers, @JsonProperty(value = "body") JsonObject body,
+                @JsonProperty(value = "filter") JsonObject filter,
+                @JsonProperty(value = "pagination") Pagination pagination) {
+        super(headers, body);
+        this.filter = Objects.nonNull(filter) ? filter : new JsonObject();
+        this.pagination = pagination;
     }
 
-    public JsonObject getFilter() {
-        return Objects.isNull(this.filter) ? new JsonObject() : JsonObject.mapFrom(this.filter);
+    public static Builder builder() { return new Builder(); }
+
+    public static RequestData from(@NonNull EventMessage msg) {
+        return builder().body(msg.getData()).build();
     }
 
     public static class Builder {
 
+        private JsonObject headers;
         private JsonObject body;
         private JsonObject filter;
         private Pagination pagination;
+
+        public Builder headers(JsonObject headers) {
+            this.headers = headers;
+            return this;
+        }
 
         public Builder body(JsonObject body) {
             this.body = body;
@@ -57,8 +62,7 @@ public final class RequestData implements Serializable, JsonData {
         }
 
         public RequestData build() {
-            return new RequestData(Objects.isNull(body) ? null : body.getMap(),
-                                   Objects.isNull(filter) ? null : filter.getMap(), pagination);
+            return new RequestData(headers, body, filter, pagination);
         }
 
     }

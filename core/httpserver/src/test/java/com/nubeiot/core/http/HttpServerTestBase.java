@@ -7,9 +7,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import org.skyscreamer.jsonassert.Customization;
+
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.http.WebSocket;
@@ -21,12 +25,15 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.core.http.HttpClient;
 
+import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.http.utils.Urls;
+import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.client.ClientUtils;
 import com.nubeiot.core.http.ws.WebsocketEventMessage;
 import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.RestRouter;
@@ -39,13 +46,27 @@ public class HttpServerTestBase {
     protected HttpClient client;
     protected RequestOptions requestOptions;
 
+    protected static void assertResponse(TestContext context, Async async, JsonObject expected,
+                                         io.vertx.core.buffer.Buffer actual) {
+        JsonHelper.assertJson(context, async, expected, actual.toJsonObject());
+    }
+
     public void before(TestContext context) throws IOException {
         vertx = Vertx.vertx();
-        httpConfig = new HttpConfig();
+        httpConfig = IConfig.fromClasspath(httpConfigFile(), HttpConfig.class);
         httpConfig.setHost(DEFAULT_HOST);
         httpConfig.setPort(TestHelper.getRandomPort());
         client = vertx.createHttpClient(createClientOptions());
         requestOptions = new RequestOptions().setHost(DEFAULT_HOST).setPort(httpConfig.getPort());
+    }
+
+    protected String httpConfigFile() {
+        return "httpServer.json";
+    }
+
+    protected void enableWebsocket() {
+        this.httpConfig.setEnabled(false);
+        this.httpConfig.getWebsocketCfg().setEnabled(true);
     }
 
     public void after(TestContext context) {
@@ -61,19 +82,29 @@ public class HttpServerTestBase {
     }
 
     protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected,
-                                      JsonObject bodyExpected) {
-        Async async = context.async();
-        client.request(method, requestOptions.setURI(path), resp -> {
-            context.assertEquals(ApiConstants.DEFAULT_CONTENT_TYPE, resp.getHeader(ApiConstants.CONTENT_TYPE));
+                                      JsonObject bodyExpected, Customization... customizations) {
+        assertRestByClient(context, method, path, null, codeExpected, bodyExpected, customizations);
+    }
+
+    protected void assertRestByClient(TestContext context, HttpMethod method, String path, RequestData data,
+                                      int codeExpected, JsonObject bodyExpected, Customization... customizations) {
+        Async async = context.async(2);
+        HttpClientRequest request = client.request(method, requestOptions.setURI(path), resp -> {
+            System.out.println("Client asserting...");
+            context.assertEquals(ApiConstants.DEFAULT_CONTENT_TYPE, resp.getHeader(HttpHeaders.CONTENT_TYPE));
             context.assertNotNull(resp.getHeader("x-response-time"));
             context.assertEquals(codeExpected, resp.statusCode());
-            resp.bodyHandler(body -> JsonHelper.assertJson(context, bodyExpected, body));
-        }).endHandler(event -> testComplete(async)).end();
+            resp.bodyHandler(
+                body -> JsonHelper.assertJson(context, async, bodyExpected, body.toJsonObject(), customizations));
+        }).endHandler(event -> testComplete(async)).getDelegate();
+        ClientUtils.DEFAULT_DECORATOR.apply(request, data).end();
     }
 
     protected HttpServer startServer(TestContext context, HttpServerRouter httpRouter) {
+        final HttpServer verticle = new HttpServer(httpRouter);
+        verticle.registerSharedData(HttpServerTestBase.class.getName());
         return VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(httpConfig.toJson()),
-                                  new HttpServer(httpRouter));
+                                  verticle);
     }
 
     protected void startServer(TestContext context, HttpServerRouter httpRouter, Consumer<Throwable> consumer) {
@@ -96,11 +127,6 @@ public class HttpServerTestBase {
 
     private Handler<Void> closeClient() {
         return e -> client.close();
-    }
-
-    protected static void assertResponse(TestContext context, Async async, JsonObject expected,
-                                         io.vertx.core.buffer.Buffer actual) {
-        JsonHelper.assertJson(context, async, expected, actual.toJsonObject());
     }
 
     protected void assertConsumerData(Async async, String address, Consumer<Object> assertData) {

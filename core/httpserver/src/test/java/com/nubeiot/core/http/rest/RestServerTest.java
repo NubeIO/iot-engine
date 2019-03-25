@@ -12,7 +12,6 @@ import org.junit.runner.RunWith;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.RepeatRule;
 import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
@@ -28,24 +27,16 @@ import com.nubeiot.core.http.mock.MockApiDefinition;
 public class RestServerTest extends HttpServerTestBase {
 
     @Rule
-    public RepeatRule repeatRule = new RepeatRule();
-    @Rule
-    public Timeout timeoutRule = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
+    public Timeout timeout = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
 
     @BeforeClass
-    public static void beforeSuite() {
-        TestHelper.setup();
-    }
+    public static void beforeSuite() { TestHelper.setup(); }
 
     @Before
-    public void before(TestContext context) throws IOException {
-        super.before(context);
-    }
+    public void before(TestContext context) throws IOException { super.before(context); }
 
     @After
-    public void after(TestContext context) {
-        super.after(context);
-    }
+    public void after(TestContext context) { super.after(context); }
 
     @Test
     public void test_not_yet_register(TestContext context) {

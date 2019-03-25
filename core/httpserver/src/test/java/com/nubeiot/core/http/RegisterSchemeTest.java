@@ -3,6 +3,8 @@ package com.nubeiot.core.http;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.nubeiot.core.http.base.HttpScheme;
+
 public class RegisterSchemeTest {
 
     @Test
