@@ -7,10 +7,10 @@ import javax.ws.rs.Produces;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.rest.RestApi;
 
-@Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
+@Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
 public final class EdgeRestController implements RestApi {
 
     @GET

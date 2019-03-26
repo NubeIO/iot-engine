@@ -7,7 +7,6 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
-import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.base.HttpUtils;
 
 public final class NotFoundContextHandler implements Handler<RoutingContext> {
@@ -18,7 +17,7 @@ public final class NotFoundContextHandler implements Handler<RoutingContext> {
         JsonObject result = new JsonObject().put("uri", request.absoluteURI()).put("message", "Resource not found");
         event.response()
              .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
-             .putHeader(HttpHeaders.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE)
+             .putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE)
              .end(HttpUtils.prettify(result, request));
     }
 

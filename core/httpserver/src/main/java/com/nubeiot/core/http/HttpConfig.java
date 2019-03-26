@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.HttpScheme;
 import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
@@ -206,7 +207,7 @@ public final class HttpConfig implements IConfig {
         public static final String NAME = "__cors__";
 
         private String allowedOriginPattern = "*";
-        private Set<HttpMethod> allowedMethods = ApiConstants.DEFAULT_CORS_HTTP_METHOD;
+        private Set<HttpMethod> allowedMethods = HttpUtils.DEFAULT_CORS_HTTP_METHOD;
         private Set<String> allowedHeaders = new HashSet<>();
         private Set<String> exposedHeaders = new HashSet<>();
         private boolean allowCredentials = false;

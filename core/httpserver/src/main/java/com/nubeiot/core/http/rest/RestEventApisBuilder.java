@@ -87,7 +87,8 @@ public final class RestEventApisBuilder {
 
     private void createRouter(RestEventApi restApi) {
         restApi.getRestMetadata()
-               .stream().sorted(Comparator.comparingInt(o -> o.getDefinition().getServicePath().length()))
+               .stream()
+               .sorted(Comparator.comparingInt(o -> o.getDefinition().getServicePath().length()))
                .forEach(metadata -> this.createRouter(metadata, restApi));
     }
 

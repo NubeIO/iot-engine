@@ -10,6 +10,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -17,7 +18,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.core.buffer.Buffer;
-import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.reactivex.servicediscovery.ServiceReference;
 import io.vertx.servicediscovery.Record;
@@ -30,6 +30,7 @@ import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.ServiceException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.http.client.ClientUtils;
+import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.micro.MicroConfig.BackendConfig;
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
 import com.nubeiot.core.micro.type.EventMessagePusher;
@@ -122,9 +123,9 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
             ServiceReference reference = get().getReference(record);
             return circuitController.wrap(
-                ClientUtils.execute(reference.getAs(HttpClient.class), path, method, headers, payload,
-                                    v -> reference.release()));
-        }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
+                ClientUtils.execute(reference.getAs(io.vertx.reactivex.core.http.HttpClient.class), path, method,
+                                    headers, payload, v -> reference.release()));
+        }).doOnError(t -> logger.error("Failed when redirect to {}::{}", t, method, path));
     }
 
     public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
@@ -133,14 +134,16 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     }
 
     public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
-                                                   RequestData data, HttpClientOptions options) {
+                                                   RequestData requestData, HttpClientOptions options) {
         return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
             ServiceReference reference = get().getReferenceWithConfiguration(record, Objects.isNull(options)
                                                                                      ? null
                                                                                      : options.toJson());
-            return circuitController.wrap(ClientUtils.execute(reference.getAs(HttpClient.class), path, method, data))
+            HttpClientDelegate delegate = HttpClientDelegate.create(reference.getAs(HttpClient.class))
+                                                            .overrideEndHandler(v -> reference.release());
+            return circuitController.wrap(delegate.execute(path, method, requestData, false))
                                     .doFinally(reference::release);
-        }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
+        }).doOnError(t -> logger.error("Failed when redirect to {}::{}", t, method, path));
     }
 
     public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,

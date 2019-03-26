@@ -9,11 +9,11 @@ import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.HttpServerContext;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.ServerInfo;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
@@ -44,14 +44,14 @@ public class HttpServiceServer extends ContainerVerticle {
     public static class MockAPI implements RestApi {
 
         @GET
-        @Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
+        @Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
         public JsonObject get() {
             return new JsonObject().put("hello", "dynamic");
         }
 
         @GET
         @Path("/error")
-        @Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
+        @Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
         public JsonObject error() {
             throw new NubeException("error");
         }

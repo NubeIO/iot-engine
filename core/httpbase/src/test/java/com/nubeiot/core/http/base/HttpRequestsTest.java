@@ -14,7 +14,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.http.base.HttpUtils.HttpRequests;
+import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
 
 public class HttpRequestsTest {
 
@@ -23,7 +23,7 @@ public class HttpRequestsTest {
         final List<String> listValue = Arrays.asList("a", "b", "c");
         final MultiMap multiMap = MultiMap.caseInsensitiveMultiMap().add("key1", "2").add("key2", listValue);
         JSONAssert.assertEquals("{\"key1\":\"2\",\"key2\":[\"a\",\"b\",\"c\"]}",
-                                HttpRequests.serializeHeaders(multiMap).toString(), JSONCompareMode.LENIENT);
+                                HttpHeaderUtils.serializeHeaders(multiMap).toString(), JSONCompareMode.LENIENT);
     }
 
     @Test
@@ -31,7 +31,7 @@ public class HttpRequestsTest {
         JsonObject header = new JsonObject("{\"key1\":\"2\",\"key3\":3, \"key4\":true}");
         header.put("key5", Arrays.asList("a", "b", "c"));
         header.put("key6", new ArrayList<>(new HashSet<>(Arrays.asList("x", "y", "z", "x"))));
-        final MultiMap entries = HttpRequests.deserializeHeaders(header);
+        final MultiMap entries = HttpHeaderUtils.deserializeHeaders(header);
         Assert.assertFalse(entries.contains("key2"));
         Assert.assertEquals("2", entries.get("key1"));
         Assert.assertEquals("3", entries.get("key3"));

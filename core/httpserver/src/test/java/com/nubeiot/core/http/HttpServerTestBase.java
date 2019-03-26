@@ -14,7 +14,6 @@ import org.skyscreamer.jsonassert.Customization;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
@@ -35,8 +34,9 @@ import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
-import com.nubeiot.core.http.client.ClientUtils;
+import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.http.ws.WebsocketEventMessage;
 import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.RestRouter;
@@ -91,18 +91,21 @@ public class HttpServerTestBase {
         assertRestByClient(context, method, path, null, codeExpected, bodyExpected, customizations);
     }
 
-    protected void assertRestByClient(TestContext context, HttpMethod method, String path, RequestData data,
+    protected void assertRestByClient(TestContext context, HttpMethod method, String path, RequestData requestData,
                                       int codeExpected, JsonObject bodyExpected, Customization... customizations) {
-        Async async = context.async(2);
-        HttpClientRequest request = client.request(method, requestOptions.setURI(path), resp -> {
-            System.out.println("Client asserting...");
-            context.assertEquals(ApiConstants.DEFAULT_CONTENT_TYPE, resp.getHeader(HttpHeaders.CONTENT_TYPE));
-            context.assertNotNull(resp.getHeader("x-response-time"));
-            context.assertEquals(codeExpected, resp.statusCode());
-            resp.bodyHandler(
-                body -> JsonHelper.assertJson(context, async, bodyExpected, body.toJsonObject(), customizations));
-        }).endHandler(event -> testComplete(async)).getDelegate();
-        ClientUtils.DEFAULT_DECORATOR.apply(request, data).end();
+        Async async = context.async();
+        HttpClientDelegate.create(vertx.getDelegate())
+                          .execute(requestOptions.setURI(path), method, requestData)
+                          .doFinally(() -> TestHelper.testComplete(async))
+                          .subscribe(resp -> {
+                              System.out.println("Client asserting...");
+                              System.out.println(resp.getStatus());
+                              context.assertEquals(HttpUtils.DEFAULT_CONTENT_TYPE,
+                                                   resp.headers().getString(HttpHeaders.CONTENT_TYPE.toString()));
+                              context.assertNotNull(resp.headers().getString("x-response-time"));
+                              context.assertEquals(codeExpected, resp.getStatus().code());
+                              JsonHelper.assertJson(context, async, bodyExpected, resp.body(), customizations);
+                          }, context::fail);
     }
 
     protected HttpServer startServer(TestContext context, HttpServerRouter httpRouter) {

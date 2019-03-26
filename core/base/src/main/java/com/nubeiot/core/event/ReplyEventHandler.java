@@ -76,12 +76,12 @@ public class ReplyEventHandler implements Consumer<AsyncResult<Message<Object>>>
     }
 
     private void handleReplyError(Throwable throwable) {
-        logger.error("{}::Backend eventbus response error", throwable, system);
         if (Objects.nonNull(errorConsumer)) {
             errorConsumer.accept(throwable);
         } else if (Objects.nonNull(errorHandler)) {
             errorHandler.accept(ErrorMessage.parse(throwable));
         } else {
+            logger.error("{}::Backend eventbus response error", throwable, system);
             redirect.accept(EventMessage.error(EventAction.RETURN, throwable));
         }
     }
