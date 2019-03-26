@@ -6,6 +6,7 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.RequestOptions;
+import io.vertx.core.http.WebSocket;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
@@ -28,12 +29,18 @@ public interface WebsocketClientDelegate extends Supplier<HttpClient> {
      */
     HttpClientConfig getConfig();
 
+
+
     /**
      * Send data to websocket server
      *
      * @return single response data. Must be subscribe before using
      */
-    Single<ResponseData> send(RequestData requestData);
+    default Single<ResponseData> send(RequestData requestData) {
+        return this.send(new RequestOptions().setHost(getConfig().getOptions().getDefaultHost())
+                                             .setPort(getConfig().getOptions().getDefaultPort())
+                                             .setSsl(getConfig().getOptions().isSsl()), requestData);
+    }
 
     /**
      * Send data to websocket server
