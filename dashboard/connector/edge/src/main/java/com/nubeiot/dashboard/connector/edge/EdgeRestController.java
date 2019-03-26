@@ -5,18 +5,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.rest.RestApi;
 
-@Path(ApiConstants.ROOT_API_PATH)
 @Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
 public final class EdgeRestController implements RestApi {
-
-    private static final Logger logger = LoggerFactory.getLogger(EdgeRestController.class);
 
     @GET
     @Path("/info")

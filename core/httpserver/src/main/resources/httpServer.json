@@ -5,7 +5,7 @@
       "port": 8080,
       "enabled": true,
       "rootApi": "/api",
-      "__server__": {
+      "__options__": {
         "sendBufferSize": -1,
         "receiveBufferSize": -1,
         "trafficClass": -1,
@@ -108,6 +108,15 @@
       "__dynamic__": {
         "enabled": false,
         "path": "/s"
+      },
+      "__upload__": {
+        "enabled": false,
+        "path": "/u",
+        "maxSize": 5
+      },
+      "__download__": {
+        "enabled": false,
+        "path": "/f"
       }
     }
   }

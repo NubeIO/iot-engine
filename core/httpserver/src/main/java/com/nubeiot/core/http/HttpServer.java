@@ -120,14 +120,16 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         if (!config.isEnabled()) {
             return router;
         }
-        return new RestApisBuilder(router).rootApi(config.getRootApi())
-                                          .registerApi(httpRouter.getRestApiClass())
-                                          .registerEventBusApi(httpRouter.getRestEventApiClass())
-                                          .dynamicRouteConfig(config.getDynamicRouteConfig())
-                                          .build();
+        return new RestApisBuilder(vertx, router).rootApi(config.getRootApi())
+                                                 .registerApi(httpRouter.getRestApiClass())
+                                                 .registerEventBusApi(httpRouter.getRestEventApiClass())
+                                                 .dynamicRouteConfig(config.getDynamicRouteConfig())
+                                                 .build();
     }
 
-    private Router initUploadRouter(Router router)   { return router; }
+    private Router initUploadRouter(Router router) {
+        return router;
+    }
 
     private Router initDownloadRouter(Router router) { return router; }
 

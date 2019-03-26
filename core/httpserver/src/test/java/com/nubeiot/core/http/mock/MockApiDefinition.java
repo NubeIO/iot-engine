@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MockApiDefinition {
 
-    @Path("/api/test")
+    @Path("/test")
     public static class MockAPI implements RestApi {
 
         @GET

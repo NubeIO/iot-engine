@@ -12,6 +12,9 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.http.base.InvalidUrlException;
+import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,6 +44,20 @@ public final class HttpConfig implements IConfig {
     private CorsOptions corsOptions = new CorsOptions();
     @JsonProperty(value = DynamicRouteConfig.NAME)
     private DynamicRouteConfig dynamicRouteConfig = new DynamicRouteConfig();
+    @JsonProperty(value = UploadConfig.NAME)
+    private UploadConfig uploadConfig = new UploadConfig();
+    @JsonProperty(value = DownloadConfig.NAME)
+    private DownloadConfig downloadConfig = new DownloadConfig();
+
+    void setRootApi(String rootApi) {
+        if (Strings.isNotBlank(rootApi)) {
+            String root = Urls.combinePath(rootApi);
+            if (!Urls.validatePath(root)) {
+                throw new InvalidUrlException("Root API is not valid");
+            }
+            this.rootApi = root;
+        }
+    }
 
     @Override
     public String name() { return NAME; }
@@ -51,7 +68,7 @@ public final class HttpConfig implements IConfig {
     @NoArgsConstructor
     public static class ServerOptions extends HttpServerOptions implements IConfig {
 
-        public static final String NAME = "__server__";
+        public static final String NAME = "__options__";
 
         @Override
         public String name() { return NAME; }
@@ -158,12 +175,57 @@ public final class HttpConfig implements IConfig {
     @Getter
     @Setter(value = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PACKAGE)
-    public static class DynamicRouteConfig {
+    public static class DynamicRouteConfig implements IConfig {
 
         public static final String NAME = "__dynamic__";
 
         private boolean enabled = false;
         private String path = ApiConstants.DYNAMIC_API_PATH;
+
+        @Override
+        public String name() { return NAME; }
+
+        @Override
+        public Class<? extends IConfig> parent() { return HttpConfig.class; }
+
+    }
+
+
+    @Getter
+    @Setter(value = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PACKAGE)
+    public static class UploadConfig implements IConfig {
+
+        public static final String NAME = "__upload__";
+
+        private boolean enabled = false;
+        private String path = ApiConstants.ROOT_UPLOAD_PATH;
+        private int maxSize = 5;
+
+        @Override
+        public String name() { return NAME; }
+
+        @Override
+        public Class<? extends IConfig> parent() { return HttpConfig.class; }
+
+    }
+
+
+    @Getter
+    @Setter(value = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PACKAGE)
+    public static class DownloadConfig implements IConfig {
+
+        public static final String NAME = "__download__";
+
+        private boolean enabled = false;
+        private String path = ApiConstants.ROOT_DOWNLOAD_PATH;
+
+        @Override
+        public String name() { return NAME; }
+
+        @Override
+        public Class<? extends IConfig> parent() { return HttpConfig.class; }
 
     }
 

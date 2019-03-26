@@ -16,14 +16,11 @@ import io.vertx.ext.web.Router;
 
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
 import com.nubeiot.core.http.handler.RestEventResultHandler;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Strings;
 
-import lombok.Getter;
 import lombok.NonNull;
 
 public final class RestEventApisBuilder {
@@ -32,8 +29,6 @@ public final class RestEventApisBuilder {
     private final Router router;
     private final Set<Class<? extends RestEventApi>> apis = new HashSet<>();
     private final Map<Class<? extends RestEventApi>, RestEventResultHandler> restHandlers = new HashMap<>();
-    @Getter
-    private String rootApi = ApiConstants.ROOT_API_PATH;
 
     /**
      * For test
@@ -56,17 +51,6 @@ public final class RestEventApisBuilder {
 
     public RestEventApisBuilder(io.vertx.reactivex.ext.web.Router router) {
         this(router.getDelegate());
-    }
-
-    public RestEventApisBuilder rootApi(String rootApi) {
-        if (Strings.isNotBlank(rootApi)) {
-            String root = Urls.combinePath(rootApi);
-            if (!Urls.validatePath(root)) {
-                throw new InvalidUrlException("Root API is not valid");
-            }
-            this.rootApi = root;
-        }
-        return this;
     }
 
     public RestEventApisBuilder register(@NonNull Class<? extends RestEventApi> restApi) {
@@ -113,7 +97,7 @@ public final class RestEventApisBuilder {
     private void createRouter(RestEventApiMetadata metadata, RestEventApi api) {
         RestEventResultHandler restHandler = restHandlers.getOrDefault(api.getClass(),
                                                                        new RestEventResultHandler(metadata));
-        String path = Urls.combinePath(rootApi, metadata.getPath());
+        String path = Urls.combinePath(metadata.getPath());
         logger.info("Registering route | Event Binding:\t{} {} --- {} {} {}", metadata.getMethod(), path,
                     metadata.getPattern(), metadata.getAction(), metadata.getAddress());
         router.route(metadata.getMethod(), path).produces(ApiConstants.DEFAULT_CONTENT_TYPE).handler(restHandler);
