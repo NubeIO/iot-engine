@@ -50,9 +50,9 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 
 @SuppressWarnings("Duplicates")
 @Path("/api")
-public class DashboardServerAuthRestController implements RestApi {
+public class AuthRestController implements RestApi {
 
-    private static final Logger logger = LoggerFactory.getLogger(DashboardServerAuthRestController.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthRestController.class);
 
     @POST
     @Path("/login/account")
@@ -211,8 +211,7 @@ public class DashboardServerAuthRestController implements RestApi {
         }).subscribe(groupAndSiteAndCompany -> {
             ResponseData responseData = new ResponseData();
             // Use case of header username: ditto NGINX
-            responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
-                                                    .put("username", user.principal().getString("username")))
+            responseData.setHeaders(new JsonObject().put("username", user.principal().getString("username")))
                         .setBodyMessage(user.principal().mergeIn(groupAndSiteAndCompany).encode());
 
             future.complete(responseData);
@@ -266,7 +265,6 @@ public class DashboardServerAuthRestController implements RestApi {
                 if (response.statusCode() == 200) {
                     responseData.setBodyMessage(body$.toString());
                 }
-                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
                 future.complete(responseData);
             });
         });
@@ -289,15 +287,9 @@ public class DashboardServerAuthRestController implements RestApi {
         String password = body.getString("password");
 
         loginAuth.rxAuthenticate(new JsonObject().put("username", username).put("password", password))
-                 .subscribe(token -> {
-                     ResponseData responseData = new ResponseData();
-                     responseData.setStatusCode(200)
-                                 .setBodyMessage(token.principal().encode())
-                                 .setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
-                     future.complete(responseData);
-                 }, error -> {
-                     future.complete(ResponseDataHelper.unauthorized());
-                 });
+                 .subscribe(token -> future.complete(
+                     new ResponseData().setStatusCode(200).setBodyMessage(token.principal().encode())),
+                            error -> future.complete(ResponseDataHelper.unauthorized()));
         return future;
     }
 
@@ -311,28 +303,32 @@ public class DashboardServerAuthRestController implements RestApi {
             setAuthenticUser(ctx, loginAuth, mongoClient, authorization, future);
         } else {
             // Web pages WebSocket authentication
-            String[] contents = ctx.request().getHeader("X-Original-URI").split("access_token=");
-            if (contents.length == 2) {
-                authorization = contents[1].substring("Bearer%20".length());
-                setAuthenticUser(ctx, loginAuth, mongoClient, authorization, future);
-            } else {
-                String[] credentials = ctx.request()
-                                          .getHeader("X-Original-URI")
-                                          .replaceFirst("/ws/[^?]*(\\?)?", "")
-                                          .split(":::");
-                // NodeRED WebSocket authentication
-                if (credentials.length == 2) {
-                    loginAuth.rxGetToken(
-                        new JsonObject().put("username", credentials[0]).put("password", credentials[1]))
-                             .subscribe(token -> {
-                                 ctx.response()
-                                    .putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
-                                    .putHeader("username", credentials[0])
-                                    .end(Json.encodePrettily(token.principal()));
-                             }, throwable -> future.complete(ResponseDataHelper.unauthorized()));
+            if (Strings.isNotBlank(ctx.request().getHeader("X-Original-URI"))) {
+                String[] contents = ctx.request().getHeader("X-Original-URI").split("access_token=");
+                if (contents.length == 2) {
+                    authorization = contents[1].substring("Bearer%20".length());
+                    setAuthenticUser(ctx, loginAuth, mongoClient, authorization, future);
                 } else {
-                    future.complete(ResponseDataHelper.unauthorized());
+                    String[] credentials = ctx.request()
+                                              .getHeader("X-Original-URI")
+                                              .replaceFirst("/ws/[^?]*(\\?)?", "")
+                                              .split(":::");
+                    // NodeRED WebSocket authentication
+                    if (credentials.length == 2) {
+                        loginAuth.rxGetToken(
+                            new JsonObject().put("username", credentials[0]).put("password", credentials[1]))
+                                 .subscribe(token -> {
+                                     ctx.response()
+                                        .putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
+                                        .putHeader("username", credentials[0])
+                                        .end(Json.encodePrettily(token.principal()));
+                                 }, throwable -> future.complete(ResponseDataHelper.unauthorized()));
+                    } else {
+                        future.complete(ResponseDataHelper.unauthorized());
+                    }
                 }
+            } else {
+                future.complete(ResponseDataHelper.unauthorized());
             }
         }
         return future;

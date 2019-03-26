@@ -81,6 +81,8 @@ public class ServerDittoRestController implements RestApi {
         HttpClient client = vertx.createHttpClient(
             new HttpClientOptions().setVerifyHost(false).setTrustAll(true).setTcpKeepAlive(true));
 
+        logger.info("App Config: {}", config.getAppConfig());
+        logger.info("Config: {}", config.getConfig());
         DittoConfig dittoConfig = IConfig.from(config.getAppConfig(), DittoConfig.class);
         HttpConfig httpConfig = IConfig.from(config.getAppConfig(), HttpConfig.class);
         // Getting actual Ditto call API

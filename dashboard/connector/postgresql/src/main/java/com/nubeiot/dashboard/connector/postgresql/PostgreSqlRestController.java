@@ -1,8 +1,5 @@
 package com.nubeiot.dashboard.connector.postgresql;
 
-import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
-import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +55,6 @@ public class PostgreSqlRestController implements RestApi {
 
     private Future<ResponseData> postgreSqlQuery(Vertx vertx, PostgreSqlConfig pgConfig, RoutingContext ctx) {
         Future<ResponseData> future = Future.future();
-        ResponseData responseData = new ResponseData();
         // Check if we have a query in body
         JsonObject body = ctx.getBodyAsJson();
         String query = null;
@@ -69,26 +65,18 @@ public class PostgreSqlRestController implements RestApi {
 
         if (query == null) {
             // Return query not specified error
-            responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
-            future.complete(responseData);
+            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()));
         } else if (!query.toUpperCase().trim().startsWith("SELECT")) {
-            responseData.setStatusCode(HttpResponseStatus.UNAUTHORIZED.code());
-            future.complete(responseData);
+            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.UNAUTHORIZED.code()));
         } else {
             JsonObject settings = new JsonObject(
                 SQLUtils.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
             final String finalQuery = query;
-            executeQuery(vertx, settings, pgConfig, query).subscribe(result -> {
-                responseData.setBodyMessage(messageWrapper(finalQuery, successMessage(result)).encode());
-                responseData.setStatusCode(HttpResponseStatus.OK.code());
-                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
-                future.complete(responseData);
-            }, error -> {
-                responseData.setBodyMessage(messageWrapper(finalQuery, failureMessage(error)).encode());
-                responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
-                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
-                future.complete(responseData);
-            });
+            executeQuery(vertx, settings, pgConfig, query).subscribe(result -> future.complete(
+                new ResponseData().setBodyMessage(messageWrapper(finalQuery, successMessage(result)).encode())
+                                  .setStatusCode(HttpResponseStatus.OK.code())), error -> future.complete(
+                new ResponseData().setBodyMessage(messageWrapper(finalQuery, failureMessage(error)).encode())
+                                  .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())));
         }
         return future;
     }

@@ -1,8 +1,5 @@
 package com.nubeiot.dashboard.connector.hive;
 
-import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
-import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
-
 import java.util.Collections;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -52,7 +49,6 @@ public class HiveRestController implements RestApi {
 
     private Future<ResponseData> hiveQuery(Vertx vertx, HiveConfig hiveConfig, RoutingContext ctx) {
         Future<ResponseData> future = Future.future();
-        ResponseData responseData = new ResponseData();
         // Check if we have a query in body
         JsonObject body = ctx.getBodyAsJson();
         String query = null;
@@ -63,24 +59,19 @@ public class HiveRestController implements RestApi {
 
         if (query == null) {
             // Return query not specified error
-            responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
-            future.complete(responseData);
+            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()));
         } else if (!query.toUpperCase().trim().startsWith("SELECT")) {
-            responseData.setStatusCode(HttpResponseStatus.UNAUTHORIZED.code());
-            future.complete(responseData);
+            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.UNAUTHORIZED.code()));
         } else {
             final String finalQuery = query;
             executeQuery(vertx, hiveConfig, query).subscribe(result -> {
-                responseData.setBodyMessage(messageWrapper(finalQuery, successMessage(result)).encode());
-
-                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
-                responseData.setStatusCode(HttpResponseStatus.OK.code());
-                future.complete(responseData);
+                future.complete(new ResponseData().setStatusCode(HttpResponseStatus.OK.code())
+                                                  .setBodyMessage(
+                                                      messageWrapper(finalQuery, successMessage(result)).encode()));
             }, error -> {
-                responseData.setBodyMessage(messageWrapper(finalQuery, failureMessage(error)).encode());
-                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
-                responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
-                future.complete(responseData);
+                future.complete(new ResponseData().setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+                                                  .setBodyMessage(
+                                                      messageWrapper(finalQuery, failureMessage(error)).encode()));
             });
         }
         return future;

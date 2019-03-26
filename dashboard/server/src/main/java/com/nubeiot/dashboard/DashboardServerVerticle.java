@@ -16,8 +16,9 @@ import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.dashboard.controllers.DashboardServerAuthRestController;
-import com.nubeiot.dashboard.controllers.DashboardServerInfoRestController;
+import com.nubeiot.dashboard.controllers.AuthRestController;
+import com.nubeiot.dashboard.controllers.InfoRestController;
+import com.nubeiot.dashboard.controllers.LayoutGridController;
 import com.nubeiot.dashboard.providers.RestMediaDirProvider;
 import com.nubeiot.dashboard.providers.RestOAuth2AuthProvider;
 import com.zandero.rest.RestRouter;
@@ -42,8 +43,8 @@ public class DashboardServerVerticle extends ContainerVerticle {
     @SuppressWarnings("Duplicates")
     public void start() {
         super.start();
-        HttpServerRouter router = new HttpServerRouter().registerApi(DashboardServerInfoRestController.class,
-                                                                     DashboardServerAuthRestController.class);
+        HttpServerRouter router = new HttpServerRouter().registerApi(InfoRestController.class, AuthRestController.class,
+                                                                     LayoutGridController.class);
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 

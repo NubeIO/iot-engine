@@ -41,10 +41,10 @@
     },
     "__ditto__": {
       "host": "localhost",
-      "port": "8080",
+      "port": 8080,
       "username": "ditto",
       "password": "ditto",
-      "policy": true,
+      "policy": false,
       "prefix": "com.nubeio"
     }
   }

@@ -57,7 +57,6 @@ public class ZeppelinRestController implements RestApi {
         req.handler(res -> {
             res.bodyHandler(body -> {
                 responseData.setStatusCode(res.statusCode());
-                //HttpServerResponse toRsp = ctx.response().setStatusCode(res.statusCode());
                 if (res.statusCode() < 500) {
                     cookieHandler(res, body, responseData);
                     future.complete(responseData);
