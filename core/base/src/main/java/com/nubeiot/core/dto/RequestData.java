@@ -6,13 +6,14 @@ import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nubeiot.core.dto.DataTransferObject.AbstractDTO;
 import com.nubeiot.core.event.EventMessage;
 
 import lombok.Getter;
 import lombok.NonNull;
 
 @Getter
-public final class RequestData extends ResponseData {
+public final class RequestData extends AbstractDTO {
 
     @JsonProperty(value = "filter")
     private JsonObject filter;

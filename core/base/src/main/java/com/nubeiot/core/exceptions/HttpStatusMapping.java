@@ -81,6 +81,10 @@ public final class HttpStatusMapping {
                                   .getOrDefault(method, HttpResponseStatus.INTERNAL_SERVER_ERROR);
     }
 
+    public static ErrorCode error(HttpMethod method, int code) {
+        return error(method, HttpResponseStatus.valueOf(code));
+    }
+
     public static ErrorCode error(HttpMethod method, HttpResponseStatus statusCode) {
         return STATUS_METHOD_ERROR.entrySet()
                                   .stream()

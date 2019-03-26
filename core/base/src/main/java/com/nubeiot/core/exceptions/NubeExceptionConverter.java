@@ -8,6 +8,7 @@ import io.reactivex.exceptions.CompositeException;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
@@ -75,7 +76,7 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
             return overrideMsg(
                 friendly ? convertFriendly((NubeException) t.getCause(), false) : (NubeException) t.getCause());
         }
-        return convertFriendly(new NubeException(NubeException.ErrorCode.UNKNOWN_ERROR, overrideMsg, t), false);
+        return convertFriendly(new NubeException(ErrorCode.UNKNOWN_ERROR, overrideMsg, t), false);
     }
 
     private NubeException overrideMsg(NubeException t) {
@@ -87,7 +88,7 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
 
     private NubeException convertFriendly(NubeException t, boolean wrapperIsNube) {
         final Throwable cause = t.getCause();
-        final NubeException.ErrorCode code = t.getErrorCode();
+        final ErrorCode code = t.getErrorCode();
         final String message = originMessage(code, t.getMessage());
         if (Objects.isNull(cause)) {
             return new NubeException(code, message);
@@ -101,7 +102,7 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
         return new NubeException(code, includeCauseMessage(cause, message), cause);
     }
 
-    private String originMessage(NubeException.ErrorCode code, String message) {
+    private String originMessage(ErrorCode code, String message) {
         return Strings.isBlank(message) ? code.toString() : message;
     }
 
