@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Vector;
+import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -77,8 +77,14 @@ public class BACnet {
     private LocalDevice localDevice;
     private HashMap<RemoteDevice, Vector<ObjectIdentifier>> points;
 
-    private BACnet(String name, int id, Future<Void> future, EventController eventController, Vertx vertx) {
+    private BACnet(String name, int id, EventController eventController, Vertx vertx, LocalDevice localDevice) {
+        this.eventController = eventController;
+        this.vertx = vertx;
+        this.points = new HashMap<>();
+        this.localDevice = localDevice;
+    }
 
+    private BACnet(String name, int id, Future<Void> future, EventController eventController, Vertx vertx) {
         this.eventController = eventController;
         this.vertx = vertx;
         this.points = new HashMap<>();
@@ -117,6 +123,11 @@ public class BACnet {
         return new BACnet(name, id, future, eventController, vertx);
     }
 
+    public static BACnet createBACnet(String name, int id, EventController eventController, Vertx vertx,
+                                      LocalDevice localDevice) {
+        return new BACnet(name, id, eventController, vertx, localDevice);
+    }
+
     public void terminate() {
         localDevice.terminate();
     }
@@ -133,8 +144,7 @@ public class BACnet {
 
     //TODO: test new RxJava
     public void initialiseLocalObjectsFromJson(JsonObject json) {
-        Observable<Entry<String, Object>> newPoints = Observable.fromIterable(json.getMap().entrySet());
-        newPoints.subscribe(entry -> {
+        Observable.fromIterable(json.getMap().entrySet()).subscribe(entry -> {
             JsonObject pointJson = JsonObject.mapFrom((LinkedHashMap) entry.getValue());
             LocalPointObjectUtils.createLocalObject(pointJson, entry.getKey(), localDevice);
         });
@@ -164,19 +174,9 @@ public class BACnet {
     }
 
     public Single<JsonObject> getRemoteDeviceExtendedInfo(RemoteDevice remoteDevice) {
-        return Single.create(source -> {
-            vertx.executeBlocking(future -> {
-                try {
-                    //TODO: might need to build own discovery util for this
-                    DiscoveryUtils.getExtendedDeviceInformation(localDevice, remoteDevice);
-                    JsonObject data = BACnetDataConversions.deviceExtended(remoteDevice);
-                    future.complete(data);
-                    source.onSuccess(data);
-                } catch (BACnetException e) {
-                    future.fail(e);
-                    source.onError(e);
-                }
-            }, res -> {});
+        return callAsyncBlocking(() -> {
+            DiscoveryUtils.getExtendedDeviceInformation(localDevice, remoteDevice);
+            return BACnetDataConversions.deviceExtended(remoteDevice);
         });
     }
 
@@ -190,19 +190,10 @@ public class BACnet {
     }
 
     public Single<JsonObject> getRemoteDeviceObjectList(RemoteDevice remoteDevice) {
-        return Single.create(source -> {
-            vertx.executeBlocking(future -> {
-                try {
-                    SequenceOf<ObjectIdentifier> list = RequestUtils.getObjectList(localDevice, remoteDevice);
-                    remoteDevice.setDeviceProperty(PropertyIdentifier.objectList, list);
-                    JsonObject data = BACnetDataConversions.deviceObjectList(list);
-                    future.complete(data);
-                    source.onSuccess(data);
-                } catch (BACnetException e) {
-                    future.fail(e);
-                    source.onError(e);
-                }
-            }, res -> {});
+        return callAsyncBlocking(() -> {
+            SequenceOf<ObjectIdentifier> list = RequestUtils.getObjectList(localDevice, remoteDevice);
+            remoteDevice.setDeviceProperty(PropertyIdentifier.objectList, list);
+            return BACnetDataConversions.deviceObjectList(list);
         });
     }
 
@@ -217,36 +208,28 @@ public class BACnet {
     }
 
     public Single<JsonObject> getRemoteObjectProperties(RemoteDevice d, ObjectIdentifier oid) {
-        return Single.create(source -> {
-            vertx.executeBlocking(future -> {
-                List<ObjectPropertyTypeDefinition> propsDefs = ObjectProperties.getObjectPropertyTypeDefinitions(
-                    oid.getObjectType());
-                ArrayList<PropertyIdentifier> props = new ArrayList<PropertyIdentifier>(propsDefs.size());
-                Map<PropertyIdentifier, Encodable> propValuesFinal = new HashMap<>();
+        return callAsyncBlocking(() -> {
+            List<ObjectPropertyTypeDefinition> propsDefs = ObjectProperties.getObjectPropertyTypeDefinitions(
+                oid.getObjectType());
+            ArrayList<PropertyIdentifier> props = new ArrayList<PropertyIdentifier>(propsDefs.size());
+            Map<PropertyIdentifier, Encodable> propValuesFinal = new HashMap<>();
 
-                for (ObjectPropertyTypeDefinition prop : propsDefs) {
-                    props.add(prop.getPropertyTypeDefinition().getPropertyIdentifier());
-                }
-                try {
-                    Map<PropertyIdentifier, Encodable> propValues = RequestUtils.getProperties(localDevice, d, oid,
-                                                                                               null, props.toArray(
-                            new PropertyIdentifier[0]));
-                    propValues.forEach((pid, val) -> {
-                        if (val instanceof ErrorClassAndCode) {
-                            return;
-                        }
-                        propValuesFinal.put(pid, val);
-                        d.setObjectProperty(oid, pid, val);
-                    });
+            for (ObjectPropertyTypeDefinition prop : propsDefs) {
+                props.add(prop.getPropertyTypeDefinition().getPropertyIdentifier());
+            }
 
-                    JsonObject data = BACnetDataConversions.objectProperties(propValuesFinal);
-                    future.complete(data);
-                    source.onSuccess(data);
-                } catch (BACnetException e) {
-                    future.fail(e);
-                    source.onError(e);
+            Map<PropertyIdentifier, Encodable> propValues = RequestUtils.getProperties(localDevice, d, oid, null,
+                                                                                       props.toArray(
+                                                                                           new PropertyIdentifier[0]));
+            propValues.forEach((pid, val) -> {
+                if (val instanceof ErrorClassAndCode) {
+                    return;
                 }
-            }, res -> {});
+                propValuesFinal.put(pid, val);
+                d.setObjectProperty(oid, pid, val);
+            });
+
+            return BACnetDataConversions.objectProperties(propValuesFinal);
         });
     }
 
@@ -274,7 +257,6 @@ public class BACnet {
                 SubscribeCOVRequest request = new SubscribeCOVRequest(subProcessID, obj, Boolean.TRUE, lifetime);
                 localDevice.send(rd, request);
                 //TODO: handle property not subscribable -> setup interval polling
-
                 correctID = true;
             } catch (BACnetRuntimeException ex) {
                 ex.printStackTrace();
@@ -312,21 +294,20 @@ public class BACnet {
         return new ObjectIdentifier(type, objNum);
     }
 
-    //    public Single<JsonObject> callAsyncBlocking(Callable callable) {
-    //        return Single.create(source -> {
-    //            vertx.executeBlocking(future -> {
-    //                try {
-    //                    Object result = callable.call();
-    //                    future.complete(result);
-    //                    source.onSuccess(JsonObject.mapFrom(result));
-    //                } catch (Exception e) {
-    //                    future.fail(e);
-    //                    source.onError(e);
-    //                }
-    //            }, res -> {});
-    //        });
-    //    }
-
+    public Single<JsonObject> callAsyncBlocking(Callable callable) {
+        return Single.create(source -> {
+            vertx.executeBlocking(future -> {
+                try {
+                    JsonObject result = (JsonObject) callable.call();
+                    future.complete(result);
+                    source.onSuccess(JsonObject.mapFrom(result));
+                } catch (Exception e) {
+                    future.fail(e);
+                    source.onError(e);
+                }
+            }, res -> {});
+        });
+    }
 
     private class listener extends DeviceEventAdapter {
 

@@ -2,26 +2,28 @@ package com.nubeiot.edge.connector.bacnet;
 
 public class BACnetTest {
 
-    //TODO: should this test for things like IP address will work or if udp port is in use?
-
+    //    @Mock
+    //    EventController eventController;
+    //    @Mock
+    //    Vertx vertx;
+    //    @Mock
+    //    LocalDevice localDevice;
+    //    @Mock
+    //    LocalPointObjectUtils localPointObjectUtils;
+    //
     //    BACnet baCnetInstance;
+    //
     //
     //    @Before
     //    public void beforeAll() throws Exception {
-    //
+    //        baCnetInstance = BACnet.createBACnet("testInstance", 1234, eventController, vertx, localDevice);
     //    }
     //
-    //    @After
-    //    public void afterAll() throws Exception {
-    //        baCnetInstance.terminate();
-    //    }
     //
     //    @Test
-    //    public void bacnetStartTest() throws Exception {
-    //        Future<Void> future = Future.future(handler -> {
-    //            assertTrue(handler.isComplete() && handler.succeeded());
-    //        });
+    //    public void initialiseLocalObjectsTest() throws Exception {
+    ////        when(LocalPointObjectUtils.createLocalObject(any(JsonObject.class), any(String.class), any(LocalDevice.class)))
+    ////            .thenReturn();
     //
-    //        baCnetInstance = new BACnet("testInstance", 1234, future, null);
     //    }
 }
