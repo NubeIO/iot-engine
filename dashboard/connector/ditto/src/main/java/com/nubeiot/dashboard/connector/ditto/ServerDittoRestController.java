@@ -1,7 +1,7 @@
 package com.nubeiot.dashboard.connector.ditto;
 
-import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE;
-import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE_JSON;
+import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
+import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
 
 import java.util.Base64;
 import javax.ws.rs.DELETE;
@@ -81,8 +81,8 @@ public class ServerDittoRestController implements RestApi {
         HttpClient client = vertx.createHttpClient(
             new HttpClientOptions().setVerifyHost(false).setTrustAll(true).setTcpKeepAlive(true));
 
-        DittoConfig dittoConfig = IConfig.from(config.getConfig(), DittoConfig.class);
-        HttpConfig httpConfig = IConfig.from(config.getConfig(), HttpConfig.class);
+        DittoConfig dittoConfig = IConfig.from(config.getAppConfig(), DittoConfig.class);
+        HttpConfig httpConfig = IConfig.from(config.getAppConfig(), HttpConfig.class);
         // Getting actual Ditto call API
         String uri = ctx.request().uri().replaceFirst(httpConfig.getRootApi(), "");
         logger.info("Proxying request: {}", uri);
@@ -106,7 +106,7 @@ public class ServerDittoRestController implements RestApi {
             res.bodyHandler(data -> {
                 responseData.setBodyMessage(data.toString());
                 if (res.statusCode() < 400) {
-                    responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
+                    responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
                 }
                 logger.info("Proxy Response Completed.");
                 future.complete(responseData);

@@ -24,42 +24,55 @@
       },
       "__serviceDiscovery__": {
         "enabled": true
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": true
       }
     },
-    "http.scheme": "http",
-    "http.port": 8080,
-    "mediaPath": "media",
+    "__http__": {
+      "port": 8085,
+      "scheme": "HTTP",
+      "rootApi": "/api",
+      "__dynamic__": {
+        "enabled": false
+      }
+    },
+    "__dashboardServer__": {
+      "mediaPath": "media",
+      "dittoPolicy": false
+    },
     "keycloak": {
-      "realm": "sandbox",
-      "auth-server-url": "http://keycloak:8080/auth",
+      "realm": "nube_iot",
+      "auth-server-url": "http://localhost:8082/auth",
       "ssl-required": "external",
-      "resource": "sandbox-client",
+      "resource": "nube-web-api-gateway",
       "credentials": {
-        "secret": "69be18ef-e43d-4840-8d02-eeaa5573a488"
+        "secret": "b3088f82-9b73-49c8-a89b-94102ede802c"
       },
-      "confidential-port": 0
+      "confidential-port": 0,
+      "policy-enforcer": {}
     },
     "mongo": {
-      "config": {
-        "hosts": [
-          {
-            "host": "mongo",
-            "port": 27017
-          }
-        ],
-        "db_name": "sandbox",
-        "username": "sandbox",
-        "password": "111",
-        "authSource": "sandbox",
-        "maxPoolSize": 25,
-        "minPoolSize": 10,
-        "maxIdleTimeMS": 300000,
-        "maxLifeTimeMS": 3600000,
-        "maintenanceFrequencyMS": 2000,
-        "maintenanceInitialDelayMS": 500,
-        "waitQueueMultiple": 10
-      }
-    },
-    "ditto-policy": false
+      "hosts": [
+        {
+          "host": "localhost",
+          "port": 27017
+        }
+      ],
+      "db_name": "nube",
+      "username": "root",
+      "password": "root",
+      "authSource": "admin",
+      "maxPoolSize": 50,
+      "minPoolSize": 25,
+      "maxIdleTimeMS": 300000,
+      "maxLifeTimeMS": 3600000,
+      "maintenanceFrequencyMS": 2000,
+      "maintenanceInitialDelayMS": 500,
+      "waitQueueMultiple": 100
+    }
   }
 }

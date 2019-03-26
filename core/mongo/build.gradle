@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':core:common')
+    compile "io.vertx:vertx-mongo-client:$project.versions.vertx"
+}

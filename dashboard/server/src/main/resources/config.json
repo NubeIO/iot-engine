@@ -6,12 +6,27 @@
       },
       "__serviceDiscovery__": {
         "enabled": true
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": true
       }
     },
-    "http.scheme": "http",
-    "http.port": 8080,
-    "mediaPath": "media",
-    "keycloak": {
+    "__http__": {
+      "port": 8080,
+      "scheme": "HTTP",
+      "rootApi": "/api",
+      "__dynamic__": {
+        "enabled": false
+      }
+    },
+    "__dashboardServer__": {
+      "mediaPath": "media",
+      "dittoPolicy": false
+    },
+    "__keycloak__": {
       "realm": "nube_iot",
       "auth-server-url": "http://localhost:8082/auth",
       "ssl-required": "external",
@@ -22,27 +37,24 @@
       "confidential-port": 0,
       "policy-enforcer": {}
     },
-    "mongo": {
-      "config": {
-        "hosts": [
-          {
-            "host": "localhost",
-            "port": 27017
-          }
-        ],
-        "db_name": "nube",
-        "username": "root",
-        "password": "root",
-        "authSource": "admin",
-        "maxPoolSize": 50,
-        "minPoolSize": 25,
-        "maxIdleTimeMS": 300000,
-        "maxLifeTimeMS": 3600000,
-        "maintenanceFrequencyMS": 2000,
-        "maintenanceInitialDelayMS": 500,
-        "waitQueueMultiple": 100
-      }
-    },
-    "ditto-policy": false
+    "__mongo__": {
+      "hosts": [
+        {
+          "host": "localhost",
+          "port": 27017
+        }
+      ],
+      "db_name": "nube",
+      "username": "root",
+      "password": "root",
+      "authSource": "admin",
+      "maxPoolSize": 50,
+      "minPoolSize": 25,
+      "maxIdleTimeMS": 300000,
+      "maxLifeTimeMS": 3600000,
+      "maintenanceFrequencyMS": 2000,
+      "maintenanceInitialDelayMS": 500,
+      "waitQueueMultiple": 100
+    }
   }
 }

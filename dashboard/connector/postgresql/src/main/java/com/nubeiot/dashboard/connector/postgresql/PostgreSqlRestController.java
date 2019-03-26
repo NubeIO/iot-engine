@@ -1,7 +1,7 @@
 package com.nubeiot.dashboard.connector.postgresql;
 
-import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE;
-import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE_JSON;
+import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
+import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,7 +52,7 @@ public class PostgreSqlRestController implements RestApi {
     @Path("/engine")
     public Future<ResponseData> engine(@Context io.vertx.core.Vertx vertx, @Context RoutingContext ctx,
                                        @Context RestConfigProvider config) {
-        PostgreSqlConfig pgConfig = IConfig.from(config.getConfig(), PostgreSqlConfig.class);
+        PostgreSqlConfig pgConfig = IConfig.from(config.getAppConfig(), PostgreSqlConfig.class);
         return postgreSqlQuery(new Vertx(vertx), pgConfig, ctx);
     }
 
@@ -81,12 +81,12 @@ public class PostgreSqlRestController implements RestApi {
             executeQuery(vertx, settings, pgConfig, query).subscribe(result -> {
                 responseData.setBodyMessage(messageWrapper(finalQuery, successMessage(result)).encode());
                 responseData.setStatusCode(HttpResponseStatus.OK.code());
-                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
+                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
                 future.complete(responseData);
             }, error -> {
                 responseData.setBodyMessage(messageWrapper(finalQuery, failureMessage(error)).encode());
                 responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
-                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
+                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
                 future.complete(responseData);
             });
         }

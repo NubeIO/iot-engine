@@ -26,15 +26,16 @@ public class ServerDittoDriver extends ContainerVerticle {
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
-        RestRouter.addProvider(RestConfigProvider.class, ctx -> new RestConfigProvider(config()));
-
         this.registerSuccessHandler(event -> {
             ServerInfo info = this.httpContext.getServerInfo();
             microContext.getClusterController()
-                        .addHttpRecord("httpService", new HttpLocation(info.toJson()).setRoot(info.getApiPath()),
+                        .addHttpRecord("ServerDittoDriver", new HttpLocation(info.toJson()).setRoot(info.getApiPath()),
                                        new JsonObject())
                         .subscribe();
         });
+
+        RestRouter.addProvider(RestConfigProvider.class,
+                               ctx -> new RestConfigProvider(config(), this.nubeConfig.getAppConfig().toJson()));
     }
 
 }

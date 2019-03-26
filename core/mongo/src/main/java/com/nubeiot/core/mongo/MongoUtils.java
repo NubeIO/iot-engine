@@ -1,4 +1,4 @@
-package com.nubeiot.core.utils;
+package com.nubeiot.core.mongo;
 
 import java.util.ArrayList;
 import java.util.List;

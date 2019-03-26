@@ -1,4 +1,4 @@
-package com.nubeiot.core;
+package com.nubeiot.dashboard;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

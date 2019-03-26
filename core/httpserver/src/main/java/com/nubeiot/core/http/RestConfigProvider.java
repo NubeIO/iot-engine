@@ -10,4 +10,7 @@ public class RestConfigProvider {
     @Getter
     private final JsonObject config;
 
+    @Getter
+    private final JsonObject appConfig;
+
 }

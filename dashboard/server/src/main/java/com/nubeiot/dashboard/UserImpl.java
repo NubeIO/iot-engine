@@ -1,7 +1,4 @@
-package com.nubeiot.dashboard.impl;
-
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.core.Model;
+package com.nubeiot.dashboard;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -27,7 +24,7 @@ public class UserImpl extends Model implements User {
     private String group_id;
     private String access_token;
 
-    UserImpl(JsonObject body) {
+    public UserImpl(JsonObject body) {
         super(body);
     }
 

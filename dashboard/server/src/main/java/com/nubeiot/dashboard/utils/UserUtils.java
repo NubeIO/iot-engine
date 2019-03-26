@@ -6,7 +6,7 @@ import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_
 import com.nubeiot.core.common.utils.HttpException;
 import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.impl.models.KeycloakUserRepresentation;
+import com.nubeiot.dashboard.models.KeycloakUserRepresentation;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;

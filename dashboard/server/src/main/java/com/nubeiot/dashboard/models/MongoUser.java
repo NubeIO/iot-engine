@@ -1,8 +1,8 @@
-package com.nubeiot.dashboard.impl.models;
+package com.nubeiot.dashboard.models;
 
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.dashboard.Model;
 import com.nubeiot.dashboard.Role;
-import com.nubeiot.core.Model;
 import com.nubeiot.dashboard.utils.UserUtils;
 
 import io.vertx.core.json.JsonObject;

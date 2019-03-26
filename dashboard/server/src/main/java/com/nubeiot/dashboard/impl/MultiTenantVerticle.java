@@ -13,6 +13,26 @@ import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.nubeiot.core.common.HttpHelper;
+import com.nubeiot.core.common.RxRestAPIVerticle;
+import com.nubeiot.core.common.constants.Services;
+import com.nubeiot.core.common.utils.CustomMessage;
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.exceptions.HttpException;
+import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.core.mongo.MongoUtils;
+import com.nubeiot.core.utils.SQLUtils;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.dashboard.Role;
+import com.nubeiot.dashboard.helpers.CustomMessageHelper;
+import com.nubeiot.dashboard.models.Company;
+import com.nubeiot.dashboard.models.KeycloakUserRepresentation;
+import com.nubeiot.dashboard.models.MongoUser;
+import com.nubeiot.dashboard.models.Site;
+import com.nubeiot.dashboard.models.UserGroup;
+import com.nubeiot.dashboard.utils.DittoUtils;
+import com.nubeiot.dashboard.utils.UserUtils;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -25,27 +45,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.UpdateOptions;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.ext.mongo.MongoClient;
-
-import com.nubeiot.core.common.HttpHelper;
-import com.nubeiot.core.common.RxRestAPIVerticle;
-import com.nubeiot.core.common.constants.Services;
-import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.utils.SQLUtils;
-import com.nubeiot.core.utils.MongoUtils;
-import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.exceptions.HttpException;
-import com.nubeiot.core.micro.MicroContext;
-import com.nubeiot.core.utils.Strings;
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.helpers.CustomMessageHelper;
-import com.nubeiot.dashboard.impl.models.Company;
-import com.nubeiot.dashboard.impl.models.KeycloakUserRepresentation;
-import com.nubeiot.dashboard.impl.models.MongoUser;
-import com.nubeiot.dashboard.impl.models.Site;
-import com.nubeiot.dashboard.impl.models.UserGroup;
-import com.nubeiot.dashboard.utils.DittoUtils;
-import com.nubeiot.dashboard.utils.UserUtils;
-
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

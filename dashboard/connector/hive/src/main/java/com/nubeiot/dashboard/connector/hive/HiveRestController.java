@@ -1,7 +1,7 @@
 package com.nubeiot.dashboard.connector.hive;
 
-import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE;
-import static com.nubeiot.core.utils.ResponseUtils.CONTENT_TYPE_JSON;
+import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
+import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
 
 import java.util.Collections;
 import javax.ws.rs.GET;
@@ -46,7 +46,7 @@ public class HiveRestController implements RestApi {
     @Path("/engine")
     public Future<ResponseData> engine(@Context io.vertx.core.Vertx vertx, @Context RoutingContext ctx,
                                        @Context RestConfigProvider config) {
-        HiveConfig hiveConfig = IConfig.from(config.getConfig(), HiveConfig.class);
+        HiveConfig hiveConfig = IConfig.from(config.getAppConfig(), HiveConfig.class);
         return hiveQuery(new Vertx(vertx), hiveConfig, ctx);
     }
 
@@ -72,12 +72,13 @@ public class HiveRestController implements RestApi {
             final String finalQuery = query;
             executeQuery(vertx, hiveConfig, query).subscribe(result -> {
                 responseData.setBodyMessage(messageWrapper(finalQuery, successMessage(result)).encode());
-                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
+
+                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
                 responseData.setStatusCode(HttpResponseStatus.OK.code());
                 future.complete(responseData);
             }, error -> {
                 responseData.setBodyMessage(messageWrapper(finalQuery, failureMessage(error)).encode());
-                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, CONTENT_TYPE_JSON));
+                responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
                 responseData.setStatusCode(HttpResponseStatus.BAD_REQUEST.code());
                 future.complete(responseData);
             });

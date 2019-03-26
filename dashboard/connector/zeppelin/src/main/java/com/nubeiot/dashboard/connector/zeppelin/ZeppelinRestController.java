@@ -42,7 +42,7 @@ public class ZeppelinRestController implements RestApi {
     public Future<ResponseData> engine(@Context io.vertx.core.Vertx vertx, @Context RoutingContext ctx,
                                        @Context RestConfigProvider config) {
 
-        ZeppelinConfig zeppelinConfig = IConfig.from(config.getConfig(), ZeppelinConfig.class);
+        ZeppelinConfig zeppelinConfig = IConfig.from(config.getAppConfig(), ZeppelinConfig.class);
         return dispatchRequests(new Vertx(vertx), zeppelinConfig, ctx);
     }
 

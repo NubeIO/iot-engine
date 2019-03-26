@@ -5,6 +5,7 @@ enableFeaturePreview('STABLE_PUBLISHING')
 include ':core:base'
 include ':core:micro'
 include ':core:sql'
+include ':core:mongo'
 include ':core:cluster:hazelcast'
 include ':core:httpbase'
 include ':core:httpclient'
