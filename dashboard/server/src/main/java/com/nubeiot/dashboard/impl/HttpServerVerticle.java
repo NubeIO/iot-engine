@@ -3,6 +3,7 @@ package com.nubeiot.dashboard.impl;
 import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE;
 import static com.nubeiot.core.common.utils.response.ResponseUtils.CONTENT_TYPE_JSON;
 import static com.nubeiot.core.http.base.HttpScheme.HTTPS;
+import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Address.DYNAMIC_SITE_COLLECTION_ADDRESS;
 import static com.nubeiot.dashboard.constants.Address.MAIN_ADDR;
 import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
@@ -15,7 +16,6 @@ import static com.nubeiot.dashboard.constants.Collection.SITE;
 import static com.nubeiot.dashboard.constants.Collection.USER;
 import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
 import static com.nubeiot.dashboard.utils.FileUtils.appendRealFileNameWithExtension;
-import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -33,7 +33,6 @@ import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.UserImpl;
-import com.nubeiot.dashboard.utils.MongoUtils;
 import com.nubeiot.dashboard.utils.ResourceUtils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -279,7 +278,7 @@ public class HttpServerVerticle extends RxMicroServiceVerticle implements RxRest
 
     private void handleGetMediaFile(RoutingContext ctx) {
         String id = ctx.request().getParam("id");
-        mongoClient.rxFindOne(MEDIA_FILES, MongoUtils.idQuery(id), null)
+        mongoClient.rxFindOne(MEDIA_FILES, idQuery(id), null)
                    .map(mediaRecord -> {
                        JsonObject record = new JsonObject();
                        if (mediaRecord != null) {

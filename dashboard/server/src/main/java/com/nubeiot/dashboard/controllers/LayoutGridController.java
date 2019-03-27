@@ -19,7 +19,7 @@ import io.vertx.ext.web.RoutingContext;
 @Path("/api/layout_grid")
 public class LayoutGridController implements RestApi {
 
-    private static String COLLECTION = "layout_grid";
+    private static final String COLLECTION = "layout_grid";
 
     @GET
     @Path("/")

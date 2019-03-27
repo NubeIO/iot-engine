@@ -23,7 +23,7 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 @Path("/api/menu")
 public class MenuController implements RestApi {
 
-    private static String COLLECTION = "menu";
+    private static final String COLLECTION = "menu";
 
     @GET
     @Path("/:id")

@@ -19,7 +19,7 @@ import io.vertx.ext.web.RoutingContext;
 @Path("/api/widget_image")
 public class WidgetImageController implements RestApi {
 
-    private static String COLLECTION = "widget_image";
+    private static final String COLLECTION = "widget_image";
 
     @GET
     @Path("/")

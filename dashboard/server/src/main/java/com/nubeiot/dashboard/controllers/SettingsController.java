@@ -19,7 +19,7 @@ import io.vertx.ext.web.RoutingContext;
 @Path("/api/settings")
 public class SettingsController implements RestApi {
 
-    private static String COLLECTION = "settings";
+    private static final String COLLECTION = "settings";
 
     @GET
     @Path("/")

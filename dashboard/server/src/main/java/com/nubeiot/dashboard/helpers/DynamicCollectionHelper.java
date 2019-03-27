@@ -3,9 +3,9 @@ package com.nubeiot.dashboard.helpers;
 import java.util.UUID;
 
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.dashboard.DynamicCollectionProps;
 import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.utils.MongoUtils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;

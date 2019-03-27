@@ -8,10 +8,10 @@ import java.util.UUID;
 
 import com.nubeiot.core.common.utils.CustomMessage;
 import com.nubeiot.core.common.utils.HttpException;
+import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.utils.MongoUtils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.eventbus.Message;

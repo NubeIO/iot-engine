@@ -3,12 +3,12 @@ package com.nubeiot.dashboard.impl;
 import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleForbiddenResponse;
 import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleHttpException;
 import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleNotFoundResponse;
+import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
 import static com.nubeiot.dashboard.constants.Collection.USER;
 import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
-import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
 
 import java.util.List;
 import java.util.stream.Collectors;

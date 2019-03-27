@@ -2,11 +2,11 @@ package com.nubeiot.dashboard.controllers;
 
 import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
 import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
+import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
 import static com.nubeiot.dashboard.constants.Collection.USER;
 import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
-import static com.nubeiot.dashboard.utils.MongoUtils.idQuery;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;

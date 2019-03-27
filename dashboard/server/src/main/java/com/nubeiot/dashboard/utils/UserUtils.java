@@ -18,20 +18,6 @@ import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
 
 public class UserUtils {
-    public static Role getReverseRole(Role userRole) {
-        switch (userRole) {
-            case GUEST:
-                return Role.MANAGER;
-            case USER:
-                return Role.MANAGER;
-            case MANAGER:
-                return Role.ADMIN;
-            case ADMIN:
-                return Role.SUPER_ADMIN;
-            default:
-                return Role.SUPER_ADMIN;
-        }
-    }
 
     public static Role getRole(Role userRole) {
         switch (userRole) {
@@ -51,7 +37,9 @@ public class UserUtils {
             case SUPER_ADMIN:
                 return setRole;
             case ADMIN:
-                return SQLUtils.in(setRole.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString()) ? Role.MANAGER : setRole;
+                return SQLUtils.in(setRole.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())
+                       ? Role.MANAGER
+                       : setRole;
             case MANAGER:
                 return (setRole == Role.USER) ? Role.USER : Role.GUEST;
             default:
@@ -59,7 +47,8 @@ public class UserUtils {
         }
     }
 
-    public static Single<Buffer> createUser(KeycloakUserRepresentation user, String accessToken, String authServerUrl, String realmName, HttpClient client) {
+    public static Single<Buffer> createUser(KeycloakUserRepresentation user, String accessToken, String authServerUrl,
+                                            String realmName, HttpClient client) {
         String url = authServerUrl + "/admin/realms/" + realmName + "/users";
 
         return Single.create(source -> {
@@ -80,7 +69,8 @@ public class UserUtils {
         });
     }
 
-    public static Single<JsonObject> getUserFromUsername(String username, String accessToken, String authServerUrl, String realmName, HttpClient client) {
+    public static Single<JsonObject> getUserFromUsername(String username, String accessToken, String authServerUrl,
+                                                         String realmName, HttpClient client) {
         String url = authServerUrl + "/admin/realms/" + realmName + "/users/?username=" + username;
         return Single.create(source -> {
             HttpClientRequest request = client.requestAbs(HttpMethod.GET, url, response -> {
@@ -100,7 +90,8 @@ public class UserUtils {
         });
     }
 
-    public static Single<JsonObject> getUser(String userId, String accessToken, String authServerUrl, String realmName, HttpClient client) {
+    public static Single<JsonObject> getUser(String userId, String accessToken, String authServerUrl, String realmName,
+                                             HttpClient client) {
         String url = authServerUrl + "/admin/realms/" + realmName + "/users/" + userId;
         return Single.create(source -> {
             HttpClientRequest request = client.requestAbs(HttpMethod.GET, url, response -> {
@@ -120,7 +111,8 @@ public class UserUtils {
         });
     }
 
-    public static Single<Buffer> resetPassword(String userId, String password, String accessToken, String authServerUrl, String realmName, HttpClient client) {
+    public static Single<Buffer> resetPassword(String userId, String password, String accessToken, String authServerUrl,
+                                               String realmName, HttpClient client) {
         String url = authServerUrl + "/admin/realms/" + realmName + "/users/" + userId + "/reset-password";
 
         return Single.create(source -> {
@@ -137,16 +129,15 @@ public class UserUtils {
             request.setChunked(true);
             request.putHeader(CONTENT_TYPE, CONTENT_TYPE_JSON);
             request.putHeader("Authorization", "Bearer " + accessToken);
-            JsonObject requestBody = new JsonObject()
-                .put("temporary", false)
-                .put("type", "password")
-                .put("value", password);
+            JsonObject requestBody = new JsonObject().put("temporary", false)
+                                                     .put("type", "password")
+                                                     .put("value", password);
             request.write(requestBody.toString()).end();
         });
     }
 
-    public static Single<JsonObject> deleteUser(String userId, String accessToken, String authServerUrl, String realmName,
-                                                HttpClient client) {
+    public static Single<JsonObject> deleteUser(String userId, String accessToken, String authServerUrl,
+                                                String realmName, HttpClient client) {
         String url = authServerUrl + "/admin/realms/" + realmName + "/users/" + userId;
 
         return Single.create(source -> {
@@ -181,8 +172,9 @@ public class UserUtils {
         });
     }
 
-    public static Single<Buffer> updateUser(String userId, KeycloakUserRepresentation keycloakUserRepresentation, String accessToken, String authServerUrl,
-                                            String realmName, HttpClient client) {
+    public static Single<Buffer> updateUser(String userId, KeycloakUserRepresentation keycloakUserRepresentation,
+                                            String accessToken, String authServerUrl, String realmName,
+                                            HttpClient client) {
         String url = authServerUrl + "/admin/realms/" + realmName + "/users/" + userId;
 
         return Single.create(source -> {
@@ -203,7 +195,4 @@ public class UserUtils {
         });
     }
 
-    public static boolean isLastLevelUser(Role role) {
-        return (role == Role.USER) || (role == Role.GUEST);
-    }
 }

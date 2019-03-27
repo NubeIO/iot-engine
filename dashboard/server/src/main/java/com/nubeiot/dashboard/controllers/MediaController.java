@@ -12,11 +12,11 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.RestConfigProvider;
 import com.nubeiot.core.http.rest.RestApi;
+import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.dashboard.DashboardServerConfig;
 import com.nubeiot.dashboard.helpers.ResponseDataHelper;
 import com.nubeiot.dashboard.providers.RestMediaDirProvider;
-import com.nubeiot.dashboard.utils.MongoUtils;
 import com.nubeiot.dashboard.utils.ResourceUtils;
 import com.zandero.rest.annotation.RouteOrder;
 
