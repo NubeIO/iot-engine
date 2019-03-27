@@ -16,10 +16,10 @@ public class ResponseDataWriter implements HttpResponseWriter<ResponseData> {
 
     @Override
     public void write(ResponseData result, HttpServerRequest request, HttpServerResponse response) {
-        String message = result.getBodyMessage();
-        response.setStatusCode(result.getStatusCode());
+        String message = result.body().getString("message");
+        response.setStatusCode(result.statusCode());
         response.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
-        for (Map.Entry<String, Object> key : result.getHeaders()) {
+        for (Map.Entry<String, Object> key : result.headers()) {
             response.putHeader(key.getKey(), key.getValue().toString());
         }
         if (Objects.isNull(message)) {
