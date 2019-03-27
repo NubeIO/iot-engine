@@ -1,11 +1,10 @@
-package com.nubeiot.dashboard.handlers;
+package com.nubeiot.dashboard.helpers;
 
 import java.util.UUID;
 
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.dashboard.DynamicCollectionProps;
 import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.helpers.ResponseDataHelper;
 import com.nubeiot.dashboard.utils.MongoUtils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -14,8 +13,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
-@SuppressWarnings("Duplicates")
-public class DynamicCollectionHandler {
+public class DynamicCollectionHelper {
 
     public static Future<ResponseData> handleGet(RoutingContext ctx, MongoClient mongoClient, String collection) {
         Future<ResponseData> future = Future.future();
@@ -25,9 +23,13 @@ public class DynamicCollectionHandler {
         } else if (collectionProps.isAuthorizedSiteId()) {
 
             mongoClient.rxFind(collection, new JsonObject().put("site_id", collectionProps.getSiteId()))
-                       .subscribe(response -> future.complete(new ResponseData().setBodyMessage(response.toString())),
-                                  throwable -> future.complete(
-                                      ResponseDataHelper.internalServerError(throwable.getMessage())));
+                       .subscribe(response -> {
+                           if (response == null) {
+                               future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NOT_FOUND.code()));
+                           } else {
+                               future.complete(new ResponseData().setBodyMessage(response.toString()));
+                           }
+                       }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
         } else {
             future.complete(ResponseDataHelper.forbidden());
         }
@@ -43,10 +45,13 @@ public class DynamicCollectionHandler {
             future.complete(ResponseDataHelper.badRequest("User must be associated with <SiteSetting>"));
         } else if (collectionProps.isAuthorizedSiteId()) {
             JsonObject query = new JsonObject().put("site_id", collectionProps.getSiteId()).put("id", id);
-            mongoClient.rxFindOne(collection, query, null)
-                       .subscribe(response -> future.complete(new ResponseData().setBodyMessage(response.toString())),
-                                  throwable -> future.complete(
-                                      ResponseDataHelper.internalServerError(throwable.getMessage())));
+            mongoClient.rxFindOne(collection, query, null).subscribe(response -> {
+                if (response == null) {
+                    future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NOT_FOUND.code()));
+                } else {
+                    future.complete(new ResponseData().setBodyMessage(response.encode()));
+                }
+            }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
         } else {
             future.complete(ResponseDataHelper.forbidden());
         }
@@ -86,15 +91,20 @@ public class DynamicCollectionHandler {
         if (collectionProps.getSitesIds().size() == 0) {
             future.complete(ResponseDataHelper.badRequest("User must be associated with <SiteSetting>"));
         } else if (collectionProps.isAuthorizedSiteId() && collectionProps.getRole() != Role.GUEST) {
-            String id = ctx.request().getParam("id");
-            JsonObject query = new JsonObject().put("site_id", collectionProps.getSiteId()).put("id", id);
-            mongoClient.rxRemoveDocuments(collection, query).subscribe(buffer -> {
-                future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code()));
-            }, throwable -> ResponseDataHelper.internalServerError(throwable.getMessage()));
+            handleDeleteDocument(ctx, mongoClient, collection, collectionProps.getSiteId(), future);
         } else {
             future.complete(ResponseDataHelper.forbidden());
         }
         return future;
+    }
+
+    public static void handleDeleteDocument(RoutingContext ctx, MongoClient mongoClient, String collection,
+                                            String siteId, Future<ResponseData> future) {
+        String id = ctx.request().getParam("id");
+        JsonObject query = new JsonObject().put("site_id", siteId).put("id", id);
+        mongoClient.rxRemoveDocuments(collection, query).subscribe(buffer -> {
+            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code()));
+        }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
     }
 
     private static void handlePostDocument(RoutingContext ctx, MongoClient mongoClient, String collection,
@@ -116,8 +126,8 @@ public class DynamicCollectionHandler {
         });
     }
 
-    private static void handlePutDocument(RoutingContext ctx, MongoClient mongoClient, String collection, String siteId,
-                                          Future<ResponseData> future) {
+    public static void handlePutDocument(RoutingContext ctx, MongoClient mongoClient, String collection, String siteId,
+                                         Future<ResponseData> future) {
         String id = ctx.request().getParam("id");
         mongoClient.rxFindOne(collection, new JsonObject().put("site_id", siteId).put("id", id), null)
                    .map(jsonObject -> {

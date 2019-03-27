@@ -10,7 +10,7 @@ import javax.ws.rs.core.Context;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
-import com.nubeiot.dashboard.handlers.DynamicCollectionHandler;
+import com.nubeiot.dashboard.helpers.DynamicCollectionHelper;
 import com.zandero.rest.annotation.RouteOrder;
 
 import io.vertx.core.Future;
@@ -25,35 +25,35 @@ public class LayoutGridController implements RestApi {
     @Path("/")
     @RouteOrder(3)
     public Future<ResponseData> get(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
-        return DynamicCollectionHandler.handleGet(ctx, mongoClient.getMongoClient(), COLLECTION);
+        return DynamicCollectionHelper.handleGet(ctx, mongoClient.getMongoClient(), COLLECTION);
     }
 
     @GET
     @Path("/:id")
     @RouteOrder(3)
     public Future<ResponseData> getOne(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
-        return DynamicCollectionHandler.handleGetOne(ctx, mongoClient.getMongoClient(), COLLECTION);
+        return DynamicCollectionHelper.handleGetOne(ctx, mongoClient.getMongoClient(), COLLECTION);
     }
 
     @POST
     @Path("/")
     @RouteOrder(3)
     public Future<ResponseData> post(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
-        return DynamicCollectionHandler.handlePost(ctx, mongoClient.getMongoClient(), COLLECTION);
+        return DynamicCollectionHelper.handlePost(ctx, mongoClient.getMongoClient(), COLLECTION);
     }
 
     @PUT
     @Path("/:id")
     @RouteOrder(3)
     public Future<ResponseData> put(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
-        return DynamicCollectionHandler.handlePut(ctx, mongoClient.getMongoClient(), COLLECTION);
+        return DynamicCollectionHelper.handlePut(ctx, mongoClient.getMongoClient(), COLLECTION);
     }
 
     @DELETE
     @Path("/:id")
     @RouteOrder(3)
     public Future<ResponseData> delete(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
-        return DynamicCollectionHandler.handleDelete(ctx, mongoClient.getMongoClient(), COLLECTION);
+        return DynamicCollectionHelper.handleDelete(ctx, mongoClient.getMongoClient(), COLLECTION);
     }
 
 }

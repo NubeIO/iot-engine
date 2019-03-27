@@ -19,6 +19,7 @@ import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.dashboard.controllers.AuthRestController;
 import com.nubeiot.dashboard.controllers.InfoRestController;
 import com.nubeiot.dashboard.controllers.LayoutGridController;
+import com.nubeiot.dashboard.controllers.MenuController;
 import com.nubeiot.dashboard.providers.RestMediaDirProvider;
 import com.nubeiot.dashboard.providers.RestOAuth2AuthProvider;
 import com.zandero.rest.RestRouter;
@@ -44,7 +45,7 @@ public class DashboardServerVerticle extends ContainerVerticle {
     public void start() {
         super.start();
         HttpServerRouter router = new HttpServerRouter().registerApi(InfoRestController.class, AuthRestController.class,
-                                                                     LayoutGridController.class);
+                                                                     LayoutGridController.class, MenuController.class);
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
