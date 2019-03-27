@@ -4,7 +4,7 @@ import java.io.File;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.ext.web.FileUpload;
+import io.vertx.ext.web.FileUpload;
 
 /**
  * @deprecated

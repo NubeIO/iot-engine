@@ -19,6 +19,7 @@ import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.dashboard.controllers.AuthRestController;
 import com.nubeiot.dashboard.controllers.InfoRestController;
 import com.nubeiot.dashboard.controllers.LayoutGridController;
+import com.nubeiot.dashboard.controllers.MediaController;
 import com.nubeiot.dashboard.controllers.MenuController;
 import com.nubeiot.dashboard.controllers.SettingsController;
 import com.nubeiot.dashboard.controllers.WidgetImageController;
@@ -49,7 +50,8 @@ public class DashboardServerVerticle extends ContainerVerticle {
         HttpServerRouter router = new HttpServerRouter().registerApi(InfoRestController.class, AuthRestController.class,
                                                                      LayoutGridController.class, MenuController.class,
                                                                      SettingsController.class,
-                                                                     WidgetImageController.class);
+                                                                     WidgetImageController.class,
+                                                                     MediaController.class);
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 

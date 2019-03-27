@@ -51,6 +51,7 @@ import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.mongo.UpdateOptions;
+import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
@@ -258,7 +259,8 @@ public class HttpServerVerticle extends RxMicroServiceVerticle implements RxRest
         JsonObject output = new JsonObject();
         Observable.fromIterable(ctx.fileUploads())
                   .flatMapSingle(fileUpload -> {
-                      String name = appendRealFileNameWithExtension(fileUpload).replace(mediaDir + "/", "");
+                      String name = appendRealFileNameWithExtension((FileUpload) fileUpload).replace(mediaDir + "/",
+                                                                                                     "");
                       String link = ResourceUtils.buildAbsolutePath(ctx.request().host(), mediaPath, name);
                       return mongoClient.rxInsert(MEDIA_FILES,
                                                   new JsonObject().put("name", name).put("title", fileUpload.name()))

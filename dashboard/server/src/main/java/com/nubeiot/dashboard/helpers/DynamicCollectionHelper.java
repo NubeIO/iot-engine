@@ -120,7 +120,7 @@ public class DynamicCollectionHelper {
             body.put("id", id);
             return body;
         }).flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body)).subscribe(buffer -> {
-            future.complete(new ResponseData());
+            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.CREATED.code()));
         }, throwable -> {
             future.complete(ResponseDataHelper.internalServerError(throwable.getMessage()));
         });
@@ -142,9 +142,7 @@ public class DynamicCollectionHelper {
                    .flatMap(body -> mongoClient.rxSave(collection, body))
                    .subscribe(buffer -> {
                        future.complete(new ResponseData());
-                   }, throwable -> {
-                       future.complete(ResponseDataHelper.internalServerError(throwable.getMessage()));
-                   });
+                   }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
     }
 
 }
