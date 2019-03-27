@@ -1,5 +1,9 @@
 package com.nubeiot.core.http.base;
 
+import java.util.Arrays;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +23,14 @@ public enum HttpScheme {
     public static final String SCHEME_REGEX = "(https?://)";
     private final String scheme;
 
+    @JsonCreator
+    public static HttpScheme parse(String name) {
+        return Arrays.stream(HttpScheme.values()).filter(s -> s.scheme.equals(name)).findFirst().orElse(HTTP);
+    }
+
     @Override
     public String toString() {
         return this.scheme;
     }
+
 }

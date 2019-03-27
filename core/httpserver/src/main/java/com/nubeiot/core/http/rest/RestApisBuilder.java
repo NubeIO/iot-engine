@@ -14,7 +14,7 @@ import io.vertx.ext.web.Router;
 
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.http.HttpConfig.DynamicRouteConfig;
+import com.nubeiot.core.http.HttpConfig.RestConfig.DynamicRouteConfig;
 import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.ApiExceptionHandler;

@@ -51,7 +51,7 @@ public class HttpServerTestBase {
         JsonHelper.assertJson(context, async, expected, actual.toJsonObject());
     }
 
-    public void before(TestContext context) throws IOException {
+    protected void before(TestContext context) throws IOException {
         vertx = Vertx.vertx();
         httpConfig = IConfig.fromClasspath(httpConfigFile(), HttpConfig.class);
         httpConfig.setHost(DEFAULT_HOST);
@@ -60,21 +60,21 @@ public class HttpServerTestBase {
         requestOptions = new RequestOptions().setHost(DEFAULT_HOST).setPort(httpConfig.getPort());
     }
 
-    protected String httpConfigFile() {
-        return "httpServer.json";
-    }
-
-    protected void enableWebsocket() {
-        this.httpConfig.setEnabled(false);
-        this.httpConfig.getWebsocketCfg().setEnabled(true);
-    }
-
-    public void after(TestContext context) {
+    protected void after(TestContext context) {
         RestRouter.getWriters().clear();
         RestRouter.getReaders().clear();
         RestRouter.getContextProviders().clear();
         RestRouter.getExceptionHandlers().clear();
         vertx.close(context.asyncAssertSuccess());
+    }
+
+    protected String httpConfigFile() {
+        return "httpServer.json";
+    }
+
+    protected void enableWebsocket() {
+        this.httpConfig.getRestConfig().setEnabled(false);
+        this.httpConfig.getWebsocketConfig().setEnabled(true);
     }
 
     private HttpClientOptions createClientOptions() {
@@ -108,8 +108,10 @@ public class HttpServerTestBase {
     }
 
     protected void startServer(TestContext context, HttpServerRouter httpRouter, Consumer<Throwable> consumer) {
-        DeploymentOptions options = new DeploymentOptions().setConfig(httpConfig.toJson());
-        vertx.deployVerticle(new HttpServer(httpRouter), options, context.asyncAssertFailure(consumer::accept));
+        final HttpServer verticle = new HttpServer(httpRouter);
+        verticle.registerSharedData(HttpServerTestBase.class.getName());
+        vertx.deployVerticle(verticle, new DeploymentOptions().setConfig(httpConfig.toJson()),
+                             context.asyncAssertFailure(consumer::accept));
     }
 
     protected JsonObject notFoundResponse(int port, String path) {

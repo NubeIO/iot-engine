@@ -22,9 +22,10 @@
   },
   "__app__": {
     "__http__": {
-      "enabled": true,
-      "rootApi": "/api"
-    },
-    "api.name": "edge-connector"
+      "__rest__": {
+        "enabled": true,
+        "rootApi": "/api"
+      }
+    }
   }
 }

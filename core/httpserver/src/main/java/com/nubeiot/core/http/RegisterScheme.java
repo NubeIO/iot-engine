@@ -5,6 +5,9 @@ import com.nubeiot.core.http.base.HttpScheme;
 
 import lombok.Getter;
 
+/**
+ * @deprecated
+ */
 public class RegisterScheme {
 
     private static RegisterScheme instance;

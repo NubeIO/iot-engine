@@ -15,9 +15,11 @@
       }
     },
     "__http__": {
-      "rootApi": "/rest",
-      "__dynamic__": {
-        "enabled": false
+      "__rest__": {
+        "rootApi": "/rest",
+        "__dynamic__": {
+          "enabled": false
+        }
       }
     }
   }

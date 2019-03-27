@@ -1,17 +1,15 @@
 package com.nubeiot.core.http.handler;
 
-import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
 import com.nubeiot.core.http.utils.RequestDataConverter;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -21,25 +19,19 @@ import lombok.RequiredArgsConstructor;
  * @see RestEventResponseHandler
  */
 @RequiredArgsConstructor
-public class RestEventResultHandler implements Handler<RoutingContext> {
+public class RestEventResultHandler implements EventResultContextHandler {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final RestEventApiMetadata metadata;
+    @Getter
+    private EventController controller;
 
     @Override
     public void handle(RoutingContext context) {
-        EventMessage msg = EventMessage.success(metadata.getAction(), RequestDataConverter.convert(context));
+        this.controller = new EventController(context.vertx());
+        EventMessage msg = EventMessage.initial(metadata.getAction(), RequestDataConverter.convert(context));
         logger.info("REST::Request data: {}", msg.toJson().encode());
-        ReplyEventHandler replyEventHandler = new ReplyEventHandler("REST", metadata.getAction(), metadata.getAddress(),
-                                                                    message -> response(context, message),
-                                                                    context::fail);
-        new EventController(context.vertx()).request(metadata.getAddress(), metadata.getPattern(), msg,
-                                                     replyEventHandler);
-    }
-
-    private void response(RoutingContext context, EventMessage message) {
-        context.put(EventAction.RETURN.name(), message);
-        context.next();
+        sendAndListenEvent(context, "REST", metadata.getAddress(), metadata.getPattern(), msg);
     }
 
 }

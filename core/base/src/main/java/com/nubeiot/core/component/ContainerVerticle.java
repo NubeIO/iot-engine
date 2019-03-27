@@ -51,7 +51,8 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
         this.nubeConfig = computeConfig(config());
         this.eventController = new EventController(vertx);
         this.registerEventbus(eventController);
-        this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController);
+        this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController)
+            .addSharedData(SharedDataDelegate.SHARED_DATADIR, this.nubeConfig.getDataDir().toAbsolutePath().toString());
     }
 
     @Override

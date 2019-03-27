@@ -7,9 +7,10 @@
   "__app__": {
     "__http__": {
       "host": "0.0.0.0",
-      "enabled": true,
-      "rootApi": "/api"
-    },
-    "api.name": "edge-connector"
+      "__rest__": {
+        "enabled": true,
+        "rootApi": "/api"
+      }
+    }
   }
 }

@@ -42,6 +42,19 @@ public interface Unit<C extends IConfig, T extends UnitContext> extends HasConfi
      * @return Data value. {@code nullable} if no data value by key or data value type doesn't match type with expected
      *     value
      */
-    <R> R getSharedData(String dataKey);
+    default <R> R getSharedData(String dataKey) {
+        return getSharedData(dataKey, null);
+    }
+
+    /**
+     * Retrieve {@code Vertx} shared data value by key data. If no data value by key or data value type doesn't match
+     * type with expected value, it will fallback to given value.
+     *
+     * @param <R>      T type of data value
+     * @param dataKey  given data key
+     * @param fallback Fallback value
+     * @return Data value.
+     */
+    <R> R getSharedData(String dataKey, R fallback);
 
 }

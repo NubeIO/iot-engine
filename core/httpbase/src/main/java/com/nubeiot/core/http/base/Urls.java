@@ -131,6 +131,21 @@ public final class Urls {
     /**
      * Build a complete URL.
      *
+     * @param scheme HTTP Scheme
+     * @param host   Host
+     * @param port   Port. Port < 1 will be skipped
+     * @return URL based on given input. Nullable if given host is blank
+     */
+    public static String buildURL(HttpScheme scheme, String host, int port) {
+        if (Strings.isBlank(host)) {
+            return null;
+        }
+        return scheme + "://" + normalize(host) + (port < 1 ? "" : ":" + port);
+    }
+
+    /**
+     * Build a complete URL.
+     *
      * @param url   Base URL with path
      * @param query Encode query
      * @return URL based on given input

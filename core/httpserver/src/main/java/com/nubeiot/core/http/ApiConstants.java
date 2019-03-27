@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ApiConstants {
 
-    public static final String SAMPLE_PATH = "/sample/*";
+    public static final String SAMPLE_PATH = "/sample";
     public static final String ROOT_API_PATH = "/api";
     public static final String ROOT_WS_PATH = "/ws";
     public static final String DYNAMIC_API_PATH = "/s";

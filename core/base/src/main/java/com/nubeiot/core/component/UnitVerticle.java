@@ -1,5 +1,7 @@
 package com.nubeiot.core.component;
 
+import java.util.Objects;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -42,9 +44,10 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
     }
 
     @Override
-    public final <R> R getSharedData(String dataKey) {
+    public <R> R getSharedData(String dataKey, R fallback) {
         logger.debug("Retrieve SharedData by SharedKey {}", sharedKey);
-        return SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
+        final R dataValue = SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
+        return Objects.isNull(dataValue) ? fallback : dataValue;
     }
 
 }

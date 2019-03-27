@@ -1,0 +1,22 @@
+{
+  "__app__": {
+    "__http__": {
+      "host": "0.0.0.0",
+      "port": 8080,
+      "__files__": {
+        "enabled": false,
+        "dir": "files",
+        "__upload__": {
+          "enabled": false,
+          "path": "/u",
+          "maxSize": 5,
+          "handlerClass": "com.nubeiot.core.http.handler.UploadFileHandler"
+        },
+        "__download__": {
+          "enabled": false,
+          "path": "/f"
+        }
+      }
+    }
+  }
+}
