@@ -12,7 +12,6 @@ import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.Status;
 
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.HttpServer;
 import com.nubeiot.core.http.ServerInfo;
 import com.nubeiot.core.http.base.Urls;
@@ -77,8 +76,7 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
         List<String> paths = api.alternativePaths()
                                 .orElse(Collections.singleton(api.path()))
                                 .stream()
-                                .map(p -> Urls.combinePath(gatewayPath, p,
-                                                           api.path().equals(p) ? ApiConstants.WILDCARDS_ANY_PATH : ""))
+                                .map(p -> Urls.combinePath(gatewayPath, p))
                                 .sorted(Comparator.reverseOrder())
                                 .collect(Collectors.toList());
         if (record.getStatus() == Status.UP) {
