@@ -44,7 +44,7 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
     }
 
     @Override
-    public <R> R getSharedData(String dataKey, R fallback) {
+    public final <R> R getSharedData(String dataKey, R fallback) {
         logger.debug("Retrieve SharedData by SharedKey {}", sharedKey);
         final R dataValue = SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
         return Objects.isNull(dataValue) ? fallback : dataValue;

@@ -30,6 +30,7 @@ import com.nubeiot.core.http.HttpConfig.FileStorageConfig.UploadConfig;
 import com.nubeiot.core.http.HttpConfig.RestConfig;
 import com.nubeiot.core.http.HttpConfig.StaticWebConfig;
 import com.nubeiot.core.http.HttpConfig.WebsocketConfig;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.DownloadFileHandler;
 import com.nubeiot.core.http.handler.FailureContextHandler;
@@ -227,8 +228,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         router.post(uploadCfg.getPath())
               .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB))
               .handler(UploadFileHandler.create(handlerClass, controller, listenerEvent, storageDir, publicUrl))
-              .handler(new RestEventResponseHandler())
-              .produces(ApiConstants.DEFAULT_CONTENT_TYPE);
+              .handler(new RestEventResponseHandler()).produces(HttpUtils.DEFAULT_CONTENT_TYPE);
         return router;
     }
 
