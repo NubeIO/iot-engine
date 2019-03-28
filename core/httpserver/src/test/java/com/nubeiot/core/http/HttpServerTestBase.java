@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 import org.skyscreamer.jsonassert.Customization;
 
 import io.vertx.core.DeploymentOptions;
@@ -30,6 +32,7 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.base.Urls;
@@ -41,6 +44,8 @@ import com.zandero.rest.RestRouter;
 public class HttpServerTestBase {
 
     private static final String DEFAULT_HOST = "127.0.0.1";
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
     protected Vertx vertx;
     protected HttpConfig httpConfig;
     protected HttpClient client;
@@ -101,16 +106,13 @@ public class HttpServerTestBase {
     }
 
     protected HttpServer startServer(TestContext context, HttpServerRouter httpRouter) {
-        final HttpServer verticle = new HttpServer(httpRouter);
-        verticle.registerSharedData(HttpServerTestBase.class.getName());
         return VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(httpConfig.toJson()),
-                                  verticle);
+                                  createHttpServer(context, httpRouter));
     }
 
     protected void startServer(TestContext context, HttpServerRouter httpRouter, Consumer<Throwable> consumer) {
-        final HttpServer verticle = new HttpServer(httpRouter);
-        verticle.registerSharedData(HttpServerTestBase.class.getName());
-        vertx.deployVerticle(verticle, new DeploymentOptions().setConfig(httpConfig.toJson()),
+        vertx.deployVerticle(createHttpServer(context, httpRouter),
+                             new DeploymentOptions().setConfig(httpConfig.toJson()),
                              context.asyncAssertFailure(consumer::accept));
     }
 
@@ -172,6 +174,19 @@ public class HttpServerTestBase {
 
     protected JsonObject createWebsocketMsg(String address, EventMessage body, BridgeEventType send) {
         return WebsocketEventMessage.builder().type(send).address(address).body(body).build().toJson();
+    }
+
+    private HttpServer createHttpServer(TestContext context, HttpServerRouter httpRouter) {
+        final HttpServer verticle = new HttpServer(httpRouter);
+        verticle.registerSharedData(HttpServerTestBase.class.getName());
+        try {
+            SharedDataDelegate.addLocalDataValue(vertx.getDelegate(), HttpServerTestBase.class.getName(),
+                                                 SharedDataDelegate.SHARED_DATADIR,
+                                                 tempFolder.newFolder(this.getClass().getName()).toString());
+        } catch (IOException e) {
+            context.fail(e);
+        }
+        return verticle;
     }
 
 }

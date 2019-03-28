@@ -175,6 +175,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         if (!uploadCfg.isEnabled()) {
             return router;
         }
+        logger.info("Init Upload router...");
         EventController controller = this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS, new EventController(vertx));
         this.uploadListenerEvent = EventModel.builder()
                                              .address(Strings.fallback(uploadCfg.getListenerAddress(), getSharedKey()))
@@ -196,13 +197,15 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         if (!downloadConfig.isEnabled()) {
             return router;
         }
+        logger.info("Init Download router...");
         router.get(Urls.combinePath(downloadConfig.getPath(), ApiConstants.WILDCARDS_ANY_PATH))
-              .handler(StaticHandler.create(storageDir.toString())
+              .handler(StaticHandler.create()
                                     .setEnableRangeSupport(true)
                                     .setSendVaryHeader(true)
                                     .setFilesReadOnly(false)
-                                    .setAllowRootFileSystemAccess(false)
-                                    .setIncludeHidden(false))
+                                    .setAllowRootFileSystemAccess(true)
+                                    .setIncludeHidden(false)
+                                    .setWebRoot(storageDir.toString()))
               .handler(DownloadFileHandler.create(downloadConfig.getPath(), storageDir));
         return router;
     }
@@ -211,9 +214,11 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         if (!websocketCfg.isEnabled()) {
             return router;
         }
+        logger.info("Init Websocket router...");
         return new WebsocketEventBuilder(vertx, router).rootWs(websocketCfg.getRootWs())
                                                        .register(httpRouter.getWebsocketEvents())
-                                                       .handler(WebsocketBridgeEventHandler.class).options(websocketCfg)
+                                                       .handler(WebsocketBridgeEventHandler.class)
+                                                       .options(websocketCfg)
                                                        .build();
     }
 

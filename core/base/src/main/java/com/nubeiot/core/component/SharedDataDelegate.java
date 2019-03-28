@@ -41,6 +41,10 @@ public interface SharedDataDelegate {
             k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).get(k), dataKey);
     }
 
+    static <D> void addLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey, D data) {
+        vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).put(Strings.requireNotBlank(dataKey), data);
+    }
+
     /**
      * Get shared data value by data key
      *
