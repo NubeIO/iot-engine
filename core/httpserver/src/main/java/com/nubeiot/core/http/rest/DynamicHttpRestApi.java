@@ -8,6 +8,9 @@ import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.types.HttpLocation;
 
+import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.base.Urls;
+
 import lombok.NonNull;
 
 public interface DynamicHttpRestApi extends DynamicRestApi {
@@ -17,7 +20,7 @@ public interface DynamicHttpRestApi extends DynamicRestApi {
         return new DynamicHttpRestApi() {
             @Override
             public String path() {
-                return location.getRoot();
+                return Urls.combinePath(location.getRoot(), ApiConstants.WILDCARDS_ANY_PATH);
             }
 
             @Override

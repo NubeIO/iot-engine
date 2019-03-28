@@ -39,7 +39,18 @@ public final class EventMethodDefinition implements JsonData {
 
     @JsonCreator
     public EventMethodDefinition(@JsonProperty(value = "servicePath") String servicePath) {
-        this.servicePath = Strings.requireNotBlank(servicePath);
+        this.servicePath = toRegex(Strings.requireNotBlank(servicePath));
+        if (this.servicePath.endsWith("/.+")) {
+            throw new IllegalArgumentException("Service path cannot ends with capture parameter");
+        }
+    }
+
+    private static String toRegex(String capturePath) {
+        return capturePath.replaceFirst("/:[^/]+(/?)$", "/.+$1").replaceAll("/:[^/]+", "/[^/]+");
+    }
+
+    private static String searchRegex(String servicePath) {
+        return servicePath + (servicePath.endsWith("/") ? "(.+)?" : "(/.+)?");
     }
 
     /**
@@ -48,7 +59,7 @@ public final class EventMethodDefinition implements JsonData {
      * @param servicePath Origin service path that represents for manipulating {@code resource} in all given {@code
      *                    HTTPMethod}
      * @param capturePath Capturing path parameters for manipulating single resource. E.g: {@code
-     *                    /catalogue/products/:producttype/:productid/}
+     *                    /catalogue/products/:productType/:productId/}
      * @return new instance of {@link EventMethodDefinition}
      * @see ActionMethodMapping#defaultEventHttpMap()
      * @see HttpMethods#isSingular(HttpMethod)
@@ -86,7 +97,7 @@ public final class EventMethodDefinition implements JsonData {
 
     public EventAction search(String actualPath, @NonNull HttpMethod method) {
         final String path = Strings.requireNotBlank(actualPath);
-        if (!path.startsWith(this.servicePath)) {
+        if (!path.matches(searchRegex(this.servicePath))) {
             throw new NotFoundException("Not found path " + actualPath);
         }
         return mapping.stream()
@@ -126,7 +137,7 @@ public final class EventMethodDefinition implements JsonData {
 
             public EventMethodMapping build() {
                 if (Objects.nonNull(capturePath) && Objects.isNull(regexPath)) {
-                    regexPath = capturePath.replaceAll("/:[^/]+", "/.+");
+                    regexPath = toRegex(capturePath);
                 }
                 return new EventMethodMapping(action, method, capturePath, regexPath);
             }

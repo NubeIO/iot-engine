@@ -2,6 +2,7 @@ package com.nubeiot.core.http.dynamic;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.After;
 import org.junit.Before;
@@ -57,6 +58,18 @@ public class DynamicEventServiceTest extends DynamicServiceTestBase {
     @Test
     public void test_not_found(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/xxx", 404, new JsonObject());
+    }
+
+    @Test
+    public void test_get_list_multiple_success(TestContext context) {
+        assertRestByClient(context, HttpMethod.GET, "/api/s/c/123/p", 200,
+                           new JsonObject().put("data", Collections.singletonList("123")));
+    }
+
+    @Test
+    public void test_get_one_multiple_success(TestContext context) {
+        assertRestByClient(context, HttpMethod.GET, "/api/s/c/123/p/456", 200,
+                           new JsonObject("{\"cId\":\"123\",\"pId\":\"456\"}"));
     }
 
 }
