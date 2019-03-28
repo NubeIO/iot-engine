@@ -2,6 +2,7 @@
   "__app__": {
     "__http__": {
       "host": "0.0.0.0",
+      "port": 9999,
       "__rest__": {
         "enabled": false
       },
@@ -11,8 +12,10 @@
         "__upload__": {
           "enabled": true,
           "path": "/u",
-          "maxSize": 5,
-          "handlerClass": "com.nubeiot.core.http.handler.UploadFileHandler"
+          "maxBodySizeMB": 1,
+          "handlerClass": "com.nubeiot.core.http.handler.UploadFileHandler",
+          "listenerAddress": "blank.mean.using.container.class.name.upload",
+          "listenerClass": "com.nubeiot.core.http.handler.UploadListener"
         },
         "__download__": {
           "enabled": true,

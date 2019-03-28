@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,8 +41,8 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class FileUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
     public static final Path DEFAULT_DATADIR = Paths.get(System.getProperty("user.home"), ".nubeio");
+    private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
 
     /**
      * To URL.
@@ -298,6 +299,13 @@ public final class FileUtils {
             return dataDir.resolve(DEFAULT_DATADIR.relativize(path).toString().replaceAll("^/", ""));
         }
         return path;
+    }
+
+    public static String getExtension(String filename) {
+        return Optional.ofNullable(filename)
+                       .filter(f -> f.contains("."))
+                       .map(f -> f.substring(filename.lastIndexOf(".") + 1))
+                       .orElse("");
     }
 
 }

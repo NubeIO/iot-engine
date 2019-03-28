@@ -2,6 +2,7 @@ package com.nubeiot.core.http;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import io.vertx.core.Future;
@@ -33,7 +34,9 @@ import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.DownloadFileHandler;
 import com.nubeiot.core.http.handler.FailureContextHandler;
 import com.nubeiot.core.http.handler.NotFoundContextHandler;
+import com.nubeiot.core.http.handler.RestEventResponseHandler;
 import com.nubeiot.core.http.handler.UploadFileHandler;
+import com.nubeiot.core.http.handler.UploadListener;
 import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
 import com.nubeiot.core.http.rest.RestApisBuilder;
 import com.nubeiot.core.http.ws.WebsocketEventBuilder;
@@ -45,11 +48,10 @@ import lombok.NonNull;
 public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext> {
 
     public final static String SERVER_INFO_DATA_KEY = "SERVER_INFO";
-
+    private static final int MB = 1024 * 1024;
     @NonNull
     private final HttpServerRouter httpRouter;
     private io.vertx.core.http.HttpServer httpServer;
-    private EventModel uploadListenerEvent;
     private String dataDir;
 
     HttpServer(HttpServerRouter httpRouter) {
@@ -70,8 +72,8 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                 int port = event.result().actualPort();
                 logger.info("Web Server started at {}", port);
                 ServerInfo info = createServerInfo(handler, port);
-                this.vertx.sharedData().getLocalMap(this.getSharedKey()).put(SERVER_INFO_DATA_KEY, info);
-                this.getContext().create(info, uploadListenerEvent);
+                SharedDataDelegate.addLocalDataValue(vertx, getSharedKey(), SERVER_INFO_DATA_KEY, info);
+                this.getContext().create(info);
                 future.complete();
                 return;
             }
@@ -124,13 +126,15 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                                  .exposedHeaders(corsOptions.getExposedHeaders())
                                                  .maxAgeSeconds(corsOptions.getMaxAgeSeconds());
             mainRouter.route()
-                      .handler(BodyHandler.create())
                       .handler(corsHandler)
                       .handler(ResponseContentTypeHandler.create())
                       .handler(ResponseTimeHandler.create())
                       .failureHandler(ResponseTimeHandler.create())
                       .failureHandler(new FailureContextHandler());
-            initFileStorageRouter(mainRouter, config.getFileStorageConfig());
+            String pathNoUpload = "(?!" + config.getFileStorageConfig().getUploadConfig().getPath() + ").+";
+            initFileStorageRouter(mainRouter, config.getFileStorageConfig(), config.publicUrl());
+            mainRouter.routeWithRegex(pathNoUpload)
+                      .handler(BodyHandler.create(false).setBodyLimit(config.getMaxBodySizeMB() * MB));
             initWebSocketRouter(mainRouter, config.getWebsocketConfig());
             initHttp2Router(mainRouter);
             initRestRouter(mainRouter, config.getRestConfig());
@@ -161,44 +165,47 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                                  .build();
     }
 
-    private Router initFileStorageRouter(Router router, FileStorageConfig storageConfig) {
+    private Router initFileStorageRouter(Router router, FileStorageConfig storageConfig, String publicUrl) {
         if (!storageConfig.isEnabled()) {
             return router;
         }
         Path storageDir = Paths.get(FileUtils.createFolder(dataDir, storageConfig.getDir()));
-        initUploadRouter(router, storageDir, storageConfig.getUploadConfig());
+        initUploadRouter(router, storageDir, storageConfig.getUploadConfig(), publicUrl);
         initDownloadRouter(router, storageDir, storageConfig.getDownloadConfig());
         return router;
     }
 
-    private Router initUploadRouter(Router router, Path storageDir, UploadConfig uploadCfg) {
+    private Router initUploadRouter(Router router, Path storageDir, UploadConfig uploadCfg, String publicUrl) {
         if (!uploadCfg.isEnabled()) {
             return router;
         }
-        logger.info("Init Upload router...");
+        logger.info("Init Upload router: '{}'...", uploadCfg.getPath());
         EventController controller = this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS, new EventController(vertx));
-        this.uploadListenerEvent = EventModel.builder()
-                                             .address(Strings.fallback(uploadCfg.getListenerAddress(), getSharedKey()))
+        EventModel listenerEvent = EventModel.builder()
+                                             .address(Strings.fallback(uploadCfg.getListenerAddress(),
+                                                                       getSharedKey() + ".upload"))
                                              .event(EventAction.CREATE)
                                              .pattern(EventPattern.REQUEST_RESPONSE)
                                              .local(true)
                                              .build();
+        String handlerClass = uploadCfg.getHandlerClass();
+        String listenerClass = uploadCfg.getListenerClass();
+        controller.register(listenerEvent,
+                            UploadListener.create(listenerClass, new ArrayList<>(listenerEvent.getEvents())));
         router.post(uploadCfg.getPath())
-              .handler(BodyHandler.create(storageDir.toString())
-                                  .setHandleFileUploads(true)
-                                  .setBodyLimit(uploadCfg.getMaxSize() * 1024))
-              .handler(
-                  UploadFileHandler.create(uploadCfg.getHandlerClass(), controller, uploadListenerEvent, storageDir,
-                                           config.publicUrl()));
+              .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB))
+              .handler(UploadFileHandler.create(handlerClass, controller, listenerEvent, storageDir, publicUrl))
+              .handler(new RestEventResponseHandler())
+              .produces(ApiConstants.DEFAULT_CONTENT_TYPE);
         return router;
     }
 
-    private Router initDownloadRouter(Router router, Path storageDir, DownloadConfig downloadConfig) {
-        if (!downloadConfig.isEnabled()) {
+    private Router initDownloadRouter(Router router, Path storageDir, DownloadConfig downloadCfg) {
+        if (!downloadCfg.isEnabled()) {
             return router;
         }
-        logger.info("Init Download router...");
-        router.get(Urls.combinePath(downloadConfig.getPath(), ApiConstants.WILDCARDS_ANY_PATH))
+        logger.info("Init Download router: '{}'...", downloadCfg.getPath());
+        router.get(Urls.combinePath(downloadCfg.getPath(), ApiConstants.WILDCARDS_ANY_PATH))
               .handler(StaticHandler.create()
                                     .setEnableRangeSupport(true)
                                     .setSendVaryHeader(true)
@@ -206,7 +213,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                     .setAllowRootFileSystemAccess(true)
                                     .setIncludeHidden(false)
                                     .setWebRoot(storageDir.toString()))
-              .handler(DownloadFileHandler.create(downloadConfig.getPath(), storageDir));
+              .handler(DownloadFileHandler.create(downloadCfg.getHandlerClass(), downloadCfg.getPath(), storageDir));
         return router;
     }
 

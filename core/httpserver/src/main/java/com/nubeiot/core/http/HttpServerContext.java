@@ -1,7 +1,6 @@
 package com.nubeiot.core.http;
 
 import com.nubeiot.core.component.UnitContext;
-import com.nubeiot.core.event.EventModel;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,11 +11,9 @@ import lombok.NoArgsConstructor;
 public class HttpServerContext extends UnitContext {
 
     private ServerInfo serverInfo;
-    private EventModel uploadListenerEvent;
 
-    HttpServerContext create(ServerInfo serverInfo, EventModel uploadListenerEvent) {
+    HttpServerContext create(ServerInfo serverInfo) {
         this.serverInfo = serverInfo;
-        this.uploadListenerEvent = uploadListenerEvent;
         return this;
     }
 

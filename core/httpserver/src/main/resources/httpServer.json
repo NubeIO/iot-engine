@@ -4,6 +4,7 @@
   "publicHost": "",
   "publicPort": -1,
   "publicScheme": "HTTP",
+  "maxBodySizeMB": 2,
   "__options__": {
     "logActivity": false,
     "receiveBufferSize": -1,
@@ -116,7 +117,7 @@
     "__upload__": {
       "enabled": false,
       "path": "/u",
-      "maxSize": 5,
+      "maxBodySizeMB": 10,
       "handlerClass": "com.nubeiot.core.http.handler.UploadFileHandler"
     },
     "__download__": {

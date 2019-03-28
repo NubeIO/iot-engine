@@ -16,6 +16,9 @@ import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.http.base.HttpScheme;
 import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.handler.DownloadFileHandler;
+import com.nubeiot.core.http.handler.UploadFileHandler;
+import com.nubeiot.core.http.handler.UploadListener;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
@@ -34,6 +37,7 @@ public final class HttpConfig implements IConfig {
     private String publicHost = "";
     private int publicPort = -1;
     private HttpScheme publicScheme = HttpScheme.HTTP;
+    private int maxBodySizeMB = 2;
 
     @JsonProperty(value = ServerOptions.NAME)
     private ServerOptions options = (ServerOptions) new ServerOptions().setCompressionSupported(true)
@@ -246,9 +250,10 @@ public final class HttpConfig implements IConfig {
 
             private boolean enabled = false;
             private String path = ApiConstants.ROOT_UPLOAD_PATH;
-            private int maxSize = 5;
-            private String handlerClass = "com.nubeiot.core.http.handler.UploadFileHandler";
+            private int maxBodySizeMB = 10;
+            private String handlerClass = UploadFileHandler.class.getName();
             private String listenerAddress;
+            private String listenerClass = UploadListener.class.getName();
 
             @Override
             public String name() { return NAME; }
@@ -268,6 +273,7 @@ public final class HttpConfig implements IConfig {
 
             private boolean enabled = false;
             private String path = ApiConstants.ROOT_DOWNLOAD_PATH;
+            private String handlerClass = DownloadFileHandler.class.getName();
 
             @Override
             public String name() { return NAME; }
