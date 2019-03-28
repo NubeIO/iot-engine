@@ -82,27 +82,16 @@ public class BACnet {
         this.localDevice = localDevice;
     }
 
-    private BACnet(String name, int id, Future<Void> future, EventController eventController, Vertx vertx) {
+    private BACnet(String name, int id, Future<Void> future, EventController eventController, Vertx vertx,
+                   String networkInterfaceName) {
         this.eventController = eventController;
         this.vertx = vertx;
         this.points = new HashMap<>();
 
-        String broadcastAddress = null;
-        int networkPrefixLength = 24;
         try {
-            broadcastAddress = NetworkUtils.getBroadcastAddress();
-            networkPrefixLength = NetworkUtils.getNetworkPrefixLength();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            future.fail(ex);
-            return;
-        }
-
-        IpNetwork network = new IpNetworkBuilder().withBroadcast(broadcastAddress, networkPrefixLength).build();
-        Transport transport = new DefaultTransport(network);
-        localDevice = new LocalDevice(id, transport);
-        localDevice.writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(name));
-        try {
+            Transport transport = buildTransport(networkInterfaceName);
+            localDevice = new LocalDevice(id, transport);
+            localDevice.writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(name));
             localDevice.initialize();
             localDevice.startRemoteDeviceDiscovery();
             //TODO: should this be stopped? does it stop handling IAM req if stopped?
@@ -118,8 +107,8 @@ public class BACnet {
     }
 
     public static BACnet createBACnet(String name, int id, Future<Void> future, EventController eventController,
-                                      Vertx vertx) {
-        return new BACnet(name, id, future, eventController, vertx);
+                                      Vertx vertx, String networkInterfaceName) {
+        return new BACnet(name, id, future, eventController, vertx, networkInterfaceName);
     }
 
     public static BACnet createBACnet(String name, int id, EventController eventController, Vertx vertx,
@@ -131,14 +120,25 @@ public class BACnet {
         localDevice.terminate();
     }
 
+    private Transport buildTransport(String networkInterface) throws Exception {
+        String broadcastAddress = NetworkUtils.getBroadcastAddress(networkInterface);
+        int networkPrefixLength = NetworkUtils.getNetworkPrefixLength(networkInterface);
+
+        IpNetwork network = new IpNetworkBuilder().withBroadcast(broadcastAddress, networkPrefixLength).build();
+        return new DefaultTransport(network);
+    }
+
     public void BEGIN_TEST() {
-        //        logger.info("\n\n\nBEGINING TEST\n\n");
-        //        logger.info(getRemoteDevices());
-        //        RemoteDevice rd = localDevice.getCachedRemoteDevice(2769127);
-        //        if(rd == null) {System.out.println("NO DEVICE");return;}
-        //        getRemoteDeviceObjectList(rd).subscribe(data -> {
-        //            logger.info(data);
-        //        });
+        logger.info("\n\n\nBEGINING TEST\n\n");
+        logger.info(getRemoteDevices());
+        RemoteDevice rd = localDevice.getCachedRemoteDevice(205);
+        if (rd == null) {
+            System.out.println("NO DEVICE");
+            return;
+        }
+        getRemoteDeviceObjectList(rd).subscribe(data -> {
+            logger.info(data);
+        });
     }
 
     //TODO: test new RxJava

@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.core.http.HttpClient;
 
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.event.EventController;
@@ -29,8 +30,10 @@ public class BACnetVerticle extends ContainerVerticle {
         try {
             String deviceName = this.nubeConfig.getAppConfig().toJson().getString("deviceName");
             int deviceID = this.nubeConfig.getAppConfig().toJson().getInteger("deviceID");
-            bacnetInstance = BACnet.createBACnet(deviceName, deviceID, future, eventController, vertx);
-            //            getLocalPoints(this.nubeConfig.getAppConfig().toJson().getString("bonescriptPassword"));
+            String networkInterfaceName = this.nubeConfig.getAppConfig().toJson().getString("networkInterface");
+            bacnetInstance = BACnet.createBACnet(deviceName, deviceID, future, eventController, vertx,
+                                                 networkInterfaceName);
+            getLocalPoints();
         } catch (Exception ex) {
             logger.error("\n\nSTARTUP FAILURE\n\n");
             future.fail(ex);
@@ -41,7 +44,7 @@ public class BACnetVerticle extends ContainerVerticle {
         //        addProvider(new MicroserviceProvider(), this::publishServices);
 
         future.complete();
-        //        vertx.setTimer(2000, handler -> bacnetInstance.BEGIN_TEST());
+        vertx.setTimer(2000, handler -> bacnetInstance.BEGIN_TEST());
 
     }
 
@@ -72,7 +75,7 @@ public class BACnetVerticle extends ContainerVerticle {
                     .subscribe();
     }
 
-    private void getLocalPoints(String password) {
+    private void getLocalPoints() {
         //        EventMessage message = EventMessage.initial(EventAction.GET_LIST);
         //
         //        ReplyEventHandler handler = new ReplyEventHandler("BACnet-pointsAPI", EventAction.GET_LIST,
@@ -90,7 +93,7 @@ public class BACnetVerticle extends ContainerVerticle {
         //                                 handler.accept(response);
         //                             });
 
-        vertx.createHttpClient().getNow(4000, "localhost", "/points", response -> {
+        HttpClient client = vertx.createHttpClient().getNow(4000, "localhost", "/points", response -> {
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 response.bodyHandler(body -> {
                     //                    System.out.println(body.toJsonObject());
