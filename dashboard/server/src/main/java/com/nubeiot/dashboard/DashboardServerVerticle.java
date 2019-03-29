@@ -2,6 +2,13 @@ package com.nubeiot.dashboard;
 
 import static com.nubeiot.core.http.base.HttpScheme.HTTPS;
 
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.oauth2.OAuth2FlowType;
+import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
+import io.vertx.reactivex.ext.auth.oauth2.providers.KeycloakAuth;
+import io.vertx.reactivex.ext.mongo.MongoClient;
+import io.vertx.servicediscovery.types.HttpLocation;
+
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpConfig;
@@ -21,18 +28,13 @@ import com.nubeiot.dashboard.controllers.InfoRestController;
 import com.nubeiot.dashboard.controllers.LayoutGridController;
 import com.nubeiot.dashboard.controllers.MediaController;
 import com.nubeiot.dashboard.controllers.MenuController;
+import com.nubeiot.dashboard.controllers.MultiTenantUserController;
 import com.nubeiot.dashboard.controllers.SettingsController;
 import com.nubeiot.dashboard.controllers.WidgetImageController;
 import com.nubeiot.dashboard.providers.RestMediaDirProvider;
+import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.providers.RestOAuth2AuthProvider;
 import com.zandero.rest.RestRouter;
-
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.oauth2.OAuth2FlowType;
-import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
-import io.vertx.reactivex.ext.auth.oauth2.providers.KeycloakAuth;
-import io.vertx.reactivex.ext.mongo.MongoClient;
-import io.vertx.servicediscovery.types.HttpLocation;
 
 @SuppressWarnings("Duplicates")
 public class DashboardServerVerticle extends ContainerVerticle {
@@ -50,17 +52,19 @@ public class DashboardServerVerticle extends ContainerVerticle {
         HttpServerRouter router = new HttpServerRouter().registerApi(InfoRestController.class, AuthRestController.class,
                                                                      LayoutGridController.class, MenuController.class,
                                                                      SettingsController.class,
-                                                                     WidgetImageController.class,
-                                                                     MediaController.class);
+                                                                     WidgetImageController.class, MediaController.class,
+                                                                     MultiTenantUserController.class);
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
         this.registerSuccessHandler(event -> {
             ServerInfo info = this.httpContext.getServerInfo();
-            microContext.getClusterController()
-                        .addHttpRecord("DashboardServerVerticle",
-                                       new HttpLocation(info.toJson()).setRoot(info.getApiPath()), new JsonObject())
-                        .subscribe();
+            microContext
+                .getClusterController()
+                .addHttpRecord("DashboardServerVerticle", new HttpLocation(info.toJson()).setRoot(info.getApiPath()),
+                               new JsonObject())
+                .subscribe();
+            RestRouter.addProvider(RestMicroContextProvider.class, ctx -> new RestMicroContextProvider(microContext));
         });
 
         JsonObject appConfig = this.nubeConfig.getAppConfig().toJson();

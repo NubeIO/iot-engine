@@ -1,50 +1,17 @@
 package com.nubeiot.dashboard.impl;
 
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleForbiddenResponse;
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleHttpException;
-import static com.nubeiot.core.common.utils.CustomMessageResponseHelper.handleNotFoundResponse;
-import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Address.MULTI_TENANT_ADDRESS;
-import static com.nubeiot.dashboard.constants.Collection.COMPANY;
-import static com.nubeiot.dashboard.constants.Collection.SITE;
-import static com.nubeiot.dashboard.constants.Collection.USER;
-import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.nubeiot.core.common.HttpHelper;
-import com.nubeiot.core.common.RxRestAPIVerticle;
-import com.nubeiot.core.common.constants.Services;
-import com.nubeiot.core.common.utils.CustomMessage;
-import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.exceptions.HttpException;
-import com.nubeiot.core.micro.MicroContext;
-import com.nubeiot.core.mongo.MongoUtils;
-import com.nubeiot.core.utils.SQLUtils;
-import com.nubeiot.core.utils.Strings;
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.helpers.CustomMessageHelper;
-import com.nubeiot.dashboard.models.Company;
-import com.nubeiot.dashboard.models.KeycloakUserRepresentation;
-import com.nubeiot.dashboard.models.MongoUser;
-import com.nubeiot.dashboard.models.Site;
-import com.nubeiot.dashboard.models.UserGroup;
-import com.nubeiot.dashboard.utils.DittoUtils;
-import com.nubeiot.dashboard.utils.UserUtils;
-
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.UpdateOptions;
-import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.ext.mongo.MongoClient;
+
+import com.nubeiot.core.common.RxRestAPIVerticle;
+import com.nubeiot.core.common.utils.CustomMessage;
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.micro.MicroContext;
+
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -71,7 +38,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
         String url = customMessage.getHeader().getString("url");
         String method = customMessage.getHeader().getString("method");
 
-        switch (method.toUpperCase()) {
+        /*switch (method.toUpperCase()) {
             case "GET":
                 switch (url) {
                     case "companies":
@@ -164,10 +131,10 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
             default:
                 handleNotFoundResponse(message);
                 break;
-        }
+        }*/
     }
 
-    private void handlePostUser(Message<Object> message) {
+    /*private void handlePostUser(Message<Object> message) {
         JsonObject user = CustomMessageHelper.getUser(message);
         Role role = CustomMessageHelper.getRole(user);
         String companyId = CustomMessageHelper.getCompanyId(user);
@@ -180,7 +147,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
             String authServerUrl = keycloakConfig.getString("auth-server-url");
             String realmName = keycloakConfig.getString("realm");
 
-            HttpClient client = vertx.createHttpClient();
+            HttpClient client = vertx.getDelegate().createHttpClient();
 
             // 1. Create User on Keycloak
             UserUtils.createUser(userRepresentation, accessToken, authServerUrl, realmName, client)
@@ -818,7 +785,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
         JsonObject keycloakConfig = CustomMessageHelper.getKeycloakConfig(message);
         JsonObject headers = CustomMessageHelper.getHeaders(message);
 
-        HttpClient client = vertx.createHttpClient();
+        HttpClient client = vertx.getDelegate().createHttpClient();
 
         return UserUtils.deleteUser(userObjectJson.getString("_id"), accessToken,
                                     keycloakConfig.getString("auth-server-url"), keycloakConfig.getString("realm"),
@@ -991,7 +958,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
         JsonObject keycloakConfig = CustomMessageHelper.getKeycloakConfig(message);
         String authServerUrl = keycloakConfig.getString("auth-server-url");
         String realmName = keycloakConfig.getString("realm");
-        HttpClient client = vertx.createHttpClient();
+        HttpClient client = vertx.getDelegate().createHttpClient();
 
         UserUtils.queryUsers(query, accessToken, authServerUrl, realmName, client).subscribe(users -> {
             logger.info("Users: " + users);
@@ -1026,7 +993,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
         String authServerUrl = keycloakConfig.getString("auth-server-url");
         String realmName = keycloakConfig.getString("realm");
 
-        HttpClient client = vertx.createHttpClient();
+        HttpClient client = vertx.getDelegate().createHttpClient();
 
         if (Strings.isNotBlank(password)) {
             mongoClient.rxFindOne(USER, idQuery(userId), null)
@@ -1074,7 +1041,7 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
         JsonObject body = CustomMessageHelper.getBodyAsJson(message);
         KeycloakUserRepresentation keycloakUserRepresentation = new KeycloakUserRepresentation(body);
 
-        HttpClient client = vertx.createHttpClient();
+        HttpClient client = vertx.getDelegate().createHttpClient();
 
         mongoClient.rxFindOne(USER, idQuery(userId), null)
                    .map(response -> {
@@ -1804,6 +1771,6 @@ public class MultiTenantVerticle extends ContainerVerticle implements RxRestAPIV
             return Single.just(companyId.equals(toCheckCompanyId));
         }
         return Single.just(false);
-    }
+    }*/
 
 }

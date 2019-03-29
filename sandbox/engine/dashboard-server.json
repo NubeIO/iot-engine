@@ -36,6 +36,22 @@
       "port": 8085,
       "scheme": "HTTP",
       "rootApi": "/api",
+      "__cors__": {
+        "allowedHeaders": [
+          "Access-Control-Request-Method",
+          "Access-Control-Allow-Credentials",
+          "Access-Control-Allow-Origin",
+          "Access-Control-Allow-Headers",
+          "Content-Type",
+          "origin",
+          "x-requested-with",
+          "accept",
+          "X-PINGARUNER",
+          "Site-Id",
+          "Authorization",
+          "JSESSIONID"
+        ]
+      },
       "__dynamic__": {
         "enabled": false
       }

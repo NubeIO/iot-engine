@@ -3,13 +3,13 @@ package com.nubeiot.core.mongo;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.nubeiot.core.common.utils.HttpException;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.mongo.MongoClient;
+
+import com.nubeiot.core.exceptions.HttpException;
 
 public class MongoUtils {
 
@@ -18,15 +18,16 @@ public class MongoUtils {
     }
 
     public static Single<String> postDocument(MongoClient mongoClient, String collection, JsonObject document) {
-        return mongoClient.rxFindOne(collection, new JsonObject().put("_id", document.getString("_id", "")), null)
-                          .flatMap(response -> {
-                              if (response == null) {
-                                  return mongoClient.rxSave(collection, document);
-                              } else {
-                                  throw new HttpException(HttpResponseStatus.CONFLICT,
-                                                          "Same value existence on our Database.");
-                              }
-                          });
+        return mongoClient
+            .rxFindOne(collection, new JsonObject().put("_id", document.getString("_id", "")), null)
+            .flatMap(response -> {
+                if (response == null) {
+                    return mongoClient.rxSave(collection, document);
+                } else {
+                    throw new HttpException(HttpResponseStatus.CONFLICT,
+                                            "Same value existence on our Database.");
+                }
+            });
     }
 
     public static String[] getIds(List<JsonObject> jsonObjectList) {
@@ -61,7 +62,7 @@ public class MongoUtils {
                 return jsonObject;
             }
         }
-        return jsonObjectList.size() > 0 ? jsonObjectList.get(0) : null;
+        return jsonObjectList.size() > 0 ? jsonObjectList.get(0) : new JsonObject();
     }
 
 }
