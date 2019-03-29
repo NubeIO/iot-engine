@@ -7,4 +7,23 @@ repositories {
 dependencies {
     compile project(':edge:connector:bacnet')
     compile project(':edge:connector:driverapi')
+
+    compile project(':core:base')
+    compile project(':core:httpbase')
+    compile "io.vertx:vertx-web:$project.versions.vertx"
+    compile("com.zandero:rest.vertx:0.8.8") {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
+    compile "org.jboss.resteasy:resteasy-jaxrs:3.6.2.Final"
+    compileOnly project(':core:micro')
+    compileOnly "io.vertx:vertx-service-discovery:$project.versions.vertx"
+
+    testCompile project(":core:base").sourceSets.test.output
+    testCompile project(":core:micro")
+    testCompile project(":core:httpclient")
+    testCompile project(":core:httpserver").sourceSets.test.output
+    testCompile project(':core:httpbase')
+
+    testCompile "org.mockito:mockito-core:1.+"
+
 }

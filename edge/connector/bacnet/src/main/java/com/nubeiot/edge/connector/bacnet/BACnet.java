@@ -15,10 +15,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.edge.connector.bacnet.Util.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.Util.LocalPointObjectUtils;
 import com.nubeiot.edge.connector.bacnet.Util.NetworkUtils;
@@ -32,15 +29,11 @@ import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 import com.serotonin.bacnet4j.npdu.ip.IpNetworkBuilder;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
 import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;
-import com.serotonin.bacnet4j.service.Service;
-import com.serotonin.bacnet4j.service.confirmed.CreateObjectRequest;
 import com.serotonin.bacnet4j.service.confirmed.SubscribeCOVRequest;
 import com.serotonin.bacnet4j.service.confirmed.WritePropertyRequest;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
 import com.serotonin.bacnet4j.transport.Transport;
 import com.serotonin.bacnet4j.type.Encodable;
-import com.serotonin.bacnet4j.type.constructed.Address;
-import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.enumerated.ErrorClass;
 import com.serotonin.bacnet4j.type.enumerated.ErrorCode;
@@ -70,7 +63,6 @@ public class BACnet {
     private Vertx vertx;
     private EventController eventController;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final String POINTS_API = "nubeio.edge.connector.pointsapi";
 
     private LocalDevice localDevice;
     private HashMap<RemoteDevice, Vector<ObjectIdentifier>> points;
@@ -93,6 +85,7 @@ public class BACnet {
             localDevice = new LocalDevice(id, transport);
             localDevice.writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(name));
             localDevice.initialize();
+            localDevice.getEventHandler().addListener(new BACnetEventListener(vertx, eventController));
             localDevice.startRemoteDeviceDiscovery();
             //TODO: should this be stopped? does it stop handling IAM req if stopped?
 
@@ -128,18 +121,18 @@ public class BACnet {
         return new DefaultTransport(network);
     }
 
-    public void BEGIN_TEST() {
-        logger.info("\n\n\nBEGINING TEST\n\n");
-        logger.info(getRemoteDevices());
-        RemoteDevice rd = localDevice.getCachedRemoteDevice(205);
-        if (rd == null) {
-            System.out.println("NO DEVICE");
-            return;
-        }
-        getRemoteDeviceObjectList(rd).subscribe(data -> {
-            logger.info(data);
-        });
-    }
+    //    public void BEGIN_TEST() {
+    //        logger.info("\n\n\nBEGINING TEST\n\n");
+    //        logger.info(getRemoteDevices());
+    //        RemoteDevice rd = localDevice.getCachedRemoteDevice(205);
+    //        if (rd == null) {
+    //            System.out.println("NO DEVICE");
+    //            return;
+    //        }
+    //        getRemoteDeviceObjectList(rd).subscribe(data -> {
+    //            logger.info(data);
+    //        });
+    //    }
 
     //TODO: test new RxJava
     public void initialiseLocalObjectsFromJson(JsonObject json) {
@@ -318,32 +311,6 @@ public class BACnet {
     }
 
     private class listener extends DeviceEventAdapter {
-
-        @Override
-        public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier,
-                                            ObjectIdentifier initiatingDeviceIdentifier,
-                                            ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
-                                            SequenceOf<PropertyValue> listOfValues) {
-            String address = "edge.connector.bacnet.cov." + subscriberProcessIdentifier + "." +
-                             initiatingDeviceIdentifier + "." + monitoredObjectIdentifier;
-            JsonObject json = BACnetDataConversions.CovNotification(subscriberProcessIdentifier,
-                                                                    monitoredObjectIdentifier, listOfValues);
-            //TODO: Check address, pattern and action
-            EventMessage message = EventMessage.initial(EventAction.UPDATE, json);
-            eventController.fire(POINTS_API + "points." + monitoredObjectIdentifier, EventPattern.POINT_2_POINT,
-                                 message);
-        }
-
-        @Override
-        public void requestReceived(Address from, Service service) {
-            super.requestReceived(from, service);
-            if (service instanceof CreateObjectRequest) {
-                CreateObjectRequest req = (CreateObjectRequest) service;
-                //TODO: send request to bonescript api for createObjectRequests
-                //  resolve why this is a private method
-                //  req.getListOfInitialValues();
-            }
-        }
 
     }
 
