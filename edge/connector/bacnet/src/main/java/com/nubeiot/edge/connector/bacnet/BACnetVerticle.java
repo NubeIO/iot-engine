@@ -18,8 +18,8 @@ import com.nubeiot.edge.connector.bacnet.handlers.PointsEventHandler;
  */
 public class BACnetVerticle extends ContainerVerticle {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private BACnet bacnetInstance;
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    protected BACnet bacnetInstance;
 
     @Override
     public void start(Future<Void> future) {
@@ -44,7 +44,7 @@ public class BACnetVerticle extends ContainerVerticle {
         //        addProvider(new MicroserviceProvider(), this::publishServices);
 
         future.complete();
-        vertx.setTimer(2000, handler -> bacnetInstance.BEGIN_TEST());
+        //        vertx.setTimer(2000, handler -> bacnetInstance.BEGIN_TEST());
 
     }
 
@@ -59,7 +59,7 @@ public class BACnetVerticle extends ContainerVerticle {
         this.eventController = controller;
     }
 
-    private void publishServices(MicroContext microContext) {
+    protected void publishServices(MicroContext microContext) {
         microContext.getLocalController()
                     .addEventMessageRecord("event-message-service", BACnetEventModels.DEVICES.getAddress(),
                                            EventMethodDefinition.createDefault("/bacnet/devices",
@@ -75,7 +75,7 @@ public class BACnetVerticle extends ContainerVerticle {
                     .subscribe();
     }
 
-    private void getLocalPoints() {
+    protected void getLocalPoints() {
         //        EventMessage message = EventMessage.initial(EventAction.GET_LIST);
         //
         //        ReplyEventHandler handler = new ReplyEventHandler("BACnet-pointsAPI", EventAction.GET_LIST,
@@ -96,7 +96,6 @@ public class BACnetVerticle extends ContainerVerticle {
         HttpClient client = vertx.createHttpClient().getNow(4000, "localhost", "/points", response -> {
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 response.bodyHandler(body -> {
-                    //                    System.out.println(body.toJsonObject());
                     bacnetInstance.initialiseLocalObjectsFromJson(body.toJsonObject());
                 });
             } else {
