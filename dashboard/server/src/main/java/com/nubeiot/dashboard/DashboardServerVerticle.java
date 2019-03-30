@@ -28,6 +28,7 @@ import com.nubeiot.dashboard.controllers.InfoRestController;
 import com.nubeiot.dashboard.controllers.LayoutGridController;
 import com.nubeiot.dashboard.controllers.MediaController;
 import com.nubeiot.dashboard.controllers.MenuController;
+import com.nubeiot.dashboard.controllers.MultiTenantCompanyController;
 import com.nubeiot.dashboard.controllers.MultiTenantUserController;
 import com.nubeiot.dashboard.controllers.SettingsController;
 import com.nubeiot.dashboard.controllers.WidgetImageController;
@@ -36,7 +37,6 @@ import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.providers.RestOAuth2AuthProvider;
 import com.zandero.rest.RestRouter;
 
-@SuppressWarnings("Duplicates")
 public class DashboardServerVerticle extends ContainerVerticle {
 
     private HttpServerContext httpContext;
@@ -46,14 +46,14 @@ public class DashboardServerVerticle extends ContainerVerticle {
     private OAuth2Auth oAuth2Auth;
 
     @Override
-    @SuppressWarnings("Duplicates")
     public void start() {
         super.start();
         HttpServerRouter router = new HttpServerRouter().registerApi(InfoRestController.class, AuthRestController.class,
                                                                      LayoutGridController.class, MenuController.class,
                                                                      SettingsController.class,
                                                                      WidgetImageController.class, MediaController.class,
-                                                                     MultiTenantUserController.class);
+                                                                     MultiTenantUserController.class,
+                                                                     MultiTenantCompanyController.class);
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 

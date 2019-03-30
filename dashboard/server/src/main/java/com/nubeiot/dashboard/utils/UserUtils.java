@@ -184,4 +184,12 @@ public class UserUtils {
         return SQLUtils.in(role.toString(), Role.MANAGER.toString(), Role.USER.toString(), Role.GUEST.toString());
     }
 
+    public static String getCompanyId(JsonObject user) {
+        return user.getString("company_id");
+    }
+
+    public static Role getRole(JsonObject user) {
+        return Role.valueOf(user.getString("role"));
+    }
+
 }

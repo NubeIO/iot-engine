@@ -5,6 +5,12 @@ import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
 import static com.nubeiot.dashboard.constants.Collection.USER;
 import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
+import static com.nubeiot.dashboard.helpers.MultiTenantPermissionHelper.checkPermissionAndReturnValue;
+import static com.nubeiot.dashboard.helpers.MultiTenantQueryBuilderHelper.byAdminCompanyGetAdminWithManagerSelectionList;
+import static com.nubeiot.dashboard.helpers.MultiTenantQueryBuilderHelper.byAdminCompanyGetAdminWithManagerSelectionListQuery;
+import static com.nubeiot.dashboard.helpers.MultiTenantRepresentationHelper.userRepresentation;
+import static com.nubeiot.dashboard.utils.UserUtils.getCompanyId;
+import static com.nubeiot.dashboard.utils.UserUtils.getRole;
 import static com.nubeiot.dashboard.utils.UserUtils.hasClientLevelRole;
 import static com.nubeiot.dashboard.utils.UserUtils.hasUserLevelRole;
 
@@ -108,7 +114,7 @@ public class MultiTenantUserController implements RestApi {
                                                    JsonObject keycloakConfig, JsonObject appConfig) {
         Future<ResponseData> future = Future.future();
         JsonObject user = ctx.user().principal();
-        Role role = Role.valueOf(user.getString("role"));
+        Role role = getRole(user);
         JsonArray arrayBody = ctx.getBodyAsJsonArray();
 
         MultiTenantUserProps userProps = MultiTenantUserProps.builder()
@@ -118,7 +124,7 @@ public class MultiTenantUserController implements RestApi {
             .authServerUrl(keycloakConfig.getString("auth-server-url"))
             .realmName(keycloakConfig.getString("realm"))
             .accessToken(user.getString("access_token"))
-            .companyId(user.getString("company_id"))
+            .companyId(getCompanyId(user))
             .user(user)
             .role(role)
             .appConfig(appConfig)
@@ -133,7 +139,8 @@ public class MultiTenantUserController implements RestApi {
             mongoClient.rxFind(USER, query)
                 .flatMap(users -> {
                     if (users.size() == userProps.getArrayBody().size()) {
-                        return checkPermissionAndReturnValue(userProps, users);
+                        return checkPermissionAndReturnValue(userProps.getMongoClient(), userProps.getCompanyId(),
+                                                             userProps.getRole(), users);
                     }
                     throw HttpException.badRequest("Database doesn't have those Users.");
                 })
@@ -141,7 +148,7 @@ public class MultiTenantUserController implements RestApi {
                     .flatMapSingle(usr -> deleteUser(userProps, usr))
                     .toList())
                 .subscribe(
-                    ignore -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+                    ignored -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
                     throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         } else {
             throw HttpException.forbidden();
@@ -174,9 +181,8 @@ public class MultiTenantUserController implements RestApi {
     }
 
     private SingleSource<?> removeUserOnDittoPolicy(MultiTenantUserProps userProps, JsonObject user) {
-        if (Role.ADMIN == Role.valueOf(user.getString("role"))) {
-            return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(),
-                                                                       user.getString("company_id"))
+        if (Role.ADMIN == getRole(user)) {
+            return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(), getCompanyId(user))
                 .flatMap(query -> userProps.getMongoClient().rxFind(SITE, query))
                 .flatMap(sites -> Observable.fromIterable(sites)
                     .flatMapSingle(site -> {
@@ -196,40 +202,12 @@ public class MultiTenantUserController implements RestApi {
         }
     }
 
-    private SingleSource<List<JsonObject>> checkPermissionAndReturnValue(MultiTenantUserProps userProps,
-                                                                         List<JsonObject> users) {
-        return Observable.fromIterable(users)
-            .flatMapSingle(
-                user -> objectLevelPermission(userProps, user.getString("associated_company_id"))
-                    .map(permitted -> {
-                        if (!permitted) {
-                            throw HttpException.forbidden();
-                        }
-                        return user;
-                    })).toList();
-    }
-
-    private Single<Boolean> objectLevelPermission(MultiTenantUserProps userProps,
-                                                  String toCheckCompanyId) {
-        String companyId = userProps.getCompanyId();
-        Role role = userProps.getRole();
-        if (role == Role.SUPER_ADMIN) {
-            return Single.just(true);
-        } else if (role == Role.ADMIN) {
-            return byAdminCompanyGetAdminWithManagerSelectionList(userProps.getMongoClient(), companyId).map(
-                list -> list.contains(toCheckCompanyId));
-        } else if (role == Role.MANAGER) {
-            return Single.just(companyId.equals(toCheckCompanyId));
-        }
-        return Single.just(false);
-    }
-
     private Future<ResponseData> handlePatchUser(Vertx vertx, RoutingContext ctx, MongoClient mongoClient,
                                                  JsonObject keycloakConfig) {
 
         Future<ResponseData> future = Future.future();
         JsonObject user = ctx.user().principal();
-        Role role = Role.valueOf(user.getString("role"));
+        Role role = getRole(user);
         JsonObject body = ctx.getBodyAsJson();
 
         MultiTenantUserProps userProps = MultiTenantUserProps.builder()
@@ -238,7 +216,7 @@ public class MultiTenantUserController implements RestApi {
             .authServerUrl(keycloakConfig.getString("auth-server-url"))
             .realmName(keycloakConfig.getString("realm"))
             .accessToken(user.getString("access_token"))
-            .companyId(user.getString("company_id"))
+            .companyId(getCompanyId(user))
             .user(user)
             .role(role)
             .body(body)
@@ -323,7 +301,6 @@ public class MultiTenantUserController implements RestApi {
 
     private SingleSource<? extends Buffer> updateKeycloakUser(Role role, MultiTenantUserProps userProps,
                                                               JsonObject usr) {
-        logger.info("Responded user: " + usr);
         // Own user_profile can be changed or those users_profiles which is associated with same company
         if (userProps.getUser().getString("user_id").equals(userProps.getParamsUserId())
             || (role == Role.MANAGER) &&
@@ -351,7 +328,7 @@ public class MultiTenantUserController implements RestApi {
         Future<ResponseData> future = Future.future();
 
         JsonObject user = ctx.user().principal();
-        Role role = Role.valueOf(user.getString("role"));
+        Role role = getRole(user);
 
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             JsonObject body = ctx.getBodyAsJson();
@@ -363,7 +340,7 @@ public class MultiTenantUserController implements RestApi {
                 .authServerUrl(keycloakConfig.getString("auth-server-url"))
                 .realmName(keycloakConfig.getString("realm"))
                 .accessToken(user.getString("access_token"))
-                .companyId(user.getString("company_id"))
+                .companyId(getCompanyId(user))
                 .user(user)
                 .role(role)
                 .body(body)
@@ -486,9 +463,9 @@ public class MultiTenantUserController implements RestApi {
     }
 
     private SingleSource<?> addUserOnDittoPolicy(MultiTenantUserProps userProps, JsonObject mongoUser) {
-        if (Role.ADMIN == Role.valueOf(mongoUser.getString("role"))) {
+        if (Role.ADMIN == getRole(mongoUser)) {
             return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(),
-                                                                       mongoUser.getString("company_id"))
+                                                                       getCompanyId(mongoUser))
                 .flatMap(subQuery -> userProps.getMongoClient().rxFind(SITE, subQuery))
                 .flatMap(sites -> Observable.fromIterable(sites)
                     .flatMapSingle(site -> putSubjectOnPolicy(userProps, mongoUser, site.getString("_id")))
@@ -542,28 +519,6 @@ public class MultiTenantUserController implements RestApi {
         return microContext.getClusterController()
             .executeHttpService(r -> prefix.equals(r.getMetadata().getString("api.name")), newPath, method,
                                 requestData);
-    }
-
-    private Single<JsonObject> byAdminCompanyGetAdminWithManagerSelectionListQuery(MongoClient mongoClient,
-                                                                                   String companyId) {
-        return mongoClient
-            .rxFind(COMPANY,
-                    new JsonObject().put("associated_company_id", companyId).put("role", Role.MANAGER.toString()))
-            .map(response -> {
-                JsonObject associatedCompanyIds =
-                    new JsonObject().put("$in", MongoUtils.getIdsOnJsonArray(response).add(companyId));
-                return new JsonObject().put("associated_company_id", associatedCompanyIds);
-            });
-    }
-
-    private Single<List<String>> byAdminCompanyGetAdminWithManagerSelectionList(MongoClient mongoClient,
-                                                                                String companyId) {
-        return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", companyId)
-            .put("role", Role.MANAGER.toString())).map(response -> {
-            List<String> companies = MongoUtils.getIdsOnList(response);
-            companies.add(companyId);
-            return companies;
-        });
     }
 
     private SingleSource<JsonObject> validateClientLevelMongoUser(MultiTenantUserProps userProps, JsonObject company) {
@@ -641,8 +596,8 @@ public class MultiTenantUserController implements RestApi {
     private Future<ResponseData> handleGetUsers(RoutingContext ctx, MongoClient mongoClient) {
         Future<ResponseData> future = Future.future();
         JsonObject user = ctx.user().principal();
-        Role role = Role.valueOf(user.getString("role"));
-        String companyId = user.getString("company_id");
+        Role role = getRole(user);
+        String companyId = getCompanyId(user);
 
         if (role == Role.SUPER_ADMIN) {
             JsonObject eqToSupperAdmin = new JsonObject().put("$eq", Role.SUPER_ADMIN.toString());
@@ -665,55 +620,6 @@ public class MultiTenantUserController implements RestApi {
             future.complete(ResponseDataHelper.forbidden());
         }
         return future;
-    }
-
-    private void userRepresentation(MongoClient mongoClient, JsonObject query, Future<ResponseData> future) {
-        mongoClient.rxFind(USER, query)
-            .flatMap(response -> Observable.fromIterable(response)
-                .flatMapSingle(object ->
-                                   associateCompanyRepresentation(mongoClient, object)
-                                       .flatMap(obj -> companyRepresentation(mongoClient, obj))
-                                       .flatMap(obj -> siteRepresentation(mongoClient, obj))
-                                       .flatMap(obj -> groupRepresentation(mongoClient, obj))).toList())
-            .subscribe(response -> {
-                JsonArray array = new JsonArray();
-                response.forEach(array::add);
-                future.complete(new ResponseData().setBodyMessage(array.encode()));
-            }, throwable -> future.complete(ResponseDataConverter.convert(throwable)));
-    }
-
-    private Single<JsonObject> associateCompanyRepresentation(MongoClient mongoClient, JsonObject object) {
-        return mongoClient
-            .rxFindOne(COMPANY, idQuery(object.getString("associated_company_id")), null)
-            .map(associatedCompany -> associatedCompany == null
-                                      ? object
-                                      : object.put("associated_company", associatedCompany));
-    }
-
-    private Single<JsonObject> companyRepresentation(MongoClient mongoClient, JsonObject object) {
-        return mongoClient
-            .rxFindOne(COMPANY, idQuery(object.getString("company_id")), null)
-            .map(company -> company == null ? object : object.put("company", company));
-    }
-
-    private Single<JsonObject> groupRepresentation(MongoClient mongoClient, JsonObject object) {
-        if (Strings.isNotBlank(object.getString("group_id"))) {
-            return mongoClient
-                .rxFindOne(USER_GROUP, idQuery(object.getString("group_id")), null)
-                .map(group -> group == null ? object : object.put("group", group));
-        } else {
-            return Single.just(object);
-        }
-    }
-
-    private Single<JsonObject> siteRepresentation(MongoClient mongoClient, JsonObject object) {
-        if (Strings.isNotBlank(object.getString("site_id"))) {
-            return mongoClient
-                .rxFindOne(SITE, idQuery(object.getString("site_id")), null)
-                .map(site -> site == null ? object : object.put("site", site));
-        } else {
-            return Single.just(object);
-        }
     }
 
 }
