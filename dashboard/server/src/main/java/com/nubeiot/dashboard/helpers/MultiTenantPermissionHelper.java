@@ -6,7 +6,6 @@ import java.util.List;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.SingleSource;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
@@ -15,18 +14,14 @@ import com.nubeiot.dashboard.Role;
 
 public class MultiTenantPermissionHelper {
 
-    public static SingleSource<List<JsonObject>> checkPermissionAndReturnValue(MongoClient mongoClient,
-                                                                               String companyId, Role role,
-                                                                               List<JsonObject> objects) {
-        return Observable.fromIterable(objects)
-            .flatMapSingle(
-                object -> objectLevelPermission(mongoClient, companyId, role, object.getString("associated_company_id"))
-                    .map(permitted -> {
-                        if (!permitted) {
-                            throw HttpException.forbidden();
-                        }
-                        return object;
-                    })).toList();
+    public static Single<List<Boolean>> checkPermissionAndReturnValue(MongoClient mongoClient,
+                                                                      String companyId, Role role,
+                                                                      List<JsonObject> objects) {
+        return Observable
+            .fromIterable(objects)
+            .flatMapSingle(object -> objectLevelPermission(mongoClient, companyId, role,
+                                                           object.getString("associated_company_id")))
+            .toList();
     }
 
     public static Single<Boolean> objectLevelPermission(MongoClient mongoClient, String companyId, Role role,
@@ -34,10 +29,19 @@ public class MultiTenantPermissionHelper {
         if (role == Role.SUPER_ADMIN) {
             return Single.just(true);
         } else if (role == Role.ADMIN) {
-            return byAdminCompanyGetAdminWithManagerSelectionList(mongoClient, companyId).map(
-                list -> list.contains(toCheckCompanyId));
+            return byAdminCompanyGetAdminWithManagerSelectionList(mongoClient, companyId).map(list -> {
+                if (list.contains(toCheckCompanyId)) {
+                    throw HttpException.forbidden();
+                } else {
+                    return true;
+                }
+            });
         } else if (role == Role.MANAGER) {
-            return Single.just(companyId.equals(toCheckCompanyId));
+            if (companyId.equals(toCheckCompanyId)) {
+                return Single.just(true);
+            } else {
+                throw HttpException.forbidden();
+            }
         }
         return Single.just(false);
     }

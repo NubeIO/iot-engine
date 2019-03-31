@@ -299,7 +299,7 @@ public class AuthRestController implements RestApi {
         logger.info("Auth middleware is being called...");
         String authorization = ctx.request().getHeader(HttpHeaders.AUTHORIZATION);
         if (authorization != null) {
-            authorization = authorization.substring("Bearer ".length());
+            authorization = authorization.substring("Bearer".length()).trim();
             setAuthenticUser(ctx, loginAuth, mongoClient, authorization, future);
         } else {
             // Web pages WebSocket authentication

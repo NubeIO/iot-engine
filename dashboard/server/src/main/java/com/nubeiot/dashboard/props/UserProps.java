@@ -1,4 +1,4 @@
-package com.nubeiot.dashboard;
+package com.nubeiot.dashboard.props;
 
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonArray;
@@ -7,6 +7,7 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.dashboard.Role;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder(builderClassName = "Builder")
-public class MultiTenantUserProps {
+public class UserProps {
 
     private final MongoClient mongoClient;
     private final HttpClient httpClient;
@@ -36,15 +37,15 @@ public class MultiTenantUserProps {
     private RequestData requestData;
     private JsonObject keycloakUser;
 
-    public String getUserId() {
-        return this.keycloakUser.getString("id");
-    }
-
     public String getBodyUsername() {
         return this.body.getString("username");
     }
 
     public String getBodyPassword() {
+        return this.body.getString("password", defaultPassword);
+    }
+
+    public String getBodyPassword(String defaultPassword) {
         return this.body.getString("password", defaultPassword);
     }
 

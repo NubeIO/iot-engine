@@ -29,6 +29,7 @@ import com.nubeiot.dashboard.controllers.LayoutGridController;
 import com.nubeiot.dashboard.controllers.MediaController;
 import com.nubeiot.dashboard.controllers.MenuController;
 import com.nubeiot.dashboard.controllers.MultiTenantCompanyController;
+import com.nubeiot.dashboard.controllers.MultiTenantSiteController;
 import com.nubeiot.dashboard.controllers.MultiTenantUserController;
 import com.nubeiot.dashboard.controllers.SettingsController;
 import com.nubeiot.dashboard.controllers.WidgetImageController;
@@ -53,7 +54,8 @@ public class DashboardServerVerticle extends ContainerVerticle {
                                                                      SettingsController.class,
                                                                      WidgetImageController.class, MediaController.class,
                                                                      MultiTenantUserController.class,
-                                                                     MultiTenantCompanyController.class);
+                                                                     MultiTenantCompanyController.class,
+                                                                     MultiTenantSiteController.class);
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 

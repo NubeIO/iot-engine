@@ -2,16 +2,16 @@ package com.nubeiot.dashboard.helpers;
 
 import java.util.UUID;
 
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.mongo.MongoUtils;
-import com.nubeiot.dashboard.DynamicCollectionProps;
-import com.nubeiot.dashboard.Role;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.mongo.MongoClient;
+
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.mongo.MongoUtils;
+import com.nubeiot.dashboard.Role;
+import com.nubeiot.dashboard.props.DynamicCollectionProps;
 
 public class DynamicCollectionHelper {
 
@@ -23,13 +23,13 @@ public class DynamicCollectionHelper {
         } else if (collectionProps.isAuthorizedSiteId()) {
 
             mongoClient.rxFind(collection, new JsonObject().put("site_id", collectionProps.getSiteId()))
-                       .subscribe(response -> {
-                           if (response == null) {
-                               future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NOT_FOUND.code()));
-                           } else {
-                               future.complete(new ResponseData().setBodyMessage(response.toString()));
-                           }
-                       }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
+                .subscribe(response -> {
+                    if (response == null) {
+                        future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NOT_FOUND.code()));
+                    } else {
+                        future.complete(new ResponseData().setBodyMessage(response.toString()));
+                    }
+                }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
         } else {
             future.complete(ResponseDataHelper.forbidden());
         }
@@ -114,7 +114,7 @@ public class DynamicCollectionHelper {
             JsonObject body = ctx.getBodyAsJson();
             if (response.size() > 0) {
                 future.complete(new ResponseData().setStatusCode(HttpResponseStatus.CONFLICT.code())
-                                                  .setBodyMessage("We have already that id value."));
+                                    .setBodyMessage("We have already that id value."));
             }
             body.put("site_id", siteId);
             body.put("id", id);
@@ -130,19 +130,19 @@ public class DynamicCollectionHelper {
                                          Future<ResponseData> future) {
         String id = ctx.request().getParam("id");
         mongoClient.rxFindOne(collection, new JsonObject().put("site_id", siteId).put("id", id), null)
-                   .map(jsonObject -> {
-                       JsonObject body = ctx.getBodyAsJson();
-                       if (jsonObject != null) {
-                           body.put("_id", jsonObject.getString("_id"));
-                       }
-                       body.put("site_id", siteId);
-                       body.put("id", id);
-                       return body;
-                   })
-                   .flatMap(body -> mongoClient.rxSave(collection, body))
-                   .subscribe(buffer -> {
-                       future.complete(new ResponseData());
-                   }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
+            .map(jsonObject -> {
+                JsonObject body = ctx.getBodyAsJson();
+                if (jsonObject != null) {
+                    body.put("_id", jsonObject.getString("_id"));
+                }
+                body.put("site_id", siteId);
+                body.put("id", id);
+                return body;
+            })
+            .flatMap(body -> mongoClient.rxSave(collection, body))
+            .subscribe(buffer -> {
+                future.complete(new ResponseData());
+            }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
     }
 
 }

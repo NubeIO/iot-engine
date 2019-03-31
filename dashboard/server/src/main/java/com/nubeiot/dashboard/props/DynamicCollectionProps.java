@@ -1,10 +1,12 @@
-package com.nubeiot.dashboard;
-
-import com.nubeiot.core.utils.Strings;
+package com.nubeiot.dashboard.props;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.dashboard.Role;
+
 import lombok.Getter;
 
 @Getter

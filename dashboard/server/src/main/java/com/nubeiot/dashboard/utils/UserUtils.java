@@ -13,8 +13,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.utils.SQLUtils;
-import com.nubeiot.dashboard.MultiTenantUserProps;
 import com.nubeiot.dashboard.Role;
+import com.nubeiot.dashboard.props.UserProps;
 
 public class UserUtils {
 
@@ -46,7 +46,7 @@ public class UserUtils {
         }
     }
 
-    public static Single<Buffer> createUser(MultiTenantUserProps userProps) {
+    public static Single<Buffer> createUser(UserProps userProps) {
         String url = userProps.getAuthServerUrl() + "/admin/realms/" + userProps.getRealmName() + "/users";
         return Single.create(source -> {
             HttpClientRequest request = userProps.getHttpClient().requestAbs(HttpMethod.POST, url, response ->
@@ -64,7 +64,7 @@ public class UserUtils {
         });
     }
 
-    public static Single<JsonObject> getUserFromUsername(MultiTenantUserProps userProps) {
+    public static Single<JsonObject> getUserFromUsername(UserProps userProps) {
         String url =
             userProps.getAuthServerUrl() + "/admin/realms/" + userProps.getRealmName() + "/users/?username=" +
             userProps.getBodyUsername();
@@ -83,7 +83,7 @@ public class UserUtils {
         });
     }
 
-    public static Single<JsonObject> getUser(MultiTenantUserProps userProps) {
+    public static Single<JsonObject> getUser(UserProps userProps) {
         String url = userProps.getAuthServerUrl() + "/admin/realms/" + userProps.getRealmName() + "/users/" +
                      userProps.getParamsUserId();
         return Single.create(source -> {
@@ -101,9 +101,9 @@ public class UserUtils {
         });
     }
 
-    public static Single<Buffer> resetPassword(MultiTenantUserProps userProps) {
+    public static Single<Buffer> resetPassword(UserProps userProps) {
         String url = userProps.getAuthServerUrl() + "/admin/realms/" + userProps.getRealmName() + "/users/" +
-                     userProps.getUserId() + "/reset-password";
+                     userProps.getParamsUserId() + "/reset-password";
         return Single.create(source -> {
             HttpClientRequest request = userProps.getHttpClient().requestAbs(HttpMethod.PUT, url, response ->
                 response.bodyHandler(body -> {
@@ -124,7 +124,7 @@ public class UserUtils {
         });
     }
 
-    public static Single<JsonObject> deleteUser(MultiTenantUserProps userProps) {
+    public static Single<JsonObject> deleteUser(UserProps userProps) {
         String url =
             userProps.getAuthServerUrl() + "/admin/realms/" + userProps.getRealmName() + "/users/" +
             userProps.getParamsUserId();
@@ -138,7 +138,7 @@ public class UserUtils {
         });
     }
 
-    public static Single<JsonArray> queryUsers(MultiTenantUserProps userProps, String query) {
+    public static Single<JsonArray> queryUsers(UserProps userProps, String query) {
         String url = userProps.getAuthServerUrl() + "/admin/realms/" + userProps.getRealmName() + "/users?" + query;
         return Single.create(source -> {
             HttpClientRequest request = userProps.getHttpClient().requestAbs(HttpMethod.GET, url, response ->
@@ -155,7 +155,7 @@ public class UserUtils {
         });
     }
 
-    public static Single<Buffer> updateUser(MultiTenantUserProps userProps) {
+    public static Single<Buffer> updateUser(UserProps userProps) {
         String url =
             userProps.getAuthServerUrl() + "/admin/realms/" + userProps.getRealmName() + "/users/" +
             userProps.getParamsUserId();

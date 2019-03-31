@@ -6,9 +6,11 @@ import static com.nubeiot.dashboard.constants.Collection.SITE;
 import static com.nubeiot.dashboard.constants.Collection.USER;
 import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
 import static com.nubeiot.dashboard.helpers.MultiTenantPermissionHelper.checkPermissionAndReturnValue;
+import static com.nubeiot.dashboard.helpers.MultiTenantPermissionHelper.objectLevelPermission;
 import static com.nubeiot.dashboard.helpers.MultiTenantQueryBuilderHelper.byAdminCompanyGetAdminWithManagerSelectionList;
 import static com.nubeiot.dashboard.helpers.MultiTenantQueryBuilderHelper.byAdminCompanyGetAdminWithManagerSelectionListQuery;
 import static com.nubeiot.dashboard.helpers.MultiTenantRepresentationHelper.userRepresentation;
+import static com.nubeiot.dashboard.utils.DispatchUtils.dispatchRequests;
 import static com.nubeiot.dashboard.utils.UserUtils.getCompanyId;
 import static com.nubeiot.dashboard.utils.UserUtils.getRole;
 import static com.nubeiot.dashboard.utils.UserUtils.hasClientLevelRole;
@@ -50,12 +52,12 @@ import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.DashboardServerConfig;
-import com.nubeiot.dashboard.MultiTenantUserProps;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.constants.Services;
 import com.nubeiot.dashboard.helpers.ResponseDataHelper;
 import com.nubeiot.dashboard.models.KeycloakUserRepresentation;
 import com.nubeiot.dashboard.models.MongoUser;
+import com.nubeiot.dashboard.props.UserProps;
 import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.utils.UserUtils;
 import com.zandero.rest.annotation.RouteOrder;
@@ -109,6 +111,66 @@ public class MultiTenantUserController implements RestApi {
                                  mongoClientProvider.getMongoClient(), keycloakConfig, appConfig);
     }
 
+    @PATCH
+    @Path("/password/:id")
+    @RouteOrder(3)
+    public Future<ResponseData> updatePassword(@Context Vertx vertx, @Context RoutingContext ctx,
+                                               @Context RestMongoClientProvider mongoClientProvider,
+                                               @Context RestConfigProvider configProvider) {
+        JsonObject appConfig = configProvider.getAppConfig();
+        JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
+        return handleUpdatePassword(vertx, ctx, mongoClientProvider.getMongoClient(), keycloakConfig);
+    }
+
+    private Future<ResponseData> handleUpdatePassword(Vertx vertx, RoutingContext ctx, MongoClient mongoClient,
+                                                      JsonObject keycloakConfig) {
+        Future<ResponseData> future = Future.future();
+        JsonObject user = ctx.user().principal();
+        Role role = getRole(user);
+        JsonObject body = ctx.getBodyAsJson();
+
+        UserProps userProps = UserProps.builder()
+            .mongoClient(mongoClient)
+            .httpClient(vertx.createHttpClient())
+            .authServerUrl(keycloakConfig.getString("auth-server-url"))
+            .realmName(keycloakConfig.getString("realm"))
+            .accessToken(user.getString("access_token"))
+            .user(user)
+            .role(role)
+            .body(body)
+            .paramsUserId(ctx.request().getParam("id"))
+            .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
+            .build();
+
+        Single.just(Strings.isNotBlank(userProps.getBodyPassword(""))).flatMap(password -> {
+            if (Strings.isNotBlank(userProps.getBodyPassword(""))) {
+                return userProps.getMongoClient().rxFindOne(USER, idQuery(userProps.getParamsUserId()), null)
+                    .map(response -> {
+                        if (response == null) {
+                            throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found");
+                        } else {
+                            return response;
+                        }
+                    })
+                    .flatMap(usr -> {
+                        // Own password can be changed or those users passwords which is associated with some company
+                        if (userProps.getUser().getString("user_id").equals(userProps.getParamsUserId())) {
+                            return UserUtils.resetPassword(userProps);
+                        } else {
+                            return objectLevelPermission(userProps.getMongoClient(),
+                                                         usr.getString("associated_company_id"), userProps.getRole(),
+                                                         userProps.getUser().getString("company_id"));
+                        }
+                    });
+            } else {
+                throw HttpException.badRequest("Password can't be NULL.");
+            }
+        }).subscribe(
+            ignored -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+            throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+        return future;
+    }
+
     private Future<ResponseData> handleDeleteUsers(Vertx vertx, RoutingContext ctx,
                                                    MicroContext microContext, MongoClient mongoClient,
                                                    JsonObject keycloakConfig, JsonObject appConfig) {
@@ -117,7 +179,7 @@ public class MultiTenantUserController implements RestApi {
         Role role = getRole(user);
         JsonArray arrayBody = ctx.getBodyAsJsonArray();
 
-        MultiTenantUserProps userProps = MultiTenantUserProps.builder()
+        UserProps userProps = UserProps.builder()
             .mongoClient(mongoClient)
             .httpClient(vertx.createHttpClient())
             .microContext(microContext)
@@ -140,7 +202,7 @@ public class MultiTenantUserController implements RestApi {
                 .flatMap(users -> {
                     if (users.size() == userProps.getArrayBody().size()) {
                         return checkPermissionAndReturnValue(userProps.getMongoClient(), userProps.getCompanyId(),
-                                                             userProps.getRole(), users);
+                                                             userProps.getRole(), users).map(ignored -> users);
                     }
                     throw HttpException.badRequest("Database doesn't have those Users.");
                 })
@@ -156,7 +218,7 @@ public class MultiTenantUserController implements RestApi {
         return future;
     }
 
-    private Single<Integer> deleteUser(MultiTenantUserProps userProps, JsonObject user) {
+    private Single<Integer> deleteUser(UserProps userProps, JsonObject user) {
         userProps.setParamsUserId(user.getString("_id")); // for making it to delete
 
         return UserUtils.deleteUser(userProps).flatMap(deleteUserKeycloakResponse -> {
@@ -180,7 +242,8 @@ public class MultiTenantUserController implements RestApi {
         });
     }
 
-    private SingleSource<?> removeUserOnDittoPolicy(MultiTenantUserProps userProps, JsonObject user) {
+    // TODO: to make dispatchRequests working
+    private SingleSource<?> removeUserOnDittoPolicy(UserProps userProps, JsonObject user) {
         if (Role.ADMIN == getRole(user)) {
             return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(), getCompanyId(user))
                 .flatMap(query -> userProps.getMongoClient().rxFind(SITE, query))
@@ -210,7 +273,7 @@ public class MultiTenantUserController implements RestApi {
         Role role = getRole(user);
         JsonObject body = ctx.getBodyAsJson();
 
-        MultiTenantUserProps userProps = MultiTenantUserProps.builder()
+        UserProps userProps = UserProps.builder()
             .mongoClient(mongoClient)
             .httpClient(vertx.createHttpClient())
             .authServerUrl(keycloakConfig.getString("auth-server-url"))
@@ -233,7 +296,7 @@ public class MultiTenantUserController implements RestApi {
         return future;
     }
 
-    private Single<JsonObject> getUserFromParams(MongoClient mongoClient, MultiTenantUserProps userProps) {
+    private Single<JsonObject> getUserFromParams(MongoClient mongoClient, UserProps userProps) {
         return mongoClient.rxFindOne(USER, idQuery(userProps.getParamsUserId()), null)
             .map(response -> {
                 if (response == null) {
@@ -244,7 +307,7 @@ public class MultiTenantUserController implements RestApi {
             });
     }
 
-    private Single<Integer> patchMongoUser(MultiTenantUserProps userProps, JsonObject keycloakUser) {
+    private Single<Integer> patchMongoUser(UserProps userProps, JsonObject keycloakUser) {
         logger.info("Keycloak user: " + keycloakUser);
         userProps.setKeycloakUser(keycloakUser);
         // Permission is already granted in above statement, we don't need to check again
@@ -256,7 +319,7 @@ public class MultiTenantUserController implements RestApi {
         }
     }
 
-    private Single<Integer> patchOwnMongoUser(MultiTenantUserProps userProps) {
+    private Single<Integer> patchOwnMongoUser(UserProps userProps) {
         // User doesn't have the authority to update own company_id, associated_company_id, and group_id
         JsonObject body = userProps.getBody();
         body.put("company_id", userProps.getUser().getString("company_id"))
@@ -271,7 +334,7 @@ public class MultiTenantUserController implements RestApi {
             .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
     }
 
-    private Single<Integer> patchOtherMongoUser(MultiTenantUserProps userProps) {
+    private Single<Integer> patchOtherMongoUser(UserProps userProps) {
         if (userProps.getRole() == Role.SUPER_ADMIN) {
             JsonObject query = new JsonObject()
                 .put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString())));
@@ -299,7 +362,7 @@ public class MultiTenantUserController implements RestApi {
         }
     }
 
-    private SingleSource<? extends Buffer> updateKeycloakUser(Role role, MultiTenantUserProps userProps,
+    private SingleSource<? extends Buffer> updateKeycloakUser(Role role, UserProps userProps,
                                                               JsonObject usr) {
         // Own user_profile can be changed or those users_profiles which is associated with same company
         if (userProps.getUser().getString("user_id").equals(userProps.getParamsUserId())
@@ -333,7 +396,7 @@ public class MultiTenantUserController implements RestApi {
         if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             JsonObject body = ctx.getBodyAsJson();
 
-            MultiTenantUserProps userProps = MultiTenantUserProps.builder()
+            UserProps userProps = UserProps.builder()
                 .mongoClient(mongoClient)
                 .httpClient(vertx.createHttpClient())
                 .microContext(microContext)
@@ -356,6 +419,7 @@ public class MultiTenantUserController implements RestApi {
                 // 3. Resetting password
                 .flatMap(keycloakUser -> {
                     userProps.setKeycloakUser(keycloakUser);
+                    userProps.setParamsUserId(keycloakUser.getString("id"));
                     return UserUtils.resetPassword(userProps)
                         .flatMap(ignored -> createMongoUser(userProps))
                         .doOnError(t -> {
@@ -369,7 +433,7 @@ public class MultiTenantUserController implements RestApi {
         return future;
     }
 
-    private SingleSource<Integer> createMongoUser(MultiTenantUserProps userProps) {
+    private SingleSource<Integer> createMongoUser(UserProps userProps) {
         if (userProps.getRole() == Role.SUPER_ADMIN) {
             // 4.1 any user can be created
             JsonObject query = new JsonObject()
@@ -396,7 +460,7 @@ public class MultiTenantUserController implements RestApi {
         }
     }
 
-    private Single<JsonObject> validateMongoUser(MultiTenantUserProps userProps, JsonObject query) {
+    private Single<JsonObject> validateMongoUser(UserProps userProps, JsonObject query) {
         return userProps.getMongoClient().rxFind(COMPANY, query).flatMap(childCompanies -> {
             if (childCompanies.size() > 0) {
                 // 5.1 Proceed for creating MongoDB user
@@ -429,7 +493,7 @@ public class MultiTenantUserController implements RestApi {
         });
     }
 
-    private Single<JsonObject> validateMongoUserForManager(MultiTenantUserProps userProps) {
+    private Single<JsonObject> validateMongoUserForManager(UserProps userProps) {
         JsonObject query = new JsonObject().put("associated_company_id", userProps.getCompanyId());
         return userProps.getMongoClient().rxFind(USER_GROUP, query).flatMap(childGroups -> {
             if (childGroups.size() > 0) {
@@ -448,7 +512,7 @@ public class MultiTenantUserController implements RestApi {
         });
     }
 
-    private Single<Integer> saveMongoUser(MultiTenantUserProps userProps) {
+    private Single<Integer> saveMongoUser(UserProps userProps) {
         DashboardServerConfig dashboardServerConfig =
             IConfig.from(userProps.getAppConfig(), DashboardServerConfig.class);
         JsonObject mongoUser = new MongoUser(userProps.getBody(), userProps.getUser(), userProps.getKeycloakUser())
@@ -462,7 +526,7 @@ public class MultiTenantUserController implements RestApi {
         }).map(ignored -> HttpResponseStatus.CREATED.code());
     }
 
-    private SingleSource<?> addUserOnDittoPolicy(MultiTenantUserProps userProps, JsonObject mongoUser) {
+    private SingleSource<?> addUserOnDittoPolicy(UserProps userProps, JsonObject mongoUser) {
         if (Role.ADMIN == getRole(mongoUser)) {
             return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(),
                                                                        getCompanyId(mongoUser))
@@ -475,24 +539,25 @@ public class MultiTenantUserController implements RestApi {
         }
     }
 
-    private Single<Integer> updateMongoUser(MultiTenantUserProps userProps) {
+    private Single<Integer> updateMongoUser(UserProps userProps) {
         JsonObject mongoUser = new MongoUser(userProps.getBody(), userProps.getUser(), userProps.getKeycloakUser())
             .toJsonObject();
         return userProps.getMongoClient().rxSave(USER, mongoUser)
             .map(ignored -> HttpResponseStatus.NO_CONTENT.code());
     }
 
-    private Single<ResponseData> putSubjectOnPolicy(MultiTenantUserProps userProps, JsonObject mongoUser,
+    // TODO: to make dispatchRequests working
+    private Single<ResponseData> putSubjectOnPolicy(UserProps userProps, JsonObject mongoUser,
                                                     String siteId) {
         String path = Services.POLICY_PREFIX + siteId + "/entries/admin/subjects/nginx:" +
                       mongoUser.getString("username");
         RequestData requestData = userProps.getRequestData();
         requestData.setBody(new JsonObject().put("type", "admin"));
-        return dispatchRequests(
-            userProps.getMicroContext(), HttpMethod.PUT, path, requestData);
+        return dispatchRequests(userProps.getMicroContext(), HttpMethod.PUT, path, requestData);
     }
 
-    private SingleSource<?> putSubjectOnPolicy(MultiTenantUserProps userProps, JsonObject mongoUser) {
+    // TODO: to make dispatchRequests working
+    private SingleSource<?> putSubjectOnPolicy(UserProps userProps, JsonObject mongoUser) {
         String entry = mongoUser.getString("role").toLowerCase();
         if (entry.equals(Role.GUEST.toString().toLowerCase())) {
             entry = "user";
@@ -504,24 +569,7 @@ public class MultiTenantUserController implements RestApi {
         return dispatchRequests(userProps.getMicroContext(), HttpMethod.PUT, path, userProps.getRequestData());
     }
 
-    // TODO: testing and change
-    private Single<ResponseData> dispatchRequests(MicroContext microContext, HttpMethod method, String path,
-                                                  RequestData requestData) {
-        Logger logger = LoggerFactory.getLogger(this.getClass());
-        int initialOffset = 5; // length of `/api/`
-        if (path.length() <= initialOffset) {
-            return Single.error(new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found"));
-        }
-        String prefix = (path.substring(initialOffset).split("/"))[0];
-        logger.info("Prefix: {}", prefix);
-        String newPath = path.substring(initialOffset + prefix.length());
-        logger.info("New path: {}", newPath);
-        return microContext.getClusterController()
-            .executeHttpService(r -> prefix.equals(r.getMetadata().getString("api.name")), newPath, method,
-                                requestData);
-    }
-
-    private SingleSource<JsonObject> validateClientLevelMongoUser(MultiTenantUserProps userProps, JsonObject company) {
+    private SingleSource<JsonObject> validateClientLevelMongoUser(UserProps userProps, JsonObject company) {
         return validateSitesIdsBody(userProps)
             .flatMap(sitesIds -> userProps.getMongoClient()
                 .rxFind(SITE, new JsonObject().put("_id", new JsonObject().put("$in", sitesIds)))
@@ -538,7 +586,7 @@ public class MultiTenantUserController implements RestApi {
                 }));
     }
 
-    private SingleSource<JsonObject> validateUserLevelMongoUser(MultiTenantUserProps userProps, JsonObject company) {
+    private SingleSource<JsonObject> validateUserLevelMongoUser(UserProps userProps, JsonObject company) {
         String groupId = userProps.getBody().getString("group_id");
         if (groupId == null) {
             throw HttpException.badRequest("You must include group_id on the request data.");
@@ -561,7 +609,7 @@ public class MultiTenantUserController implements RestApi {
             });
     }
 
-    private SingleSource<Boolean> validateSitesAssociation(MultiTenantUserProps userProps,
+    private SingleSource<Boolean> validateSitesAssociation(UserProps userProps,
                                                            JsonObject company, JsonArray sitesIds,
                                                            List<JsonObject> sites) {
         String siteId = userProps.getBody().getString("site_id", "");
@@ -583,7 +631,7 @@ public class MultiTenantUserController implements RestApi {
         }
     }
 
-    private Single<JsonArray> validateSitesIdsBody(MultiTenantUserProps userProps) {
+    private Single<JsonArray> validateSitesIdsBody(UserProps userProps) {
         JsonArray sitesIds = userProps.getBody().getJsonArray("sites_ids", new JsonArray());
         if (sitesIds.size() == 0 && Strings.isNotBlank(userProps.getBody().getString("site_id"))) {
             return Single.just(new JsonArray().add(userProps.getBody().getString("site_id")));

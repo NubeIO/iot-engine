@@ -27,12 +27,32 @@ public class MultiTenantQueryBuilderHelper {
 
     public static Single<List<String>> byAdminCompanyGetAdminWithManagerSelectionList(MongoClient mongoClient,
                                                                                       String companyId) {
+        return mongoClient
+            .rxFind(COMPANY, new JsonObject().put("associated_company_id", companyId)
+                .put("role", Role.MANAGER.toString()))
+            .map(response -> {
+                List<String> companies = MongoUtils.getIdsOnList(response);
+                companies.add(companyId);
+                return companies;
+            });
+    }
+
+    public static Single<JsonObject> byAdminCompanyGetManagerSelectionListQuery(MongoClient mongoClient,
+                                                                                String companyId) {
         return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", companyId)
-            .put("role", Role.MANAGER.toString())).map(response -> {
-            List<String> companies = MongoUtils.getIdsOnList(response);
-            companies.add(companyId);
-            return companies;
-        });
+            .put("role", Role.MANAGER.toString()))
+            .map(response ->
+                     new JsonObject()
+                         .put("associated_company_id", new JsonObject()
+                             .put("$in", MongoUtils.getIdsOnJsonArray(response))));
+    }
+
+    public static Single<List<String>> byAdminCompanyGetManagerSelectionList(MongoClient mongoClient,
+                                                                             String companyId) {
+        return mongoClient
+            .rxFind(COMPANY,
+                    new JsonObject().put("associated_company_id", companyId).put("role", Role.MANAGER.toString()))
+            .map(MongoUtils::getIdsOnList);
     }
 
 }

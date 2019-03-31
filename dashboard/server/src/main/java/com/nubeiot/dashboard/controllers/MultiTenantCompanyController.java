@@ -73,11 +73,12 @@ public class MultiTenantCompanyController implements RestApi {
         JsonObject user = ctx.user().principal();
         String companyId = ctx.request().getParam("id");
 
-        Single.just(getRole(user))
+        Single
+            .just(getRole(user))
             .flatMap(role -> createUpdateCompanyModel(mongoClient, body, user, companyId, role))
             .flatMap(company -> mongoClient.rxSave(COMPANY, company.toJsonObject().put("_id", companyId)))
             .subscribe(
-                ignore -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+                ignored -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
                 throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
@@ -210,14 +211,14 @@ public class MultiTenantCompanyController implements RestApi {
                                 // Can change associated_company_id on the same level
                                 return new Company(body.put("role", Role.MANAGER.toString()));
                             } else {
-                                throw HttpException.badRequest("You can't associated that <Company>!");
+                                throw HttpException.badRequest("You can't associated that <Company>.");
                             }
                         });
                 } else {
                     throw HttpException.badRequest("You can't change this company.");
                 }
             } else {
-                throw HttpException.badRequest("Requested <Company> doesn't exist!");
+                throw HttpException.badRequest("Requested <Company> doesn't exist.");
             }
         });
     }
@@ -236,11 +237,11 @@ public class MultiTenantCompanyController implements RestApi {
                     if (company != null) {
                         Role role = UserUtils.getRole(Role.valueOf(company.getString("role")));
                         if (!SQLUtils.in(role.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
-                            throw HttpException.badRequest("You can't associated that <Company>!");
+                            throw HttpException.badRequest("You can't associated that <Company>.");
                         }
                         return new Company(body.put("role", role));
                     } else {
-                        throw HttpException.badRequest("Requested <Company> doesn't exist!");
+                        throw HttpException.badRequest("Requested <Company> doesn't exist.");
                     }
                 });
         } else {
