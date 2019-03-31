@@ -5,6 +5,7 @@ import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
 import static com.nubeiot.dashboard.constants.Collection.USER;
 import static com.nubeiot.dashboard.helpers.MultiTenantPermissionHelper.checkPermissionAndReturnValue;
+import static com.nubeiot.dashboard.helpers.MultiTenantPermissionHelper.nullableCheck;
 import static com.nubeiot.dashboard.helpers.MultiTenantPermissionHelper.objectLevelPermission;
 import static com.nubeiot.dashboard.helpers.MultiTenantQueryBuilderHelper.byAdminCompanyGetManagerSelectionList;
 import static com.nubeiot.dashboard.helpers.MultiTenantQueryBuilderHelper.byAdminCompanyGetManagerSelectionListQuery;
@@ -246,14 +247,6 @@ public class MultiTenantSiteController implements RestApi {
                         throw HttpException.forbidden();
                     }
                 });
-        }
-    }
-
-    private JsonObject nullableCheck(JsonObject object, String message) {
-        if (object != null) {
-            return object;
-        } else {
-            throw HttpException.badRequest(message);
         }
     }
 

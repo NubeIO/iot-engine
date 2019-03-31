@@ -46,4 +46,12 @@ public class MultiTenantPermissionHelper {
         return Single.just(false);
     }
 
+    public static JsonObject nullableCheck(JsonObject object, String message) {
+        if (object != null) {
+            return object;
+        } else {
+            throw HttpException.badRequest(message);
+        }
+    }
+
 }

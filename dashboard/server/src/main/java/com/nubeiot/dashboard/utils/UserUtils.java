@@ -140,6 +140,7 @@ public class UserUtils {
 
     public static Single<JsonArray> queryUsers(UserProps userProps, String query) {
         String url = userProps.getAuthServerUrl() + "/admin/realms/" + userProps.getRealmName() + "/users?" + query;
+        System.out.println("Query is: " +  url);
         return Single.create(source -> {
             HttpClientRequest request = userProps.getHttpClient().requestAbs(HttpMethod.GET, url, response ->
                 response.bodyHandler(body -> {
@@ -186,6 +187,10 @@ public class UserUtils {
 
     public static String getCompanyId(JsonObject user) {
         return user.getString("company_id");
+    }
+
+    public static String getSiteId(JsonObject user) {
+        return user.getString("site_id");
     }
 
     public static Role getRole(JsonObject user) {

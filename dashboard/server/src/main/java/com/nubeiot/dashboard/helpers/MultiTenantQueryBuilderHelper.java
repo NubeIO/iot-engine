@@ -55,4 +55,15 @@ public class MultiTenantQueryBuilderHelper {
             .map(MongoUtils::getIdsOnList);
     }
 
+    public static Single<JsonObject> getManagerSiteQuery(MongoClient mongoClient, Role role, String userCompanyId) {
+        if (role == Role.SUPER_ADMIN) {
+            return Single.just(new JsonObject().put("role", Role.MANAGER));
+        } else {
+            return mongoClient.rxFind(COMPANY, new JsonObject().put("associated_company_id", userCompanyId)
+                .put("role", Role.MANAGER.toString()))
+                .map(response -> new JsonObject()
+                    .put("associated_company_id", new JsonObject().put("$in", MongoUtils.getIdsOnJsonArray(response))));
+        }
+    }
+
 }

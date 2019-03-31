@@ -17,6 +17,7 @@ import static com.nubeiot.dashboard.utils.UserUtils.hasClientLevelRole;
 import static com.nubeiot.dashboard.utils.UserUtils.hasUserLevelRole;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.GET;
 import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
@@ -30,6 +31,7 @@ import io.reactivex.SingleSource;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -120,6 +122,56 @@ public class MultiTenantUserController implements RestApi {
         JsonObject appConfig = configProvider.getAppConfig();
         JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         return handleUpdatePassword(vertx, ctx, mongoClientProvider.getMongoClient(), keycloakConfig);
+    }
+
+    @POST
+    @Path("/check_user")
+    @RouteOrder(3)
+    public Future<ResponseData> checkUser(@Context Vertx vertx, @Context RoutingContext ctx,
+                                          @Context RestConfigProvider configProvider) {
+        JsonObject appConfig = configProvider.getAppConfig();
+        JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
+        return handleCheckUser(vertx, ctx, keycloakConfig);
+    }
+
+    private Future<ResponseData> handleCheckUser(Vertx vertx, RoutingContext ctx, JsonObject keycloakConfig) {
+        Future<ResponseData> future = Future.future();
+        JsonObject user = ctx.user().principal();
+        JsonObject body = ctx.getBodyAsJson();
+
+        UserProps userProps = UserProps.builder()
+            .httpClient(vertx.createHttpClient())
+            .authServerUrl(keycloakConfig.getString("auth-server-url"))
+            .realmName(keycloakConfig.getString("realm"))
+            .accessToken(user.getString("access_token"))
+            .body(body)
+            .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
+            .build();
+
+        String username = body.getString("username", "");
+        String email = body.getString("email", "");
+        String query = "username=" + username + "&email=" + email;
+
+        UserUtils.queryUsers(userProps, query).subscribe(users -> {
+            logger.info("Users: " + users);
+            int usersSize = users.stream().filter(userObject -> {
+                JsonObject jsonUser = (JsonObject) userObject;
+                if (Strings.isBlank(username)) {
+                    return jsonUser.getString("email").equals(email);
+                } else if (Strings.isBlank(email)) {
+                    return jsonUser.getString("username").equals(username);
+                } else {
+                    return jsonUser.getString("username").equals(username) && jsonUser.getString("email").equals(email);
+                }
+            }).collect(Collectors.toList()).size();
+            logger.info("Size of user match: " + usersSize);
+            if (usersSize > 0) {
+                future.complete(new ResponseData().setBodyMessage(new JsonObject().put("exist", true).encode()));
+            } else {
+                future.complete(new ResponseData().setBodyMessage(new JsonObject().put("exist", false).encode()));
+            }
+        }, throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+        return future;
     }
 
     private Future<ResponseData> handleUpdatePassword(Vertx vertx, RoutingContext ctx, MongoClient mongoClient,
