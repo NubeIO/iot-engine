@@ -1,17 +1,24 @@
 package com.nubeiot.dashboard.controllers;
 
+import static com.nubeiot.dashboard.Role.ADMIN;
+import static com.nubeiot.dashboard.constants.Collection.MENU;
+import static com.nubeiot.dashboard.utils.UserUtils.getRole;
+
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 
+import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.exceptions.HttpException;
+import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.dashboard.Role;
@@ -20,45 +27,72 @@ import com.nubeiot.dashboard.helpers.ResponseDataHelper;
 import com.nubeiot.dashboard.props.DynamicCollectionProps;
 import com.zandero.rest.annotation.RouteOrder;
 
-@Path("/api/menu")
+@Path("/api")
 public class MenuController implements RestApi {
 
     private static final String COLLECTION = "menu";
 
     @GET
-    @Path("/:id")
+    @Path("/menu/:id")
     @RouteOrder(3)
     public Future<ResponseData> getOne(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
         return DynamicCollectionHelper.handleGetOne(ctx, mongoClient.getMongoClient(), COLLECTION);
     }
 
     @PUT
-    @Path("/:id")
+    @Path("/menu/:id")
     @RouteOrder(3)
     public Future<ResponseData> put(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
         return this.handlePut(ctx, mongoClient.getMongoClient(), COLLECTION);
     }
 
     @PUT
-    @Path("/:id/:menu_id")
+    @Path("/menu/:id/:menu_id")
     @RouteOrder(3)
     public Future<ResponseData> putRecord(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
         return this.handlePutRecord(ctx, mongoClient.getMongoClient(), COLLECTION);
     }
 
     @DELETE
-    @Path("/:id")
+    @Path("/menu/:id")
     @RouteOrder(3)
     public Future<ResponseData> delete(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
         return this.handleDelete(ctx, mongoClient.getMongoClient(), COLLECTION);
     }
 
     @DELETE
-    @Path("/:id/:menu_id")
+    @Path("/menu/:id/:menu_id")
     @RouteOrder(3)
     public Future<ResponseData> deleteRecord(@Context RoutingContext ctx,
                                              @Context RestMongoClientProvider mongoClient) {
         return this.handleDeleteRecord(ctx, mongoClient.getMongoClient(), COLLECTION);
+    }
+
+    @GET
+    @Path("/menu_for_user_group/:id")
+    @RouteOrder(3)
+    public Future<ResponseData> menuForUserGroup(@Context RoutingContext ctx,
+                                                 @Context RestMongoClientProvider mongoClient) {
+        return this.handleMenuForUserGroup(ctx, mongoClient.getMongoClient());
+    }
+
+    private Future<ResponseData> handleMenuForUserGroup(RoutingContext ctx, MongoClient mongoClient) {
+        Future<ResponseData> future = Future.future();
+        JsonObject user = ctx.user().principal();
+
+        Single.just(getRole(user))
+            .flatMap(role -> {
+                if (role == Role.SUPER_ADMIN || role == ADMIN) {
+                    String siteId = ctx.request().getParam("id");
+                    return mongoClient.rxFindOne(MENU, new JsonObject().put("site_id", siteId), null)
+                        .map(menu -> menu != null ? menu : new JsonObject());
+                } else {
+                    throw HttpException.forbidden();
+                }
+            })
+            .subscribe(menu -> future.complete(new ResponseData().setBodyMessage(menu.toString())),
+                       throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+        return future;
     }
 
     private Future<ResponseData> handlePut(RoutingContext ctx, MongoClient mongoClient, String collection) {
