@@ -1,5 +1,6 @@
 package com.nubeiot.dashboard.controllers;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -64,7 +65,6 @@ import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.utils.UserUtils;
 import com.zandero.rest.annotation.RouteOrder;
 
-@Path("/api")
 public class MultiTenantUserController implements RestApi {
 
     private static final Logger logger = LoggerFactory.getLogger(MultiTenantUserController.class);
@@ -166,9 +166,9 @@ public class MultiTenantUserController implements RestApi {
             }).collect(Collectors.toList()).size();
             logger.info("Size of user match: " + usersSize);
             if (usersSize > 0) {
-                future.complete(new ResponseData().setBodyMessage(new JsonObject().put("exist", true).encode()));
+                future.complete(responseData(new JsonObject().put("exist", true).encode()));
             } else {
-                future.complete(new ResponseData().setBodyMessage(new JsonObject().put("exist", false).encode()));
+                future.complete(responseData(new JsonObject().put("exist", false).encode()));
             }
         }, throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
@@ -218,7 +218,7 @@ public class MultiTenantUserController implements RestApi {
                 throw HttpException.badRequest("Password can't be NULL.");
             }
         }).subscribe(
-            ignored -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+            ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT)),
             throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
@@ -262,7 +262,7 @@ public class MultiTenantUserController implements RestApi {
                     .flatMapSingle(usr -> deleteUser(userProps, usr))
                     .toList())
                 .subscribe(
-                    ignored -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+                    ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT.code())),
                     throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         } else {
             throw HttpException.forbidden();
@@ -343,7 +343,7 @@ public class MultiTenantUserController implements RestApi {
             .flatMap(usr -> updateKeycloakUser(role, userProps, usr))
             .flatMap(ignored -> UserUtils.getUser(userProps))
             .flatMap(keycloakUser -> patchMongoUser(userProps, keycloakUser))
-            .subscribe(statusCode -> future.complete(new ResponseData().setStatusCode(statusCode)),
+            .subscribe(statusCode -> future.complete(new ResponseData().setStatus(statusCode)),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
@@ -479,7 +479,7 @@ public class MultiTenantUserController implements RestApi {
                             UserUtils.deleteUser(userProps).subscribe();
                         });
                 })
-                .subscribe(statusCode -> future.complete(new ResponseData().setStatusCode(statusCode)),
+                .subscribe(statusCode -> future.complete(new ResponseData().setStatus(statusCode)),
                            throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         }
         return future;

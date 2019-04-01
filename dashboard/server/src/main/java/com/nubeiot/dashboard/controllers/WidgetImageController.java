@@ -16,7 +16,7 @@ import com.zandero.rest.annotation.RouteOrder;
 import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
 
-@Path("/api/widget_image")
+@Path("/widget_image")
 public class WidgetImageController implements RestApi {
 
     private static final String COLLECTION = "widget_image";

@@ -1,5 +1,6 @@
 package com.nubeiot.dashboard.controllers;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.helpers.MultiTenantPermissionHelper.checkPermissionAndReturnValue;
@@ -36,7 +37,6 @@ import com.nubeiot.dashboard.models.Company;
 import com.nubeiot.dashboard.utils.UserUtils;
 import com.zandero.rest.annotation.RouteOrder;
 
-@Path("/api")
 public class MultiTenantCompanyController implements RestApi {
 
     @GET
@@ -78,7 +78,7 @@ public class MultiTenantCompanyController implements RestApi {
             .flatMap(role -> createUpdateCompanyModel(mongoClient, body, user, companyId, role))
             .flatMap(company -> mongoClient.rxSave(COMPANY, company.toJsonObject().put("_id", companyId)))
             .subscribe(
-                ignored -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+                ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT)),
                 throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
@@ -103,7 +103,7 @@ public class MultiTenantCompanyController implements RestApi {
             .just(getRole(user))
             .flatMap(role -> deleteCompanies(ctx, mongoClient, companyId, role))
             .subscribe(
-                ignored -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+                ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT.code())),
                 throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
@@ -139,7 +139,7 @@ public class MultiTenantCompanyController implements RestApi {
             .flatMap(role -> getCompanies(mongoClient, companyId, role))
             .flatMap(response -> Observable.fromIterable(response)
                 .flatMapSingle(company -> associatedCompanyRepresentation(mongoClient, company)).toList())
-            .subscribe(response -> future.complete(new ResponseData().setBodyMessage(response.toString())),
+            .subscribe(response -> future.complete(responseData(response.toString())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }

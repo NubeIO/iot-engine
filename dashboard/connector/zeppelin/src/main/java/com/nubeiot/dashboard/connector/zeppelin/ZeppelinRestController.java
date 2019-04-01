@@ -1,5 +1,7 @@
 package com.nubeiot.dashboard.connector.zeppelin;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
+
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.GET;
@@ -10,6 +12,7 @@ import javax.ws.rs.core.Context;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.RestConfigProvider;
+import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.rest.RestApi;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -23,7 +26,6 @@ import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
 import io.vertx.reactivex.core.http.HttpClientResponse;
 
-@Path("/api/zeppelin")
 public class ZeppelinRestController implements RestApi {
 
     private String COOKIE_NAME = "JSESSIONID";
@@ -32,9 +34,9 @@ public class ZeppelinRestController implements RestApi {
     @Path("/info")
     public JsonObject info(@Context RoutingContext ctx) {
         return new JsonObject().put("name", "zeppelin-verticle")
-                               .put("version", "1.0")
-                               .put("vert.x_version", "3.4.1")
-                               .put("java_version", "8.0");
+            .put("version", "1.0")
+            .put("vert.x_version", "3.4.1")
+            .put("java_version", "8.0");
     }
 
     @POST
@@ -54,22 +56,15 @@ public class ZeppelinRestController implements RestApi {
         HttpClientRequest req = client.request(ctx.request().method(), zeppelinConfigJson.getInteger("port"),
                                                zeppelinConfigJson.getString("host"), ctx.request().uri());
 
-        req.handler(res -> {
-            res.bodyHandler(body -> {
-                responseData.setStatusCode(res.statusCode());
-                if (res.statusCode() < 500) {
-                    cookieHandler(res, body, responseData);
-                    future.complete(responseData);
-                } else {
-                    responseData.setBodyMessage(body.toString());
-                    future.complete(responseData);
-                }
-            });
-        }).exceptionHandler(e -> {
-            responseData.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
-            responseData.setBodyMessage(e.getMessage());
+        req.handler(res -> res.bodyHandler(body -> {
+            if (res.statusCode() < 500) {
+                cookieHandler(res, body, responseData);
+            } else {
+                responseData(responseData, body.toString());
+            }
+            responseData.setStatus(res.statusCode());
             future.complete(responseData);
-        });
+        })).exceptionHandler(e -> future.complete(ResponseDataConverter.convert(e)));
 
         // set headers
         ctx.request().headers().forEach(header -> {
@@ -115,7 +110,8 @@ public class ZeppelinRestController implements RestApi {
             }
         }
 
-        responseData.setHeaders(headers).setBodyMessage(body.toString());
+        responseData.setHeaders(headers);
+        responseData(responseData, body.toString());
     }
 
 }

@@ -1,5 +1,6 @@
 package com.nubeiot.dashboard.controllers;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -52,7 +53,6 @@ import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.utils.DittoUtils;
 import com.zandero.rest.annotation.RouteOrder;
 
-@Path("/api")
 public class MultiTenantSiteController implements RestApi {
 
     @GET
@@ -133,7 +133,7 @@ public class MultiTenantSiteController implements RestApi {
             } else {
                 throw HttpException.forbidden();
             }
-        }).subscribe(ignored -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+        }).subscribe(ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT.code())),
                      throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
@@ -405,7 +405,7 @@ public class MultiTenantSiteController implements RestApi {
                 .fromIterable(sites)
                 .flatMapSingle(site -> associatedCompanyRepresentation(mongoClient, site))
                 .toList())
-            .subscribe(sites -> future.complete(new ResponseData().setBodyMessage(sites.toString())),
+            .subscribe(sites -> future.complete(responseData(sites.toString())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
 
         return future;
@@ -432,7 +432,7 @@ public class MultiTenantSiteController implements RestApi {
             .just(getRole(user))
             .flatMap(this::userRolePermissionCheck)
             .flatMap(role -> postSite(siteProps))
-            .subscribe(ignored -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.CREATED.code())),
+            .subscribe(ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.CREATED)),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }

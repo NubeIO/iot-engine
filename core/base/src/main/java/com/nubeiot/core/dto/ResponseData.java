@@ -17,7 +17,7 @@ import lombok.NonNull;
 public final class ResponseData extends AbstractDTO {
 
     @Getter
-    private HttpResponseStatus status;
+    private HttpResponseStatus status = HttpResponseStatus.OK;
 
     public ResponseData(JsonObject headers, JsonObject body) {
         super(headers, body);

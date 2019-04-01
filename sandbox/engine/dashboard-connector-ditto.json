@@ -34,17 +34,19 @@
     },
     "__http__": {
       "port": 8088,
-      "rootApi": "/api/ditto",
-      "__dynamic__": {
-        "enabled": true
+      "__rest__": {
+        "rootApi": "/api/ditto",
+        "__dynamic__": {
+          "enabled": true
+        }
       }
     },
     "__ditto__": {
-      "host": "localhost",
+      "host": "infiniabiz.com",
       "port": 8080,
       "username": "ditto",
       "password": "ditto",
-      "policy": false,
+      "policy": true,
       "prefix": "com.nubeio"
     }
   }

@@ -1,5 +1,7 @@
 package com.nubeiot.dashboard.connector.postgresql;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,8 +31,6 @@ import io.vertx.reactivex.ext.asyncsql.PostgreSQLClient;
 import io.vertx.reactivex.ext.sql.SQLClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 
-@SuppressWarnings("Duplicates")
-@Path("/api/sql-pg")
 public class PostgreSqlRestController implements RestApi {
 
     private static final Logger logger = LoggerFactory.getLogger(PostgreSqlRestController.class);
@@ -40,9 +40,9 @@ public class PostgreSqlRestController implements RestApi {
     @Path("/info")
     public JsonObject info(@Context RoutingContext ctx) {
         return new JsonObject().put("name", "postgresql-engine-rest")
-                               .put("version", "1.0")
-                               .put("vert.x_version", "3.4.1")
-                               .put("java_version", "8.0");
+            .put("version", "1.0")
+            .put("vert.x_version", "3.4.1")
+            .put("java_version", "8.0");
     }
 
     @POST
@@ -65,18 +65,20 @@ public class PostgreSqlRestController implements RestApi {
 
         if (query == null) {
             // Return query not specified error
-            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()));
+            future.complete(new ResponseData().setStatus(HttpResponseStatus.BAD_REQUEST));
         } else if (!query.toUpperCase().trim().startsWith("SELECT")) {
-            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.UNAUTHORIZED.code()));
+            future.complete(new ResponseData().setStatus(HttpResponseStatus.UNAUTHORIZED));
         } else {
             JsonObject settings = new JsonObject(
                 SQLUtils.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
             final String finalQuery = query;
-            executeQuery(vertx, settings, pgConfig, query).subscribe(result -> future.complete(
-                new ResponseData().setBodyMessage(messageWrapper(finalQuery, successMessage(result)).encode())
-                                  .setStatusCode(HttpResponseStatus.OK.code())), error -> future.complete(
-                new ResponseData().setBodyMessage(messageWrapper(finalQuery, failureMessage(error)).encode())
-                                  .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())));
+            executeQuery(vertx, settings, pgConfig, query)
+                .subscribe(
+                    result -> future
+                        .complete(responseData(messageWrapper(finalQuery, successMessage(result)).encode())),
+                    throwable -> future.complete(
+                        responseData(messageWrapper(finalQuery, failureMessage(throwable)).encode())
+                            .setStatus(HttpResponseStatus.BAD_REQUEST.code())));
         }
         return future;
     }
@@ -84,20 +86,17 @@ public class PostgreSqlRestController implements RestApi {
     private Single<ResultSet> executeQuery(Vertx vertx, JsonObject settings, PostgreSqlConfig pgConfig,
                                            String sqlQuery) {
         return getConnection(vertx, settings, pgConfig).flatMap(conn -> conn.rxQuery(sqlQuery))
-                                                       .onErrorResumeNext(throwable -> {
-                                                           // TODO: Find a better way of handling pooling
-                                                           if (throwable.getMessage().contains("race -> false")) {
-                                                               return Single.timer(100, TimeUnit.MILLISECONDS)
-                                                                            .flatMap(
-                                                                                ignore -> executeQuery(vertx, settings,
-                                                                                                       pgConfig,
-                                                                                                       sqlQuery))
-                                                                            .map(result -> result);
-                                                           } else {
-                                                               return Single.error(throwable);
-                                                           }
-                                                       })
-                                                       .map(result -> result);
+            .onErrorResumeNext(throwable -> {
+                // TODO: Find a better way of handling pooling
+                if (throwable.getMessage().contains("race -> false")) {
+                    return Single.timer(100, TimeUnit.MILLISECONDS)
+                        .flatMap(ignore -> executeQuery(vertx, settings, pgConfig, sqlQuery))
+                        .map(result -> result);
+                } else {
+                    return Single.error(throwable);
+                }
+            })
+            .map(result -> result);
     }
 
     private Single<SQLConnection> getConnection(Vertx vertx, JsonObject settings, PostgreSqlConfig pgConfig) {
@@ -107,10 +106,10 @@ public class PostgreSqlRestController implements RestApi {
         if (!settings.toString().equals("{}")) {
             PostgreSqlUrl url = new PostgreSqlUrl(settings.getString("url"));
             pgConfigJson.put("host", url.getHost())
-                        .put("port", url.getPort())
-                        .put("database", url.getDatabase())
-                        .put("username", settings.getString("userName"))
-                        .put("password", settings.getString("password"));
+                .put("port", url.getPort())
+                .put("database", url.getDatabase())
+                .put("username", settings.getString("userName"))
+                .put("password", settings.getString("password"));
         }
 
         String key = pgConfigJson.getString("host") + ":" + pgConfigJson.getInteger("port") + ":" +
@@ -125,9 +124,9 @@ public class PostgreSqlRestController implements RestApi {
         }
 
         return client.rxGetConnection()
-                     .flatMap(conn -> Single.just(conn)
-                                            .doOnError(throwable -> logger.error("Cannot get connection object."))
-                                            .doFinally(conn::close));
+            .flatMap(conn -> Single.just(conn)
+                .doOnError(throwable -> logger.error("Cannot get connection object."))
+                .doFinally(conn::close));
     }
 
     private JsonObject messageWrapper(String query, JsonObject message) {
@@ -136,12 +135,11 @@ public class PostgreSqlRestController implements RestApi {
 
     private JsonObject successMessage(ResultSet result) {
         return new JsonObject().put("status", "OK")
-                               .put("message", new JsonArray(
-                                   result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()));
+            .put("message", new JsonArray(result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()));
     }
 
     private JsonObject failureMessage(Throwable throwable) {
-        return new JsonObject().put("status", "OK").put("message", throwable.getMessage());
+        return new JsonObject().put("status", "FAILED").put("message", throwable.getMessage());
     }
 
 }

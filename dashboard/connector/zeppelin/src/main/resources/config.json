@@ -16,9 +16,11 @@
     },
     "__http__": {
       "port": 8087,
-      "rootApi": "/api/zeppelin",
-      "__dynamic__": {
-        "enabled": true
+      "__rest__": {
+        "rootApi": "/api/zeppelin",
+        "__dynamic__": {
+          "enabled": true
+        }
       }
     },
     "__zeppelin__": {

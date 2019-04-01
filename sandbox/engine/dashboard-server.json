@@ -34,8 +34,12 @@
     },
     "__http__": {
       "port": 8085,
-      "scheme": "HTTP",
-      "rootApi": "/api",
+      "__rest__": {
+        "rootApi": "/api",
+        "__dynamic__": {
+          "enabled": false
+        }
+      },
       "__cors__": {
         "allowedHeaders": [
           "Access-Control-Request-Method",
@@ -51,9 +55,6 @@
           "Authorization",
           "JSESSIONID"
         ]
-      },
-      "__dynamic__": {
-        "enabled": false
       }
     },
     "__dashboardServer__": {

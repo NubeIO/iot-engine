@@ -65,7 +65,7 @@ public class DashboardServerVerticle extends ContainerVerticle {
             ServerInfo info = this.httpContext.getServerInfo();
             microContext
                 .getClusterController()
-                .addHttpRecord("DashboardServerVerticle", new HttpLocation(info.toJson()).setRoot(info.getApiPath()),
+                .addHttpRecord("DashboardServerVerticle", new HttpLocation(info.toJson()),
                                new JsonObject())
                 .subscribe();
             RestRouter.addProvider(RestMicroContextProvider.class, ctx -> new RestMicroContextProvider(microContext));
@@ -75,8 +75,8 @@ public class DashboardServerVerticle extends ContainerVerticle {
         DashboardServerConfig dashboardServerConfig = IConfig.from(appConfig, DashboardServerConfig.class);
         HttpConfig httpConfig = IConfig.from(appConfig, HttpConfig.class);
 
-        logger.info("Registering Schema: {}", httpConfig.getScheme());
-        registerHttpScheme(HttpScheme.valueOf(httpConfig.getScheme()));
+        logger.info("Registering Schema: {}", httpConfig.getPublicScheme());
+        registerHttpScheme(httpConfig.getPublicScheme());
         mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo"));
         mediaDir = FileUtils.createFolder(nubeConfig.getDataDir().toString(), dashboardServerConfig.getMediaPath());
         oAuth2Auth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, appConfig.getJsonObject("keycloak"));

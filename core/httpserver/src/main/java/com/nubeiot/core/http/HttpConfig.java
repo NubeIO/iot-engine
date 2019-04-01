@@ -38,7 +38,6 @@ public final class HttpConfig implements IConfig {
     private int publicPort = -1;
     private HttpScheme publicScheme = HttpScheme.HTTP;
     private int maxBodySizeMB = 2;
-    private String scheme = HttpScheme.HTTP.toString();
 
     @JsonProperty(value = ServerOptions.NAME)
     private ServerOptions options = (ServerOptions) new ServerOptions().setCompressionSupported(true)

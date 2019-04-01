@@ -1,5 +1,7 @@
 package com.nubeiot.dashboard.helpers;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
+
 import java.util.UUID;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -25,9 +27,9 @@ public class DynamicCollectionHelper {
             mongoClient.rxFind(collection, new JsonObject().put("site_id", collectionProps.getSiteId()))
                 .subscribe(response -> {
                     if (response == null) {
-                        future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NOT_FOUND.code()));
+                        future.complete(new ResponseData().setStatus(HttpResponseStatus.NOT_FOUND));
                     } else {
-                        future.complete(new ResponseData().setBodyMessage(response.toString()));
+                        future.complete(responseData(response.toString()));
                     }
                 }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
         } else {
@@ -47,9 +49,9 @@ public class DynamicCollectionHelper {
             JsonObject query = new JsonObject().put("site_id", collectionProps.getSiteId()).put("id", id);
             mongoClient.rxFindOne(collection, query, null).subscribe(response -> {
                 if (response == null) {
-                    future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NOT_FOUND.code()));
+                    future.complete(new ResponseData().setStatus(HttpResponseStatus.NOT_FOUND));
                 } else {
-                    future.complete(new ResponseData().setBodyMessage(response.encode()));
+                    future.complete(responseData(response.encode()));
                 }
             }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
         } else {
@@ -103,7 +105,7 @@ public class DynamicCollectionHelper {
         String id = ctx.request().getParam("id");
         JsonObject query = new JsonObject().put("site_id", siteId).put("id", id);
         mongoClient.rxRemoveDocuments(collection, query).subscribe(buffer -> {
-            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code()));
+            future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT));
         }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
     }
 
@@ -113,17 +115,14 @@ public class DynamicCollectionHelper {
         mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id)).map(response -> {
             JsonObject body = ctx.getBodyAsJson();
             if (response.size() > 0) {
-                future.complete(new ResponseData().setStatusCode(HttpResponseStatus.CONFLICT.code())
-                                    .setBodyMessage("We have already that id value."));
+                future.complete(responseData("We have already that id value.").setStatus(HttpResponseStatus.CONFLICT));
             }
             body.put("site_id", siteId);
             body.put("id", id);
             return body;
-        }).flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body)).subscribe(buffer -> {
-            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.CREATED.code()));
-        }, throwable -> {
-            future.complete(ResponseDataHelper.internalServerError(throwable.getMessage()));
-        });
+        }).flatMap(body -> MongoUtils.postDocument(mongoClient, collection, body))
+            .subscribe(buffer -> future.complete(new ResponseData().setStatus(HttpResponseStatus.CREATED)),
+                       throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
     }
 
     public static void handlePutDocument(RoutingContext ctx, MongoClient mongoClient, String collection, String siteId,
@@ -140,9 +139,8 @@ public class DynamicCollectionHelper {
                 return body;
             })
             .flatMap(body -> mongoClient.rxSave(collection, body))
-            .subscribe(buffer -> {
-                future.complete(new ResponseData());
-            }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
+            .subscribe(buffer -> future.complete(new ResponseData()),
+                       throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
     }
 
 }

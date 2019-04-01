@@ -2,6 +2,7 @@ package com.nubeiot.dashboard.controllers;
 
 import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
 import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -49,7 +50,6 @@ import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
 @SuppressWarnings("Duplicates")
-@Path("/api")
 public class AuthRestController implements RestApi {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthRestController.class);
@@ -147,7 +147,7 @@ public class AuthRestController implements RestApi {
         io.vertx.core.http.HttpClient client = vertx.createHttpClient();
 
         io.vertx.core.http.HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response -> {
-            future.complete(new ResponseData().setStatusCode(response.statusCode()));
+            future.complete(new ResponseData().setStatus(response.statusCode()));
         });
         request.setChunked(true);
 
@@ -192,7 +192,7 @@ public class AuthRestController implements RestApi {
         }).flatMap(groupAndSite -> {
             if (sitesIds.size() > 0) {
                 return mongoClient.rxFind(SITE, new JsonObject().put("_id", new JsonObject().put("$in", sitesIds)))
-                                  .map(respondSites -> groupAndSite.put("sites", respondSites));
+                    .map(respondSites -> groupAndSite.put("sites", respondSites));
             } else {
                 return Single.just(groupAndSite);
             }
@@ -209,10 +209,9 @@ public class AuthRestController implements RestApi {
                 return Single.just(groupAndSite);
             }
         }).subscribe(groupAndSiteAndCompany -> {
-            ResponseData responseData = new ResponseData();
             // Use case of header username: ditto NGINX
-            responseData.setHeaders(new JsonObject().put("username", user.principal().getString("username")))
-                        .setBodyMessage(user.principal().mergeIn(groupAndSiteAndCompany).encode());
+            ResponseData responseData = responseData(user.principal().mergeIn(groupAndSiteAndCompany).encode())
+                .setHeaders(new JsonObject().put("username", user.principal().getString("username")));
 
             future.complete(responseData);
         });
@@ -233,8 +232,8 @@ public class AuthRestController implements RestApi {
                     JsonObject update$ = new JsonObject().put("$set", new JsonObject().put("site_id", siteId$));
                     return mongoClient.rxUpdateCollectionWithOptions(USER, query, update$,
                                                                      new UpdateOptions(false, true))
-                                      .map(absSite -> group.put("site",
-                                                                site$.put("site", site$).put("site_id", siteId$)));
+                        .map(absSite -> group.put("site",
+                                                  site$.put("site", site$).put("site_id", siteId$)));
                 } else {
                     return Single.just(group);
                 }
@@ -261,9 +260,9 @@ public class AuthRestController implements RestApi {
 
         HttpClientRequest request = client.requestAbs(HttpMethod.POST, uri, response -> {
             response.bodyHandler(body$ -> {
-                responseData.setStatusCode(response.statusCode());
+                responseData.setStatus(response.statusCode());
                 if (response.statusCode() == 200) {
-                    responseData.setBodyMessage(body$.toString());
+                    responseData(responseData, body$.toString());
                 }
                 future.complete(responseData);
             });
@@ -287,9 +286,8 @@ public class AuthRestController implements RestApi {
         String password = body.getString("password");
 
         loginAuth.rxAuthenticate(new JsonObject().put("username", username).put("password", password))
-                 .subscribe(token -> future.complete(
-                     new ResponseData().setStatusCode(200).setBodyMessage(token.principal().encode())),
-                            error -> future.complete(ResponseDataHelper.unauthorized()));
+            .subscribe(token -> future.complete(responseData(token.principal().encode())),
+                       error -> future.complete(ResponseDataHelper.unauthorized()));
         return future;
     }
 
@@ -310,19 +308,19 @@ public class AuthRestController implements RestApi {
                     setAuthenticUser(ctx, loginAuth, mongoClient, authorization, future);
                 } else {
                     String[] credentials = ctx.request()
-                                              .getHeader("X-Original-URI")
-                                              .replaceFirst("/ws/[^?]*(\\?)?", "")
-                                              .split(":::");
+                        .getHeader("X-Original-URI")
+                        .replaceFirst("/ws/[^?]*(\\?)?", "")
+                        .split(":::");
                     // NodeRED WebSocket authentication
                     if (credentials.length == 2) {
                         loginAuth.rxGetToken(
                             new JsonObject().put("username", credentials[0]).put("password", credentials[1]))
-                                 .subscribe(token -> {
-                                     ctx.response()
-                                        .putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
-                                        .putHeader("username", credentials[0])
-                                        .end(Json.encodePrettily(token.principal()));
-                                 }, throwable -> future.complete(ResponseDataHelper.unauthorized()));
+                            .subscribe(token -> {
+                                ctx.response()
+                                    .putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
+                                    .putHeader("username", credentials[0])
+                                    .end(Json.encodePrettily(token.principal()));
+                            }, throwable -> future.complete(ResponseDataHelper.unauthorized()));
                     } else {
                         future.complete(ResponseDataHelper.unauthorized());
                     }

@@ -8,7 +8,6 @@ import com.zandero.rest.annotation.RouteOrder;
 
 import io.vertx.core.json.JsonObject;
 
-@Path("/api")
 public class InfoRestController implements RestApi {
 
     @GET

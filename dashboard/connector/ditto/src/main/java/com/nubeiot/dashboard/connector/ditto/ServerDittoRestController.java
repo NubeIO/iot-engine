@@ -1,7 +1,6 @@
 package com.nubeiot.dashboard.connector.ditto;
 
-import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
-import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 
 import java.util.Base64;
 import javax.ws.rs.DELETE;
@@ -15,6 +14,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.HttpConfig;
 import com.nubeiot.core.http.RestConfigProvider;
+import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.utils.Strings;
@@ -33,7 +33,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
-@Path("/api/ditto")
 public class ServerDittoRestController implements RestApi {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerDittoRestController.class);
@@ -42,9 +41,9 @@ public class ServerDittoRestController implements RestApi {
     @Path("/info")
     public JsonObject info(@Context RoutingContext ctx) {
         return new JsonObject().put("name", "server-ditto-driver")
-                               .put("version", "1.0")
-                               .put("vert.x_version", "3.4.1")
-                               .put("java_version", "8.0");
+            .put("version", "1.0")
+            .put("vert.x_version", "3.4.1")
+            .put("java_version", "8.0");
     }
 
     @GET
@@ -86,7 +85,7 @@ public class ServerDittoRestController implements RestApi {
         DittoConfig dittoConfig = IConfig.from(config.getAppConfig(), DittoConfig.class);
         HttpConfig httpConfig = IConfig.from(config.getAppConfig(), HttpConfig.class);
         // Getting actual Ditto call API
-        String uri = ctx.request().uri().replaceFirst(httpConfig.getRootApi(), "");
+        String uri = ctx.request().uri().replaceFirst(httpConfig.getRestConfig().getRootApi(), "");
         logger.info("Proxying request: {}", uri);
 
         HttpMethod httpMethod = ctx.request().method();
@@ -97,27 +96,17 @@ public class ServerDittoRestController implements RestApi {
             ssl = true;
         }
         HttpClientRequest req = client.request(httpMethod, new RequestOptions().setHost(host)
-                                                                               .setPort(port)
-                                                                               .setURI(uri)
-                                                                               .setSsl(ssl));
+            .setPort(port)
+            .setURI(uri)
+            .setSsl(ssl));
 
-        ResponseData responseData = new ResponseData();
         req.handler(res -> {
             logger.info("Proxying Response StatusCode: {}", res.statusCode());
-            responseData.setStatusCode(res.statusCode());
             res.bodyHandler(data -> {
-                responseData.setBodyMessage(data.toString());
-                if (res.statusCode() < 400) {
-                    responseData.setHeaders(new JsonObject().put(CONTENT_TYPE, DEFAULT_CONTENT_TYPE));
-                }
                 logger.info("Proxy Response Completed.");
-                future.complete(responseData);
+                future.complete(responseData(data.toString()).setStatus(res.statusCode()));
             });
-        }).exceptionHandler(e -> {
-            responseData.setStatusCode(500);
-            responseData.setBodyMessage(e.getMessage());
-            future.complete(responseData);
-        });
+        }).exceptionHandler(e -> future.complete(ResponseDataConverter.convert(e)));
 
         req.setChunked(true);
 

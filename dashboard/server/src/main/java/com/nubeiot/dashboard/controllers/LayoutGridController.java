@@ -16,7 +16,7 @@ import com.zandero.rest.annotation.RouteOrder;
 import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
 
-@Path("/api/layout_grid")
+@Path("/layout_grid")
 public class LayoutGridController implements RestApi {
 
     private static final String COLLECTION = "layout_grid";

@@ -16,9 +16,11 @@
     },
     "__http__": {
       "port": 8088,
-      "rootApi": "/api/ditto",
-      "__dynamic__": {
-        "enabled": false
+      "__rest__": {
+        "rootApi": "/api/ditto",
+        "__dynamic__": {
+          "enabled": false
+        }
       }
     },
     "__ditto__": {

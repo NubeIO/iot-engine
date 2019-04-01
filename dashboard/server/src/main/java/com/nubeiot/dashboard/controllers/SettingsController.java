@@ -16,7 +16,7 @@ import com.zandero.rest.annotation.RouteOrder;
 import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
 
-@Path("/api/settings")
+@Path("/settings")
 public class SettingsController implements RestApi {
 
     private static final String COLLECTION = "settings";

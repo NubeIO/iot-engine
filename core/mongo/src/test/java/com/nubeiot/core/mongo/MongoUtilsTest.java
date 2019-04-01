@@ -55,7 +55,7 @@ public class MongoUtilsTest {
     public void getMatchValueOrFirstOneNull() {
         List<JsonObject> jsonObjectList = new ArrayList<>();
         JsonObject jsonObject = MongoUtils.getMatchValueOrFirstOne(jsonObjectList, "1");
-        Assert.assertNull(jsonObject);
+        Assert.assertEquals("{}", jsonObject.encode());
     }
 
 }

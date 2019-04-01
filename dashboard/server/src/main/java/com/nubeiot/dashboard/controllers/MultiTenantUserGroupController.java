@@ -1,5 +1,6 @@
 package com.nubeiot.dashboard.controllers;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -41,7 +42,6 @@ import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.models.UserGroup;
 import com.zandero.rest.annotation.RouteOrder;
 
-@Path("/api")
 public class MultiTenantUserGroupController implements RestApi {
 
     @GET
@@ -101,7 +101,7 @@ public class MultiTenantUserGroupController implements RestApi {
             })
             .flatMap(userGroup -> mongoClient.rxSave(USER_GROUP, userGroup))
             .subscribe(
-                userGroups -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+                userGroups -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT)),
                 throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
@@ -133,7 +133,7 @@ public class MultiTenantUserGroupController implements RestApi {
                         return userGroup;
                     })))
                 .toList())
-            .subscribe(userGroups -> future.complete(new ResponseData().setBodyMessage(userGroups.toString())),
+            .subscribe(userGroups -> future.complete(responseData(userGroups.toString())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
@@ -156,7 +156,7 @@ public class MultiTenantUserGroupController implements RestApi {
             })
             .flatMap(userGroup -> mongoClient.rxSave(USER_GROUP, userGroup.toJsonObject()))
             .subscribe(
-                userGroups -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.CREATED.code())),
+                userGroups -> future.complete(new ResponseData().setStatus(HttpResponseStatus.CREATED)),
                 throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
@@ -226,7 +226,7 @@ public class MultiTenantUserGroupController implements RestApi {
                     }).flatMap(ignored -> mongoClient.rxRemoveDocuments(USER_GROUP, query));
             })
             .subscribe(
-                userGroups -> future.complete(new ResponseData().setStatusCode(HttpResponseStatus.NO_CONTENT.code())),
+                userGroups -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT)),
                 throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }

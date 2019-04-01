@@ -16,9 +16,11 @@
     },
     "__http__": {
       "port": 8084,
-      "rootApi": "/api/sql-hive",
-      "__dynamic__": {
-        "enabled": true
+      "__rest__": {
+        "rootApi": "/api/sql-hive",
+        "__dynamic__": {
+          "enabled": true
+        }
       }
     },
     "__hive__": {

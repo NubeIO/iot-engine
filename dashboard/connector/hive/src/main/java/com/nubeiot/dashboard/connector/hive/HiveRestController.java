@@ -1,5 +1,7 @@
 package com.nubeiot.dashboard.connector.hive;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
+
 import java.util.Collections;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -24,8 +26,6 @@ import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 
-@SuppressWarnings("Duplicates")
-@Path("/api/sql-hive")
 public class HiveRestController implements RestApi {
 
     private static final Logger logger = LoggerFactory.getLogger(HiveRestController.class);
@@ -34,9 +34,9 @@ public class HiveRestController implements RestApi {
     @Path("/info")
     public JsonObject info(@Context RoutingContext ctx) {
         return new JsonObject().put("name", "hive-engine-rest")
-                               .put("version", "1.0")
-                               .put("vert.x_version", "3.4.1")
-                               .put("java_version", "8.0");
+            .put("version", "1.0")
+            .put("vert.x_version", "3.4.1")
+            .put("java_version", "8.0");
     }
 
     @POST
@@ -59,20 +59,17 @@ public class HiveRestController implements RestApi {
 
         if (query == null) {
             // Return query not specified error
-            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.BAD_REQUEST.code()));
+            future.complete(new ResponseData().setStatus(HttpResponseStatus.BAD_REQUEST));
         } else if (!query.toUpperCase().trim().startsWith("SELECT")) {
-            future.complete(new ResponseData().setStatusCode(HttpResponseStatus.UNAUTHORIZED.code()));
+            future.complete(new ResponseData().setStatus(HttpResponseStatus.UNAUTHORIZED));
         } else {
             final String finalQuery = query;
-            executeQuery(vertx, hiveConfig, query).subscribe(result -> {
-                future.complete(new ResponseData().setStatusCode(HttpResponseStatus.OK.code())
-                                                  .setBodyMessage(
-                                                      messageWrapper(finalQuery, successMessage(result)).encode()));
-            }, error -> {
-                future.complete(new ResponseData().setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
-                                                  .setBodyMessage(
-                                                      messageWrapper(finalQuery, failureMessage(error)).encode()));
-            });
+            executeQuery(vertx, hiveConfig, query)
+                .subscribe(
+                    result -> future.complete(responseData(messageWrapper(finalQuery, successMessage(result)).encode())
+                                                  .setStatus(HttpResponseStatus.OK)),
+                    error -> future.complete(responseData(messageWrapper(finalQuery, failureMessage(error)).encode())
+                                                 .setStatus(HttpResponseStatus.BAD_REQUEST)));
         }
         return future;
     }
@@ -85,9 +82,9 @@ public class HiveRestController implements RestApi {
         JDBCClient client = JDBCClient.createNonShared(vertx, hiveConfig.toJson());
 
         return client.rxGetConnection()
-                     .flatMap(conn -> Single.just(conn)
-                                            .doOnError(throwable -> logger.error("Cannot get connection object."))
-                                            .doFinally(conn::close));
+            .flatMap(conn -> Single.just(conn)
+                .doOnError(throwable -> logger.error("Cannot get connection object."))
+                .doFinally(conn::close));
     }
 
     private JsonObject messageWrapper(String query, JsonObject message) {
@@ -96,12 +93,12 @@ public class HiveRestController implements RestApi {
 
     private JsonObject successMessage(ResultSet result) {
         return new JsonObject().put("status", "OK")
-                               .put("message", new JsonArray(
-                                   result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()));
+            .put("message", new JsonArray(
+                result.getNumRows() > 0 ? result.getRows() : Collections.emptyList()));
     }
 
     private JsonObject failureMessage(Throwable throwable) {
-        return new JsonObject().put("status", "OK").put("message", throwable.getMessage());
+        return new JsonObject().put("status", "FAILED").put("message", throwable.getMessage());
     }
 
 }

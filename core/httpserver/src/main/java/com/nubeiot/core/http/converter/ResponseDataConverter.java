@@ -1,5 +1,7 @@
 package com.nubeiot.core.http.converter;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
+
 import java.util.function.Function;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -18,11 +20,11 @@ public class ResponseDataConverter implements Function<Throwable, ResponseData> 
     public ResponseData apply(Throwable e) {
         if (e instanceof HttpException) {
             HttpException httpException = (HttpException) e;
-            return new ResponseData().setBodyMessage(new JsonObject().put("error", httpException.getMessage()).encode())
-                .setStatusCode(httpException.getStatusCode().code());
+            return responseData(new JsonObject().put("error", httpException.getMessage()).encode())
+                .setStatus(httpException.getStatusCode().code());
         } else {
-            return new ResponseData().setBodyMessage(e.getMessage())
-                .setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
+            return responseData(new JsonObject().put("error", e.getMessage()).encode())
+                .setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

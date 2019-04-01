@@ -1,5 +1,6 @@
 package com.nubeiot.dashboard.helpers;
 
+import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -9,7 +10,6 @@ import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
@@ -27,11 +27,8 @@ public class MultiTenantRepresentationHelper {
                                        .flatMap(obj -> companyRepresentation(mongoClient, obj))
                                        .flatMap(obj -> siteRepresentation(mongoClient, obj))
                                        .flatMap(obj -> groupRepresentation(mongoClient, obj))).toList())
-            .subscribe(response -> {
-                JsonArray array = new JsonArray();
-                response.forEach(array::add);
-                future.complete(new ResponseData().setBodyMessage(array.encode()));
-            }, throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+            .subscribe(response -> future.complete(responseData(response.toString())),
+                       throwable -> future.complete(ResponseDataConverter.convert(throwable)));
     }
 
     public static Single<JsonObject> associatedCompanyRepresentation(MongoClient mongoClient, JsonObject object) {
