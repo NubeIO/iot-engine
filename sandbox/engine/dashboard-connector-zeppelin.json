@@ -35,11 +35,11 @@
     "__http__": {
       "port": 8087,
       "__rest__": {
-        "rootApi": "/api/zeppelin",
+        "rootApi": "/zeppelin",
         "__dynamic__": {
-          "enabled": true
+          "enabled": false
         }
-      },
+      }
     },
     "__zeppelin__": {
       "server.host": "localhost",

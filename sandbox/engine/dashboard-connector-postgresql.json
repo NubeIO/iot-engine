@@ -37,7 +37,7 @@
       "__rest__": {
         "rootApi": "/sql-pg",
         "__dynamic__": {
-          "enabled": true
+          "enabled": false
         }
       }
     },

@@ -30,11 +30,15 @@
         "enabled": false
       },
       "__circuitBreaker__": {
-        "enabled": true
+        "enabled": true,
+        "options": {
+          "timeout": 20000
+        }
       }
     },
     "__http__": {
       "port": 8080,
+      "publicScheme": "HTTP",
       "__rest__": {
         "rootApi": "/api",
         "__dynamic__": {

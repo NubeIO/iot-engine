@@ -2,7 +2,8 @@
   "__app__": {
     "__micro__": {
       "__gateway__": {
-        "enabled": true
+        "enabled": true,
+        "clusterAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
       },
       "__serviceDiscovery__": {
         "enabled": true
@@ -11,7 +12,10 @@
         "enabled": false
       },
       "__circuitBreaker__": {
-        "enabled": true
+        "enabled": true,
+        "options": {
+          "timeout": 20000
+        }
       }
     },
     "__http__": {
@@ -20,43 +24,59 @@
       "__rest__": {
         "rootApi": "/api",
         "__dynamic__": {
-          "enabled": false
+          "enabled": true,
+          "path": ""
         }
+      },
+      "__cors__": {
+        "allowedHeaders": [
+          "Access-Control-Request-Method",
+          "Access-Control-Allow-Credentials",
+          "Access-Control-Allow-Origin",
+          "Access-Control-Allow-Headers",
+          "Content-Type",
+          "origin",
+          "x-requested-with",
+          "accept",
+          "X-PINGARUNER",
+          "Site-Id",
+          "Authorization",
+          "JSESSIONID"
+        ]
       }
     },
     "__dashboardServer__": {
       "mediaPath": "media",
       "dittoPolicy": false
     },
-    "__keycloak__": {
-      "realm": "nube_iot",
-      "auth-server-url": "http://localhost:8082/auth",
+    "keycloak": {
+      "realm": "sandbox",
+      "auth-server-url": "http://keycloak:8080/auth",
       "ssl-required": "external",
-      "resource": "nube-web-api-gateway",
+      "resource": "sandbox-client",
       "credentials": {
-        "secret": "b3088f82-9b73-49c8-a89b-94102ede802c"
+        "secret": "69be18ef-e43d-4840-8d02-eeaa5573a488"
       },
-      "confidential-port": 0,
-      "policy-enforcer": {}
+      "confidential-port": 0
     },
-    "__mongo__": {
+    "mongo": {
       "hosts": [
         {
-          "host": "localhost",
+          "host": "mongo",
           "port": 27017
         }
       ],
-      "db_name": "nube",
-      "username": "root",
-      "password": "root",
-      "authSource": "admin",
-      "maxPoolSize": 50,
-      "minPoolSize": 25,
+      "db_name": "sandbox",
+      "username": "sandbox",
+      "password": "111",
+      "authSource": "sandbox",
+      "maxPoolSize": 25,
+      "minPoolSize": 10,
       "maxIdleTimeMS": 300000,
       "maxLifeTimeMS": 3600000,
       "maintenanceFrequencyMS": 2000,
       "maintenanceInitialDelayMS": 500,
-      "waitQueueMultiple": 100
+      "waitQueueMultiple": 10
     }
   }
 }
