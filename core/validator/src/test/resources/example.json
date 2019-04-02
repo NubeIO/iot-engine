@@ -1,0 +1,40 @@
+[
+  {
+    "first_name": "Binod",
+    "last_name": "Rai",
+    "siblings": [
+      "Guna",
+      "Rina"
+    ]
+  },
+  {
+    "first_name": "Binod",
+    "last_name": "Rai",
+    "details": {
+      "basic": {
+        "interests": [
+          {
+            "sports": [
+              "Cricket",
+              "Tennis"
+            ],
+            "music": [
+              {
+                "classical": [
+                  "Baroque",
+                  "Choral"
+                ]
+              },
+              {
+                "rock": "Arena Rock"
+              }
+            ]
+          },
+          {
+            "sports": "Football"
+          }
+        ]
+      }
+    }
+  }
+]

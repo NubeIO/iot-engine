@@ -1,0 +1,14 @@
+{
+  "UI1": {
+    "type": "abc",
+    "value": 12
+  },
+  "UI2": {
+    "type": "xyz",
+    "value": "True",
+    "attributes": [
+      123,
+      "ABC"
+    ]
+  }
+}

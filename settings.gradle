@@ -12,6 +12,7 @@ include ':core:httpserver'
 include ':core:auth'
 include ':core:kafka'
 include ':core:common'
+include ':core:validator'
 
 include ':dashboard:server'
 include ':dashboard:connector:edge'
