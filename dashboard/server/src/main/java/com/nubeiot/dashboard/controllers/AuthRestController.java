@@ -49,7 +49,6 @@ import io.vertx.reactivex.ext.auth.oauth2.AccessToken;
 import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
-@SuppressWarnings("Duplicates")
 public class AuthRestController implements RestApi {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthRestController.class);
@@ -69,7 +68,7 @@ public class AuthRestController implements RestApi {
         return handleRefreshToken(vertx, ctx, configProvider);
     }
 
-    @POST
+    @GET
     @Path("/currentUser")
     @RouteOrder(3)
     public Future<ResponseData> currentUser(@Context RoutingContext ctx,
