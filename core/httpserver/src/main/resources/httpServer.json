@@ -1,114 +1,132 @@
 {
-  "__app__": {
-    "__http__": {
-      "host": "0.0.0.0",
-      "port": 8080,
-      "enabled": true,
-      "rootApi": "/api",
-      "__server__": {
-        "sendBufferSize": -1,
-        "receiveBufferSize": -1,
-        "trafficClass": -1,
-        "reuseAddress": true,
-        "logActivity": false,
-        "reusePort": false,
-        "tcpNoDelay": true,
-        "tcpKeepAlive": false,
-        "soLinger": -1,
-        "usePooledBuffers": false,
-        "idleTimeout": 0,
-        "idleTimeoutUnit": "SECONDS",
-        "ssl": false,
-        "enabledCipherSuites": [],
-        "crlPaths": [],
-        "crlValues": [],
-        "useAlpn": false,
-        "enabledSecureTransportProtocols": [
-          "TLSv1",
-          "TLSv1.1",
-          "TLSv1.2"
-        ],
-        "tcpFastOpen": false,
-        "tcpCork": false,
-        "tcpQuickAck": false,
-        "port": 80,
-        "host": "0.0.0.0",
-        "acceptBacklog": -1,
-        "clientAuth": "NONE",
-        "sni": false,
-        "compressionSupported": true,
-        "compressionLevel": 6,
-        "maxWebsocketFrameSize": 65536,
-        "maxWebsocketMessageSize": 262144,
-        "handle100ContinueAutomatically": false,
-        "maxChunkSize": 8192,
-        "maxInitialLineLength": 4096,
-        "maxHeaderSize": 8192,
-        "initialSettings": {
-          "headerTableSize": 4096,
-          "pushEnabled": true,
-          "maxConcurrentStreams": 100,
-          "initialWindowSize": 65535,
-          "maxFrameSize": 16384,
-          "maxHeaderListSize": 2147483647
-        },
-        "alpnVersions": [
-          "HTTP_2",
-          "HTTP_1_1"
-        ],
-        "http2ConnectionWindowSize": -1,
-        "decompressionSupported": true,
-        "acceptUnmaskedFrames": false,
-        "decoderInitialBufferSize": 128,
-        "clientAuthRequired": false,
-        "websocketAllowServerNoContext": false,
-        "websocketPreferredClientNoContext": false
-      },
-      "__socket__": {
-        "enabled": false,
-        "port": 8080,
-        "rootWs": "/ws",
-        "__sockjs__": {
-          "sessionTimeout": 5000,
-          "insertJSESSIONID": true,
-          "heartbeatInterval": 25000,
-          "maxBytesStreaming": 131072,
-          "libraryURL": "//cdn.jsdelivr.net/sockjs/1.1.5/sockjs.min.js",
-          "disabledTransports": []
-        },
-        "__bridge__": {
-          "maxAddressLength": 200,
-          "maxHandlersPerSocket": 1000,
-          "pingTimeout": 10000,
-          "replyTimeout": 30000,
-          "inboundPermitteds": [],
-          "outboundPermitteds": []
-        }
-      },
-      "__http2__": {
-        "enabled": false,
-        "port": 8080
-      },
-      "__cors__": {
-        "allowedOriginPattern": "*",
-        "allowedMethods": [
-          "PATCH",
-          "POST",
-          "GET",
-          "HEAD",
-          "DELETE",
-          "PUT",
-          "OPTIONS"
-        ],
-        "allowedHeaders": [],
-        "exposedHeaders": [],
-        "allowCredentials": false,
-        "maxAgeSeconds": 3600
-      },
-      "__dynamic__": {
-        "enabled": false,
-        "path": "/s"
-      }
+  "host": "0.0.0.0",
+  "port": 8080,
+  "publicHost": "",
+  "publicPort": -1,
+  "publicScheme": "HTTP",
+  "maxBodySizeMB": 2,
+  "__options__": {
+    "logActivity": false,
+    "receiveBufferSize": -1,
+    "reuseAddress": true,
+    "reusePort": false,
+    "sendBufferSize": -1,
+    "trafficClass": -1,
+    "crlPaths": [],
+    "crlValues": [],
+    "enabledCipherSuites": [],
+    "enabledSecureTransportProtocols": [
+      "TLSv1",
+      "TLSv1.1",
+      "TLSv1.2"
+    ],
+    "idleTimeout": 0,
+    "idleTimeoutUnit": "SECONDS",
+    "soLinger": -1,
+    "ssl": false,
+    "tcpCork": false,
+    "tcpFastOpen": false,
+    "tcpKeepAlive": false,
+    "tcpNoDelay": true,
+    "tcpQuickAck": false,
+    "useAlpn": false,
+    "usePooledBuffers": false,
+    "acceptBacklog": -1,
+    "clientAuth": "NONE",
+    "clientAuthRequired": false,
+    "host": "0.0.0.0",
+    "port": 80,
+    "sni": false,
+    "acceptUnmaskedFrames": false,
+    "alpnVersions": [
+      "HTTP_2",
+      "HTTP_1_1"
+    ],
+    "compressionLevel": 6,
+    "compressionSupported": true,
+    "decoderInitialBufferSize": 128,
+    "decompressionSupported": true,
+    "handle100ContinueAutomatically": false,
+    "http2ConnectionWindowSize": -1,
+    "initialSettings": {
+      "headerTableSize": 4096,
+      "initialWindowSize": 65535,
+      "maxConcurrentStreams": 100,
+      "maxFrameSize": 16384,
+      "maxHeaderListSize": 2147483647,
+      "pushEnabled": true
+    },
+    "maxChunkSize": 8192,
+    "maxHeaderSize": 8192,
+    "maxInitialLineLength": 4096,
+    "maxWebsocketFrameSize": 65536,
+    "maxWebsocketMessageSize": 262144,
+    "websocketAllowServerNoContext": false,
+    "websocketPreferredClientNoContext": false
+  },
+  "__rest__": {
+    "enabled": true,
+    "rootApi": "/api",
+    "__dynamic__": {
+      "enabled": false,
+      "path": "/s"
     }
+  },
+  "__websocket__": {
+    "enabled": false,
+    "rootWs": "/ws",
+    "__sockjs__": {
+      "sessionTimeout": 5000,
+      "insertJSESSIONID": true,
+      "heartbeatInterval": 25000,
+      "maxBytesStreaming": 131072,
+      "libraryURL": "//cdn.jsdelivr.net/sockjs/1.1.5/sockjs.min.js",
+      "disabledTransports": []
+    },
+    "__bridge__": {
+      "maxAddressLength": 200,
+      "maxHandlersPerSocket": 1000,
+      "pingTimeout": 10000,
+      "replyTimeout": 30000,
+      "inboundPermitteds": [],
+      "outboundPermitteds": []
+    }
+  },
+  "__http2__": {
+    "enabled": false
+  },
+  "__cors__": {
+    "allowedOriginPattern": "*",
+    "allowedMethods": [
+      "HEAD",
+      "GET",
+      "PATCH",
+      "POST",
+      "OPTIONS",
+      "DELETE",
+      "PUT"
+    ],
+    "allowedHeaders": [],
+    "exposedHeaders": [],
+    "allowCredentials": false,
+    "maxAgeSeconds": 3600
+  },
+  "__files__": {
+    "enabled": false,
+    "dir": "files",
+    "__upload__": {
+      "enabled": false,
+      "path": "/u",
+      "maxBodySizeMB": 10,
+      "handlerClass": "com.nubeiot.core.http.handler.UploadFileHandler"
+    },
+    "__download__": {
+      "enabled": false,
+      "path": "/f"
+    }
+  },
+  "__static__": {
+    "enabled": false,
+    "webRoot": "/sample"
   }
 }

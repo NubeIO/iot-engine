@@ -40,7 +40,7 @@ public class HttpServiceServer extends ContainerVerticle {
 
     public String configFile() { return "httpService.json"; }
 
-    @Path("/rest/test")
+    @Path("/test")
     public static class MockAPI implements RestApi {
 
         @GET

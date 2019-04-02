@@ -15,13 +15,6 @@ public class RestEventApisBuilderTest {
         new RestEventApisBuilder().validate();
     }
 
-    @Test
-    public void test_root_api() {
-        Assert.assertEquals("/api", new RestEventApisBuilder().getRootApi());
-        Assert.assertEquals("/api", new RestEventApisBuilder().rootApi("").getRootApi());
-        Assert.assertEquals("/api", new RestEventApisBuilder().rootApi(null).getRootApi());
-        Assert.assertEquals("/xyz", new RestEventApisBuilder().rootApi("xyz").getRootApi());
-    }
 
     @Test(expected = NullPointerException.class)
     public void test_register_null() {

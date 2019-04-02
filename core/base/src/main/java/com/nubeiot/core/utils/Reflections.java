@@ -360,7 +360,7 @@ public final class Reflections {
 
         public static <T> Class<T> findClass(String clazz) {
             try {
-                return (Class<T>) Class.forName(clazz, true, Reflections.contextClassLoader());
+                return (Class<T>) Class.forName(Strings.requireNotBlank(clazz), true, Reflections.contextClassLoader());
             } catch (ClassNotFoundException | ClassCastException e) {
                 logger.debug("Not found class {}", e, clazz);
                 return null;

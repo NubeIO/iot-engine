@@ -2,22 +2,25 @@ package com.nubeiot.core.dto;
 
 import java.util.Objects;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.JsonObject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.nubeiot.core.dto.DataTransferObject.AbstractDTO;
 import com.nubeiot.core.event.EventMessage;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @NoArgsConstructor
-public class ResponseData implements DataTransferObject {
+public final class ResponseData extends AbstractDTO {
 
-    private JsonObject headers = new JsonObject();
-    private JsonObject body = new JsonObject();
+    @Getter
+    private HttpResponseStatus status;
 
     public ResponseData(JsonObject headers, JsonObject body) {
-        this.headers = Objects.nonNull(headers) ? headers : new JsonObject();
-        this.body = body;
+        super(headers, body);
     }
 
     //TODO convert EventMessage to ResponseData
@@ -32,24 +35,20 @@ public class ResponseData implements DataTransferObject {
         return responseData.setBody(message.getData());
     }
 
-    @Override
-    public JsonObject body() {
-        return body;
-    }
-
-    @Override
-    public JsonObject headers() {
-        return headers;
-    }
-
-    public ResponseData setBody(JsonObject body) {
-        this.body = body;
+    public ResponseData setStatus(HttpResponseStatus status) {
+        this.status = status;
         return this;
     }
 
-    public ResponseData setHeaders(JsonObject headers) {
-        this.headers = headers;
+    @JsonIgnore
+    public ResponseData setStatus(int status) {
+        this.status = HttpResponseStatus.valueOf(status);
         return this;
+    }
+
+    @JsonIgnore
+    public boolean isError() {
+        return Objects.nonNull(this.status) && this.status.code() >= 400;
     }
 
 }

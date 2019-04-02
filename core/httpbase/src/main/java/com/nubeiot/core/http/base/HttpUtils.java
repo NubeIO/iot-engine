@@ -127,6 +127,11 @@ public final class HttpUtils {
             return SINGULAR_HTTP_METHODS.contains(method);
         }
 
+        public static boolean hasBody(HttpMethod method) {
+            return HttpMethod.POST.equals(method) || HttpMethod.PUT.equals(method) || HttpMethod.PATCH.equals(method) ||
+                   HttpMethod.TRACE.equals(method);
+        }
+
     }
 
 }

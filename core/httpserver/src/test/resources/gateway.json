@@ -16,9 +16,11 @@
       }
     },
     "__http__": {
-      "__dynamic__": {
-        "enabled": true,
-        "path": "/s"
+      "__rest__": {
+        "__dynamic__": {
+          "enabled": true,
+          "path": "/s"
+        }
       }
     }
   }

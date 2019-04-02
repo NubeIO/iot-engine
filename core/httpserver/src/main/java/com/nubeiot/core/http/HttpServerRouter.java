@@ -1,14 +1,11 @@
 package com.nubeiot.core.http;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.nubeiot.core.http.rest.DynamicRestApi;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.RestEventApi;
 import com.nubeiot.core.http.ws.WebsocketEventMetadata;
@@ -21,7 +18,6 @@ public final class HttpServerRouter {
 
     private final Set<Class<? extends RestApi>> restApiClass = new HashSet<>();
     private final Set<Class<? extends RestEventApi>> restEventApiClass = new HashSet<>();
-    private final Map<String, DynamicRestApi> dynamicRestApi = new HashMap<>();
     private final Set<WebsocketEventMetadata> websocketEvents = new HashSet<>();
 
     @SafeVarargs

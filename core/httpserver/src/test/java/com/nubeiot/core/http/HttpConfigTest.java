@@ -16,23 +16,23 @@ public class HttpConfigTest {
         HttpConfig config = new HttpConfig();
         System.out.println(config.toJson().encode());
         HttpConfig fromFile = IConfig.from(Configs.loadJsonConfig("httpServer.json"), HttpConfig.class);
-        JSONAssert.assertEquals(fromFile.toJson().encode(), config.toJson().encode(), JSONCompareMode.NON_EXTENSIBLE);
+        JSONAssert.assertEquals(fromFile.toJson().encode(), config.toJson().encode(), JSONCompareMode.LENIENT);
     }
 
     @Test
     public void deserialize() {
-        String jsonStr = "{\"__app__\":{\"__http__\":{\"host\":\"1.1.1.1\",\"port\":9090,\"enabled\":true," +
-                         "\"rootApi\":\"/xyz\"}}}";
+        String jsonStr = "{\"__app__\":{\"__http__\":{\"host\":\"1.1.1.1\",\"port\":9090," +
+                         "\"__rest__\":{\"enabled\":true,\"rootApi\":\"/xyz\"}}}}";
         HttpConfig from = IConfig.from(jsonStr, HttpConfig.class);
         Assert.assertNotNull(from);
         Assert.assertEquals("1.1.1.1", from.getHost());
         Assert.assertEquals(9090, from.getPort());
-        Assert.assertEquals("/xyz", from.getRootApi());
-        Assert.assertTrue(from.isEnabled());
+        Assert.assertEquals("/xyz", from.getRestConfig().getRootApi());
+        Assert.assertTrue(from.getRestConfig().isEnabled());
         Assert.assertNotNull(from.getOptions());
         Assert.assertTrue(from.getOptions().isCompressionSupported());
         Assert.assertTrue(from.getOptions().isDecompressionSupported());
-        Assert.assertFalse(from.getWebsocketCfg().isEnabled());
+        Assert.assertFalse(from.getWebsocketConfig().isEnabled());
         Assert.assertFalse(from.getHttp2Cfg().isEnabled());
     }
 

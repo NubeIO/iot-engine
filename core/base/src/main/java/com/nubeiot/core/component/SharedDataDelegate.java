@@ -22,6 +22,7 @@ public interface SharedDataDelegate {
      * @see EventController
      */
     String SHARED_EVENTBUS = "EVENTBUS_CONTROLLER";
+    String SHARED_DATADIR = "DATADIR";
 
     @SuppressWarnings("unchecked")
     static <D> D getSharedDataValue(Function<String, Object> sharedDataFunc, String dataKey) {
@@ -38,6 +39,10 @@ public interface SharedDataDelegate {
     static <D> D getLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey) {
         return SharedDataDelegate.getSharedDataValue(
             k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).get(k), dataKey);
+    }
+
+    static <D> void addLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey, D data) {
+        vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).put(Strings.requireNotBlank(dataKey), data);
     }
 
     /**

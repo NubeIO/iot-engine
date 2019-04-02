@@ -11,9 +11,11 @@
   "__app__": {
     "__http__": {
       "host": "0.0.0.0",
-      "enabled": true,
-      "rootApi": "/api",
-      "__socket__": {
+      "__rest__": {
+        "enabled": true,
+        "rootApi": "/api"
+      },
+      "__websocket__": {
         "enabled": true,
         "rootWs": "/wsk"
       }

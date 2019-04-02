@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -169,6 +170,17 @@ public final class Strings {
     public static String format(String msgPattern, Object... params) {
         String[] args = Arrays.stream(params).map(String::valueOf).toArray(String[]::new);
         return MessageFormat.format(msgPattern, (Object[]) args);
+    }
+
+    /**
+     * Checks given string is blank then fallback to given value
+     *
+     * @param value    String
+     * @param fallback Fallback value, must not blank
+     * @return given value if not blank, otherwise {@code fallback}
+     */
+    public static String fallback(String value, String fallback) {
+        return Strings.isBlank(value) ? requireNotBlank(fallback) : value;
     }
 
 }
