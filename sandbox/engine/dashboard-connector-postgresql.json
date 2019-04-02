@@ -35,11 +35,11 @@
     "__http__": {
       "port": 8080,
       "__rest__": {
-        "rootApi": "/api/sql-pg",
+        "rootApi": "/sql-pg",
         "__dynamic__": {
           "enabled": true
         }
-      },
+      }
     },
     "__pg__": {
       "host": "pg-db",

@@ -7,7 +7,6 @@ import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.reactivex.ext.auth.oauth2.providers.KeycloakAuth;
 import io.vertx.reactivex.ext.mongo.MongoClient;
-import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
@@ -17,7 +16,6 @@ import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.RegisterScheme;
 import com.nubeiot.core.http.RestConfigProvider;
-import com.nubeiot.core.http.ServerInfo;
 import com.nubeiot.core.http.base.HttpScheme;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
@@ -61,15 +59,8 @@ public class DashboardServerVerticle extends ContainerVerticle {
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
-        this.registerSuccessHandler(event -> {
-            ServerInfo info = this.httpContext.getServerInfo();
-            microContext
-                .getClusterController()
-                .addHttpRecord("DashboardServerVerticle", new HttpLocation(info.toJson()),
-                               new JsonObject())
-                .subscribe();
-            RestRouter.addProvider(RestMicroContextProvider.class, ctx -> new RestMicroContextProvider(microContext));
-        });
+        this.registerSuccessHandler(event -> RestRouter.addProvider(RestMicroContextProvider.class,
+                                                                    ctx -> new RestMicroContextProvider(microContext)));
 
         JsonObject appConfig = this.nubeConfig.getAppConfig().toJson();
         DashboardServerConfig dashboardServerConfig = IConfig.from(appConfig, DashboardServerConfig.class);
