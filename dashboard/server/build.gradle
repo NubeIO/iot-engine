@@ -3,7 +3,8 @@ ext {
 }
 
 dependencies {
-    compile project(':core:common')
+    compile project(':core:micro')
+    compile project(':core:cluster:hazelcast')
     compile project(':core:httpserver')
     compile project(':core:mongo')
     compile "io.vertx:vertx-auth-oauth2:$project.versions.vertx"

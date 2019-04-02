@@ -12,7 +12,6 @@ include ':core:httpclient'
 include ':core:httpserver'
 include ':core:auth'
 include ':core:kafka'
-include ':core:common'
 
 include ':dashboard:server'
 include ':dashboard:connector:edge'
