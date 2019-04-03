@@ -192,6 +192,8 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         String listenerClass = uploadCfg.getListenerClass();
         controller.register(listenerEvent,
                             UploadListener.create(listenerClass, new ArrayList<>(listenerEvent.getEvents())));
+
+        //FixMe: Need to address in backend and frontend in parallel
         router.route()
               .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB));
         router.post(uploadCfg.getPath())
@@ -206,6 +208,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         logger.info("Init Download router: '{}'...", downloadCfg.getPath());
+        //FixMe: Need to address in backend and frontend in parallel
         router.route().handler(StaticHandler.create()
                                             .setEnableRangeSupport(true)
                                             .setSendVaryHeader(true)
