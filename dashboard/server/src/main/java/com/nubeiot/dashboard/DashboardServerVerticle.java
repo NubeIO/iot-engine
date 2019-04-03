@@ -75,8 +75,7 @@ public class DashboardServerVerticle extends ContainerVerticle {
         mediaAbsoluteDir = FileUtils.createFolder(nubeConfig.getDataDir().toString(), httpFilesConfig.getDir());
         oAuth2Auth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, appConfig.getJsonObject("keycloak"));
 
-        RestRouter.addProvider(RestConfigProvider.class,
-                               ctx -> new RestConfigProvider(config(), this.nubeConfig.getAppConfig().toJson()));
+        RestRouter.addProvider(RestConfigProvider.class, ctx -> new RestConfigProvider(this.nubeConfig));
         RestRouter.addProvider(RestOAuth2AuthProvider.class, ctx -> new RestOAuth2AuthProvider(oAuth2Auth));
         RestRouter.addProvider(RestMongoClientProvider.class, ctx -> new RestMongoClientProvider(mongoClient));
         RestRouter.addProvider(RestMediaDirProvider.class, ctx -> new RestMediaDirProvider(mediaAbsoluteDir));

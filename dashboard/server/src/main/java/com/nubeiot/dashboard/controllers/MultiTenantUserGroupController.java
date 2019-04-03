@@ -36,7 +36,6 @@ import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
-import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.models.UserGroup;
@@ -88,7 +87,7 @@ public class MultiTenantUserGroupController implements RestApi {
                         userGroup -> objectLevelPermission(mongoClient, userGroup.getString("associated_company_id"),
                                                            role, companyId).map(ignored -> userGroup))
                     .flatMap(userGroup -> {
-                        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+                        if (Strings.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
                             return editUserGroup(mongoClient, body, companyId, role)
                                 .map(body$ -> new UserGroup(body$).toJsonObject()
                                     .put("_id", userGroup.getString("_id")));
@@ -147,7 +146,7 @@ public class MultiTenantUserGroupController implements RestApi {
         Single.just(getRole(user))
             .flatMap(this::userRolePermissionCheck)
             .flatMap(role -> {
-                if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+                if (Strings.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
                     return editUserGroup(mongoClient, body, companyId, role).map(UserGroup::new);
                 } else {
                     return Single.just(
@@ -166,7 +165,7 @@ public class MultiTenantUserGroupController implements RestApi {
             managerSiteQuery -> mongoClient.rxFind(SITE, managerSiteQuery).flatMap(childSitesResponse -> {
                 if (childSitesResponse.size() > 0) {
                     String[] availableSites = MongoUtils.getIds(childSitesResponse);
-                    String siteId = SQLUtils.getMatchValue(body.getString("site_id", ""), availableSites);
+                    String siteId = Strings.getMatchValue(body.getString("site_id", ""), availableSites);
                     if (siteId == null) {
                         throw HttpException.badRequest("Site doesn't match up Exception!");
                     }
@@ -198,7 +197,7 @@ public class MultiTenantUserGroupController implements RestApi {
     }
 
     private Single<Role> userRolePermissionCheck(Role role) {
-        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+        if (Strings.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             return Single.just(role);
         } else {
             throw HttpException.forbidden();

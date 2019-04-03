@@ -30,7 +30,6 @@ import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
-import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.models.Company;
@@ -111,7 +110,7 @@ public class MultiTenantCompanyController implements RestApi {
     private Single<MongoClientDeleteResult> deleteCompanies(RoutingContext ctx, MongoClient mongoClient,
                                                             String companyId, Role role) {
         // Model level permission; this is limited to SUPER_ADMIN and ADMIN
-        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+        if (Strings.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
             JsonArray queryInput = ctx.getBodyAsJsonArray();
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", queryInput));
@@ -236,7 +235,7 @@ public class MultiTenantCompanyController implements RestApi {
                 .map(company -> {
                     if (company != null) {
                         Role role = UserUtils.getRole(Role.valueOf(company.getString("role")));
-                        if (!SQLUtils.in(role.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+                        if (!Strings.in(role.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
                             throw HttpException.badRequest("You can't associated that <Company>.");
                         }
                         return new Company(body.put("role", role));

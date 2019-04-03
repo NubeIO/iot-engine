@@ -80,10 +80,10 @@ public class ServerDittoRestController implements RestApi {
         HttpClient client = vertx.createHttpClient(
             new HttpClientOptions().setVerifyHost(false).setTrustAll(true).setTcpKeepAlive(true));
 
-        logger.info("App Config: {}", config.getAppConfig());
+        logger.info("App Config: {}", config.getConfig().getAppConfig());
         logger.info("Config: {}", config.getConfig());
-        DittoConfig dittoConfig = IConfig.from(config.getAppConfig(), DittoConfig.class);
-        HttpConfig httpConfig = IConfig.from(config.getAppConfig(), HttpConfig.class);
+        DittoConfig dittoConfig = IConfig.from(config.getConfig().getAppConfig(), DittoConfig.class);
+        HttpConfig httpConfig = IConfig.from(config.getConfig().getAppConfig(), HttpConfig.class);
         // Getting actual Ditto call API
         String uri = ctx.request().uri().replaceFirst(httpConfig.getRestConfig().getRootApi(), "");
         logger.info("Proxying request: {}", uri);

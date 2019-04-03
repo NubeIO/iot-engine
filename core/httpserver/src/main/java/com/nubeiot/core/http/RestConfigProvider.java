@@ -1,6 +1,7 @@
 package com.nubeiot.core.http;
 
-import io.vertx.core.json.JsonObject;
+import com.nubeiot.core.NubeConfig;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -8,9 +9,6 @@ import lombok.RequiredArgsConstructor;
 public class RestConfigProvider {
 
     @Getter
-    private final JsonObject config;
-
-    @Getter
-    private final JsonObject appConfig;
+    private final NubeConfig config;
 
 }

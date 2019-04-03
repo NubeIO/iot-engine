@@ -69,7 +69,7 @@ public class MultiTenantSiteController implements RestApi {
                                      @Context RoutingContext ctx,
                                      @Context RestConfigProvider configProvider,
                                      @Context RestMongoClientProvider mongoClient) {
-        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getAppConfig(),
+        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getConfig().getAppConfig(),
                                                                    DashboardServerConfig.class);
         return handlePostSite(microContextProvider.getMicroContext(), ctx, mongoClient.getMongoClient(),
                               dashboardServerConfig);
@@ -82,7 +82,7 @@ public class MultiTenantSiteController implements RestApi {
                                     @Context RoutingContext ctx,
                                     @Context RestConfigProvider configProvider,
                                     @Context RestMongoClientProvider mongoClient) {
-        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getAppConfig(),
+        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getConfig().getAppConfig(),
                                                                    DashboardServerConfig.class);
         return handlePutSite(microContextProvider.getMicroContext(), ctx, mongoClient.getMongoClient(),
                              dashboardServerConfig);
@@ -102,7 +102,7 @@ public class MultiTenantSiteController implements RestApi {
                                        @Context RoutingContext ctx,
                                        @Context RestConfigProvider configProvider,
                                        @Context RestMongoClientProvider mongoClient) {
-        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getAppConfig(),
+        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getConfig().getAppConfig(),
                                                                    DashboardServerConfig.class);
         return handleDeleteSites(microContextProvider.getMicroContext(), ctx, mongoClient.getMongoClient(),
                                  dashboardServerConfig);
@@ -178,7 +178,7 @@ public class MultiTenantSiteController implements RestApi {
                     }))
                     .toList());
             })
-            .subscribe(ignored -> future.complete(new ResponseData()),
+            .subscribe(ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT.code())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }

@@ -40,7 +40,6 @@ public class MediaController implements RestApi {
     @Path("/")
     @RouteOrder(3)
     public Future<ResponseData> post(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient,
-                                     @Context RestConfigProvider configProvider,
                                      @Context RestMediaDirProvider mediaDirProvider) {
         return handlePostMediaFiles(ctx, mongoClient.getMongoClient(), mediaDirProvider.getMediaAbsoluteDir());
     }

@@ -34,8 +34,7 @@ public class HiveVerticle extends ContainerVerticle {
                         .subscribe();
         });
 
-        RestRouter.addProvider(RestConfigProvider.class,
-                               ctx -> new RestConfigProvider(config(), this.nubeConfig.getAppConfig().toJson()));
+        RestRouter.addProvider(RestConfigProvider.class, ctx -> new RestConfigProvider(this.nubeConfig));
     }
 
 }

@@ -1,18 +1,18 @@
 package com.nubeiot.dashboard.utils;
 
-import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
 import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.exceptions.HttpException;
-import com.nubeiot.core.utils.SQLUtils;
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.props.UserProps;
 
@@ -36,7 +36,7 @@ public class UserUtils {
             case SUPER_ADMIN:
                 return setRole;
             case ADMIN:
-                return SQLUtils.in(setRole.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())
+                return Strings.in(setRole.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())
                        ? Role.MANAGER
                        : setRole;
             case MANAGER:
@@ -58,7 +58,7 @@ public class UserUtils {
                     }
                 }));
             request.setChunked(true);
-            request.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+            request.putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
             request.putHeader("Authorization", "Bearer " + userProps.getAccessToken());
             request.write(userProps.getKeycloakUser().encode()).end();
         });
@@ -77,7 +77,7 @@ public class UserUtils {
                         source.onError(new HttpException(response.statusCode(), "Failure to get User from Username."));
                     }
                 }));
-            request.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+            request.putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
             request.putHeader("Authorization", "Bearer " + userProps.getAccessToken());
             request.end();
         });
@@ -95,7 +95,7 @@ public class UserUtils {
                         source.onError(new HttpException(response.statusCode(), "Failure on getting User."));
                     }
                 }));
-            request.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+            request.putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
             request.putHeader("Authorization", "Bearer " + userProps.getAccessToken());
             request.end();
         });
@@ -114,7 +114,7 @@ public class UserUtils {
                     }
                 }));
             request.setChunked(true);
-            request.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+            request.putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
             request.putHeader("Authorization", "Bearer " + userProps.getAccessToken());
             JsonObject requestBody = new JsonObject()
                 .put("temporary", false)
@@ -132,7 +132,7 @@ public class UserUtils {
             HttpClientRequest request = userProps.getHttpClient().requestAbs(HttpMethod.DELETE, url, response ->
                 response
                     .bodyHandler(body -> source.onSuccess(new JsonObject().put("statusCode", response.statusCode()))));
-            request.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+            request.putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
             request.putHeader("Authorization", "Bearer " + userProps.getAccessToken());
             request.end();
         });
@@ -150,7 +150,7 @@ public class UserUtils {
                         source.onError(new HttpException(response.statusCode(), "Failure on querying Users."));
                     }
                 }));
-            request.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+            request.putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
             request.putHeader("Authorization", "Bearer " + userProps.getAccessToken());
             request.end();
         });
@@ -171,18 +171,18 @@ public class UserUtils {
                         }
                     }));
             request.setChunked(true);
-            request.putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+            request.putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
             request.putHeader("Authorization", "Bearer " + userProps.getAccessToken());
             request.write(userProps.getKeycloakUser().encode()).end();
         });
     }
 
     public static boolean hasUserLevelRole(Role role) {
-        return SQLUtils.in(role.toString(), Role.USER.toString(), Role.GUEST.toString());
+        return Strings.in(role.toString(), Role.USER.toString(), Role.GUEST.toString());
     }
 
     public static boolean hasClientLevelRole(Role role) {
-        return SQLUtils.in(role.toString(), Role.MANAGER.toString(), Role.USER.toString(), Role.GUEST.toString());
+        return Strings.in(role.toString(), Role.MANAGER.toString(), Role.USER.toString(), Role.GUEST.toString());
     }
 
     public static String getCompanyId(JsonObject user) {

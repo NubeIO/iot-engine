@@ -32,7 +32,6 @@ import io.reactivex.SingleSource;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -52,7 +51,6 @@ import com.nubeiot.core.http.utils.RequestDataConverter;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
-import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.DashboardServerConfig;
 import com.nubeiot.dashboard.Role;
@@ -83,7 +81,7 @@ public class MultiTenantUserController implements RestApi {
                                      @Context RestMicroContextProvider microContextProvider,
                                      @Context RestMongoClientProvider mongoClientProvider,
                                      @Context RestConfigProvider configProvider) {
-        JsonObject appConfig = configProvider.getAppConfig();
+        JsonObject appConfig = configProvider.getConfig().getAppConfig().toJson();
         JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         return handlePostUser(vertx, ctx, microContextProvider.getMicroContext(), mongoClientProvider.getMongoClient(),
                               keycloakConfig, appConfig);
@@ -95,7 +93,7 @@ public class MultiTenantUserController implements RestApi {
     public Future<ResponseData> patch(@Context Vertx vertx, @Context RoutingContext ctx,
                                       @Context RestMongoClientProvider mongoClientProvider,
                                       @Context RestConfigProvider configProvider) {
-        JsonObject keycloakConfig = configProvider.getAppConfig().getJsonObject("keycloak");
+        JsonObject keycloakConfig = configProvider.getConfig().getAppConfig().toJson().getJsonObject("keycloak");
         return handlePatchUser(vertx, ctx, mongoClientProvider.getMongoClient(),
                                keycloakConfig);
     }
@@ -107,7 +105,7 @@ public class MultiTenantUserController implements RestApi {
                                        @Context RestMicroContextProvider microContextProvider,
                                        @Context RestMongoClientProvider mongoClientProvider,
                                        @Context RestConfigProvider configProvider) {
-        JsonObject appConfig = configProvider.getAppConfig();
+        JsonObject appConfig = configProvider.getConfig().getAppConfig().toJson();
         JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         return handleDeleteUsers(vertx, ctx, microContextProvider.getMicroContext(),
                                  mongoClientProvider.getMongoClient(), keycloakConfig, appConfig);
@@ -119,7 +117,7 @@ public class MultiTenantUserController implements RestApi {
     public Future<ResponseData> updatePassword(@Context Vertx vertx, @Context RoutingContext ctx,
                                                @Context RestMongoClientProvider mongoClientProvider,
                                                @Context RestConfigProvider configProvider) {
-        JsonObject appConfig = configProvider.getAppConfig();
+        JsonObject appConfig = configProvider.getConfig().getAppConfig().toJson();
         JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         return handleUpdatePassword(vertx, ctx, mongoClientProvider.getMongoClient(), keycloakConfig);
     }
@@ -129,7 +127,7 @@ public class MultiTenantUserController implements RestApi {
     @RouteOrder(3)
     public Future<ResponseData> checkUser(@Context Vertx vertx, @Context RoutingContext ctx,
                                           @Context RestConfigProvider configProvider) {
-        JsonObject appConfig = configProvider.getAppConfig();
+        JsonObject appConfig = configProvider.getConfig().getAppConfig().toJson();
         JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         return handleCheckUser(vertx, ctx, keycloakConfig);
     }
@@ -246,7 +244,7 @@ public class MultiTenantUserController implements RestApi {
             .build();
 
         // Model level permission; this is limited to SUPER_ADMIN, ADMIN and MANAGER
-        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+        if (Strings.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             // Object level permission
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", userProps.getArrayBody()));
 
@@ -445,7 +443,7 @@ public class MultiTenantUserController implements RestApi {
         JsonObject user = ctx.user().principal();
         Role role = getRole(user);
 
-        if (SQLUtils.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
+        if (Strings.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
             JsonObject body = ctx.getBodyAsJson();
 
             UserProps userProps = UserProps.builder()
@@ -518,7 +516,7 @@ public class MultiTenantUserController implements RestApi {
                 // 5.1 Proceed for creating MongoDB user
                 String[] childCompaniesIds = MongoUtils.getIds(childCompanies);
                 // If company doesn't match with user request, a random company will be assigned
-                String companyId = SQLUtils
+                String companyId = Strings
                     .getMatchValueOrFirstOne(userProps.getBody().getString("company_id", ""), childCompaniesIds);
                 JsonObject company = MongoUtils.getMatchValueOrFirstOne(childCompanies, companyId);
 
@@ -554,7 +552,7 @@ public class MultiTenantUserController implements RestApi {
                 body.put("company_id", userProps.getCompanyId())
                     .put("associated_company_id", userProps.getCompanyId())
                     .put("site_id", userProps.getUser().getString("site_id"))
-                    .put("group_id", SQLUtils.getMatchValueOrFirstOne(userProps.getBodyGroupId(),
+                    .put("group_id", Strings.getMatchValueOrFirstOne(userProps.getBodyGroupId(),
                                                                       MongoUtils.getIds(childGroups)));
                 return Single.just(body);
             } else {

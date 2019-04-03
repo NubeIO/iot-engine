@@ -15,7 +15,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.RestConfigProvider;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.utils.SQLUtils;
+import com.nubeiot.core.utils.Strings;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
@@ -49,7 +49,7 @@ public class PostgreSqlRestController implements RestApi {
     @Path("/engine")
     public Future<ResponseData> engine(@Context io.vertx.core.Vertx vertx, @Context RoutingContext ctx,
                                        @Context RestConfigProvider config) {
-        PostgreSqlConfig pgConfig = IConfig.from(config.getAppConfig(), PostgreSqlConfig.class);
+        PostgreSqlConfig pgConfig = IConfig.from(config.getConfig().getAppConfig(), PostgreSqlConfig.class);
         return postgreSqlQuery(new Vertx(vertx), pgConfig, ctx);
     }
 
@@ -70,7 +70,7 @@ public class PostgreSqlRestController implements RestApi {
             future.complete(new ResponseData().setStatus(HttpResponseStatus.UNAUTHORIZED));
         } else {
             JsonObject settings = new JsonObject(
-                SQLUtils.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
+                Strings.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
             final String finalQuery = query;
             executeQuery(vertx, settings, pgConfig, query)
                 .subscribe(

@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.ApiConstants.CONTENT_TYPE;
 import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
 import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
@@ -21,7 +20,6 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.RestConfigProvider;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
-import com.nubeiot.core.utils.SQLUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.UserImpl;
@@ -136,7 +134,7 @@ public class AuthRestController implements RestApi {
         User user = ctx.user();
         String access_token = user.principal().getString("access_token");
         String refresh_token = body.getString("refresh_token");
-        JsonObject keycloakConfig = configProvider.getAppConfig().getJsonObject("keycloak");
+        JsonObject keycloakConfig = configProvider.getConfig().getAppConfig().toJson().getJsonObject("keycloak");
         String client_id = keycloakConfig.getString("resource");
         String client_secret = keycloakConfig.getJsonObject("credentials").getString("secret");
         String realmName = keycloakConfig.getString("realm");
@@ -209,8 +207,9 @@ public class AuthRestController implements RestApi {
             }
         }).subscribe(groupAndSiteAndCompany -> {
             // Use case of header username: ditto NGINX
-            ResponseData responseData = responseData(user.principal().mergeIn(groupAndSiteAndCompany).encode())
-                .setHeaders(new JsonObject().put("username", user.principal().getString("username")));
+            ResponseData responseData = responseData(
+                user.principal().mergeIn(groupAndSiteAndCompany).encode()).setHeaders(
+                new JsonObject().put("username", user.principal().getString("username")));
 
             future.complete(responseData);
         });
@@ -220,7 +219,7 @@ public class AuthRestController implements RestApi {
     private SingleSource<? extends JsonObject> assignSiteOnAvailability(RoutingContext ctx, MongoClient mongoClient,
                                                                         JsonObject group) {
         String role = ctx.user().principal().getString("role");
-        if (SQLUtils.in(role, Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
+        if (Strings.in(role, Role.SUPER_ADMIN.toString(), Role.ADMIN.toString())) {
             // If we have already a site for its respective role, then we will assign it
             JsonObject query = new JsonObject().put("associated_company_id",
                                                     ctx.user().principal().getString("company_id"));
@@ -249,7 +248,7 @@ public class AuthRestController implements RestApi {
         JsonObject body = ctx.getBodyAsJson();
         String refresh_token = body.getString("refresh_token");
         String access_token = ctx.request().getHeader("Authorization"); // Bearer {{token}}
-        JsonObject keycloakConfig = configProvider.getAppConfig().getJsonObject("keycloak");
+        JsonObject keycloakConfig = configProvider.getConfig().getAppConfig().toJson().getJsonObject("keycloak");
         String client_id = keycloakConfig.getString("resource");
         String client_secret = keycloakConfig.getJsonObject("credentials").getString("secret");
         String realmName = keycloakConfig.getString("realm");
@@ -316,7 +315,7 @@ public class AuthRestController implements RestApi {
                             new JsonObject().put("username", credentials[0]).put("password", credentials[1]))
                             .subscribe(token -> {
                                 ctx.response()
-                                    .putHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
+                                    .putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
                                     .putHeader("username", credentials[0])
                                     .end(Json.encodePrettily(token.principal()));
                             }, throwable -> future.complete(ResponseDataHelper.unauthorized()));
