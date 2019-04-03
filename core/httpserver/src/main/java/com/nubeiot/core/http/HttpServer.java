@@ -158,10 +158,14 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         if (!restConfig.isEnabled()) {
             return router;
         }
+        this.dataDir = this.getSharedData(SharedDataDelegate.SHARED_DATADIR, FileUtils.DEFAULT_DATADIR.toString());
         return new RestApisBuilder(vertx, router).rootApi(restConfig.getRootApi())
                                                  .registerApi(httpRouter.getRestApiClass())
                                                  .registerEventBusApi(httpRouter.getRestEventApiClass())
                                                  .dynamicRouteConfig(restConfig.getDynamicConfig())
+                                                 .addEventController(
+                                                     this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS,
+                                                                        new EventController(vertx)))
                                                  .build();
     }
 

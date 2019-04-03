@@ -1,7 +1,5 @@
 package com.nubeiot.eventbus.edge;
 
-import java.util.Arrays;
-
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
@@ -15,11 +13,9 @@ public final class EdgeEventBus {
     public static final EventModel APP_INSTALLER = EventModel.builder()
                                                              .address("nubeiot.edge.app.installer")
                                                              .pattern(EventPattern.REQUEST_RESPONSE)
-                                                             .events(
-                                                                 Arrays.asList(EventAction.CREATE, EventAction.UPDATE,
-                                                                               EventAction.HALT, EventAction.REMOVE,
-                                                                               EventAction.GET_ONE,
-                                                                               EventAction.GET_LIST))
+                                                             .addEvents(EventAction.CREATE, EventAction.UPDATE,
+                                                                        EventAction.HALT, EventAction.REMOVE,
+                                                                        EventAction.GET_ONE, EventAction.GET_LIST)
                                                              .build();
     public static final EventModel APP_TRANSACTION = EventModel.builder()
                                                                .address("nubeiot.edge.app.installer.transaction")
@@ -30,18 +26,16 @@ public final class EdgeEventBus {
                                                               .address("nubeiot.edge.app.installer.deployment")
                                                               .pattern(EventPattern.REQUEST_RESPONSE)
                                                               .local(true)
-                                                              .events(
-                                                                  Arrays.asList(EventAction.INIT, EventAction.CREATE,
-                                                                                EventAction.UPDATE, EventAction.HALT,
-                                                                                EventAction.REMOVE))
+                                                              .addEvents(EventAction.INIT, EventAction.CREATE,
+                                                                         EventAction.UPDATE, EventAction.HALT,
+                                                                         EventAction.REMOVE)
                                                               .build();
     public static final EventModel BIOS_INSTALLER = EventModel.builder()
                                                               .address("nubeiot.edge.bios.installer")
                                                               .pattern(EventPattern.REQUEST_RESPONSE)
-                                                              .events(
-                                                                  Arrays.asList(EventAction.UPDATE, EventAction.GET_ONE,
-                                                                                EventAction.GET_LIST, EventAction.PATCH,
-                                                                                EventAction.UPDATE))
+                                                              .addEvents(EventAction.UPDATE, EventAction.GET_ONE,
+                                                                         EventAction.GET_LIST, EventAction.PATCH,
+                                                                         EventAction.UPDATE)
                                                               .build();
     public static final EventModel BIOS_TRANSACTION = EventModel.builder()
                                                                 .address("nubeiot.edge.bios.installer.transaction")
@@ -52,10 +46,9 @@ public final class EdgeEventBus {
                                                                .address("nubeiot.edge.bios.installer.deployment")
                                                                .pattern(EventPattern.REQUEST_RESPONSE)
                                                                .local(true)
-                                                               .events(
-                                                                   Arrays.asList(EventAction.INIT, EventAction.CREATE,
-                                                                                 EventAction.UPDATE, EventAction.HALT,
-                                                                                 EventAction.REMOVE))
+                                                               .addEvents(EventAction.INIT, EventAction.CREATE,
+                                                                          EventAction.UPDATE, EventAction.HALT,
+                                                                          EventAction.REMOVE)
                                                                .build();
     public static final EventModel BIOS_STATUS = EventModel.builder()
                                                            .address("nubeiot.edge.bios.status")
