@@ -30,6 +30,8 @@ import com.nubeiot.dashboard.controllers.MultiTenantCompanyController;
 import com.nubeiot.dashboard.controllers.MultiTenantSiteController;
 import com.nubeiot.dashboard.controllers.MultiTenantUserController;
 import com.nubeiot.dashboard.controllers.MultiTenantUserGroupController;
+import com.nubeiot.dashboard.controllers.QueryHiveController;
+import com.nubeiot.dashboard.controllers.QueryPostgreSqlController;
 import com.nubeiot.dashboard.controllers.SettingsController;
 import com.nubeiot.dashboard.controllers.WidgetImageController;
 import com.nubeiot.dashboard.providers.RestMediaDirProvider;
@@ -54,7 +56,9 @@ public class DashboardServerVerticle extends ContainerVerticle {
                                                                      MultiTenantUserController.class,
                                                                      MultiTenantCompanyController.class,
                                                                      MultiTenantSiteController.class,
-                                                                     MultiTenantUserGroupController.class);
+                                                                     MultiTenantUserGroupController.class,
+                                                                     QueryHiveController.class,
+                                                                     QueryPostgreSqlController.class);
         this.addProvider(new HttpServerProvider(router))
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
