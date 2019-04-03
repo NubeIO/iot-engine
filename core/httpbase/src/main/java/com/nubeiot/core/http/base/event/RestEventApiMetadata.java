@@ -32,10 +32,7 @@ public final class RestEventApiMetadata {
         if (metadata.pathPattern) {
             return Urls.capturePatternPath(metadata.rawPath(), metadata.paramNames.toArray(new String[] {}));
         }
-        if (HttpMethod.POST == method || (HttpMethod.GET == method && EventAction.GET_LIST == action)) {
-            return metadata.rawPath() + "s";
-        }
-        if (HttpMethods.isSingular(method)) {
+        if (HttpMethods.isSingular(method) && EventAction.GET_LIST != action) {
             return Urls.capturePath(metadata.rawPath(), metadata.paramNames.toArray(new String[] {}));
         }
         return metadata.rawPath();

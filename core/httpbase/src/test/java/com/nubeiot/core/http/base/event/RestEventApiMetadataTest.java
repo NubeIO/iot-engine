@@ -13,7 +13,7 @@ import com.nubeiot.core.event.EventPattern;
 public class RestEventApiMetadataTest {
 
     private RestEventApiMetadata.Builder createBuilder(EventAction event, HttpMethod method) {
-        return createBuilder(event, method, "/api/gold", "gold_id");
+        return createBuilder(event, method, "/api/golds", "gold_id");
     }
 
     private RestEventApiMetadata.Builder createBuilder(String path, String... params) {
@@ -46,13 +46,13 @@ public class RestEventApiMetadataTest {
     @Test
     public void test_get_one() {
         RestEventApiMetadata metadata = createBuilder(EventAction.GET_ONE, HttpMethod.GET).build();
-        Assert.assertEquals("/api/gold/:gold_id", metadata.getPath());
+        Assert.assertEquals("/api/golds/:gold_id", metadata.getPath());
     }
 
     @Test
     public void test_other_method() {
         RestEventApiMetadata metadata = createBuilder(EventAction.INIT, HttpMethod.OPTIONS).build();
-        Assert.assertEquals("/api/gold", metadata.getPath());
+        Assert.assertEquals("/api/golds", metadata.getPath());
         Assert.assertEquals(HttpMethod.OPTIONS, metadata.getMethod());
     }
 

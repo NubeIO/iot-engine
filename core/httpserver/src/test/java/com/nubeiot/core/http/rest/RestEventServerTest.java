@@ -76,7 +76,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     @Test
     public void test_api_eventbus_error_from_user(TestContext context) {
         MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
-        String path = "/api/test/event/:event_id";
+        String path = "/api/test/events/:event_id";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.INVALID_ARGUMENT)
                                               .put("message", "invalid");
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
@@ -85,7 +85,7 @@ public class RestEventServerTest extends HttpServerTestBase {
 
     @Test
     public void test_api_eventbus_no_reply(TestContext context) {
-        String path = "/api/test/event/:event_id";
+        String path = "/api/test/events/:event_id";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.SERVICE_ERROR)
                                               .put("message", "Service unavailable");
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
@@ -112,7 +112,7 @@ public class RestEventServerTest extends HttpServerTestBase {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        String path = "/api/test/event/1";
+        String path = "/api/test/events/1";
         JsonObject expected = new JsonObject().put("data", 1);
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
         assertRestByClient(context, HttpMethod.GET, path, 200, expected);
@@ -138,7 +138,7 @@ public class RestEventServerTest extends HttpServerTestBase {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        String path = "/api/test/event/1";
+        String path = "/api/test/events/1";
         JsonObject expected = new JsonObject().put("data", "success");
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
         assertRestByClient(context, HttpMethod.PUT, path, 200, expected);
@@ -151,7 +151,7 @@ public class RestEventServerTest extends HttpServerTestBase {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        String path = "/api/test/event/1";
+        String path = "/api/test/events/1";
         JsonObject expected = new JsonObject().put("patch", "success").put("event_id", 1);
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
         assertRestByClient(context, HttpMethod.PATCH, path, 200, expected);
