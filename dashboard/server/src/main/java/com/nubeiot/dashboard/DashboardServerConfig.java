@@ -15,7 +15,6 @@ public final class DashboardServerConfig implements IConfig {
 
     public static final String NAME = "__dashboardServer__";
 
-    private String mediaPath = "media";
     private Boolean dittoPolicy = false;
 
     @Override

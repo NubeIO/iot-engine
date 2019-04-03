@@ -7,6 +7,6 @@ import lombok.RequiredArgsConstructor;
 public class RestMediaDirProvider {
 
     @Getter
-    private final String mediaDir;
+    private final String mediaAbsoluteDir;
 
 }

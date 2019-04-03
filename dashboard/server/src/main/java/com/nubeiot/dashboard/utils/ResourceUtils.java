@@ -10,10 +10,9 @@ import com.nubeiot.core.http.base.Urls;
  */
 public class ResourceUtils {
 
-    public static String buildAbsolutePath(@NotNull String host, @NotNull String mediaRoot,
-                                           @NotNull String relativePath) {
+    public static String buildAbsolutePath(@NotNull String host, @NotNull String relativePath) {
         return Urls.optimizeURL(RegisterScheme.getInstance().getHttpScheme().getScheme() + "://" + host,
-                                Urls.combinePath(mediaRoot, relativePath));
+                                Urls.combinePath(relativePath));
     }
 
 }

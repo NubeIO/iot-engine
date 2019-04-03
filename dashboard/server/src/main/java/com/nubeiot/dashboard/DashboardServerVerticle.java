@@ -11,7 +11,7 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpConfig;
-import com.nubeiot.core.http.HttpServerContext;
+import com.nubeiot.core.http.HttpConfig.FileStorageConfig;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.RegisterScheme;
@@ -39,10 +39,9 @@ import com.zandero.rest.RestRouter;
 
 public class DashboardServerVerticle extends ContainerVerticle {
 
-    private HttpServerContext httpContext;
     private MicroContext microContext;
     private MongoClient mongoClient;
-    private String mediaDir;
+    private String mediaAbsoluteDir;
     private OAuth2Auth oAuth2Auth;
 
     @Override
@@ -56,27 +55,28 @@ public class DashboardServerVerticle extends ContainerVerticle {
                                                                      MultiTenantCompanyController.class,
                                                                      MultiTenantSiteController.class,
                                                                      MultiTenantUserGroupController.class);
-        this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
+        this.addProvider(new HttpServerProvider(router))
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
         this.registerSuccessHandler(event -> RestRouter.addProvider(RestMicroContextProvider.class,
                                                                     ctx -> new RestMicroContextProvider(microContext)));
 
         JsonObject appConfig = this.nubeConfig.getAppConfig().toJson();
-        DashboardServerConfig dashboardServerConfig = IConfig.from(appConfig, DashboardServerConfig.class);
         HttpConfig httpConfig = IConfig.from(appConfig, HttpConfig.class);
+        FileStorageConfig httpFilesConfig = IConfig.from(httpConfig, FileStorageConfig.class);
 
         logger.info("Registering Schema: {}", httpConfig.getPublicScheme());
         registerHttpScheme(httpConfig.getPublicScheme());
         mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo"));
-        mediaDir = FileUtils.createFolder(nubeConfig.getDataDir().toString(), dashboardServerConfig.getMediaPath());
+        mediaAbsoluteDir = FileUtils.createFolder(nubeConfig.getDataDir().toString(), httpFilesConfig.getDir());
         oAuth2Auth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, appConfig.getJsonObject("keycloak"));
 
         RestRouter.addProvider(RestConfigProvider.class,
                                ctx -> new RestConfigProvider(config(), this.nubeConfig.getAppConfig().toJson()));
         RestRouter.addProvider(RestOAuth2AuthProvider.class, ctx -> new RestOAuth2AuthProvider(oAuth2Auth));
         RestRouter.addProvider(RestMongoClientProvider.class, ctx -> new RestMongoClientProvider(mongoClient));
-        RestRouter.addProvider(RestMediaDirProvider.class, ctx -> new RestMediaDirProvider(mediaDir));
+        RestRouter.addProvider(RestMediaDirProvider.class, ctx -> new RestMediaDirProvider(mediaAbsoluteDir));
+
     }
 
     private void registerHttpScheme(HttpScheme scheme) {

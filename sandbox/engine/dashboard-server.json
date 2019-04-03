@@ -61,10 +61,22 @@
           "Authorization",
           "JSESSIONID"
         ]
+      },
+      "__files__": {
+        "enabled": true,
+        "dir": "media",
+        "__upload__": {
+          "enabled": true,
+          "path": "/u",
+          "maxBodySizeMB": 5
+        },
+        "__download__": {
+          "enabled": true,
+          "path": "/f"
+        }
       }
     },
     "__dashboardServer__": {
-      "mediaPath": "media",
       "dittoPolicy": false
     },
     "keycloak": {
