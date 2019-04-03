@@ -27,7 +27,7 @@ public class ClientUtils {
     private static final Logger logger = LoggerFactory.getLogger(ClientUtils.class);
 
     public static Single<ResponseData> execute(HttpClient httpClient, String path, HttpMethod method,
-                                               RequestData requestData, Handler<Void> closeHandler) {
+                                               RequestData requestData) {
         return Single.create(source -> {
             HttpClientRequest request = httpClient.request(method, path, response -> response.bodyHandler(body -> {
                 logger.info("Response status {}", response.statusCode());
@@ -40,7 +40,7 @@ public class ClientUtils {
                     source.onSuccess(new ResponseData().setHeaders(JsonObject.mapFrom(response.headers()))
                                                        .setBody(body.toJsonObject()));
                 }
-            })).endHandler(closeHandler).getDelegate();
+            })).getDelegate();
             logger.info("Make HTTP request {} :: {} | <{}> | <{}>", request.method(), request.absoluteURI(),
                         requestData.headers().encode(), requestData.body().encode());
             //TODO why need it?
