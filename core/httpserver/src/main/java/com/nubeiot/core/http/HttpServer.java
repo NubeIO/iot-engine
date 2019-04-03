@@ -170,6 +170,23 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         Path storageDir = Paths.get(FileUtils.createFolder(dataDir, storageConfig.getDir()));
+
+        //FixMe: Need to address in backend and frontend in parallel
+        if (storageConfig.isExternalHandler()) {
+            router.route()
+                  .handler(BodyHandler.create(storageDir.toString())
+                                      .setBodyLimit(storageConfig.getUploadConfig().getMaxBodySizeMB() * MB));
+            router.route()
+                  .handler(StaticHandler.create()
+                                        .setEnableRangeSupport(true)
+                                        .setSendVaryHeader(true)
+                                        .setFilesReadOnly(false)
+                                        .setAllowRootFileSystemAccess(true)
+                                        .setIncludeHidden(false)
+                                        .setWebRoot(storageDir.toString()));
+            router.get(Urls.combinePath(storageConfig.getDownloadConfig().getPath(), ApiConstants.WILDCARDS_ANY_PATH));
+            return router;
+        }
         initUploadRouter(router, storageDir, storageConfig.getUploadConfig(), publicUrl);
         initDownloadRouter(router, storageDir, storageConfig.getDownloadConfig());
         return router;
@@ -192,11 +209,8 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         String listenerClass = uploadCfg.getListenerClass();
         controller.register(listenerEvent,
                             UploadListener.create(listenerClass, new ArrayList<>(listenerEvent.getEvents())));
-
-        //FixMe: Need to address in backend and frontend in parallel
-        router.route()
-              .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB));
         router.post(uploadCfg.getPath())
+              .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB))
               .handler(UploadFileHandler.create(handlerClass, controller, listenerEvent, storageDir, publicUrl))
               .handler(new RestEventResponseHandler())
               .produces(ApiConstants.DEFAULT_CONTENT_TYPE);
@@ -208,15 +222,14 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         logger.info("Init Download router: '{}'...", downloadCfg.getPath());
-        //FixMe: Need to address in backend and frontend in parallel
-        router.route().handler(StaticHandler.create()
-                                            .setEnableRangeSupport(true)
-                                            .setSendVaryHeader(true)
-                                            .setFilesReadOnly(false)
-                                            .setAllowRootFileSystemAccess(true)
-                                            .setIncludeHidden(false)
-                                            .setWebRoot(storageDir.toString()));
         router.get(Urls.combinePath(downloadCfg.getPath(), ApiConstants.WILDCARDS_ANY_PATH))
+              .handler(StaticHandler.create()
+                                    .setEnableRangeSupport(true)
+                                    .setSendVaryHeader(true)
+                                    .setFilesReadOnly(false)
+                                    .setAllowRootFileSystemAccess(true)
+                                    .setIncludeHidden(false)
+                                    .setWebRoot(storageDir.toString()))
               .handler(DownloadFileHandler.create(downloadCfg.getHandlerClass(), downloadCfg.getPath(), storageDir));
         return router;
     }

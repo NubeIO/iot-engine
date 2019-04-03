@@ -64,6 +64,7 @@
       },
       "__files__": {
         "enabled": true,
+        "externalHandler": true,
         "dir": "media",
         "__upload__": {
           "enabled": true,
