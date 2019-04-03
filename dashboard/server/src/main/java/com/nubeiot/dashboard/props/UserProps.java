@@ -54,7 +54,7 @@ public class UserProps {
     }
 
     public String getBodySiteId() {
-        return this.body.getString(body.getString("site_id"));
+        return this.body.getString("site_id");
     }
 
     public String getBodyGroupId() {

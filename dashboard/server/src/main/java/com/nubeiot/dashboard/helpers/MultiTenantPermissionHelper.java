@@ -30,7 +30,7 @@ public class MultiTenantPermissionHelper {
             return Single.just(true);
         } else if (role == Role.ADMIN) {
             return byAdminCompanyGetAdminWithManagerSelectionList(mongoClient, companyId).map(list -> {
-                if (list.contains(toCheckCompanyId)) {
+                if (!list.contains(toCheckCompanyId)) {
                     throw HttpException.forbidden();
                 } else {
                     return true;

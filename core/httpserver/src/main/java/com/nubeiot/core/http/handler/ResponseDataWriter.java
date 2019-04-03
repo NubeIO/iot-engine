@@ -25,7 +25,7 @@ public class ResponseDataWriter implements HttpResponseWriter<ResponseData> {
             response.putHeader(key.getKey(), key.getValue().toString());
         }
         if (Objects.isNull(message)) {
-            response.end();
+            response.end(new JsonObject().encode());
         } else {
             response.end(message);
         }

@@ -27,7 +27,7 @@ public class DynamicCollectionHelper {
             mongoClient.rxFind(collection, new JsonObject().put("site_id", collectionProps.getSiteId()))
                 .subscribe(response -> {
                     if (response == null) {
-                        future.complete(new ResponseData().setStatus(HttpResponseStatus.NOT_FOUND));
+                        future.complete(new ResponseData());
                     } else {
                         future.complete(responseData(response.toString()));
                     }
@@ -49,7 +49,7 @@ public class DynamicCollectionHelper {
             JsonObject query = new JsonObject().put("site_id", collectionProps.getSiteId()).put("id", id);
             mongoClient.rxFindOne(collection, query, null).subscribe(response -> {
                 if (response == null) {
-                    future.complete(new ResponseData().setStatus(HttpResponseStatus.NOT_FOUND));
+                    future.complete(new ResponseData());
                 } else {
                     future.complete(responseData(response.encode()));
                 }

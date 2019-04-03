@@ -46,7 +46,6 @@
       }
     },
     "__dashboardServer__": {
-      "mediaPath": "media",
       "dittoPolicy": false
     },
     "keycloak": {
