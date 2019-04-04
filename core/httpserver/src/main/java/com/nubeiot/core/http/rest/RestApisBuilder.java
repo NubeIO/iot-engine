@@ -13,6 +13,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.HttpConfig.RestConfig.DynamicRouteConfig;
@@ -20,6 +21,7 @@ import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.ApiExceptionHandler;
 import com.nubeiot.core.http.handler.ApiJsonWriter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.handler.RestEventResponseHandler;
 import com.nubeiot.core.utils.Reflections;
 import com.nubeiot.core.utils.Strings;
@@ -107,6 +109,7 @@ public final class RestApisBuilder {
         logger.info("Registering sub router REST API...");
         return new RestBuilder(vertx).errorHandler(ApiExceptionHandler.class)
                                      .writer(MediaType.APPLICATION_JSON_TYPE, ApiJsonWriter.class)
+                                     .writer(ResponseData.class, ResponseDataWriter.class)
                                      .register((Object[]) classes)
                                      .build();
     }

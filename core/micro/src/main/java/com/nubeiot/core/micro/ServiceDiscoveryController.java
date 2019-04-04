@@ -133,14 +133,13 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     }
 
     public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
-                                                   RequestData requestData, HttpClientOptions options) {
+                                                   RequestData data, HttpClientOptions options) {
         return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
             ServiceReference reference = get().getReferenceWithConfiguration(record, Objects.isNull(options)
                                                                                      ? null
                                                                                      : options.toJson());
-            return circuitController.wrap(
-                ClientUtils.execute(reference.getAs(HttpClient.class), path, method, requestData,
-                                    v -> reference.release()));
+            return circuitController.wrap(ClientUtils.execute(reference.getAs(HttpClient.class), path, method, data))
+                                    .doFinally(reference::release);
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 

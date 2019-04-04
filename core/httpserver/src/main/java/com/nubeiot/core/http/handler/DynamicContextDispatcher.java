@@ -59,7 +59,7 @@ public interface DynamicContextDispatcher<T extends DynamicRestApi> extends Hand
         HttpMethod httpMethod = validateMethod(context.request().method());
         RequestData requestData = RequestDataConverter.convert(context);
         String path = context.request().path();
-        String servicePath = Urls.normalize(path.replaceAll(getGatewayPath(), ""));
+        String servicePath = Urls.normalize(path.replaceAll("^" + getGatewayPath(), ""));
         this.process(httpMethod, servicePath, requestData)
             .subscribe(responseData -> handleResponse(context, responseData),
                        throwable -> handleError(context, throwable));
