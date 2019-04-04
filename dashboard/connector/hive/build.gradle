@@ -3,7 +3,9 @@ ext {
 }
 
 dependencies {
-    compile project(':core:common')
+    compile project(':core:httpserver')
+    compile project(":core:micro")
+    compile project(':core:cluster:hazelcast')
     compile "io.vertx:vertx-jdbc-client:$project.versions.vertx"
     compile "org.spark-project.hive:hive-jdbc:1.2.1.spark2"
     compile "org.apache.hadoop:hadoop-core:1.2.1"

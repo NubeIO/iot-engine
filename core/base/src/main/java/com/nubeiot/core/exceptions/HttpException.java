@@ -27,4 +27,13 @@ public final class HttpException extends NubeException {
 
     public HttpException(Throwable e)    { this(null, e); }
 
+    public static HttpException badRequest(String message) {
+        return new HttpException(HttpResponseStatus.BAD_REQUEST.code(), message);
+    }
+
+    public static HttpException forbidden() {
+        return new HttpException(HttpResponseStatus.FORBIDDEN.code(),
+                                 "You don't have permission to perform the action.");
+    }
+
 }

@@ -3,6 +3,8 @@ ext {
 }
 
 dependencies {
-    compile project(':core:common')
+    compile project(':core:micro')
+    compile project(':core:httpserver')
+    compile project(':core:cluster:hazelcast')
     compile "io.vertx:vertx-mysql-postgresql-client:$project.versions.vertx"
 }

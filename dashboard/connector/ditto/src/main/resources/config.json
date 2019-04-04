@@ -1,12 +1,35 @@
 {
   "__app__": {
-    "http.port": 8088,
-    "http.host": "0.0.0.0",
-    "api.name": "ditto",
-    "ditto.http.port": 8080,
-    "ditto.http.host": "localhost",
-    "ditto.http.username": "ditto",
-    "ditto.http.password": "ditto",
-    "ditto-policy": false
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": true
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
+    },
+    "__http__": {
+      "port": 8080,
+      "__rest__": {
+        "rootApi": "/ditto",
+        "__dynamic__": {
+          "enabled": false
+        }
+      }
+    },
+    "__ditto__": {
+      "port": 80,
+      "host": "ditto",
+      "username": "sandbox",
+      "password": "111",
+      "policy": false,
+      "prefix": "com.nubeio"
+    }
   }
 }

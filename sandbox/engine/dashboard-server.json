@@ -20,15 +20,66 @@
   "__app__": {
     "__micro__": {
       "__gateway__": {
-        "enabled": true
+        "enabled": true,
+        "clusterAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
       },
       "__serviceDiscovery__": {
         "enabled": true
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": true,
+        "options": {
+          "timeout": 20000
+        }
       }
     },
-    "http.scheme": "http",
-    "http.port": 8080,
-    "mediaPath": "media",
+    "__http__": {
+      "port": 8080,
+      "publicScheme": "HTTP",
+      "__rest__": {
+        "rootApi": "/api",
+        "__dynamic__": {
+          "enabled": true,
+          "path": ""
+        }
+      },
+      "__cors__": {
+        "allowedHeaders": [
+          "Access-Control-Request-Method",
+          "Access-Control-Allow-Credentials",
+          "Access-Control-Allow-Origin",
+          "Access-Control-Allow-Headers",
+          "Content-Type",
+          "origin",
+          "x-requested-with",
+          "accept",
+          "X-PINGARUNER",
+          "Site-Id",
+          "Authorization",
+          "JSESSIONID"
+        ]
+      },
+      "__files__": {
+        "enabled": true,
+        "externalHandler": true,
+        "dir": "media",
+        "__upload__": {
+          "enabled": true,
+          "path": "/u",
+          "maxBodySizeMB": 5
+        },
+        "__download__": {
+          "enabled": true,
+          "path": "/f"
+        }
+      }
+    },
+    "__dashboardServer__": {
+      "dittoPolicy": false
+    },
     "keycloak": {
       "realm": "sandbox",
       "auth-server-url": "http://keycloak:8080/auth",
@@ -40,26 +91,23 @@
       "confidential-port": 0
     },
     "mongo": {
-      "config": {
-        "hosts": [
-          {
-            "host": "mongo",
-            "port": 27017
-          }
-        ],
-        "db_name": "sandbox",
-        "username": "sandbox",
-        "password": "111",
-        "authSource": "sandbox",
-        "maxPoolSize": 25,
-        "minPoolSize": 10,
-        "maxIdleTimeMS": 300000,
-        "maxLifeTimeMS": 3600000,
-        "maintenanceFrequencyMS": 2000,
-        "maintenanceInitialDelayMS": 500,
-        "waitQueueMultiple": 10
-      }
-    },
-    "ditto-policy": false
+      "hosts": [
+        {
+          "host": "mongo",
+          "port": 27017
+        }
+      ],
+      "db_name": "sandbox",
+      "username": "sandbox",
+      "password": "111",
+      "authSource": "sandbox",
+      "maxPoolSize": 25,
+      "minPoolSize": 10,
+      "maxIdleTimeMS": 300000,
+      "maxLifeTimeMS": 3600000,
+      "maintenanceFrequencyMS": 2000,
+      "maintenanceInitialDelayMS": 500,
+      "waitQueueMultiple": 10
+    }
   }
 }

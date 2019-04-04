@@ -7,7 +7,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 
+import org.junit.Assert;
 import org.junit.Test;
+
+import io.vertx.core.json.JsonObject;
 
 public class StringsTest {
 
@@ -116,6 +119,47 @@ public class StringsTest {
     @Test
     public void test_format() {
         assertEquals("hello world 12345 true", Strings.format("hello {0} {1} {2}", "world", 12345, true));
+    }
+
+    @Test
+    public void test_in() {
+        Assert.assertTrue(Strings.in("abc", "abc"));
+        Assert.assertFalse(Strings.in("abc", "Abc"));
+        Assert.assertTrue(Strings.in("abc", "xyz", "abc"));
+        Assert.assertFalse(Strings.in("abc", "xyz", "uvw"));
+        Assert.assertFalse(Strings.in(null, "xyz", "uvw"));
+        Assert.assertFalse(Strings.in(null, null, "uvw"));
+
+        Assert.assertTrue(Strings.in("abc", true, "Abc"));
+        Assert.assertTrue(Strings.in("abc", true, "xyz", "ABC"));
+    }
+
+    @Test
+    public void test_getMatchValueOrFirstOne_does_not_match_happyCase() {
+        String[] values = new String[] {"Shane", "Michel"};
+        String output = Strings.getMatchValueOrFirstOne("1", values);
+        Assert.assertEquals("Shane", output);
+    }
+
+    @Test
+    public void test_getFirstNotNull() {
+        Assert.assertEquals("Shane", Strings.getFirstNotNull("", "Shane", "Watson"));
+        JsonObject object = new JsonObject().put("first_name", "Shane");
+        Assert.assertEquals(object, Strings.getFirstNotNull(null, object));
+    }
+
+    @Test
+    public void test_getMatchValueOrFirstOne_matched_happyCase() {
+        String[] values = new String[] {"Shane", "Michel"};
+        String output = Strings.getMatchValueOrFirstOne("Michel", values);
+        Assert.assertEquals("Michel", output);
+    }
+
+    @Test
+    public void test_getMatchValueOrFirstOne_nullCase() {
+        String[] values = new String[] {};
+        String output = Strings.getMatchValueOrFirstOne("Michel", values);
+        Assert.assertNull(output);
     }
 
 }

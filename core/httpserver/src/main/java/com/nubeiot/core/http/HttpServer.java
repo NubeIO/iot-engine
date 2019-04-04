@@ -170,6 +170,23 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         Path storageDir = Paths.get(FileUtils.createFolder(dataDir, storageConfig.getDir()));
+
+        //FixMe: Need to address in backend and frontend in parallel
+        if (storageConfig.isExternalHandler()) {
+            router.route()
+                  .handler(BodyHandler.create(storageDir.toString())
+                                      .setBodyLimit(storageConfig.getUploadConfig().getMaxBodySizeMB() * MB));
+            router.route()
+                  .handler(StaticHandler.create()
+                                        .setEnableRangeSupport(true)
+                                        .setSendVaryHeader(true)
+                                        .setFilesReadOnly(false)
+                                        .setAllowRootFileSystemAccess(true)
+                                        .setIncludeHidden(false)
+                                        .setWebRoot(storageDir.toString()));
+            router.get(Urls.combinePath(storageConfig.getDownloadConfig().getPath(), ApiConstants.WILDCARDS_ANY_PATH));
+            return router;
+        }
         initUploadRouter(router, storageDir, storageConfig.getUploadConfig(), publicUrl);
         initDownloadRouter(router, storageDir, storageConfig.getDownloadConfig());
         return router;

@@ -1,6 +1,0 @@
-dependencies {
-    compile project(':core:micro')
-    compile project(':core:httpserver')
-    compile project(':core:cluster:hazelcast')
-    compile "commons-codec:commons-codec:1.9"
-}
