@@ -12,6 +12,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
@@ -30,7 +31,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class RestApisBuilder {
+public final class RestApisBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(RestApisBuilder.class);
 
@@ -38,11 +39,13 @@ public class RestApisBuilder {
     private final Vertx vertx;
     @NonNull
     private final Router mainRouter;
+
     @NonNull
     private final Set<Class<? extends RestApi>> restApiClass = new HashSet<>();
     @NonNull
     private final Set<Class<? extends RestEventApi>> restEventApiClass = new HashSet<>();
     private String rootApi = ApiConstants.ROOT_API_PATH;
+    private EventController eventController;
     private DynamicRouteConfig dynamicRouteConfig;
 
     public RestApisBuilder registerApi(Collection<Class<? extends RestApi>> apiClass) {
@@ -63,6 +66,11 @@ public class RestApisBuilder {
             }
             this.rootApi = root;
         }
+        return this;
+    }
+
+    public RestApisBuilder addEventController(@NonNull EventController controller) {
+        this.eventController = controller;
         return this;
     }
 
@@ -111,7 +119,7 @@ public class RestApisBuilder {
             return null;
         }
         logger.info("Registering sub router REST Event API...");
-        return new RestEventApisBuilder(vertx).register(restEventApiClass).build();
+        return new RestEventApisBuilder(vertx).addEventController(eventController).register(restEventApiClass).build();
     }
 
     private Router initDynamicRouter() {

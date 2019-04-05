@@ -1,6 +1,5 @@
 package com.nubeiot.core.http.mock;
 
-import java.util.Arrays;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -44,11 +43,10 @@ public class MockApiDefinition {
         protected void initRoute() {
             EventModel model = EventModel.builder()
                                          .address("http.server.test")
-                                         .events(Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE,
-                                                               EventAction.CREATE, EventAction.UPDATE,
-                                                               EventAction.PATCH))
+                                         .addEvents(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE,
+                                                    EventAction.UPDATE, EventAction.PATCH)
                                          .build();
-            this.addRouter(model, "/test/event", "event_id");
+            this.addRouter(model, "/test/events", "/test/events/:event_id");
         }
 
     }

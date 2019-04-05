@@ -69,6 +69,8 @@ public final class EventMethodDefinition implements JsonData {
     }
 
     /**
+     * Create default definition with given {@code ActionMethodMapping}.
+     *
      * @see #createDefault(String, String)
      */
     public static EventMethodDefinition create(String servicePath, String capturePath,
@@ -108,7 +110,7 @@ public final class EventMethodDefinition implements JsonData {
                       .map(EventMethodMapping::getAction)
                       .findFirst()
                       .orElseThrow(() -> new NotFoundException(
-                          Strings.format("Not found '{0}' with HTTP method {1}", actualPath, method)));
+                          Strings.format("Not found ''{0}'' with HTTP method {1}", actualPath, method)));
     }
 
     @Getter
