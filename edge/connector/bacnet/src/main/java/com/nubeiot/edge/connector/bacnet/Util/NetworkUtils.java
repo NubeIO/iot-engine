@@ -9,6 +9,7 @@ import java.util.Enumeration;
  * Utils for getting network addresses etc
  */
 
+//TODO: merge this into core later
 
 public class NetworkUtils {
 

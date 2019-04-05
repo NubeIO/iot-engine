@@ -112,13 +112,13 @@ public class BACnetTest {
     }
 
     @Test(expected = BACnetRuntimeException.class)
-    public void getObjectidentifierTest_NoObjectException() {
+    public void getObjectidentifierTest_NoObjectException() throws Exception {
         String objStr = "badInput:1";
         ObjectIdentifier oid = bacnetInstance.getObjectIdentifier(objStr);
     }
 
     @Test(expected = BACnetRuntimeException.class)
-    public void getObjectidentifierTest_BadInputException() {
+    public void getObjectidentifierTest_BadInputException() throws Exception {
         String objStr = "badInput2";
         ObjectIdentifier oid = bacnetInstance.getObjectIdentifier(objStr);
     }

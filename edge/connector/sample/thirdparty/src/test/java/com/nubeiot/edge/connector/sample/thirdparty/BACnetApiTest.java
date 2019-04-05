@@ -23,8 +23,8 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.HttpServerTestBase;
 
 @RunWith(VertxUnitRunner.class)
-public class bacnetApiTest extends HttpServerTestBase {
-    //public class bacnetApiTest {
+public class BACnetApiTest extends HttpServerTestBase {
+    //public class BACnetApiTest {
 
     @BeforeClass
     public static void beforeSuite() { TestHelper.setup(); }
@@ -37,7 +37,8 @@ public class bacnetApiTest extends HttpServerTestBase {
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
-        startGatewayAndService(context, new BACnetVerticleTest(), new DeploymentOptions());
+        startGatewayAndService(context, new BACnetVerticleTest(),
+                               new DeploymentOptions().setConfig(overridePort(TestHelper.getRandomPort())));
     }
 
     void startGatewayAndService(TestContext context, ContainerVerticle service, DeploymentOptions serviceOptions) {
@@ -65,9 +66,9 @@ public class bacnetApiTest extends HttpServerTestBase {
 
     @Test
     public void test_event_not_found(TestContext context) {
-        assertRestByClient(context, HttpMethod.POST, "/api/driver/bacnet/devices", 409,
+        assertRestByClient(context, HttpMethod.PUT, "/api/driver/bacnet/devices", 409,
                            new JsonObject().put("code", ErrorCode.STATE_ERROR)
-                                           .put("message", "Unsupported event CREATE"));
+                                           .put("message", "Unsupported event UPDATE"));
     }
 
     @Test

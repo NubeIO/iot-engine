@@ -9,7 +9,9 @@ import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
+import com.serotonin.bacnet4j.type.constructed.ServicesSupported;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
+import com.serotonin.bacnet4j.type.enumerated.Segmentation;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 
@@ -28,14 +30,15 @@ public class BACnetDataConversions {
         data.put("instanceNumber", remoteDevice.getInstanceNumber());
         data.put("name", remoteDevice.getName());
         data.put("address", remoteDevice.getAddress().toString());
-        data.put("maxAPDULengthAccepted",
-                 remoteDevice.getCharacterStringProperty(PropertyIdentifier.maxApduLengthAccepted));
-        data.put("segmentationSupported",
-                 remoteDevice.getCharacterStringProperty(PropertyIdentifier.segmentationSupported));
-        data.put("vendorId", remoteDevice.getCharacterStringProperty(PropertyIdentifier.vendorIdentifier));
-        data.put("vendorName", remoteDevice.getCharacterStringProperty(PropertyIdentifier.vendorName));
-        data.put("servicesSupported",
-                 remoteDevice.getCharacterStringProperty(PropertyIdentifier.protocolServicesSupported));
+        UnsignedInteger maxAPDU = remoteDevice.getDeviceProperty(PropertyIdentifier.maxApduLengthAccepted);
+        data.put("maxAPDULengthAccepted", maxAPDU.intValue());
+        Segmentation seg = remoteDevice.getDeviceProperty(PropertyIdentifier.segmentationSupported);
+        data.put("segmentationSupported", seg.toString());
+        UnsignedInteger vendID = remoteDevice.getDeviceProperty(PropertyIdentifier.vendorIdentifier);
+        data.put("vendorId", vendID.intValue());
+        data.put("vendorName", remoteDevice.getDeviceProperty(PropertyIdentifier.vendorName));
+        ServicesSupported servs = remoteDevice.getDeviceProperty(PropertyIdentifier.protocolServicesSupported);
+        data.put("servicesSupported", servs.toString());
         return data;
     }
 

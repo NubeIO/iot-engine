@@ -3,11 +3,7 @@ package com.nubeiot.edge.connector.bacnet;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.edge.connector.bacnet.Util.BACnetDataConversions;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
 import com.serotonin.bacnet4j.service.Service;
 import com.serotonin.bacnet4j.service.confirmed.CreateObjectRequest;
@@ -39,13 +35,17 @@ public class BACnetEventListener extends DeviceEventAdapter {
                                         ObjectIdentifier initiatingDeviceIdentifier,
                                         ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
                                         SequenceOf<PropertyValue> listOfValues) {
-        String address = "edge.connector.bacnet.cov." + subscriberProcessIdentifier + "." + initiatingDeviceIdentifier +
-                         "." + monitoredObjectIdentifier;
-        JsonObject json = BACnetDataConversions.CovNotification(subscriberProcessIdentifier, monitoredObjectIdentifier,
-                                                                listOfValues);
-        //TODO: Check address, pattern and action
-        EventMessage message = EventMessage.initial(EventAction.UPDATE, json);
-        eventController.fire(POINTS_API + "points." + monitoredObjectIdentifier, EventPattern.POINT_2_POINT, message);
+        System.out.println(
+            "COV NOTIFICATION: " + monitoredObjectIdentifier.toString() + " " + initiatingDeviceIdentifier);
+        //        String address = "edge.connector.bacnet.cov." + subscriberProcessIdentifier + "." +
+        //        initiatingDeviceIdentifier +
+        //                         "." + monitoredObjectIdentifier;
+        //        JsonObject json = BACnetDataConversions.CovNotification(subscriberProcessIdentifier,
+        //        monitoredObjectIdentifier,
+        //                                                                listOfValues);
+        //        //TODO: Check address, pattern and action
+        //        EventMessage message = EventMessage.initial(EventAction.UPDATE, json);
+        //        eventController.fire(POINTS_API + "points." + monitoredObjectIdentifier, EventPattern.POINT_2_POINT, message);
     }
 
     @Override

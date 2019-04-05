@@ -5,12 +5,11 @@ import java.util.Collections;
 import java.util.List;
 
 import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.edge.connector.bacnet.BACnet;
@@ -42,16 +41,14 @@ public class PointsEventHandler implements EventHandler {
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = EventMessage.class)
-    public Single<EventMessage> getRemoteDevicePoints(RequestData data) {
-        int instanceNumber = data.body().getInteger("deviceID");
+    public Single<EventMessage> getRemoteDevicePoints(@Param("deviceID") int instanceNumber) {
         return bacnetInstance.getRemoteDeviceObjectList(instanceNumber)
                              .flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
     }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = EventMessage.class)
-    public Single<EventMessage> getRemoteDevicePointExtended(RequestData data) {
-        int instanceNumber = data.body().getInteger("deviceID");
-        String objectID = data.body().getString("objectID");
+    public Single<EventMessage> getRemoteDevicePointExtended(@Param("deviceID") int instanceNumber,
+                                                             @Param("objectID") String objectID) {
         return bacnetInstance.getRemoteObjectProperties(instanceNumber, objectID)
                              .flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
     }
@@ -67,14 +64,19 @@ public class PointsEventHandler implements EventHandler {
     //    }
 
     @EventContractor(action = EventAction.PATCH, returnType = EventMessage.class)
-    public Single<EventMessage> writeRemoteDevicePointValue(RequestData data) {
-        JsonObject body = data.body();
-        int instanceNumber = body.getInteger("deviceID");
-        String objectID = body.getString("objectID");
-        int priority = body.getInteger("priority");
-        String str = body.getString("value");
-        Encodable val;
+    public Single<EventMessage> writeRemoteDevicePointValue(@Param("deviceID") int instanceNumber,
+                                                            @Param("objectID") String objectID,
+                                                            @Param("priority") int priority,
+                                                            @Param("value") Object obj) {
+        return writeRemoteDevicePointValue(instanceNumber, objectID, priority, obj.toString());
+    }
 
+    @EventContractor(action = EventAction.PATCH, returnType = EventMessage.class)
+    public Single<EventMessage> writeRemoteDevicePointValue(@Param("deviceID") int instanceNumber,
+                                                            @Param("objectID") String objectID,
+                                                            @Param("priority") int priority,
+                                                            @Param("value") String str) {
+        Encodable val;
         if (priority < 1 || priority > 16) {
             return Single.error(new BACnetException("Invalid priority array index"));
         }
