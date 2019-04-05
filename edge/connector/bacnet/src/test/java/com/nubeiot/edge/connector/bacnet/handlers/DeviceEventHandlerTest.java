@@ -13,7 +13,6 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.edge.connector.bacnet.BACnet;
 
 public class DeviceEventHandlerTest {
@@ -34,15 +33,13 @@ public class DeviceEventHandlerTest {
     @Test
     public void getRemoteDeviceExtendedTest() throws Exception {
         when(bacnetInstance.getRemoteDevices()).thenReturn(Single.just(new JsonObject()));
-        eventHandler.getCachedRemoteDevices(null).test().assertNoErrors().assertComplete();
+        eventHandler.getCachedRemoteDevices().test().assertNoErrors().assertComplete();
     }
 
     @Test
     public void getRemoteDeviceExtendedInfo() throws Exception {
         when(bacnetInstance.getRemoteDeviceExtendedInfo(any(Integer.class))).thenReturn(Single.just(new JsonObject()));
-
-        RequestData req = RequestData.builder().body(new JsonObject().put("deviceID", 11)).build();
-        eventHandler.getCachedRemoteDevices(req).test().assertNoErrors().assertComplete();
+        eventHandler.getRemoteDeviceExtendedInfo(11).test().assertNoErrors().assertComplete();
     }
 
 }

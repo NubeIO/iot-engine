@@ -9,7 +9,6 @@ import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -21,7 +20,6 @@ import com.nubeiot.edge.connector.bacnet.Util.LocalPointObjectUtils;
 import com.nubeiot.edge.connector.bacnet.Util.NetworkUtils;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
-import com.serotonin.bacnet4j.event.DeviceEventAdapter;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
@@ -74,34 +72,28 @@ public class BACnet {
         this.localDevice = localDevice;
     }
 
-    private BACnet(String name, int id, Future<Void> future, EventController eventController, Vertx vertx,
-                   String networkInterfaceName) {
+    private BACnet(String name, int id, EventController eventController, Vertx vertx, String networkInterfaceName)
+        throws Exception {
         this.eventController = eventController;
         this.vertx = vertx;
         this.points = new HashMap<>();
 
-        try {
-            Transport transport = buildTransport(networkInterfaceName);
-            localDevice = new LocalDevice(id, transport);
-            localDevice.writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(name));
-            localDevice.initialize();
-            localDevice.getEventHandler().addListener(new BACnetEventListener(vertx, eventController));
-            localDevice.startRemoteDeviceDiscovery();
-            //TODO: should this be stopped? does it stop handling IAM req if stopped?
+        Transport transport = buildTransportIP(networkInterfaceName);
+        localDevice = new LocalDevice(id, transport);
+        localDevice.writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(name));
+        localDevice.initialize();
+        localDevice.getEventHandler().addListener(new BACnetEventListener(vertx, eventController));
+        localDevice.startRemoteDeviceDiscovery();
+        //TODO: should this be stopped? does it stop handling IAM req if stopped?
 
-            if (!localDevice.isInitialized()) {
-                throw new BACnetServiceException(ErrorClass.device, ErrorCode.internalError);
-            }
-        } catch (Exception ex) {
-            logger.error("\n\nBACNET FAILURE\n\n", ex);
-            future.fail(ex);
-            return;
+        if (!localDevice.isInitialized()) {
+            throw new BACnetServiceException(ErrorClass.device, ErrorCode.internalError);
         }
     }
 
-    public static BACnet createBACnet(String name, int id, Future<Void> future, EventController eventController,
-                                      Vertx vertx, String networkInterfaceName) {
-        return new BACnet(name, id, future, eventController, vertx, networkInterfaceName);
+    public static BACnet createBACnet(String name, int id, EventController eventController, Vertx vertx,
+                                      String networkInterfaceName) throws Exception {
+        return new BACnet(name, id, eventController, vertx, networkInterfaceName);
     }
 
     public static BACnet createBACnet(String name, int id, EventController eventController, Vertx vertx,
@@ -113,7 +105,7 @@ public class BACnet {
         localDevice.terminate();
     }
 
-    private Transport buildTransport(String networkInterface) throws Exception {
+    private Transport buildTransportIP(String networkInterface) throws Exception {
         String broadcastAddress = NetworkUtils.getBroadcastAddress(networkInterface);
         int networkPrefixLength = NetworkUtils.getNetworkPrefixLength(networkInterface);
 
@@ -121,18 +113,38 @@ public class BACnet {
         return new DefaultTransport(network);
     }
 
-    //    public void BEGIN_TEST() {
-    //        logger.info("\n\n\nBEGINING TEST\n\n");
-    //        logger.info(getRemoteDevices());
-    //        RemoteDevice rd = localDevice.getCachedRemoteDevice(205);
-    //        if (rd == null) {
-    //            System.out.println("NO DEVICE");
-    //            return;
-    //        }
-    //        getRemoteDeviceObjectList(rd).subscribe(data -> {
-    //            logger.info(data);
-    //        });
+    //    private Transport buildTransportMSTP(String port, int macNum, int bufferSize, int retryCount) throws
+    //    Exception {
+    //        byte[] bytes = new byte[bufferSize];
+    //        MstpNode node = new MasterNode(port, new ByteArrayInputStream(bytes), new ByteArrayOutputStream(),
+    //                                       (byte) macNum, retryCount);
+    //        MstpNetwork network = new MstpNetwork(node, );
+    //        return new DefaultTransport(network);
     //    }
+
+    //TEMPORARY
+    public void resetLocalObjects(JsonObject json) {
+        localDevice.getLocalObjects().forEach(baCnetObject -> {
+            try {
+                localDevice.removeObject(baCnetObject.getId());
+            } catch (Exception e) {
+            }
+        });
+        initialiseLocalObjectsFromJson(json);
+    }
+
+    public void BEGIN_TEST() {
+        logger.info("\n\n\nBEGINING TEST\n\n");
+        logger.info(getRemoteDevices());
+        RemoteDevice rd = localDevice.getCachedRemoteDevice(205);
+        if (rd == null) {
+            System.out.println("NO DEVICE");
+            return;
+        }
+        getRemoteDeviceObjectList(rd).subscribe(data -> {
+            logger.info(data);
+        });
+    }
 
     //TODO: test new RxJava
     public void initialiseLocalObjectsFromJson(JsonObject json) {
@@ -155,8 +167,8 @@ public class BACnet {
         } else {
             JsonObject data = new JsonObject();
             return Observable.fromIterable(localDevice.getRemoteDeviceCache().getEntities())
-                             .map(remoteDevice -> BACnetDataConversions.deviceMinimal(remoteDevice))
-                             .flatMapSingle(entries -> Single.just(entries))
+                             .map(BACnetDataConversions::deviceMinimal)
+                             .flatMapSingle(Single::just)
                              .collect(() -> data, (d, deviceJson) -> d.put(
                                  Integer.toString(deviceJson.getInteger("instanceNumber")), deviceJson));
         }
@@ -171,7 +183,7 @@ public class BACnet {
         }
     }
 
-    public Single<JsonObject> getRemoteDeviceExtendedInfo(RemoteDevice remoteDevice) {
+    private Single<JsonObject> getRemoteDeviceExtendedInfo(RemoteDevice remoteDevice) {
         return callAsyncBlocking(() -> {
             DiscoveryUtils.getExtendedDeviceInformation(localDevice, remoteDevice);
             return BACnetDataConversions.deviceExtended(remoteDevice);
@@ -187,7 +199,7 @@ public class BACnet {
         }
     }
 
-    public Single<JsonObject> getRemoteDeviceObjectList(RemoteDevice remoteDevice) {
+    private Single<JsonObject> getRemoteDeviceObjectList(RemoteDevice remoteDevice) {
         return callAsyncBlocking(() -> {
             SequenceOf<ObjectIdentifier> list = RequestUtils.getObjectList(localDevice, remoteDevice);
             remoteDevice.setDeviceProperty(PropertyIdentifier.objectList, list);
@@ -207,7 +219,7 @@ public class BACnet {
         }
     }
 
-    public Single<JsonObject> getRemoteObjectProperties(RemoteDevice d, ObjectIdentifier oid) {
+    private Single<JsonObject> getRemoteObjectProperties(RemoteDevice d, ObjectIdentifier oid) {
         return callAsyncBlocking(() -> {
             List<ObjectPropertyTypeDefinition> propsDefs = ObjectProperties.getObjectPropertyTypeDefinitions(
                 oid.getObjectType());
@@ -267,7 +279,7 @@ public class BACnet {
     public Single<JsonObject> writeAtPriority(int instanceNumber, String obj, Encodable val, int priority) {
         RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
         if (remoteDevice == null) {
-            return Single.error(new BACnetException("Remote device not found"));
+            return Single.error(new BACnetRuntimeException("Remote device not found"));
         }
         try {
             ObjectIdentifier oid = getObjectIdentifier(obj);
@@ -279,7 +291,7 @@ public class BACnet {
     }
 
     //TODO: check if throws error or just nothing when not writable
-    public void writeAtPriority(RemoteDevice rd, ObjectIdentifier obj, Encodable val, int priority) {
+    private void writeAtPriority(RemoteDevice rd, ObjectIdentifier obj, Encodable val, int priority) {
         WritePropertyRequest req = new WritePropertyRequest(obj, PropertyIdentifier.presentValue, null, val,
                                                             new UnsignedInteger(priority));
         localDevice.send(rd, req);
@@ -295,7 +307,7 @@ public class BACnet {
         return new ObjectIdentifier(type, objNum);
     }
 
-    public Single<JsonObject> callAsyncBlocking(Callable callable) {
+    private Single<JsonObject> callAsyncBlocking(Callable callable) {
         return Single.create(source -> {
             vertx.executeBlocking(future -> {
                 try {
@@ -308,10 +320,6 @@ public class BACnet {
                 }
             }, res -> {});
         });
-    }
-
-    private class listener extends DeviceEventAdapter {
-
     }
 
 }

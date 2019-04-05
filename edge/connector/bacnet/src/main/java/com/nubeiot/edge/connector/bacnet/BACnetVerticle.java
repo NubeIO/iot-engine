@@ -25,33 +25,41 @@ public class BACnetVerticle extends ContainerVerticle {
     public void start(Future<Void> future) {
         super.start();
         logger.info("BACNet configuration: {}", this.nubeConfig.getAppConfig().toJson());
-
-        //START BACNET
         try {
-            String deviceName = this.nubeConfig.getAppConfig().toJson().getString("deviceName");
-            int deviceID = this.nubeConfig.getAppConfig().toJson().getInteger("deviceID");
-            String networkInterfaceName = this.nubeConfig.getAppConfig().toJson().getString("networkInterface");
-            bacnetInstance = BACnet.createBACnet(deviceName, deviceID, future, eventController, vertx,
-                                                 networkInterfaceName);
-            getLocalPoints();
-        } catch (Exception ex) {
-            logger.error("\n\nSTARTUP FAILURE\n\n");
-            future.fail(ex);
+            startBACnet();
+        } catch (Exception e) {
+            logger.error(e);
+            future.fail(e);
+            return;
         }
 
         //REGISTER ENDPOINTS
-        //        registerEventbus(new EventController(vertx));
+        registerEventbus(new EventController(vertx));
         //        addProvider(new MicroserviceProvider(), this::publishServices);
+        super.start(future);
+    }
 
-        future.complete();
-        //        vertx.setTimer(2000, handler -> bacnetInstance.BEGIN_TEST());
+    protected void startBACnet() throws Exception {
+        String deviceName = this.nubeConfig.getAppConfig().toJson().getString("deviceName");
+        int deviceID = this.nubeConfig.getAppConfig().toJson().getInteger("deviceID");
+        String networkInterfaceName = this.nubeConfig.getAppConfig().toJson().getString("networkInterface");
+        bacnetInstance = BACnet.createBACnet(deviceName, deviceID, eventController, vertx, networkInterfaceName);
+        getLocalPoints();
+    }
 
+    @Override
+    public void stop(Future<Void> future) {
+        bacnetInstance.terminate();
+        super.stopUnits(future);
     }
 
     public String configFile() { return "bacnet.json"; }
 
     @Override
     public void registerEventbus(EventController controller) {
+        if (bacnetInstance == null) {
+            return; //Prevents super.start() from registering before BACnet is started
+        }
         controller.register(BACnetEventModels.DEVICES, new DeviceEventHandler(vertx, bacnetInstance));
 
         controller.register(BACnetEventModels.POINTS, new PointsEventHandler(vertx, bacnetInstance));
@@ -61,14 +69,14 @@ public class BACnetVerticle extends ContainerVerticle {
 
     protected void publishServices(MicroContext microContext) {
         microContext.getLocalController()
-                    .addEventMessageRecord("event-message-service", BACnetEventModels.DEVICES.getAddress(),
+                    .addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),
                                            EventMethodDefinition.createDefault("/bacnet/devices",
                                                                                "/bacnet/devices/:deviceID"),
                                            new JsonObject())
                     .subscribe();
 
         microContext.getLocalController()
-                    .addEventMessageRecord("event-message-service", BACnetEventModels.POINTS.getAddress(),
+                    .addEventMessageRecord("bacnet-points-service", BACnetEventModels.POINTS.getAddress(),
                                            EventMethodDefinition.createDefault("/bacnet/devices/:deviceID/points",
                                                                                "/bacnet/devices/:deviceID/points" +
                                                                                "/:objectID"), new JsonObject())

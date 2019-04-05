@@ -5,13 +5,13 @@ import java.util.Collections;
 import java.util.List;
 
 import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventHandler;
-import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.edge.connector.bacnet.BACnet;
 import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
 
@@ -37,16 +37,14 @@ public class DeviceEventHandler implements EventHandler {
     }
 
     //GET ALL DEVICES
-    @EventContractor(action = EventAction.GET_LIST, returnType = EventMessage.class)
-    public Single<EventMessage> getCachedRemoteDevices(RequestData data) {
-        return bacnetInstance.getRemoteDevices()
-                             .flatMap(item -> Single.just(EventMessage.success(EventAction.RETURN, item)));
+    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
+    public Single<JsonObject> getCachedRemoteDevices() {
+        return bacnetInstance.getRemoteDevices();
     }
 
-    @EventContractor(action = EventAction.GET_ONE, returnType = EventMessage.class)
-    public Single<EventMessage> getRemoteDeviceExtendedInfo(RequestData data) {
-        int instanceNumber = data.body().getInteger("deviceID");
-        return bacnetInstance.getRemoteDeviceExtendedInfo(instanceNumber)
-                             .flatMap(jsonObject -> Single.just(EventMessage.success(EventAction.RETURN, jsonObject)));
+    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
+    public Single<JsonObject> getRemoteDeviceExtendedInfo(@Param("deviceID") int instanceNumber) {
+        System.out.println("looking for device " + instanceNumber);
+        return bacnetInstance.getRemoteDeviceExtendedInfo(instanceNumber);
     }
 }

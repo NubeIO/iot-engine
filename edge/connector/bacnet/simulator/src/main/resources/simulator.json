@@ -1,0 +1,12 @@
+{
+  "__system__": {
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "deviceName": "RoomController.Simulator",
+    "deviceID": 2769127,
+    "networkInterface": "eth0"
+  }
+}
