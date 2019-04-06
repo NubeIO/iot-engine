@@ -2,10 +2,13 @@ package com.nubeiot.core;
 
 import static junit.framework.TestCase.assertNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.junit.After;
@@ -52,8 +55,7 @@ public class ConfigProcessorTest {
 
     @Test
     public void environment_config_overridden_system_config() {
-        processor.process();
-        String value = processor.getResult().get("nubeio.app.http.host").toString();
+        String value = processor.mergeEnvAndSys().get("nubeio.app.http.host").toString();
         Assert.assertEquals("2.2.2.2", value);
     }
 
@@ -65,27 +67,9 @@ public class ConfigProcessorTest {
                                      "2.2.2.2"));
         processor.getMappingOptions()
             .put(propertiesStore,
-                 entries -> entries.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
-        processor.process();
-        String value = processor.getResult().get("nubeio.app.http.host").toString();
+                 entries -> entries.getMap());
+        String value = processor.mergeEnvAndSys().get("nubeio.app.http.host").toString();
         Assert.assertEquals("2.2.2.2", value);
-    }
-
-    @Test
-    public void not_have_environment_config_should_use_system_config() throws Exception {
-        SystemHelper.cleanEnvironments();
-        assertNull(System.getenv("NUBEIO_APP_HTTP_HOST"));
-
-        ConfigStoreOptions propertiesStore = new ConfigStoreOptions().setType("json")
-            .setConfig(
-                new JsonObject().put("nubeio.app.http.host",
-                                     "2.2.2.2"));
-        processor.getMappingOptions()
-            .put(propertiesStore,
-                 entries -> entries.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
-        processor.process();
-        String value = processor.getResult().get("nubeio.app.http.host").toString();
-        Assert.assertEquals("1.1.1.1", value);
     }
 
     @Test
@@ -98,20 +82,18 @@ public class ConfigProcessorTest {
         processor.getMappingOptions()
             .put(propertiesStore,
                  entries -> entries.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
-        processor.process();
-        String value = processor.getResult().get("nubeio.app.http.host").toString();
+        String value = processor.mergeEnvAndSys().get("nubeio.app.http.host").toString();
         Assert.assertEquals("0.0.0.0", value);
     }
 
     @Test
     public void not_have_config_from_environment_system_and_json_should_use_default_config() throws Exception {
         cleanSystemAndEnvironmentVariable();
-        processor.process();
-        Assert.assertNotNull(processor.getResult());
+        Assert.assertNotNull(processor.mergeEnvAndSys());
     }
 
     @Test
-    public void override_config() {
+    public void override_app_config() {
         System.setProperty("nubeio.app.http.port", "8088");
         System.setProperty("nubeio.app.http.enabled", "false");
         String jsonInput = "{\"__system__\":{\"__eventBus__\":{\"clientAuth\":\"REQUIRED\",\"ssl\":true," +
@@ -122,12 +104,37 @@ public class ConfigProcessorTest {
                            "\"__app__\":{\"__http__\":{\"host\":\"0.0.0.0\",\"port\":8086,\"enabled\":true," +
                            "\"rootApi\":\"/api\"},\"api.name\":\"edge-connector\"}}";
         AppConfig appConfig = IConfig.from(jsonInput, AppConfig.class);
-        Optional<AppConfig> result = processor.processAndOverride(NubeConfig.AppConfig.class, appConfig);
+        Optional<AppConfig> result = processor.processAndOverride(NubeConfig.AppConfig.class, appConfig, null);
 
         AppConfig finalResult = IConfig.merge(appConfig, result.get(), AppConfig.class);
         Assert.assertEquals(finalResult.get("__http__").toString(),
                             "{host=2.2.2.2, port=8088.0, enabled=false, rootApi=/api}");
         System.out.println(finalResult.toJson());
+    }
+
+    @Test
+    public void override_system_config() throws Exception {
+        System.setProperty("nubeio.app.http.enabled", "false");
+        System.setProperty("nubeio.app.http.port", "8088");
+        System.setProperty("nubeio.app.http.port.abc.dfd", "8088");
+        System.setProperty("nubeio.app.http.abc.def", "123");
+        System.setProperty("nubeio.system.http.enabled", "true");
+        System.setProperty("nubeio.deploy.cluster.abc.def", "123");
+        String jsonInput = "{\"__system__\":{\"__eventBus__\":{\"clientAuth\":\"REQUIRED\",\"ssl\":true," +
+                           "\"clustered\":true,\"keyStoreOptions\":{\"path\":\"eventBusKeystore.jks\"," +
+                           "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path\":\"eventBusKeystore" +
+                           ".jks\",\"password\":\"nubesparkEventBus\"}},\"__cluster__\":{\"active\":true,\"ha\":true," +
+                           "\"listenerAddress\":\"com.nubeiot.dashboard.connector.edge.cluster\"}}," +
+                           "\"__app__\":{\"__http__\":{\"host\":\"0.0.0.0\",\"port\":8086,\"enabled\":true," +
+                           "\"rootApi\":\"/api\"},\"api.name\":\"edge-connector\"}}";
+        NubeConfig nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
+        System.out.println(nubeConfig.toJson());
+        Optional<NubeConfig> result = processor.processAndOverride(NubeConfig.class, nubeConfig, null);
+
+        NubeConfig finalResult = IConfig.merge(nubeConfig, result.get(), NubeConfig.class);
+        //        Assert.assertEquals(finalResult.get("__http__").toString(),
+        //                            "{host=2.2.2.2, port=8088.0, enabled=false, rootApi=/api}");
+
     }
 
     @After
@@ -138,6 +145,21 @@ public class ConfigProcessorTest {
     private void cleanSystemAndEnvironmentVariable() throws Exception {
         SystemHelper.cleanEnvironments();
         System.clearProperty("nubeio.app.http.host");
+    }
+
+    @Test
+    public void test(){
+        List<String> list = new ArrayList<>();
+        list.add("http");
+        list.add("httpa");
+        list.add("http.");
+
+        Collections.sort(list);
+        System.out.println(list);
+        ConfigStoreOptions systemStore = new ConfigStoreOptions().setType("sys").setOptional(true);
+        final Function<JsonObject, Map<String, Object>> jsonObjectMapFunction = this.processor.getMappingOptions()
+            .get(systemStore);
+        System.out.println(jsonObjectMapFunction);
     }
 
 }
