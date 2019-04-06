@@ -1,6 +1,5 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -22,38 +21,15 @@ public class BACnetVerticle extends ContainerVerticle {
     protected BACnet bacnetInstance;
 
     @Override
-    public void start(Future<Void> future) {
+    public void start() {
         super.start();
         logger.info("BACNet configuration: {}", this.nubeConfig.getAppConfig().toJson());
-        try {
-            startBACnet();
-        } catch (Exception e) {
-            logger.error(e);
-            future.fail(e);
-            return;
-        }
+        startBACNet();
 
         //REGISTER ENDPOINTS
         registerEventbus(new EventController(vertx));
         //        addProvider(new MicroserviceProvider(), this::publishServices);
-        super.start(future);
     }
-
-    protected void startBACnet() throws Exception {
-        String deviceName = this.nubeConfig.getAppConfig().toJson().getString("deviceName");
-        int deviceID = this.nubeConfig.getAppConfig().toJson().getInteger("deviceID");
-        String networkInterfaceName = this.nubeConfig.getAppConfig().toJson().getString("networkInterface");
-        bacnetInstance = BACnet.createBACnet(deviceName, deviceID, eventController, vertx, networkInterfaceName);
-        getLocalPoints();
-    }
-
-    @Override
-    public void stop(Future<Void> future) {
-        bacnetInstance.terminate();
-        super.stopUnits(future);
-    }
-
-    public String configFile() { return "bacnet.json"; }
 
     @Override
     public void registerEventbus(EventController controller) {
@@ -66,6 +42,22 @@ public class BACnetVerticle extends ContainerVerticle {
 
         this.eventController = controller;
     }
+
+    @Override
+    public void stop() {
+        bacnetInstance.terminate();
+    }
+
+    protected void startBACNet() {
+        //TODO should create BACNet Config
+        String deviceName = (String) this.nubeConfig.getAppConfig().get("deviceName");
+        int deviceID = (Integer) this.nubeConfig.getAppConfig().get("deviceID");
+        String networkInterfaceName = (String) this.nubeConfig.getAppConfig().get("networkInterface");
+        bacnetInstance = BACnet.createBACnet(deviceName, deviceID, eventController, vertx, networkInterfaceName);
+        getLocalPoints();
+    }
+
+    public String configFile() { return "bacnet.json"; }
 
     protected void publishServices(MicroContext microContext) {
         microContext.getLocalController()

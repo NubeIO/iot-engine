@@ -19,7 +19,7 @@ public class BACnetVerticleTest extends BACnetVerticle {
     BACnet bacnetInstance;
 
     @Override
-    public void startBACnet() {
+    public void startBACNet() {
         bacnetInstance = Mockito.mock(BACnet.class);
 
         Mockito.when(bacnetInstance.getRemoteDevices()).thenReturn(Single.just(new JsonObject()));

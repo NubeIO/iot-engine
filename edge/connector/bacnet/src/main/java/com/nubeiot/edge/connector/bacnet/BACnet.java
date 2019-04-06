@@ -15,21 +15,19 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.connector.bacnet.Util.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.Util.LocalPointObjectUtils;
-import com.nubeiot.edge.connector.bacnet.Util.NetworkUtils;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
-import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
-import com.serotonin.bacnet4j.npdu.ip.IpNetworkBuilder;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
 import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;
 import com.serotonin.bacnet4j.service.confirmed.SubscribeCOVRequest;
 import com.serotonin.bacnet4j.service.confirmed.WritePropertyRequest;
-import com.serotonin.bacnet4j.transport.DefaultTransport;
 import com.serotonin.bacnet4j.transport.Transport;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
@@ -58,10 +56,9 @@ public class BACnet {
     //TODO execute blocking will throw warnings after 10 seconds. is it possible for this to happen on local network
     // requests?
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private Vertx vertx;
     private EventController eventController;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     private LocalDevice localDevice;
     private HashMap<RemoteDevice, Vector<ObjectIdentifier>> points;
 
@@ -73,26 +70,34 @@ public class BACnet {
     }
 
     private BACnet(String name, int id, EventController eventController, Vertx vertx, String networkInterfaceName)
-        throws Exception {
-        this.eventController = eventController;
-        this.vertx = vertx;
-        this.points = new HashMap<>();
+        throws NubeException {
+        try {
+            this.eventController = eventController;
+            this.vertx = vertx;
+            this.points = new HashMap<>();
 
-        Transport transport = buildTransportIP(networkInterfaceName);
-        localDevice = new LocalDevice(id, transport);
-        localDevice.writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(name));
-        localDevice.initialize();
-        localDevice.getEventHandler().addListener(new BACnetEventListener(vertx, eventController));
-        localDevice.startRemoteDeviceDiscovery();
-        //TODO: should this be stopped? does it stop handling IAM req if stopped?
-
-        if (!localDevice.isInitialized()) {
-            throw new BACnetServiceException(ErrorClass.device, ErrorCode.internalError);
+            Transport transport = Strings.isBlank(networkInterfaceName)
+                                  ? TransportIP.autoSelect().get()
+                                  : TransportIP.byName(networkInterfaceName).get();
+            localDevice = new LocalDevice(id, transport);
+            localDevice.writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(name));
+            localDevice.initialize();
+            localDevice.getEventHandler().addListener(new BACnetEventListener(vertx, eventController));
+            localDevice.startRemoteDeviceDiscovery();
+            //TODO: should this be stopped? does it stop handling IAM req if stopped?
+            if (!localDevice.isInitialized()) {
+                throw new NubeException(new BACnetServiceException(ErrorClass.device, ErrorCode.internalError));
+            }
+        } catch (Exception e) {
+            if (e instanceof NubeException) {
+                throw (NubeException) e;
+            }
+            throw new NubeException("Failed when starting BACNet", e);
         }
     }
 
     public static BACnet createBACnet(String name, int id, EventController eventController, Vertx vertx,
-                                      String networkInterfaceName) throws Exception {
+                                      String networkInterfaceName) {
         return new BACnet(name, id, eventController, vertx, networkInterfaceName);
     }
 
@@ -104,23 +109,6 @@ public class BACnet {
     public void terminate() {
         localDevice.terminate();
     }
-
-    private Transport buildTransportIP(String networkInterface) throws Exception {
-        String broadcastAddress = NetworkUtils.getBroadcastAddress(networkInterface);
-        int networkPrefixLength = NetworkUtils.getNetworkPrefixLength(networkInterface);
-
-        IpNetwork network = new IpNetworkBuilder().withBroadcast(broadcastAddress, networkPrefixLength).build();
-        return new DefaultTransport(network);
-    }
-
-    //    private Transport buildTransportMSTP(String port, int macNum, int bufferSize, int retryCount) throws
-    //    Exception {
-    //        byte[] bytes = new byte[bufferSize];
-    //        MstpNode node = new MasterNode(port, new ByteArrayInputStream(bytes), new ByteArrayOutputStream(),
-    //                                       (byte) macNum, retryCount);
-    //        MstpNetwork network = new MstpNetwork(node, );
-    //        return new DefaultTransport(network);
-    //    }
 
     //TEMPORARY
     public void resetLocalObjects(JsonObject json) {

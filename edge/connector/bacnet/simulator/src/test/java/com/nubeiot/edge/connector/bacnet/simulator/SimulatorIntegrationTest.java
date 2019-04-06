@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -23,10 +24,11 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 
+//TODO temporary ignore
+@Ignore
 @RunWith(VertxUnitRunner.class)
 public class SimulatorIntegrationTest {
 
@@ -51,9 +53,9 @@ public class SimulatorIntegrationTest {
         eventController = new EventController(vertx);
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions(), verticle);
 
-        bacnetConfig = IConfig.from(Configs.loadJsonConfig("simulator.json"), NubeConfig.class).getAppConfig().toJson();
+        bacnetConfig = IConfig.fromClasspath("simulator.json", NubeConfig.class).getAppConfig().toJson();
         remoteDeviceId = bacnetConfig.getInteger("deviceID");
-        System.out.println("SIMIULATOR ID: " + remoteDeviceId);
+        System.out.println("SIMULATOR ID: " + remoteDeviceId);
         ThreadUtils.sleep(250); //just to assure enough discovery time
     }
 
@@ -73,8 +75,8 @@ public class SimulatorIntegrationTest {
     public void deviceExtendedInfoTest(TestContext context) throws Exception {
         Async async = context.async();
         eventController.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_ONE,
-                                                  new JsonObject().put("deviceID", remoteDeviceId)),
+                             EventMessage.initial(EventAction.GET_ONE, new JsonObject().put("deviceID",
+                                                                                            remoteDeviceId)),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.from(messageAsyncResult.result().body());
                                  JsonObject data = message.getData();
