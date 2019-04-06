@@ -2,12 +2,14 @@ package com.nubeiot.core.http.utils;
 
 import java.util.Objects;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.HttpUtils.HttpRequests;
 import com.nubeiot.core.utils.Strings;
@@ -23,7 +25,13 @@ public final class RequestDataConverter {
         JsonObject mergeInput = JsonObject.mapFrom(context.pathParams());
         String body = context.getBodyAsString();
         if (Strings.isNotBlank(body)) {
-            final JsonObject bodyAsJson = context.getBodyAsJson();
+            JsonObject bodyAsJson;
+            try {
+                bodyAsJson = context.getBodyAsJson();
+            } catch (Exception ex) {
+                throw new HttpException(HttpResponseStatus.BAD_REQUEST, ex.getMessage());
+            }
+
             if (Objects.nonNull(bodyAsJson)) {
                 mergeInput.mergeIn(bodyAsJson, true);
             }

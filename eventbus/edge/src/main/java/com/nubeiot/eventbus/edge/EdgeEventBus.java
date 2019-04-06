@@ -14,7 +14,7 @@ public final class EdgeEventBus {
                                                              .address("nubeiot.edge.app.installer")
                                                              .pattern(EventPattern.REQUEST_RESPONSE)
                                                              .addEvents(EventAction.CREATE, EventAction.UPDATE,
-                                                                        EventAction.HALT, EventAction.REMOVE,
+                                                                        EventAction.PATCH, EventAction.REMOVE,
                                                                         EventAction.GET_ONE, EventAction.GET_LIST)
                                                              .build();
     public static final EventModel APP_TRANSACTION = EventModel.builder()
