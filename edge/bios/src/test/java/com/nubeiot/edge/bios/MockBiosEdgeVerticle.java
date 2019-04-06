@@ -27,11 +27,19 @@ public class MockBiosEdgeVerticle extends EdgeBiosVerticle {
                                                              .build();
     private final AssertmentConsumer assertmentConsumer;
 
+    private final boolean failed;
+
+    public MockBiosEdgeVerticle(AssertmentConsumer assertmentConsumer) {
+        this(assertmentConsumer, false);
+    }
+
     @Override
     public void registerEventbus(EventController controller) {
         controller.register(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER,
                             new ModuleEventHandler(this, MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER));
-        controller.register(EdgeEventBus.BIOS_DEPLOYMENT, new MockModuleLoader(assertmentConsumer));
+        controller.register(EdgeEventBus.BIOS_DEPLOYMENT, failed
+                                                          ? new MockFailedModuleLoader(assertmentConsumer)
+                                                          : new MockModuleLoader(assertmentConsumer));
         controller.register(EdgeEventBus.BIOS_TRANSACTION,
                             new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION));
     }
