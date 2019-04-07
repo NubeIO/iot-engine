@@ -61,8 +61,6 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
     @OutputFile
     final RegularFileProperty out = newOutputFile()
 
-    final String exposePorts
-
     @Override
     DockerClient createDockerClient(Project project) {
         return create().createDockerClient(project)
@@ -83,13 +81,6 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
         jvmOptions.set("")
         javaProps.set("")
         vcsBranch.set("")
-        exposePorts = ProjectUtils.extraProp(project, "docker.exposePorts", "8000 5000 5701")
-                                  .tokenize()
-                                  .stream()
-                                  .map { it -> Integer.valueOf(it) }
-                                  .filter { p -> p > 0 && p < 65536 }
-                                  .map { p -> p.toString() }
-                                  .collect(Collectors.joining(" "))
     }
 
     @TaskAction
@@ -146,6 +137,13 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
         if (!jdkUrl) {
             throw new TaskExecutionException(this, new RuntimeException("Not found Oracle jdk url"))
         }
+        def exposePorts = ProjectUtils.extraProp(project, "docker.exposePorts", "8000 5000 5701")
+                                      .tokenize()
+                                      .stream()
+                                      .map { p -> Integer.valueOf(p) }
+                                      .filter { p -> p > 0 && p < 65536 }
+                                      .map { p -> p.toString() }
+                                      .collect(Collectors.joining(" "))
         def arch = it.arch.canonicalName
         project.copy {
             into buildDir.get().asFile

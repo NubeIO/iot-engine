@@ -1,10 +1,5 @@
 version: "2.4"
 services:
-  mongo:
-    image: mongo:${MONGO_VERSION}
-
-  keycloak:
-    image: jboss/keycloak:${KEYCLOAK_VERSION}
 
   backend:
     image: amd64/nube-dashboard-server:${IOT_VERSION}

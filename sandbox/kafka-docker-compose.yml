@@ -40,3 +40,5 @@ volumes:
     driver: local
   zk-conf:
     driver: local
+  connector-kafka-data:
+    driver: local

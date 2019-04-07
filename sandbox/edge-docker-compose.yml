@@ -29,13 +29,9 @@ services:
       - ./engine/bios.json:/app/conf/config.json
       - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
       - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
-    depends_on:
-      - nexus
 
 volumes:
   connector-edge-data:
-    driver: local
-  connector-kafka-data:
     driver: local
   bios-data:
     driver: local
