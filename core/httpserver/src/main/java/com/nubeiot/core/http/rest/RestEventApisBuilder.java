@@ -17,7 +17,7 @@ import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.base.event.EventMethodDefinition.EventMethodMapping;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
-import com.nubeiot.core.http.handler.RestEventResultHandler;
+import com.nubeiot.core.http.handler.RestEventApiDispatcher;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
@@ -93,7 +93,7 @@ public final class RestEventApisBuilder {
 
     private void createRouter(RestEventApiMetadata metadata, RestEventApi api) {
         for (EventMethodMapping mapping : metadata.getDefinition().getMapping()) {
-            RestEventResultHandler restHandler = RestEventResultHandler.create(api.handler(), eventController,
+            RestEventApiDispatcher restHandler = RestEventApiDispatcher.create(api.dispatcher(), eventController,
                                                                                metadata.getAddress(),
                                                                                mapping.getAction(),
                                                                                metadata.getPattern());

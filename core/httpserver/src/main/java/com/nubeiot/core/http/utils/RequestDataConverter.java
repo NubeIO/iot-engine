@@ -3,11 +3,13 @@ package com.nubeiot.core.http.utils;
 import java.util.Objects;
 
 import io.vertx.core.http.ServerWebSocket;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.HttpUtils.HttpRequests;
 import com.nubeiot.core.utils.Strings;
@@ -23,9 +25,13 @@ public final class RequestDataConverter {
         JsonObject mergeInput = JsonObject.mapFrom(context.pathParams());
         String body = context.getBodyAsString();
         if (Strings.isNotBlank(body)) {
-            final JsonObject bodyAsJson = context.getBodyAsJson();
-            if (Objects.nonNull(bodyAsJson)) {
-                mergeInput.mergeIn(bodyAsJson, true);
+            try {
+                JsonObject bodyAsJson = context.getBodyAsJson();
+                if (Objects.nonNull(bodyAsJson)) {
+                    mergeInput.mergeIn(bodyAsJson, true);
+                }
+            } catch (DecodeException ex) {
+                throw new HttpException("JSON payload is invalid", ex);
             }
         }
         final RequestData.Builder builder = RequestData.builder();
@@ -34,7 +40,8 @@ public final class RequestDataConverter {
             builder.pagination(pagination);
         }
         return builder.headers(HttpRequests.serializeHeaders(context.request()))
-                      .body(mergeInput).filter(HttpRequests.query(context.request()))
+                      .body(mergeInput)
+                      .filter(HttpRequests.query(context.request()))
                       .build();
     }
 

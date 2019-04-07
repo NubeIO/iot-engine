@@ -45,7 +45,6 @@ import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblRemoveHistory;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
-import com.nubeiot.edge.core.model.tables.records.TblModuleRecord;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -132,11 +131,14 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         logger.info("Handle entities before do deployment...");
         InstallerConfig config = IConfig.from(sharedDataFunc.apply(EdgeVerticle.SHARED_INSTALLER_CFG),
                                               InstallerConfig.class);
+        if (event == EventAction.REMOVE) {
+            module.setState(State.UNAVAILABLE);
+        }
         return validateModuleState(module, event).flatMap(o -> {
             if (EventAction.INIT == event || EventAction.CREATE == event) {
                 module.setState(State.NONE);
-                return markModuleInsert(
-                    new TblModule(module).setDeployLocation(config.getRepoConfig().getLocal())).flatMap(
+                TblModule tblModule = new TblModule(module).setDeployLocation(config.getRepoConfig().getLocal());
+                return markModuleInsert(tblModule).flatMap(
                     key -> createTransaction(key.getServiceId(), event, module.toJson()).map(
                         transId -> createPreDeployResult(module, transId, event, module.getState(), State.ENABLED)));
             }
@@ -200,8 +202,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                  .flatMap(ignore -> moduleDao.deleteById(serviceId)))
                     .subscribe();
         } else {
-            Map<TableField<TblModuleRecord, String>, String> values = Collections.singletonMap(
-                Tables.TBL_MODULE.DEPLOY_ID, deployId);
+            Map<TableField, String> values = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
             queryExecutor.executeAny(c -> updateTransStatus(c, transId, status, null))
                          .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, values))
                                                      .map(r2 -> r1 + r2))

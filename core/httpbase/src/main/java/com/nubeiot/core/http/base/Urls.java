@@ -133,7 +133,7 @@ public final class Urls {
      *
      * @param scheme HTTP Scheme
      * @param host   Host
-     * @param port   Port. Port < 1 will be skipped
+     * @param port   Port. Port &lt; 1 will be skipped
      * @return URL based on given input. Nullable if given host is blank
      */
     public static String buildURL(HttpScheme scheme, String host, int port) {

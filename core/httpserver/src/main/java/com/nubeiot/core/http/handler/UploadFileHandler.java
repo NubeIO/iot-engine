@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
  * Only override it if any performance issue
  */
 @RequiredArgsConstructor
-public class UploadFileHandler implements EventResultContextHandler {
+public class UploadFileHandler implements RestEventRequestDispatcher {
 
     @Getter
     private final EventController controller;
@@ -63,7 +63,7 @@ public class UploadFileHandler implements EventResultContextHandler {
         data.put("attributes", HttpRequests.serializeHeaders(context.request().formAttributes()));
         EventMessage message = EventMessage.initial(
             eventModel.getEvents().stream().findFirst().orElse(EventAction.CREATE), data);
-        sendAndListenEvent(context, "UPLOAD", eventModel.getAddress(), eventModel.getPattern(), message);
+        dispatch(context, "UPLOAD", eventModel.getAddress(), eventModel.getPattern(), message);
     }
 
     private JsonObject extractFileInfo(String link, FileUpload fileUpload) {

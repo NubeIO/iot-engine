@@ -35,6 +35,12 @@ class DynamicServiceTestBase extends HttpServerTestBase {
         } catch (InterruptedException e) {
             context.fail("Failed to start Gateway and HTTP Service");
         }
+        //small delay for enable dynamic api
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            context.fail(e);
+        }
         System.out.println("FINISHED AFTER: " + (System.nanoTime() - start) / 1e9);
     }
 

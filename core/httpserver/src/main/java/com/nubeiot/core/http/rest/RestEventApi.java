@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
-import com.nubeiot.core.http.handler.RestEventResultHandler;
+import com.nubeiot.core.http.handler.RestEventApiDispatcher;
 
 /**
  * Make a mapping dynamically between {@code HTTP endpoint} and {@code EventBus}
@@ -14,8 +14,8 @@ public interface RestEventApi extends ActionMethodMapping {
     List<RestEventApiMetadata> getRestMetadata();
 
     @SuppressWarnings("unchecked")
-    default <T extends RestEventResultHandler> Class<T> handler() {
-        return (Class<T>) RestEventResultHandler.class;
+    default <T extends RestEventApiDispatcher> Class<T> dispatcher() {
+        return (Class<T>) RestEventApiDispatcher.class;
     }
 
 }

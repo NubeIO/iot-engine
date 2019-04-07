@@ -31,7 +31,7 @@ import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
-import com.nubeiot.eventbus.edge.EdgeEventBus;
+import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 
 public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
 
@@ -51,7 +51,7 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
 
     @Override
     protected EventModel deploymentEvent() {
-        return EdgeEventBus.BIOS_DEPLOYMENT;
+        return EdgeInstallerEventBus.BIOS_DEPLOYMENT;
     }
 
     private Single<EventMessage> bootstrap(EventAction action) {

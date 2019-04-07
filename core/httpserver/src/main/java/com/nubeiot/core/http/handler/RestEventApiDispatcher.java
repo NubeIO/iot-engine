@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
  * @see RestEventResponseHandler
  */
 @RequiredArgsConstructor
-public class RestEventResultHandler implements EventResultContextHandler {
+public class RestEventApiDispatcher implements RestEventRequestDispatcher {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Getter
@@ -40,11 +40,11 @@ public class RestEventResultHandler implements EventResultContextHandler {
     private final EventPattern pattern;
 
     @SuppressWarnings("unchecked")
-    public static <T extends RestEventResultHandler> RestEventResultHandler create(Class<T> handler,
+    public static <T extends RestEventApiDispatcher> RestEventApiDispatcher create(Class<T> handler,
                                                                                    EventController eventController,
                                                                                    String address, EventAction action,
                                                                                    EventPattern pattern) {
-        Class<T> handlerClass = Objects.isNull(handler) ? (Class<T>) RestEventResultHandler.class : handler;
+        Class<T> handlerClass = Objects.isNull(handler) ? (Class<T>) RestEventApiDispatcher.class : handler;
         LinkedHashMap<Class, Object> inputs = new LinkedHashMap<>();
         inputs.put(EventController.class, eventController);
         inputs.put(String.class, Strings.requireNotBlank(address));
@@ -57,7 +57,7 @@ public class RestEventResultHandler implements EventResultContextHandler {
     public void handle(RoutingContext context) {
         EventMessage msg = EventMessage.initial(action, RequestDataConverter.convert(context));
         logger.info("REST::Request data: {}", msg.toJson().encode());
-        sendAndListenEvent(context, "REST", address, pattern, msg);
+        dispatch(context, "REST", address, pattern, msg);
     }
 
 }
