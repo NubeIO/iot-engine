@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 
-final class EdgeInstallerRuleProvider implements Supplier<ModuleTypeRule> {
+final class ServiceInstallerRuleProvider implements Supplier<ModuleTypeRule> {
 
     @Override
     public ModuleTypeRule get() {

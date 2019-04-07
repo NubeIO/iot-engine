@@ -9,7 +9,7 @@ import com.nubeiot.edge.core.ModuleEventHandler;
 import com.nubeiot.edge.core.TransactionEventHandler;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.eventbus.edge.EdgeEventBus;
+import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 
 public final class EdgeBiosVerticle extends EdgeVerticle {
 
@@ -22,11 +22,8 @@ public final class EdgeBiosVerticle extends EdgeVerticle {
     }
 
     @Override
-    public void registerEventbus(EventController controller) {
-        controller.register(EdgeEventBus.BIOS_INSTALLER, new ModuleEventHandler(this, EdgeEventBus.BIOS_INSTALLER));
-        controller.register(EdgeEventBus.BIOS_TRANSACTION,
-                            new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION));
-        controller.register(EdgeEventBus.BIOS_DEPLOYMENT, new ModuleLoader(vertx));
+    protected Supplier<ModuleTypeRule> getModuleRuleProvider() {
+        return new EdgeBiosRuleProvider();
     }
 
     @Override
@@ -35,8 +32,12 @@ public final class EdgeBiosVerticle extends EdgeVerticle {
     }
 
     @Override
-    protected Supplier<ModuleTypeRule> getModuleRuleProvider() {
-        return new EdgeBiosRuleProvider();
+    public void registerEventbus(EventController controller) {
+        controller.register(EdgeInstallerEventBus.BIOS_INSTALLER,
+                            new ModuleEventHandler(this, EdgeInstallerEventBus.BIOS_INSTALLER));
+        controller.register(EdgeInstallerEventBus.BIOS_TRANSACTION,
+                            new TransactionEventHandler(this, EdgeInstallerEventBus.BIOS_TRANSACTION));
+        controller.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, new ModuleLoader(vertx));
     }
 
 }

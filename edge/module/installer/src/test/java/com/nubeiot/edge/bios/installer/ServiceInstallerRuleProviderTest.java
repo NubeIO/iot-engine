@@ -11,18 +11,18 @@ import org.junit.Test;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 
-public class EdgeInstallerRuleProviderTest {
+public class ServiceInstallerRuleProviderTest {
 
     private ModuleTypeRule rule;
 
     @Before
     public void setup() {
-        this.rule = new EdgeInstallerRuleProvider().get();
+        this.rule = new ServiceInstallerRuleProvider().get();
     }
 
     @Test
     public void test_ModuleTypeJAVA_success() {
-        ModuleTypeRule rule = new EdgeInstallerRuleProvider().get();
+        ModuleTypeRule rule = new ServiceInstallerRuleProvider().get();
         assertTrue(rule.getRule(ModuleType.JAVA).test("com.nubeiot.edge.connector.xyz"));
         assertTrue(rule.getSearchPattern(ModuleType.JAVA)
                        .containsAll(Arrays.asList("com.nubeiot.edge.connector", "com.nubeiot.edge.rule")));
