@@ -23,7 +23,7 @@
       },
       "__static__": {
         "enabled": true,
-        "webRoot": "/kafkaWebRoot"
+        "webRoot": "kafkaWebRoot"
       }
     },
     "__kafka__": {

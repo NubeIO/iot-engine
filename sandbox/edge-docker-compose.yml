@@ -1,13 +1,5 @@
 version: "2.4"
 services:
-  nexus:
-    image: sonatype/nexus3:${NEXUS_VERSION}
-
-  zookeeper:
-    image: wurstmeister/zookeeper:${ZOOKEEPER_VERSION}
-
-  kafka:
-    image: wurstmeister/kafka:${KAFKA_VERSION}
 
   connector-edge:
     image: amd64/nube-dashboard-connector-edge:${IOT_VERSION}
@@ -20,18 +12,6 @@ services:
       - ./engine/connector-edge.json:/app/conf/config.json
       - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
       - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
-
-  connector-kafka:
-    image: amd64/nube-dashboard-connector-sample-kafka:${IOT_VERSION}
-    ports:
-      - ${CONNECTOR_KAFKA_PORT}:8080
-    volumes:
-      - connector-kafka-data:/data
-      - ./engine/connector-kafka.json:/app/conf/config.json
-      - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
-      - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
-    depends_on:
-      - kafka
 
   bios:
     image: amd64/nube-edge-bios:${IOT_VERSION}

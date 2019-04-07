@@ -148,9 +148,21 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
 
     private void initStaticWebRouter(Router mainRouter, StaticWebConfig webConfig) {
         if (webConfig.isEnabled()) {
-            String webDir = FileUtils.createFolder(dataDir, webConfig.getWebRoot());
-            mainRouter.route(Urls.combinePath(ApiConstants.SAMPLE_PATH, ApiConstants.WILDCARDS_ANY_PATH))
-                      .handler(StaticHandler.create(webDir));
+            final StaticHandler staticHandler = StaticHandler.create();
+            if (webConfig.isInResource()) {
+                staticHandler.setWebRoot(webConfig.getWebRoot());
+            } else {
+                String webDir = FileUtils.createFolder(dataDir, webConfig.getWebRoot());
+                logger.info("Static web dir {}", webDir);
+                staticHandler.setEnableRangeSupport(true)
+                             .setSendVaryHeader(true)
+                             .setFilesReadOnly(false)
+                             .setAllowRootFileSystemAccess(true)
+                             .setIncludeHidden(false)
+                             .setWebRoot(webDir);
+            }
+            mainRouter.route(Urls.combinePath(webConfig.getWebPath(), ApiConstants.WILDCARDS_ANY_PATH))
+                      .handler(staticHandler);
         }
     }
 
@@ -183,8 +195,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             router.route()
                   .handler(StaticHandler.create()
                                         .setEnableRangeSupport(true)
-                                        .setSendVaryHeader(true)
-                                        .setFilesReadOnly(false)
+                                        .setSendVaryHeader(true).setFilesReadOnly(true)
                                         .setAllowRootFileSystemAccess(true)
                                         .setIncludeHidden(false)
                                         .setWebRoot(storageDir.toString()));
