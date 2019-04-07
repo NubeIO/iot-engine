@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
  * @see RestEventResponseHandler
  */
 @RequiredArgsConstructor
-public class RestEventApiDispatcher implements EventResultContextHandler {
+public class RestEventApiDispatcher implements RestEventRequestDispatcher {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Getter
@@ -57,7 +57,7 @@ public class RestEventApiDispatcher implements EventResultContextHandler {
     public void handle(RoutingContext context) {
         EventMessage msg = EventMessage.initial(action, RequestDataConverter.convert(context));
         logger.info("REST::Request data: {}", msg.toJson().encode());
-        sendAndListenEvent(context, "REST", address, pattern, msg);
+        dispatch(context, "REST", address, pattern, msg);
     }
 
 }

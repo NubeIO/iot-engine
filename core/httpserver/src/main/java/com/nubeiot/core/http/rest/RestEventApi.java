@@ -14,7 +14,7 @@ public interface RestEventApi extends ActionMethodMapping {
     List<RestEventApiMetadata> getRestMetadata();
 
     @SuppressWarnings("unchecked")
-    default <T extends RestEventApiDispatcher> Class<T> handler() {
+    default <T extends RestEventApiDispatcher> Class<T> dispatcher() {
         return (Class<T>) RestEventApiDispatcher.class;
     }
 

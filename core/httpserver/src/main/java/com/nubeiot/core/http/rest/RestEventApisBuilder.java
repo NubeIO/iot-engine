@@ -93,7 +93,7 @@ public final class RestEventApisBuilder {
 
     private void createRouter(RestEventApiMetadata metadata, RestEventApi api) {
         for (EventMethodMapping mapping : metadata.getDefinition().getMapping()) {
-            RestEventApiDispatcher restHandler = RestEventApiDispatcher.create(api.handler(), eventController,
+            RestEventApiDispatcher restHandler = RestEventApiDispatcher.create(api.dispatcher(), eventController,
                                                                                metadata.getAddress(),
                                                                                mapping.getAction(),
                                                                                metadata.getPattern());
