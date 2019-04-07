@@ -1,0 +1,17 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "NONE",
+      "ssl": false,
+      "clustered": false
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "deviceName": "RoomController.Simulator",
+    "deviceID": 2769127,
+    "networkInterface": ""
+  }
+}
