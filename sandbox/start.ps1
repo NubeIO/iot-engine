@@ -2,13 +2,18 @@
 param($H, $services = $(throw "services parameter is required."))
 
 $files = ""
-$dashboard = "dashboard mongo keycloak ditto postgres"
-$edge = "edge nexus kafka"
+$dashboard = "dashboard mongo keycloak postgres"
+$edge = "edge nexus"
+$kafka = "kafka"
 $ditto="mongo"
 
 if ($services -contains '*dashboard*') { $services = "$dashboard $services" }
 if ($services -contains '*edge*') { $services = "$edge $services" }
 if ($services -contains '*ditto*') { $services = "$ditto $services" }
+if ($services -contains '*kafka*')
+{
+    $services = "$kafka $services"
+}
 
 $services = ($services -split ' ' | Select-Object -Unique) -join ' '
 

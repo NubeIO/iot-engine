@@ -2,7 +2,7 @@ version: "2.4"
 
 services:
 
-  policies:
+  ditto-policies:
     init: true
     image: eclipse/ditto-policies:${DITTO_VERSION:-latest}
     mem_limit: 256m
@@ -18,7 +18,7 @@ services:
       - REMOTING_IDLE_CPU_LEVEL=1
       - MONGO_DB_URI=mongodb://ditto:ditto@mongo:27017/ditto
 
-  things:
+  ditto-things:
     init: true
     image: eclipse/ditto-things:${DITTO_VERSION:-latest}
     mem_limit: 256m
@@ -27,7 +27,7 @@ services:
         aliases:
           - ditto-cluster
     depends_on:
-      - policies
+      - ditto-policies
     environment:
       - TZ=UTC
       - INSTANCE_INDEX=1
@@ -36,7 +36,7 @@ services:
       - REMOTING_IDLE_CPU_LEVEL=1
       - MONGO_DB_URI=mongodb://ditto:ditto@mongo:27017/ditto
 
-  things-search:
+  ditto-things-search:
     init: true
     image: eclipse/ditto-things-search:${DITTO_VERSION:-latest}
     mem_limit: 384m
@@ -54,7 +54,7 @@ services:
       - REMOTING_IDLE_CPU_LEVEL=1
       - MONGO_DB_URI=mongodb://ditto:ditto@mongo:27017/ditto
 
-  concierge:
+  ditto-concierge:
     init: true
     image: eclipse/ditto-concierge:${DITTO_VERSION:-latest}
     mem_limit: 256m
@@ -63,7 +63,7 @@ services:
         aliases:
           - ditto-cluster
     depends_on:
-      - policies
+      - ditto-policies
     environment:
       - TZ=UTC
       - INSTANCE_INDEX=1
@@ -72,7 +72,7 @@ services:
       - REMOTING_IDLE_CPU_LEVEL=1
       - MONGO_DB_URI=mongodb://ditto:ditto@mongo:27017/ditto
 
-  connectivity:
+  ditto-connectivity:
     init: true
     image: eclipse/ditto-connectivity:${DITTO_VERSION:-latest}
     mem_limit: 256m
@@ -81,8 +81,8 @@ services:
         aliases:
           - ditto-cluster
     depends_on:
-      - policies
-      - concierge
+      - ditto-policies
+      - ditto-concierge
     environment:
       - TZ=UTC
       - INSTANCE_INDEX=1
@@ -91,7 +91,7 @@ services:
       - REMOTING_IDLE_CPU_LEVEL=1
       - MONGO_DB_URI=mongodb://ditto:ditto@mongo:27017/ditto
 
-  gateway:
+  ditto-gateway:
     init: true
     image: eclipse/ditto-gateway:${DITTO_VERSION:-latest}
     mem_limit: 256m
@@ -100,8 +100,8 @@ services:
         aliases:
           - ditto-cluster
     depends_on:
-      - policies
-      - concierge
+      - ditto-policies
+      - ditto-concierge
     ports:
       - ${DITTO_GATEWAY_PORT}:8080
     environment:
@@ -114,7 +114,7 @@ services:
       - DEVOPS_SECURE_STATUS=false
       - GATEWAY_PUBLIC_HEALTH_SECURE=false
 
-  swagger-ui:
+  ditto-swagger-ui:
     image: swaggerapi/swagger-ui:${DITTO_SWAGGER}
     volumes:
       - ./ditto/swagger/openapi:/usr/share/nginx/html/openapi:ro
@@ -135,5 +135,5 @@ services:
     ports:
       - ${DITTO_NGINX_PORT}:80
     depends_on:
-      - gateway
-      - swagger-ui
+      - ditto-gateway
+      - ditto-swagger-ui

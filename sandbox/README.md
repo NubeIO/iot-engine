@@ -12,7 +12,7 @@ Build docker images:
 ## Dashboard stack
 
 ```bash
-./start.sh dashboard
+./start.sh dashboard ditto
 ```
 
 ### Server information
@@ -41,13 +41,13 @@ Build docker images:
   gradle publish
   ```
 
-- Start `edge` stack
+- Start `edge` stack in another command line windows. If you want to test `kafka`, simple append `kafka` in `start.sh` script
 
   ```bash
-    ./start.sh edge
+    ./start.sh edge kafka
   ```
 
-- Then install `edge-kafka-producer` on `bios` via `connector-edge` with below payload. Refers [Postman](https://documenter.getpostman.com/view/670606/RWguwGk8#ed6d4b9b-2ffc-4ca7-99d2-2973c28c3af4)
+- Then install `edge-kafka-producer` on `bios` via `connector-edge` with below payload. Refers [Postman](https://documenter.getpostman.com/view/670606/RWguwGk8#51b425c4-59be-4c13-b33c-e2db84830494)
 
   ```json
     {
@@ -91,7 +91,7 @@ docker rm -f $(docker ps -a | grep sandbox | awk '{print $1}')
 docker rmi -f $(docker images | grep "nube\|iot" | awk '{print $3}')
 ```
 
-- Remove `sandbox volume` - **Note**: becareful, it will erase all your container data
+- Remove `sandbox volume` - **Note**: careful, it will erase all your container data
 
 ```bash
 docker volume rm $(docker volume ls | grep sandbox)
