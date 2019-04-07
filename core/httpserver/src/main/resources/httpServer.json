@@ -127,6 +127,7 @@
   },
   "__static__": {
     "enabled": false,
-    "webRoot": "/sample"
+    "webRoot": "webroot",
+    "webPath": "/web"
   }
 }

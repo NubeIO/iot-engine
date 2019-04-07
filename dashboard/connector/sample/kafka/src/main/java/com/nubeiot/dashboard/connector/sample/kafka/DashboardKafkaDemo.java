@@ -2,8 +2,6 @@ package com.nubeiot.dashboard.connector.sample.kafka;
 
 import java.util.UUID;
 
-import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
-
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;

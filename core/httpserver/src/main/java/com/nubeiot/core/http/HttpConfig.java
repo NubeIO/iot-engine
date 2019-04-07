@@ -294,7 +294,9 @@ public final class HttpConfig implements IConfig {
 
         public static final String NAME = "__static__";
         private boolean enabled = false;
-        private String webRoot = ApiConstants.SAMPLE_PATH;
+        private boolean inResource = true;
+        private String webPath = ApiConstants.WEB_PATH;
+        private String webRoot = "webroot";
 
         @Override
         public String name() { return NAME; }
