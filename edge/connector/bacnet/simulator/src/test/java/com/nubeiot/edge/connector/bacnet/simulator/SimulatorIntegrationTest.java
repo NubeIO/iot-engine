@@ -53,7 +53,7 @@ public class SimulatorIntegrationTest {
         eventController = new EventController(vertx);
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions(), verticle);
 
-        bacnetConfig = IConfig.fromClasspath("simulator.json", NubeConfig.class).getAppConfig().toJson();
+        bacnetConfig = IConfig.fromClasspath("config.json", NubeConfig.class).getAppConfig().toJson();
         remoteDeviceId = bacnetConfig.getInteger("deviceID");
         System.out.println("SIMULATOR ID: " + remoteDeviceId);
         ThreadUtils.sleep(250); //just to assure enough discovery time

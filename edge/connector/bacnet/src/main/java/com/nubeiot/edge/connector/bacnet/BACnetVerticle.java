@@ -57,8 +57,6 @@ public class BACnetVerticle extends ContainerVerticle {
         getLocalPoints();
     }
 
-    public String configFile() { return "bacnet.json"; }
-
     protected void publishServices(MicroContext microContext) {
         microContext.getLocalController()
                     .addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),

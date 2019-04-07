@@ -11,7 +11,7 @@ services:
       - ${BACNET_PORT}:47808/udp
     volumes:
       - bacnet-data:/data
-      - ./engine/bacnet-simulater.json:/app/conf/bacnet.json
+      - ./engine/bacnet-simulator.json:/app/conf/simulator.json
 
 volumes:
   bacnet-data:
