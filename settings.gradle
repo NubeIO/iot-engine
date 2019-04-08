@@ -11,6 +11,8 @@ include ':core:httpbase'
 include ':core:httpclient'
 include ':core:httpserver'
 include ':core:auth'
+include ':core:auth:jwt'
+include ':core:auth:oauth2'
 include ':core:kafka'
 
 include ':dashboard:server'

@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':core:auth:jwt')
+    compile "io.vertx:vertx-auth-oauth2:$project.versions.vertx"
+}

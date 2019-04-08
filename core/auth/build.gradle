@@ -1,4 +1,5 @@
 dependencies {
     compile project(':core:base')
     compile project(':core:httpclient')
+    compile "io.vertx:vertx-auth-common:$project.versions.vertx"
 }
