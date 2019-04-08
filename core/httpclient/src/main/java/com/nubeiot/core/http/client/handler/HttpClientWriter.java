@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpHeaders;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
@@ -33,7 +34,11 @@ public interface HttpClientWriter extends BiFunction<HttpClientRequest, RequestD
             return request;
         }
         if (!reqData.headers().isEmpty()) {
-            request.headers().setAll(HttpHeaderUtils.deserializeHeaders(reqData.headers()));
+            request.headers()
+                   .setAll(HttpHeaderUtils.deserializeHeaders(reqData.headers()))
+                   .remove(HttpHeaders.ACCEPT_ENCODING)
+                   .remove(HttpHeaders.CONTENT_TYPE)
+                   .remove(HttpHeaders.CONTENT_LENGTH);
         }
         if (Objects.nonNull(reqData.body()) && !reqData.body().isEmpty()) {
             request.write(reqData.body().toBuffer());
