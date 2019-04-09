@@ -1,5 +1,6 @@
 package com.nubeiot.core;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -17,6 +18,7 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.NubeConfig.DeployConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig;
@@ -108,11 +110,11 @@ public class ConfigProcessor {
     public <T extends IConfig> Optional<T> processAndOverride(@NonNull Class<T> clazz, IConfig provideConfig,
                                                               IConfig defaultConfig) {
         Map<String, Object> envConfig = this.mergeEnvAndSys();
-        T input;
+        IConfig input;
         if (Objects.isNull(provideConfig)) {
-            input = (T) defaultConfig;
+            input = defaultConfig;
         } else if (Objects.isNull(defaultConfig)) {
-            input = (T) provideConfig;
+            input = provideConfig;
         } else {
             input = IConfig.merge(defaultConfig, provideConfig, clazz);
         }
@@ -159,40 +161,55 @@ public class ConfigProcessor {
         //TODO merge to NubeConfig class
         System.out.println(appConfig);
         System.out.println(systemConfig);
+//        try {
+//            SystemConfig sysConfig = new ObjectMapper().readValue(systemConfig.toString(), SystemConfig.class);
+//        } catch (IOException e) {
+//            throw new ClassCastException(e.getLocalizedMessage());
+//        }
         System.out.println(deployConfig);
         System.out.println(nubeConfig);
         return Optional.of(finalAppConfig);
     }
 
-    private void handleConfig(JsonObject appConfig, JsonObject inputAppConfig, Entry<String, Object> entry,
+    private void handleConfig(JsonObject config, JsonObject inputConfig, Entry<String, Object> entry,
                               String[] keyArray) {
-        if (Objects.isNull(inputAppConfig)) {
+        if (Objects.isNull(inputConfig)) {
             return;
         }
         String propertyName = keyArray[2];
-        if (Objects.nonNull(inputAppConfig.getValue(propertyName))) {
-            this.handleChildElement(appConfig, inputAppConfig, entry, keyArray, propertyName);
-        } else if (Objects.nonNull(inputAppConfig.getValue("__" + propertyName + "__"))) {
-            this.handleChildElement(appConfig, inputAppConfig, entry, keyArray, "__" + propertyName + "__");
+        if (Objects.nonNull(inputConfig.getValue(propertyName))) {
+            this.handleChildElement(config, inputConfig, entry, keyArray, propertyName);
+        } else if (Objects.nonNull(inputConfig.getValue("__" + propertyName + "__"))) {
+            this.handleChildElement(config, inputConfig, entry, keyArray, "__" + propertyName + "__");
         } else {
-            this.handleChildElement(appConfig, inputAppConfig, entry, keyArray, propertyName);
+            this.handleChildElement(config, inputConfig, entry, keyArray, propertyName);
         }
     }
 
     private void handleChildElement(JsonObject appConfig, JsonObject inputAppConfig, Entry<String, Object> entry,
                                     String[] keyArray, String temp) {
-        Optional<JsonObject> entries = checkAndUpdate(3, keyArray,
-                                                      entry.getValue().toString(),
-                                                      inputAppConfig);
-        if (!entries.isPresent()) {
+        if (keyArray.length < 4) {
+            appConfig.put(keyArray[2], entry.getValue());
             return;
         }
+        JsonObject overrideResult = checkAndUpdate(3, keyArray,
+                                                   entry.getValue().toString(),
+                                                   inputAppConfig);
+        if (Objects.isNull(overrideResult)) {
+            return;
+        }
+        System.out.println("" + entry.getKey());
+        System.out.println(appConfig);
+        System.out.println(overrideResult);
         JsonObject childElement = appConfig.getJsonObject(temp);
         if (Objects.isNull(childElement)) {
-            appConfig.put(temp, entries.get());
+            System.out.println("put");
+            appConfig.put(temp, overrideResult);
         } else {
-            childElement = childElement.mergeIn(entries.get());
+            System.out.println("merge");
+            childElement = childElement.mergeIn(overrideResult);
         }
+        System.out.println(appConfig);
     }
 
     private boolean hasMatchChildConfig(String[] array, JsonObject input) {
@@ -231,47 +248,45 @@ public class ConfigProcessor {
                                  Entry::getValue)));
     }
 
-    private Optional<JsonObject> checkAndUpdate(int index, String[] array, String overrideValue, JsonObject input)
+    private JsonObject checkAndUpdate(int index, String[] array, String overrideValue, JsonObject input)
         throws ClassCastException {
-        // TODO remove Optional
         String key = array[index];
         Object value = input.getValue(key);
         if (Objects.nonNull(value)) {
             if (JsonObject.class.isInstance(value)) {
-                Optional<JsonObject> temp = checkAndUpdate(index + 1, array, overrideValue, (JsonObject) value);
-                if (temp.isPresent()) {
-                    return Optional.of(new JsonObject().put(key, temp.get()));
+                JsonObject temp = checkAndUpdate(index + 1, array, overrideValue, (JsonObject) value);
+                if (Objects.nonNull(temp)) {
+                    return new JsonObject().put(key, temp);
                 }
-                return Optional.empty();
+                return null;
             }
             if (index == array.length - 1) {
-                return Optional.of(new JsonObject().put(key, overrideValue));
+                return new JsonObject().put(key, overrideValue);
             }
-            return Optional.empty();
+            return null;
         } else if (Objects.nonNull(input.getValue("__" + key + "__"))) {
             value = input.getValue("__" + key + "__");
             if (JsonObject.class.isInstance(value)) {
-                Optional<JsonObject> temp = checkAndUpdate(index + 1, array, overrideValue, (JsonObject) value);
-                if (temp.isPresent()) {
-                    return Optional.of(new JsonObject().put("__" + key + "__",
-                                                            temp.get()));
+                JsonObject temp = checkAndUpdate(index + 1, array, overrideValue, (JsonObject) value);
+                if (Objects.nonNull(temp)) {
+                    return new JsonObject().put("__" + key + "__",
+                                                temp);
                 }
                 ;
-                return Optional.empty();
+                return null;
             }
-            return Optional.empty();
+            return null;
         } else {
             //if input Value doesn't contains this attribute.
             if (index == array.length - 1) {
-                return Optional.of(new JsonObject().put(key, overrideValue));
+                return new JsonObject().put(key, overrideValue);
             }
-            Optional<JsonObject> temp = checkAndUpdate(index + 1, array, overrideValue, new JsonObject());
-            if (temp.isPresent()) {
-                return Optional.of(new JsonObject().put(key, temp.get()));
+            JsonObject temp = checkAndUpdate(index + 1, array, overrideValue, new JsonObject());
+            if (Objects.nonNull(temp)) {
+                return new JsonObject().put(key, temp);
             }
+            return null;
         }
-
-        return Optional.empty();
     }
 
 }
