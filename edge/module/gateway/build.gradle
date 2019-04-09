@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':core:micro')
+    compile project(':core:httpserver')
+}
