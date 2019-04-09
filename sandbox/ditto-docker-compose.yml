@@ -45,7 +45,7 @@ services:
         aliases:
           - ditto-cluster
     depends_on:
-      - policies
+      - ditto-policies
     environment:
       - TZ=UTC
       - INSTANCE_INDEX=1
