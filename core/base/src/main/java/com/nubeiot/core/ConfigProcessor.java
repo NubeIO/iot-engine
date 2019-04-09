@@ -1,6 +1,5 @@
 package com.nubeiot.core;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -18,7 +17,6 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.NubeConfig.DeployConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig;
@@ -135,6 +133,8 @@ public class ConfigProcessor {
         JsonObject systemConfig = new JsonObject();
         JsonObject deployConfig = new JsonObject();
         nubeConfig.put(AppConfig.NAME, appConfig);
+        nubeConfig.put(SystemConfig.NAME, systemConfig);
+        nubeConfig.put(DeployConfig.NAME, deployConfig);
         JsonObject inputAppConfig = input.toJson().getJsonObject(AppConfig.NAME);
         JsonObject inputSystemConfig = input.toJson().getJsonObject(SystemConfig.NAME);
         JsonObject inputDeployConfig = input.toJson().getJsonObject(DeployConfig.NAME);
@@ -161,11 +161,12 @@ public class ConfigProcessor {
         //TODO merge to NubeConfig class
         System.out.println(appConfig);
         System.out.println(systemConfig);
-//        try {
-//            SystemConfig sysConfig = new ObjectMapper().readValue(systemConfig.toString(), SystemConfig.class);
-//        } catch (IOException e) {
-//            throw new ClassCastException(e.getLocalizedMessage());
-//        }
+        //        try {
+        //            SystemConfig sysConfig = new ObjectMapper().readValue(systemConfig.toString(), SystemConfig
+        //            .class);
+        //        } catch (IOException e) {
+        //            throw new ClassCastException(e.getLocalizedMessage());
+        //        }
         System.out.println(deployConfig);
         System.out.println(nubeConfig);
         return Optional.of(finalAppConfig);
@@ -186,7 +187,8 @@ public class ConfigProcessor {
         }
     }
 
-    private void handleChildElement(JsonObject appConfig, JsonObject inputAppConfig, Entry<String, Object> entry,
+    private void handleChildElement(JsonObject appConfig, JsonObject
+        inputAppConfig, Entry<String, Object> entry,
                                     String[] keyArray, String temp) {
         if (keyArray.length < 4) {
             appConfig.put(keyArray[2], entry.getValue());
@@ -198,18 +200,12 @@ public class ConfigProcessor {
         if (Objects.isNull(overrideResult)) {
             return;
         }
-        System.out.println("" + entry.getKey());
-        System.out.println(appConfig);
-        System.out.println(overrideResult);
         JsonObject childElement = appConfig.getJsonObject(temp);
         if (Objects.isNull(childElement)) {
-            System.out.println("put");
             appConfig.put(temp, overrideResult);
         } else {
-            System.out.println("merge");
             childElement = childElement.mergeIn(overrideResult);
         }
-        System.out.println(appConfig);
     }
 
     private boolean hasMatchChildConfig(String[] array, JsonObject input) {

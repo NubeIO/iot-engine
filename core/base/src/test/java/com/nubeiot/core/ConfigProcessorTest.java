@@ -1,14 +1,9 @@
 package com.nubeiot.core;
 
-import static junit.framework.TestCase.assertNull;
-
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.junit.After;
@@ -107,8 +102,8 @@ public class ConfigProcessorTest {
         Optional<AppConfig> result = processor.processAndOverride(NubeConfig.AppConfig.class, appConfig, null);
 
         AppConfig finalResult = IConfig.merge(appConfig, result.get(), AppConfig.class);
-//        Assert.assertEquals(finalResult.get("__http__").toString(),
-//                            "{host=2.2.2.2, port=8088.0, enabled=false, rootApi=/api}");
+        //        Assert.assertEquals(finalResult.get("__http__").toString(),
+        //                            "{host=2.2.2.2, port=8088.0, enabled=false, rootApi=/api}");
         System.out.println(finalResult.toJson());
     }
 
