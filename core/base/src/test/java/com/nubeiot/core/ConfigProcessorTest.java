@@ -1,6 +1,8 @@
 package com.nubeiot.core;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -115,8 +117,9 @@ public class ConfigProcessorTest {
         System.setProperty("nubeio.app.http.port.abc.dfd", "8088");
         System.setProperty("nubeio.app.http.abc.def", "123");
         System.setProperty("nubeio.app.http1.abc.def", "123");
-        System.setProperty("nubeio.system.http.enabled", "true");
+        System.setProperty("nubeio.system.cluster.active", "false");
         System.setProperty("nubeio.deploy.cluster.abc.def", "123");
+        System.setProperty("nubeio.dataDir", "C:/test");
         String jsonInput = "{\"__system__\":{\"__eventBus__\":{\"clientAuth\":\"REQUIRED\",\"ssl\":true," +
                            "\"clustered\":true,\"keyStoreOptions\":{\"path\":\"eventBusKeystore.jks\"," +
                            "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path\":\"eventBusKeystore" +
@@ -127,8 +130,9 @@ public class ConfigProcessorTest {
         NubeConfig nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
         System.out.println(nubeConfig.toJson());
         Optional<NubeConfig> result = processor.processAndOverride(NubeConfig.class, nubeConfig, null);
-
+        System.out.println(nubeConfig.toJson());
         NubeConfig finalResult = IConfig.merge(nubeConfig, result.get(), NubeConfig.class);
+        System.out.println(finalResult.toJson());
         //        Assert.assertEquals(finalResult.get("__http__").toString(),
         //                            "{host=2.2.2.2, port=8088.0, enabled=false, rootApi=/api}");
 

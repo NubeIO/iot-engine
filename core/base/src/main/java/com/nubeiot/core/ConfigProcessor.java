@@ -1,5 +1,6 @@
 package com.nubeiot.core;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -17,9 +19,12 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.NubeConfig.DeployConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
@@ -31,6 +36,8 @@ public class ConfigProcessor {
     private static final String APP = "app";
     private static final String SYSTEM = "system";
     private static final String DEPLOY = "deploy";
+    private static final String DATA_DIR = "dataDir";
+    private static final String DATA_DIR_LOWER_CASE = "datadir";
     @Getter
     private LinkedHashMap<ConfigStoreOptions, Function<JsonObject, Map<String, Object>>> mappingOptions;
     private Vertx vertx;
@@ -73,7 +80,7 @@ public class ConfigProcessor {
     }
 
     private static String convertEnv(String key) {
-        if (isBlank(key)) {
+        if (Strings.isBlank(key)) {
             return key;
         }
         return lowerCase(key).replace('_', '.');
@@ -87,9 +94,6 @@ public class ConfigProcessor {
         }
     }
 
-    private static boolean isBlank(String key) {
-        return Strings.isBlank(key);
-    }
 
     public Map<String, Object> mergeEnvAndSys() {
         Map<String, Object> result = new HashMap<>();
@@ -101,8 +105,7 @@ public class ConfigProcessor {
                 result.putAll(currentResult);
             });
         });
-        //TODO sorting
-        return result;
+        return new TreeMap<>(result);
     }
 
     public <T extends IConfig> Optional<T> processAndOverride(@NonNull Class<T> clazz, IConfig provideConfig,
@@ -121,32 +124,21 @@ public class ConfigProcessor {
 
     private <T extends IConfig> Optional<T> overrideConfig(Class<T> clazz, Map<String, Object> envConfig,
                                                            IConfig input) {
-        T finalAppConfig;
-        try {
-            finalAppConfig = clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            return Optional.empty();
-        }
         JsonObject nubeConfig = new JsonObject();
 
-        JsonObject appConfig = new JsonObject();
-        JsonObject systemConfig = new JsonObject();
-        JsonObject deployConfig = new JsonObject();
-        nubeConfig.put(AppConfig.NAME, appConfig);
-        nubeConfig.put(SystemConfig.NAME, systemConfig);
-        nubeConfig.put(DeployConfig.NAME, deployConfig);
         JsonObject inputAppConfig = input.toJson().getJsonObject(AppConfig.NAME);
         JsonObject inputSystemConfig = input.toJson().getJsonObject(SystemConfig.NAME);
         JsonObject inputDeployConfig = input.toJson().getJsonObject(DeployConfig.NAME);
+        JsonObject appConfigJson = new JsonObject();
+        JsonObject systemConfig = new JsonObject();
+        JsonObject deployConfig = new JsonObject();
+
         for (Map.Entry<String, Object> entry : envConfig.entrySet()) {
             String[] keyArray = entry.getKey().split("\\.");
 
-            if (keyArray.length < 3) {
-                continue;
-            }
             switch (keyArray[1]) {
                 case APP:
-                    handleConfig(appConfig, inputAppConfig, entry, keyArray);
+                    handleConfig(appConfigJson, inputAppConfig, entry, keyArray);
                     break;
                 case SYSTEM:
                     handleConfig(systemConfig, inputSystemConfig, entry, keyArray);
@@ -154,27 +146,39 @@ public class ConfigProcessor {
                 case DEPLOY:
                     handleConfig(deployConfig, inputDeployConfig, entry, keyArray);
                     break;
-                default:
-                    //TODO case : dataDir
+                case DATA_DIR_LOWER_CASE:
+                    try {
+                        if (!String.class.isInstance(entry.getValue())) {
+                            continue;
+                        }
+                        FileUtils.toPath(entry.getValue().toString());
+                    } catch (NubeException ex) {
+                        continue;
+                    }
+                    nubeConfig.put(DATA_DIR, entry.getValue());
+                    break;
             }
         }
-        //TODO merge to NubeConfig class
-        System.out.println(appConfig);
-        System.out.println(systemConfig);
-        //        try {
-        //            SystemConfig sysConfig = new ObjectMapper().readValue(systemConfig.toString(), SystemConfig
-        //            .class);
-        //        } catch (IOException e) {
-        //            throw new ClassCastException(e.getLocalizedMessage());
-        //        }
-        System.out.println(deployConfig);
-        System.out.println(nubeConfig);
-        return Optional.of(finalAppConfig);
+
+        nubeConfig.put(AppConfig.NAME, new JsonObject(inputAppConfig.toString()).mergeIn(appConfigJson, true));
+        nubeConfig.put(SystemConfig.NAME, new JsonObject(inputSystemConfig.toString()).mergeIn(systemConfig, true));
+        nubeConfig.put(DeployConfig.NAME, new JsonObject(inputDeployConfig.toString()).mergeIn(deployConfig, true));
+
+        try {
+            return Optional.of(IConfig.MAPPER.copy()
+                                   .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                   .readValue(nubeConfig.toString(), clazz));
+        } catch (IOException e) {
+            throw new ClassCastException(e.getLocalizedMessage());
+        }
     }
 
     private void handleConfig(JsonObject config, JsonObject inputConfig, Entry<String, Object> entry,
                               String[] keyArray) {
         if (Objects.isNull(inputConfig)) {
+            return;
+        }
+        if (keyArray.length < 3) {
             return;
         }
         String propertyName = keyArray[2];
@@ -195,7 +199,7 @@ public class ConfigProcessor {
             return;
         }
         JsonObject overrideResult = checkAndUpdate(3, keyArray,
-                                                   entry.getValue().toString(),
+                                                   entry.getValue(),
                                                    inputAppConfig);
         if (Objects.isNull(overrideResult)) {
             return;
@@ -208,18 +212,6 @@ public class ConfigProcessor {
         }
     }
 
-    private boolean hasMatchChildConfig(String[] array, JsonObject input) {
-        for (String item : Arrays.stream(array).skip(2).collect(Collectors.toList())) {
-            if (input.getValue(item) != null || input.getValue("__" + item + "__") != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private JsonObject get(String item, JsonObject jsonObject) {
-        return new JsonObject().put(item, jsonObject);
-    }
 
     private void initDefaultOptions() {
         initSystemOption();
@@ -244,7 +236,7 @@ public class ConfigProcessor {
                                  Entry::getValue)));
     }
 
-    private JsonObject checkAndUpdate(int index, String[] array, String overrideValue, JsonObject input)
+    private JsonObject checkAndUpdate(int index, String[] array, Object overrideValue, JsonObject input)
         throws ClassCastException {
         String key = array[index];
         Object value = input.getValue(key);
