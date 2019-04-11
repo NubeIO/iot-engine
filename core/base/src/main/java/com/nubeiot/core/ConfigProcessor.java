@@ -1,7 +1,6 @@
 package com.nubeiot.core;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -27,18 +26,17 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 
-import lombok.Getter;
 import lombok.NonNull;
 
 public class ConfigProcessor {
 
-    private static final String NUBEIO = "NUBEIO";
+    private static final String NUBEIO_SYS = "NUBEIO.";
+    private static final String NUBEIO_ENV = "NUBEIO_";
     private static final String APP = "app";
     private static final String SYSTEM = "system";
     private static final String DEPLOY = "deploy";
     private static final String DATA_DIR = "dataDir";
     private static final String DATA_DIR_LOWER_CASE = "datadir";
-    @Getter
     private LinkedHashMap<ConfigStoreOptions, Function<JsonObject, Map<String, Object>>> mappingOptions;
     private Vertx vertx;
 
@@ -46,37 +44,6 @@ public class ConfigProcessor {
         this.vertx = vertx;
         mappingOptions = new LinkedHashMap<>();
         initDefaultOptions();
-    }
-
-    //To use in test. will be removed later
-    public static Map<String, Object> getConfigFromEnvironment(Vertx vertx) {
-        ConfigStoreOptions environmentStore = new ConfigStoreOptions().setType("env");
-        ConfigRetrieverOptions options = new ConfigRetrieverOptions().addStore(environmentStore);
-        ConfigRetriever retriever = ConfigRetriever.create(vertx, options);
-        retriever.getConfig(json -> {
-        });
-        Map<String, Object> mappedEnv = retriever.getCachedConfig()
-            .stream()
-            .filter(x -> x.getKey().startsWith(NUBEIO))
-            .collect(Collectors.toMap(key -> convertEnv(key.getKey()),
-                                      Map.Entry::getValue));
-        return mappedEnv;
-    }
-
-    //To use in test. will be removed later
-    public static JsonObject getConfigFromSystem(Vertx vertx) {
-        ConfigStoreOptions systemStore = new ConfigStoreOptions().setType("sys").setOptional(true);
-        ConfigRetrieverOptions options = new ConfigRetrieverOptions().addStore(systemStore);
-        ConfigRetriever retriever = ConfigRetriever.create(vertx, options);
-        retriever.setConfigurationProcessor(entries -> {
-            final Map<String, Object> collect = entries.stream()
-                .filter(x -> x.getKey().startsWith(NUBEIO.toLowerCase()))
-                .collect(Collectors.toMap(key -> convertEnv(key.getKey()),
-                                          Entry::getValue));
-            return new JsonObject(collect);
-        });
-        retriever.getConfig(json -> {});
-        return retriever.getCachedConfig();
     }
 
     private static String convertEnv(String key) {
@@ -94,7 +61,6 @@ public class ConfigProcessor {
         }
     }
 
-
     public Map<String, Object> mergeEnvAndSys() {
         Map<String, Object> result = new HashMap<>();
         mappingOptions.forEach((store, filterNubeVariables) -> {
@@ -110,6 +76,9 @@ public class ConfigProcessor {
 
     public <T extends IConfig> Optional<T> processAndOverride(@NonNull Class<T> clazz, IConfig provideConfig,
                                                               IConfig defaultConfig) {
+        if (Objects.isNull(provideConfig) && Objects.isNull(defaultConfig)) {
+            return Optional.empty();
+        }
         Map<String, Object> envConfig = this.mergeEnvAndSys();
         IConfig input;
         if (Objects.isNull(provideConfig)) {
@@ -129,16 +98,16 @@ public class ConfigProcessor {
         JsonObject inputAppConfig = input.toJson().getJsonObject(AppConfig.NAME);
         JsonObject inputSystemConfig = input.toJson().getJsonObject(SystemConfig.NAME);
         JsonObject inputDeployConfig = input.toJson().getJsonObject(DeployConfig.NAME);
-        JsonObject appConfigJson = new JsonObject();
+        JsonObject appConfig = new JsonObject();
         JsonObject systemConfig = new JsonObject();
         JsonObject deployConfig = new JsonObject();
 
         for (Map.Entry<String, Object> entry : envConfig.entrySet()) {
             String[] keyArray = entry.getKey().split("\\.");
-
+            //TODO should be able to handle the generic case
             switch (keyArray[1]) {
                 case APP:
-                    handleConfig(appConfigJson, inputAppConfig, entry, keyArray);
+                    handleConfig(appConfig, inputAppConfig, entry, keyArray);
                     break;
                 case SYSTEM:
                     handleConfig(systemConfig, inputSystemConfig, entry, keyArray);
@@ -160,7 +129,7 @@ public class ConfigProcessor {
             }
         }
 
-        nubeConfig.put(AppConfig.NAME, new JsonObject(inputAppConfig.toString()).mergeIn(appConfigJson, true));
+        nubeConfig.put(AppConfig.NAME, new JsonObject(inputAppConfig.toString()).mergeIn(appConfig, true));
         nubeConfig.put(SystemConfig.NAME, new JsonObject(inputSystemConfig.toString()).mergeIn(systemConfig, true));
         nubeConfig.put(DeployConfig.NAME, new JsonObject(inputDeployConfig.toString()).mergeIn(deployConfig, true));
 
@@ -212,7 +181,6 @@ public class ConfigProcessor {
         }
     }
 
-
     private void initDefaultOptions() {
         initSystemOption();
         initEnvironmentOption();
@@ -221,7 +189,7 @@ public class ConfigProcessor {
     private void initSystemOption() {
         ConfigStoreOptions systemStore = new ConfigStoreOptions().setType("sys").setOptional(true);
         mappingOptions.put(systemStore, entries -> entries.stream()
-            .filter(x -> x.getKey().startsWith(NUBEIO.toLowerCase()))
+            .filter(x -> x.getKey().startsWith(NUBEIO_SYS.toLowerCase()))
             .collect(
                 Collectors.toMap(key -> convertEnv(key.getKey()),
                                  Entry::getValue)));
@@ -230,7 +198,7 @@ public class ConfigProcessor {
     private void initEnvironmentOption() {
         ConfigStoreOptions environmentStore = new ConfigStoreOptions().setType("env").setOptional(true);
         mappingOptions.put(environmentStore, entries -> entries.stream()
-            .filter(x -> x.getKey().startsWith(NUBEIO))
+            .filter(x -> x.getKey().startsWith(NUBEIO_ENV))
             .collect(
                 Collectors.toMap(key -> convertEnv(key.getKey()),
                                  Entry::getValue)));
