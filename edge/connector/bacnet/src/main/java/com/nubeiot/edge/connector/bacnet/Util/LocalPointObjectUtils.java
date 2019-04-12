@@ -25,8 +25,11 @@ import com.serotonin.bacnet4j.type.primitive.Double;
 import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 
+//TODO: refactor for better testing
+
+
 /*
- * Static methods to create and add objects/points on the local BACnet device instance
+ * Static methods to create and add objects/points on the local BACnetInstance device instance
  *
  * essentially a JSON parser to create local objects
  */
@@ -37,6 +40,7 @@ public class LocalPointObjectUtils {
         ArrayList<PropertyValue> proplist = new ArrayList<>();
         String name = "NAME_ERROR";
         float presentValue = 0;
+        float covIncrement = 0;
         int inst;
         try {
             inst = Integer.parseInt(pointID.substring(pointID.length() - 1, pointID.length()));
@@ -44,7 +48,7 @@ public class LocalPointObjectUtils {
             //TODO: handle virtual points
             return null;
         }
-        //Have to get the name and present value first to create specific BACnet Object instance
+        //Have to get the name and present value first to create specific BACnetInstance Object instance
         String[] jsonkeys = json.getMap().keySet().toArray(new String[json.size()]);
         for (int i = 0; i < jsonkeys.length; i++) {
             try {
@@ -56,6 +60,8 @@ public class LocalPointObjectUtils {
                     name = p.getValue().toString();
                 } else if (p.getPropertyIdentifier() == PropertyIdentifier.presentValue) {
                     presentValue = ((Real) p.getValue()).floatValue();
+                } else if (p.getPropertyIdentifier() == PropertyIdentifier.covIncrement) {
+                    covIncrement = ((Real) p.getValue()).floatValue();
                 } else {
                     proplist.add(p);
                 }
@@ -67,26 +73,32 @@ public class LocalPointObjectUtils {
         try {
             switch (pointPrefix) {
                 case "UI":
-                    obj = new AnalogInputObject(localDevice, inst, name, presentValue, EngineeringUnits.noUnits, false);
+                    //                    obj = new AnalogInputObject(localDevice, inst, name, presentValue,
+                    //                    EngineeringUnits.noUnits, false );
+                    obj = new AnalogInputObject(localDevice, inst, name, presentValue, EngineeringUnits.noUnits,
+                                                false).supportCovReporting(covIncrement);
                     break;
                 case "UO":
                     obj = new AnalogOutputObject(localDevice, inst, name, presentValue, EngineeringUnits.noUnits, false,
-                                                 0);
+                                                 0).supportCovReporting(covIncrement);
+                    //                    obj = new AnalogOutputObject(localDevice, inst, name, presentValue, EngineeringUnits.noUnits, false,
+                    //                                                 0);
                     break;
                 case "DI":
-                    obj = new BinaryInputObject(localDevice, inst, name, BinaryPV.active, false, Polarity.normal);
+                    obj = new BinaryInputObject(localDevice, inst, name, BinaryPV.active, false,
+                                                Polarity.normal).supportCovReporting();
                     break;
                 case "DO": {
                     BinaryPV binaryVal = presentValue == 0 ? BinaryPV.inactive : BinaryPV.active;
                     obj = new BinaryOutputObject(localDevice, inst, name, binaryVal, false, Polarity.normal,
-                                                 BinaryPV.inactive);
+                                                 BinaryPV.inactive).supportCovReporting();
                     break;
                 }
                 case "R": {
                     inst += 10;
                     BinaryPV binaryVal = presentValue == 0 ? BinaryPV.inactive : BinaryPV.active;
                     obj = new BinaryOutputObject(localDevice, inst, name, binaryVal, false, Polarity.normal,
-                                                 BinaryPV.inactive);
+                                                 BinaryPV.inactive).supportCovReporting();
                     break;
                 }
                 default: {
@@ -114,6 +126,10 @@ public class LocalPointObjectUtils {
             }
             case "value": {
                 return new PropertyValue(PropertyIdentifier.presentValue, getValue(val));
+            }
+            case "historySettings": {
+                return new PropertyValue(PropertyIdentifier.covIncrement,
+                                         getValue((JsonObject.mapFrom(val).getFloat("tolerance"))));
             }
             //            case "tags": {
             //TODO: can't write tags , certain objects don't allow... does this matter?

@@ -11,13 +11,25 @@
   },
   "__app__": {
     "__bacnet__": {
-      "deviceName": "NubeIOSimulator",
-      "deviceId": 3145749,
+      "deviceName": "NubeIOMaster",
+      "deviceId": 11111,
       "__ipConfigs__": [
         {
-          "name": "ip1"
+          "name": "ip1",
+          "networkInterface": "br-2e592f75ad7b"
         }
       ]
     }
   }
 }
+
+
+
+
+
+
+}
+
+
+
+

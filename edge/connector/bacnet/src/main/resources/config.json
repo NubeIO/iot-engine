@@ -24,8 +24,14 @@
         "enabled": false
       }
     },
-    "deviceName": "NubeIOEdge28",
-    "deviceID": 4321,
-    "networkInterface": ""
+    "__bacnet__": {
+      "deviceName": "NubeIOEdge28",
+      "deviceId": 4321,
+      "__ipConfigs__": [
+        {
+          "name": "ip1"
+        }
+      ]
+    }
   }
 }

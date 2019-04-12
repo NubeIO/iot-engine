@@ -33,18 +33,18 @@ public class BACnetTest {
     Vertx vertx;
     LocalDevice localDevice;
     DefaultTransport transport;
-    BACnet bacnetInstance;
+    BACnetInstance bacnetInstance;
 
     @Before
-    public void beforeAll() throws Exception {
+    public void beforeEach() throws Exception {
         vertx = Mockito.mock(Vertx.class);
         transport = Mockito.mock(DefaultTransport.class);
         localDevice = new LocalDevice(1234, transport);
-        bacnetInstance = BACnet.createBACnet("testInstance", 1234, eventController, vertx, localDevice);
+        bacnetInstance = BACnetInstance.createBACnet(localDevice, vertx);
     }
 
     @After
-    public void afterAll() throws Exception {
+    public void afterEach() throws Exception {
         localDevice.terminate();
     }
 

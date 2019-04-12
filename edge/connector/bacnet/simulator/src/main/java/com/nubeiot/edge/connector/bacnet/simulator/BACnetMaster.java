@@ -5,7 +5,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 
-public class BACnetSimulator extends BACnetVerticle {
+public class BACnetMaster extends BACnetVerticle {
 
     @Override
     protected void initLocalPoints(String localPointsAddress) {
@@ -14,3 +14,5 @@ public class BACnetSimulator extends BACnetVerticle {
     }
 
 }
+
+// you can just delete this now

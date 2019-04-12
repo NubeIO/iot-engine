@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import com.serotonin.bacnet4j.transport.Transport;
+import com.serotonin.bacnet4j.transport.DefaultTransport;
 
 class TransportMstp implements TransportProvider {
 
@@ -14,8 +14,6 @@ class TransportMstp implements TransportProvider {
     //    }
 
     @Override
-    public Transport get() {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
+    public DefaultTransport get() { throw new UnsupportedOperationException("Not yet implemented"); }
 
 }

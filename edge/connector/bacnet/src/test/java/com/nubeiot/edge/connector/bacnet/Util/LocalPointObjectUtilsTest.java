@@ -34,7 +34,7 @@ public class LocalPointObjectUtilsTest {
     private JsonObject points;
 
     @Before
-    public void beforeAll() throws Exception {
+    public void beforeEach() throws Exception {
         Transport transport = Mockito.mock(DefaultTransport.class);
         localDevice = new LocalDevice(1234, transport);
 

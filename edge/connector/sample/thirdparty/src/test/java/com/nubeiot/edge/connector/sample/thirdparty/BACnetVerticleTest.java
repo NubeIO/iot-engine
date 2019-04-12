@@ -9,18 +9,19 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.edge.connector.bacnet.BACnet;
+import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
+import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 import com.serotonin.bacnet4j.type.Encodable;
 
 public class BACnetVerticleTest extends BACnetVerticle {
 
-    BACnet bacnetInstance;
+    BACnetInstance bacnetInstance;
 
     @Override
-    public void startBACNet() {
-        bacnetInstance = Mockito.mock(BACnet.class);
+    protected void startBACnet(BACnetConfig baCnetConfig) {
+        bacnetInstance = Mockito.mock(BACnetInstance.class);
 
         Mockito.when(bacnetInstance.getRemoteDevices()).thenReturn(Single.just(new JsonObject()));
         Mockito.when(bacnetInstance.getRemoteDeviceExtendedInfo(Mockito.anyInt()))
