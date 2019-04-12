@@ -46,19 +46,11 @@ public class ConfigProcessor {
         initDefaultOptions();
     }
 
-    private static String convertEnv(String key) {
+    private String convertEnv(String key) {
         if (Strings.isBlank(key)) {
             return key;
         }
-        return lowerCase(key).replace('_', '.');
-    }
-
-    private static String lowerCase(String key) {
-        if (Objects.isNull(key)) {
-            return "";
-        } else {
-            return key.toLowerCase(Locale.ENGLISH);
-        }
+        return key.toLowerCase(Locale.ENGLISH).replace('_', '.');
     }
 
     public Map<String, Object> mergeEnvAndSys() {
@@ -104,27 +96,28 @@ public class ConfigProcessor {
 
         for (Map.Entry<String, Object> entry : envConfig.entrySet()) {
             String[] keyArray = entry.getKey().split("\\.");
+            Object overrideValue = entry.getValue();
             //TODO should be able to handle the generic case
             switch (keyArray[1]) {
                 case APP:
-                    handleConfig(appConfig, inputAppConfig, entry, keyArray);
+                    handleConfig(appConfig, inputAppConfig, overrideValue, keyArray);
                     break;
                 case SYSTEM:
-                    handleConfig(systemConfig, inputSystemConfig, entry, keyArray);
+                    handleConfig(systemConfig, inputSystemConfig, overrideValue, keyArray);
                     break;
                 case DEPLOY:
-                    handleConfig(deployConfig, inputDeployConfig, entry, keyArray);
+                    handleConfig(deployConfig, inputDeployConfig, overrideValue, keyArray);
                     break;
                 case DATA_DIR_LOWER_CASE:
                     try {
-                        if (!String.class.isInstance(entry.getValue())) {
+                        if (!String.class.isInstance(overrideValue)) {
                             continue;
                         }
-                        FileUtils.toPath(entry.getValue().toString());
+                        FileUtils.toPath(overrideValue.toString());
                     } catch (NubeException ex) {
                         continue;
                     }
-                    nubeConfig.put(DATA_DIR, entry.getValue());
+                    nubeConfig.put(DATA_DIR, overrideValue);
                     break;
             }
         }
@@ -142,7 +135,7 @@ public class ConfigProcessor {
         }
     }
 
-    private void handleConfig(JsonObject config, JsonObject inputConfig, Entry<String, Object> entry,
+    private void handleConfig(JsonObject config, JsonObject inputConfig, Object overrideValue,
                               String[] keyArray) {
         if (Objects.isNull(inputConfig)) {
             return;
@@ -152,23 +145,23 @@ public class ConfigProcessor {
         }
         String propertyName = keyArray[2];
         if (Objects.nonNull(inputConfig.getValue(propertyName))) {
-            this.handleChildElement(config, inputConfig, entry, keyArray, propertyName);
+            this.handleChildElement(config, inputConfig, overrideValue, keyArray, propertyName);
         } else if (Objects.nonNull(inputConfig.getValue("__" + propertyName + "__"))) {
-            this.handleChildElement(config, inputConfig, entry, keyArray, "__" + propertyName + "__");
+            this.handleChildElement(config, inputConfig, overrideValue, keyArray, "__" + propertyName + "__");
         } else {
-            this.handleChildElement(config, inputConfig, entry, keyArray, propertyName);
+            this.handleChildElement(config, inputConfig, overrideValue, keyArray, propertyName);
         }
     }
 
     private void handleChildElement(JsonObject appConfig, JsonObject
-        inputAppConfig, Entry<String, Object> entry,
+        inputAppConfig, Object overrideValue,
                                     String[] keyArray, String temp) {
         if (keyArray.length < 4) {
-            appConfig.put(keyArray[2], entry.getValue());
+            appConfig.put(keyArray[2], overrideValue);
             return;
         }
         JsonObject overrideResult = checkAndUpdate(3, keyArray,
-                                                   entry.getValue(),
+                                                   overrideValue,
                                                    inputAppConfig);
         if (Objects.isNull(overrideResult)) {
             return;
@@ -177,7 +170,9 @@ public class ConfigProcessor {
         if (Objects.isNull(childElement)) {
             appConfig.put(temp, overrideResult);
         } else {
-            childElement = childElement.mergeIn(overrideResult);
+            overrideResult.getMap().forEach((key, val) -> {
+                childElement.put(key, val);
+            });
         }
     }
 
@@ -191,7 +186,7 @@ public class ConfigProcessor {
         mappingOptions.put(systemStore, entries -> entries.stream()
             .filter(x -> x.getKey().startsWith(NUBEIO_SYS.toLowerCase()))
             .collect(
-                Collectors.toMap(key -> convertEnv(key.getKey()),
+                Collectors.toMap(entry -> entry.getKey(),
                                  Entry::getValue)));
     }
 
@@ -200,7 +195,7 @@ public class ConfigProcessor {
         mappingOptions.put(environmentStore, entries -> entries.stream()
             .filter(x -> x.getKey().startsWith(NUBEIO_ENV))
             .collect(
-                Collectors.toMap(key -> convertEnv(key.getKey()),
+                Collectors.toMap(entry -> convertEnv(entry.getKey()),
                                  Entry::getValue)));
     }
 
