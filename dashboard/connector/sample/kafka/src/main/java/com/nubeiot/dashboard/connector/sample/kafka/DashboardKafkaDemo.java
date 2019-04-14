@@ -9,7 +9,7 @@ import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.core.http.ws.WebsocketEventMetadata;
+import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
 import com.nubeiot.core.kafka.KafkaContext;
 import com.nubeiot.core.kafka.KafkaEventMetadata;
 import com.nubeiot.core.kafka.KafkaRouter;
@@ -57,7 +57,7 @@ public class DashboardKafkaDemo extends ContainerVerticle {
 
     private HttpServerRouter initHttpRouter() {
         return new HttpServerRouter().registerEventBusApi(EnableKafkaProducerApi.class)
-                                     .registerEventBusSocket(WebsocketEventMetadata.create(KAFKA_EB_PUBLISHER));
+                                     .registerEventBusSocket(WebsocketServerEventMetadata.create(KAFKA_EB_PUBLISHER));
     }
 
     private void startConsumer(KafkaContext context) {

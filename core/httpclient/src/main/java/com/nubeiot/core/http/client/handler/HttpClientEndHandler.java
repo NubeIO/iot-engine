@@ -14,15 +14,15 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public abstract class ClientEndHandler implements Handler<Void>, Supplier<HttpClient> {
+public abstract class HttpClientEndHandler implements Handler<Void>, Supplier<HttpClient> {
 
     @NonNull
     private final HttpClient client;
 
     @SuppressWarnings("unchecked")
-    public static <T extends ClientEndHandler> T create(HttpClient client, Class<T> endHandlerClass) {
-        if (Objects.isNull(endHandlerClass) || ClientEndHandler.class.equals(endHandlerClass)) {
-            return (T) new ClientEndHandler(client) {};
+    public static <T extends HttpClientEndHandler> T create(HttpClient client, Class<T> endHandlerClass) {
+        if (Objects.isNull(endHandlerClass) || HttpClientEndHandler.class.equals(endHandlerClass)) {
+            return (T) new HttpClientEndHandler(client) {};
         }
         return (T) ReflectionClass.createObject(endHandlerClass,
                                                 new LinkedHashMap<>(Collections.singletonMap(HttpClient.class, client)))

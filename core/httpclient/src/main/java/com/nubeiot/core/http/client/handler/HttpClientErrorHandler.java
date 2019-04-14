@@ -18,16 +18,16 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public abstract class ClientErrorHandler implements Handler<Throwable>, Supplier<SingleEmitter<ResponseData>> {
+public abstract class HttpClientErrorHandler implements Handler<Throwable>, Supplier<SingleEmitter<ResponseData>> {
 
     @NonNull
     private final SingleEmitter<ResponseData> emitter;
 
     @SuppressWarnings("unchecked")
-    public static <T extends ClientErrorHandler> T create(SingleEmitter<ResponseData> emitter,
-                                                          Class<T> endHandlerClass) {
-        if (Objects.isNull(endHandlerClass) || ClientErrorHandler.class.equals(endHandlerClass)) {
-            return (T) new ClientErrorHandler(emitter) {};
+    public static <T extends HttpClientErrorHandler> T create(SingleEmitter<ResponseData> emitter,
+                                                              Class<T> endHandlerClass) {
+        if (Objects.isNull(endHandlerClass) || HttpClientErrorHandler.class.equals(endHandlerClass)) {
+            return (T) new HttpClientErrorHandler(emitter) {};
         }
         return (T) ReflectionClass.createObject(endHandlerClass, new LinkedHashMap<>(
             Collections.singletonMap(SingleEmitter.class, emitter))).get();

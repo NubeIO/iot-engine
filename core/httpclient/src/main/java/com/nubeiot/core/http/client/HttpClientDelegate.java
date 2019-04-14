@@ -54,15 +54,14 @@ public interface HttpClientDelegate extends Supplier<HttpClient> {
      * @param path         Server path. Server host and port will reuse from {@link #getConfig()}
      * @param method       Http Method
      * @param requestData  Request data
-     * @param swallowError Shadow error if {@code Response HTTP status code >= 400}
+     * @param swallowError Swallow error in {@link ResponseData} instead raise {@link Single#error(Throwable)} if {@code
+     *                     HTTP Response status code >= 400}
      * @return single response data. Must be subscribe before using
      */
     default Single<ResponseData> execute(String path, HttpMethod method, RequestData requestData,
                                          boolean swallowError) {
-        return this.execute(new RequestOptions().setHost(getConfig().getOptions().getDefaultHost())
-                                                .setPort(getConfig().getOptions().getDefaultPort())
-                                                .setSsl(getConfig().getOptions().isSsl())
-                                                .setURI(path), method, requestData, swallowError);
+        return this.execute(ClientDelegate.evaluateRequestOpts(getConfig(), path, requestData), method, requestData,
+                            swallowError);
     }
 
     /**

@@ -7,6 +7,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 
 import io.vertx.core.buffer.Buffer;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventMessage;
 
 public final class EventMessageDeserializer implements Deserializer<EventMessage> {
@@ -16,7 +17,7 @@ public final class EventMessageDeserializer implements Deserializer<EventMessage
 
     @Override
     public EventMessage deserialize(String topic, byte[] data) {
-        return Objects.isNull(data) ? null : EventMessage.from(Buffer.buffer(data).toJsonObject());
+        return Objects.isNull(data) ? null : EventMessage.tryParse(JsonData.tryParse(Buffer.buffer(data)));
     }
 
     @Override

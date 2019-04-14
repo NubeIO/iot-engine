@@ -1,9 +1,11 @@
 {
   "userAgent": "nubeio.httpclient",
-  "clientWriterClass": "com.nubeiot.core.http.client.handler.HttpClientWriter",
-  "errorHandlerClass": "com.nubeiot.core.http.client.handler.ClientErrorHandler",
-  "endHandlerClass": "com.nubeiot.core.http.client.handler.ClientEndHandler",
-  "lightweightBodyHandlerClass": "com.nubeiot.core.http.client.handler.LightweightResponseBodyHandler",
+  "handlerConfig": {
+    "clientWriterClass": "com.nubeiot.core.http.client.handler.HttpClientWriter",
+    "errorHandlerClass": "com.nubeiot.core.http.client.handler.HttpClientErrorHandler",
+    "endHandlerClass": "com.nubeiot.core.http.client.handler.HttpClientEndHandler",
+    "lightBodyHandlerClass": "com.nubeiot.core.http.client.handler.HttpLightResponseBodyHandler"
+  },
   "options": {
     "sendBufferSize": -1,
     "receiveBufferSize": -1,

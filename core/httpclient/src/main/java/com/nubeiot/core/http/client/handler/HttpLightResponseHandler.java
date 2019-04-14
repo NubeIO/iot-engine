@@ -9,10 +9,10 @@ import com.nubeiot.core.dto.ResponseData;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Represents for handling lightweight response data
+ * Represents for handling lightweight {@code HTTP response data}
  */
 @RequiredArgsConstructor
-public final class LightweightResponseHandler<T extends LightweightResponseBodyHandler>
+public final class HttpLightResponseHandler<T extends HttpLightResponseBodyHandler>
     implements Handler<HttpClientResponse> {
 
     private final Class<T> bodyHandlerClass;
@@ -21,7 +21,7 @@ public final class LightweightResponseHandler<T extends LightweightResponseBodyH
 
     @Override
     public void handle(HttpClientResponse response) {
-        T bodyHandler = LightweightResponseBodyHandler.create(response, emitter, swallowError, bodyHandlerClass);
+        T bodyHandler = HttpLightResponseBodyHandler.create(response, emitter, swallowError, bodyHandlerClass);
         response.bodyHandler(bodyHandler).exceptionHandler(emitter::onError);
     }
 

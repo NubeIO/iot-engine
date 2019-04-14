@@ -40,14 +40,14 @@ public class EventMessageTest {
 
     @Test(expected = NubeException.class)
     public void test_deserialize_missing_action() {
-        EventMessage.from(new JsonObject("{\"data\":{\"groupId\":\"io.nubespark\"}}"));
+        EventMessage.tryParse(new JsonObject("{\"data\":{\"groupId\":\"io.nubespark\"}}"));
     }
 
     @Test
     public void test_deserialize_success() {
         JsonObject jsonObject = new JsonObject("{\"action\":\"CREATE\",\"data\":{\"groupId\":\"io.nubespark\"," +
                                                "\"artifactId\":\"nube-edge-ditto-driver\"}}");
-        EventMessage message = EventMessage.from(jsonObject.getMap());
+        EventMessage message = EventMessage.tryParse(jsonObject.getMap());
         Assert.assertFalse(message.isError());
         Assert.assertFalse(message.isSuccess());
         Assert.assertEquals(EventAction.CREATE, message.getAction());
@@ -59,7 +59,7 @@ public class EventMessageTest {
     @Test
     public void test_deserialize_success_none_data() {
         JsonObject jsonObject = new JsonObject("{\"status\":\"SUCCESS\",\"action\":\"CREATE\"}");
-        EventMessage message = EventMessage.from(jsonObject.getMap());
+        EventMessage message = EventMessage.tryParse(jsonObject.getMap());
         Assert.assertFalse(message.isError());
         Assert.assertTrue(message.isSuccess());
         Assert.assertEquals(EventAction.CREATE, message.getAction());
@@ -72,7 +72,7 @@ public class EventMessageTest {
         JsonObject jsonObject = new JsonObject(
             "{\"status\":\"FAILED\",\"action\":\"REMOVE\",\"error\":{\"code\":\"UNKNOWN_ERROR\"," +
             "\"message\":\"UNKNOWN_ERROR | Cause: xxx\"}}");
-        EventMessage message = EventMessage.from(jsonObject);
+        EventMessage message = EventMessage.tryParse(jsonObject);
         Assert.assertTrue(message.isError());
         Assert.assertFalse(message.isSuccess());
         Assert.assertEquals(EventAction.REMOVE, message.getAction());

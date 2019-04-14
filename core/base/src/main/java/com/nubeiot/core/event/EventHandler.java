@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -55,9 +54,8 @@ public interface EventHandler extends Consumer<Message<Object>> {
     @Override
     default void accept(Message<Object> message) {
         Logger logger = LoggerFactory.getLogger(this.getClass());
-        EventMessage msg = EventMessage.from(message.body());
+        EventMessage msg = EventMessage.tryParse(message.body());
         EventAction action = msg.getAction();
-        logger.info("Executing action: {} with data: {}", action, msg.toJson().encode());
         AnnotationHandler<? extends EventHandler> handler = new AnnotationHandler<>(this);
         try {
             handler.execute(msg)

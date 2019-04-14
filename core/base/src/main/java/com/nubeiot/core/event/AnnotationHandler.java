@@ -45,11 +45,50 @@ final class AnnotationHandler<T extends EventHandler> {
         this.eventHandler = eventHandler;
         this.func = SerializerFunction.builder()
                                       .mapper(eventHandler.mapper())
-                                      .backupKey(eventHandler.fallback())
+                                      .backupKey(eventHandler.fallback()).lenient(true)
                                       .build();
     }
 
+    static MethodInfo getMethodByAnnotation(@NonNull Class<?> clazz, @NonNull EventAction action) {
+        List<Method> methods = ReflectionMethod.find(clazz, filterMethod(action));
+        if (methods.size() != 1) {
+            throw new ImplementationError(ErrorCode.EVENT_ERROR,
+                                          Strings.format("Error when implementing @EventContractor in class {0}",
+                                                         clazz.getName()));
+        }
+        return to(methods.get(0));
+    }
+
+    private static MethodInfo to(Method method) {
+        EventContractor contractor = method.getAnnotation(EventContractor.class);
+        LinkedHashMap<String, Class<?>> inputs = Stream.of(method.getParameters())
+                                                       .collect(Collectors.toMap(AnnotationHandler::paramName,
+                                                                                 Parameter::getType, throwingMerger(),
+                                                                                 LinkedHashMap::new));
+        return new MethodInfo(method, contractor.returnType(), inputs);
+    }
+
+    private static String paramName(Parameter parameter) {
+        Param param = parameter.getAnnotation(Param.class);
+        return Objects.nonNull(param) && Strings.isNotBlank(param.value()) ? param.value() : parameter.getName();
+    }
+
+    private static Predicate<Method> filterMethod(EventAction action) {
+        return Functions.and(Reflections.hasModifiers(Modifier.PUBLIC), Reflections.notModifiers(Modifier.STATIC),
+                             Reflections.hasAnnotation(EventContractor.class), method -> {
+                EventContractor contractor = method.getAnnotation(EventContractor.class);
+                return !ReflectionClass.assertDataType(method.getReturnType(), Void.class) &&
+                       ReflectionClass.assertDataType(method.getReturnType(), contractor.returnType()) &&
+                       Stream.of(contractor.action()).anyMatch(eventType -> action == eventType);
+            });
+    }
+
+    private static <T> BinaryOperator<T> throwingMerger() {
+        return (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); };
+    }
+
     Single<JsonObject> execute(@NonNull EventMessage message) {
+        logger.debug("Executing action '{}' in listener '{}'", message.getAction(), eventHandler.getClass());
         if (!eventHandler.getAvailableEvents().contains(message.getAction())) {
             throw new StateException("Unsupported event " + message.getAction());
         }
@@ -89,44 +128,6 @@ final class AnnotationHandler<T extends EventHandler> {
             return new Object[] {convertParam(data, params.entrySet().iterator().next(), true)};
         }
         return params.entrySet().stream().map(entry -> convertParam(data, entry, false)).toArray();
-    }
-
-    static MethodInfo getMethodByAnnotation(@NonNull Class<?> clazz, @NonNull EventAction action) {
-        List<Method> methods = ReflectionMethod.find(clazz, filterMethod(action));
-        if (methods.isEmpty() || methods.size() > 1) {
-            throw new ImplementationError(NubeException.ErrorCode.EVENT_ERROR,
-                                          Strings.format("Error when implementing @EventContractor in class {0}",
-                                                         clazz.getName()));
-        }
-        return to(methods.get(0));
-    }
-
-    private static MethodInfo to(Method method) {
-        EventContractor contractor = method.getAnnotation(EventContractor.class);
-        LinkedHashMap<String, Class<?>> inputs = Stream.of(method.getParameters())
-                                                       .collect(Collectors.toMap(AnnotationHandler::paramName,
-                                                                                 Parameter::getType, throwingMerger(),
-                                                                                 LinkedHashMap::new));
-        return new MethodInfo(method, contractor.returnType(), inputs);
-    }
-
-    private static String paramName(Parameter parameter) {
-        Param param = parameter.getAnnotation(Param.class);
-        return Objects.nonNull(param) && Strings.isNotBlank(param.value()) ? param.value() : parameter.getName();
-    }
-
-    private static Predicate<Method> filterMethod(EventAction action) {
-        return Functions.and(Reflections.hasModifiers(Modifier.PUBLIC), Reflections.notModifiers(Modifier.STATIC),
-                             Reflections.hasAnnotation(EventContractor.class), method -> {
-                EventContractor contractor = method.getAnnotation(EventContractor.class);
-                return !ReflectionClass.assertDataType(method.getReturnType(), Void.class) &&
-                       ReflectionClass.assertDataType(method.getReturnType(), contractor.returnType()) &&
-                       Stream.of(contractor.action()).anyMatch(eventType -> action == eventType);
-            });
-    }
-
-    private static <T> BinaryOperator<T> throwingMerger() {
-        return (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); };
     }
 
     private Object convertParam(JsonObject data, Entry<String, Class<?>> next, boolean oneParam) {

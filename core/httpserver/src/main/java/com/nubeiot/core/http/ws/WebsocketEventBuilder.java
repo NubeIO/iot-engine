@@ -24,6 +24,7 @@ import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.HttpConfig.WebsocketConfig;
 import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
 import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
@@ -39,7 +40,7 @@ public final class WebsocketEventBuilder {
     private final Logger logger = LoggerFactory.getLogger(WebsocketEventBuilder.class);
     private final Vertx vertx;
     private final Router router;
-    private final Map<String, List<WebsocketEventMetadata>> socketsByPath = new HashMap<>();
+    private final Map<String, List<WebsocketServerEventMetadata>> socketsByPath = new HashMap<>();
     private WebsocketConfig websocketConfig;
     private Class<? extends WebsocketBridgeEventHandler> bridgeHandlerClass = WebsocketBridgeEventHandler.class;
     @Getter(AccessLevel.PACKAGE)
@@ -56,23 +57,23 @@ public final class WebsocketEventBuilder {
         if (Strings.isNotBlank(rootWs)) {
             String root = Urls.combinePath(rootWs);
             if (!Urls.validatePath(root)) {
-                throw new InvalidUrlException("Root API is not valid");
+                throw new InvalidUrlException("Root Websocket is not valid");
             }
             this.rootWs = root;
         }
         return this;
     }
 
-    public WebsocketEventBuilder register(@NonNull WebsocketEventMetadata socketMetadata) {
+    public WebsocketEventBuilder register(@NonNull WebsocketServerEventMetadata socketMetadata) {
         socketsByPath.computeIfAbsent(socketMetadata.getPath(), k -> new ArrayList<>()).add(socketMetadata);
         return this;
     }
 
-    public WebsocketEventBuilder register(@NonNull WebsocketEventMetadata... eventBusSockets) {
+    public WebsocketEventBuilder register(@NonNull WebsocketServerEventMetadata... eventBusSockets) {
         return this.register(Arrays.asList(eventBusSockets));
     }
 
-    public WebsocketEventBuilder register(@NonNull Collection<WebsocketEventMetadata> eventBusSockets) {
+    public WebsocketEventBuilder register(@NonNull Collection<WebsocketServerEventMetadata> eventBusSockets) {
         eventBusSockets.stream().filter(Objects::nonNull).forEach(this::register);
         return this;
     }
@@ -99,14 +100,14 @@ public final class WebsocketEventBuilder {
         return router;
     }
 
-    Map<String, List<WebsocketEventMetadata>> validate() {
+    Map<String, List<WebsocketServerEventMetadata>> validate() {
         if (this.socketsByPath.isEmpty()) {
             throw new InitializerError("No socket handler given, register at least one.");
         }
         return socketsByPath;
     }
 
-    private BridgeOptions createBridgeOptions(String fullPath, List<WebsocketEventMetadata> metadata) {
+    private BridgeOptions createBridgeOptions(String fullPath, List<WebsocketServerEventMetadata> metadata) {
         BridgeOptions opts = new BridgeOptions(config().getBridgeOptions());
         metadata.forEach(m -> {
             EventModel listener = m.getListener();
@@ -125,7 +126,7 @@ public final class WebsocketEventBuilder {
     }
 
     private WebsocketBridgeEventHandler createHandler(EventController controller,
-                                                      List<WebsocketEventMetadata> socketMapping) {
+                                                      List<WebsocketServerEventMetadata> socketMapping) {
         Map<Class, Object> map = new LinkedHashMap<>();
         map.put(EventController.class, controller);
         map.put(List.class, socketMapping);

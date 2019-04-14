@@ -6,7 +6,7 @@ import io.vertx.core.http.HttpClientResponse;
 /**
  * Represents for handling large response data. It is suite for downloading data
  */
-public class LargeResponseHandler implements Handler<HttpClientResponse> {
+public class HttpHeavyResponseHandler implements Handler<HttpClientResponse> {
 
     @Override
     public void handle(HttpClientResponse event) {

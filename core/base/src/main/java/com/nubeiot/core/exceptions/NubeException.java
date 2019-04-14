@@ -43,10 +43,8 @@ public class NubeException extends RuntimeException {
         INITIALIZER_ERROR,
         ENGINE_ERROR,
         CLUSTER_ERROR,
-        EVENT_ERROR,
-        DATABASE_ERROR, STATE_ERROR, TIMEOUT_ERROR,
+        EVENT_ERROR, DATABASE_ERROR, STATE_ERROR, TIMEOUT_ERROR,
         UNKNOWN_ERROR
-
     }
 
 }

@@ -17,7 +17,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.Vertx;
-import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.reactivex.servicediscovery.ServiceReference;
 import io.vertx.servicediscovery.Record;
@@ -29,7 +28,6 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.ServiceException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.http.client.ClientUtils;
 import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.micro.MicroConfig.BackendConfig;
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
@@ -111,21 +109,6 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     public Single<Record> addEventMessageRecord(String name, String address, EventMethodDefinition definition,
                                                 JsonObject metadata) {
         return addDecoratorRecord(EventMessageService.createRecord(name, address, definition, metadata));
-    }
-
-    /**
-     * Will be removed soon
-     *
-     * @deprecated Use {@link #executeHttpService(Function, String, HttpMethod, RequestData)}
-     */
-    public Single<Buffer> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
-                                             JsonObject headers, JsonObject payload) {
-        return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
-            ServiceReference reference = get().getReference(record);
-            return circuitController.wrap(
-                ClientUtils.execute(reference.getAs(io.vertx.reactivex.core.http.HttpClient.class), path, method,
-                                    headers, payload, v -> reference.release()));
-        }).doOnError(t -> logger.error("Failed when redirect to {}::{}", t, method, path));
     }
 
     public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,

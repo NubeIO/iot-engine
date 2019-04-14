@@ -118,8 +118,34 @@ public final class EventMessage implements Serializable, JsonData {
         return new EventMessage(action, status, data);
     }
 
-    public static EventMessage from(@NonNull Object object) {
-        return JsonData.from(object, EventMessage.class, "Invalid event message format");
+    /**
+     * Try parse given object to {@link EventMessage}
+     *
+     * @param object any non null object
+     * @return event message instance
+     * @throws NubeException if wrong format
+     */
+    public static EventMessage tryParse(@NonNull Object object) {
+        return tryParse(object, false);
+    }
+
+    /**
+     * Try parse with fallback data
+     *
+     * @param object  any non null object
+     * @param lenient {@code true} if want to force given object to data json with {@code action} is {@link
+     *                EventAction#UNKNOWN}
+     * @return event message instance
+     */
+    public static EventMessage tryParse(@NonNull Object object, boolean lenient) {
+        try {
+            return JsonData.from(object, EventMessage.class, "Invalid event message format");
+        } catch (NubeException e) {
+            if (lenient) {
+                return EventMessage.initial(EventAction.UNKNOWN, JsonData.tryParse(object));
+            }
+            throw e;
+        }
     }
 
     @JsonInclude(Include.NON_EMPTY)
@@ -128,6 +154,7 @@ public final class EventMessage implements Serializable, JsonData {
         return Objects.isNull(data) ? null : JsonData.from(data, dataClass).toJson();
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T data() {
         return Objects.isNull(data) ? null : (T) JsonData.from(data, dataClass);
     }

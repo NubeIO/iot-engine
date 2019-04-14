@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
 
 public class WebsocketEventBuilderTest {
@@ -15,7 +16,7 @@ public class WebsocketEventBuilderTest {
 
     @Test(expected = NullPointerException.class)
     public void test_register_null() {
-        new WebsocketEventBuilder().register((WebsocketEventMetadata) null);
+        new WebsocketEventBuilder().register((WebsocketServerEventMetadata) null);
     }
 
     @Test
@@ -28,26 +29,30 @@ public class WebsocketEventBuilderTest {
 
     @Test
     public void test_one_metadata() {
-        WebsocketEventMetadata metadata = WebsocketEventMetadata.create(MockWebsocketEvent.SERVER_LISTENER,
-                                                                        MockWebsocketEvent.SERVER_PROCESSOR);
+        WebsocketServerEventMetadata metadata = WebsocketServerEventMetadata.create(MockWebsocketEvent.SERVER_LISTENER,
+                                                                                    MockWebsocketEvent.SERVER_PROCESSOR);
         Assert.assertEquals(1, new WebsocketEventBuilder().register(metadata).validate().size());
     }
 
     @Test
     public void test_register_many_metadata_with_same_path() {
-        WebsocketEventMetadata metadata1 = WebsocketEventMetadata.create("xy", MockWebsocketEvent.SERVER_LISTENER,
-                                                                         MockWebsocketEvent.SERVER_PROCESSOR);
-        WebsocketEventMetadata metadata2 = WebsocketEventMetadata.create("xy", MockWebsocketEvent.SERVER_LISTENER,
-                                                                         MockWebsocketEvent.SERVER_PROCESSOR);
+        WebsocketServerEventMetadata metadata1 = WebsocketServerEventMetadata.create("xy",
+                                                                                     MockWebsocketEvent.SERVER_LISTENER,
+                                                                                     MockWebsocketEvent.SERVER_PROCESSOR);
+        WebsocketServerEventMetadata metadata2 = WebsocketServerEventMetadata.create("xy",
+                                                                                     MockWebsocketEvent.SERVER_LISTENER,
+                                                                                     MockWebsocketEvent.SERVER_PROCESSOR);
         Assert.assertEquals(1, new WebsocketEventBuilder().register(metadata1, metadata2).validate().size());
     }
 
     @Test
     public void test_register_many_metadata_with_different_path() {
-        WebsocketEventMetadata metadata1 = WebsocketEventMetadata.create("xy", MockWebsocketEvent.SERVER_LISTENER,
-                                                                         MockWebsocketEvent.SERVER_PROCESSOR);
-        WebsocketEventMetadata metadata2 = WebsocketEventMetadata.create("abc", MockWebsocketEvent.SERVER_LISTENER,
-                                                                         MockWebsocketEvent.SERVER_PROCESSOR);
+        WebsocketServerEventMetadata metadata1 = WebsocketServerEventMetadata.create("xy",
+                                                                                     MockWebsocketEvent.SERVER_LISTENER,
+                                                                                     MockWebsocketEvent.SERVER_PROCESSOR);
+        WebsocketServerEventMetadata metadata2 = WebsocketServerEventMetadata.create("abc",
+                                                                                     MockWebsocketEvent.SERVER_LISTENER,
+                                                                                     MockWebsocketEvent.SERVER_PROCESSOR);
         Assert.assertEquals(2, new WebsocketEventBuilder().register(metadata1, metadata2).validate().size());
     }
 

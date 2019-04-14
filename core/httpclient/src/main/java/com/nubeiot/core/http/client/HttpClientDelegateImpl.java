@@ -20,10 +20,11 @@ import io.vertx.core.streams.WriteStream;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.client.handler.ClientEndHandler;
-import com.nubeiot.core.http.client.handler.ClientErrorHandler;
+import com.nubeiot.core.http.client.HttpClientConfig.HttpClientHandlerConfig;
+import com.nubeiot.core.http.client.handler.HttpClientEndHandler;
+import com.nubeiot.core.http.client.handler.HttpClientErrorHandler;
 import com.nubeiot.core.http.client.handler.HttpClientWriter;
-import com.nubeiot.core.http.client.handler.LightweightResponseHandler;
+import com.nubeiot.core.http.client.handler.HttpLightResponseHandler;
 
 import lombok.NonNull;
 
@@ -45,18 +46,17 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
                                         boolean swallowError) {
         RequestData reqData = decorator(requestData);
         return Single.create(emitter -> {
-            LightweightResponseHandler responseHandler = new LightweightResponseHandler<>(
-                getConfig().getLightweightBodyHandlerClass(), emitter, swallowError);
-            ClientErrorHandler exceptionHandler = ClientErrorHandler.create(emitter,
-                                                                            getConfig().getErrorHandlerClass());
-            ClientEndHandler endHandler = ClientEndHandler.create(get(), getConfig().getEndHandlerClass());
-            HttpClientRequest request = get().request(method, evaluateRequestOpts(options), responseHandler)
-                                             .exceptionHandler(exceptionHandler)
-                                             .endHandler(
-                                                 Objects.nonNull(this.endHandler) ? this.endHandler : endHandler);
-            logger.info("Make HTTP request {}::{} | <{}> | <{}>", request.method(), request.absoluteURI(),
-                        reqData.toJson());
-            HttpClientWriter.create(getConfig().getClientWriterClass()).apply(request, reqData).end();
+            HttpClientHandlerConfig config = getConfig().getHandlerConfig();
+            HttpLightResponseHandler responseHandler = new HttpLightResponseHandler<>(config.getLightBodyHandlerClass(),
+                                                                                      emitter, swallowError);
+            HttpClientErrorHandler exceptionHandler = HttpClientErrorHandler.create(emitter,
+                                                                                    config.getErrorHandlerClass());
+            HttpClientEndHandler endHandler = HttpClientEndHandler.create(get(), config.getEndHandlerClass());
+            HttpClientRequest r = get().request(method, evaluateRequestOpts(getConfig(), options), responseHandler)
+                                       .exceptionHandler(exceptionHandler)
+                                       .endHandler(Objects.nonNull(this.endHandler) ? this.endHandler : endHandler);
+            logger.info("Make HTTP request {}::{} | <{}> | <{}>", r.method(), r.absoluteURI(), reqData.toJson());
+            HttpClientWriter.create(config.getClientWriterClass()).apply(r, reqData).end();
         });
     }
 
@@ -67,19 +67,19 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
 
     @Override
     public Single<ResponseData> push(RequestOptions options, ReadStream readStream, HttpMethod method) {
-        RequestOptions opts = evaluateRequestOpts(options);
+        RequestOptions opts = evaluateRequestOpts(getConfig(), options);
         return null;
     }
 
     @Override
     public Single<AsyncFile> download(RequestOptions options, AsyncFile saveFile) {
-        RequestOptions opts = evaluateRequestOpts(options);
+        RequestOptions opts = evaluateRequestOpts(getConfig(), options);
         return null;
     }
 
     @Override
     public Single<WriteStream> pull(RequestOptions options, WriteStream writeStream) {
-        RequestOptions opts = evaluateRequestOpts(options);
+        RequestOptions opts = evaluateRequestOpts(getConfig(), options);
         return null;
     }
 
@@ -99,15 +99,6 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
             headers.put(HttpHeaders.USER_AGENT.toString(), getConfig().getUserAgent());
         }
         return reqData;
-    }
-
-    private RequestOptions evaluateRequestOpts(RequestOptions options) {
-        if (Objects.isNull(options)) {
-            return new RequestOptions().setHost(getConfig().getOptions().getDefaultHost())
-                                       .setPort(getConfig().getOptions().getDefaultPort())
-                                       .setSsl(getConfig().getOptions().isSsl());
-        }
-        return options;
     }
 
 }
