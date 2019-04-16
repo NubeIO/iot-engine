@@ -192,8 +192,8 @@ public class MultiTenantUserController implements RestApi {
             .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
             .build();
 
-        Single.just(Strings.isNotBlank(userProps.getBodyPassword(""))).flatMap(password -> {
-            if (Strings.isNotBlank(userProps.getBodyPassword(""))) {
+        Single.just(userProps.getBodyPassword("")).flatMap(password -> {
+            if (Strings.isNotBlank(password)) {
                 return userProps.getMongoClient().rxFindOne(USER, idQuery(userProps.getParamsUserId()), null)
                     .map(response -> {
                         if (response == null) {
@@ -205,11 +205,17 @@ public class MultiTenantUserController implements RestApi {
                     .flatMap(usr -> {
                         // Own password can be changed or those users passwords which is associated with some company
                         if (userProps.getUser().getString("user_id").equals(userProps.getParamsUserId())) {
-                            return UserUtils.resetPassword(userProps);
+                            return Single.just(true);
                         } else {
                             return objectLevelPermission(userProps.getMongoClient(),
                                                          usr.getString("associated_company_id"), userProps.getRole(),
                                                          userProps.getUser().getString("company_id"));
+                        }
+                    }).flatMap(isAuthorized -> {
+                        if (isAuthorized) {
+                            return UserUtils.resetPassword(userProps);
+                        } else {
+                            throw HttpException.forbidden();
                         }
                     });
             } else {
