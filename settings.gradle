@@ -30,6 +30,7 @@ include ':edge:connector:sensor'
 include ':edge:connector:bacnet'
 include ':edge:connector:bacnet:simulator'
 include ':edge:connector:sample:kafka'
+include ':edge:connector:modbus'
 include ':edge:rule:sample'
 
 include ':eventbus:edge'
@@ -37,4 +38,5 @@ include ':eventbus:edge:gateway'
 include ':eventbus:sensor'
 
 include ':ext:rx-jdbc'
+include 'modbus'
 
