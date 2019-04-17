@@ -1,0 +1,39 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "NONE",
+      "ssl": true,
+      "clustered": false
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": true,
+        "clusterAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
+      },
+      "__serviceDiscovery__": {
+        "enabled": false
+      },
+      "__localServiceDiscovery__": {
+        "enabled": true
+      },
+      "__circuitBreaker__": {
+        "enabled": true
+      }
+    },
+    "__http__": {
+      "port": 8080,
+      "__rest__": {
+        "rootApi": "/api",
+        "__dynamic__": {
+          "enabled": true,
+          "path": "/drivers"
+        }
+      }
+    }
+  }
+}
