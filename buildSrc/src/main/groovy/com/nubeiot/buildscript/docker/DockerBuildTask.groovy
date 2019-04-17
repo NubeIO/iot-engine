@@ -1,6 +1,7 @@
 package com.nubeiot.buildscript.docker
 
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.stream.Collectors
 
 import org.gradle.api.Project
@@ -19,13 +20,15 @@ import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.core.command.BuildImageResultCallback
 import com.nubeiot.buildscript.ProjectUtils
 import com.nubeiot.buildscript.Strings
-import com.nubeiot.buildscript.docker.internal.BaseImage
+import com.nubeiot.buildscript.docker.internal.DockerBaseImage
 import com.nubeiot.buildscript.docker.internal.DockerHostAware
+import com.nubeiot.buildscript.docker.internal.JavaEdition
+import com.nubeiot.buildscript.docker.internal.JavaType
 import com.nubeiot.buildscript.docker.internal.OperatingSystem
-import com.nubeiot.buildscript.docker.internal.rule.ArchTagRule
 import com.nubeiot.buildscript.docker.internal.rule.CustomImageTagRule
 import com.nubeiot.buildscript.docker.internal.rule.DockerImageTagRule
 import com.nubeiot.buildscript.docker.internal.rule.GitFlowImageTagRule
+import com.nubeiot.buildscript.docker.internal.rule.JavaTagRule
 import com.nubeiot.buildscript.docker.internal.rule.ProjectImageTagRule
 
 import groovy.json.JsonSlurper
@@ -35,7 +38,7 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
     static final def JAVA_VERSIONS
 
     static {
-        InputStream stream = DockerBuildTask.class.classLoader.getResourceAsStream("oracle-jdk.json")
+        InputStream stream = DockerBuildTask.class.classLoader.getResourceAsStream("oraclejdk.json")
         JAVA_VERSIONS = new JsonSlurper().parse(stream) as Map
     }
 
@@ -47,6 +50,10 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
     final Property<Boolean> pull = project.objects.property(Boolean)
     @Input
     final Property<String> javaVersion = project.objects.property(String)
+    @Input
+    final Property<JavaEdition> javaEdition = project.objects.property(JavaEdition)
+    @Input
+    final Property<JavaType> javaType = project.objects.property(JavaType)
     @Input
     @Optional
     final Property<String> jdkUrl = project.objects.property(String)
@@ -78,6 +85,8 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
         buildDir.set(project.distsDir)
         out.set(project.rootProject.buildDir.toPath().resolve("docker.txt").toFile())
         javaVersion.set("8u201")
+        javaEdition.set(JavaEdition.ORACLE)
+        javaType.set(JavaType.JDK)
         jvmOptions.set("")
         javaProps.set("")
         vcsBranch.set("")
@@ -86,7 +95,8 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
     @TaskAction
     void start() {
         println("Build docker image for ${project}")
-        def baseImages = ProjectUtils.isSubProject(project, "edge") ? BaseImage.EDGES : BaseImage.SERVERS
+        def baseImages = ProjectUtils.isSubProject(project, "edge") ? DockerBaseImage.EDGES :
+                         DockerBaseImage.SERVERS
         ProjectImageTagRule tagRule = new ProjectImageTagRule(project)
         List<DockerImageTagRule> rules = rules(tagRule)
         baseImages.each { it ->
@@ -121,22 +131,35 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
     }
 
     @Internal
-    Set<String> computeTags(BaseImage baseImage, List<DockerImageTagRule> rules) {
+    Set<String> computeTags(DockerBaseImage image, List<DockerImageTagRule> rules) {
         return rules.stream()
-                    .map { rule -> new ArchTagRule(rule, baseImage.arch, baseImage.os, defaultOS.get()).images() }
+                    .map { rule ->
+                        new JavaTagRule(rule, image.arch, image.os, defaultOS.get(), javaEdition.get()).images()
+                    }
                     .flatMap { x -> x.stream() }.collect(Collectors.toSet())
     }
 
     @Internal
-    Path createDockerFile(BaseImage it, String artifactName) {
-        def dockerfile = it.os.dockerfile
-        def imageBase = it.baseImage
-        def defaultUrl = (String) JAVA_VERSIONS.get(javaVersion.get(), [:]).
-            find { v -> it.arch.isAlias((String) v.key) }?.value
-        def jdkUrl = jdkUrl.getOrElse(defaultUrl)
-        if (!jdkUrl) {
-            throw new TaskExecutionException(this, new RuntimeException("Not found Oracle jdk url"))
+    Path createDockerFile(DockerBaseImage baseImage, String artifactName) {
+        def link = ""
+        DockerBaseImage image = baseImage
+        if (javaEdition.get() == JavaEdition.OPENJDK) {
+            image = DockerBaseImage.openjdkImage(baseImage, javaVersion.get(), javaType.get())
+        } else if (javaEdition.get() == JavaEdition.ORACLE) {
+            def defaultUrl = (String) JAVA_VERSIONS.get(javaVersion.get(), [:])
+                                                   .find { v -> image.arch.isAlias((String) v.key) }?.value
+            link = jdkUrl.getOrElse(defaultUrl)
+            if (!link) {
+                throw new TaskExecutionException(this, new RuntimeException("Not found Oracle jdk url"))
+            }
+        } else {
+            throw new TaskExecutionException(this, new RuntimeException("Unsupport platform ${javaEdition.get()}"))
         }
+        return genDockerfile(image, artifactName, link)
+    }
+
+    @Internal
+    Path genDockerfile(DockerBaseImage image, String artifactName, String jdkUrl = "") {
         def exposePorts = ProjectUtils.extraProp(project, "docker.exposePorts", "8000 5000 5701")
                                       .tokenize()
                                       .stream()
@@ -144,13 +167,12 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
                                       .filter { p -> p > 0 && p < 65536 }
                                       .map { p -> p.toString() }
                                       .collect(Collectors.joining(" "))
-        def arch = it.arch.canonicalName
         project.copy {
             into buildDir.get().asFile
-            from("${project.rootDir}/docker/${dockerfile}") {
-                rename '(.+)\\.template', "\$1.${arch}"
+            from("${project.rootDir}/docker/${Paths.get(javaEdition.get().value, image.os.dockerfile).toString()}") {
+                rename '(.+)\\.template', "\$1.${image.arch.canonicalName}"
                 filter {
-                    it.replaceAll("\\{\\{IMAGE_BASE\\}\\}", imageBase)
+                    it.replaceAll("\\{\\{IMAGE_BASE\\}\\}", image.dockerImage)
                       .replaceAll("\\{\\{JDK_URL\\}\\}", jdkUrl)
                       .replaceAll("\\{\\{ARTIFACT\\}\\}", artifactName)
                       .replaceAll("\\{\\{VERSION\\}\\}", project.version)
@@ -163,6 +185,7 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
             from("${project.rootDir}/docker/entrypoint.sh")
             from("${project.rootDir}/docker/wait-for-it.sh")
         }
-        return buildDir.get().asFile.toPath().resolve(dockerfile.replaceAll("(.+)\\.template", "\$1.${arch}"))
+        return buildDir.get().asFile.toPath()
+                       .resolve(image.os.dockerfile.replaceAll("(.+)\\.template", "\$1.${image.arch.canonicalName}"))
     }
 }
