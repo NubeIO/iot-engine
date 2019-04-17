@@ -14,6 +14,23 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.UpdateOptions;
+import io.vertx.reactivex.core.buffer.Buffer;
+import io.vertx.reactivex.core.http.HttpClient;
+import io.vertx.reactivex.core.http.HttpClientRequest;
+import io.vertx.reactivex.ext.mongo.MongoClient;
+import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
+import io.vertx.servicediscovery.Record;
+
 import com.nubeiot.core.common.HttpHelper;
 import com.nubeiot.core.common.RxRestAPIVerticle;
 import com.nubeiot.core.common.constants.Services;
@@ -32,23 +49,6 @@ import com.nubeiot.dashboard.impl.models.Site;
 import com.nubeiot.dashboard.impl.models.UserGroup;
 import com.nubeiot.dashboard.utils.DittoUtils;
 import com.nubeiot.dashboard.utils.UserUtils;
-
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.UpdateOptions;
-import io.vertx.reactivex.core.buffer.Buffer;
-import io.vertx.reactivex.core.http.HttpClient;
-import io.vertx.reactivex.core.http.HttpClientRequest;
-import io.vertx.reactivex.ext.mongo.MongoClient;
-import io.vertx.reactivex.servicediscovery.types.HttpEndpoint;
-import io.vertx.servicediscovery.Record;
 
 public class MultiTenantVerticle extends RxRestAPIVerticle {
 
@@ -1039,7 +1039,7 @@ public class MultiTenantVerticle extends RxRestAPIVerticle {
                                                               client);
                            } else {
                                return objectLevelPermission(role, user.getString("associated_company_id"),
-                                                            ctxUser.getString("company_id")).map(permitted -> {
+                                                            ctxUser.getString("company_id")).flatMap(permitted -> {
                                    if (permitted) {
                                        return UserUtils.resetPassword(userId, password, accessToken, authServerUrl,
                                                                       realmName, client);
