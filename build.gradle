@@ -1,5 +1,7 @@
 import com.nubeiot.buildscript.ProjectUtils
 import com.nubeiot.buildscript.docker.DockerBuildTask
+import com.nubeiot.buildscript.docker.internal.JavaEdition
+import com.nubeiot.buildscript.docker.internal.JavaType
 
 plugins {
     id "eclipse"
@@ -73,7 +75,9 @@ subprojects {
     }
 
     task dockerBuild(type: DockerBuildTask) {
-        javaVersion = "8u201"
+        javaVersion = ProjectUtils.extraProp(project, "javaVersion", "8u201")
+        javaEdition = JavaEdition.valueOf(ProjectUtils.extraProp(project, "javaEdition", JavaEdition.OPENJDK.name()))
+        javaType = JavaType.valueOf(ProjectUtils.extraProp(project, "javaType", JavaType.JDK.name()))
         vcsBranch = ProjectUtils.extraProp(project, "vcsBranch", "")
     }
 

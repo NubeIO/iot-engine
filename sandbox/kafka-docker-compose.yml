@@ -20,10 +20,25 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - kafka-log:/kafka
+
+  connector-kafka:
+    image: ${PREFIX_IMG}/nube-dashboard-connector-sample-kafka:${IOT_VERSION}
+    ports:
+      - ${CONNECTOR_KAFKA_PORT}:8080
+    volumes:
+      - connector-kafka-data:/data
+      - ./engine/connector-kafka.json:/app/conf/config.json
+      - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
+      - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
+    depends_on:
+      - kafka
+
 volumes:
   kafka-log:
     driver: local
   zk-data:
     driver: local
   zk-conf:
+    driver: local
+  connector-kafka-data:
     driver: local

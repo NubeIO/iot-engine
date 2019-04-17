@@ -10,13 +10,10 @@ RUN apk add --no-cache curl ca-certificates tini bash \
     && mkdir -p /usr/lib/jvm/ \
     && tar -xvf /tmp/jdk.tar.gz --strip 1 -C /usr/lib/jvm/
 
-RUN curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -o ./wait-for-it.sh \
-        && chmod +x ./wait-for-it.sh
-
 WORKDIR /app
 COPY {{ARTIFACT}}.tar /tmp/
 COPY entrypoint.sh wait-for-it.sh /app/
-RUN tar -xvf /tmp/{{ARTIFACT}}.tar --strip 1 -C /app && rm -rf /tmp/* && chmod +x entrypoint.sh
+RUN tar -xvf /tmp/{{ARTIFACT}}.tar --strip 1 -C /app && rm -rf /tmp/* && chmod +x entrypoint.sh wait-for-it.sh
 
 ENV JAVA_HOME=/usr/lib/jvm/ PATH=$PATH:/usr/lib/jvm/bin JAVA_VERSION={{JAVA_VERSION}} LANG=C.UTF-8
 ENV JVM_OPTS="{{JVM_OPTS}}" JAVA_PROPS="{{JAVA_PROPS}}" VERSION={{VERSION}} ARTIFACT="{{ARTIFACT}}"

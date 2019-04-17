@@ -1,13 +1,8 @@
 version: "2.4"
 services:
-  mongo:
-    image: mongo:${MONGO_VERSION}
-
-  keycloak:
-    image: jboss/keycloak:${KEYCLOAK_VERSION}
 
   backend:
-    image: amd64/nube-dashboard-server:${IOT_VERSION}
+    image: ${PREFIX_IMG}/nube-dashboard-server:${IOT_VERSION}
     ports:
       - ${DASHBOARD_IOT_PORT}:8080
       - ${DASHBOARD_IOT_EVENTBUS_PORT}:5000
@@ -19,9 +14,11 @@ services:
       - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
 
   connector-psql:
-    image: amd64/nube-dashboard-connector-postgresql:${IOT_VERSION}
+    image: ${PREFIX_IMG}/nube-dashboard-connector-postgresql:${IOT_VERSION}
+    command: >-
+      ./wait-for-it.sh backend:8080 --timeout=30 -s -- ./entrypoint.sh
     ports:
-      # - ${DASHBOARD_CONNECTOR_PSQL_PORT}:8080
+      - ${DASHBOARD_CONNECTOR_PSQL_PORT}:8080
       - ${DASHBOARD_CONNECTOR_PSQL_EVENTBUS_PORT}:5000
       - ${DASHBOARD_CONNECTOR_PSQL_CLUSTER_PORT}:5701
     volumes:
@@ -29,11 +26,15 @@ services:
       - ./engine/dashboard-connector-postgresql.json:/app/conf/config.json
       - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
       - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
+    depends_on:
+      - backend
 
   connector-ditto:
-    image: amd64/nube-dashboard-connector-ditto:${IOT_VERSION}
+    image: ${PREFIX_IMG}/nube-dashboard-connector-ditto:${IOT_VERSION}
+    command: >-
+      ./wait-for-it.sh backend:8080 --timeout=30 -s -- ./entrypoint.sh
     ports:
-      # - ${DASHBOARD_CONNECTOR_DITTO_PORT}:8080
+      - ${DASHBOARD_CONNECTOR_DITTO_PORT}:8080
       - ${DASHBOARD_CONNECTOR_DITTO_EVENTBUS_PORT}:5000
       - ${DASHBOARD_CONNECTOR_DITTO_CLUSTER_PORT}:5701
     volumes:
@@ -41,9 +42,11 @@ services:
       - ./engine/dashboard-connector-ditto.json:/app/conf/config.json
       - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
       - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
+    depends_on:
+      - backend
 
   frontend:
-    image: iot-engine-dashboard-ui:${FRONTEND_VERSION}
+    image: nube-dashboard-ui:${FRONTEND_VERSION}
     environment:
       USE_DNS: fasle
       BACKEND_SCHEMA: http
