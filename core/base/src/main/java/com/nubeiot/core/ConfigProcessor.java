@@ -1,6 +1,7 @@
 package com.nubeiot.core;
 
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -17,6 +18,8 @@ import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.nubeiot.core.NubeConfig.AppConfig;
@@ -29,6 +32,8 @@ import com.nubeiot.core.utils.Strings;
 import lombok.NonNull;
 
 public class ConfigProcessor {
+
+    private static final Logger logger = LoggerFactory.getLogger(ConfigProcessor.class);
 
     private static final String NUBEIO_SYS = "NUBEIO.";
     private static final String NUBEIO_ENV = "NUBEIO_";
@@ -74,22 +79,24 @@ public class ConfigProcessor {
         Map<String, Object> envConfig = this.mergeEnvAndSys();
         IConfig input;
         if (Objects.isNull(provideConfig)) {
+            logger.debug("Provide config is null");
             input = defaultConfig;
         } else if (Objects.isNull(defaultConfig)) {
+            logger.debug("Default config is null");
             input = provideConfig;
         } else {
             input = IConfig.merge(defaultConfig, provideConfig, clazz);
         }
-        return overrideConfig(clazz, envConfig, input);
+        return overrideConfig(clazz, envConfig, input.toJson());
     }
 
     private <T extends IConfig> Optional<T> overrideConfig(Class<T> clazz, Map<String, Object> envConfig,
-                                                           IConfig input) {
+                                                           JsonObject input) {
         JsonObject nubeConfig = new JsonObject();
 
-        JsonObject inputAppConfig = input.toJson().getJsonObject(AppConfig.NAME);
-        JsonObject inputSystemConfig = input.toJson().getJsonObject(SystemConfig.NAME);
-        JsonObject inputDeployConfig = input.toJson().getJsonObject(DeployConfig.NAME);
+        JsonObject inputAppConfig = input.getJsonObject(AppConfig.NAME);
+        JsonObject inputSystemConfig = input.getJsonObject(SystemConfig.NAME);
+        JsonObject inputDeployConfig = input.getJsonObject(DeployConfig.NAME);
         JsonObject appConfig = new JsonObject();
         JsonObject systemConfig = new JsonObject();
         JsonObject deployConfig = new JsonObject();
@@ -115,6 +122,7 @@ public class ConfigProcessor {
                         }
                         FileUtils.toPath(overrideValue.toString());
                     } catch (NubeException ex) {
+                        logger.warn("DataDir is not valid. ", ex);
                         continue;
                     }
                     nubeConfig.put(DATA_DIR, overrideValue);
@@ -130,8 +138,9 @@ public class ConfigProcessor {
             return Optional.of(IConfig.MAPPER.copy()
                                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                                    .readValue(nubeConfig.toString(), clazz));
-        } catch (IOException e) {
-            throw new ClassCastException(e.getLocalizedMessage());
+        } catch (IOException ex) {
+            logger.warn("Converting to object failed", ex);
+            throw new NubeException(ex);
         }
     }
 
@@ -144,31 +153,38 @@ public class ConfigProcessor {
             return;
         }
         String propertyName = keyArray[2];
-        if (Objects.nonNull(inputConfig.getValue(propertyName))) {
-            this.handleChildElement(config, inputConfig, overrideValue, keyArray, propertyName);
-        } else if (Objects.nonNull(inputConfig.getValue("__" + propertyName + "__"))) {
-            this.handleChildElement(config, inputConfig, overrideValue, keyArray, "__" + propertyName + "__");
+        Optional<Entry<String, Object>> valueByKey = this.getValueByKey(inputConfig, propertyName);
+        if (valueByKey.isPresent() && Objects.nonNull(valueByKey.get().getValue())) {
+            this.handleChildElement(config, overrideValue, keyArray,
+                                    valueByKey.get());
+            return;
+        }
+
+        valueByKey = this.getValueByKey(inputConfig, "__" + propertyName + "__");
+        if (valueByKey.isPresent() && Objects.nonNull(valueByKey.get().getValue())) {
+            this.handleChildElement(config, overrideValue, keyArray,
+                                    valueByKey.get());
         } else {
-            this.handleChildElement(config, inputConfig, overrideValue, keyArray, propertyName);
+            this.handleChildElement(config, overrideValue, keyArray, new SimpleEntry<String, Object>(propertyName,
+                                                                                                     new JsonObject()));
         }
     }
 
-    private void handleChildElement(JsonObject appConfig, JsonObject
-        inputAppConfig, Object overrideValue,
-                                    String[] keyArray, String temp) {
-        if (keyArray.length < 4) {
-            appConfig.put(keyArray[2], overrideValue);
+    private void handleChildElement(JsonObject appConfig, Object overrideValue,
+                                    String[] keyArray, Entry<String, Object> valueByKey) {
+        if (keyArray.length < 4 || !JsonObject.class.isInstance(valueByKey.getValue())) {
+            appConfig.put(valueByKey.getKey(), overrideValue);
             return;
         }
         JsonObject overrideResult = checkAndUpdate(3, keyArray,
                                                    overrideValue,
-                                                   inputAppConfig);
+                                                   (JsonObject) valueByKey.getValue());
         if (Objects.isNull(overrideResult)) {
             return;
         }
-        JsonObject childElement = appConfig.getJsonObject(temp);
+        JsonObject childElement = appConfig.getJsonObject(valueByKey.getKey());
         if (Objects.isNull(childElement)) {
-            appConfig.put(temp, overrideResult);
+            appConfig.put(valueByKey.getKey(), overrideResult);
         } else {
             overrideResult.getMap().forEach((key, val) -> {
                 childElement.put(key, val);
@@ -186,7 +202,7 @@ public class ConfigProcessor {
         mappingOptions.put(systemStore, entries -> entries.stream()
             .filter(x -> x.getKey().startsWith(NUBEIO_SYS.toLowerCase()))
             .collect(
-                Collectors.toMap(entry -> entry.getKey(),
+                Collectors.toMap(entry -> convertEnv(entry.getKey()),
                                  Entry::getValue)));
     }
 
@@ -199,45 +215,60 @@ public class ConfigProcessor {
                                  Entry::getValue)));
     }
 
-    private JsonObject checkAndUpdate(int index, String[] array, Object overrideValue, JsonObject input)
-        throws ClassCastException {
+    private JsonObject checkAndUpdate(int index, String[] array, Object overrideValue, JsonObject input) {
         String key = array[index];
-        Object value = input.getValue(key);
-        if (Objects.nonNull(value)) {
-            if (JsonObject.class.isInstance(value)) {
-                JsonObject temp = checkAndUpdate(index + 1, array, overrideValue, (JsonObject) value);
-                if (Objects.nonNull(temp)) {
-                    return new JsonObject().put(key, temp);
+        Optional<Entry<String, Object>> valueByKey = this.getValueByKey(input, key);
+        if (valueByKey.isPresent() && Objects.nonNull(valueByKey.get().getValue())) {
+            return checkingNextLevel(index, array, overrideValue, valueByKey.get());
+        }
+        valueByKey = this.getValueByKey(input, "__" + key + "__");
+
+        if (valueByKey.isPresent() && Objects.nonNull(valueByKey.get().getValue())) {
+            return checkingNextLevel(index, array, overrideValue, valueByKey.get());
+        }
+        return checkingNextLevel(index, array, overrideValue, new SimpleEntry<String, Object>(key, null));
+    }
+
+    private JsonObject checkingNextLevel(int index, String[] array, Object overrideValue,
+                                         Entry<String, Object> entry) {
+        if (index == array.length - 1) {
+            if (Objects.isNull(entry.getValue())) {
+                return new JsonObject().put(entry.getKey(), overrideValue);
+            }
+            try {
+                Object temp = entry.getValue().getClass().cast(overrideValue);
+                return new JsonObject().put(entry.getKey(), temp);
+            } catch (ClassCastException ex) {
+                logger.warn("Invalid data type", ex);
+                if (Integer.class.isInstance(entry.getValue()) && Number.class.isInstance(overrideValue)) {
+                    logger.warn("Source data type is Integer but input is Number");
+                    return new JsonObject().put(entry.getKey(), ((Number) overrideValue).intValue());
                 }
                 return null;
             }
-            if (index == array.length - 1) {
-                return new JsonObject().put(key, overrideValue);
-            }
-            return null;
-        } else if (Objects.nonNull(input.getValue("__" + key + "__"))) {
-            value = input.getValue("__" + key + "__");
-            if (JsonObject.class.isInstance(value)) {
-                JsonObject temp = checkAndUpdate(index + 1, array, overrideValue, (JsonObject) value);
-                if (Objects.nonNull(temp)) {
-                    return new JsonObject().put("__" + key + "__",
-                                                temp);
-                }
-                ;
-                return null;
-            }
-            return null;
+        }
+        JsonObject temp;
+        if (Objects.isNull(entry.getValue())) {
+            temp = checkAndUpdate(index + 1, array, overrideValue, new JsonObject());
+        } else if (JsonObject.class.isInstance(entry.getValue())) {
+            temp = checkAndUpdate(index + 1, array, overrideValue, (JsonObject) entry.getValue());
         } else {
-            //if input Value doesn't contains this attribute.
-            if (index == array.length - 1) {
-                return new JsonObject().put(key, overrideValue);
-            }
-            JsonObject temp = checkAndUpdate(index + 1, array, overrideValue, new JsonObject());
-            if (Objects.nonNull(temp)) {
-                return new JsonObject().put(key, temp);
-            }
             return null;
         }
+        if (Objects.nonNull(temp)) {
+            return new JsonObject().put(entry.getKey(), temp);
+        }
+        return null;
+    }
+
+    private Optional<Entry<String, Object>> getValueByKey(JsonObject input, String key) {
+        if (input.containsKey(key)) {
+            return Optional.of(new SimpleEntry(key, input.getValue(key)));
+        }
+
+        return input.getMap().entrySet().stream()
+            .filter(entry -> entry.getKey().toLowerCase().equals(key))
+            .findAny();
     }
 
 }

@@ -76,7 +76,7 @@ public class ConfigProcessorTest {
 
         overrideConfigThenAssert(finalResult -> {
             String httpConfig = finalResult.getAppConfig().get("__http__").toString();
-            Assert.assertEquals(httpConfig, "{host=2.2.2.2, port=8088.0, enabled=false, rootApi=/test}");
+            Assert.assertEquals(httpConfig, "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test}");
         });
     }
 
@@ -118,7 +118,8 @@ public class ConfigProcessorTest {
     public void test_invalid_data_type_should_be_used_default_config() {
         System.setProperty("nubeio.system.cluster.active", "invalid_type");
 
-        overrideConfigThenAssert(finalResult -> Assert.assertTrue(finalResult.getSystemConfig().getClusterConfig().isActive()));
+        overrideConfigThenAssert(
+            finalResult -> Assert.assertTrue(finalResult.getSystemConfig().getClusterConfig().isActive()));
     }
 
     private void overrideConfigThenAssert(Consumer<NubeConfig> configConsumer) {
