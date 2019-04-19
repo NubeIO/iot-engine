@@ -1,30 +1,18 @@
 package com.nubeiot.core.http.client;
 
-import java.util.function.Supplier;
-
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.RequestOptions;
 
 import com.nubeiot.core.http.base.event.WebsocketClientEventMetadata;
 
 import lombok.NonNull;
 
-public interface WebsocketClientDelegate extends Supplier<HttpClient> {
-
-    static WebsocketClientDelegate create(@NonNull HttpClient client) {
-        return new WebsocketClientDelegateImpl(client);
-    }
+public interface WebsocketClientDelegate extends IClientDelegate {
 
     static WebsocketClientDelegate create(@NonNull Vertx vertx, @NonNull HttpClientConfig config) {
         return new WebsocketClientDelegateImpl(vertx, config);
     }
-
-    /**
-     * @return null if use {@link #create(HttpClient)}
-     */
-    HttpClientConfig getConfig();
 
     /**
      * Blocking open websocket connection
@@ -52,7 +40,5 @@ public interface WebsocketClientDelegate extends Supplier<HttpClient> {
      * @param headers  Websocket headers
      */
     void asyncOpen(WebsocketClientEventMetadata metadata, MultiMap headers);
-
-    void close();
 
 }

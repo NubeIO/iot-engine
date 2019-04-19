@@ -1,7 +1,6 @@
 package com.nubeiot.core.http.client;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -20,7 +19,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public abstract class ClientDelegate implements Supplier<HttpClient> {
+abstract class ClientDelegate implements IClientDelegate {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     @NonNull
@@ -73,6 +72,15 @@ public abstract class ClientDelegate implements Supplier<HttpClient> {
     @Override
     public final HttpClient get() {
         return client;
+    }
+
+    @Override
+    public void close() {
+        try {
+            get().close();
+        } catch (IllegalStateException e) {
+            logger.warn(e.getMessage());
+        }
     }
 
 }

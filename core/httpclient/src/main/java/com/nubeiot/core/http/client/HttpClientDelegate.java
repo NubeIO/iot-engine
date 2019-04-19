@@ -1,7 +1,5 @@
 package com.nubeiot.core.http.client;
 
-import java.util.function.Supplier;
-
 import io.reactivex.Single;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -17,7 +15,7 @@ import com.nubeiot.core.dto.ResponseData;
 
 import lombok.NonNull;
 
-public interface HttpClientDelegate extends Supplier<HttpClient> {
+public interface HttpClientDelegate extends IClientDelegate {
 
     static HttpClientDelegate create(@NonNull HttpClient client) {
         return new HttpClientDelegateImpl(client);
@@ -30,11 +28,6 @@ public interface HttpClientDelegate extends Supplier<HttpClient> {
     static HttpClientDelegate create(@NonNull Vertx vertx, HttpClientConfig config) {
         return new HttpClientDelegateImpl(vertx, config);
     }
-
-    /**
-     * @return null if use {@link #create(HttpClient)}
-     */
-    HttpClientConfig getConfig();
 
     /**
      * Execute HTTP request

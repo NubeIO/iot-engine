@@ -9,7 +9,11 @@ import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.http.client.handler.HttpClientEndHandler;
 import com.nubeiot.core.http.client.handler.HttpClientErrorHandler;
 import com.nubeiot.core.http.client.handler.HttpClientWriter;
+import com.nubeiot.core.http.client.handler.HttpHeavyResponseHandler;
 import com.nubeiot.core.http.client.handler.HttpLightResponseBodyHandler;
+import com.nubeiot.core.http.client.handler.WsConnectionErrorHandler;
+import com.nubeiot.core.http.client.handler.WsLightResponseDispatcher;
+import com.nubeiot.core.http.client.handler.WsResponseErrorHandler;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
@@ -22,18 +26,16 @@ import lombok.NonNull;
 public class HttpClientConfig implements IConfig {
 
     private String userAgent = "nubeio.httpclient";
-    private HttpClientHandlerConfig handlerConfig = HttpClientHandlerConfig.builder().build();
+    private HttpClientHandlerConfig httpHandlerConfig = HttpClientHandlerConfig.builder().build();
+    private WebsocketOptions websocketOptions = WebsocketOptions.builder().build();
     private HttpClientOptions options;
 
     HttpClientConfig() {
-        this(new HttpClientOptions());
+        this(new HttpClientOptions().setIdleTimeout(30).setTryUseCompression(true));
     }
 
     HttpClientConfig(@NonNull HttpClientOptions options) {
-        this.options = options.setIdleTimeout(30)
-                              .setTryUseCompression(true)
-                              .setTryUsePerFrameWebsocketCompression(true)
-                              .setTryUsePerMessageWebsocketCompression(true);
+        this.options = options;
     }
 
     @Override
@@ -54,6 +56,8 @@ public class HttpClientConfig implements IConfig {
         private final String endHandlerClass = HttpClientEndHandler.class.getName();
         @Default
         private final String lightBodyHandlerClass = HttpLightResponseBodyHandler.class.getName();
+        @Default
+        private final String heavyBodyHandlerClass = HttpHeavyResponseHandler.class.getName();
 
         public Class<? extends HttpClientWriter> getClientWriterClass() {
             return Strings.isBlank(clientWriterClass)
@@ -78,6 +82,24 @@ public class HttpClientConfig implements IConfig {
                    ? HttpLightResponseBodyHandler.class
                    : ReflectionClass.findClass(lightBodyHandlerClass);
         }
+
+        @JsonPOJOBuilder(withPrefix = "")
+        public static class Builder {}
+
+    }
+
+
+    @Builder(builderClassName = "Builder")
+    @JsonDeserialize(builder = HttpClientHandlerConfig.Builder.class)
+    public static class WebsocketOptions {
+
+        @Default
+        private final String connectionErrorHandlerClass = WsConnectionErrorHandler.class.getName();
+        @Default
+        private final String errorHandlerClass = WsResponseErrorHandler.class.getName();
+        @Default
+        private final String lightResponseHandlerClass = WsLightResponseDispatcher.class.getName();
+
 
         @JsonPOJOBuilder(withPrefix = "")
         public static class Builder {}

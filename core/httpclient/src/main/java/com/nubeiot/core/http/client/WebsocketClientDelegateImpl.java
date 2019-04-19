@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
 
@@ -25,10 +24,6 @@ import com.nubeiot.core.http.client.handler.WsResponseErrorHandler;
 class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketClientDelegate {
 
     private Vertx vertx;
-
-    WebsocketClientDelegateImpl(HttpClient client) {
-        super(client);
-    }
 
     WebsocketClientDelegateImpl(Vertx vertx, HttpClientConfig config) {
         super(vertx, config);

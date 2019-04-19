@@ -1,10 +1,18 @@
 {
   "userAgent": "nubeio.httpclient",
-  "handlerConfig": {
+  "httpHandlerConfig": {
     "clientWriterClass": "com.nubeiot.core.http.client.handler.HttpClientWriter",
     "errorHandlerClass": "com.nubeiot.core.http.client.handler.HttpClientErrorHandler",
     "endHandlerClass": "com.nubeiot.core.http.client.handler.HttpClientEndHandler",
     "lightBodyHandlerClass": "com.nubeiot.core.http.client.handler.HttpLightResponseBodyHandler"
+  },
+  "websocketOptions": {
+    "idleTimeout": -1,
+    "maxWebsocketFrameSize": 65536,
+    "maxWebsocketMessageSize": 262144,
+    "websocketCompressionLevel": 6,
+    "websocketCompressionAllowClientNoContext": true,
+    "websocketCompressionRequestServerNoContext": true
   },
   "options": {
     "sendBufferSize": -1,
@@ -47,10 +55,6 @@
     "http2KeepAliveTimeout": 60,
     "poolCleanerPeriod": 1000,
     "tryUseCompression": true,
-    "maxWebsocketFrameSize": 65536,
-    "maxWebsocketMessageSize": 262144,
-    "defaultHost": "localhost",
-    "defaultPort": 80,
     "protocolVersion": "HTTP_1_1",
     "maxChunkSize": 8192,
     "maxInitialLineLength": 4096,
@@ -69,9 +73,6 @@
     "sendUnmaskedFrames": false,
     "maxRedirects": 16,
     "forceSni": false,
-    "decoderInitialBufferSize": 128,
-    "websocketCompressionLevel": 6,
-    "websocketCompressionAllowClientNoContext": false,
-    "websocketCompressionRequestServerNoContext": false
+    "decoderInitialBufferSize": 128
   }
 }

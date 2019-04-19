@@ -46,7 +46,7 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
                                         boolean swallowError) {
         RequestData reqData = decorator(requestData);
         return Single.create(emitter -> {
-            HttpClientHandlerConfig config = getConfig().getHandlerConfig();
+            HttpClientHandlerConfig config = getConfig().getHttpHandlerConfig();
             HttpLightResponseHandler responseHandler = new HttpLightResponseHandler<>(config.getLightBodyHandlerClass(),
                                                                                       emitter, swallowError);
             HttpClientErrorHandler exceptionHandler = HttpClientErrorHandler.create(emitter,
@@ -67,20 +67,17 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
 
     @Override
     public Single<ResponseData> push(RequestOptions options, ReadStream readStream, HttpMethod method) {
-        RequestOptions opts = evaluateRequestOpts(getConfig(), options);
-        return null;
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public Single<AsyncFile> download(RequestOptions options, AsyncFile saveFile) {
-        RequestOptions opts = evaluateRequestOpts(getConfig(), options);
-        return null;
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public Single<WriteStream> pull(RequestOptions options, WriteStream writeStream) {
-        RequestOptions opts = evaluateRequestOpts(getConfig(), options);
-        return null;
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
