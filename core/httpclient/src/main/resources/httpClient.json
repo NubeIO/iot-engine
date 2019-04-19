@@ -1,19 +1,5 @@
 {
   "userAgent": "nubeio.httpclient",
-  "httpHandlerConfig": {
-    "clientWriterClass": "com.nubeiot.core.http.client.handler.HttpClientWriter",
-    "errorHandlerClass": "com.nubeiot.core.http.client.handler.HttpClientErrorHandler",
-    "endHandlerClass": "com.nubeiot.core.http.client.handler.HttpClientEndHandler",
-    "lightBodyHandlerClass": "com.nubeiot.core.http.client.handler.HttpLightResponseBodyHandler"
-  },
-  "websocketOptions": {
-    "idleTimeout": -1,
-    "maxWebsocketFrameSize": 65536,
-    "maxWebsocketMessageSize": 262144,
-    "websocketCompressionLevel": 6,
-    "websocketCompressionAllowClientNoContext": true,
-    "websocketCompressionRequestServerNoContext": true
-  },
   "options": {
     "sendBufferSize": -1,
     "receiveBufferSize": -1,
@@ -25,7 +11,7 @@
     "tcpKeepAlive": false,
     "soLinger": -1,
     "usePooledBuffers": false,
-    "idleTimeout": 30,
+    "idleTimeout": 15,
     "idleTimeoutUnit": "SECONDS",
     "ssl": false,
     "enabledCipherSuites": [],
@@ -40,7 +26,7 @@
     "tcpFastOpen": false,
     "tcpCork": false,
     "tcpQuickAck": false,
-    "connectTimeout": 60000,
+    "connectTimeout": 45000,
     "trustAll": false,
     "metricsName": "",
     "verifyHost": true,
@@ -55,6 +41,8 @@
     "http2KeepAliveTimeout": 60,
     "poolCleanerPeriod": 1000,
     "tryUseCompression": true,
+    "maxWebsocketFrameSize": 65536,
+    "maxWebsocketMessageSize": 262144,
     "protocolVersion": "HTTP_1_1",
     "maxChunkSize": 8192,
     "maxInitialLineLength": 4096,
@@ -73,6 +61,18 @@
     "sendUnmaskedFrames": false,
     "maxRedirects": 16,
     "forceSni": false,
-    "decoderInitialBufferSize": 128
+    "decoderInitialBufferSize": 128,
+    "websocketCompressionLevel": 6,
+    "websocketCompressionRequestServerNoContext": true,
+    "websocketCompressionAllowClientNoContext": true
+  },
+  "handlerConfig": {
+    "httpClientWriterClass": "com.nubeiot.core.http.client.handler.HttpClientWriter",
+    "httpLightBodyHandlerClass": "com.nubeiot.core.http.client.handler.HttpLightResponseBodyHandler",
+    "httpHeavyBodyHandlerClass": "com.nubeiot.core.http.client.handler.HttpHeavyResponseHandler",
+    "httpErrorHandlerClass": "com.nubeiot.core.http.client.handler.HttpErrorHandler",
+    "wsConnectErrorHandlerClass": "com.nubeiot.core.http.client.handler.WsConnectErrorHandler",
+    "wsErrorHandlerClass": "com.nubeiot.core.http.client.handler.WsResponseErrorHandler",
+    "wsLightResponseHandlerClass": "com.nubeiot.core.http.client.handler.WsLightResponseDispatcher"
   }
 }

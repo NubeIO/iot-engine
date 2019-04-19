@@ -4,16 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import io.reactivex.SingleEmitter;
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
@@ -23,6 +13,15 @@ import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
+import io.reactivex.SingleEmitter;
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

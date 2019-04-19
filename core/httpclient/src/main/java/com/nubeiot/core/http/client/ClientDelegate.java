@@ -2,18 +2,21 @@ package com.nubeiot.core.http.client;
 
 import java.util.Objects;
 
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.http.base.HostInfo;
+import com.nubeiot.core.utils.Strings;
+
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.http.impl.HttpClientImpl;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.utils.Strings;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -25,41 +28,44 @@ abstract class ClientDelegate implements IClientDelegate {
     @NonNull
     private final HttpClient client;
     @Getter
-    private final HttpClientConfig config;
+    private final String agent;
+    @Getter
+    private final HttpClientConfig.HandlerConfig handlerConfig;
+    @Getter
+    private final HostInfo hostInfo;
     protected Handler<Void> endHandler;
 
     protected ClientDelegate(@NonNull HttpClient client) {
+        HttpClientConfig config = new HttpClientConfig(((HttpClientImpl) client).getOptions());
+        this.agent = config.getUserAgent();
+        this.handlerConfig = config.getHandlerConfig();
+        this.hostInfo = HostInfo.builder()
+                                .host(config.getOptions().getDefaultHost())
+                                .port(config.getOptions().getDefaultPort())
+                                .ssl(config.getOptions().isSsl())
+                                .build();
         this.client = client;
-        this.config = new HttpClientConfig(((HttpClientImpl) client).getOptions());
     }
 
-    protected ClientDelegate(@NonNull Vertx vertx, HttpClientConfig config) {
-        this.config = Objects.isNull(config) ? new HttpClientConfig() : config;
-        this.client = vertx.createHttpClient(this.config.getOptions());
+    protected ClientDelegate(@NonNull Vertx vertx, @NonNull HttpClientConfig config) {
+        this.agent = config.getUserAgent();
+        this.handlerConfig = config.getHandlerConfig();
+        this.hostInfo = config.getHostInfo();
+        this.client = vertx.createHttpClient(config.getOptions());
     }
 
-    static RequestOptions evaluateRequestOpts(HttpClientConfig clientConfig, RequestOptions options) {
+    static HostInfo evaluateRequestOpts(HttpClientConfig clientConfig, HostInfo options) {
         if (Objects.isNull(options)) {
-            final HttpClientOptions opt = clientConfig.getOptions();
-            return new RequestOptions().setHost(opt.getDefaultHost()).setPort(opt.getDefaultPort()).setSsl(opt.isSsl());
+            return clientConfig.getHostInfo();
         }
-        return options;
+        return JsonData.from(options.toJson().mergeIn(clientConfig.getHostInfo().toJson(), true), HostInfo.class);
     }
 
-    static RequestOptions evaluateRequestOpts(HttpClientConfig config, String path) {
-        return evaluateRequestOpts(config, path, (RequestOptions) null);
-    }
-
-    static RequestOptions evaluateRequestOpts(HttpClientConfig config, String path, RequestOptions options) {
-        RequestOptions opt = evaluateRequestOpts(config, options);
-        if (Strings.isNotBlank(path)) {
-            return opt.setURI(path);
-        }
-        return opt;
-    }
-
-    static RequestOptions evaluateRequestOpts(HttpClientConfig config, String path, RequestData requestData) {
-        return evaluateRequestOpts(config, (RequestOptions) null).setURI(computePath(path, requestData));
+    static RequestOptions evaluateRequestOpts(HostInfo hostInfo, String path) {
+        return new RequestOptions().setHost(hostInfo.getHost())
+                                   .setPort(hostInfo.getPort())
+                                   .setSsl(hostInfo.isSsl())
+                                   .setURI(path);
     }
 
     private static String computePath(String path, RequestData requestData) {
@@ -67,6 +73,15 @@ abstract class ClientDelegate implements IClientDelegate {
             return "";
         }
         return path;
+    }
+
+    static HttpClientConfig cloneConfig(@NonNull HttpClientConfig config, HostInfo hostInfo, int idleTimeout) {
+        HostInfo info = evaluateRequestOpts(config, hostInfo);
+        HttpClientOptions clientOpts = new HttpClientOptions(config.getOptions()).setIdleTimeout(idleTimeout)
+                                                                                 .setSsl(info.isSsl())
+                                                                                 .setDefaultHost(info.getHost())
+                                                                                 .setDefaultPort(info.getPort());
+        return IConfig.merge(config, new JsonObject().put("options", clientOpts.toJson()), HttpClientConfig.class);
     }
 
     @Override

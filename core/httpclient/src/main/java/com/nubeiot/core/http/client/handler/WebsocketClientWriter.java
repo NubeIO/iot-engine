@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import io.vertx.core.http.WebSocket;
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventModel;
 
+import io.vertx.core.http.WebSocket;
+import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

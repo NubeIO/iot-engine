@@ -2,6 +2,15 @@ package com.nubeiot.core.http.client;
 
 import java.util.Objects;
 
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
+import com.nubeiot.core.http.client.handler.ClientEndHandler;
+import com.nubeiot.core.http.client.handler.HttpClientWriter;
+import com.nubeiot.core.http.client.handler.HttpErrorHandler;
+import com.nubeiot.core.http.client.handler.HttpLightResponseHandler;
+
 import io.reactivex.Single;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -10,22 +19,11 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
-
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.client.HttpClientConfig.HttpClientHandlerConfig;
-import com.nubeiot.core.http.client.handler.HttpClientEndHandler;
-import com.nubeiot.core.http.client.handler.HttpClientErrorHandler;
-import com.nubeiot.core.http.client.handler.HttpClientWriter;
-import com.nubeiot.core.http.client.handler.HttpLightResponseHandler;
-
 import lombok.NonNull;
 
 class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegate {
@@ -42,41 +40,38 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
 
     @Override
     @SuppressWarnings("unchecked")
-    public Single<ResponseData> execute(RequestOptions options, HttpMethod method, RequestData requestData,
-                                        boolean swallowError) {
+    public Single<ResponseData> execute(String path, HttpMethod method, RequestData requestData, boolean swallowError) {
         RequestData reqData = decorator(requestData);
         return Single.create(emitter -> {
-            HttpClientHandlerConfig config = getConfig().getHttpHandlerConfig();
-            HttpLightResponseHandler responseHandler = new HttpLightResponseHandler<>(config.getLightBodyHandlerClass(),
-                                                                                      emitter, swallowError);
-            HttpClientErrorHandler exceptionHandler = HttpClientErrorHandler.create(emitter,
-                                                                                    config.getErrorHandlerClass());
-            HttpClientEndHandler endHandler = HttpClientEndHandler.create(get(), config.getEndHandlerClass());
-            HttpClientRequest r = get().request(method, evaluateRequestOpts(getConfig(), options), responseHandler)
+            HandlerConfig config = getHandlerConfig();
+            HttpLightResponseHandler responseHandler = new HttpLightResponseHandler<>(
+                config.getHttpLightBodyHandlerClass(), emitter, swallowError);
+            HttpErrorHandler exceptionHandler = HttpErrorHandler.create(emitter, config.getHttpErrorHandlerClass());
+            HttpClientRequest r = get().request(method, path, responseHandler)
                                        .exceptionHandler(exceptionHandler)
-                                       .endHandler(Objects.nonNull(this.endHandler) ? this.endHandler : endHandler);
+                                       .endHandler(new ClientEndHandler(getHostInfo(), false));
             logger.info("Make HTTP request {}::{} | <{}> | <{}>", r.method(), r.absoluteURI(), reqData.toJson());
-            HttpClientWriter.create(config.getClientWriterClass()).apply(r, reqData).end();
+            HttpClientWriter.create(config.getHttpClientWriterClass()).apply(r, reqData).end();
         });
     }
 
     @Override
-    public Single<ResponseData> upload(RequestOptions options, String uploadFile) {
+    public Single<ResponseData> upload(String path, String uploadFile) {
         return null;
     }
 
     @Override
-    public Single<ResponseData> push(RequestOptions options, ReadStream readStream, HttpMethod method) {
+    public Single<ResponseData> push(String path, ReadStream readStream, HttpMethod method) {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
-    public Single<AsyncFile> download(RequestOptions options, AsyncFile saveFile) {
+    public Single<AsyncFile> download(String path, AsyncFile saveFile) {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
-    public Single<WriteStream> pull(RequestOptions options, WriteStream writeStream) {
+    public Single<WriteStream> pull(String path, WriteStream writeStream) {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
@@ -93,7 +88,7 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
             headers.put(HttpHeaders.CONTENT_TYPE.toString(), HttpUtils.DEFAULT_CONTENT_TYPE);
         }
         if (!headers.containsKey(HttpHeaders.USER_AGENT.toString())) {
-            headers.put(HttpHeaders.USER_AGENT.toString(), getConfig().getUserAgent());
+            headers.put(HttpHeaders.USER_AGENT.toString(), getAgent());
         }
         return reqData;
     }

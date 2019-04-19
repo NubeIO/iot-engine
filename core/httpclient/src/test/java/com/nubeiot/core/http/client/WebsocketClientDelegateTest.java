@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -59,8 +58,7 @@ public class WebsocketClientDelegateTest {
     @Before
     public void setup() {
         vertx = Vertx.vertx();
-        config = new HttpClientConfig(new HttpClientOptions().setWebsocketCompressionAllowClientNoContext(true)
-                                                             .setWebsocketCompressionRequestServerNoContext(true));
+        config = new HttpClientConfig();
         controller = new EventController(vertx);
         client = WebsocketClientDelegate.create(vertx, config);
     }
@@ -77,7 +75,7 @@ public class WebsocketClientDelegateTest {
                                                  .setPort(443)
                                                  .setSsl(true)
                                                  .setURI("/echo");
-        client.open(WebsocketClientEventMetadata.create(LISTENER, PUBLISHER_ADDRESS), opt, null);
+        client.open(WebsocketClientEventMetadata.create(LISTENER, PUBLISHER_ADDRESS), null);
     }
 
     @Test
@@ -89,7 +87,7 @@ public class WebsocketClientDelegateTest {
                                                  .setURI("/echo");
         controller.register(LISTENER, new EventAsserter(LISTENER, context, async, new JsonObject().put("k", 1)));
         client = WebsocketClientDelegate.create(vertx, config);
-        client.open(WebsocketClientEventMetadata.create(LISTENER, PUBLISHER_ADDRESS), opt, null);
+        client.open(WebsocketClientEventMetadata.create(LISTENER, PUBLISHER_ADDRESS), null);
         Thread.sleep(1000);
         controller.request(PUBLISHER_ADDRESS, EventPattern.PUBLISH_SUBSCRIBE,
                            EventMessage.initial(EventAction.SEND, new JsonObject().put("k", 1)));

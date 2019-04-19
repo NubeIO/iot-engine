@@ -6,26 +6,34 @@ import io.vertx.ext.web.Router;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.http.base.HostInfo;
 
-import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = ServerInfo.Builder.class)
-public class ServerInfo implements JsonData, Shareable {
+public class ServerInfo extends HostInfo implements JsonData, Shareable {
 
-    private String host;
-    private int port;
     private String publicHost;
     private String apiPath;
     private String wsPath;
     private String downloadPath;
     private String uploadPath;
     private String servicePath;
-    private boolean ssl;
     private Router router;
 
+    @lombok.Builder(builderMethodName = "siBuilder")
+    public ServerInfo(String host, int port, boolean ssl, String publicHost, String apiPath, String wsPath,
+                      String downloadPath, String uploadPath, String servicePath, Router router) {
+        super(host, port, ssl);
+        this.publicHost = publicHost;
+        this.apiPath = apiPath;
+        this.wsPath = wsPath;
+        this.downloadPath = downloadPath;
+        this.uploadPath = uploadPath;
+        this.servicePath = servicePath;
+        this.router = router;
+    }
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {}

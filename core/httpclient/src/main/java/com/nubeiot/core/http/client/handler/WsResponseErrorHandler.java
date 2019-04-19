@@ -4,14 +4,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

@@ -90,7 +90,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
     }
 
     private ServerInfo createServerInfo(Router handler, int port) {
-        return ServerInfo.builder()
+        return ServerInfo.siBuilder()
                          .host(config.getHost())
                          .port(port)
                          .apiPath(config.getRestConfig().isEnabled() ? config.getRestConfig().getRootApi() : null)
@@ -196,7 +196,8 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             router.route()
                   .handler(StaticHandler.create()
                                         .setEnableRangeSupport(true)
-                                        .setSendVaryHeader(true).setFilesReadOnly(true)
+                                        .setSendVaryHeader(true)
+                                        .setFilesReadOnly(true)
                                         .setAllowRootFileSystemAccess(true)
                                         .setIncludeHidden(false)
                                         .setWebRoot(storageDir.toString()));
@@ -228,7 +229,8 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         router.post(uploadCfg.getPath())
               .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB))
               .handler(UploadFileHandler.create(handlerClass, controller, listenerEvent, storageDir, publicUrl))
-              .handler(new RestEventResponseHandler()).produces(HttpUtils.DEFAULT_CONTENT_TYPE);
+              .handler(new RestEventResponseHandler())
+              .produces(HttpUtils.DEFAULT_CONTENT_TYPE);
         return router;
     }
 

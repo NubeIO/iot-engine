@@ -1,37 +1,50 @@
 package com.nubeiot.core.http.client;
 
-import io.vertx.core.http.HttpClientOptions;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.http.client.handler.HttpClientEndHandler;
-import com.nubeiot.core.http.client.handler.HttpClientErrorHandler;
+import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.client.handler.HttpClientWriter;
+import com.nubeiot.core.http.client.handler.HttpErrorHandler;
 import com.nubeiot.core.http.client.handler.HttpHeavyResponseHandler;
 import com.nubeiot.core.http.client.handler.HttpLightResponseBodyHandler;
-import com.nubeiot.core.http.client.handler.WsConnectionErrorHandler;
+import com.nubeiot.core.http.client.handler.WsConnectErrorHandler;
 import com.nubeiot.core.http.client.handler.WsLightResponseDispatcher;
 import com.nubeiot.core.http.client.handler.WsResponseErrorHandler;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
-import lombok.Builder;
-import lombok.Builder.Default;
+import io.vertx.core.http.HttpClientOptions;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @Getter
-public class HttpClientConfig implements IConfig {
+public final class HttpClientConfig implements IConfig {
 
+    public static final int CONNECT_TIMEOUT_SECOND = 45;
+    public static final int HTTP_IDLE_TIMEOUT_SECOND = 15;
+    public static final int WS_IDLE_TIMEOUT_SECOND = 1200;
     private String userAgent = "nubeio.httpclient";
-    private HttpClientHandlerConfig httpHandlerConfig = HttpClientHandlerConfig.builder().build();
-    private WebsocketOptions websocketOptions = WebsocketOptions.builder().build();
+    private HostInfo hostInfo;
     private HttpClientOptions options;
+    private HandlerConfig handlerConfig = new HandlerConfig();
 
     HttpClientConfig() {
-        this(new HttpClientOptions().setIdleTimeout(30).setTryUseCompression(true));
+        this(new HttpClientOptions().setIdleTimeout(HTTP_IDLE_TIMEOUT_SECOND)
+                                    .setIdleTimeoutUnit(TimeUnit.SECONDS)
+                                    .setConnectTimeout(45000)
+                                    .setTryUseCompression(true)
+                                    .setWebsocketCompressionAllowClientNoContext(true)
+                                    .setWebsocketCompressionRequestServerNoContext(true)
+                                    .setWebsocketCompressionLevel(6)
+                                    .setTryUsePerFrameWebsocketCompression(false)
+                                    .setTryUsePerMessageWebsocketCompression(true));
     }
 
     HttpClientConfig(@NonNull HttpClientOptions options) {
@@ -44,65 +57,61 @@ public class HttpClientConfig implements IConfig {
     @Override
     public Class<? extends IConfig> parent() { return AppConfig.class; }
 
-    @Builder(builderClassName = "Builder")
-    @JsonDeserialize(builder = HttpClientHandlerConfig.Builder.class)
-    public static class HttpClientHandlerConfig {
-
-        @Default
-        private final String clientWriterClass = HttpClientWriter.class.getName();
-        @Default
-        private final String errorHandlerClass = HttpClientErrorHandler.class.getName();
-        @Default
-        private final String endHandlerClass = HttpClientEndHandler.class.getName();
-        @Default
-        private final String lightBodyHandlerClass = HttpLightResponseBodyHandler.class.getName();
-        @Default
-        private final String heavyBodyHandlerClass = HttpHeavyResponseHandler.class.getName();
-
-        public Class<? extends HttpClientWriter> getClientWriterClass() {
-            return Strings.isBlank(clientWriterClass)
-                   ? HttpClientWriter.class
-                   : ReflectionClass.findClass(clientWriterClass);
+    public HostInfo getHostInfo() {
+        if (Objects.nonNull(hostInfo)) {
+            return hostInfo;
         }
-
-        public Class<? extends HttpClientErrorHandler> getErrorHandlerClass() {
-            return Strings.isBlank(errorHandlerClass)
-                   ? HttpClientErrorHandler.class
-                   : ReflectionClass.findClass(errorHandlerClass);
-        }
-
-        public Class<? extends HttpClientEndHandler> getEndHandlerClass() {
-            return Strings.isBlank(endHandlerClass)
-                   ? HttpClientEndHandler.class
-                   : ReflectionClass.findClass(endHandlerClass);
-        }
-
-        public Class<? extends HttpLightResponseBodyHandler> getLightBodyHandlerClass() {
-            return Strings.isBlank(lightBodyHandlerClass)
-                   ? HttpLightResponseBodyHandler.class
-                   : ReflectionClass.findClass(lightBodyHandlerClass);
-        }
-
-        @JsonPOJOBuilder(withPrefix = "")
-        public static class Builder {}
-
+        return HostInfo.builder()
+                       .host(this.getOptions().getDefaultHost())
+                       .port(this.getOptions().getDefaultPort())
+                       .ssl(this.getOptions().isSsl())
+                       .build();
     }
 
+    @Getter
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class HandlerConfig {
 
-    @Builder(builderClassName = "Builder")
-    @JsonDeserialize(builder = HttpClientHandlerConfig.Builder.class)
-    public static class WebsocketOptions {
+        private Class<? extends HttpClientWriter> httpClientWriterClass = HttpClientWriter.class;
+        private Class<? extends HttpLightResponseBodyHandler> httpLightBodyHandlerClass
+            = HttpLightResponseBodyHandler.class;
+        private Class<? extends HttpHeavyResponseHandler> httpHeavyBodyHandlerClass = HttpHeavyResponseHandler.class;
+        private Class<? extends HttpErrorHandler> httpErrorHandlerClass = HttpErrorHandler.class;
+        private Class<? extends WsConnectErrorHandler> wsConnectErrorHandlerClass = WsConnectErrorHandler.class;
+        private Class<? extends WsResponseErrorHandler> wsErrorHandlerClass = WsResponseErrorHandler.class;
+        private Class<? extends WsLightResponseDispatcher> wsLightResponseHandlerClass
+            = WsLightResponseDispatcher.class;
 
-        @Default
-        private final String connectionErrorHandlerClass = WsConnectionErrorHandler.class.getName();
-        @Default
-        private final String errorHandlerClass = WsResponseErrorHandler.class.getName();
-        @Default
-        private final String lightResponseHandlerClass = WsLightResponseDispatcher.class.getName();
-
-
-        @JsonPOJOBuilder(withPrefix = "")
-        public static class Builder {}
+        @JsonCreator
+        HandlerConfig(@JsonProperty("httpClientWriterClass") String httpClientWriterClass,
+                      @JsonProperty("httpLightBodyHandlerClass") String httpLightBodyHandlerClass,
+                      @JsonProperty("httpHeavyBodyHandlerClass") String httpHeavyBodyHandlerClass,
+                      @JsonProperty("httpErrorHandlerClass") String httpErrorHandlerClass,
+                      @JsonProperty("wsConnectErrorHandlerClass") String wsConnectErrorHandlerClass,
+                      @JsonProperty("wsErrorHandlerClass") String wsErrorHandlerClass,
+                      @JsonProperty("wsLightResponseHandlerClass") String wsLightResponseHandlerClass) {
+            this.httpClientWriterClass = Strings.isBlank(httpClientWriterClass)
+                                         ? HttpClientWriter.class
+                                         : ReflectionClass.findClass(httpClientWriterClass);
+            this.httpLightBodyHandlerClass = Strings.isBlank(httpLightBodyHandlerClass)
+                                             ? HttpLightResponseBodyHandler.class
+                                             : ReflectionClass.findClass(httpLightBodyHandlerClass);
+            this.httpHeavyBodyHandlerClass = Strings.isBlank(httpHeavyBodyHandlerClass)
+                                             ? HttpHeavyResponseHandler.class
+                                             : ReflectionClass.findClass(httpHeavyBodyHandlerClass);
+            this.httpErrorHandlerClass = Strings.isBlank(httpErrorHandlerClass)
+                                         ? HttpErrorHandler.class
+                                         : ReflectionClass.findClass(httpErrorHandlerClass);
+            this.wsConnectErrorHandlerClass = Strings.isBlank(wsConnectErrorHandlerClass)
+                                              ? WsConnectErrorHandler.class
+                                              : ReflectionClass.findClass(wsConnectErrorHandlerClass);
+            this.wsErrorHandlerClass = Strings.isBlank(wsErrorHandlerClass)
+                                       ? WsResponseErrorHandler.class
+                                       : ReflectionClass.findClass(wsErrorHandlerClass);
+            this.wsLightResponseHandlerClass = Strings.isBlank(wsLightResponseHandlerClass)
+                                               ? WsLightResponseDispatcher.class
+                                               : ReflectionClass.findClass(wsLightResponseHandlerClass);
+        }
 
     }
 

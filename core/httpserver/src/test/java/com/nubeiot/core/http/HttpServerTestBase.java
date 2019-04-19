@@ -34,6 +34,7 @@ import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.client.HttpClientDelegate;
@@ -94,8 +95,8 @@ public class HttpServerTestBase {
     protected void assertRestByClient(TestContext context, HttpMethod method, String path, RequestData requestData,
                                       int codeExpected, JsonObject bodyExpected, Customization... customizations) {
         Async async = context.async();
-        HttpClientDelegate.create(vertx.getDelegate())
-                          .execute(requestOptions.setURI(path), method, requestData)
+        HttpClientDelegate.create(vertx.getDelegate(), HostInfo.from(requestOptions))
+                          .execute(path, method, requestData)
                           .doFinally(() -> TestHelper.testComplete(async))
                           .subscribe(resp -> {
                               System.out.println("Client asserting...");
