@@ -31,7 +31,7 @@ import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 
 //TODO temporary ignore
-//@Ignore
+@Ignore
 @RunWith(VertxUnitRunner.class)
 public class SimulatorIntegrationTest {
 
@@ -52,15 +52,12 @@ public class SimulatorIntegrationTest {
     @BeforeClass
     public static void beforeAll(TestContext context) throws IOException {
         TestHelper.setup();
-        verticle = new BACnetMaster();
+        verticle = new BACnetMasterTest();
         vertx = Vertx.vertx();
         eventController = new EventController(vertx);
         JsonObject masterConfig = IConfig.fromClasspath("master.json", NubeConfig.class).toJson();
         masterBACnetConfig = IConfig.from(masterConfig, BACnetConfig.class);
-        VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(masterConfig), verticle,
-                           event -> {
-                           });
-
+        VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(masterConfig), verticle);
         simConfig = IConfig.fromClasspath("config.json", BACnetConfig.class);
         remoteDeviceId = simConfig.getDeviceId();
         testPoints = Configs.loadJsonConfig("points.json");
@@ -82,7 +79,6 @@ public class SimulatorIntegrationTest {
                              });
     }
 
-    @Ignore
     @Test
     public void deviceExtendedInfoTest(TestContext context) throws Exception {
         Async async = context.async();
@@ -100,7 +96,6 @@ public class SimulatorIntegrationTest {
                              });
     }
 
-    @Ignore
     @Test
     public void deviceExtendedInfoNotFoundExceptionTest(TestContext context) throws Exception {
         Async async = context.async();
@@ -115,7 +110,6 @@ public class SimulatorIntegrationTest {
                              });
     }
 
-    @Ignore
     @Test
     public void readAllPoints(TestContext context) throws Exception {
         Async async = context.async();
@@ -129,15 +123,15 @@ public class SimulatorIntegrationTest {
                                  EventMessage message = EventMessage.from(messageAsyncResult.result().body());
                                  JsonObject data = message.getData();
                                  context.assertTrue(message.isSuccess());
-                                 context.assertFalse(message.getData().isEmpty());
-                                 testPoints.getMap().keySet().forEach(o -> {
-                                     context.assertTrue(data.containsKey(BACnetDataConversions.pointIDNubeToBACnet(o)));
-                                 });
+                                 context.assertFalse(data.isEmpty());
+                                 testPoints.getMap()
+                                           .keySet()
+                                           .forEach(o -> context.assertTrue(
+                                               data.containsKey(BACnetDataConversions.pointIDNubeToBACnet(o))));
                                  TestHelper.testComplete(async);
                              });
     }
 
-    @Ignore
     @Test
     public void readSinglePoint(TestContext context) throws Exception {
         Async async = context.async();
@@ -148,26 +142,28 @@ public class SimulatorIntegrationTest {
                                                   addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId)
                                                                                     .put("objectId",
                                                                                          BACnetDataConversions.pointIDNubeToBACnet(
-                                                                                             p1))), messageAsyncResult -> {
-                EventMessage message = EventMessage.from(messageAsyncResult.result().body());
-                context.assertTrue(message.isSuccess());
+                                                                                             p1))),
+                             messageAsyncResult -> {
+                                 EventMessage message = EventMessage.from(messageAsyncResult.result().body());
+                                 context.assertTrue(message.isSuccess());
 
-                Object val = p1o.getValue("value");
-                if (val instanceof Integer) {
-                    val = new Float((Integer) val);
-                }
-                context.assertEquals(val, message.getData().getValue(PropertyIdentifier.presentValue.toString()));
-                TestHelper.testComplete(async);
-            });
+                                 Object val = p1o.getValue("value");
+                                 if (val instanceof Integer) {
+                                     val = new Float((Integer) val);
+                                 }
+                                 context.assertEquals(val, message.getData()
+                                                                  .getValue(
+                                                                      PropertyIdentifier.presentValue.toString()));
+                                 TestHelper.testComplete(async);
+                             });
     }
 
-    @Ignore
     @Test
     public void writePointTest(TestContext context) throws Exception {
         Async async = context.async();
         String pointId = BACnetDataConversions.pointIDNubeToBACnet("R1");
         JsonObject point = testPoints.getJsonObject("R1");
-        boolean val = point.getInteger("value") == 1 ? true : false;
+        boolean val = point.getInteger("value") == 1;
         JsonObject initMessage = addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId)
                                                                    .put("objectId", pointId)
                                                                    .put("priority", 16)
@@ -189,8 +185,7 @@ public class SimulatorIntegrationTest {
                                      messageAsyncResult2 -> {
                                          EventMessage message2 = EventMessage.from(messageAsyncResult2.result().body());
                                          context.assertTrue(message2.isSuccess());
-
-                                         int expected = !val == true ? 1 : 0;
+                                         int expected = val ? 0 : 1;
                                          context.assertEquals(expected, message2.getData()
                                                                                 .getValue(
                                                                                     PropertyIdentifier.presentValue.toString()));

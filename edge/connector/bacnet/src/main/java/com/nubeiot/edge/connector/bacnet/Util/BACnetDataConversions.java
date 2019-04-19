@@ -108,7 +108,7 @@ public class BACnetDataConversions {
 
     public static String pointIDNubeToBACnet(String id) {
         String pointPrefix = id.substring(0, id.length() - 1);
-        int inst = Integer.parseInt(id.substring(id.length() - 1, id.length()));
+        int inst = Integer.parseInt(id.substring(id.length() - 1));
         switch (pointPrefix) {
             case "UI":
                 return ObjectType.analogInput.toString() + ":" + inst;
