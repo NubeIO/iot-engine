@@ -2,55 +2,52 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.net.InterfaceAddress;
 
-import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NetworkException;
 import com.nubeiot.core.utils.Networks;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.connector.bacnet.BACnetConfig.IPConfig;
 import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 import com.serotonin.bacnet4j.npdu.ip.IpNetworkBuilder;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
+import com.serotonin.bacnet4j.transport.Transport;
+import com.serotonin.bacnet4j.util.sero.IpAddressUtils;
 
-import lombok.RequiredArgsConstructor;
-
-@RequiredArgsConstructor
 class TransportIP implements TransportProvider {
 
-    private final IpNetwork network;
+    private final Transport transport;
 
-    //    static TransportIP autoSelect() {
-    //        return create(Networks.firstNATIPv4());
-    //    }
-    //
-    //    static TransportIP bySubnet(String subnet) {
-    //        throw new UnsupportedOperationException("Not yet implemented");
-    //    }
-    //
-    //    static TransportIP byName(String networkInterface) {
-    //        return create(Networks.findByName(networkInterface));
-    //    }
+    private TransportIP(IpNetwork network) { this.transport = new DefaultTransport(network); }
 
-    static TransportIP byAll(String ip, String networkName, Integer port) {
-        IpNetworkBuilder builder = new IpNetworkBuilder();
-        InterfaceAddress address = null;
-        if (ip != null && !ip.isEmpty()) {
-            //            builder.withLocalBindAddress(ip);
-            throw new UnsupportedOperationException("Not yet implemented");
-        } else if (networkName != null && !networkName.isEmpty()) {
-            address = Networks.findByName(networkName);
-        } else {
-            address = Networks.firstNATIPv4();
+    static TransportIP byConfig(IPConfig config) {
+        if (Strings.isNotBlank(config.getSubnet())) {
+            return bySubnet(config.getSubnet(), config.getPort());
         }
+        return byNetworkName(config.getNetworkInterface(), config.getPort());
+    }
 
-        if (address == null) {
-            throw new NubeException("No network interface found");
+    static TransportIP bySubnet(String subnet, int port) {
+        String[] parts = Strings.requireNotBlank(subnet).split("/");
+        int prefix = parts.length < 2 ? 0 : Strings.convertToInt(parts[1], 0);
+        String check = IpAddressUtils.checkIpMask(parts[0]);
+        if (Strings.isNotBlank(check)) {
+            throw new NetworkException("Subnet is invalid: " + check);
         }
-        if (port != null && port != 0) {
-            builder.withPort(port);
-        }
+        IpNetworkBuilder builder = new IpNetworkBuilder().withSubnet(parts[0], prefix)
+                                                         .withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT));
+        return new TransportIP(builder.build());
+    }
 
-        return new TransportIP(
-            builder.withBroadcast(address.getBroadcast().getHostAddress(), address.getNetworkPrefixLength()).build());
+    static TransportIP byNetworkName(String networkName, int port) {
+        InterfaceAddress address = Strings.isBlank(networkName)
+                                   ? Networks.firstNATIPv4()
+                                   : Networks.findByName(networkName);
+        IpNetworkBuilder builder = new IpNetworkBuilder().withBroadcast(address.getBroadcast().getHostAddress(),
+                                                                        address.getNetworkPrefixLength())
+                                                         .withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT));
+        return new TransportIP(builder.build());
     }
 
     @Override
-    public DefaultTransport get() { return new DefaultTransport(network); }
+    public Transport get() { return transport; }
 
 }

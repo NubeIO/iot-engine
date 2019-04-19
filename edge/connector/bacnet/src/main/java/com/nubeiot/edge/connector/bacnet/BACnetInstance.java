@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -18,7 +16,6 @@ import io.vertx.reactivex.core.Vertx;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig.BACnetNetworkConfig;
-import com.nubeiot.edge.connector.bacnet.BACnetConfig.IPConfig;
 import com.nubeiot.edge.connector.bacnet.Util.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.Util.LocalPointObjectUtils;
 import com.serotonin.bacnet4j.LocalDevice;
@@ -71,11 +68,7 @@ public class BACnetInstance {
                            Vertx vertx) {
         this.vertx = vertx;
         this.config = config;
-        Transport transport = netConfig instanceof IPConfig
-                              ? TransportIP.byAll(((IPConfig) netConfig).getSubnet(),
-                                                  ((IPConfig) netConfig).getNetworkInterface(),
-                                                  ((IPConfig) netConfig).getPort()).get()
-                              : new TransportMstp().get();
+        Transport transport = TransportProvider.byConfig(netConfig).get();
 
         //TODO: set name and model name
         localDevice = new LocalDevice(config.getDeviceId(), transport);
@@ -181,11 +174,8 @@ public class BACnetInstance {
                 //                    .presentValue));
                 //                }
             });
-            List<Pair<ObjectPropertyReference, Encodable>> reply = RequestUtils.readProperties(localDevice,
-                                                                                               remoteDevice, refs,
-                                                                                               null);
-
-            return BACnetDataConversions.deviceObjectList(reply);
+            return BACnetDataConversions.deviceObjectList(
+                RequestUtils.readProperties(localDevice, remoteDevice, refs, true, null));
         });
     }
 
@@ -255,17 +245,17 @@ public class BACnetInstance {
     public Single<JsonObject> remoteObjectSubscribeCOV(RemoteDevice rd, ObjectIdentifier obj) {
         boolean correctID = false;
         while (!correctID) {
-                int subID = (int) Math.floor((Math.random() * 100) + 1);
-                UnsignedInteger subProcessID = new UnsignedInteger(subID);
-                UnsignedInteger lifetime = new UnsignedInteger(0);
-                SubscribeCOVRequest request = new SubscribeCOVRequest(subProcessID, obj, Boolean.TRUE, lifetime);
+            int subID = (int) Math.floor((Math.random() * 100) + 1);
+            UnsignedInteger subProcessID = new UnsignedInteger(subID);
+            UnsignedInteger lifetime = new UnsignedInteger(0);
+            SubscribeCOVRequest request = new SubscribeCOVRequest(subProcessID, obj, Boolean.TRUE, lifetime);
             try {
                 localDevice.send(rd, request).get();
             } catch (BACnetException e) {
                 //                    logger.warn(e.getMessage(), e);
                 return Single.error(e);
             }
-                correctID = true;
+            correctID = true;
         }
         return Single.just(new JsonObject());
     }

@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 
 import lombok.Getter;
 
@@ -51,7 +52,7 @@ public class BACnetConfig implements IConfig {
         public static final String NAME = "__ip__";
         private String subnet;
         private String networkInterface;
-        private int port;
+        private int port = IpNetwork.DEFAULT_PORT;
 
         @Override
         public String name() { return NAME; }
