@@ -4,13 +4,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -30,12 +31,13 @@ public abstract class WsResponseErrorHandler implements Handler<Throwable> {
     public static <T extends WsResponseErrorHandler> T create(@NonNull EventController controller,
                                                               @NonNull EventModel listener,
                                                               @NonNull Class<T> errorHandlerClass) {
+        if (Objects.isNull(errorHandlerClass) || WsResponseErrorHandler.class.equals(errorHandlerClass)) {
+            return (T) new IgnoreWsResponseError(controller, listener) {};
+        }
         Map<Class, Object> params = new LinkedHashMap<>();
         params.put(EventController.class, controller);
         params.put(EventModel.class, listener);
-        return Objects.isNull(errorHandlerClass) || WsResponseErrorHandler.class.equals(errorHandlerClass)
-               ? (T) new IgnoreWsResponseError(controller, listener) {}
-               : ReflectionClass.createObject(errorHandlerClass, params);
+        return ReflectionClass.createObject(errorHandlerClass, params);
     }
 
     public static class IgnoreWsResponseError extends WsResponseErrorHandler {

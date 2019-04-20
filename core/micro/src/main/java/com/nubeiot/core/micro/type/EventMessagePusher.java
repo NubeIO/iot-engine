@@ -18,7 +18,7 @@ public interface EventMessagePusher {
      * @param dataConsumer  Success Data consumer
      * @param errorConsumer Error consumer
      */
-    void push(String path, HttpMethod httpMethod, RequestData requestData, Consumer<ResponseData> dataConsumer,
-              Consumer<Throwable> errorConsumer);
+    void execute(String path, HttpMethod httpMethod, RequestData requestData, Consumer<ResponseData> dataConsumer,
+                 Consumer<Throwable> errorConsumer);
 
 }

@@ -1,37 +1,70 @@
 package com.nubeiot.core.http.client;
 
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.base.HostInfo;
-
 import io.reactivex.Single;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
+
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.base.HostInfo;
+
 import lombok.NonNull;
 
+/**
+ * Due cache mechanism, before closing {@code Vertx}, it is mandatory to call {@link HttpClientRegistry#clear()}
+ */
 public interface HttpClientDelegate extends IClientDelegate {
 
+    /**
+     * Create new {@code HTTP client} by wrapping another {@code HTTP client}. It is used by {@code Service Discovery}
+     * and not cached then after using, must close {@code HTTP client} explicit
+     *
+     * @param client HTTP Client instance
+     * @return {@code HTTP client delegate}
+     */
     static HttpClientDelegate create(@NonNull HttpClient client) {
         return new HttpClientDelegateImpl(client);
     }
 
+    /**
+     * Create new {@code HTTP client}
+     *
+     * @param vertx  Vertx
+     * @param config HTTP Client config
+     * @return {@code HTTP client delegate}
+     */
     static HttpClientDelegate create(@NonNull Vertx vertx, @NonNull HttpClientConfig config) {
-        return HttpClientRegistry.getInstance()
-                                 .getHttpClient(config.getHostInfo(), () -> new HttpClientDelegateImpl(vertx, config));
+        return create(vertx, config, null);
     }
 
+    /**
+     * Create new {@code HTTP client} by default config and given host info
+     *
+     * @param vertx    Vertx
+     * @param hostInfo Override {@code host}, {@code port}, {@code SSL} option in config
+     * @return {@code HTTP client delegate}
+     */
     static HttpClientDelegate create(@NonNull Vertx vertx, HostInfo hostInfo) {
+        return create(vertx, new HttpClientConfig(), hostInfo);
+    }
+
+    /**
+     * Create new {@code Websocket client} with {@code idle timeout} is {@link HttpClientConfig#WS_IDLE_TIMEOUT_SECOND}
+     * seconds
+     *
+     * @param vertx    Vertx
+     * @param config   HTTP Client config
+     * @param hostInfo Override {@code host}, {@code port}, {@code SSL} option in config
+     * @return {@code HTTP client delegate}
+     */
+    static HttpClientDelegate create(@NonNull Vertx vertx, @NonNull HttpClientConfig config, HostInfo hostInfo) {
+        HttpClientConfig clone = ClientDelegate.cloneConfig(config, hostInfo, config.getOptions().getIdleTimeout());
         return HttpClientRegistry.getInstance()
-                                 .getHttpClient(hostInfo, () -> new HttpClientDelegateImpl(vertx,
-                                                                                           ClientDelegate.cloneConfig(
-                                                                                               new HttpClientConfig(),
-                                                                                               hostInfo,
-                                                                                               HttpClientConfig.HTTP_IDLE_TIMEOUT_SECOND)));
+                                 .getHttpClient(clone.getHostInfo(), () -> new HttpClientDelegateImpl(vertx, clone));
     }
 
     /**
@@ -150,7 +183,5 @@ public interface HttpClientDelegate extends IClientDelegate {
      * @return single {@code WriteStream} a reference to {@code saveFile }parameter, so the API can be used fluently
      */
     Single<WriteStream> pull(String path, WriteStream writeStream);
-
-    HttpClientDelegate overrideEndHandler(Handler<Void> o);
 
 }

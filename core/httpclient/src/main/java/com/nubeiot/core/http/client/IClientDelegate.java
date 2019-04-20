@@ -2,21 +2,22 @@ package com.nubeiot.core.http.client;
 
 import java.util.function.Supplier;
 
-import com.nubeiot.core.http.base.HostInfo;
-
 import io.vertx.core.http.HttpClient;
+
+import com.nubeiot.core.http.base.HostInfo;
+import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
 
 interface IClientDelegate extends Supplier<HttpClient> {
 
     /**
-     * @return client agent
+     * @return client HTTP agent
      */
-    String getAgent();
+    String getUserAgent();
 
     /**
      * @return handler config
      */
-    HttpClientConfig.HandlerConfig getHandlerConfig();
+    HandlerConfig getHandlerConfig();
 
     /**
      * @return HostInfo

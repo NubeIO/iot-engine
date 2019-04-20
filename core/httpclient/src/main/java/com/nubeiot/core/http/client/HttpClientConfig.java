@@ -3,6 +3,8 @@ package com.nubeiot.core.http.client;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import io.vertx.core.http.HttpClientOptions;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
@@ -18,7 +20,6 @@ import com.nubeiot.core.http.client.handler.WsResponseErrorHandler;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
-import io.vertx.core.http.HttpClientOptions;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

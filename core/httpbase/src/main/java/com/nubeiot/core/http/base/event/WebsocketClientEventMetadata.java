@@ -3,6 +3,7 @@ package com.nubeiot.core.http.base.event;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -33,12 +34,17 @@ public class WebsocketClientEventMetadata {
     private final EventModel publisher;
 
     public static WebsocketClientEventMetadata create(@NonNull EventModel listener, String publisherAddress) {
-        return create("", listener, EventModel.builder()
-                                              .address(publisherAddress)
-                                              .pattern(EventPattern.POINT_2_POINT)
-                                              .local(true)
-                                              .event(EventAction.SEND)
-                                              .build());
+        return create("", listener, publisherAddress);
+    }
+
+    public static WebsocketClientEventMetadata create(String path, @NonNull EventModel listener,
+                                                      String publisherAddress) {
+        return create(path, listener, EventModel.builder()
+                                                .address(Strings.requireNotBlank(publisherAddress))
+                                                .pattern(EventPattern.POINT_2_POINT)
+                                                .local(true)
+                                                .event(EventAction.SEND)
+                                                .build());
     }
 
     public static WebsocketClientEventMetadata create(String path, @NonNull EventModel listener,

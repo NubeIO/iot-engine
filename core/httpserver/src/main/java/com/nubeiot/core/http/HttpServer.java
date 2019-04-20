@@ -28,6 +28,7 @@ import com.nubeiot.core.http.HttpConfig.FileStorageConfig;
 import com.nubeiot.core.http.HttpConfig.FileStorageConfig.DownloadConfig;
 import com.nubeiot.core.http.HttpConfig.FileStorageConfig.UploadConfig;
 import com.nubeiot.core.http.HttpConfig.RestConfig;
+import com.nubeiot.core.http.HttpConfig.RestConfig.DynamicRouteConfig;
 import com.nubeiot.core.http.HttpConfig.StaticWebConfig;
 import com.nubeiot.core.http.HttpConfig.WebsocketConfig;
 import com.nubeiot.core.http.base.HttpUtils;
@@ -90,22 +91,21 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
     }
 
     private ServerInfo createServerInfo(Router handler, int port) {
+        final RestConfig restCfg = config.getRestConfig();
+        final DynamicRouteConfig dynamicCfg = restCfg.getDynamicConfig();
+        final WebsocketConfig wsCfg = config.getWebsocketConfig();
+        final FileStorageConfig storageCfg = config.getFileStorageConfig();
+        final DownloadConfig downCfg = storageCfg.getDownloadConfig();
+        final UploadConfig uploadCfg = storageCfg.getUploadConfig();
         return ServerInfo.siBuilder()
                          .host(config.getHost())
                          .port(port)
-                         .apiPath(config.getRestConfig().isEnabled() ? config.getRestConfig().getRootApi() : null)
-                         .wsPath(
-                             config.getWebsocketConfig().isEnabled() ? config.getWebsocketConfig().getRootWs() : null)
-                         .servicePath(
-                             config.getRestConfig().isEnabled() && config.getRestConfig().getDynamicConfig().isEnabled()
-                             ? config.getRestConfig().getDynamicConfig().getPath()
-                             : null)
-                         .downloadPath(config.getFileStorageConfig().isEnabled() ? config.getFileStorageConfig()
-                                                                                         .getDownloadConfig()
-                                                                                         .getPath() : null)
-                         .uploadPath(config.getFileStorageConfig().isEnabled() ? config.getFileStorageConfig()
-                                                                                       .getUploadConfig()
-                                                                                       .getPath() : null)
+                         .publicHost(config.publicServerUrl())
+                         .apiPath(restCfg.isEnabled() ? restCfg.getRootApi() : null)
+                         .wsPath(wsCfg.isEnabled() ? wsCfg.getRootWs() : null)
+                         .servicePath(restCfg.isEnabled() && dynamicCfg.isEnabled() ? dynamicCfg.getPath() : null)
+                         .downloadPath(storageCfg.isEnabled() && downCfg.isEnabled() ? downCfg.getPath() : null)
+                         .uploadPath(storageCfg.isEnabled() && uploadCfg.isEnabled() ? uploadCfg.getPath() : null)
                          .router(handler)
                          .build();
     }
@@ -133,7 +133,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                       .failureHandler(ResponseTimeHandler.create())
                       .failureHandler(new FailureContextHandler());
             String pathNoUpload = "(?!" + config.getFileStorageConfig().getUploadConfig().getPath() + ").+";
-            initFileStorageRouter(mainRouter, config.getFileStorageConfig(), config.publicUrl());
+            initFileStorageRouter(mainRouter, config.getFileStorageConfig(), config.publicServerUrl());
             mainRouter.routeWithRegex(pathNoUpload)
                       .handler(BodyHandler.create(false).setBodyLimit(config.getMaxBodySizeMB() * MB));
             initWebSocketRouter(mainRouter, config.getWebsocketConfig());
@@ -188,7 +188,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         }
         Path storageDir = Paths.get(FileUtils.createFolder(dataDir, storageConfig.getDir()));
 
-        //FixMe: Need to address in backend and frontend in parallel
+        //FIXME: Need to address in backend and frontend in parallel
         if (storageConfig.isExternalHandler()) {
             router.route()
                   .handler(BodyHandler.create(storageDir.toString())

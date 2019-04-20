@@ -1,12 +1,16 @@
 package com.nubeiot.core.http.client;
 
+import io.vertx.core.MultiMap;
+import io.vertx.core.Vertx;
+
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.event.WebsocketClientEventMetadata;
 
-import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
 import lombok.NonNull;
 
+/**
+ * Due cache mechanism, before closing {@code Vertx}, it is mandatory to call {@link HttpClientRegistry#clear()}
+ */
 public interface WebsocketClientDelegate extends IClientDelegate {
 
     /**
@@ -15,10 +19,23 @@ public interface WebsocketClientDelegate extends IClientDelegate {
      *
      * @param vertx  Vertx
      * @param config HTTP Client config
-     * @return websocket client delegate
+     * @return {@code Websocket client delegate}
      */
     static WebsocketClientDelegate create(@NonNull Vertx vertx, @NonNull HttpClientConfig config) {
         return create(vertx, config, HttpClientConfig.WS_IDLE_TIMEOUT_SECOND);
+    }
+
+    /**
+     * Create new {@code Websocket client} with {@code idle timeout} is {@link HttpClientConfig#WS_IDLE_TIMEOUT_SECOND}
+     * seconds
+     *
+     * @param vertx    Vertx
+     * @param config   HTTP Client config
+     * @param hostInfo Override {@code host}, {@code port}, {@code SSL} option in config
+     * @return {@code Websocket client delegate}
+     */
+    static WebsocketClientDelegate create(@NonNull Vertx vertx, @NonNull HttpClientConfig config, HostInfo hostInfo) {
+        return create(vertx, config, hostInfo, HttpClientConfig.WS_IDLE_TIMEOUT_SECOND);
     }
 
     /**
@@ -27,7 +44,7 @@ public interface WebsocketClientDelegate extends IClientDelegate {
      * @param vertx       Vertx
      * @param config      HTTP Client config
      * @param idleTimeout Idle timeout
-     * @return websocket client delegate
+     * @return {@code Websocket client delegate}
      */
     static WebsocketClientDelegate create(@NonNull Vertx vertx, @NonNull HttpClientConfig config, int idleTimeout) {
         return create(vertx, config, null, idleTimeout);
@@ -40,7 +57,7 @@ public interface WebsocketClientDelegate extends IClientDelegate {
      * @param config      HTTP Client config
      * @param hostInfo    Override {@code host}, {@code port}, {@code SSL} option in config
      * @param idleTimeout Idle timeout
-     * @return websocket client delegate
+     * @return {@code Websocket client delegate}
      */
     static WebsocketClientDelegate create(@NonNull Vertx vertx, @NonNull HttpClientConfig config, HostInfo hostInfo,
                                           int idleTimeout) {

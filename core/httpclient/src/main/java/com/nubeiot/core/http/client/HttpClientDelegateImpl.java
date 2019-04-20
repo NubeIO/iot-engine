@@ -2,17 +2,7 @@ package com.nubeiot.core.http.client;
 
 import java.util.Objects;
 
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
-import com.nubeiot.core.http.client.handler.ClientEndHandler;
-import com.nubeiot.core.http.client.handler.HttpClientWriter;
-import com.nubeiot.core.http.client.handler.HttpErrorHandler;
-import com.nubeiot.core.http.client.handler.HttpLightResponseHandler;
-
 import io.reactivex.Single;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.http.HttpClient;
@@ -24,6 +14,16 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
+
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
+import com.nubeiot.core.http.client.handler.ClientEndHandler;
+import com.nubeiot.core.http.client.handler.HttpClientWriter;
+import com.nubeiot.core.http.client.handler.HttpErrorHandler;
+import com.nubeiot.core.http.client.handler.HttpLightResponseHandler;
+
 import lombok.NonNull;
 
 class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegate {
@@ -46,7 +46,8 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
             HandlerConfig config = getHandlerConfig();
             HttpLightResponseHandler responseHandler = new HttpLightResponseHandler<>(
                 config.getHttpLightBodyHandlerClass(), emitter, swallowError);
-            HttpErrorHandler exceptionHandler = HttpErrorHandler.create(emitter, config.getHttpErrorHandlerClass());
+            HttpErrorHandler exceptionHandler = HttpErrorHandler.create(emitter, getHostInfo(),
+                                                                        config.getHttpErrorHandlerClass());
             HttpClientRequest r = get().request(method, path, responseHandler)
                                        .exceptionHandler(exceptionHandler)
                                        .endHandler(new ClientEndHandler(getHostInfo(), false));
@@ -75,12 +76,6 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    @Override
-    public HttpClientDelegate overrideEndHandler(Handler<Void> endHandler) {
-        this.endHandler = endHandler;
-        return this;
-    }
-
     private RequestData decorator(RequestData requestData) {
         RequestData reqData = Objects.isNull(requestData) ? RequestData.builder().build() : requestData;
         final JsonObject headers = reqData.headers();
@@ -88,7 +83,7 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
             headers.put(HttpHeaders.CONTENT_TYPE.toString(), HttpUtils.DEFAULT_CONTENT_TYPE);
         }
         if (!headers.containsKey(HttpHeaders.USER_AGENT.toString())) {
-            headers.put(HttpHeaders.USER_AGENT.toString(), getAgent());
+            headers.put(HttpHeaders.USER_AGENT.toString(), this.getUserAgent());
         }
         return reqData;
     }

@@ -5,20 +5,19 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.vertx.core.MultiMap;
+import io.vertx.core.Vertx;
+
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.base.event.WebsocketClientEventMetadata;
+import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
 import com.nubeiot.core.http.client.handler.ClientEndHandler;
 import com.nubeiot.core.http.client.handler.WebsocketClientWriter;
 import com.nubeiot.core.http.client.handler.WsConnectErrorHandler;
 import com.nubeiot.core.http.client.handler.WsLightResponseDispatcher;
 import com.nubeiot.core.http.client.handler.WsResponseErrorHandler;
-
-import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.RequestOptions;
-import io.vertx.core.json.JsonObject;
 
 class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketClientDelegate {
 
@@ -36,11 +35,10 @@ class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketCli
         EventController controller = new EventController(vertx);
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> ref = new AtomicReference<>();
-        HttpClientConfig.HandlerConfig handler = getHandlerConfig();
-        RequestOptions opts = ClientDelegate.evaluateRequestOpts(getHostInfo(), metadata.getPath());
-        get().websocket(opts, headers, ws -> {
+        HandlerConfig handler = getHandlerConfig();
+        get().websocket(metadata.getPath(), headers, ws -> {
             latch.countDown();
-            logger.info("Websocket to {} is connected", JsonObject.mapFrom(opts).encode());
+            logger.info("Websocket to {} is connected", getHostInfo().toJson());
             controller.register(metadata.getPublisher(), new WebsocketClientWriter(ws, metadata.getPublisher()));
             EventModel listener = metadata.getListener();
             ws.handler(
@@ -57,7 +55,8 @@ class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketCli
             if (r && Objects.isNull(error)) {
                 return;
             }
-            WsConnectErrorHandler.create(controller, handler.getWsConnectErrorHandlerClass()).handle(error);
+            WsConnectErrorHandler.create(getHostInfo(), controller, handler.getWsConnectErrorHandlerClass())
+                                 .handle(error);
         } catch (InterruptedException e) {
             throw new InitializerError("Interrupted thread when open websocket connection", e);
         }

@@ -13,8 +13,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.HttpScheme;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.DownloadFileHandler;
@@ -35,7 +35,9 @@ public final class HttpConfig implements IConfig {
     public static final String NAME = "__http__";
     private String host = "0.0.0.0";
     private int port = 8080;
+    @Getter(value = AccessLevel.PRIVATE)
     private String publicHost = "";
+    @Getter(value = AccessLevel.PRIVATE)
     private int publicPort = -1;
     private HttpScheme publicScheme = HttpScheme.HTTP;
     private int maxBodySizeMB = 2;
@@ -74,7 +76,7 @@ public final class HttpConfig implements IConfig {
     public Class<? extends IConfig> parent() { return NubeConfig.AppConfig.class; }
 
     @JsonIgnore
-    public String publicUrl() {
+    public String publicServerUrl() {
         return Urls.buildURL(publicScheme, publicHost, publicPort);
     }
 

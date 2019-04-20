@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.vertx.core.http.WebSocket;
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventModel;
 
-import io.vertx.core.http.WebSocket;
-import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -25,10 +26,10 @@ public final class WebsocketClientWriter implements EventHandler {
         return Collections.unmodifiableList(new ArrayList<>(publisher.getEvents()));
     }
 
-    @EventContractor(action = EventAction.SEND, returnType = int.class)
-    public int send(JsonObject data) {
+    @EventContractor(action = EventAction.SEND, returnType = boolean.class)
+    public boolean send(JsonObject data) {
         webSocket.writeTextMessage(data.encode());
-        return 1;
+        return true;
     }
 
 }

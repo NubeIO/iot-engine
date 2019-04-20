@@ -7,7 +7,6 @@ import java.util.function.Supplier;
 
 import io.reactivex.Single;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpClient;
@@ -122,8 +121,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
             ServiceReference reference = get().getReferenceWithConfiguration(record, Objects.isNull(options)
                                                                                      ? null
                                                                                      : options.toJson());
-            HttpClientDelegate delegate = HttpClientDelegate.create(reference.getAs(HttpClient.class))
-                                                            .overrideEndHandler(v -> reference.release());
+            HttpClientDelegate delegate = HttpClientDelegate.create(reference.getAs(HttpClient.class));
             return circuitController.wrap(delegate.execute(path, method, requestData, false))
                                     .doFinally(reference::release);
         }).doOnError(t -> logger.error("Failed when redirect to {}::{}", t, method, path));
@@ -141,9 +139,11 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
             JsonObject config = new JsonObject().put(EventMessageService.SHARED_KEY_CONFIG, this.sharedKey)
                                                 .put(EventMessageService.DELIVERY_OPTIONS_CONFIG,
                                                      Objects.isNull(options) ? new JsonObject() : options.toJson());
-            ServiceReference reference = get().getReferenceWithConfiguration(record, config);
-            return circuitController.wrap(execute(reference.getAs(EventMessagePusher.class), path, method, requestData,
-                                                  v -> reference.release()));
+            ServiceReference ref = get().getReferenceWithConfiguration(record, config);
+            Single<ResponseData> command = Single.create(source -> ref.getAs(EventMessagePusher.class)
+                                                                      .execute(path, method, requestData,
+                                                                               source::onSuccess, source::onError));
+            return circuitController.wrap(command).doFinally(ref::release);
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
@@ -166,14 +166,6 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         HttpLocation location = new HttpLocation(record.getLocation());
         location.setHost(computeINet(location.getHost()));
         return record.setLocation(location.toJson());
-    }
-
-    private Single<ResponseData> execute(EventMessagePusher pusher, String path, HttpMethod method,
-                                         RequestData requestData, Handler<Void> closeHandler) {
-
-        return Single.<ResponseData>create(
-            source -> pusher.push(path, method, requestData, source::onSuccess, source::onError)).doFinally(
-            () -> closeHandler.handle(null));
     }
 
 }

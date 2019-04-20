@@ -1,10 +1,11 @@
 package com.nubeiot.core.http.client.handler;
 
-import com.nubeiot.core.dto.ResponseData;
-
 import io.reactivex.SingleEmitter;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientResponse;
+
+import com.nubeiot.core.dto.ResponseData;
+
 import lombok.RequiredArgsConstructor;
 
 /**
