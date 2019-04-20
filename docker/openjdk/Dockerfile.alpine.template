@@ -1,0 +1,20 @@
+FROM {{IMAGE_BASE}}
+
+LABEL maintainer="Son Tran <sontt246@gmail.com>"
+
+RUN apk add --no-cache curl ca-certificates tini bash
+
+WORKDIR /app
+COPY {{ARTIFACT}}.tar /tmp/
+COPY entrypoint.sh wait-for-it.sh /app/
+RUN tar -xvf /tmp/{{ARTIFACT}}.tar --strip 1 -C /app && rm -rf /tmp/* && chmod +x entrypoint.sh wait-for-it.sh
+
+ENV LANG=C.UTF-8
+ENV JVM_OPTS="{{JVM_OPTS}}" JAVA_PROPS="{{JAVA_PROPS}}" VERSION={{VERSION}} ARTIFACT="{{ARTIFACT}}"
+ENV CLUSTER_PUBLIC="false" CLUSTER_PUBLIC_PORT=""
+
+EXPOSE {{PORTS}}
+VOLUME ["/data"]
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["./entrypoint.sh"]

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.jooq.Configuration;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -80,13 +81,15 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
         if (builtinApps.isEmpty()) {
             return Single.just(new JsonObject().put("success", true));
         }
-        RequestedServiceData firstApp = builtinApps.get(0);
-        ModuleTypeRule rule = (ModuleTypeRule) this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_MODULE_RULE);
-        JsonObject module = ModuleType.getDefault().serialize(firstApp.getMetadata(), rule);
-        ITblModule tblModule = new TblModule().fromJson(module);
-        tblModule.setPublishedBy("NubeIO")
-                 .setDeployConfig(computeNubeConfig(dataDir, repoConfig, firstApp, tblModule).toJson());
-        return processDeploymentTransaction(tblModule, EventAction.INIT);
+        return Observable.fromIterable(builtinApps).flatMapSingle(app-> {
+            ModuleTypeRule rule = (ModuleTypeRule) this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_MODULE_RULE);
+            JsonObject module = ModuleType.getDefault().serialize(app.getMetadata(), rule);
+            ITblModule tblModule = new TblModule().fromJson(module);
+            tblModule.setPublishedBy("NubeIO")
+                .setDeployConfig(computeNubeConfig(dataDir, repoConfig, app, tblModule).toJson());
+            return processDeploymentTransaction(tblModule, EventAction.INIT);
+        }).toList().map(results -> new JsonObject().put("results", results));
+
     }
 
     private NubeConfig computeNubeConfig(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData firstApp,

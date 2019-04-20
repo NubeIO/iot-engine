@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 WORKDIR /app
 COPY {{ARTIFACT}}.tar /tmp/
 COPY entrypoint.sh wait-for-it.sh /app/
-RUN tar -xvf /tmp/{{ARTIFACT}}.tar --strip 1 -C /app && rm -rf /tmp/* && chmod +x entrypoint.sh
+RUN tar -xvf /tmp/{{ARTIFACT}}.tar --strip 1 -C /app && rm -rf /tmp/* && chmod +x entrypoint.sh wait-for-it.sh
 
 ENV JAVA_HOME=/usr/lib/jvm/ PATH=$PATH:/usr/lib/jvm/bin JAVA_VERSION={{JAVA_VERSION}} LANG=C.UTF-8
 ENV JVM_OPTS="{{JVM_OPTS}}" JAVA_PROPS="{{JAVA_PROPS}}" VERSION={{VERSION}} ARTIFACT="{{ARTIFACT}}"
