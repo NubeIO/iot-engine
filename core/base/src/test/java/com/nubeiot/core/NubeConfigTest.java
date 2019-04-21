@@ -1,5 +1,7 @@
 package com.nubeiot.core;
 
+import static org.junit.Assert.assertEquals;
+
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -8,6 +10,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.exceptions.NubeException;
@@ -20,7 +23,7 @@ public class NubeConfigTest {
     public void test_default() throws JSONException {
         NubeConfig from = IConfig.from(Configs.loadJsonConfig("system.json"), NubeConfig.class);
         System.out.println(from.toJson());
-        Assert.assertEquals(FileUtils.DEFAULT_DATADIR, from.getDataDir());
+        assertEquals(FileUtils.DEFAULT_DATADIR, from.getDataDir());
         Assert.assertNotNull(from.getSystemConfig());
         System.out.println(from.getSystemConfig().getClusterConfig().toJson().encode());
         JSONAssert.assertEquals("{\"active\":true,\"ha\":false,\"name\":\"nubeio-cluster\",\"type\":\"HAZELCAST\"," +
@@ -89,18 +92,18 @@ public class NubeConfigTest {
     public void test_deserialize_plain_child() {
         String jsonStr = "{\"active\":false,\"ha\":false,\"name\":\"\"," +
                          "\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\",\"file\":\"\",\"options\":{}}";
-        NubeConfig.SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, NubeConfig.SystemConfig.ClusterConfig.class);
+        SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, SystemConfig.ClusterConfig.class);
         Assert.assertNotNull(cfg);
-        Assert.assertEquals(ClusterType.HAZELCAST, cfg.getType());
+        assertEquals(ClusterType.HAZELCAST, cfg.getType());
     }
 
     @Test
     public void test_deserialize_child_from_parent_lvl1() {
         String jsonStr = "{\"__cluster__\":{\"active\":false,\"ha\":false,\"name\":\"\"," +
                          "\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\",\"file\":\"\",\"options\":{}}}";
-        NubeConfig.SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, NubeConfig.SystemConfig.ClusterConfig.class);
+        SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, SystemConfig.ClusterConfig.class);
         Assert.assertNotNull(cfg);
-        Assert.assertEquals(ClusterType.HAZELCAST, cfg.getType());
+        assertEquals(ClusterType.HAZELCAST, cfg.getType());
     }
 
     @Test
@@ -117,7 +120,7 @@ public class NubeConfigTest {
                          "\"clusterPingReplyInterval\":20000,\"port\":0,\"host\":\"localhost\",\"acceptBacklog\":-1," +
                          "\"clientAuth\":\"NONE\",\"reconnectAttempts\":0,\"reconnectInterval\":1000," +
                          "\"connectTimeout\":60000,\"trustAll\":true}}";
-        NubeConfig.SystemConfig cfg = IConfig.from(jsonStr, NubeConfig.SystemConfig.class);
+        SystemConfig cfg = IConfig.from(jsonStr, SystemConfig.class);
         Assert.assertNotNull(cfg);
         Assert.assertNotNull(cfg.getClusterConfig());
         Assert.assertNotNull(cfg.getEventBusConfig());
@@ -128,9 +131,9 @@ public class NubeConfigTest {
         String jsonStr =
             "{\"dataDir\": \"\", \"__system__\":{\"__cluster__\":{\"active\":false,\"ha\":false,\"name\":\"\"," +
             "\"type\":\"HAZELCAST\",\"listenerAddress\":\"\",\"url\":\"\",\"file\":\"\",\"options\":{}}}}";
-        NubeConfig.SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, NubeConfig.SystemConfig.ClusterConfig.class);
+        SystemConfig.ClusterConfig cfg = IConfig.from(jsonStr, SystemConfig.ClusterConfig.class);
         Assert.assertNotNull(cfg);
-        Assert.assertEquals(ClusterType.HAZELCAST, cfg.getType());
+        assertEquals(ClusterType.HAZELCAST, cfg.getType());
     }
 
     @Test
@@ -139,7 +142,7 @@ public class NubeConfigTest {
         NubeConfig cfg = IConfig.from(jsonStr, NubeConfig.class);
         Assert.assertNotNull(cfg);
         Assert.assertNotNull(cfg.getAppConfig());
-        Assert.assertEquals(8085, cfg.getAppConfig().get("http.port"));
+        assertEquals(8085, cfg.getAppConfig().get("http.port"));
         JSONAssert.assertEquals("{\"http.port\":8085}", cfg.getAppConfig().toJson().encode(), JSONCompareMode.STRICT);
         Assert.assertNotNull(cfg.getSystemConfig());
         Assert.assertNotNull(cfg.getSystemConfig().getClusterConfig());
@@ -151,22 +154,28 @@ public class NubeConfigTest {
     @Test
     public void test_deserialize_appCfg_directly() {
         String jsonStr = "{\"__system__\":{},\"__app__\":{\"http.port\":8085}}";
-        NubeConfig.AppConfig cfg = IConfig.from(jsonStr, NubeConfig.AppConfig.class);
+        AppConfig cfg = IConfig.from(jsonStr, AppConfig.class);
         Assert.assertNotNull(cfg);
-        Assert.assertEquals(1, cfg.size());
-        Assert.assertEquals(8085, cfg.get("http.port"));
+        assertEquals(1, cfg.size());
+        assertEquals(8085, cfg.get("http.port"));
     }
 
     @Test(expected = NubeException.class)
     public void test_deserialize_appCfg_invalid_json() {
-        IConfig.from("{\"__system__\":{},\"__app__\":8085}}", NubeConfig.AppConfig.class);
+        IConfig.from("{\"__system__\":{},\"__app__\":8085}}", AppConfig.class);
     }
 
     @Test
     public void test_deserialize_appCfg_limitation() {
-        NubeConfig.AppConfig from = IConfig.from(
-            "{\"__system__\":{\"__cluster__\":{},\"__eventbus__\":{},\"__micro__\":{}}}", NubeConfig.AppConfig.class);
+        AppConfig from = IConfig.from("{\"__system__\":{\"__cluster__\":{},\"__eventbus__\":{},\"__micro__\":{}}}",
+                                      AppConfig.class);
         Assert.assertNotNull(from);
+    }
+
+    @Test
+    public void test_merge_with_empty_json() throws JSONException {
+        AppConfig appconfig = IConfig.merge("{\"__app__\":{\"fuck\":\"1\"}}", "{\"__app__\":{}}", AppConfig.class);
+        JSONAssert.assertEquals("{\"fuck\":\"1\"}", appconfig.toJson().encode(), JSONCompareMode.STRICT);
     }
 
     @Test
@@ -190,8 +199,8 @@ public class NubeConfigTest {
         Assert.assertNotNull(blank);
         Assert.assertNotNull(blank.getDataDir());
         Assert.assertNotNull(blank.getAppConfig());
-        Assert.assertEquals(1, blank.getAppConfig().size());
-        Assert.assertEquals(1, blank.getAppConfig().get("hello"));
+        assertEquals(1, blank.getAppConfig().size());
+        assertEquals(1, blank.getAppConfig().get("hello"));
         Assert.assertNotNull(blank.getDeployConfig());
         JSONAssert.assertEquals("{\"worker\":false,\"multiThreaded\":false,\"workerPoolSize\":20," +
                                 "\"maxWorkerExecuteTime\":60000000000,\"ha\":false,\"instances\":1," +
@@ -211,8 +220,8 @@ public class NubeConfigTest {
                            "\"__app__\":{\"__http__\":{\"host\":\"0.0.0.0\",\"port\":8086,\"enabled\":true," +
                            "\"rootApi\":\"/api\"},\"api.name\":\"edge-connector\"}}";
         NubeConfig input = IConfig.from(jsonInput, NubeConfig.class);
-        Assert.assertEquals("0.0.0.0", input.getSystemConfig().getEventBusConfig().getOptions().getHost());
-        Assert.assertEquals(5000, input.getSystemConfig().getEventBusConfig().getOptions().getPort());
+        assertEquals("0.0.0.0", input.getSystemConfig().getEventBusConfig().getOptions().getHost());
+        assertEquals(5000, input.getSystemConfig().getEventBusConfig().getOptions().getPort());
         JsonObject mergeJson = nubeConfig.toJson().mergeIn(input.toJson(), true);
         JsonObject mergeToJson = nubeConfig.mergeToJson(input);
 

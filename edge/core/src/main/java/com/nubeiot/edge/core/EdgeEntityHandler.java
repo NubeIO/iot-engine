@@ -21,6 +21,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
@@ -258,10 +260,18 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             throw new NubeException("Version is required!");
         }
 
-        if (Objects.nonNull(newOne.getDeployConfig())) {
-            oldOne.setDeployConfig(newOne.getDeployConfig());
-        } else if (isUpdated) {
+        if (isUpdated && Objects.isNull(newOne.getDeployConfig())) {
             throw new NubeException("Deploy config is required!");
+        }
+        if (isUpdated) {
+            oldOne.setDeployConfig(newOne.getDeployConfig());
+        } else {
+            NubeConfig nubeConfigInDB = IConfig.from(oldOne.getDeployConfig(), NubeConfig.class);
+            JsonObject request = new JsonObject().put(AppConfig.NAME,
+                                                      IConfig.from(newOne.getDeployConfig(), NubeConfig.class)
+                                                             .getAppConfig()
+                                                             .toJson());
+            oldOne.setDeployConfig(IConfig.merge(nubeConfigInDB, request, NubeConfig.class).toJson());
         }
 
         if (Objects.nonNull(newOne.getPublishedBy())) {

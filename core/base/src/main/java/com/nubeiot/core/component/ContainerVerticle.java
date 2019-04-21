@@ -39,7 +39,6 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, Consumer<? extends UnitContext>> afterSuccesses = new HashMap<>();
     private final Set<String> deployments = new HashSet<>();
     private final Map<String, Object> sharedData = new HashMap<>();
-    private final String sharedKey = this.getClass().getName();
     @Getter
     protected EventController eventController;
     @Getter
@@ -58,7 +57,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     public void start(Future<Void> future) {
         this.start();
-        this.vertx.getDelegate().sharedData().getLocalMap(sharedKey).putAll(sharedData);
+        this.vertx.getDelegate().sharedData().getLocalMap(getSharedKey()).putAll(sharedData);
         this.sharedData.clear();
         this.installUnits(future);
     }
@@ -103,7 +102,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
             return;
         }
         List<Single<String>> collect = components.entrySet().stream().map(entry -> {
-            Unit unit = entry.getValue().get().registerSharedData(sharedKey);
+            Unit unit = entry.getValue().get().registerSharedData(getSharedKey());
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
             return vertx.rxDeployVerticle(unit, options)

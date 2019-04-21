@@ -29,6 +29,10 @@ public interface Container extends HasConfig<NubeConfig> {
         return "config.json";
     }
 
+    default String getSharedKey() {
+        return this.getClass().getName();
+    }
+
     /**
      * Register eventbus consumer
      *
