@@ -3,5 +3,6 @@ ext {
 }
 
 dependencies {
+    compile project(':core:micro')
     compile project(':edge:core')
 }

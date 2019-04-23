@@ -24,15 +24,15 @@ import com.nubeiot.core.micro.ServiceDiscoveryController;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-public class EventMessageService extends ContainerVerticle {
+public class MockEventMessageService extends ContainerVerticle {
 
-    private static EventModel TEST_EVENT_MODEL_1 = EventModel.builder()
-                                                             .address("test.EventMessageService.1")
+    private static EventModel TEST_EVENT_MODEL_1 = EventModel.builder().address("test.MockEventMessageService.1")
                                                              .local(true)
                                                              .pattern(EventPattern.REQUEST_RESPONSE)
                                                              .addEvents(EventAction.GET_ONE, EventAction.GET_LIST)
                                                              .build();
-    private static EventModel TEST_EVENT_MODEL_2 = EventModel.clone(TEST_EVENT_MODEL_1, "test.EventMessageService.2");
+    private static EventModel TEST_EVENT_MODEL_2 = EventModel.clone(TEST_EVENT_MODEL_1,
+                                                                    "test.MockEventMessageService.2");
 
     public String configFile() { return "eventService.json"; }
 
