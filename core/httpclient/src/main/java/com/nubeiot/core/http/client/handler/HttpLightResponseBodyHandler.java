@@ -37,7 +37,7 @@ public abstract class HttpLightResponseBodyHandler implements Handler<Buffer> {
     private final HttpClientResponse response;
     @NonNull
     private final SingleEmitter<ResponseData> emitter;
-    private final boolean shadowError;
+    private final boolean swallowError;
 
     @SuppressWarnings("unchecked")
     public static <T extends HttpLightResponseBodyHandler> T create(HttpClientResponse response,
@@ -56,7 +56,7 @@ public abstract class HttpLightResponseBodyHandler implements Handler<Buffer> {
     @Override
     public void handle(Buffer buffer) {
         final JsonObject body = tryParse(buffer);
-        if (!shadowError && response.statusCode() >= 400) {
+        if (!swallowError && response.statusCode() >= 400) {
             ErrorCode code = HttpStatusMapping.error(response.request().method(), response.statusCode());
             emitter.onError(new NubeException(code, body.encode()));
             return;
