@@ -1,4 +1,4 @@
-package com.nubeiot.edge.bios.installer;
+package com.nubeiot.edge.module.installer;
 
 import java.util.Arrays;
 import java.util.function.Supplier;

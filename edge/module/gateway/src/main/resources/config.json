@@ -13,7 +13,7 @@
     "__micro__": {
       "__gateway__": {
         "enabled": true,
-        "clusterAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
+        "localAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
       },
       "__serviceDiscovery__": {
         "enabled": false
@@ -31,7 +31,7 @@
         "rootApi": "/api",
         "__dynamic__": {
           "enabled": true,
-          "path": "/drivers"
+          "path": ""
         }
       }
     }

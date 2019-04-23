@@ -18,7 +18,8 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.http.dynamic.mock.EventMessageService;
+import com.nubeiot.core.http.dynamic.mock.MockEventMessageService;
+
 
 @RunWith(VertxUnitRunner.class)
 public class DynamicEventServiceTest extends DynamicServiceTestBase {
@@ -29,7 +30,7 @@ public class DynamicEventServiceTest extends DynamicServiceTestBase {
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
-        startGatewayAndService(context, new EventMessageService(), new DeploymentOptions());
+        startGatewayAndService(context, new MockEventMessageService(), new DeploymentOptions());
     }
 
     @After
