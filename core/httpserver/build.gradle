@@ -13,5 +13,6 @@ dependencies {
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:micro")
+    testCompile project(":core:httpclient")
 
 }

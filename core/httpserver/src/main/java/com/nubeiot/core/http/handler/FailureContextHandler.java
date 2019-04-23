@@ -11,7 +11,6 @@ import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
-import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.base.HttpUtils;
 
 public final class FailureContextHandler implements Handler<RoutingContext> {
@@ -25,8 +24,7 @@ public final class FailureContextHandler implements Handler<RoutingContext> {
         if (Objects.nonNull(throwable)) {
             logger.error("API exception", throwable);
             ErrorMessage errorMessage = ErrorMessage.parse(throwable);
-            failureContext.response()
-                          .putHeader(HttpHeaders.CONTENT_TYPE, ApiConstants.DEFAULT_CONTENT_TYPE)
+            failureContext.response().putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE)
                           .setStatusCode(HttpStatusMapping.error(method, errorMessage.getThrowable()).code())
                           .end(HttpUtils.prettify(errorMessage, failureContext.request()));
         }

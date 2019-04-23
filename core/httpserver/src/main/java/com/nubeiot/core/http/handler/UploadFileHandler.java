@@ -15,7 +15,7 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.http.base.HttpScheme;
-import com.nubeiot.core.http.base.HttpUtils.HttpRequests;
+import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
@@ -60,7 +60,7 @@ public class UploadFileHandler implements RestEventRequestDispatcher {
                                                                  context.request().host(), -1) : publicUrl;
         JsonObject data = new JsonObject();
         context.fileUploads().forEach(fileUpload -> data.put(fileUpload.name(), extractFileInfo(link, fileUpload)));
-        data.put("attributes", HttpRequests.serializeHeaders(context.request().formAttributes()));
+        data.put("attributes", HttpHeaderUtils.serializeHeaders(context.request().formAttributes()));
         EventMessage message = EventMessage.initial(
             eventModel.getEvents().stream().findFirst().orElse(EventAction.CREATE), data);
         dispatch(context, "UPLOAD", eventModel.getAddress(), eventModel.getPattern(), message);

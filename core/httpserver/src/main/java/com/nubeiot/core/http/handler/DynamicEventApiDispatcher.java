@@ -26,7 +26,7 @@ public class DynamicEventApiDispatcher<T extends DynamicEventRestApi> extends Ab
 
     @Override
     public void handleResponse(RoutingContext context, ResponseData responseData) {
-        EventMessage msg = EventMessage.from(responseData.headers());
+        EventMessage msg = EventMessage.tryParse(responseData.headers());
         if (msg.isError()) {
             handleErrorMessage(context, JsonData.from(responseData.body(), ErrorMessage.class));
             return;

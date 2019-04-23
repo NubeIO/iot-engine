@@ -1,9 +1,9 @@
 package com.nubeiot.core.event;
 
 import java.util.Objects;
-import java.util.function.Consumer;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
@@ -47,7 +47,7 @@ public final class EventController implements Shareable {
      * @param message Request data message
      * @see EventPattern
      * @see EventMessage
-     * @see #request(String, EventPattern, EventMessage, Consumer)
+     * @see #request(String, EventPattern, EventMessage, Handler)
      */
     public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message) {
         request(address, pattern, message, null);
@@ -64,7 +64,7 @@ public final class EventController implements Shareable {
      * @see EventMessage
      */
     public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                        Consumer<AsyncResult<Message<Object>>> replyConsumer) {
+                        Handler<AsyncResult<Message<Object>>> replyConsumer) {
         logger.debug("Eventbus::Request:Address: {} - Pattern: {}", address, pattern);
         fire(address, pattern, message.toJson(), replyConsumer);
     }
@@ -93,7 +93,7 @@ public final class EventController implements Shareable {
      * @see EventPattern
      */
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                         Consumer<AsyncResult<Message<Object>>> replyConsumer) {
+                         Handler<AsyncResult<Message<Object>>> replyConsumer) {
         if (message.isError()) {
             response(address, pattern, message.getError(), replyConsumer);
         } else {
@@ -137,7 +137,7 @@ public final class EventController implements Shareable {
      * @see ErrorMessage
      */
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error,
-                         Consumer<AsyncResult<Message<Object>>> replyConsumer) {
+                         Handler<AsyncResult<Message<Object>>> replyConsumer) {
         logger.debug("Eventbus::Error Response:Address: {} - Pattern: {}", address, pattern);
         fire(address, pattern, error.toJson(), replyConsumer);
     }
@@ -153,7 +153,7 @@ public final class EventController implements Shareable {
      * @see EventPattern
      */
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
-                         Consumer<AsyncResult<Message<Object>>> replyConsumer) {
+                         Handler<AsyncResult<Message<Object>>> replyConsumer) {
         logger.debug("Eventbus::Response:Address: {} - Pattern: {}", address, pattern);
         fire(address, pattern, data, replyConsumer);
     }
@@ -166,7 +166,7 @@ public final class EventController implements Shareable {
      * @param address Eventbus address
      * @param pattern Event pattern
      * @param message Event message
-     * @see #fire(String, EventPattern, EventMessage, Consumer)
+     * @see #fire(String, EventPattern, EventMessage, Handler)
      */
     public void fire(String address, EventPattern pattern, EventMessage message) {
         fire(address, pattern, message, null);
@@ -181,11 +181,11 @@ public final class EventController implements Shareable {
      * @param pattern       Event pattern
      * @param message       Event message
      * @param replyConsumer The consumer for handling message back
-     * @see #request(String, EventPattern, EventMessage, Consumer)
-     * @see #response(String, EventPattern, EventMessage, Consumer)
+     * @see #request(String, EventPattern, EventMessage, Handler)
+     * @see #response(String, EventPattern, EventMessage, Handler)
      */
     public void fire(String address, EventPattern pattern, EventMessage message,
-                     Consumer<AsyncResult<Message<Object>>> replyConsumer) {
+                     Handler<AsyncResult<Message<Object>>> replyConsumer) {
         if (message.getAction() == EventAction.RETURN) {
             response(address, pattern, message, replyConsumer);
         } else {
@@ -194,7 +194,7 @@ public final class EventController implements Shareable {
     }
 
     /**
-     * Register event consumer
+     * Register event listener
      *
      * @param address Event bus address
      * @param handler Handler when receiving message
@@ -205,7 +205,7 @@ public final class EventController implements Shareable {
     }
 
     /**
-     * Register event consumer
+     * Register event listener
      *
      * @param address Event bus address
      * @param local   If {@code true}, only register for local event address
@@ -223,7 +223,7 @@ public final class EventController implements Shareable {
     }
 
     /**
-     * Register event consumer
+     * Register event listener
      *
      * @param eventModel Event model
      * @param handler    Handler when receiving message
@@ -234,7 +234,7 @@ public final class EventController implements Shareable {
     }
 
     private void fire(String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
-                      Consumer<AsyncResult<Message<Object>>> replyConsumer) {
+                      Handler<AsyncResult<Message<Object>>> replyConsumer) {
         Strings.requireNotBlank(address);
         if (pattern == EventPattern.PUBLISH_SUBSCRIBE) {
             eventBus.publish(address, data);
@@ -244,7 +244,7 @@ public final class EventController implements Shareable {
         }
         if (pattern == EventPattern.REQUEST_RESPONSE) {
             Objects.requireNonNull(replyConsumer, "Must provide reply consumer");
-            eventBus.send(address, data, replyConsumer::accept);
+            eventBus.send(address, data, replyConsumer);
         }
     }
 

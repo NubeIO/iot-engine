@@ -27,6 +27,11 @@ public final class HttpException extends NubeException {
 
     public HttpException(Throwable e)    { this(null, e); }
 
+    public HttpException(int statusCode, String message, Throwable e) {
+        super(ErrorCode.HTTP_ERROR, message, e);
+        this.statusCode = HttpResponseStatus.valueOf(statusCode);
+    }
+
     public static HttpException badRequest(String message) {
         return new HttpException(HttpResponseStatus.BAD_REQUEST.code(), message);
     }

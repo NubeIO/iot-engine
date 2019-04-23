@@ -9,7 +9,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.rest.AbstractRestEventApi;
 import com.nubeiot.core.http.rest.RestApi;
 
@@ -22,14 +22,14 @@ public class MockApiDefinition {
     public static class MockAPI implements RestApi {
 
         @GET
-        @Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
+        @Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
         public JsonObject get() {
             return new JsonObject().put("abc", "xxx");
         }
 
         @GET
         @Path("/error")
-        @Produces(ApiConstants.DEFAULT_CONTENT_TYPE)
+        @Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
         public JsonObject error() {
             throw new NubeException("error");
         }

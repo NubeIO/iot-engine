@@ -27,8 +27,8 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
-import com.nubeiot.core.http.ws.WebsocketEventMetadata;
 import com.nubeiot.core.kafka.mock.MockKafkaConsumer;
 import com.nubeiot.core.kafka.mock.MockKafkaProducer;
 
@@ -73,7 +73,7 @@ public class KafkaWebsocketTest extends HttpServerTestBase {
 
     @Test
     public void test_client_consumer(TestContext context) {
-        WebsocketEventMetadata metadata = MockWebsocketEvent.ONLY_PUBLISHER;
+        WebsocketServerEventMetadata metadata = MockWebsocketEvent.ONLY_PUBLISHER;
         startServer(context, new HttpServerRouter().registerEventBusSocket(metadata));
         startKafkaClient(metadata);
         Async async = context.async(1);
@@ -83,7 +83,7 @@ public class KafkaWebsocketTest extends HttpServerTestBase {
 
     @Test
     public void test_web_consumer(TestContext context) throws InterruptedException {
-        WebsocketEventMetadata metadata = MockWebsocketEvent.ONLY_PUBLISHER;
+        WebsocketServerEventMetadata metadata = MockWebsocketEvent.ONLY_PUBLISHER;
         JsonObject expected = createWebsocketMsg(metadata.getPublisher().getAddress(), supply().get(),
                                                  BridgeEventType.RECEIVE);
         startServer(context, new HttpServerRouter().registerEventBusSocket(metadata));
@@ -94,7 +94,7 @@ public class KafkaWebsocketTest extends HttpServerTestBase {
         ws.handler(buffer -> assertResponse(context, async, expected, buffer));
     }
 
-    private void startKafkaClient(WebsocketEventMetadata metadata) {
+    private void startKafkaClient(WebsocketServerEventMetadata metadata) {
         consumer = new MockKafkaConsumer(vertx.getDelegate(), kafkaConfig.getConsumerConfig(), "nube",
                                          metadata::getPublisher);
         producer = new MockKafkaProducer(vertx.getDelegate(), kafkaConfig.getProducerConfig(), "nube", supply());

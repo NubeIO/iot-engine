@@ -15,11 +15,16 @@ public interface RestEventRequestDispatcher extends Handler<RoutingContext> {
 
     default void dispatch(RoutingContext context, String system, String address, EventPattern pattern,
                           EventMessage message) {
-        getController().request(address, pattern, message,
-                                new ReplyEventHandler(system, message.getAction(), address, respMsg -> {
-                                    context.put(EventAction.RETURN.name(), respMsg);
-                                    context.next();
-                                }, context::fail));
+        ReplyEventHandler handler = ReplyEventHandler.builder()
+                                                     .system(system)
+                                                     .action(message.getAction())
+                                                     .success(respMsg -> {
+                                                         context.put(EventAction.RETURN.name(), respMsg);
+                                                         context.next();
+                                                     })
+                                                     .exception(context::fail)
+                                                     .build();
+        getController().request(address, pattern, message, handler);
     }
 
 }

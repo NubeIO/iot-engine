@@ -8,7 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 
-import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.micro.type.EventMessageService;
 
 import lombok.NonNull;
@@ -72,7 +72,7 @@ public interface DynamicRestApi {
      * @return set of {@code HTTP methods}
      */
     default Set<HttpMethod> availableMethods() {
-        return ApiConstants.DEFAULT_CORS_HTTP_METHOD;
+        return HttpUtils.DEFAULT_CORS_HTTP_METHOD;
     }
 
 }

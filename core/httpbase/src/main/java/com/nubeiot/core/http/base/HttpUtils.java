@@ -3,15 +3,21 @@ package com.nubeiot.core.http.base;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.vertx.core.MultiMap;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -25,20 +31,10 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class HttpUtils {
 
-    private static final String EQUAL = "=";
-    private static final String SEPARATE = "&";
-
-    public static Map<String, Object> deserializeQuery(String query) {
-        Map<String, Object> map = new HashMap<>();
-        for (String property : query.split("\\" + SEPARATE)) {
-            String[] keyValues = property.split("\\" + EQUAL);
-            if (keyValues.length != 2) {
-                throw new InvalidUrlException("Property doesn't conform the syntax: `key`" + EQUAL + "`value`");
-            }
-            map.put(Urls.decode(keyValues[0]), Urls.decode(keyValues[1]));
-        }
-        return map;
-    }
+    public static final String DEFAULT_CONTENT_TYPE = "application/json;charset=utf-8";
+    public static final Set<HttpMethod> DEFAULT_CORS_HTTP_METHOD = Collections.unmodifiableSet(new HashSet<>(
+        Arrays.asList(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH, HttpMethod.DELETE,
+                      HttpMethod.HEAD, HttpMethod.OPTIONS)));
 
     private static boolean isPretty(HttpServerRequest request) {
         return Boolean.valueOf(request.getParam("pretty"));
@@ -55,33 +51,22 @@ public final class HttpUtils {
         return pretty ? jsonObject.encodePrettily() : jsonObject.encode();
     }
 
-    public static final class HttpRequests {
-
-        public static String language(@NonNull HttpServerRequest request) {
-            String lang = request.getParam("lang");
-            if (Strings.isBlank(lang)) {
-                return "en";
-            }
-            return lang;
-        }
-
-        public static Pagination pagination(@NonNull HttpServerRequest request) {
-            if (request.method() == HttpMethod.GET) {
-                return Pagination.builder()
-                                 .page(request.getParam("page"))
-                                 .perPage(request.getParam("per_page"))
-                                 .build();
-            }
-            return null;
-        }
-
-        public static JsonObject query(@NonNull HttpServerRequest request) {
-            String query = request.query();
-            return Strings.isBlank(query) ? new JsonObject() : JsonObject.mapFrom(HttpUtils.deserializeQuery(query));
-        }
+    public static final class HttpHeaderUtils {
 
         public static JsonObject serializeHeaders(@NonNull HttpServerRequest request) {
             return serializeHeaders(request.headers());
+        }
+
+        public static JsonObject serializeHeaders(@NonNull HttpServerResponse request) {
+            return serializeHeaders(request.headers());
+        }
+
+        public static JsonObject serializeHeaders(@NonNull HttpClientRequest request) {
+            return serializeHeaders(request.headers());
+        }
+
+        public static JsonObject serializeHeaders(@NonNull HttpClientResponse response) {
+            return serializeHeaders(response.headers());
         }
 
         public static JsonObject serializeHeaders(@NonNull MultiMap multiMap) {
@@ -112,6 +97,52 @@ public final class HttpUtils {
                 }
             });
             return map;
+        }
+
+        public static Map<String, Object> deserializeQuery(String query) {
+            Map<String, Object> map = new HashMap<>();
+            for (String property : query.split("\\" + HttpRequests.SEPARATE)) {
+                String[] keyValues = property.split("\\" + HttpRequests.EQUAL);
+                if (keyValues.length != 2) {
+                    throw new InvalidUrlException(
+                        "Property doesn't conform the syntax: `key`" + HttpRequests.EQUAL + "`value`");
+                }
+                map.put(Urls.decode(keyValues[0]), Urls.decode(keyValues[1]));
+            }
+            return map;
+        }
+
+    }
+
+
+    public static final class HttpRequests {
+
+        private static final String EQUAL = "=";
+        private static final String SEPARATE = "&";
+
+        public static String language(@NonNull HttpServerRequest request) {
+            String lang = request.getParam("lang");
+            if (Strings.isBlank(lang)) {
+                return "en";
+            }
+            return lang;
+        }
+
+        public static Pagination pagination(@NonNull HttpServerRequest request) {
+            if (request.method() == HttpMethod.GET) {
+                return Pagination.builder()
+                                 .page(request.getParam("page"))
+                                 .perPage(request.getParam("per_page"))
+                                 .build();
+            }
+            return null;
+        }
+
+        public static JsonObject query(@NonNull HttpServerRequest request) {
+            String query = request.query();
+            return Strings.isBlank(query)
+                   ? new JsonObject()
+                   : JsonObject.mapFrom(HttpHeaderUtils.deserializeQuery(query));
         }
 
     }

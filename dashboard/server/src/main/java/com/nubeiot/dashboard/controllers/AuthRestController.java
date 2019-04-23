@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.ApiConstants.DEFAULT_CONTENT_TYPE;
 import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
@@ -15,17 +14,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
-
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.RestConfigProvider;
-import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.mongo.RestMongoClientProvider;
-import com.nubeiot.core.utils.Strings;
-import com.nubeiot.dashboard.Role;
-import com.nubeiot.dashboard.UserImpl;
-import com.nubeiot.dashboard.helpers.ResponseDataHelper;
-import com.nubeiot.dashboard.providers.RestOAuth2AuthProvider;
-import com.zandero.rest.annotation.RouteOrder;
 
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
@@ -46,6 +34,18 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.auth.oauth2.AccessToken;
 import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.reactivex.ext.mongo.MongoClient;
+
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.RestConfigProvider;
+import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.rest.RestApi;
+import com.nubeiot.core.mongo.RestMongoClientProvider;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.dashboard.Role;
+import com.nubeiot.dashboard.UserImpl;
+import com.nubeiot.dashboard.helpers.ResponseDataHelper;
+import com.nubeiot.dashboard.providers.RestOAuth2AuthProvider;
+import com.zandero.rest.annotation.RouteOrder;
 
 public class AuthRestController implements RestApi {
 
@@ -314,10 +314,9 @@ public class AuthRestController implements RestApi {
                         loginAuth.rxGetToken(
                             new JsonObject().put("username", credentials[0]).put("password", credentials[1]))
                             .subscribe(token -> {
-                                ctx.response()
-                                    .putHeader(HttpHeaders.CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
-                                    .putHeader("username", credentials[0])
-                                    .end(Json.encodePrettily(token.principal()));
+                                ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE)
+                                   .putHeader("username", credentials[0])
+                                   .end(Json.encodePrettily(token.principal()));
                             }, throwable -> future.complete(ResponseDataHelper.unauthorized()));
                     } else {
                         future.complete(ResponseDataHelper.unauthorized());

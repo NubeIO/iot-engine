@@ -14,7 +14,7 @@ import io.vertx.ext.web.Router;
 
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.http.ApiConstants;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.event.EventMethodDefinition.EventMethodMapping;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
 import com.nubeiot.core.http.handler.RestEventApiDispatcher;
@@ -87,7 +87,8 @@ public final class RestEventApisBuilder {
 
     private void createRouter(RestEventApi restApi) {
         restApi.getRestMetadata()
-               .stream().sorted(Comparator.comparingInt(o -> o.getDefinition().getServicePath().length()))
+               .stream()
+               .sorted(Comparator.comparingInt(o -> o.getDefinition().getServicePath().length()))
                .forEach(metadata -> this.createRouter(metadata, restApi));
     }
 
@@ -102,7 +103,7 @@ public final class RestEventApisBuilder {
                                 : mapping.getCapturePath();
             logger.info("Registering route | Event Binding:\t{} {} --- {} {} {}", mapping.getMethod(), path,
                         metadata.getPattern(), mapping.getAction(), metadata.getAddress());
-            router.route(mapping.getMethod(), path).produces(ApiConstants.DEFAULT_CONTENT_TYPE).handler(restHandler);
+            router.route(mapping.getMethod(), path).produces(HttpUtils.DEFAULT_CONTENT_TYPE).handler(restHandler);
         }
     }
 

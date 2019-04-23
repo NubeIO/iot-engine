@@ -23,7 +23,6 @@ public final class ResponseData extends AbstractDTO {
         super(headers, body);
     }
 
-    //TODO convert EventMessage to ResponseData
     public static ResponseData from(@NonNull EventMessage message) {
         ResponseData responseData = new ResponseData();
         responseData.setHeaders(new JsonObject().put("status", message.getStatus())

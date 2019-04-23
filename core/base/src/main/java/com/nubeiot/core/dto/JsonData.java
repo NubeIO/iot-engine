@@ -1,11 +1,13 @@
 package com.nubeiot.core.dto;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -17,8 +19,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
@@ -26,6 +30,18 @@ import lombok.NonNull;
 public interface JsonData {
 
     ObjectMapper MAPPER = Json.mapper.copy().registerModule(Deserializer.SIMPLE_MODULE);
+
+    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean isError) {
+        return DefaultJsonData.tryParse(buffer, isJson, isError);
+    }
+
+    static JsonData tryParse(@NonNull Buffer buffer) {
+        return DefaultJsonData.tryParse(buffer, false, false);
+    }
+
+    static JsonData tryParse(@NonNull Object obj) {
+        return DefaultJsonData.tryParse(obj);
+    }
 
     static <T extends JsonData> T from(Object object, Class<T> clazz) {
         return from(object, clazz, "Invalid data format");
@@ -39,18 +55,13 @@ public interface JsonData {
         return from(object, clazz, mapper, null);
     }
 
-    @SuppressWarnings("unchecked")
     static <T extends JsonData> T from(@NonNull Object object, @NonNull Class<T> clazz, @NonNull ObjectMapper mapper,
                                        String errorMsg) {
         try {
-            JsonObject entries = object instanceof JsonObject
-                                 ? (JsonObject) object
-                                 : object instanceof String
-                                   ? new JsonObject((String) object)
-                                   : new JsonObject((Map<String, Object>) mapper.convertValue(object, Map.class));
+            JsonObject entries = SerializerFunction.builder().mapper(mapper).build().apply(object);
             return mapper.convertValue(entries.getMap(), clazz);
         } catch (IllegalArgumentException | NullPointerException | DecodeException ex) {
-            throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, errorMsg, new HiddenException(ex));
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, errorMsg, new HiddenException(ex));
         }
     }
 
@@ -68,8 +79,41 @@ public interface JsonData {
     @NoArgsConstructor
     class DefaultJsonData extends HashMap<String, Object> implements JsonData {
 
-        public DefaultJsonData(@NonNull Map<String, Object> map) {
-            this.putAll(map);
+        private static final String SUCCESS_KEY = "data";
+        private static final String ERROR_KEY = "error";
+        private static final Logger logger = LoggerFactory.getLogger(DefaultJsonData.class);
+
+        public DefaultJsonData(@NonNull Map<String, Object> map) { this.putAll(map); }
+
+        public DefaultJsonData(@NonNull JsonObject json)         { this(json.getMap()); }
+
+        static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean isError) {
+            try {
+                return new DefaultJsonData(buffer.toJsonObject());
+            } catch (DecodeException e) {
+                logger.trace("Failed to parse json. Try json array", e);
+                String key = isError ? ERROR_KEY : SUCCESS_KEY;
+                JsonObject data = new JsonObject();
+                try {
+                    data.put(key, buffer.toJsonArray());
+                } catch (DecodeException ex) {
+                    if (isJson) {
+                        throw new NubeException(ErrorCode.INVALID_ARGUMENT,
+                                                "Cannot parse json data. Received data: " + buffer.toString(), ex);
+                    }
+                    logger.trace("Failed to parse json array. Use text", ex);
+                }
+                //TODO check length, check encode
+                data.put(key, buffer.toString());
+                return new DefaultJsonData(data);
+            }
+        }
+
+        static JsonData tryParse(@NonNull Object obj) {
+            if (obj instanceof JsonData) {
+                return (JsonData) obj;
+            }
+            return new DefaultJsonData(SerializerFunction.builder().lenient(true).mapper(MAPPER).build().apply(obj));
         }
 
     }
@@ -81,25 +125,53 @@ public interface JsonData {
         private static final Logger logger = LoggerFactory.getLogger(SerializerFunction.class);
 
         @NonNull
-        private final String backupKey;
+        @Default
+        private final String backupKey = "data";
+        @Default
+        private final boolean lenient = false;
         @NonNull
         private final ObjectMapper mapper;
 
         @SuppressWarnings("unchecked")
         @Override
         public JsonObject apply(Object obj) {
+            if (obj instanceof String) {
+                try {
+                    return new JsonObject(mapper.readValue((String) obj, Map.class));
+                } catch (IOException e) {
+                    logger.trace("Failed mapping to json. Fallback to construct Json from plain string", e);
+                    return decode(obj, e);
+                }
+            }
+            if (obj instanceof JsonData) {
+                return ((JsonData) obj).toJson(mapper);
+            }
             if (obj instanceof JsonObject) {
                 return (JsonObject) obj;
             }
+            if (obj instanceof JsonArray) {
+                return decode(obj, "Failed to decode from JsonArray");
+            }
             if (obj instanceof Collection) {
-                return new JsonObject().put(backupKey, new JsonArray(new ArrayList((Collection) obj)));
+                return decode(new ArrayList((Collection) obj), "Failed to decode from Collection");
             }
             try {
                 return new JsonObject((Map<String, Object>) mapper.convertValue(obj, Map.class));
             } catch (IllegalArgumentException e) {
-                logger.trace("Failed to map to json. Fallback to construct Json from plain object", e);
+                logger.trace("Failed mapping to json. Fallback to construct Json from plain object", e);
+                return decode(obj, e);
+            }
+        }
+
+        private JsonObject decode(Object obj, Exception e) {
+            return decode(obj, "Failed to decode " + e.getMessage());
+        }
+
+        private JsonObject decode(Object obj, String msg) {
+            if (lenient) {
                 return new JsonObject().put(backupKey, obj);
             }
+            throw new DecodeException(msg);
         }
 
     }

@@ -6,16 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.ws.WebsocketEventExecutor;
-import com.nubeiot.core.http.ws.WebsocketEventMessage;
-import com.nubeiot.core.http.ws.WebsocketEventMetadata;
-import com.nubeiot.core.utils.Strings;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
@@ -23,6 +13,17 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import io.vertx.ext.web.handler.sockjs.SockJSSocket;
+
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
+import com.nubeiot.core.http.ws.WebsocketEventExecutor;
+import com.nubeiot.core.http.ws.WebsocketEventMessage;
+import com.nubeiot.core.utils.Strings;
+
 import lombok.NonNull;
 
 /**
@@ -32,16 +33,16 @@ import lombok.NonNull;
 public class WebsocketBridgeEventHandler implements Handler<BridgeEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(WebsocketBridgeEventHandler.class);
-    private final Map<String, WebsocketEventMetadata> metadataByListener = new HashMap<>();
+    private final Map<String, WebsocketServerEventMetadata> metadataByListener = new HashMap<>();
     private final WebsocketEventExecutor executor;
 
     public WebsocketBridgeEventHandler(@NonNull EventController eventController,
-                                       @NonNull List<WebsocketEventMetadata> addressMap) {
+                                       @NonNull List<WebsocketServerEventMetadata> addressMap) {
         this.executor = new WebsocketEventExecutor(eventController);
         addressMap.forEach(this::initMetadata);
     }
 
-    private void initMetadata(WebsocketEventMetadata metadata) {
+    private void initMetadata(WebsocketServerEventMetadata metadata) {
         EventModel eventModel = Objects.isNull(metadata.getListener())
                                 ? metadata.getPublisher()
                                 : metadata.getListener();
@@ -75,7 +76,7 @@ public class WebsocketBridgeEventHandler implements Handler<BridgeEvent> {
         SockJSSocket socket = event.socket();
         socket.exceptionHandler(t -> logger.error("WEBSOCKET::Backend error", t));
         String address = event.getRawMessage().getString("address");
-        WebsocketEventMetadata metadata = this.metadataByListener.get(address);
+        WebsocketServerEventMetadata metadata = this.metadataByListener.get(address);
         if (Objects.isNull(metadata)) {
             String errorMsg = Strings.format("Address {0} is not found", address);
             socket.close(HttpResponseStatus.NOT_FOUND.code(), errorMsg);

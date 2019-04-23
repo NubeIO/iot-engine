@@ -100,11 +100,15 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
         EventMessage request = EventMessage.success(action, preDeployResult.toRequestData());
         EventController controller = (EventController) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
-        ReplyEventHandler reply = new ReplyEventHandler("VERTX-DEPLOY", deploymentEvent().getAddress(), action,
-                                                        r -> succeedPostDeployment(serviceId, transactionId, action,
-                                                                                   r.getData().getString("deploy_id"),
-                                                                                   preDeployResult.getTargetState()),
-                                                        e -> errorPostDeployment(serviceId, transactionId, action, e));
+        ReplyEventHandler reply = ReplyEventHandler.builder()
+                                                   .action(action)
+                                                   .system("VERTX_DEPLOY")
+                                                   .success(r -> succeedPostDeployment(serviceId, transactionId, action,
+                                                                                       r.getData()
+                                                                                        .getString("deploy_id"),
+                                                                                       preDeployResult.getTargetState()))
+                                                   .error(e -> errorPostDeployment(serviceId, transactionId, action, e))
+                                                   .build();
         controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply);
     }
 

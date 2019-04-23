@@ -49,7 +49,7 @@ public interface TestHelper {
     }
 
     static void testComplete(Async async, String msgEvent, Handler<Void> completeAction) {
-        System.out.println("Count:" + async.count());
+        System.out.println("Current Test Async Count: " + async.count() + ". Countdown...");
         System.out.println(msgEvent);
         if (async.count() > 0) {
             async.countDown();

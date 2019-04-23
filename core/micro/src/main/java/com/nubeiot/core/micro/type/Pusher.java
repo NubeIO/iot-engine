@@ -31,12 +31,15 @@ class Pusher implements EventMessagePusher {
     private final EventPattern pattern;
 
     @Override
-    public void push(String path, HttpMethod httpMethod, RequestData requestData, Consumer<ResponseData> dataConsumer,
-                     Consumer<Throwable> errorConsumer) {
+    public void execute(String path, HttpMethod httpMethod, RequestData requestData,
+                        Consumer<ResponseData> dataConsumer, Consumer<Throwable> errorConsumer) {
         EventAction action = definition.search(path, httpMethod);
-        ReplyEventHandler handler = new ReplyEventHandler("SERVICE_DISCOVERY", EventAction.RETURN, path,
-                                                          message -> dataConsumer.accept(ResponseData.from(message)),
-                                                          errorConsumer);
+        ReplyEventHandler handler = ReplyEventHandler.builder()
+                                                     .system("SERVICE_DISCOVERY")
+                                                     .action(EventAction.RETURN)
+                                                     .success(msg -> dataConsumer.accept(ResponseData.from(msg)))
+                                                     .exception(errorConsumer)
+                                                     .build();
         controller.request(address, pattern, EventMessage.initial(action, requestData.toJson()), handler);
     }
 

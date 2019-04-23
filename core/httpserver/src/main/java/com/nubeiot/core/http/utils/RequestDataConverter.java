@@ -10,7 +10,7 @@ import io.vertx.ext.web.RoutingContext;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.exceptions.HttpException;
-import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
 import com.nubeiot.core.http.base.HttpUtils.HttpRequests;
 import com.nubeiot.core.utils.Strings;
 
@@ -39,7 +39,7 @@ public final class RequestDataConverter {
         if (Objects.nonNull(pagination)) {
             builder.pagination(pagination);
         }
-        return builder.headers(HttpRequests.serializeHeaders(context.request()))
+        return builder.headers(HttpHeaderUtils.serializeHeaders(context.request()))
                       .body(mergeInput)
                       .filter(HttpRequests.query(context.request()))
                       .build();
@@ -51,7 +51,7 @@ public final class RequestDataConverter {
         if (Strings.isBlank(query)) {
             return builder.build();
         }
-        return builder.filter(JsonObject.mapFrom(HttpUtils.deserializeQuery(query))).build();
+        return builder.filter(JsonObject.mapFrom(HttpHeaderUtils.deserializeQuery(query))).build();
     }
 
 }

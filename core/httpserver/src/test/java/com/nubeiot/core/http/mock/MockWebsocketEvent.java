@@ -3,14 +3,14 @@ package com.nubeiot.core.http.mock;
 import java.util.Arrays;
 import java.util.List;
 
+import io.vertx.reactivex.core.eventbus.EventBus;
+
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.http.ws.WebsocketEventMetadata;
-
-import io.vertx.reactivex.core.eventbus.EventBus;
+import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
 
 public class MockWebsocketEvent {
 
@@ -27,12 +27,13 @@ public class MockWebsocketEvent {
                                                                 .pattern(EventPattern.PUBLISH_SUBSCRIBE)
                                                                 .event(EventAction.RETURN)
                                                                 .build();
-    public static final WebsocketEventMetadata ALL_EVENTS = WebsocketEventMetadata.create(SERVER_LISTENER,
-                                                                                          SERVER_PROCESSOR,
-                                                                                          SERVER_PUBLISHER);
-    public static final WebsocketEventMetadata NO_PUBLISHER = WebsocketEventMetadata.create(SERVER_LISTENER,
-                                                                                            SERVER_PROCESSOR);
-    public static final WebsocketEventMetadata ONLY_PUBLISHER = WebsocketEventMetadata.create("rtc", SERVER_PUBLISHER);
+    public static final WebsocketServerEventMetadata ALL_EVENTS = WebsocketServerEventMetadata.create(SERVER_LISTENER,
+                                                                                                      SERVER_PROCESSOR,
+                                                                                                      SERVER_PUBLISHER);
+    public static final WebsocketServerEventMetadata NO_PUBLISHER = WebsocketServerEventMetadata.create(SERVER_LISTENER,
+                                                                                                        SERVER_PROCESSOR);
+    public static final WebsocketServerEventMetadata ONLY_PUBLISHER = WebsocketServerEventMetadata.create("rtc",
+                                                                                                          SERVER_PUBLISHER);
 
 
     public static class MockWebsocketEventServerHandler extends MockEventBusHandler {

@@ -82,7 +82,7 @@ public class KafkaUnitTest extends KafkaUnitTestBase {
         MessageConsumer<Object> consumer = vertx.eventBus().consumer(address);
         consumer.handler(event -> {
             System.out.println("Received message from address: " + address);
-            EventMessage msg = EventMessage.from(event.body());
+            EventMessage msg = EventMessage.tryParse(event.body());
             Assert.assertNotNull(msg.getData());
             Assert.assertNotEquals(-1, msg.getData().getValue("timestamp"));
             Assert.assertNotEquals(-1, msg.getData().getValue("checksum"));
