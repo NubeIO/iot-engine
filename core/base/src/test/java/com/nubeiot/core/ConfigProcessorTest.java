@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper.SystemHelper;
@@ -37,7 +38,8 @@ public class ConfigProcessorTest {
                            ".jks\",\"password\":\"nubesparkEventBus\"}},\"__cluster__\":{\"active\":true,\"ha\":true," +
                            "\"listenerAddress\":\"com.nubeiot.dashboard.connector.edge.cluster\"}}," +
                            "\"__app__\":{\"__http__\":{\"host\":\"0.0.0.0\",\"port\":8086,\"enabled\":true," +
-                           "\"rootApi\":\"/api\"},\"api.name\":\"edge-connector\"}}";
+                           "\"rootApi\":\"/api\", \"alpnVersions\": [ \"HTTP_2\", \"HTTP_1_1\" ]},\"api" +
+                           ".name\":\"edge-connector\"}}";
         nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
     }
 
@@ -76,7 +78,32 @@ public class ConfigProcessorTest {
 
         overrideConfigThenAssert(finalResult -> {
             String httpConfig = finalResult.getAppConfig().get("__http__").toString();
-            Assert.assertEquals(httpConfig, "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test}");
+            Assert.assertEquals(httpConfig, "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test, alpnVersions=[" +
+                                            "HTTP_2, HTTP_1_1]}");
+        });
+    }
+
+    @Test
+    public void test_override_app_config_primitive_data_type() {
+        System.setProperty("nubeio.app.test", "8088");
+
+        overrideConfigThenAssert(finalResult -> {
+            System.out.print(finalResult.getAppConfig().toJson());
+        });
+    }
+
+    @Test
+    public void test_override_app_config_with_array() {
+        System.setProperty("nubeio.app.http.port", "8088");
+        System.setProperty("nubeio.app.http.host", "2.2.2.2");
+        System.setProperty("nubeio.app.http.enabled", "false");
+        System.setProperty("nubeio.app.http.rootApi", "/test");
+        System.setProperty("nubeio.app.http.alpnVersions", "[HTTP_2,HTTP_1_2]");
+
+        overrideConfigThenAssert(finalResult -> {
+            String httpConfig = finalResult.getAppConfig().get("__http__").toString();
+            Assert.assertEquals(httpConfig, "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test, alpnVersions=[" +
+                                            "HTTP_2, HTTP_1_2]}");
         });
     }
 
@@ -105,8 +132,7 @@ public class ConfigProcessorTest {
             try {
                 assertEquals("{\"ha\":false,\"instances\":1,\"maxWorkerExecuteTime\":70000000000," +
                              "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\",\"multiThreaded\":false," +
-                             "\"worker\":true,\"workerPoolSize\":50}",
-                             finalResult.getDeployConfig().toJson().encode(),
+                             "\"worker\":true,\"workerPoolSize\":50}", finalResult.getDeployConfig().toJson().encode(),
                              JSONCompareMode.STRICT);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -122,16 +148,110 @@ public class ConfigProcessorTest {
             finalResult -> Assert.assertTrue(finalResult.getSystemConfig().getClusterConfig().isActive()));
     }
 
+    @Test
+    public void test_json_array_of_json_object() {
+        System.setProperty("nubeio.app.https.port", "8087");
+        String jsonInput = "{\"__system__\":{\"__eventBus__\":{\"clientAuth\":\"REQUIRED\",\"ssl\":true," +
+                           "\"clustered\":true,\"keyStoreOptions\":{\"path\":\"eventBusKeystore.jks\"," +
+                           "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path\":\"eventBusKeystore" +
+                           ".jks\",\"password\":\"nubesparkEventBus\"}},\"__cluster__\":{\"active\":true,\"ha\":true," +
+                           "\"listenerAddress\":\"com.nubeiot.dashboard.connector.edge.cluster\"}}," +
+                           "\"__app__\":{\"__https__\": [{\"host\": \"2.2.2.2\", \"port\": 8088, \"enabled\": false, " +
+                           "\"rootApi\": \"/test\"},{\"host\": \"2.2.2.3\", \"port\": 8089, \"enabled\": true, " +
+                           "\"rootApi\": \"/test1\"}]}}";
+        nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
+        Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null, nubeConfig);
+        Assert.assertTrue(finalResult.isPresent());
+        String httpsConfig = finalResult.get().getAppConfig().get("__https__").toString();
+        Assert.assertEquals(finalResult.get().getAppConfig().get("__https__").toString(),
+                            "[{host=2.2.2.2, port=8088, enabled=false, rootApi=/test}, {host=2.2.2.3, port=8089, " +
+                            "enabled=true, rootApi=/test1}]");
+        System.out.println(httpsConfig);
+    }
+
+    @Test
+    public void test_json_array_of_primitive() {
+        System.setProperty("nubeio.app.https", "[abc1,def1]");
+        String jsonInput = "{\"__system__\":{\"__eventBus__\":{\"clientAuth\":\"REQUIRED\",\"ssl\":true," +
+                           "\"clustered\":true,\"keyStoreOptions\":{\"path\":\"eventBusKeystore.jks\"," +
+                           "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path\":\"eventBusKeystore" +
+                           ".jks\",\"password\":\"nubesparkEventBus\"}},\"__cluster__\":{\"active\":true,\"ha\":true," +
+                           "\"listenerAddress\":\"com.nubeiot.dashboard.connector.edge.cluster\"}}," +
+                           "\"__app__\":{\"__https__\": [\"abc\", \"def\"]}}";
+        nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
+        Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null, nubeConfig);
+        Assert.assertTrue(finalResult.isPresent());
+        String httpsConfig = finalResult.get().getAppConfig().get("__https__").toString();
+        Assert.assertEquals(finalResult.get().getAppConfig().get("__https__").toString(),
+                            "[abc1, def1]");
+    }
+
+    @Test
+    public void test_json_array_of_primitive_not_update() {
+        System.setProperty("nubeio.app.https.name", "[abc1,def1]");
+        String jsonInput = "{\"__system__\":{\"__eventBus__\":{\"clientAuth\":\"REQUIRED\",\"ssl\":true," +
+                           "\"clustered\":true,\"keyStoreOptions\":{\"path\":\"eventBusKeystore.jks\"," +
+                           "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path\":\"eventBusKeystore" +
+                           ".jks\",\"password\":\"nubesparkEventBus\"}},\"__cluster__\":{\"active\":true,\"ha\":true," +
+                           "\"listenerAddress\":\"com.nubeiot.dashboard.connector.edge.cluster\"}}," +
+                           "\"__app__\":{\"__https__\": [\"abc\", \"def\"]}}";
+        nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
+        Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null, nubeConfig);
+        Assert.assertTrue(finalResult.isPresent());
+        String httpsConfig = finalResult.get().getAppConfig().get("__https__").toString();
+        Assert.assertEquals(finalResult.get().getAppConfig().get("__https__").toString(),
+                            "[abc, def]");
+    }
+
+    @Test
+    public void test_json_array_of_json_object_1() {
+        System.setProperty("nubeio.app.http.host.name", "[abc.net,def.net]");
+        String jsonInput = "{\"__app__\":{\"__http__\":{\"host\":[{\"name\":\"abc.com\"}, {\"name\":\"def" +
+                           ".com\"}]}}}";
+
+        nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
+        Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null, nubeConfig);
+        Assert.assertTrue(finalResult.isPresent());
+        Object httpConfig = finalResult.get().getAppConfig().get("__http__");
+        Assert.assertNotNull(httpConfig);
+        Assert.assertEquals(httpConfig.toString(),
+                            "{host=[{name=abc.com}, {name=def.com}]}");
+    }
+
+    @Test
+    public void test_json_array_of_primitive_1() {
+        String jsonInput = "{\"__system__\":{\"__eventBus__\":{\"clientAuth\":\"REQUIRED\",\"ssl\":true," +
+                           "\"clustered\":true,\"keyStoreOptions\":{\"path\":\"eventBusKeystore.jks\"," +
+                           "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path\":\"eventBusKeystore" +
+                           ".jks\",\"password\":\"nubesparkEventBus\"}},\"__cluster__\":{\"active\":true,\"ha\":true," +
+                           "\"listenerAddress\":\"com.nubeiot.dashboard.connector.edge.cluster\"}}," +
+                           "\"__app__\":{\"__http__\":{\"host\":[\"abc.com\",\"def.com\"]}}}";
+        System.setProperty("nubeio.app.http.host.name", "[abc.net,def.net]");
+        nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
+        Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null, nubeConfig);
+        Assert.assertTrue(finalResult.isPresent());
+        Object httpConfig = finalResult.get().getAppConfig().get("__http__");
+        Assert.assertNotNull(httpConfig);
+        Assert.assertEquals(httpConfig.toString(),
+                            "{host=[abc.com, def.com]}");
+    }
+
     private void overrideConfigThenAssert(Consumer<NubeConfig> configConsumer) {
         Optional<NubeConfig> result = processor.processAndOverride(NubeConfig.class, nubeConfig, null);
-        NubeConfig finalConfig = IConfig.merge(nubeConfig, result.get(), NubeConfig.class);
-        configConsumer.accept(finalConfig);
+        configConsumer.accept(result.get());
     }
 
     @After
     public void after() throws Exception {
         SystemHelper.cleanEnvironments();
         System.clearProperty("nubeio.app.http.host");
+        System.clearProperty("nubeio.app.http.host.name");
+        System.clearProperty("nubeio.app.http.alpnVersions");
+        System.clearProperty("nubeio.app.http.port");
+        System.clearProperty("nubeio.app.https.port");
+        System.clearProperty("nubeio.app.http.enabled");
+        System.clearProperty("nubeio.app.http.rootApi");
+        System.clearProperty("nubeio.app.https");
     }
-
+//    TODO testing dataDir as well
 }
