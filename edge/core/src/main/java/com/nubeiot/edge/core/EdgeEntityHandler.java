@@ -254,37 +254,46 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     private ITblModule updateModule(@NonNull ITblModule oldOne, @NonNull ITblModule newOne, boolean isUpdated) {
-        if (Objects.nonNull(newOne.getVersion())) {
-            oldOne.setVersion(newOne.getVersion());
-        } else if (isUpdated) {
+        if (verifyUpdateModule(newOne.getVersion(), isUpdated)) {
             throw new NubeException("Version is required!");
         }
+        if (Objects.nonNull(newOne.getVersion())) {
+            oldOne.setVersion(newOne.getVersion());
+        }
 
-        if (isUpdated && Objects.isNull(newOne.getDeployConfig())) {
+        if (verifyUpdateModule(newOne.getDeployConfig(), isUpdated)) {
             throw new NubeException("Deploy config is required!");
         }
-        if (isUpdated) {
-            oldOne.setDeployConfig(newOne.getDeployConfig());
-        } else {
-            NubeConfig nubeConfigInDB = IConfig.from(oldOne.getDeployConfig(), NubeConfig.class);
-            JsonObject request = new JsonObject().put(AppConfig.NAME,
-                                                      IConfig.from(newOne.getDeployConfig(), NubeConfig.class)
-                                                             .getAppConfig()
-                                                             .toJson());
-            oldOne.setDeployConfig(IConfig.merge(nubeConfigInDB, request, NubeConfig.class).toJson());
+
+        if (Objects.nonNull(newOne.getDeployConfig())) {
+            if (isUpdated) {
+                oldOne.setDeployConfig(newOne.getDeployConfig());
+            } else {
+                NubeConfig nubeConfigInDB = IConfig.from(oldOne.getDeployConfig(), NubeConfig.class);
+                JsonObject request = new JsonObject().put(AppConfig.NAME,
+                                                          IConfig.from(newOne.getDeployConfig(), NubeConfig.class)
+                                                                 .getAppConfig()
+                                                                 .toJson());
+                oldOne.setDeployConfig(IConfig.merge(nubeConfigInDB, request, NubeConfig.class).toJson());
+            }
         }
 
         if (Objects.nonNull(newOne.getPublishedBy())) {
             oldOne.setPublishedBy(newOne.getPublishedBy());
         }
 
+        if (verifyUpdateModule(newOne.getState(), isUpdated)) {
+            throw new NubeException("State is required!");
+        }
         if (Objects.nonNull(newOne.getState())) {
             oldOne.setState(newOne.getState());
-        } else if (isUpdated) {
-            throw new NubeException("State is required!");
         }
 
         return oldOne;
+    }
+
+    private boolean verifyUpdateModule(Object checkNullObject, boolean isUpdated) {
+        return Objects.isNull(checkNullObject) && isUpdated;
     }
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {

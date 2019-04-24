@@ -174,8 +174,23 @@ public class NubeConfigTest {
 
     @Test
     public void test_merge_with_empty_json() throws JSONException {
-        AppConfig appconfig = IConfig.merge("{\"__app__\":{\"fuck\":\"1\"}}", "{\"__app__\":{}}", AppConfig.class);
-        JSONAssert.assertEquals("{\"fuck\":\"1\"}", appconfig.toJson().encode(), JSONCompareMode.STRICT);
+        AppConfig appconfig = IConfig.merge("{\"__app__\":{\"test\":\"1\"}}", "{\"__app__\":{}}", AppConfig.class);
+        JSONAssert.assertEquals("{\"test\":\"1\"}", appconfig.toJson().encode(), JSONCompareMode.STRICT);
+    }
+
+    @Test
+    public void test_merge_with_blank_value() throws JSONException {
+        AppConfig appconfig = IConfig.merge("{\"__app__\":{\"test\":\"1\"}}", "{\"__app__\":{\"test\":\"" + "\"}}",
+                                            AppConfig.class);
+        JSONAssert.assertEquals("{\"test\":\"\"}", appconfig.toJson().encode(), JSONCompareMode.STRICT);
+    }
+
+    @Test
+    public void test_merge_with_null_value() throws JSONException {
+        AppConfig overridedAppconfig = IConfig.merge("{\"__app__\":{\"test\":\"1\"}}", "{\"__app__\":{\"test\":null}}",
+                                                     AppConfig.class);
+
+        JSONAssert.assertEquals("{\"test\":\"1\"}", overridedAppconfig.toJson().encode(), JSONCompareMode.STRICT);
     }
 
     @Test
