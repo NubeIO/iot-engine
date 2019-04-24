@@ -42,6 +42,10 @@ public final class ModuleTypeRule implements Shareable {
         return new TblModule().fromJson(module);
     }
 
+    public ITblModule parse(@NonNull Path dataDir, @NonNull ITblModule tblModule, AppConfig appConfig) {
+        return tblModule.setDeployConfig(computeNubeConfig(dataDir, appConfig, tblModule.getServiceId()).toJson());
+    }
+
     private NubeConfig computeNubeConfig(@NonNull Path parentDataDir, AppConfig appConfig, String serviceId) {
         return NubeConfig.blank(FileUtils.recomputeDataDir(parentDataDir, serviceId), appConfig.toJson());
     }
