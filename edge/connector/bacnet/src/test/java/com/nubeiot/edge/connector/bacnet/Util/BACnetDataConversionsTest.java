@@ -1,14 +1,20 @@
 package com.nubeiot.edge.connector.bacnet.Util;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.serotonin.bacnet4j.exception.BACnetException;
+import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
+import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
+import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
@@ -73,4 +79,71 @@ public class BACnetDataConversionsTest {
         Assert.assertNotNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
     }
 
+    @Test
+    public void getObjectIdentifierTest() throws Exception {
+        String objStr = ObjectType.analogInput.toString() + ":1";
+        ObjectIdentifier oid = BACnetDataConversions.getObjectIdentifier(objStr);
+        assertEquals(oid, new ObjectIdentifier(ObjectType.analogInput, 1));
+
+        objStr = ObjectType.binaryOutput + ":2";
+        oid = BACnetDataConversions.getObjectIdentifier(objStr);
+        assertEquals(oid, new ObjectIdentifier(ObjectType.binaryOutput, 2));
+
+        objStr = "analog-output:1";
+        oid = BACnetDataConversions.getObjectIdentifier(objStr);
+        assertEquals(oid, new ObjectIdentifier(ObjectType.analogOutput, 1));
+
+        objStr = "binary-input:2";
+        oid = BACnetDataConversions.getObjectIdentifier(objStr);
+        assertEquals(oid, new ObjectIdentifier(ObjectType.binaryInput, 2));
+    }
+
+    @Test(expected = BACnetRuntimeException.class)
+    public void getObjectidentifierTest_BadInput() throws Exception {
+        String objStr = "badInput:1";
+        ObjectIdentifier oid = BACnetDataConversions.getObjectIdentifier(objStr);
+
+        objStr = "badInput2";
+        oid = BACnetDataConversions.getObjectIdentifier(objStr);
+    }
+
+    @Test
+    public void encodableToPrimitive_Test() throws Exception {
+        assertEquals(1f, BACnetDataConversions.encodableToPrimitive(new Real(1)));
+        assertEquals(1, BACnetDataConversions.encodableToPrimitive(new UnsignedInteger(1)));
+        assertEquals(1, BACnetDataConversions.encodableToPrimitive(BinaryPV.active));
+        assertEquals("null", BACnetDataConversions.encodableToPrimitive(Null.instance));
+        assertEquals("test", BACnetDataConversions.encodableToPrimitive(new CharacterString("test")));
+    }
+
+    @Test
+    public void primitiveToBinary_Test() throws Exception {
+        assertEquals(BinaryPV.active, BACnetDataConversions.primitiveToBinary(1));
+        assertEquals(BinaryPV.active, BACnetDataConversions.primitiveToBinary(1f));
+        assertEquals(BinaryPV.active, BACnetDataConversions.primitiveToBinary(1.5));
+        assertEquals(BinaryPV.active, BACnetDataConversions.primitiveToBinary(1d));
+        assertEquals(BinaryPV.active, BACnetDataConversions.primitiveToBinary(true));
+        assertEquals(BinaryPV.active, BACnetDataConversions.primitiveToBinary("1"));
+        assertEquals(BinaryPV.inactive, BACnetDataConversions.primitiveToBinary(false));
+        assertEquals(BinaryPV.active, BACnetDataConversions.primitiveToBinary("true"));
+        assertEquals(BinaryPV.inactive, BACnetDataConversions.primitiveToBinary("test"));
+        assertEquals(BinaryPV.inactive, BACnetDataConversions.primitiveToBinary(null));
+    }
+
+    @Test
+    public void primitiveToReal_Test() throws Exception {
+        assertEquals(new Real(1.2f), BACnetDataConversions.primitiveToReal("1.2"));
+        assertEquals(new Real(1.2f), BACnetDataConversions.primitiveToReal(1.2));
+        assertEquals(new Real(1), BACnetDataConversions.primitiveToReal(1));
+    }
+
+    @Test(expected = BACnetException.class)
+    public void primitiveToReal_Invalid() throws Exception {
+        assertEquals(new Real(1.2f), BACnetDataConversions.primitiveToReal("test"));
+    }
+
+    @Test(expected = BACnetException.class)
+    public void primitiveToReal_InvalidNull() throws Exception {
+        assertEquals(new Real(1.2f), BACnetDataConversions.primitiveToReal(null));
+    }
 }

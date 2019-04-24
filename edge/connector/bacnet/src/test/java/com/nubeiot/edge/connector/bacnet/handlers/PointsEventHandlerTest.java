@@ -40,51 +40,18 @@ public class PointsEventHandlerTest {
         eventHandler = new PointsEventHandler(bacnetInstances);
     }
 
-    //TODO: test sending 1 / 0 to binary-output
-
     @Test
     public void writeRemoteDevicePointValueTest() throws Exception {
         when(bacnetInstance.writeAtPriority(any(Integer.class), any(String.class), any(Encodable.class),
                                             any(Integer.class))).thenReturn(Single.just(new JsonObject()));
 
-        Single<JsonObject> reply = eventHandler.writeRemoteDevicePointValue(n, id, p, pr, "1");
-        reply.test().assertNoErrors().assertComplete();
-
-        reply = eventHandler.writeRemoteDevicePointValue(n, id, p, pr, "1.2");
-        reply.test().assertNoErrors().assertComplete();
-
-        reply = eventHandler.writeRemoteDevicePointValue(n, id, p, pr, "null");
-        reply.test().assertNoErrors().assertComplete();
-
-        reply = eventHandler.writeRemoteDevicePointValue(n, id, p, pr, "true");
-        reply.test().assertNoErrors().assertComplete();
-
-        reply = eventHandler.writeRemoteDevicePointValue(n, id, p, pr, "false");
-        reply.test().assertNoErrors().assertComplete();
-
-        reply = eventHandler.writeRemoteDevicePointValue(n, id, p, pr, 1);
-        reply.test().assertNoErrors().assertComplete();
-
-        reply = eventHandler.writeRemoteDevicePointValue(n, id, p, pr, 1.1);
-        reply.test().assertNoErrors().assertComplete();
-
-        //        reply = eventHandler.writeRemoteDevicePointValue(n, id, p, pr, null);
-        //        reply.test().assertNoErrors().assertComplete();
+        eventHandler.writeRemoteDevicePointValue(n, id, p, pr, "1").test().assertNoErrors().assertComplete();
     }
 
     @Test
     public void writeRemoteDevicePointValueTest_invalidPriority() throws Exception {
-        Single<JsonObject> reply = eventHandler.writeRemoteDevicePointValue(n, id, p, 0, "1");
-        reply.test().assertError(BACnetException.class);
-
-        reply = eventHandler.writeRemoteDevicePointValue(n, id, p, 17, "1");
-        reply.test().assertError(BACnetException.class);
-    }
-
-    @Test
-    public void writeRemoteDevicePointValueTest_invalidValue() throws Exception {
-        Single<JsonObject> reply = eventHandler.writeRemoteDevicePointValue(n, id, p, pr, "bad_value");
-        reply.test().assertError(NumberFormatException.class);
+        eventHandler.writeRemoteDevicePointValue(n, id, p, 0, "1").test().assertError(BACnetException.class);
+        eventHandler.writeRemoteDevicePointValue(n, id, p, 17, "1").test().assertError(BACnetException.class);
     }
 
     @Test

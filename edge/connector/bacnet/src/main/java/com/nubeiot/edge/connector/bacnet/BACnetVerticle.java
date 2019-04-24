@@ -4,14 +4,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.edge.connector.bacnet.handlers.DeviceEventHandler;
+import com.nubeiot.edge.connector.bacnet.handlers.NubeServiceEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.PointsEventHandler;
 
 /*
@@ -19,8 +26,9 @@ import com.nubeiot.edge.connector.bacnet.handlers.PointsEventHandler;
  */
 public class BACnetVerticle extends ContainerVerticle {
 
-    //    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected Map<String, BACnetInstance> bacnetInstances;
+    protected PollingTimers pollingTimers;
 
     @Override
     public void start() {
@@ -34,9 +42,11 @@ public class BACnetVerticle extends ContainerVerticle {
             throw new NubeException("No network information provided");
         }
 
+        pollingTimers = new PollingTimers(vertx);
         bacnetInstances = new HashMap<>();
         startBACnet(bacnetConfig);
         initLocalPoints(bacnetConfig.getLocalPointsAddress());
+        //TODO: init all configs from DB when ready to implement
         //REGISTER ENDPOINTS
         registerEventbus(new EventController(vertx));
         //        addProvider(new MicroserviceProvider(), this::publishServices);
@@ -54,7 +64,8 @@ public class BACnetVerticle extends ContainerVerticle {
         bacnetConfig.getIpConfigs().forEach(ipConfig -> {
             logger.info("Initialising bacnet instance for network {}", ipConfig.getName());
             bacnetInstances.put(ipConfig.getName(),
-                                BACnetInstance.createBACnet(bacnetConfig, ipConfig, eventController, vertx));
+                                BACnetInstance.createBACnet(bacnetConfig, ipConfig, eventController, pollingTimers,
+                                                            vertx));
         });
     }
 
@@ -63,6 +74,7 @@ public class BACnetVerticle extends ContainerVerticle {
         if (bacnetInstances == null) {
             return; //Prevents super.start() from registering before BACnetInstance is started
         }
+        controller.register(BACnetEventModels.NUBE_SERVICE_SUB, new NubeServiceEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.DEVICES, new DeviceEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.POINTS, new PointsEventHandler(bacnetInstances));
         this.eventController = controller;
@@ -87,16 +99,14 @@ public class BACnetVerticle extends ContainerVerticle {
     protected void initLocalPoints(String localPointsAddress) {
         logger.info("Requesting local points from address {}", localPointsAddress);
 
-        //TODO: TEMPORARY REQUEST
-        vertx.createHttpClient().getNow(4000, "localhost", "/points", response -> {
-            if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                response.bodyHandler(body -> {
-                    //todo: init points for each instance
-                });
-            } else {
-                System.out.println("REQUEST DIDNT ");
-            }
-        });
+        ReplyEventHandler handler = new ReplyEventHandler("bacnet-edgeApi", EventAction.GET_LIST, localPointsAddress,
+                                                          eventMessage -> {
+                                                              bacnetInstances.forEach(
+                                                                  (s, baCnetInstance) -> baCnetInstance.initialiseLocalObjectsFromJson(
+                                                                      eventMessage.getData()));
+                                                          });
+        eventController.fire(localPointsAddress, EventPattern.REQUEST_RESPONSE,
+                             EventMessage.initial(EventAction.GET_LIST));
     }
 
 }

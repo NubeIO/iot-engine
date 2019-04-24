@@ -77,9 +77,15 @@ public class BACnetEventListener extends DeviceEventAdapter {
             return;
         }
         ObjectIdentifier oid = req.getObjectIdentifier();
-        String id = BACnetDataConversions.pointIDBACnetToNube(oid);
-        Object val = BACnetDataConversions.encodableToPrimitive(req.getPropertyValue());
-
+        String id;
+        Object val;
+        try {
+            id = BACnetDataConversions.pointIDBACnetToNube(oid);
+            val = BACnetDataConversions.encodableToPrimitive(req.getPropertyValue());
+        } catch (Exception e) {
+            logger.warn("External BACnet write request error", e);
+            return;
+        }
         logger.info("REQUEST RECIEVED FOR POINT " + id + " value " + val + " @ " + req.getPriority().intValue());
 
         JsonObject reqBody = new JsonObject().put("value", val).put("priority", req.getPriority().intValue());

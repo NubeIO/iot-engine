@@ -8,6 +8,17 @@ import com.nubeiot.core.event.EventPattern;
 
 public final class BACnetEventModels {
 
+    public static final EventModel NUBE_SERVICE_SUB = EventModel.builder()
+                                                                //TODO: verify address
+                                                                .address("nubeiot.edge.connector.edgeapi")
+                                                                .pattern(EventPattern.PUBLISH_SUBSCRIBE)
+                                                                .local(true)
+                                                                .events(Arrays.asList(EventAction.CREATE,
+                                                                                      EventAction.REMOVE,
+                                                                                      EventAction.UPDATE,
+                                                                                      EventAction.PATCH))
+                                                                .build();
+
     public static final EventModel NETWORKS_ALL = EventModel.builder()
                                                             .address("nubeiot.edge.connector.bacnet")
                                                             .pattern(EventPattern.REQUEST_RESPONSE)

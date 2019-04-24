@@ -25,6 +25,7 @@ public class BACnetConfig implements IConfig {
 
     private String deviceName = "NubeIOEdge28";
     private int deviceId = 123456;
+    private long defaultPollingTime = 60000;
     private String localPointsAddress = "NO_DEFAULT_ADDRESS";
     @JsonProperty(value = "__ipConfigs__")
     private List<IPConfig> ipConfigs = new ArrayList<>();

@@ -124,10 +124,14 @@ public class SimulatorIntegrationTest {
                                  JsonObject data = message.getData();
                                  context.assertTrue(message.isSuccess());
                                  context.assertFalse(data.isEmpty());
-                                 testPoints.getMap()
-                                           .keySet()
-                                           .forEach(o -> context.assertTrue(
-                                               data.containsKey(BACnetDataConversions.pointIDNubeToBACnet(o))));
+                                 testPoints.getMap().keySet().forEach(o -> {
+                                     try {
+                                         context.assertTrue(
+                                             data.containsKey(BACnetDataConversions.pointIDNubeToBACnet(o)));
+                                     } catch (Exception e) {
+                                         context.fail(e);
+                                     }
+                                 });
                                  TestHelper.testComplete(async);
                              });
     }

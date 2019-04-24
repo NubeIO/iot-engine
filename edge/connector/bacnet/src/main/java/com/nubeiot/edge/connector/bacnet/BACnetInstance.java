@@ -48,6 +48,10 @@ import com.serotonin.bacnet4j.util.RequestUtils;
  *  - local object adding
  *  - remote device request utils
  */
+
+//TODO: CHECK WHAT HAPPENS WHEN OBJECT DOES'T EXIST ON REMOTE DEVICE
+
+
 public class BACnetInstance {
 
     //TODO execute blocking will throw warnings after 10 seconds. is it possible for this to happen on local network
@@ -57,17 +61,28 @@ public class BACnetInstance {
     private Vertx vertx;
     private LocalDevice localDevice;
     private BACnetConfig config;
-    private Map<RemoteDevice, ArrayList<ObjectIdentifier>> cachedRemotePoints = new HashMap<>();
+    //    private Map<RemoteDevice, ArrayList<ObjectIdentifier>> cachedRemotePoints = new HashMap<>();
+    private Map<String, Integer> remoteSubscribtions = new HashMap<>();
+    private PollingTimers pollingTimers;
 
-    private BACnetInstance(LocalDevice localDevice, Vertx vertx) {
+    private BACnetInstance(LocalDevice localDevice, Vertx vertx, PollingTimers timers) {
         this.vertx = vertx;
         this.localDevice = localDevice;
+        this.pollingTimers = timers;
+        this.config = new BACnetConfig();
+    }
+
+    private BACnetInstance(LocalDevice localDevice, Vertx vertx, PollingTimers timers,
+                           Map<String, Integer> remoteSubscribtions) {
+        this(localDevice, vertx, timers);
+        this.remoteSubscribtions = remoteSubscribtions;
     }
 
     private BACnetInstance(BACnetConfig config, BACnetNetworkConfig netConfig, EventController eventController,
-                           Vertx vertx) {
+                           PollingTimers pollingTimers, Vertx vertx) {
         this.vertx = vertx;
         this.config = config;
+        this.pollingTimers = pollingTimers;
         Transport transport = TransportProvider.byConfig(netConfig).get();
 
         //TODO: set name and model name
@@ -88,13 +103,19 @@ public class BACnetInstance {
         }
     }
 
-    public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx) {
-        return new BACnetInstance(localDevice, vertx);
+    public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx, PollingTimers pollingTimers) {
+        return new BACnetInstance(localDevice, vertx, pollingTimers);
+    }
+
+    public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx, PollingTimers pollingTimers,
+                                              Map<String, Integer> remoteSubscribtions) {
+        return new BACnetInstance(localDevice, vertx, pollingTimers, remoteSubscribtions);
     }
 
     public static BACnetInstance createBACnet(BACnetConfig bacnetConfig, BACnetNetworkConfig networkConfig,
-                                              EventController eventController, Vertx vertx) {
-        return new BACnetInstance(bacnetConfig, networkConfig, eventController, vertx);
+                                              EventController eventController, PollingTimers pollingTimers,
+                                              Vertx vertx) {
+        return new BACnetInstance(bacnetConfig, networkConfig, eventController, pollingTimers, vertx);
     }
 
     public void terminate() {
@@ -102,15 +123,47 @@ public class BACnetInstance {
     }
 
     public void initialiseLocalObjectsFromJson(JsonObject json) {
+        localDevice.getLocalObjects().clear();//TODO: make sure no memory leaks in BACnetObjects
         Observable.fromIterable(json.getMap().entrySet()).subscribe(entry -> {
             JsonObject pointJson = JsonObject.mapFrom(entry.getValue());
-            LocalPointObjectUtils.createLocalObject(pointJson, entry.getKey(), localDevice);
+            LocalPointObjectUtils.createLocalObject(entry.getKey(), pointJson, localDevice);
         });
     }
 
-    public void addLocalObjectFromJson(JsonObject json) {
-        //TODO: get id from json
-        //        LocalPointObjectUtils.createLocalObject(json, id, localDevice);
+    public void addLocalObjectFromJson(String id, JsonObject json) {
+        try {
+            if (localDevice.getObject(BACnetDataConversions.getObjectIdentifierFromNube(id)) == null) {
+                LocalPointObjectUtils.createLocalObject(id, json, localDevice);
+            } else {
+                logger.warn("Local object {} already exists", id);
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    public void removeLocalObject(String id) {
+        try {
+            localDevice.removeObject(
+                BACnetDataConversions.getObjectIdentifier(BACnetDataConversions.pointIDNubeToBACnet(id)));
+        } catch (Exception e) {
+            logger.warn("Invalid NubeIO Point Id to remove: {}", e, id);
+        }
+    }
+
+    public void writeLocalObject(String id, JsonObject json) {
+        try {
+            LocalPointObjectUtils.writeLocalObject(id, json, localDevice);
+        } catch (Exception e) {
+            logger.warn("Failed writing to point {}", e, id);
+        }
+    }
+
+    public void updateLocalObject(String id, String property, Object value) {
+        try {
+            LocalPointObjectUtils.updateLocalObjectProperty(localDevice, id, property, value);
+        } catch (Exception e) {
+            logger.warn("Error updating point {} property {}", e, id, property);
+        }
     }
 
     //REMOTE DEVICE FUNCTIONS
@@ -153,6 +206,7 @@ public class BACnetInstance {
         }
     }
 
+    //TODO: refactor
     private Single<JsonObject> getRemoteDeviceObjectList(RemoteDevice remoteDevice) {
         return callAsyncBlocking(() -> {
             SequenceOf<ObjectIdentifier> list = RequestUtils.getObjectList(localDevice, remoteDevice);
@@ -185,7 +239,7 @@ public class BACnetInstance {
             return Single.error(new BACnetRuntimeException("Remote device not found"));
         }
         try {
-            return getRemoteObjectProperties(remoteDevice, getObjectIdentifier(objectID));
+            return getRemoteObjectProperties(remoteDevice, BACnetDataConversions.getObjectIdentifier(objectID));
         } catch (BACnetRuntimeException e) {
             return Single.error(e);
         }
@@ -236,41 +290,115 @@ public class BACnetInstance {
             return Single.error(new BACnetRuntimeException("Remote device not found"));
         }
         try {
-            return remoteObjectSubscribeCOV(remoteDevice, getObjectIdentifier(objectID));
+            return remoteObjectSubscribeCOV(remoteDevice, BACnetDataConversions.getObjectIdentifier(objectID));
         } catch (BACnetRuntimeException e) {
             return Single.error(e);
         }
     }
 
-    public Single<JsonObject> remoteObjectSubscribeCOV(RemoteDevice rd, ObjectIdentifier obj) {
+    public Single<JsonObject> remoteObjectSubscribeCOV(RemoteDevice rd, ObjectIdentifier oid) {
+        return callAsyncBlocking(() -> sendSubscribeCOVRequestBlocking(rd, oid));
+    }
+
+    public JsonObject sendSubscribeCOVRequestBlocking(RemoteDevice rd, ObjectIdentifier oid) throws Exception {
         boolean correctID = false;
         while (!correctID) {
             int subID = (int) Math.floor((Math.random() * 100) + 1);
             UnsignedInteger subProcessID = new UnsignedInteger(subID);
             UnsignedInteger lifetime = new UnsignedInteger(0);
-            SubscribeCOVRequest request = new SubscribeCOVRequest(subProcessID, obj, Boolean.TRUE, lifetime);
-            try {
-                localDevice.send(rd, request).get();
-            } catch (BACnetException e) {
-                //                    logger.warn(e.getMessage(), e);
-                return Single.error(e);
-            }
+            SubscribeCOVRequest request = new SubscribeCOVRequest(subProcessID, oid, Boolean.TRUE, lifetime);
+            localDevice.send(rd, request).get();
             correctID = true;
+            remoteSubscribtions.put(remoteObjectKey(rd, oid), subProcessID.intValue());
         }
-        return Single.just(new JsonObject());
+        initRemoteObjectPolling(rd, oid);
+        return new JsonObject();
     }
 
-    //    public Single<JsonObject> initRemoteObjectPolling(RemoteDevice rd, ObjectIdentifier obj, int pollSeconds) {
-    //
-    //    }
-
-    public Single<JsonObject> writeAtPriority(int instanceNumber, String obj, Encodable val, int priority) {
+    public Single<JsonObject> removeRemoteObjectSubscription(int instanceNumber, String objectId) {
         RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
         if (remoteDevice == null) {
             return Single.error(new BACnetRuntimeException("Remote device not found"));
         }
         try {
-            ObjectIdentifier oid = getObjectIdentifier(obj);
+            return removeRemoteObjectSubscription(remoteDevice, BACnetDataConversions.getObjectIdentifier(objectId));
+        } catch (BACnetRuntimeException e) {
+            return Single.error(e);
+        }
+    }
+
+    public Single<JsonObject> removeRemoteObjectSubscription(RemoteDevice remoteDevice, ObjectIdentifier oid) {
+        try {
+            return Single.create(source -> removeRemoteObjectSubscriptionBlocking(remoteDevice, oid));
+        } catch (Exception e) {
+            return Single.error(e);
+        }
+    }
+
+    //TODO: CHECK LocalDevice COV_Contexts for memory overuse
+    public JsonObject removeRemoteObjectSubscriptionBlocking(RemoteDevice remoteDevice, ObjectIdentifier oid)
+        throws Exception {
+        if (!remoteSubscribtions.containsKey(remoteObjectKey(remoteDevice, oid))) {
+            throw new BACnetException("Subscription doesn't exist");
+        }
+        UnsignedInteger subId = new UnsignedInteger(remoteSubscribtions.get(remoteObjectKey(remoteDevice, oid)));
+        SubscribeCOVRequest request = new SubscribeCOVRequest(subId, oid, null, null);
+        //TODO: check don't need to confirm
+        localDevice.send(remoteDevice, request);
+        remoteSubscribtions.remove(remoteObjectKey(remoteDevice, oid));
+        pollingTimers.removePoint(remoteDevice, oid);
+        return new JsonObject();
+    }
+
+    public Single<JsonObject> initRemoteObjectPolling(int instanceNumber, String oid, long pollTime) {
+        RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
+        if (remoteDevice == null) {
+            return Single.error(new BACnetRuntimeException("Remote device not found"));
+        }
+        try {
+            return initRemoteObjectPolling(remoteDevice, BACnetDataConversions.getObjectIdentifier(oid),
+                                           config.getDefaultPollingTime());
+        } catch (BACnetRuntimeException e) {
+            return Single.error(e);
+        }
+    }
+
+    public Single<JsonObject> initRemoteObjectPolling(RemoteDevice rd, ObjectIdentifier oid) {
+        return initRemoteObjectPolling(rd, oid, config.getDefaultPollingTime());
+    }
+
+    public Single<JsonObject> initRemoteObjectPolling(RemoteDevice rd, ObjectIdentifier oid, long pollTime) {
+        try {
+            pollingTimers.addPoint(this, rd, oid, pollTime);
+            return Single.just(new JsonObject());
+        } catch (BACnetException e) {
+            return Single.error(e);
+        }
+    }
+
+    public Single<JsonObject> removeRemoteObjectPolling(RemoteDevice rd, ObjectIdentifier oid) {
+        try {
+            pollingTimers.removePoint(rd, oid);
+            return Single.just(new JsonObject());
+        } catch (BACnetException e) {
+            return Single.error(e);
+        }
+    }
+
+    public Single<JsonObject> writeAtPriority(int instanceNumber, String obj, Object v, int priority) {
+        RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
+        if (remoteDevice == null) {
+            return Single.error(new BACnetRuntimeException("Remote device not found"));
+        }
+        try {
+            Encodable val;
+            ObjectIdentifier oid = BACnetDataConversions.getObjectIdentifier(obj);
+            if (oid.getObjectType().isOneOf(ObjectType.binaryOutput, ObjectType.binaryInput, ObjectType.binaryValue)) {
+                val = BACnetDataConversions.primitiveToBinary(v);
+            } else {
+                val = BACnetDataConversions.primitiveToReal(v);
+            }
+
             writeAtPriority(remoteDevice, oid, val, priority);
         } catch (BACnetRuntimeException | BACnetException e) {
             return Single.error(e);
@@ -281,16 +409,6 @@ public class BACnetInstance {
     private void writeAtPriority(RemoteDevice rd, ObjectIdentifier oid, Encodable val, int priority)
         throws BACnetException {
         RequestUtils.writeProperty(localDevice, rd, oid, PropertyIdentifier.presentValue, val, priority);
-    }
-
-    public ObjectIdentifier getObjectIdentifier(String idString) throws BACnetRuntimeException {
-        String[] arr = idString.split(":");
-        if (arr.length <= 1) {
-            throw new BACnetRuntimeException("Illegal Object Identifier");
-        }
-        ObjectType type = ObjectType.forName(arr[0]);
-        int objNum = Integer.parseInt(arr[1]);
-        return new ObjectIdentifier(type, objNum);
     }
 
     private Single<JsonObject> callAsyncBlocking(Callable callable) {
@@ -306,6 +424,10 @@ public class BACnetInstance {
                 }
             }, res -> {});
         });
+    }
+
+    private String remoteObjectKey(RemoteDevice remoteDevice, ObjectIdentifier oid) {
+        return Integer.toString(remoteDevice.hashCode()) + Integer.toString(oid.hashCode());
     }
 
 }

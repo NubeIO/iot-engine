@@ -1,11 +1,12 @@
 package com.nubeiot.edge.connector.bacnet.Util;
 
-import java.util.ArrayList;
-
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import com.serotonin.bacnet4j.LocalDevice;
+import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
 import com.serotonin.bacnet4j.obj.AnalogInputObject;
 import com.serotonin.bacnet4j.obj.AnalogOutputObject;
@@ -18,15 +19,13 @@ import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import com.serotonin.bacnet4j.type.constructed.ValueSource;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.EngineeringUnits;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.Polarity;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
-import com.serotonin.bacnet4j.type.primitive.Double;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
-
-//TODO: refactor for better testing
-
 
 /*
  * Static methods to create and add objects/points on the local BACnetInstance device instance
@@ -35,129 +34,61 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
  */
 public class LocalPointObjectUtils {
 
-    public static BACnetObject createLocalObject(JsonObject json, String pointID, LocalDevice localDevice) {
+    public static Logger logger = LoggerFactory.getLogger(LocalPointObjectUtils.class);
+
+    public static BACnetObject createLocalObject(String pointID, JsonObject json, LocalDevice localDevice) {
         BACnetObject obj;
-        ArrayList<PropertyValue> proplist = new ArrayList<>();
         String name = "NAME_ERROR";
         float presentValue = 0;
         float covIncrement = 0;
-        int inst;
-        try {
-            inst = Integer.parseInt(pointID.substring(pointID.length() - 1, pointID.length()));
-        } catch (Exception e) {
-            //TODO: handle virtual points
-            return null;
+
+        if (json.containsKey("name")) {
+            name = json.getString("name");
         }
-        //Have to get the name and present value first to create specific BACnetInstance Object instance
-        String[] jsonkeys = json.getMap().keySet().toArray(new String[json.size()]);
-        for (int i = 0; i < jsonkeys.length; i++) {
-            try {
-                PropertyValue p = getProperyValue(jsonkeys[i], json.getValue(jsonkeys[i]));
-                if (p == null) {
-                    continue;
-                }
-                if (p.getPropertyIdentifier() == PropertyIdentifier.objectName) {
-                    name = p.getValue().toString();
-                } else if (p.getPropertyIdentifier() == PropertyIdentifier.presentValue) {
-                    presentValue = ((Real) p.getValue()).floatValue();
-                } else if (p.getPropertyIdentifier() == PropertyIdentifier.covIncrement) {
-                    covIncrement = ((Real) p.getValue()).floatValue();
-                } else {
-                    proplist.add(p);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (json.containsKey("value")) {
+            presentValue = json.getFloat("value");
         }
-        String pointPrefix = pointID.substring(0, pointID.length() - 1);
+        if (json.containsKey("historySettings") && json.getJsonObject("historySettings").containsKey("tolerance")) {
+            covIncrement = json.getJsonObject("historySettings").getFloat("tolerance");
+        }
+
         try {
-            switch (pointPrefix) {
-                case "UI":
-                    //                    obj = new AnalogInputObject(localDevice, inst, name, presentValue,
-                    //                    EngineeringUnits.noUnits, false );
-                    obj = new AnalogInputObject(localDevice, inst, name, presentValue, EngineeringUnits.noUnits,
-                                                false).supportCovReporting(covIncrement);
-                    break;
-                case "UO":
-                    obj = new AnalogOutputObject(localDevice, inst, name, presentValue, EngineeringUnits.noUnits, false,
-                                                 0).supportCovReporting(covIncrement);
-                    //                    obj = new AnalogOutputObject(localDevice, inst, name, presentValue, EngineeringUnits.noUnits, false,
-                    //                                                 0);
-                    break;
-                case "DI":
-                    obj = new BinaryInputObject(localDevice, inst, name, BinaryPV.active, false,
-                                                Polarity.normal).supportCovReporting();
-                    break;
-                case "DO": {
-                    BinaryPV binaryVal = presentValue == 0 ? BinaryPV.inactive : BinaryPV.active;
-                    obj = new BinaryOutputObject(localDevice, inst, name, binaryVal, false, Polarity.normal,
-                                                 BinaryPV.inactive).supportCovReporting();
-                    break;
-                }
-                case "R": {
-                    inst += 10;
-                    BinaryPV binaryVal = presentValue == 0 ? BinaryPV.inactive : BinaryPV.active;
-                    obj = new BinaryOutputObject(localDevice, inst, name, binaryVal, false, Polarity.normal,
-                                                 BinaryPV.inactive).supportCovReporting();
-                    break;
-                }
-                default: {
-                    //TODO: what to do for virtual points?
-                    return null;
-                }
-            }
-        } catch (BACnetServiceException ex) {
-            ex.printStackTrace();
+            obj = addBACnetObject(localDevice, BACnetDataConversions.getObjectIdentifierFromNube(pointID), name,
+                                  presentValue, covIncrement);
+        } catch (Exception ex) {
+            logger.warn(ex);
             return null;
         }
 
-        for (int i = 0; i < proplist.size(); i++) {
-            PropertyValue p = proplist.get(i);
-            obj.writePropertyInternal(p.getPropertyIdentifier(), p.getValue());
-        }
         writePriorityArray(obj, json.getJsonObject("priorityArray"));
         return obj;
     }
 
-    private static PropertyValue getProperyValue(String key, Object val) {
-        switch (key) {
-            case "name": {
-                return new PropertyValue(PropertyIdentifier.objectName, new CharacterString((String) val));
-            }
-            case "value": {
-                return new PropertyValue(PropertyIdentifier.presentValue, getValue(val));
-            }
-            case "historySettings": {
-                return new PropertyValue(PropertyIdentifier.covIncrement,
-                                         getValue((JsonObject.mapFrom(val).getFloat("tolerance"))));
-            }
-            //            case "tags": {
-            //TODO: can't write tags , certain objects don't allow... does this matter?
-            //                return new PropertyValue(PropertyIdentifier.tags, new BACnetArray<CharacterString>
-            //                (getTags(val)));
-            //            }
-            //TODO: work out units converter/mapper
-            default:
-                return null;
+    public static BACnetObject addBACnetObject(LocalDevice localDevice, ObjectIdentifier oid, String name,
+                                               float presentValue, float covIncrement)
+        throws BACnetException, BACnetServiceException {
+        int instanceNumber = oid.getInstanceNumber();
+        ObjectType t = oid.getObjectType();
+        if (t == ObjectType.analogInput) {
+            return new AnalogInputObject(localDevice, instanceNumber, name, presentValue, EngineeringUnits.noUnits,
+                                         false).supportCovReporting(covIncrement);
         }
-    }
-
-    private static Real getValue(Object val) {
-        try {
-            float f = 0;
-            if (val instanceof Integer) {
-                f = new Float((Integer) val);
-            } else if (val instanceof Double) {
-                f = new Float((java.lang.Double) val);
-            } else if (val instanceof Float) {
-                f = (Float) val;
-            }
-
-            return new Real(f);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        if (t == ObjectType.analogOutput) {
+            return new AnalogOutputObject(localDevice, instanceNumber, name, presentValue, EngineeringUnits.noUnits,
+                                          false, 0).supportCovReporting(covIncrement);
         }
+        if (t == ObjectType.binaryInput) {
+            BinaryPV binaryVal1 = BACnetDataConversions.primitiveToBinary(presentValue);
+            return new BinaryInputObject(localDevice, instanceNumber, name, binaryVal1, false,
+                                         Polarity.normal).supportCovReporting();
+        }
+        if (t == ObjectType.binaryOutput) {
+            BinaryPV binaryVal2 = BACnetDataConversions.primitiveToBinary(presentValue);
+            return new BinaryOutputObject(localDevice, instanceNumber, name, binaryVal2, false, Polarity.normal,
+                                          BinaryPV.inactive).supportCovReporting();
+        }
+        //TODO: what to do for virtual points?
+        return null;
     }
 
     private static void writePriorityArray(BACnetObject obj, JsonObject priorityArray) {
@@ -169,7 +100,7 @@ public class LocalPointObjectUtils {
             Object o = priorityArray.getValue(Integer.toString(i));
             try {
                 if (isBinary(obj) && !(o instanceof String)) {
-                    val = BinaryPV.forId((Integer) o);
+                    val = BACnetDataConversions.primitiveToBinary(o);
                 } else if (o instanceof String) {
                     if (((String) o).equalsIgnoreCase("null")) {
                         continue;
@@ -183,9 +114,6 @@ public class LocalPointObjectUtils {
                                                                        new UnsignedInteger(i)));
             } catch (Exception ex) {
                 System.err.println(
-                    "Object: " + obj.getInstanceId() + "  - Issue writing value " + o + " of type " + o.getClass() +
-                    " @ priority " + i);
-                System.out.println(
                     "Object: " + obj.getInstanceId() + "  - Issue writing value " + o + " of type " + o.getClass() +
                     " @ priority " + i);
                 ex.printStackTrace();
@@ -202,9 +130,83 @@ public class LocalPointObjectUtils {
         return tags;
     }
 
+    public static void writeLocalObject(String nubeId, JsonObject json, LocalDevice localDevice) throws Exception {
+        if (!json.containsKey("value")) {
+            throw new BACnetException("No value suplied");
+        }
+        if (isInputFromNube(nubeId)) {
+            writeToLocalInput(localDevice.getObject(BACnetDataConversions.getObjectIdentifierFromNube(nubeId)), json);
+        } else {
+            writeToLocalOutput(localDevice.getObject(BACnetDataConversions.getObjectIdentifierFromNube(nubeId)), json);
+        }
+    }
+
+    private static void writeToLocalInput(BACnetObject obj, JsonObject json) {
+        Encodable val;
+        if (isBinary(obj)) {
+            val = BACnetDataConversions.primitiveToBinary(json.getValue("value"));
+        } else {
+            val = new Real(json.getFloat("value"));
+        }
+        try {
+            obj.writePropertyInternal(PropertyIdentifier.presentValue, val);
+        } catch (Exception e) {
+            logger.warn("Error writing to local input object", e);
+        }
+    }
+
+    private static void writeToLocalOutput(BACnetObject obj, JsonObject json)
+        throws BACnetException, BACnetServiceException {
+        if (!json.containsKey("priority")) {
+            throw new BACnetException("No priority supplied for writing Output type");
+        }
+        if (json.getInteger("priority") > 16 || json.getInteger("priority") < 1) {
+            throw new BACnetException("Invalid priority: " + json.getInteger("priority"));
+        }
+        Encodable val;
+        if (isBinary(obj)) {
+            val = BACnetDataConversions.primitiveToBinary(json.getValue("value"));
+        } else {
+            val = new Real(json.getFloat("value"));
+        }
+        obj.writeProperty(new ValueSource(), new PropertyValue(PropertyIdentifier.presentValue, null, val,
+                                                               new UnsignedInteger(json.getInteger("priority"))));
+    }
+
+    public static void updateLocalObjectProperty(LocalDevice localDevice, String nubeId, String property, Object val)
+        throws Exception {
+        PropertyValue propertyValue = BACnetDataConversions.nubeStringToPropertyValue(property, val);
+        BACnetObject obj = localDevice.getObject(BACnetDataConversions.getObjectIdentifierFromNube(nubeId));
+        updateLocalObjectProperty(obj, propertyValue.getPropertyIdentifier(), propertyValue.getValue());
+    }
+
+    public static void updateLocalObjectProperty(BACnetObject obj, PropertyIdentifier pid, Encodable val)
+        throws Exception {
+        if (pid == PropertyIdentifier.presentValue) {
+            //TODO: support updating present value from "update" instead of "write"
+            throw new BACnetException("Not yet supported updating value instead of writing");
+        }
+        if (obj == null) {
+            throw new BACnetException("Object does not exist");
+        }
+        obj.writePropertyInternal(pid, val);
+    }
+
     private static boolean isBinary(BACnetObject obj) {
         return (obj instanceof BinaryInputObject || obj instanceof BinaryOutputObject ||
                 obj instanceof BinaryValueObject);
+    }
+
+    private static boolean isInputFromNube(String id) {
+        try {
+            return isInput(BACnetDataConversions.getObjectIdentifierFromNube(id));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean isInput(ObjectIdentifier oid) {
+        return oid.getObjectType().isOneOf(ObjectType.binaryInput, ObjectType.analogInput, ObjectType.multiStateInput);
     }
 
 }

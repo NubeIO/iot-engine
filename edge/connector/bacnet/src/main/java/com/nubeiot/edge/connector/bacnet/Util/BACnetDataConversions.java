@@ -8,6 +8,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import io.vertx.core.json.JsonObject;
 
 import com.serotonin.bacnet4j.RemoteDevice;
+import com.serotonin.bacnet4j.exception.BACnetException;
+import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.ObjectPropertyReference;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
@@ -15,6 +17,7 @@ import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
+import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.Real;
@@ -88,10 +91,6 @@ public class BACnetDataConversions {
         return data;
     }
 
-    public static String pointFormatBACnet(ObjectIdentifier oid) {
-        return oid.getObjectType().toString() + ":" + oid.getInstanceNumber();
-    }
-
     public static Object encodableToPrimitive(Encodable val) {
         if (val instanceof Real) {
             return ((Real) val).floatValue();
@@ -106,9 +105,58 @@ public class BACnetDataConversions {
         }
     }
 
-    public static String pointIDNubeToBACnet(String id) {
+    public static BinaryPV primitiveToBinary(Object obj) {
+        if (obj instanceof Integer || obj instanceof Long) {
+            return BinaryPV.forId((Integer) obj);
+        } else if (obj instanceof Float) {
+            return BinaryPV.forId(((Float) obj).intValue());
+        } else if (obj instanceof Double) {
+            return BinaryPV.forId(((Double) obj).intValue());
+        } else if (obj instanceof Boolean) {
+            if ((Boolean) obj) {
+                return BinaryPV.active;
+            } else {
+                return BinaryPV.inactive;
+            }
+        } else if (obj instanceof String) {
+            String str = (String) obj;
+            if (str.equals("true") || str.equals("1") || str.equals("on")) {
+                return BinaryPV.active;
+            } else {
+                return BinaryPV.inactive;
+            }
+        }
+        return BinaryPV.inactive;
+    }
+
+    public static Encodable primitiveToReal(Object obj) throws BACnetException {
+        if (obj == null) {
+            throw new BACnetException("Null value");
+        }
+        String str = obj.toString();
+        if (str == null || str.equalsIgnoreCase("null")) {
+            return Null.instance;
+        } else {
+            try {
+                return new Real(Float.parseFloat(str));
+            } catch (NumberFormatException e) {
+                throw new BACnetException("Invalid primitive for Real");
+            }
+        }
+    }
+
+    public static String pointFormatBACnet(ObjectIdentifier oid) {
+        return oid.getObjectType().toString() + ":" + oid.getInstanceNumber();
+    }
+
+    public static String pointIDNubeToBACnet(String id) throws Exception {
         String pointPrefix = id.substring(0, id.length() - 1);
-        int inst = Integer.parseInt(id.substring(id.length() - 1));
+        int inst;
+        try {
+            inst = Integer.parseInt(id.substring(id.length() - 1));
+        } catch (Exception e) {
+            throw new BACnetException("Invalid Nube point Id");
+        }
         switch (pointPrefix) {
             case "UI":
                 return ObjectType.analogInput.toString() + ":" + inst;
@@ -124,12 +172,12 @@ public class BACnetDataConversions {
                 return ObjectType.binaryOutput.toString() + ":" + inst;
             }
             default: {
-                return null;
+                throw new BACnetException("Invalid Nube point Id");
             }
         }
     }
 
-    public static String pointIDBACnetToNube(ObjectIdentifier o) {
+    public static String pointIDBACnetToNube(ObjectIdentifier o) throws BACnetException {
         switch (o.getObjectType().toString()) {
             case "analog-input":
                 return "UI" + o.getInstanceNumber();
@@ -144,8 +192,32 @@ public class BACnetDataConversions {
                     return "DO" + o.getInstanceNumber();
                 }
             default:
-                return "";
+                throw new BACnetException("Unsupported Nube object type");
         }
+    }
+
+    public static ObjectIdentifier getObjectIdentifierFromNube(String id) throws BACnetRuntimeException, Exception {
+        return getObjectIdentifier(pointIDNubeToBACnet(id));
+    }
+
+    public static ObjectIdentifier getObjectIdentifier(String idString) throws BACnetRuntimeException {
+        String[] arr = idString.split(":");
+        if (arr.length <= 1) {
+            throw new BACnetRuntimeException("Illegal Object Identifier");
+        }
+        ObjectType type = ObjectType.forName(arr[0]);
+        int objNum = Integer.parseInt(arr[1]);
+        return new ObjectIdentifier(type, objNum);
+    }
+
+    public static PropertyValue nubeStringToPropertyValue(String str, Object val) throws Exception {
+        if (str.equals("name")) {
+            return new PropertyValue(PropertyIdentifier.objectName, new CharacterString(val.toString()));
+        }
+        if (str.equals("value")) {
+            return new PropertyValue(PropertyIdentifier.presentValue, new Real((Float) val));
+        }
+        throw new BACnetException("Unsupported property: " + str);
     }
 
 }
