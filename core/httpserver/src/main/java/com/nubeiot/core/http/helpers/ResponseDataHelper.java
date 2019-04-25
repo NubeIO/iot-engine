@@ -1,11 +1,11 @@
-package com.nubeiot.dashboard.helpers;
+package com.nubeiot.core.http.helpers;
 
 import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 
-import com.nubeiot.core.dto.ResponseData;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.dto.ResponseData;
 
 public class ResponseDataHelper {
 

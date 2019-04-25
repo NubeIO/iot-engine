@@ -9,7 +9,6 @@ import org.junit.runner.RunWith;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -22,6 +21,7 @@ import com.nubeiot.edge.module.gateway.mock.HttpServer;
 public class DriverRegistrationTest extends EdgeGatewayTestBase {
 
     private int httpServicePort;
+    private String registration;
 
     @BeforeClass
     public static void beforeSuite() {
@@ -38,9 +38,13 @@ public class DriverRegistrationTest extends EdgeGatewayTestBase {
         super.before(context);
         startEdgeGateway(context, new HttpServer(), new DeploymentOptions().setConfig(overridePort(httpServicePort)));
         // Registration
-        assertRestByClient(context, HttpMethod.POST, "/api/drivers/registration",
-                           RequestData.builder().body(new JsonObject().put("port", httpServicePort)).build(), 200,
-                           new JsonObject());
+        restRequest(context, HttpMethod.POST, "/api/drivers/registration",
+                    RequestData.builder().body(new JsonObject().put("port", httpServicePort)).build()).subscribe(
+            resp -> {
+                context.assertEquals(200, resp.getStatus().code());
+                this.registration = resp.body().getString("registration");
+                System.out.println("Registration: " + resp.body().getString("registration"));
+            });
     }
 
     @Test
@@ -49,8 +53,7 @@ public class DriverRegistrationTest extends EdgeGatewayTestBase {
                     RequestData.builder().body(new JsonObject().put("port", httpServicePort)).build()).subscribe(
             resp -> {
                 context.assertEquals(200, resp.getStatus().code());
-                System.out.println("Response Body:: " + resp.body().encode());
-                context.assertEquals(new JsonArray(resp.body().getString("records")).size(), 1);
+                context.assertEquals(resp.body().getJsonArray("records").size(), 1);
             }, context::fail);
     }
 
@@ -59,6 +62,20 @@ public class DriverRegistrationTest extends EdgeGatewayTestBase {
         assertRestByClient(context, HttpMethod.GET, "/api/api/test",
                            RequestData.builder().body(new JsonObject().put("port", httpServicePort)).build(), 200,
                            new JsonObject().put("hello", "test"));
+    }
+
+    @Test
+    public void test_driverDeleteRegistrationNotFound(TestContext context) {
+        restRequest(context, HttpMethod.DELETE, "/api/drivers/registration/d",
+                    RequestData.builder().body(new JsonObject().put("port", httpServicePort)).build()).subscribe(
+            resp -> context.assertEquals(404, resp.getStatus().code()));
+    }
+
+    @Test
+    public void test_driverDeleteRegistration(TestContext context) {
+        restRequest(context, HttpMethod.DELETE, "/api/drivers/registration/" + registration,
+                    RequestData.builder().body(new JsonObject().put("port", httpServicePort)).build()).subscribe(
+            resp -> context.assertEquals(204, resp.getStatus().code()));
     }
 
 }

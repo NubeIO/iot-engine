@@ -20,11 +20,11 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.helpers.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.helpers.DynamicCollectionHelper;
-import com.nubeiot.dashboard.helpers.ResponseDataHelper;
 import com.nubeiot.dashboard.props.DynamicCollectionProps;
 import com.zandero.rest.annotation.RouteOrder;
 

@@ -7,23 +7,22 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Observable;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.micro.HttpRecord;
 import com.nubeiot.core.micro.providers.RestMicroContextProvider;
 
 public class DriverRegistrationApi implements RestApi {
-
-    private static final Logger logger = LoggerFactory.getLogger(DriverRegistrationApi.class);
 
     @GET
     @Path("/drivers")
@@ -36,7 +35,7 @@ public class DriverRegistrationApi implements RestApi {
                             .getRecord()
                             .flatMap(records -> Observable.fromIterable(records).map(Record::toJson).toList())
                             .subscribe(records -> future.complete(ResponseDataWriter.responseData(
-                                new JsonObject().put("records", records.toString()).encode())));
+                                new JsonObject().put("records", new JsonArray(records.toString())).encode())));
         return future;
     }
 
@@ -57,16 +56,24 @@ public class DriverRegistrationApi implements RestApi {
         microContextProvider.getMicroContext()
                             .getLocalController()
                             .addHttpRecord(httpRecord)
-                            .subscribe(
-                                r -> future.complete(ResponseDataWriter.responseData(new JsonObject().encode())));
+                            .subscribe(r -> future.complete(ResponseDataWriter.responseData(r.toJson().encode())));
         return future;
     }
 
     @DELETE
-    @Path("/drivers/registration")
+    @Path("/drivers/registration/:registration")
     public Future<ResponseData> deleteDriverRegistration(@Context RoutingContext ctx,
                                                          @Context RestMicroContextProvider microContextProvider) {
         Future<ResponseData> future = Future.future();
+        String registration = ctx.request().getParam("registration");
+        microContextProvider.getMicroContext()
+                            .getLocalController()
+                            .removeRecord(registration)
+                            .subscribe(() -> future.complete(ResponseDataWriter.responseData(new JsonObject().encode())
+                                                                               .setStatus(
+                                                                                   HttpResponseStatus.NO_CONTENT)),
+                                       e -> future.complete(ResponseDataConverter.convert(e)));
+
         return future;
     }
 

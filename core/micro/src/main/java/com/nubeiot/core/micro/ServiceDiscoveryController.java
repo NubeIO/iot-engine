@@ -5,7 +5,10 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -25,6 +28,7 @@ import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.ServiceException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
@@ -163,6 +167,15 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     public Single<List<Record>> getRecord() {
         return get().rxGetRecords(r -> true, true);
+    }
+
+    public Completable removeRecord(String registration) {
+        return get().rxGetRecords(r -> true, true).flatMapCompletable(records -> {
+            if (records.stream().map(Record::getRegistration).collect(Collectors.toList()).contains(registration)) {
+                return serviceDiscovery.rxUnpublish(registration);
+            }
+            throw new HttpException(HttpResponseStatus.NOT_FOUND, "Not found that registration");
+        });
     }
 
     private Single<Record> addDecoratorRecord(@NonNull Record record) {

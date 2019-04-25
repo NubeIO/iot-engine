@@ -71,6 +71,9 @@ public abstract class HttpLightResponseBodyHandler implements Handler<Buffer> {
         final HttpMethod method = response.request().method();
         final String uri = response.request().absoluteURI();
         final boolean isError = response.statusCode() >= 400;
+        if (Strings.isBlank(buffer.toString())) {
+            return new JsonObject();
+        }
         if (Strings.isNotBlank(contentType) && contentType.contains("json")) {
             logger.info("Try parsing Json data from {}::{}", method, uri);
             return JsonData.tryParse(buffer, true, isError).toJson();
