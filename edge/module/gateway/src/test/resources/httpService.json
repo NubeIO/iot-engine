@@ -1,0 +1,12 @@
+{
+  "__app__": {
+    "__http__": {
+      "__rest__": {
+        "rootApi": "/api",
+        "__dynamic__": {
+          "enabled": false
+        }
+      }
+    }
+  }
+}

@@ -4,6 +4,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Verticle;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
@@ -13,12 +15,15 @@ import com.nubeiot.core.http.HttpServerTestBase;
 
 class EdgeGatewayTestBase extends HttpServerTestBase {
 
-    void startEdgeGateway(TestContext context) {
+    void startEdgeGateway(TestContext context, Verticle httpServer, DeploymentOptions deploymentOptions) {
         CountDownLatch latch = new CountDownLatch(1);
         DeploymentOptions config = new DeploymentOptions().setConfig(overridePort(httpConfig.getPort()));
-        VertxHelper.deploy(vertx.getDelegate(), context, config, new EdgeGatewayVerticle(), id -> {
+        VertxHelper.deploy(Vertx.vertx(), context, config, new EdgeGatewayVerticle(), id -> {
             System.out.println("Gateway Deploy Id: " + id);
-            latch.countDown();
+            VertxHelper.deploy(Vertx.vertx(), context, deploymentOptions, httpServer, d -> {
+                System.out.println("Http Server Deploy Id: " + d);
+                latch.countDown();
+            });
         });
         long start = System.nanoTime();
         try {
