@@ -1,5 +1,6 @@
 package com.nubeiot.core.micro;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -158,6 +159,10 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return get().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r))
                     .switchIfEmpty(Single.error(
                         new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
+    }
+
+    public Single<List<Record>> getRecord() {
+        return get().rxGetRecords(r -> true, true);
     }
 
     private Single<Record> addDecoratorRecord(@NonNull Record record) {
