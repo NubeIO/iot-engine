@@ -10,6 +10,7 @@ import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventMessage;
 
 import lombok.AccessLevel;
@@ -25,6 +26,7 @@ public abstract class EntityHandler {
     protected final JDBCRXGenericQueryExecutor queryExecutor;
     @Getter
     protected Function<String, Object> sharedDataFunc = k -> null;
+    protected String sharedKey = "";
 
     public EntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         this.jooqConfig = jooqConfig;
@@ -80,8 +82,9 @@ public abstract class EntityHandler {
     }
 
     @SuppressWarnings("unchecked")
-    <T extends EntityHandler> T registerFunc(Function<String, Object> sharedDataFunc) {
-        this.sharedDataFunc = sharedDataFunc;
+    <T extends EntityHandler> T registerSharedKey(String sharedKey) {
+        this.sharedKey = sharedKey;
+        this.sharedDataFunc = dataKey -> SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
         return (T) this;
     }
 

@@ -84,7 +84,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     @Override
     public boolean isNew() {
-        return isNew(com.nubeiot.edge.core.model.tables.TblModule.TBL_MODULE);
+        return isNew(Tables.TBL_MODULE);
     }
 
     @Override

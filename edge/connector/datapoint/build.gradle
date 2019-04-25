@@ -1,0 +1,70 @@
+import org.jooq.meta.jaxb.ForcedType
+
+import com.nubeiot.buildscript.Strings
+import com.nubeiot.buildscript.jooq.DB
+import com.nubeiot.buildscript.jooq.JooqGenerateTask
+import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
+
+ext {
+    specifiedLog = project.loggers["sql"] + ["h2database": "info"]
+}
+
+dependencies {
+    compile project(":core:iotdata")
+    compile project(":core:sql")
+    compile project.deps.database.h2
+}
+
+task jooqGen(type: JooqGenerateTask) {
+    packageName = "com.nubeiot.edge.connector.datapoint.model"
+    enumTypes = project(':core:sql').ext.enumTypes
+    dbTypes = project(':core:sql').ext.dbTypes + [
+        new ForcedType(userType: "com.nubeiot.edge.connector.datapoint.dto.HistorySettingType",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("history_setting_type"),
+                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.HistorySettingTypeConverter"),
+        new ForcedType(userType: "com.nubeio.iotdata.DataType",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("point_unit"),
+                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.DataTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.edge.connector.datapoint.dto.PointCategory",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("point_category"),
+                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.PointCategoryConverter"),
+        new ForcedType(userType: "com.nubeiot.edge.connector.datapoint.dto.PointKind",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("point_kind"),
+                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.PointKindConverter"),
+        new ForcedType(userType: "com.nubeiot.edge.connector.datapoint.dto.PointType",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("point_type"),
+                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.PointTypeConverter"),
+        new ForcedType(userType: "io.vertx.core.json.JsonArray",
+                       types: DB.TYPES.array,
+                       expression: Strings.toRegexIgnoreCase("weekdays"),
+                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.WeekDaysConverter")
+
+    ]
+    javaTypes = project(':core:sql').ext.javaTypes + [
+        new JsonDataType(className: "com.nubeio.iotdata.DataType",
+                         converter: "%s.value()",
+                         parser: "com.nubeio.iotdata.DataType.factory((String)%s)",
+                         defVal: "com.nubeio.iotdata.DataType.def()"),
+        new JsonDataType(className: "com.nubeiot.edge.connector.datapoint.dto.HistorySettingType",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.edge.connector.datapoint.dto.HistorySettingType.factory((String)%s)",
+                         defVal: "com.nubeiot.edge.connector.datapoint.dto.HistorySettingType.def()"),
+        new JsonDataType(className: "com.nubeiot.edge.connector.datapoint.dto.PointCategory",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.edge.connector.datapoint.dto.PointCategory.factory((String)%s)",
+                         defVal: "com.nubeiot.edge.connector.datapoint.dto.PointCategory.def()"),
+        new JsonDataType(className: "com.nubeiot.edge.connector.datapoint.dto.PointKind",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.edge.connector.datapoint.dto.PointKind.factory((String)%s)",
+                         defVal: "com.nubeiot.edge.connector.datapoint.dto.PointKind.def()"),
+        new JsonDataType(className: "com.nubeiot.edge.connector.datapoint.dto.PointType",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.edge.connector.datapoint.dto.PointType.factory((String)%s)",
+                         defVal: "com.nubeiot.edge.connector.datapoint.dto.PointType.def()")
+    ]
+}

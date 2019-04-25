@@ -96,6 +96,8 @@ public final class Reflections {
 
     public static class ReflectionField {
 
+        public static Predicate<Field> CONSTANT_FILTER = hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+
         /**
          * Find declared fields in given {@code class} that matches with filter
          *
@@ -116,28 +118,43 @@ public final class Reflections {
         }
 
         public static <T> T constantByName(@NonNull Class<?> clazz, String name) {
-            Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+            Predicate<Field> filter = Functions.and(CONSTANT_FILTER,
                                                     f -> f.getName().equals(Strings.requireNotBlank(name)));
             return (T) findToStream(clazz, filter).map(field -> getConstant(clazz, field)).findFirst().orElse(null);
         }
 
         public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,
                                                Predicate<Field> predicate) {
-            Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+            return streamConstants(clazz, fieldClass, predicate).collect(Collectors.toList());
+        }
+
+        public static <T> Stream<T> streamConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,
+                                                    Predicate<Field> predicate) {
+            Predicate<Field> filter = Functions.and(CONSTANT_FILTER,
                                                     f -> ReflectionClass.assertDataType(fieldClass, f.getType()));
             if (Objects.nonNull(predicate)) {
                 filter = filter.and(predicate);
             }
-            return (List<T>) findToStream(clazz, filter).map(field -> getConstant(clazz, field))
-                                                        .collect(Collectors.toList());
+            return findToStream(clazz, filter).map(field -> getConstant(clazz, field));
         }
 
-        private static <T> T getConstant(@NonNull Class<?> clazz, Field field) {
+        public static <T> T getConstant(@NonNull Class<?> clazz, Field field) {
             try {
                 return (T) field.get(null);
             } catch (IllegalAccessException | ClassCastException e) {
                 throw new NubeException(
                     Strings.format("Failed to get field constant {0} of {1}", field.getName(), clazz.getName()), e);
+            }
+        }
+
+        public static <T> T getConstant(@NonNull Class<?> clazz, Field field, T fallback) {
+            try {
+                return (T) field.get(null);
+            } catch (IllegalAccessException | ClassCastException e) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Failed to get field constant {} of {}", e, field.getName(), clazz.getName());
+                }
+                return fallback;
             }
         }
 

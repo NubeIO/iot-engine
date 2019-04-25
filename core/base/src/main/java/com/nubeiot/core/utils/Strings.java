@@ -110,6 +110,19 @@ public final class Strings {
     }
 
     /**
+     * Checks that the specified string reference is not {@code blank} then remove multiple space characters to one
+     * space.
+     *
+     * @param text Given input
+     * @return Optimization text
+     * @throws IllegalArgumentException if {@code text} is {@code blank}
+     */
+    public static String optimizeMultipleSpace(String text) {
+        String t = requireNotBlank(text);
+        return t.replaceAll("\\s+", "");
+    }
+
+    /**
      * Checks that the specified string reference is not {@code blank} then remove all space characters.
      *
      * @param text Given input

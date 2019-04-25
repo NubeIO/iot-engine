@@ -8,6 +8,7 @@ import java.time.Period
 
 import org.jooq.meta.jaxb.ForcedType
 
+import io.vertx.core.json.JsonArray
 import com.nubeiot.buildscript.jooq.DB
 import com.nubeiot.buildscript.jooq.JooqGenerateTask
 import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
@@ -47,6 +48,11 @@ ext {
                          parser: "java.time.Duration.parse((String)%s)"),
         new JsonDataType(className: Period.class.getName(), converter: "%s.toString()",
                          parser: "java.time.Period.parse((String)%s)"),
+        new JsonDataType(className: UUID.class.getName(), converter: "%s.toString()",
+                         parser: "java.util.UUID.fromString((String)%s)"),
+        new JsonDataType(className: JsonArray.class.getName(),
+                         converter: "%s",
+                         parser: "(io.vertx.core.json.JsonArray)%s")
     ]
 }
 
