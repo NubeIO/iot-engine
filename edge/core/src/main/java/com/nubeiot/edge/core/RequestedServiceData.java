@@ -8,10 +8,11 @@ import io.vertx.core.json.JsonObject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.dto.JsonData;
 
 import lombok.Getter;
 
-public class RequestedServiceData {
+public class RequestedServiceData implements JsonData {
 
     @Getter
     private final JsonObject metadata;

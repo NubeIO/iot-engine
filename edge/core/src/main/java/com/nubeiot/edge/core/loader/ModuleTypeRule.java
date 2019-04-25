@@ -1,5 +1,6 @@
 package com.nubeiot.edge.core.loader;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,9 +9,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
 
+import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.utils.FileUtils;
+import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
+import com.nubeiot.edge.core.model.tables.pojos.TblModule;
+
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -20,6 +29,25 @@ public final class ModuleTypeRule implements Shareable {
 
     public ModuleTypeRule() {
         rules = new HashMap<>();
+    }
+
+    public ITblModule parse(@NonNull Path dataDir, @NonNull JsonObject metadata, AppConfig appConfig) {
+        ITblModule tblModule = parse(metadata);
+        return tblModule.setDeployConfig(computeNubeConfig(dataDir, appConfig, tblModule.getServiceId()).toJson());
+    }
+
+    public ITblModule parse(JsonObject metadata) {
+        ModuleType moduleType = ModuleType.factory(metadata.getString("service_type"));
+        JsonObject module = moduleType.serialize(metadata, this);
+        return new TblModule().fromJson(module);
+    }
+
+    public ITblModule parse(@NonNull Path dataDir, @NonNull ITblModule tblModule, AppConfig appConfig) {
+        return tblModule.setDeployConfig(computeNubeConfig(dataDir, appConfig, tblModule.getServiceId()).toJson());
+    }
+
+    private NubeConfig computeNubeConfig(@NonNull Path parentDataDir, AppConfig appConfig, String serviceId) {
+        return NubeConfig.blank(FileUtils.recomputeDataDir(parentDataDir, serviceId), appConfig.toJson());
     }
 
     public ModuleTypeRule registerRule(ModuleType moduleType, List<String> searchPattern) {

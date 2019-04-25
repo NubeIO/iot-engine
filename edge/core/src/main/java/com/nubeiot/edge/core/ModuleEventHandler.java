@@ -3,10 +3,15 @@ package com.nubeiot.edge.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
@@ -45,7 +50,8 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
-        ITblModule module = new TblModule(data.body());
+        RequestedServiceData serviceData = JsonData.from(data.body(), RequestedServiceData.class);
+        ITblModule module = verticle.getModuleRule().parse(serviceData.getMetadata());
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
@@ -57,21 +63,23 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> updatePartly(RequestData data) {
-        ITblModule module = new TblModule(data.body());
+        ITblModule module = createTblModule(data.body());
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
-        return this.verticle.getEntityHandler().processDeploymentTransaction(new TblModule().fromJson(data.body()),
-                                                                             EventAction.PATCH);
+        return this.verticle.getEntityHandler()
+                            .processDeploymentTransaction(new TblModule().fromJson(data.body()), EventAction.PATCH);
     }
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData data) {
         JsonObject body = data.body();
-        ITblModule module = new TblModule().fromJson(body);
+        ITblModule module = createTblModule(body);
+
         if (Strings.isBlank(module.getServiceId())) {
             ModuleType moduleType = module.getServiceType();
-            JsonObject moduleJson = moduleType.serialize(body, verticle.getModuleRule());
+            RequestedServiceData serviceData = JsonData.from(body, RequestedServiceData.class);
+            JsonObject moduleJson = moduleType.serialize(serviceData.getMetadata(), verticle.getModuleRule());
             module = module.fromJson(moduleJson);
             if (Strings.isBlank(module.getServiceName())) {
                 throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT,
@@ -84,7 +92,8 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> remove(RequestData data) {
-        ITblModule module = new TblModule().fromJson(data.body());
+        RequestedServiceData serviceData = JsonData.from(data.body(), RequestedServiceData.class);
+        ITblModule module = verticle.getModuleRule().parse(serviceData.getMetadata());
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
@@ -93,14 +102,22 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData data) {
-        JsonObject body = data.body();
-        ModuleType moduleType = new TblModule().fromJson(body).getServiceType();
-        JsonObject moduleJson = moduleType.serialize(body, this.verticle.getModuleRule());
-        ITblModule module = new TblModule().fromJson(moduleJson);
+        ITblModule module = createTblModule(data.body());
         if (Strings.isBlank(module.getServiceName())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Missing service_name");
         }
         return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.CREATE);
+    }
+
+    private ITblModule createTblModule(JsonObject body) {
+        RequestedServiceData serviceData = JsonData.from(body, RequestedServiceData.class);
+        return verticle.getModuleRule()
+                       .parse(SharedDataDelegate.getLocalDataValue(verticle.getVertx(), verticle.getSharedKey(),
+                                                                   SharedDataDelegate.SHARED_DATADIR),
+                              serviceData.getMetadata(),
+                              Objects.isNull(serviceData.getAppConfig())
+                              ? IConfig.from(new JsonObject(), AppConfig.class)
+                              : serviceData.getAppConfig());
     }
 
 }

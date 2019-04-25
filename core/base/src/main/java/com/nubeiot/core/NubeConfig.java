@@ -47,8 +47,12 @@ public final class NubeConfig implements IConfig {
      * @param appConfig Given app config
      * @return nubeConfig instance
      */
-    public static NubeConfig blank(JsonObject appConfig) {
-        return new NubeConfig(FileUtils.DEFAULT_DATADIR, null, new DeployConfig(),
+    public static NubeConfig blank(@NonNull JsonObject appConfig) {
+        return blank(FileUtils.DEFAULT_DATADIR, appConfig);
+    }
+
+    public static NubeConfig blank(@NonNull Path dataDir, @NonNull JsonObject appConfig) {
+        return new NubeConfig(dataDir, null, new DeployConfig(),
                               IConfig.from(appConfig, AppConfig.class));
     }
 

@@ -21,6 +21,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
@@ -35,6 +37,7 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.model.Tables;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.daos.TblRemoveHistoryDao;
@@ -255,30 +258,37 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                         .map(ignore -> oldOne);
     }
 
-    private ITblModule updateModule(@NonNull ITblModule oldOne, @NonNull ITblModule newOne, boolean isUpdated) {
-        if (Objects.nonNull(newOne.getVersion())) {
-            oldOne.setVersion(newOne.getVersion());
-        } else if (isUpdated) {
+    private ITblModule updateModule(@NonNull ITblModule old, @NonNull ITblModule newOne, boolean isUpdated) {
+        verifyUpdateModule(newOne, isUpdated);
+        old.setVersion(Strings.isBlank(newOne.getVersion()) ? old.getVersion() : newOne.getVersion());
+        old.setPublishedBy(Strings.isBlank(newOne.getPublishedBy()) ? old.getPublishedBy() : newOne.getPublishedBy());
+        old.setState(Objects.isNull(newOne.getState()) ? old.getState() : newOne.getState());
+        old.setDeployConfig(mergeDeployConfig(old.getDeployConfig(), newOne.getDeployConfig(), isUpdated));
+        return old;
+    }
+
+    private void verifyUpdateModule(ITblModule newOne, boolean isUpdated) {
+        if (Strings.isBlank(newOne.getVersion()) && isUpdated) {
             throw new NubeException("Version is required!");
         }
-
-        if (Objects.nonNull(newOne.getDeployConfig())) {
-            oldOne.setDeployConfig(newOne.getDeployConfig());
-        } else if (isUpdated) {
-            throw new NubeException("Deploy config is required!");
-        }
-
-        if (Objects.nonNull(newOne.getPublishedBy())) {
-            oldOne.setPublishedBy(newOne.getPublishedBy());
-        }
-
-        if (Objects.nonNull(newOne.getState())) {
-            oldOne.setState(newOne.getState());
-        } else if (isUpdated) {
+        if (Objects.isNull(newOne.getState()) && isUpdated) {
             throw new NubeException("State is required!");
         }
+        if (Objects.isNull(newOne.getDeployConfig()) && isUpdated) {
+            throw new NubeException("Deploy config is required!");
+        }
+    }
 
-        return oldOne;
+    private JsonObject mergeDeployConfig(JsonObject oldOne, JsonObject newOne, boolean isUpdate) {
+        if (Objects.isNull(newOne)) {
+            return oldOne;
+        }
+        if (isUpdate) {
+            return newOne;
+        }
+        JsonObject request = new JsonObject().put(AppConfig.NAME,
+                                                  IConfig.from(newOne, NubeConfig.class).getAppConfig().toJson());
+        return IConfig.merge(IConfig.from(oldOne, NubeConfig.class), request, NubeConfig.class).toJson();
     }
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {

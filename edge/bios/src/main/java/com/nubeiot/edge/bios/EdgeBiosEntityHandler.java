@@ -16,7 +16,6 @@ import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
 
 import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
@@ -31,7 +30,6 @@ import com.nubeiot.edge.core.RequestedServiceData;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
-import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 
 public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
@@ -81,27 +79,24 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
         if (builtinApps.isEmpty()) {
             return Single.just(new JsonObject().put("success", true));
         }
-        return Observable.fromIterable(builtinApps).flatMapSingle(app-> {
-            ModuleTypeRule rule = (ModuleTypeRule) this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_MODULE_RULE);
-            JsonObject module = ModuleType.getDefault().serialize(app.getMetadata(), rule);
-            ITblModule tblModule = new TblModule().fromJson(module);
-            tblModule.setPublishedBy("NubeIO")
-                .setDeployConfig(computeNubeConfig(dataDir, repoConfig, app, tblModule).toJson());
-            return processDeploymentTransaction(tblModule, EventAction.INIT);
-        }).toList().map(results -> new JsonObject().put("results", results));
-
+        return Observable.fromIterable(builtinApps)
+                         .flatMapSingle(serviceData -> processDeploymentTransaction(
+                             createTblModule(dataDir, repoConfig, serviceData), EventAction.INIT))
+                         .toList()
+                         .map(results -> new JsonObject().put("results", results));
     }
 
-    private NubeConfig computeNubeConfig(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData firstApp,
-                                         ITblModule tblModule) {
-        InstallerConfig installerConfig = new InstallerConfig();
-        installerConfig.setRepoConfig(repoConfig);
-        JsonObject appCfg = new JsonObject().put(installerConfig.name(), installerConfig.toJson());
-        AppConfig installerAppConfig = IConfig.merge(appCfg, firstApp.getAppConfig(), AppConfig.class);
-        NubeConfig nubeConfig = new NubeConfig();
-        nubeConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, tblModule.getServiceId()));
-        nubeConfig.setAppConfig(installerAppConfig);
-        return nubeConfig;
+    private ITblModule createTblModule(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData serviceData) {
+        ModuleTypeRule rule = (ModuleTypeRule) this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_MODULE_RULE);
+        ITblModule tblModule = rule.parse(serviceData.getMetadata());
+        AppConfig appConfig = serviceData.getAppConfig();
+        if (String.format("%s:%s", "com.nubeiot.edge.module", "installer").equals(tblModule.getServiceId())) {
+            InstallerConfig installerConfig = new InstallerConfig();
+            installerConfig.setRepoConfig(repoConfig);
+            appConfig = IConfig.merge(new JsonObject().put(installerConfig.name(), installerConfig.toJson()),
+                                      serviceData.getAppConfig(), AppConfig.class);
+        }
+        return rule.parse(dataDir, tblModule, appConfig).setPublishedBy("NubeIO");
     }
 
     private void setupServiceRepository(RepositoryConfig repositoryCfg) {
