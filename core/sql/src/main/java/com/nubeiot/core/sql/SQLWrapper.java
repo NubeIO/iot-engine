@@ -26,6 +26,7 @@ import org.jooq.impl.DefaultConfiguration;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
@@ -50,7 +51,11 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     public void start() {
         super.start();
         logger.info("Creating Hikari datasource from application configuration...");
-        logger.debug(config.getHikariConfig().toJson());
+        String dataDir = SharedDataDelegate.getLocalDataValue(vertx, getSharedKey(), SharedDataDelegate.SHARED_DATADIR);
+        config.getHikariConfig().setJdbcUrl(config.computeJdbcUrl(dataDir));
+        if (logger.isDebugEnabled()) {
+            logger.debug(config.getHikariConfig().toJson());
+        }
         this.dataSource = new HikariDataSource(config.getHikariConfig());
     }
 
@@ -85,7 +90,8 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
 
     private Single<EventMessage> createDatabase(Configuration jooqConfig) {
         try {
-            EntityHandler handler = getContext().createHandler(jooqConfig, vertx).registerFunc(this::getSharedData);
+            EntityHandler handler = getContext().createHandler(jooqConfig, vertx)
+                                                .registerSharedKey(this.getSharedKey());
             if (handler.isNew()) {
                 createNewDatabase(jooqConfig);
                 logger.info("Initializing data...");

@@ -10,7 +10,7 @@ class DB {
         time      : Strings.toRegexIgnoreCase("TIME"),
         timestamp : Strings.toRegexIgnoreCase("TIMESTAMP"),
         timestampz: Strings.toRegexIgnoreCase("timestamp(\\([0-9]\\))? with time zone"),
-
+        array     : Strings.toRegexIgnoreCase("ARRAY"),
     ]
     static COL_REGEX = [
         json     : Strings.toRegexIgnoreCase(".+_JSON\$"),

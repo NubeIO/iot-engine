@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -26,7 +25,7 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
     @JsonIgnore
     private final T pojo;
     @Getter
-    private ObjectMapper mapper = Json.mapper.copy().setSerializationInclusion(Include.NON_NULL);
+    private ObjectMapper mapper = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
 
     public static <T extends VertxPojo> JsonPojo<T> from(@NonNull T pojo) {
         return new JsonPojo<>(pojo);
