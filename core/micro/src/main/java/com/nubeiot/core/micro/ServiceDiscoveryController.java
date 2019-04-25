@@ -105,6 +105,13 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return addDecoratorRecord(record);
     }
 
+    public Single<Record> addHttpRecord(HttpRecord httpRecord) {
+        Record record = HttpEndpoint.createRecord(httpRecord.getName(), httpRecord.isSsl(),
+                                                  computeINet(httpRecord.getHost()), httpRecord.getPort(),
+                                                  httpRecord.getRoot(), httpRecord.getMetaData());
+        return addDecoratorRecord(record);
+    }
+
     public Single<Record> addEventMessageRecord(String name, String address, EventMethodDefinition definition,
                                                 JsonObject metadata) {
         return addDecoratorRecord(EventMessageService.createRecord(name, address, definition, metadata));

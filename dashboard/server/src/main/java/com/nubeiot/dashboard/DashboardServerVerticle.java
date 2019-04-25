@@ -19,6 +19,7 @@ import com.nubeiot.core.http.RestConfigProvider;
 import com.nubeiot.core.http.base.HttpScheme;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
+import com.nubeiot.core.micro.providers.RestMicroContextProvider;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.dashboard.controllers.AuthRestController;
@@ -35,7 +36,6 @@ import com.nubeiot.dashboard.controllers.QueryPostgreSqlController;
 import com.nubeiot.dashboard.controllers.SettingsController;
 import com.nubeiot.dashboard.controllers.WidgetImageController;
 import com.nubeiot.dashboard.providers.RestMediaDirProvider;
-import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.providers.RestOAuth2AuthProvider;
 import com.zandero.rest.RestRouter;
 

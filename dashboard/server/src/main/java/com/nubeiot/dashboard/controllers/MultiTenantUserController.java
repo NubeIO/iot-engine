@@ -49,6 +49,7 @@ import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.utils.RequestDataConverter;
 import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.core.micro.providers.RestMicroContextProvider;
 import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.core.utils.Strings;
@@ -59,7 +60,6 @@ import com.nubeiot.dashboard.helpers.ResponseDataHelper;
 import com.nubeiot.dashboard.models.KeycloakUserRepresentation;
 import com.nubeiot.dashboard.models.MongoUser;
 import com.nubeiot.dashboard.props.UserProps;
-import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.utils.UserUtils;
 import com.zandero.rest.annotation.RouteOrder;
 

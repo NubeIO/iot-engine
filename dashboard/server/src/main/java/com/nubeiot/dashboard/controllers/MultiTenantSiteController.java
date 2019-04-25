@@ -43,13 +43,13 @@ import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.utils.RequestDataConverter;
 import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.core.micro.providers.RestMicroContextProvider;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.dashboard.DashboardServerConfig;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.constants.Services;
 import com.nubeiot.dashboard.models.Site;
 import com.nubeiot.dashboard.props.SiteProps;
-import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.utils.DittoUtils;
 import com.zandero.rest.annotation.RouteOrder;
 

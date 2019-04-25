@@ -1,4 +1,4 @@
-package com.nubeiot.dashboard.providers;
+package com.nubeiot.core.micro.providers;
 
 import com.nubeiot.core.micro.MicroContext;
 

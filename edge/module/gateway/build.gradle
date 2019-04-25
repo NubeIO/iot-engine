@@ -1,4 +1,7 @@
 dependencies {
     compile project(':core:micro')
     compile project(':core:httpserver')
+
+    testCompile project(':core:httpserver').sourceSets.test.output
+    testCompile project(":core:base").sourceSets.test.output
 }
