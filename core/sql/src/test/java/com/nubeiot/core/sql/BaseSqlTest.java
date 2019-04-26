@@ -30,26 +30,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 abstract class BaseSqlTest {
 
-    static int TEST_TIMEOUT = 10;
     private Vertx vertx;
     private DeploymentOptions options;
     private String deployId;
-
-
-    static class OneSchema {
-
-        static final Catalog CATALOG = com.nubeiot.core.sql.mock.oneschema.DefaultCatalog.DEFAULT_CATALOG;
-
-    }
-
-
-    static class ManySchema {
-
-        static final Catalog CATALOG = com.nubeiot.core.sql.mock.manyschema.DefaultCatalog.DEFAULT_CATALOG;
-        static final TblSample_00 TBL_SAMPLE_00 = TblSample_00.TBL_SAMPLE_00;
-        static final TblSample_01 TBL_SAMPLE_01 = TblSample_01.TBL_SAMPLE_01;
-
-    }
 
     static void beforeSuite() {
         TestHelper.setup();
@@ -81,8 +64,10 @@ abstract class BaseSqlTest {
     }
 
     <T extends EntityHandler> T startSQL(TestContext context, Catalog catalog, Class<T> handlerClass) {
-        SQLWrapper<T> verticle = VertxHelper.deploy(vertx, context, options, new SQLWrapper<>(catalog, handlerClass),
-                                                    TEST_TIMEOUT);
+        final String key = getClass().getName();
+        SQLWrapper<T> verticle = VertxHelper.deploy(vertx, context, options,
+                                                    new SQLWrapper<>(catalog, handlerClass).registerSharedKey(key),
+                                                    TestHelper.TEST_TIMEOUT_SEC * 2);
         deployId = verticle.deploymentID();
         return verticle.getContext().getEntityHandler();
     }
@@ -116,6 +101,21 @@ abstract class BaseSqlTest {
         } finally {
             TestHelper.testComplete(async);
         }
+    }
+
+    static class OneSchema {
+
+        static final Catalog CATALOG = com.nubeiot.core.sql.mock.oneschema.DefaultCatalog.DEFAULT_CATALOG;
+
+    }
+
+
+    static class ManySchema {
+
+        static final Catalog CATALOG = com.nubeiot.core.sql.mock.manyschema.DefaultCatalog.DEFAULT_CATALOG;
+        static final TblSample_00 TBL_SAMPLE_00 = TblSample_00.TBL_SAMPLE_00;
+        static final TblSample_01 TBL_SAMPLE_01 = TblSample_01.TBL_SAMPLE_01;
+
     }
 
 }
