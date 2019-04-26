@@ -54,14 +54,15 @@ public final class Networks {
     }
 
     public static String computeNATAddress(String givenHost) {
-        if (Objects.nonNull(natHost)) {
+        if (Strings.isNotBlank(natHost)) {
             return natHost;
         }
         synchronized (Networks.class) {
-            if (Objects.nonNull(natHost)) {
+            if (Strings.isNotBlank(natHost)) {
                 return natHost;
             }
-            return getAddress(givenHost);
+            natHost = getAddress(givenHost);
+            return natHost;
         }
     }
 

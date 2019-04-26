@@ -16,7 +16,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.connector.bacnet.Util.BACnetDataConversions;
 import com.serotonin.bacnet4j.LocalDevice;
@@ -36,22 +35,20 @@ import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 @RunWith(MockitoJUnitRunner.class)
 public class BACnetInstanceTest {
 
-    EventController eventController;
-    Vertx vertx;
-    LocalDevice localDevice;
-    DefaultTransport transport;
-    BACnetInstance bacnetInstance;
-    PollingTimers pollingTimers;
-    Map<String, Integer> remoteSubscribtions;
+    private LocalDevice localDevice;
+    private DefaultTransport transport;
+    private BACnetInstance bacnetInstance;
+    private PollingTimers pollingTimers;
+    private Map<String, Integer> remoteSubscriptions;
 
     @Before
     public void beforeEach() throws Exception {
-        vertx = Mockito.mock(Vertx.class);
+        Vertx vertx = Mockito.mock(Vertx.class);
         transport = Mockito.mock(DefaultTransport.class);
         pollingTimers = Mockito.mock(PollingTimers.class);
         localDevice = new LocalDevice(1234, transport);
-        remoteSubscribtions = new HashMap<>();
-        bacnetInstance = BACnetInstance.createBACnet(localDevice, vertx, pollingTimers, remoteSubscribtions);
+        remoteSubscriptions = new HashMap<>();
+        bacnetInstance = BACnetInstance.createBACnet(localDevice, vertx, pollingTimers, remoteSubscriptions);
     }
 
     @After
@@ -112,7 +109,6 @@ public class BACnetInstanceTest {
                .addPoint(Mockito.any(BACnetInstance.class), Mockito.any(RemoteDevice.class),
                          Mockito.any(ObjectIdentifier.class), Mockito.anyLong());
         bacnetInstance.initRemoteObjectPolling(rd, oid).test().assertNoErrors();
-
     }
 
     @Test
@@ -160,19 +156,19 @@ public class BACnetInstanceTest {
 
         JsonObject data = bacnetInstance.sendSubscribeCOVRequestBlocking(remoteDevice1, oid);
         assertEquals(new JsonObject(), data);
-        assertEquals(1, remoteSubscribtions.size());
+        assertEquals(1, remoteSubscriptions.size());
         Mockito.verify(pollingTimers)
                .addPoint(Mockito.any(BACnetInstance.class), Mockito.any(RemoteDevice.class),
                          Mockito.any(ObjectIdentifier.class), Mockito.anyLong());
 
         data = bacnetInstance.removeRemoteObjectSubscriptionBlocking(remoteDevice1, oid);
         assertEquals(new JsonObject(), data);
-        assertEquals(0, remoteSubscribtions.size());
+        assertEquals(0, remoteSubscriptions.size());
         Mockito.verify(pollingTimers).removePoint(Mockito.any(RemoteDevice.class), Mockito.any(ObjectIdentifier.class));
     }
 
     @Test(expected = ErrorAPDUException.class)
-    public void subscribeCOVTest_NonSubscribable() throws Exception {
+    public void subscribeCOBTest_NonSubscribe() throws Exception {
         ServiceFutureImpl sf = new ServiceFutureImpl();
         sf.fail(Mockito.mock(Error.class));
         Mockito.when(transport.send(Mockito.any(Address.class), Mockito.anyInt(), Mockito.any(Segmentation.class),
@@ -180,8 +176,7 @@ public class BACnetInstanceTest {
         RemoteDevice remoteDevice1 = new RemoteDevice(localDevice, 1111, new Address(1, "yote".getBytes()));
         localDevice.getRemoteDeviceCache().putEntity(0, remoteDevice1, RemoteEntityCachePolicy.EXPIRE_1_DAY);
 
-        bacnetInstance.sendSubscribeCOVRequestBlocking(remoteDevice1,
-                                                       (ObjectIdentifier) Mockito.mock(ObjectIdentifier.class));
+        bacnetInstance.sendSubscribeCOVRequestBlocking(remoteDevice1, Mockito.mock(ObjectIdentifier.class));
     }
 
 }

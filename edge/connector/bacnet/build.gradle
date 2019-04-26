@@ -10,5 +10,9 @@ dependencies {
     compile "com.infiniteautomation:bacnet4j:5.0.0-SNAPSHOT"
 
     testCompile project(":core:base").sourceSets.test.output
+    testCompile project(":core:micro")
+    testCompile project(":core:httpclient")
+    testCompile project(":core:httpserver").sourceSets.test.output
+
     testCompile "org.mockito:mockito-core:1.+"
 }

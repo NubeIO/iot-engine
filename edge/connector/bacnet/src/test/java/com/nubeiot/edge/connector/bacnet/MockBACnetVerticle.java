@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.sample.thirdparty;
+package com.nubeiot.edge.connector.bacnet;
 
 import org.mockito.Mockito;
 
@@ -9,19 +9,13 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.edge.connector.bacnet.BACnetConfig;
-import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
-import com.nubeiot.edge.connector.bacnet.BACnetInstance;
-import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 import com.serotonin.bacnet4j.type.Encodable;
 
-public class BACnetVerticleTest extends BACnetVerticle {
-
-    BACnetInstance bacnetInstance;
+public class MockBACnetVerticle extends BACnetVerticle {
 
     @Override
     protected void startBACnet(BACnetConfig baCnetConfig) {
-        bacnetInstance = Mockito.mock(BACnetInstance.class);
+        BACnetInstance bacnetInstance = Mockito.mock(BACnetInstance.class);
 
         Mockito.when(bacnetInstance.getRemoteDevices()).thenReturn(Single.just(new JsonObject()));
         Mockito.when(bacnetInstance.getRemoteDeviceExtendedInfo(Mockito.anyInt()))
@@ -36,9 +30,6 @@ public class BACnetVerticleTest extends BACnetVerticle {
         this.registerEventbus(new EventController(vertx));
         this.addProvider(new MicroserviceProvider(), this::publishServices);
     }
-
-    @Override
-    public String configFile() { return "bacnet.json"; }
 
     @Override
     protected void publishServices(MicroContext microContext) {
@@ -57,5 +48,8 @@ public class BACnetVerticleTest extends BACnetVerticle {
                                                                                "/:objectID"), new JsonObject())
                     .subscribe();
     }
+
+    @Override
+    public String configFile() { return "bacnet.json"; }
 
 }

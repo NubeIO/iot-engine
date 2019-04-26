@@ -14,25 +14,21 @@ import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 
-import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 /*
  * VERTX event bus message handler
  *  calls respective messages in BACnetInstance
  */
-
-
+@RequiredArgsConstructor
 public class NubeServiceEventHandler implements EventHandler {
 
-    private Map<String, BACnetInstance> bacnetInstances;
+    private final Map<String, BACnetInstance> bacnetInstances;
 
-    @Getter
-    private final List<EventAction> availableEvents;
-
-    public NubeServiceEventHandler(Map bacnetInstances) {
-        this.bacnetInstances = bacnetInstances;
-        this.availableEvents = Collections.unmodifiableList(
-            new ArrayList<>(BACnetEventModels.NUBE_SERVICE_SUB.getEvents()));
+    @Override
+    public @NonNull List<EventAction> getAvailableEvents() {
+        return Collections.unmodifiableList(new ArrayList<>(BACnetEventModels.NUBE_SERVICE_SUB.getEvents()));
     }
 
     @EventContractor(action = EventAction.CREATE, returnType = void.class)

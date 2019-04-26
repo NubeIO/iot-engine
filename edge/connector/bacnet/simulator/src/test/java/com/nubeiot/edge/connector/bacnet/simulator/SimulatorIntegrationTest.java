@@ -71,7 +71,7 @@ public class SimulatorIntegrationTest {
         eventController.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
                              EventMessage.initial(EventAction.GET_LIST, addNetWorkToJson(new JsonObject())),
                              messageAsyncResult -> {
-                                 EventMessage message = EventMessage.from(messageAsyncResult.result().body());
+                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body(), true);
                                  System.out.println(message.getData());
                                  context.assertTrue(message.isSuccess());
                                  context.assertTrue(message.getData().containsKey(Integer.toString(remoteDeviceId)));
@@ -86,7 +86,7 @@ public class SimulatorIntegrationTest {
                              EventMessage.initial(EventAction.GET_ONE,
                                                   addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId)),
                              messageAsyncResult -> {
-                                 EventMessage message = EventMessage.from(messageAsyncResult.result().body());
+                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body(), true);
                                  JsonObject data = message.getData();
                                  context.assertTrue(message.isSuccess());
                                  context.assertEquals(remoteDeviceId, data.getInteger("instanceNumber"));
@@ -104,7 +104,7 @@ public class SimulatorIntegrationTest {
                              EventMessage.initial(EventAction.GET_ONE,
                                                   addNetWorkToJson(new JsonObject()).put("deviceId", id)),
                              messageAsyncResult -> {
-                                 EventMessage message = EventMessage.from(messageAsyncResult.result().body());
+                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  context.assertTrue(message.isError());
                                  TestHelper.testComplete(async);
                              });
@@ -120,7 +120,7 @@ public class SimulatorIntegrationTest {
                                                                                               "deviceId",
                                                                                               remoteDeviceId)),
                              messageAsyncResult -> {
-                                 EventMessage message = EventMessage.from(messageAsyncResult.result().body());
+                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  JsonObject data = message.getData();
                                  context.assertTrue(message.isSuccess());
                                  context.assertFalse(data.isEmpty());
@@ -148,7 +148,7 @@ public class SimulatorIntegrationTest {
                                                                                          BACnetDataConversions.pointIDNubeToBACnet(
                                                                                              p1))),
                              messageAsyncResult -> {
-                                 EventMessage message = EventMessage.from(messageAsyncResult.result().body());
+                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  context.assertTrue(message.isSuccess());
 
                                  Object val = p1o.getValue("value");
@@ -180,14 +180,15 @@ public class SimulatorIntegrationTest {
         eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
                              EventMessage.initial(EventAction.PATCH, initMessage), messageAsyncResult -> {
 
-                context.assertTrue(EventMessage.from(messageAsyncResult.result().body()).isSuccess());
+                context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isSuccess());
                 eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
                                      EventMessage.initial(EventAction.GET_ONE,
                                                           addNetWorkToJson(new JsonObject()).put("deviceId",
                                                                                                  remoteDeviceId)
                                                                                             .put("objectId", pointId)),
                                      messageAsyncResult2 -> {
-                                         EventMessage message2 = EventMessage.from(messageAsyncResult2.result().body());
+                                         EventMessage message2 = EventMessage.tryParse(
+                                             messageAsyncResult2.result().body());
                                          context.assertTrue(message2.isSuccess());
                                          int expected = val ? 0 : 1;
                                          context.assertEquals(expected, message2.getData()
@@ -208,7 +209,7 @@ public class SimulatorIntegrationTest {
                                                                                     .put("objectId", "analog-input:1")
                                                                                     .put("pollSeconds", 0)),
                              messageAsyncResult -> {
-                                 EventMessage message = EventMessage.from(messageAsyncResult.result().body());
+                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  context.assertTrue(message.isSuccess());
                                  context.assertTrue(message.getData().containsKey("saveType"));
                                  context.assertEquals("COV", message.getData().getString("saveType"));

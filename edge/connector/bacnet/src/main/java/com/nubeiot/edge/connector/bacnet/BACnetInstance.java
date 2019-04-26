@@ -42,6 +42,8 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 import com.serotonin.bacnet4j.util.DiscoveryUtils;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
+import lombok.NonNull;
+
 /*
  * Main BACnetInstance functionality
  *  - initialisation
@@ -58,11 +60,11 @@ public class BACnetInstance {
     // requests?
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    //    private Map<RemoteDevice, ArrayList<ObjectIdentifier>> cachedRemotePoints = new HashMap<>();
+    private final Map<String, Integer> remoteSubscriptions = new HashMap<>();
     private Vertx vertx;
     private LocalDevice localDevice;
     private BACnetConfig config;
-    //    private Map<RemoteDevice, ArrayList<ObjectIdentifier>> cachedRemotePoints = new HashMap<>();
-    private Map<String, Integer> remoteSubscribtions = new HashMap<>();
     private PollingTimers pollingTimers;
 
     private BACnetInstance(LocalDevice localDevice, Vertx vertx, PollingTimers timers) {
@@ -73,9 +75,9 @@ public class BACnetInstance {
     }
 
     private BACnetInstance(LocalDevice localDevice, Vertx vertx, PollingTimers timers,
-                           Map<String, Integer> remoteSubscribtions) {
+                           Map<String, Integer> remoteSubscriptions) {
         this(localDevice, vertx, timers);
-        this.remoteSubscribtions = remoteSubscribtions;
+        this.remoteSubscriptions.putAll(remoteSubscriptions);
     }
 
     private BACnetInstance(BACnetConfig config, BACnetNetworkConfig netConfig, EventController eventController,
@@ -108,8 +110,8 @@ public class BACnetInstance {
     }
 
     public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx, PollingTimers pollingTimers,
-                                              Map<String, Integer> remoteSubscribtions) {
-        return new BACnetInstance(localDevice, vertx, pollingTimers, remoteSubscribtions);
+                                              Map<String, Integer> remoteSubscriptions) {
+        return new BACnetInstance(localDevice, vertx, pollingTimers, remoteSubscriptions);
     }
 
     public static BACnetInstance createBACnet(BACnetConfig bacnetConfig, BACnetNetworkConfig networkConfig,
@@ -309,7 +311,7 @@ public class BACnetInstance {
             SubscribeCOVRequest request = new SubscribeCOVRequest(subProcessID, oid, Boolean.TRUE, lifetime);
             localDevice.send(rd, request).get();
             correctID = true;
-            remoteSubscribtions.put(remoteObjectKey(rd, oid), subProcessID.intValue());
+            remoteSubscriptions.put(remoteObjectKey(rd, oid), subProcessID.intValue());
         }
         initRemoteObjectPolling(rd, oid);
         return new JsonObject();
@@ -338,14 +340,14 @@ public class BACnetInstance {
     //TODO: CHECK LocalDevice COV_Contexts for memory overuse
     public JsonObject removeRemoteObjectSubscriptionBlocking(RemoteDevice remoteDevice, ObjectIdentifier oid)
         throws Exception {
-        if (!remoteSubscribtions.containsKey(remoteObjectKey(remoteDevice, oid))) {
+        if (!remoteSubscriptions.containsKey(remoteObjectKey(remoteDevice, oid))) {
             throw new BACnetException("Subscription doesn't exist");
         }
-        UnsignedInteger subId = new UnsignedInteger(remoteSubscribtions.get(remoteObjectKey(remoteDevice, oid)));
+        UnsignedInteger subId = new UnsignedInteger(remoteSubscriptions.get(remoteObjectKey(remoteDevice, oid)));
         SubscribeCOVRequest request = new SubscribeCOVRequest(subId, oid, null, null);
         //TODO: check don't need to confirm
         localDevice.send(remoteDevice, request);
-        remoteSubscribtions.remove(remoteObjectKey(remoteDevice, oid));
+        remoteSubscriptions.remove(remoteObjectKey(remoteDevice, oid));
         pollingTimers.removePoint(remoteDevice, oid);
         return new JsonObject();
     }
@@ -398,7 +400,6 @@ public class BACnetInstance {
             } else {
                 val = BACnetDataConversions.primitiveToReal(v);
             }
-
             writeAtPriority(remoteDevice, oid, val, priority);
         } catch (BACnetRuntimeException | BACnetException e) {
             return Single.error(e);
@@ -412,22 +413,20 @@ public class BACnetInstance {
     }
 
     private Single<JsonObject> callAsyncBlocking(Callable callable) {
-        return Single.create(source -> {
-            vertx.executeBlocking(future -> {
-                try {
-                    JsonObject result = (JsonObject) callable.call();
-                    future.complete(result);
-                    source.onSuccess(result);
-                } catch (Exception e) {
-                    future.fail(e);
-                    source.onError(e);
-                }
-            }, res -> {});
-        });
+        return Single.create(source -> vertx.executeBlocking(future -> {
+            try {
+                JsonObject result = (JsonObject) callable.call();
+                future.complete(result);
+                source.onSuccess(result);
+            } catch (Exception e) {
+                future.fail(e);
+                source.onError(e);
+            }
+        }, res -> {}));
     }
 
-    private String remoteObjectKey(RemoteDevice remoteDevice, ObjectIdentifier oid) {
-        return Integer.toString(remoteDevice.hashCode()) + Integer.toString(oid.hashCode());
+    private String remoteObjectKey(@NonNull RemoteDevice remoteDevice, @NonNull ObjectIdentifier oid) {
+        return remoteDevice.hashCode() + "::" + oid.hashCode();
     }
 
 }

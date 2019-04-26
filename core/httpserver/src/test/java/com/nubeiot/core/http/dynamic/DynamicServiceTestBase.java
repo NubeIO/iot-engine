@@ -2,6 +2,7 @@ package com.nubeiot.core.http.dynamic;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.skyscreamer.jsonassert.Customization;
 
@@ -15,14 +16,15 @@ import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.dynamic.mock.GatewayServer;
 
-class DynamicServiceTestBase extends HttpServerTestBase {
+public class DynamicServiceTestBase extends HttpServerTestBase {
 
     static final Customization IGNORE_URI = new Customization("message.uri", (o1, o2) -> false);
 
-    void startGatewayAndService(TestContext context, ContainerVerticle service, DeploymentOptions serviceOptions) {
+    protected void startGatewayAndService(TestContext context, ContainerVerticle service,
+                                          DeploymentOptions serviceOptions) {
         CountDownLatch latch = new CountDownLatch(1);
-        DeploymentOptions config = new DeploymentOptions().setConfig(overridePort(httpConfig.getPort()));
-        VertxHelper.deploy(vertx.getDelegate(), context, config, new GatewayServer(), id -> {
+        DeploymentOptions config = new DeploymentOptions().setConfig(deployConfig(httpConfig.getPort()));
+        VertxHelper.deploy(vertx.getDelegate(), context, config, gateway().get(), id -> {
             System.out.println("Gateway Deploy Id: " + id);
             VertxHelper.deploy(vertx.getDelegate(), context, serviceOptions, service, d -> {
                 System.out.println("Service Deploy Id: " + d);
@@ -44,8 +46,13 @@ class DynamicServiceTestBase extends HttpServerTestBase {
         System.out.println("FINISHED AFTER: " + (System.nanoTime() - start) / 1e9);
     }
 
-    JsonObject overridePort(int port) {
+    protected JsonObject deployConfig(int port) {
         return new JsonObject().put("__app__", new JsonObject().put("__http__", new JsonObject().put("port", port)));
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T extends ContainerVerticle> Supplier<T> gateway() {
+        return () -> (T) new GatewayServer();
     }
 
 }

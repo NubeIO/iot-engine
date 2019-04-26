@@ -17,24 +17,21 @@ import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.type.Encodable;
 
-import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 /*
  * VERTX event bus message handler
  *  calls respective messages in BACnetInstance
  */
-
-
+@RequiredArgsConstructor
 public class PointsEventHandler implements EventHandler {
 
-    private Map<String, BACnetInstance> bacnetInstances;
+    private final Map<String, BACnetInstance> bacnetInstances;
 
-    @Getter
-    private final List<EventAction> availableEvents;
-
-    public PointsEventHandler(Map bacnetInstances) {
-        this.bacnetInstances = bacnetInstances;
-        this.availableEvents = Collections.unmodifiableList(new ArrayList<>(BACnetEventModels.POINTS.getEvents()));
+    @Override
+    public @NonNull List<EventAction> getAvailableEvents() {
+        return Collections.unmodifiableList(new ArrayList<>(BACnetEventModels.POINTS.getEvents()));
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
