@@ -1,17 +1,17 @@
 package com.nubeiot.dashboard.connector.hive;
 
+import io.vertx.core.json.JsonObject;
+import io.vertx.servicediscovery.types.HttpLocation;
+
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpServerContext;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.core.http.RestConfigProvider;
 import com.nubeiot.core.http.ServerInfo;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.zandero.rest.RestRouter;
-
-import io.vertx.core.json.JsonObject;
-import io.vertx.servicediscovery.types.HttpLocation;
 
 public class HiveVerticle extends ContainerVerticle {
 

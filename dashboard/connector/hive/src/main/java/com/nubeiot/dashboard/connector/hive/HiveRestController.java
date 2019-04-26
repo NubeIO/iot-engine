@@ -8,11 +8,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.RestConfigProvider;
-import com.nubeiot.core.http.rest.RestApi;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.vertx.core.Future;
@@ -25,6 +20,11 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
+
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.rest.RestApi;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 
 public class HiveRestController implements RestApi {
 

@@ -15,10 +15,10 @@ import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.converter.RequestDataConverter;
 import com.nubeiot.core.http.rest.DynamicEventRestApi;
 import com.nubeiot.core.http.rest.DynamicHttpRestApi;
 import com.nubeiot.core.http.rest.DynamicRestApi;
-import com.nubeiot.core.http.utils.RequestDataConverter;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 
 import lombok.Getter;

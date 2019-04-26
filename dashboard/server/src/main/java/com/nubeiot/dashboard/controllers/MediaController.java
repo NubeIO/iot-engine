@@ -17,7 +17,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
 import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.helpers.ResponseDataHelper;
+import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.mongo.RestMongoClientProvider;

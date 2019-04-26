@@ -13,6 +13,8 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.http.HttpServerTestBase;
 
+// FIXME: Replace it later by DynamicServiceTestBase.java of BACnet implementation
+@Deprecated
 class EdgeGatewayTestBase extends HttpServerTestBase {
 
     void startEdgeGateway(TestContext context, Verticle httpServer, DeploymentOptions deploymentOptions) {

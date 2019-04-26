@@ -1,4 +1,4 @@
-package com.nubeiot.core.micro.providers;
+package com.nubeiot.core.http.rest.provider;
 
 import com.nubeiot.core.micro.MicroContext;
 

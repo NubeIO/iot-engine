@@ -10,16 +10,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.HttpConfig;
-import com.nubeiot.core.http.RestConfigProvider;
-import com.nubeiot.core.http.converter.ResponseDataConverter;
-import com.nubeiot.core.http.handler.ResponseDataWriter;
-import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.utils.Strings;
-import com.zandero.rest.annotation.ResponseWriter;
-
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -32,6 +22,16 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
+
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.HttpConfig;
+import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
+import com.nubeiot.core.http.rest.RestApi;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.utils.Strings;
+import com.zandero.rest.annotation.ResponseWriter;
 
 public class ServerDittoRestController implements RestApi {
 

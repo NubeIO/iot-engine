@@ -36,10 +36,10 @@ import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
 import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.RestConfigProvider;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.helpers.ResponseDataHelper;
+import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;

@@ -7,7 +7,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
@@ -28,7 +27,6 @@ import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.ServiceException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
@@ -110,13 +108,6 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return addDecoratorRecord(record);
     }
 
-    public Single<Record> addHttpRecord(HttpRecord httpRecord) {
-        Record record = HttpEndpoint.createRecord(httpRecord.getName(), httpRecord.isSsl(),
-                                                  computeINet(httpRecord.getHost()), httpRecord.getPort(),
-                                                  httpRecord.getRoot(), httpRecord.getMetaData());
-        return addDecoratorRecord(record);
-    }
-
     public Single<Record> addEventMessageRecord(String name, String address, EventMethodDefinition definition,
                                                 JsonObject metadata) {
         return addDecoratorRecord(EventMessageService.createRecord(name, address, definition, metadata));
@@ -165,7 +156,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
                         new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
     }
 
-    public Single<List<Record>> getRecord() {
+    public Single<List<Record>> getRecords() {
         return get().rxGetRecords(r -> true, true);
     }
 
@@ -174,7 +165,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
             if (records.stream().map(Record::getRegistration).collect(Collectors.toList()).contains(registration)) {
                 return serviceDiscovery.rxUnpublish(registration);
             }
-            throw new HttpException(HttpResponseStatus.NOT_FOUND, "Not found that registration");
+            throw new NotFoundException("Not found that registration");
         });
     }
 

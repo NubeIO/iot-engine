@@ -3,9 +3,9 @@ package com.nubeiot.edge.module.gateway;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
+import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.core.micro.providers.RestMicroContextProvider;
 import com.zandero.rest.RestRouter;
 
 public class EdgeGatewayVerticle extends ContainerVerticle {

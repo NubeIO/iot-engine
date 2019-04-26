@@ -13,12 +13,12 @@ import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.rest.RestApi;
 
-public class HttpServer extends ContainerVerticle {
+public class ExternalHttpServer extends ContainerVerticle {
 
     @Override
     public void start() {
         super.start();
-        final HttpServerRouter httpRouter = new HttpServerRouter().registerApi(HttpServer.MockAPI.class);
+        final HttpServerRouter httpRouter = new HttpServerRouter().registerApi(ExternalHttpServer.MockAPI.class);
         this.addProvider(new HttpServerProvider(httpRouter));
     }
 

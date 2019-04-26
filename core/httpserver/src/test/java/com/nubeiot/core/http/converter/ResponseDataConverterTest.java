@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
+import com.nubeiot.core.exceptions.NotFoundException;
 
 public class ResponseDataConverterTest {
 
@@ -20,6 +21,17 @@ public class ResponseDataConverterTest {
         ResponseData responseData = ResponseDataConverter.convert(httpException);
 
         Assert.assertEquals(responseData.getStatus().code(), statusCode);
+        Assert.assertEquals(responseData.body().getString("message"), new JsonObject().put("error", message).encode());
+    }
+
+    @Test
+    public void testConvertNotFoundExceptionToResponseData() {
+        String message = "Not found";
+
+        NotFoundException notFoundException = new NotFoundException(message);
+        ResponseData responseData = ResponseDataConverter.convert(notFoundException);
+
+        Assert.assertEquals(responseData.getStatus().code(), HttpResponseStatus.NOT_FOUND.code());
         Assert.assertEquals(responseData.body().getString("message"), new JsonObject().put("error", message).encode());
     }
 

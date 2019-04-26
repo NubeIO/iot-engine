@@ -20,7 +20,7 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
-import com.nubeiot.core.http.helpers.ResponseDataHelper;
+import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.dashboard.Role;
