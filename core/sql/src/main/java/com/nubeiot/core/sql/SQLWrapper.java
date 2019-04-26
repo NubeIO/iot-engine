@@ -51,8 +51,9 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     public void start() {
         super.start();
         logger.info("Creating Hikari datasource from application configuration...");
-        String dataDir = SharedDataDelegate.getLocalDataValue(vertx, getSharedKey(), SharedDataDelegate.SHARED_DATADIR);
-        config.getHikariConfig().setJdbcUrl(config.computeJdbcUrl(dataDir));
+        config.getHikariConfig()
+              .setJdbcUrl(config.computeJdbcUrl(() -> SharedDataDelegate.getLocalDataValue(vertx, getSharedKey(),
+                                                                                           SharedDataDelegate.SHARED_DATADIR)));
         if (logger.isDebugEnabled()) {
             logger.debug(config.getHikariConfig().toJson());
         }

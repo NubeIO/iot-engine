@@ -2,6 +2,8 @@
   "__app__": {
     "__sql__": {
       "dialect": "POSTGRES",
+      "dbName": null,
+      "dbLocalFile": false,
       "__hikari__": {
         "minimumIdle": 2,
         "maximumPoolSize": 10,

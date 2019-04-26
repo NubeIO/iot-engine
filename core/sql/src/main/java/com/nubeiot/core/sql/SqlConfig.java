@@ -1,6 +1,7 @@
 package com.nubeiot.core.sql;
 
 import java.nio.file.Paths;
+import java.util.function.Supplier;
 
 import org.jooq.SQLDialect;
 
@@ -22,18 +23,18 @@ public final class SqlConfig implements IConfig {
 
     private SQLDialect dialect = SQLDialect.POSTGRES;
     private String dbName;
-    private boolean dbLocalFile;
+    private boolean dbLocalFile = false;
 
     @JsonProperty(value = Hikari.NAME)
     private Hikari hikariConfig = new Hikari();
 
-    public String computeJdbcUrl(String dataDir) {
+    public String computeJdbcUrl(Supplier<String> dataDir) {
         if (Strings.isNotBlank(dbName) && isDbLocalFile() && Strings.isBlank(getHikariConfig().getJdbcUrl())) {
             if (SQLDialect.H2.equals(dialect)) {
-                return "jdbc:h2:file:" + Paths.get(dataDir, dbName);
+                return "jdbc:h2:file:" + Paths.get(dataDir.get(), dbName);
             }
             if (SQLDialect.SQLITE.equals(dialect)) {
-                return "jdbc:sqlite:" + Paths.get(dataDir, dbName);
+                return "jdbc:sqlite:" + Paths.get(dataDir.get(), dbName);
             }
         }
         return getHikariConfig().getJdbcUrl();
