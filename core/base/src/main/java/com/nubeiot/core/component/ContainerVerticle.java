@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -21,11 +22,13 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.AbstractVerticle;
 
+import com.nubeiot.core.ConfigProcessor;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
+import com.nubeiot.core.utils.Configs;
 
 import lombok.Getter;
 
@@ -48,7 +51,15 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     @Override
     public void start() {
-        this.nubeConfig = computeConfig(config());
+        Optional<NubeConfig> nubeConfig = new ConfigProcessor(vertx.getDelegate()).processAndOverride(NubeConfig.class,
+                                                                                                      Configs.loadJsonConfig(
+                                                                                                          configFile()),
+                                                                                                      config());
+        if (nubeConfig.isPresent()) {
+            this.nubeConfig = nubeConfig.get();
+        } else {
+            this.nubeConfig = computeConfig(config());
+        }
         this.eventController = new EventController(vertx);
         this.registerEventbus(eventController);
         this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController)

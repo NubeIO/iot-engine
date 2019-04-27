@@ -86,13 +86,14 @@ public class ConfigProcessor {
         return new TreeMap<>(result);
     }
 
-    public <T extends IConfig> Optional<T> processAndOverride(@NonNull Class<T> clazz, IConfig provideConfig,
-                                                              IConfig defaultConfig) {
+    public <T extends IConfig> Optional<T> processAndOverride(@NonNull Class<T> clazz, JsonObject defaultConfig,
+                                                              JsonObject provideConfig) {
+        logger.info("Starting to override config");
         if (Objects.isNull(provideConfig) && Objects.isNull(defaultConfig)) {
             return Optional.empty();
         }
         Map<String, Object> envConfig = this.mergeEnvAndSys();
-        IConfig input;
+        JsonObject input;
         if (Objects.isNull(provideConfig)) {
             logger.debug("Provide config is null");
             input = defaultConfig;
@@ -100,9 +101,9 @@ public class ConfigProcessor {
             logger.debug("Default config is null");
             input = provideConfig;
         } else {
-            input = IConfig.merge(defaultConfig, provideConfig, clazz);
+            input = defaultConfig.mergeIn(provideConfig, true);
         }
-        return overrideConfig(clazz, envConfig, input.toJson());
+        return overrideConfig(clazz, envConfig, input);
     }
 
     private <T extends IConfig> Optional<T> overrideConfig(Class<T> clazz, Map<String, Object> envConfig,
@@ -195,31 +196,16 @@ public class ConfigProcessor {
                                     Entry<String, Object> valueByKey) {
         Object value = valueByKey.getValue();
 
+        if (keyArray.length < 4) {
+            Object overridedProperty = this.getOverridedProperty(overrideValue, value);
+            if (Objects.isNull(overridedProperty)) {
+                return;
+            }
+            appConfig.put(valueByKey.getKey(), overridedProperty);
+            return;
+        }
         if (Objects.isNull(value)) {
             value = new JsonObject();
-        }
-
-        if (value instanceof JsonObject || value instanceof Map) {
-            if (keyArray.length < 4) {
-                appConfig.put(valueByKey.getKey(), overrideValue);
-                return;
-            }
-
-            JsonObject overrideResult = checkAndUpdate(3, keyArray, overrideValue, value instanceof JsonObject
-                                                                                   ? (JsonObject) value
-                                                                                   : JsonObject.mapFrom((Map) value));
-            if (Objects.isNull(overrideResult)) {
-                return;
-            }
-            JsonObject childElement = appConfig.getJsonObject(valueByKey.getKey());
-            if (Objects.isNull(childElement)) {
-                appConfig.put(valueByKey.getKey(), overrideResult);
-            } else {
-                overrideResult.getMap().forEach((key, val) -> {
-                    childElement.put(key, val);
-                });
-            }
-            return;
         }
 
         if (value instanceof JsonArray || value instanceof Collection) {
@@ -239,7 +225,30 @@ public class ConfigProcessor {
             value = jsonArray.getList();
         }
 
+        if (value instanceof JsonObject || value instanceof Map) {
+            JsonObject overrideResult = checkAndUpdate(3, keyArray, overrideValue, value instanceof JsonObject
+                                                                                   ? (JsonObject) value
+                                                                                   : JsonObject.mapFrom((Map) value));
+            if (Objects.isNull(overrideResult)) {
+                return;
+            }
+            JsonObject childElement = appConfig.getJsonObject(valueByKey.getKey());
+            if (Objects.isNull(childElement)) {
+                appConfig.put(valueByKey.getKey(), overrideResult);
+            } else {
+                overrideResult.getMap().forEach((key, val) -> {
+                    childElement.put(key, val);
+                });
+            }
+            return;
+        }
+
+        Object overridedProperty = this.getOverridedProperty(overrideValue, value);
+        if (Objects.isNull(overridedProperty)) {
+            return;
+        }
         appConfig.put(valueByKey.getKey(), this.getOverridedProperty(overrideValue, value));
+
     }
 
     private void initDefaultOptions() {
@@ -321,25 +330,9 @@ public class ConfigProcessor {
             if (Objects.isNull(value)) {
                 return overrideValue;
             }
-            if (value instanceof Integer && overrideValue instanceof Number) {
-                logger.warn("Source data type is Integer but input is Number");
-                return ((Number) overrideValue).intValue();
-            }
-
-            if (value instanceof Double && overrideValue instanceof Number) {
-                logger.warn("Source data type is Double but input is Number");
-                return ((Number) overrideValue).doubleValue();
-            }
-
-            if (value instanceof Float && overrideValue instanceof Number) {
-                logger.warn("Source data type is Float but input is Number");
-                return ((Number) overrideValue).floatValue();
-            }
-
-            if (value instanceof Long && overrideValue instanceof Number) {
-                logger.warn("Source data type is Long but input is Number");
-                return ((Number) overrideValue).longValue();
-            }
+            Number number = handleNumberClasses(overrideValue, value);
+            if (Objects.nonNull(number))
+                return number;
 
             if (value instanceof JsonArray) {
                 return ((JsonArray) value).getList().getClass().cast(overrideValue);
@@ -351,6 +344,35 @@ public class ConfigProcessor {
                         ex);
             return null;
         }
+    }
+
+    private Number handleNumberClasses(Object overrideValue, Object value) {
+        if (value instanceof Integer && overrideValue instanceof Number) {
+            logger.warn("Source data type is Integer but input is Number");
+            return ((Number) overrideValue).intValue();
+        }
+
+        if (value instanceof Double && overrideValue instanceof Number) {
+            logger.warn("Source data type is Double but input is Number");
+            return ((Number) overrideValue).doubleValue();
+        }
+
+        if (value instanceof Float && overrideValue instanceof Number) {
+            logger.warn("Source data type is Float but input is Number");
+            return ((Number) overrideValue).floatValue();
+        }
+
+        if (value instanceof Long && overrideValue instanceof Number) {
+            logger.warn("Source data type is Long but input is Number");
+            return ((Number) overrideValue).longValue();
+        }
+
+        if (value instanceof Short && overrideValue instanceof Number) {
+            logger.warn("Source data type is Short but input is Number");
+            return ((Number) overrideValue).shortValue();
+        }
+
+        return null;
     }
 
     private Optional<Entry<String, Object>> getValueByKey(JsonObject input, String key) {
