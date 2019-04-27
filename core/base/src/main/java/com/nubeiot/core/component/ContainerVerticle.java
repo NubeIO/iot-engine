@@ -54,7 +54,8 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
         Optional<NubeConfig> nubeConfig = new ConfigProcessor(vertx.getDelegate()).processAndOverride(NubeConfig.class,
                                                                                                       Configs.loadJsonConfig(
                                                                                                           configFile()),
-                                                                                                      config());
+                                                                                                      config(), true,
+                                                                                                      false);
         if (nubeConfig.isPresent()) {
             this.nubeConfig = nubeConfig.get();
         } else {

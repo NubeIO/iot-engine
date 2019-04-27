@@ -87,9 +87,11 @@ public class ConfigProcessor {
     }
 
     public <T extends IConfig> Optional<T> processAndOverride(@NonNull Class<T> clazz, JsonObject defaultConfig,
-                                                              JsonObject provideConfig) {
+                                                              JsonObject provideConfig, boolean overrideAppConfig,
+                                                              boolean overrideOtherConfigs) {
         logger.info("Starting to override config");
-        if (Objects.isNull(provideConfig) && Objects.isNull(defaultConfig)) {
+        if ((Objects.isNull(provideConfig) && Objects.isNull(defaultConfig)) ||
+            (!overrideAppConfig && !overrideOtherConfigs)) {
             return Optional.empty();
         }
         Map<String, Object> envConfig = this.mergeEnvAndSys();
@@ -103,11 +105,12 @@ public class ConfigProcessor {
         } else {
             input = defaultConfig.mergeIn(provideConfig, true);
         }
-        return overrideConfig(clazz, envConfig, input);
+        return overrideConfig(clazz, envConfig, input, overrideAppConfig, overrideOtherConfigs);
     }
 
     private <T extends IConfig> Optional<T> overrideConfig(Class<T> clazz, Map<String, Object> envConfig,
-                                                           JsonObject input) {
+                                                           JsonObject input, boolean overrideAppConfig,
+                                                           boolean overrideOtherConfigs) {
         JsonObject nubeConfig = new JsonObject();
 
         JsonObject inputAppConfig = input.getJsonObject(AppConfig.NAME);
@@ -132,25 +135,33 @@ public class ConfigProcessor {
             //TODO should be able to handle the generic case
             switch (keyArray[1]) {
                 case APP:
-                    handleConfig(appConfig, inputAppConfig, overrideValue, keyArray);
+                    if (overrideAppConfig) {
+                        handleConfig(appConfig, inputAppConfig, overrideValue, keyArray);
+                    }
                     break;
                 case SYSTEM:
-                    handleConfig(systemConfig, inputSystemConfig, overrideValue, keyArray);
+                    if (overrideOtherConfigs) {
+                        handleConfig(systemConfig, inputSystemConfig, overrideValue, keyArray);
+                    }
                     break;
                 case DEPLOY:
-                    handleConfig(deployConfig, inputDeployConfig, overrideValue, keyArray);
+                    if (overrideOtherConfigs) {
+                        handleConfig(deployConfig, inputDeployConfig, overrideValue, keyArray);
+                    }
                     break;
                 case DATA_DIR_LOWER_CASE:
-                    try {
-                        if (!(overrideValue instanceof String)) {
+                    if (overrideOtherConfigs) {
+                        try {
+                            if (!(overrideValue instanceof String)) {
+                                continue;
+                            }
+                            FileUtils.toPath(overrideValue.toString());
+                        } catch (NubeException ex) {
+                            logger.warn("DataDir is not valid. ", ex);
                             continue;
                         }
-                        FileUtils.toPath(overrideValue.toString());
-                    } catch (NubeException ex) {
-                        logger.warn("DataDir is not valid. ", ex);
-                        continue;
+                        nubeConfig.put(DATA_DIR, overrideValue);
                     }
-                    nubeConfig.put(DATA_DIR, overrideValue);
                     break;
             }
         }
@@ -248,7 +259,6 @@ public class ConfigProcessor {
             return;
         }
         appConfig.put(valueByKey.getKey(), this.getOverridedProperty(overrideValue, value));
-
     }
 
     private void initDefaultOptions() {
@@ -331,8 +341,9 @@ public class ConfigProcessor {
                 return overrideValue;
             }
             Number number = handleNumberClasses(overrideValue, value);
-            if (Objects.nonNull(number))
+            if (Objects.nonNull(number)) {
                 return number;
+            }
 
             if (value instanceof JsonArray) {
                 return ((JsonArray) value).getList().getClass().cast(overrideValue);

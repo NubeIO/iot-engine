@@ -21,6 +21,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.TestHelper.OSHelper;
 import com.nubeiot.core.TestHelper.SystemHelper;
 import com.nubeiot.core.cluster.ClusterType;
+import com.nubeiot.core.exceptions.NubeException;
 
 @RunWith(VertxUnitRunner.class)
 public class ConfigProcessorTest {
@@ -55,7 +56,7 @@ public class ConfigProcessorTest {
 
     @Test
     public void test_not_have_default_and_provide_config() {
-        Optional<NubeConfig> nubeConfig = this.processor.processAndOverride(NubeConfig.class, null, null);
+        Optional<NubeConfig> nubeConfig = this.processor.processAndOverride(NubeConfig.class, null, null, true, true);
         Assert.assertFalse(nubeConfig.isPresent());
     }
 
@@ -67,7 +68,7 @@ public class ConfigProcessorTest {
         overrideConfigThenAssert(finalResult -> {
             Assert.assertEquals("thanh", finalResult.getAppConfig().get("name"));
             Assert.assertEquals("{abc={def=123.0}}", finalResult.getAppConfig().get("http1").toString());
-        });
+        }, true, true);
     }
 
     @Test
@@ -75,8 +76,10 @@ public class ConfigProcessorTest {
         System.setProperty("nubeio.app.http", "123");
 
         overrideConfigThenAssert(finalResult -> {
-            Assert.assertEquals("{host=0.0.0.0, port=8086, enabled=true, rootApi=/api, alpnVersions=[HTTP_2, HTTP_1_1]}", finalResult.getAppConfig().get("__http__").toString());
-        });
+            Assert.assertEquals(
+                "{host=0.0.0.0, port=8086, enabled=true, rootApi=/api, alpnVersions=[HTTP_2, HTTP_1_1]}",
+                finalResult.getAppConfig().get("__http__").toString());
+        }, true, true);
     }
 
     @Test
@@ -90,7 +93,7 @@ public class ConfigProcessorTest {
             String httpConfig = finalResult.getAppConfig().get("__http__").toString();
             Assert.assertEquals(httpConfig, "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test, alpnVersions=[" +
                                             "HTTP_2, HTTP_1_1]}");
-        });
+        }, true, true);
     }
 
     @Test
@@ -105,7 +108,7 @@ public class ConfigProcessorTest {
             String httpConfig = finalResult.getAppConfig().get("__http__").toString();
             Assert.assertEquals(httpConfig, "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test, alpnVersions=[" +
                                             "HTTP_2, HTTP_1_2]}");
-        });
+        }, true, true);
     }
 
     @Test
@@ -120,7 +123,7 @@ public class ConfigProcessorTest {
             Assert.assertTrue(finalResult.getSystemConfig().getEventBusConfig().getOptions().isClustered());
             Assert.assertEquals(ClusterType.ZOOKEEPER, finalResult.getSystemConfig().getClusterConfig().getType());
             Assert.assertFalse(finalResult.getSystemConfig().getClusterConfig().isActive());
-        });
+        }, true, true);
     }
 
     @Test
@@ -136,9 +139,9 @@ public class ConfigProcessorTest {
                              "\"worker\":true,\"workerPoolSize\":50}", finalResult.getDeployConfig().toJson().encode(),
                              JSONCompareMode.STRICT);
             } catch (JSONException e) {
-                e.printStackTrace();
+                throw new NubeException(e);
             }
-        });
+        }, true, true);
     }
 
     @Test
@@ -146,7 +149,7 @@ public class ConfigProcessorTest {
         System.setProperty("nubeio.system.cluster.active", "invalid_type");
 
         overrideConfigThenAssert(
-            finalResult -> Assert.assertTrue(finalResult.getSystemConfig().getClusterConfig().isActive()));
+            finalResult -> Assert.assertTrue(finalResult.getSystemConfig().getClusterConfig().isActive()), true, true);
     }
 
     @Test
@@ -156,12 +159,11 @@ public class ConfigProcessorTest {
 
         nubeConfig = IConfig.from(jsonInput1, NubeConfig.class);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, nubeConfig.toJson(),
-                                                                             null);
+                                                                             null, true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
-        Assert.assertEquals(httpConfig.toString(),
-                            "anyvalue");
+        Assert.assertEquals(httpConfig.toString(), "anyvalue");
     }
 
     @Test
@@ -176,7 +178,7 @@ public class ConfigProcessorTest {
         nubeConfig = IConfig.from(jsonInput1, NubeConfig.class);
         NubeConfig nubeConfig2 = IConfig.from(jsonInput2, NubeConfig.class);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, nubeConfig.toJson(),
-                                                                             nubeConfig2.toJson());
+                                                                             nubeConfig2.toJson(), true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
@@ -189,7 +191,8 @@ public class ConfigProcessorTest {
     public void test_data_dir() {
         System.setProperty("nubeio.dataDir", OSHelper.getAbsolutePathByOs("test").toString());
         overrideConfigThenAssert(
-            finalResult -> Assert.assertEquals(finalResult.getDataDir(), OSHelper.getAbsolutePathByOs("test")));
+            finalResult -> Assert.assertEquals(finalResult.getDataDir(), OSHelper.getAbsolutePathByOs("test")), true,
+            true);
     }
 
     @Test
@@ -198,7 +201,7 @@ public class ConfigProcessorTest {
         String jsonInput = "{\"__app__\":{\"__http__\":{\"port\":8086.0}}}";
         nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
-                                                                             nubeConfig.toJson());
+                                                                             nubeConfig.toJson(), true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
@@ -212,7 +215,7 @@ public class ConfigProcessorTest {
         nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
         ((LinkedHashMap) nubeConfig.getAppConfig().get("__http__")).put("port", (float) 3.4e+028);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
-                                                                             nubeConfig.toJson());
+                                                                             nubeConfig.toJson(), true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
@@ -228,7 +231,7 @@ public class ConfigProcessorTest {
             "\"rootApi\": \"/test1\"}]}}";
         nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
-                                                                             nubeConfig.toJson());
+                                                                             nubeConfig.toJson(), true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpsConfig = finalResult.get().getAppConfig().get("__https__");
         Assert.assertNotNull(httpsConfig);
@@ -243,7 +246,7 @@ public class ConfigProcessorTest {
         String jsonInput = "{\"__app__\":{\"__https__\": [\"abc\", \"def\"]}}";
         nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
-                                                                             nubeConfig.toJson());
+                                                                             nubeConfig.toJson(), true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpsConfig = finalResult.get().getAppConfig().get("__https__").toString();
         Assert.assertNotNull(httpsConfig);
@@ -256,7 +259,7 @@ public class ConfigProcessorTest {
         String jsonInput = "{\"__app__\":{\"__https__\": [\"abc\", \"def\"]}}";
         nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
-                                                                             nubeConfig.toJson());
+                                                                             nubeConfig.toJson(), true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpsConfig = finalResult.get().getAppConfig().get("__https__");
         Assert.assertNotNull(httpsConfig);
@@ -271,7 +274,7 @@ public class ConfigProcessorTest {
 
         nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
-                                                                             nubeConfig.toJson());
+                                                                             nubeConfig.toJson(), true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
@@ -284,15 +287,82 @@ public class ConfigProcessorTest {
         System.setProperty("nubeio.app.http.host.name", "[abc.net,def.net]");
         nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
-                                                                             nubeConfig.toJson());
+                                                                             nubeConfig.toJson(), true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
         Assert.assertEquals(httpConfig.toString(), "{host=[abc.com, def.com]}");
     }
 
-    private void overrideConfigThenAssert(Consumer<NubeConfig> configConsumer) {
-        Optional<NubeConfig> result = processor.processAndOverride(NubeConfig.class, nubeConfig.toJson(), null);
+    @Test
+    public void test_override_app_config_only() {
+        System.setProperty("nubeio.app.http.port", "8088");
+        System.setProperty("nubeio.system.cluster.active", "false");
+        System.setProperty("nubeio.deploy.maxWorkerExecuteTime", "70000000000");
+        overrideConfigThenAssert(finalResult -> {
+            try {
+                assertEquals("{\"ha\":false,\"instances\":1,\"maxWorkerExecuteTime\":60000000000," +
+                             "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\",\"multiThreaded\":false," +
+                             "\"worker\":false,\"workerPoolSize\":20}", finalResult.getDeployConfig().toJson().encode(),
+                             JSONCompareMode.STRICT);
+            } catch (JSONException e) {
+                throw new NubeException(e);
+            }
+            Assert.assertTrue(finalResult.getSystemConfig().getClusterConfig().isActive());
+            Object httpConfig = finalResult.getAppConfig().get("__http__");
+            Assert.assertNotNull(httpConfig);
+            Assert.assertEquals(httpConfig.toString(),
+                                "{host=0.0.0.0, port=8088, enabled=true, rootApi=/api, alpnVersions=[" +
+                                "HTTP_2, HTTP_1_1]}");
+        }, true, false);
+    }
+
+    @Test
+    public void test_override_other_configs_only() {
+        System.setProperty("nubeio.app.http.port", "8088");
+        System.setProperty("nubeio.system.cluster.active", "false");
+        System.setProperty("nubeio.deploy.maxWorkerExecuteTime", "70000000000");
+        overrideConfigThenAssert(finalResult -> {
+            try {
+                assertEquals("{\"ha\":false,\"instances\":1,\"maxWorkerExecuteTime\":70000000000," +
+                             "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\",\"multiThreaded\":false," +
+                             "\"worker\":false,\"workerPoolSize\":20}", finalResult.getDeployConfig().toJson().encode(),
+                             JSONCompareMode.STRICT);
+            } catch (JSONException e) {
+                throw new NubeException(e);
+            }
+            Assert.assertFalse(finalResult.getSystemConfig().getClusterConfig().isActive());
+            Object httpConfig = finalResult.getAppConfig().get("__http__");
+            Assert.assertNotNull(httpConfig);
+            Assert.assertEquals(httpConfig.toString(),
+                                "{host=0.0.0.0, port=8086, enabled=true, rootApi=/api, alpnVersions=[" +
+                                "HTTP_2, HTTP_1_1]}");
+        }, false, true);
+    }
+
+    @Test
+    public void test_override_none() {
+        System.setProperty("nubeio.app.http.port", "8088");
+        System.setProperty("nubeio.system.cluster.active", "false");
+        System.setProperty("nubeio.deploy.maxWorkerExecuteTime", "70000000000");
+        String jsonInput = "{\"__system__\":{\"__eventBus__\":{\"clientAuth\":\"REQUIRED\",\"ssl\":true," +
+                           "\"clustered\":true,\"keyStoreOptions\":{\"path\":\"eventBusKeystore.jks\"," +
+                           "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path\":\"eventBusKeystore" +
+                           ".jks\",\"password\":\"nubesparkEventBus\"}},\"__cluster__\":{\"active\":true,\"ha\":true," +
+                           "\"listenerAddress\":\"com.nubeiot.dashboard.connector.edge.cluster\"}}," +
+                           "\"__app__\":{\"__http__\":{\"host\":\"0.0.0.0\",\"port\":8086,\"enabled\":true," +
+                           "\"rootApi\":\"/api\", \"alpnVersions\": [ \"HTTP_2\", \"HTTP_1_1\" ]},\"api" +
+                           ".name\":\"edge-connector\"}}";
+        nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
+        Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
+                                                                             nubeConfig.toJson(), false, false);
+        Assert.assertFalse(finalResult.isPresent());
+    }
+
+    private void overrideConfigThenAssert(Consumer<NubeConfig> configConsumer, boolean overrideAppConfig,
+                                          boolean overrideOtherConfigs) {
+        Optional<NubeConfig> result = processor.processAndOverride(NubeConfig.class, nubeConfig.toJson(), null,
+                                                                   overrideAppConfig, overrideOtherConfigs);
         configConsumer.accept(result.get());
     }
 
@@ -308,6 +378,13 @@ public class ConfigProcessorTest {
         System.clearProperty("nubeio.app.http.rootApi");
         System.clearProperty("nubeio.app.https");
         System.clearProperty("nubeio.dataDir");
+        System.clearProperty("nubeio.deploy.workerPoolSize");
+        System.clearProperty("nubeio.deploy.worker");
+        System.clearProperty("nubeio.deploy.maxWorkerExecuteTime");
+        System.clearProperty("nubeio.system.cluster.active");
+        System.clearProperty("nubeio.system.cluster.type");
+        System.clearProperty("nubeio.system.eventBus.port");
+        System.clearProperty("nubeio.system.eventBus.clustered");
     }
 
 }

@@ -49,7 +49,7 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         Optional<NubeConfig> nubeConfig = new ConfigProcessor(Vertx.vertx()).processAndOverride(NubeConfig.class,
                                                                                                 Configs.loadJsonConfig(
                                                                                                     "system.json"),
-                                                                                                config);
+                                                                                                config, false, true);
         if (nubeConfig.isPresent()) {
             this.config = nubeConfig.get();
         } else {
