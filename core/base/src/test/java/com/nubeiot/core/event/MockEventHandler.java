@@ -145,6 +145,8 @@ public class MockEventHandler implements EventHandler {
             return new MockChild();
         }
 
+        @EventContractor(action = EventAction.UNKNOWN)
+        public JsonObject refParam(@Param("metadata") JsonObject data) { return data; }
     }
 
 

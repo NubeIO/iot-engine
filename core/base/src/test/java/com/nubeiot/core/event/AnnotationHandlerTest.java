@@ -4,9 +4,12 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
+import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.slf4j.LoggerFactory;
 
 import io.reactivex.Single;
@@ -213,6 +216,19 @@ public class AnnotationHandlerTest {
     @Test
     public void test_return_type_extends_annotated_type() {
         AnnotationHandler.getMethodByAnnotation(MockEventWithDiffParam.class, EventAction.MIGRATE);
+    }
+
+    @Test
+    public void test_json_param() throws JSONException {
+        JsonObject data = new JsonObject(
+            "{\"metadata" + "\":{\"service_name\":\"bios-installer\",\"version\":\"1.0.0-SNAPSHOT\"," + "\"state" +
+            "\":\"ENABLED\"}," + "\"appConfig" + "\":{}," + "\"service_id" + "\":\"com.nubeiot" + ".edge" + ".module" +
+            ":installer\"}");
+        Single<JsonObject> response = MPH.get().execute(EventMessage.initial(EventAction.UNKNOWN, data));
+
+        JSONAssert.assertEquals(
+            "{\"service_name\":\"bios-installer\",\"version\":\"1.0.0-SNAPSHOT\"," + "\"state\":\"ENABLED\"}",
+            response.blockingGet().toString(), JSONCompareMode.STRICT);
     }
 
 }
