@@ -220,22 +220,15 @@ public class AnnotationHandlerTest {
 
     @Test
     public void test_json_param() throws JSONException {
-        Single<JsonObject> r = MPH.get()
-                                  .execute(EventMessage.initial(EventAction.UNKNOWN, new JsonObject("{\"metadata" +
-                                                                                                    "\":{\"service_name\":\"bios-installer\",\"version\":\"1.0.0-SNAPSHOT\"," +
-                                                                                                    "\"state" +
-                                                                                                    "\":\"ENABLED\"}," +
-                                                                                                    "\"appConfig" +
-                                                                                                    "\":{}," +
-                                                                                                    "\"service_id" +
-                                                                                                    "\":\"com.nubeiot" +
-                                                                                                    ".edge" +
-                                                                                                    ".module" +
-                                                                                                    ":installer\"}")));
+        JsonObject data = new JsonObject(
+            "{\"metadata" + "\":{\"service_name\":\"bios-installer\",\"version\":\"1.0.0-SNAPSHOT\"," + "\"state" +
+            "\":\"ENABLED\"}," + "\"appConfig" + "\":{}," + "\"service_id" + "\":\"com.nubeiot" + ".edge" + ".module" +
+            ":installer\"}");
+        Single<JsonObject> response = MPH.get().execute(EventMessage.initial(EventAction.UNKNOWN, data));
 
         JSONAssert.assertEquals(
             "{\"service_name\":\"bios-installer\",\"version\":\"1.0.0-SNAPSHOT\"," + "\"state\":\"ENABLED\"}",
-            r.blockingGet().toString(), JSONCompareMode.STRICT);
+            response.blockingGet().toString(), JSONCompareMode.STRICT);
     }
 
 }
