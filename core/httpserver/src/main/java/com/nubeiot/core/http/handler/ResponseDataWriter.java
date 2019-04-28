@@ -12,6 +12,8 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.zandero.rest.writer.HttpResponseWriter;
 
+// FIXME: I dont understand why ApiJsonWriter is not enough???
+@Deprecated
 public class ResponseDataWriter implements HttpResponseWriter<ResponseData> {
 
     public static ResponseData responseData(String message) {

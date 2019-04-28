@@ -150,10 +150,14 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
-    private Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
+    public Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
         return get().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r))
                     .switchIfEmpty(Single.error(
                         new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
+    }
+
+    public Single<Boolean> contains(Function<Record, Boolean> filter, String type) {
+        return get().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r)).count().map(c -> c > 0);
     }
 
     public Single<List<Record>> getRecords() {

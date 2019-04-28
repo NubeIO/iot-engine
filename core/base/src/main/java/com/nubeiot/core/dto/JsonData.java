@@ -16,6 +16,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
@@ -30,6 +31,28 @@ import lombok.NonNull;
 public interface JsonData {
 
     ObjectMapper MAPPER = Json.mapper.copy().registerModule(Deserializer.SIMPLE_MODULE);
+    ObjectMapper LENIENT_MAPPER = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    static <T> T convert(@NonNull JsonObject jsonObject, @NonNull Class<T> clazz) {
+        return convert(jsonObject, clazz, MAPPER);
+    }
+
+    /**
+     * Convert lenient with ignore unknown properties
+     *
+     * @param jsonObject json object
+     * @param clazz      data type class
+     * @param <T>        Expected Data Type
+     * @return Expected instance
+     * @throws IllegalArgumentException If conversion fails due to incompatible type
+     */
+    static <T> T convertLenient(@NonNull JsonObject jsonObject, @NonNull Class<T> clazz) {
+        return convert(jsonObject, clazz, LENIENT_MAPPER);
+    }
+
+    static <T> T convert(@NonNull JsonObject jsonObject, @NonNull Class<T> clazz, @NonNull ObjectMapper mapper) {
+        return mapper.convertValue(jsonObject.getMap(), clazz);
+    }
 
     static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean isError) {
         return DefaultJsonData.tryParse(buffer, isJson, isError);
@@ -88,6 +111,9 @@ public interface JsonData {
         public DefaultJsonData(@NonNull JsonObject json)         { this(json.getMap()); }
 
         static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean isError) {
+            if (buffer.length() == 0) {
+                return new DefaultJsonData(new JsonObject());
+            }
             try {
                 return new DefaultJsonData(buffer.toJsonObject());
             } catch (DecodeException e) {

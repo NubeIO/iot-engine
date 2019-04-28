@@ -51,7 +51,11 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
             HttpClientRequest r = get().request(method, path, responseHandler)
                                        .exceptionHandler(exceptionHandler)
                                        .endHandler(new ClientEndHandler(getHostInfo(), false));
-            logger.info("Make HTTP request {}::{} | <{}> | <{}>", r.method(), r.absoluteURI(), reqData.toJson());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Send HTTP request {}::{} | <{}>", r.method(), r.absoluteURI(), reqData.toJson());
+            } else {
+                logger.info("Send HTTP request {}::{}", r.method(), r.absoluteURI());
+            }
             HttpClientWriter.create(config.getHttpClientWriterClass()).apply(r, reqData).end();
         });
     }

@@ -13,7 +13,6 @@ public class EdgeGatewayVerticle extends ContainerVerticle {
     private MicroContext microContext;
 
     @Override
-    @SuppressWarnings("Duplicates")
     public void start() {
         super.start();
         HttpServerRouter router = new HttpServerRouter().registerApi(DriverRegistrationApi.class);

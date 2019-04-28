@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Verticle;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
@@ -20,9 +19,9 @@ class EdgeGatewayTestBase extends HttpServerTestBase {
     void startEdgeGateway(TestContext context, Verticle httpServer, DeploymentOptions deploymentOptions) {
         CountDownLatch latch = new CountDownLatch(1);
         DeploymentOptions config = new DeploymentOptions().setConfig(overridePort(httpConfig.getPort()));
-        VertxHelper.deploy(Vertx.vertx(), context, config, new EdgeGatewayVerticle(), id -> {
+        VertxHelper.deploy(vertx.getDelegate(), context, config, new EdgeGatewayVerticle(), id -> {
             System.out.println("Gateway Deploy Id: " + id);
-            VertxHelper.deploy(Vertx.vertx(), context, deploymentOptions, httpServer, d -> {
+            VertxHelper.deploy(vertx.getDelegate(), context, deploymentOptions, httpServer, d -> {
                 System.out.println("Http Server Deploy Id: " + d);
                 latch.countDown();
             });

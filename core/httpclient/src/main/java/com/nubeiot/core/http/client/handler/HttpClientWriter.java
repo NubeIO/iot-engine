@@ -3,6 +3,7 @@ package com.nubeiot.core.http.client.handler;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 
@@ -17,6 +18,7 @@ import lombok.NonNull;
  * server.
  * <b>Notice:</b> Never close {@code HTTPClientRequest} in this function
  */
+//TODO Optimize header
 public interface HttpClientWriter extends BiFunction<HttpClientRequest, RequestData, HttpClientRequest> {
 
     HttpClientWriter DEFAULT = new HttpClientWriter() {};
@@ -41,8 +43,9 @@ public interface HttpClientWriter extends BiFunction<HttpClientRequest, RequestD
                    .remove(HttpHeaders.CONTENT_LENGTH);
         }
         if (Objects.nonNull(reqData.body()) && !reqData.body().isEmpty()) {
-            request.putHeader(HttpHeaders.CONTENT_LENGTH, Integer.toString(reqData.body().toBuffer().length()));
-            request.write(reqData.body().toBuffer());
+            final Buffer buffer = reqData.body().toBuffer();
+            request.putHeader(HttpHeaders.CONTENT_LENGTH, Integer.toString(buffer.length()));
+            request.write(buffer);
         }
         return request;
     }
