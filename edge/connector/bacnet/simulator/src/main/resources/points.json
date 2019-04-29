@@ -1,0 +1,131 @@
+{
+  "UI1": {
+    "name": "UI1",
+    "value": 0
+  },
+  "UI2": {
+    "name": "UI2",
+    "value": 0
+  },
+  "DI1": {
+    "name": "DI1",
+    "value": 1
+  },
+  "DI2": {
+    "name": "DI2",
+    "value": 1
+  },
+  "UO1": {
+    "name": "UO1",
+    "value": 9,
+    "priorityArray": {
+      "1": "null",
+      "2": "null",
+      "3": "null",
+      "4": "null",
+      "5": "null",
+      "6": "null",
+      "7": "null",
+      "8": "null",
+      "9": "null",
+      "10": "null",
+      "11": "null",
+      "12": 9,
+      "13": "null",
+      "14": "null",
+      "15": "null",
+      "16": 2
+    }
+  },
+  "UO2": {
+    "name": "UO2",
+    "value": 10,
+    "priorityArray": {
+      "1": "null",
+      "2": "null",
+      "3": "null",
+      "4": "null",
+      "5": "null",
+      "6": "null",
+      "7": "null",
+      "8": "null",
+      "9": "null",
+      "10": "null",
+      "11": "null",
+      "12": 10,
+      "13": "null",
+      "14": "null",
+      "15": "null",
+      "16": 2,
+      "null": 2
+    }
+  },
+  "DO1": {
+    "name": "DO1",
+    "value": 0,
+    "priorityArray": {
+      "1": "null",
+      "2": "null",
+      "3": "null",
+      "4": "null",
+      "5": "null",
+      "6": "null",
+      "7": "null",
+      "8": "null",
+      "9": "null",
+      "10": "null",
+      "11": "null",
+      "12": "null",
+      "13": "null",
+      "14": "null",
+      "15": "null",
+      "16": "null",
+      "null": 0
+    }
+  },
+  "DO2": {
+    "name": "DO2",
+    "value": 0,
+    "priorityArray": {
+      "1": "null",
+      "2": "null",
+      "3": "null",
+      "4": "null",
+      "5": "null",
+      "6": "null",
+      "7": "null",
+      "8": "null",
+      "9": "null",
+      "10": "null",
+      "11": "null",
+      "12": "null",
+      "13": "null",
+      "14": "null",
+      "15": "null",
+      "16": "null",
+      "null": 0
+    }
+  },
+  "R1": {
+    "name": "R1",
+    "value": 1,
+    "priorityArray": {
+      "1": "null",
+      "2": "null",
+      "3": "null",
+      "4": "null",
+      "5": "null",
+      "6": "null",
+      "7": "null",
+      "8": "null",
+      "9": "null",
+      "10": "null",
+      "11": "null",
+      "12": "null",
+      "13": "null",
+      "14": "null",
+      "15": "null",
+      "16": 1
+    }
+  }
+}

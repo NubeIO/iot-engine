@@ -27,6 +27,8 @@ include ':edge:bios'
 include ':edge:module:installer'
 include ':edge:module:gateway'
 include ':edge:connector:sensor'
+include ':edge:connector:bacnet'
+include ':edge:connector:bacnet:simulator'
 include ':edge:connector:sample:kafka'
 include ':edge:rule:sample'
 

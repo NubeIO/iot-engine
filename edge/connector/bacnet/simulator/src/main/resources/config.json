@@ -1,0 +1,23 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "NONE",
+      "ssl": false,
+      "clustered": false
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "__bacnet__": {
+      "deviceName": "NubeIOSimulator",
+      "deviceId": 3145749,
+      "__ipConfigs__": [
+        {
+          "name": "ip1"
+        }
+      ]
+    }
+  }
+}

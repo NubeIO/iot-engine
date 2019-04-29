@@ -1,0 +1,35 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "NONE",
+      "ssl": false,
+      "clustered": false
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "__bacnet__": {
+      "deviceName": "NubeIOMaster",
+      "deviceId": 11111,
+      "__ipConfigs__": [
+        {
+          "name": "ip1",
+          "networkInterface": "br-2e592f75ad7b"
+        }
+      ]
+    }
+  }
+}
+
+
+
+
+
+
+}
+
+
+
+

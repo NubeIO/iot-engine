@@ -28,7 +28,7 @@ public class DynamicHttpServerTest extends DynamicServiceTestBase {
     public void before(TestContext context) throws IOException {
         super.before(context);
         startGatewayAndService(context, new HttpServiceServer(),
-                               new DeploymentOptions().setConfig(overridePort(TestHelper.getRandomPort())));
+                               new DeploymentOptions().setConfig(deployConfig(TestHelper.getRandomPort())));
     }
 
     @After
