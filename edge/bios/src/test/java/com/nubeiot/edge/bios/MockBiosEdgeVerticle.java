@@ -8,7 +8,7 @@ import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.edge.core.ModuleEventHandler;
 import com.nubeiot.edge.core.TransactionEventHandler;
-import com.nubeiot.eventbus.edge.EdgeEventBus;
+import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,11 +37,11 @@ public class MockBiosEdgeVerticle extends EdgeBiosVerticle {
     public void registerEventbus(EventController controller) {
         controller.register(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER,
                             new ModuleEventHandler(this, MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER));
-        controller.register(EdgeEventBus.BIOS_DEPLOYMENT, failed
-                                                          ? new MockFailedModuleLoader(assertmentConsumer)
-                                                          : new MockModuleLoader(assertmentConsumer));
-        controller.register(EdgeEventBus.BIOS_TRANSACTION,
-                            new TransactionEventHandler(this, EdgeEventBus.BIOS_TRANSACTION));
+        controller.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, failed
+                                                                   ? new MockFailedModuleLoader(assertmentConsumer)
+                                                                   : new MockModuleLoader(assertmentConsumer));
+        controller.register(EdgeInstallerEventBus.BIOS_TRANSACTION,
+                            new TransactionEventHandler(this, EdgeInstallerEventBus.BIOS_TRANSACTION));
     }
 
     @Override

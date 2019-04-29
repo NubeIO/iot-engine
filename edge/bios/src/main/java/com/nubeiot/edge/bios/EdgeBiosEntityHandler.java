@@ -99,18 +99,6 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
         return rule.parse(dataDir, tblModule, appConfig).setPublishedBy("NubeIO");
     }
 
-    private NubeConfig computeNubeConfig(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData firstApp,
-                                         ITblModule tblModule) {
-        InstallerConfig installerConfig = new InstallerConfig();
-        installerConfig.setRepoConfig(repoConfig);
-        JsonObject appCfg = new JsonObject().put(installerConfig.name(), installerConfig.toJson());
-        AppConfig installerAppConfig = IConfig.merge(appCfg, firstApp.getAppConfig(), AppConfig.class);
-        NubeConfig nubeConfig = new NubeConfig();
-        nubeConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(tblModule.getServiceId())));
-        nubeConfig.setAppConfig(installerAppConfig);
-        return nubeConfig;
-    }
-
     private void setupServiceRepository(RepositoryConfig repositoryCfg) {
         logger.info("Setting up service local and remote repository");
         RemoteRepositoryConfig remoteConfig = repositoryCfg.getRemoteConfig();

@@ -32,40 +32,39 @@ public class HandlerCreateSuccessfullyTest extends BaseEdgeVerticleTest {
         super.before(context);
     }
 
-    @Override
-    protected EdgeVerticle initMockupVerticle(TestContext context) {
-        return new MockBiosEdgeVerticle(this.getConsumer(context));
-    }
-
     @After
     public void after(TestContext context) {
         super.after(context);
+    }
+
+    @Override
+    protected EdgeVerticle initMockupVerticle(TestContext context) {
+        return new MockBiosEdgeVerticle(this.getConsumer(context));
     }
 
     @Test
     public void test_create_success(TestContext context) {
         JsonObject deployConfig = new JsonObject().put("", "");
         EventMessage eventMessage = EventMessage.success(EventAction.CREATE, RequestData.builder()
-            .body(new JsonObject().put(
-                "artifact_id",
-                ARTIFACT_ID)
-                      .put(
-                          "group_id",
-                          GROUP_ID)
-                      .put(
-                          "version",
-                          VERSION)
-                      .put(
-                          "deploy_config",
-                          deployConfig))
-            .build());
+                                                                                        .body(new JsonObject().put(
+                                                                                            "artifact_id", ARTIFACT_ID)
+                                                                                                              .put(
+                                                                                                                  "group_id",
+                                                                                                                  GROUP_ID)
+                                                                                                              .put(
+                                                                                                                  "version",
+                                                                                                                  VERSION)
+                                                                                                              .put(
+                                                                                                                  "deploy_config",
+                                                                                                                  deployConfig))
+                                                                                        .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            TestHelper.testComplete(async);
+                        }));
 
         async.awaitSuccess();
         //Checking module state and transaction status

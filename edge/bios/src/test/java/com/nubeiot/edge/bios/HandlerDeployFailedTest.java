@@ -46,26 +46,25 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
     public void test_deploy_failed(TestContext context) {
         JsonObject deployConfig = new JsonObject().put("", "");
         EventMessage eventMessage = EventMessage.success(EventAction.CREATE, RequestData.builder()
-            .body(new JsonObject().put(
-                "artifact_id",
-                ARTIFACT_ID)
-                      .put(
-                          "group_id",
-                          GROUP_ID)
-                      .put(
-                          "version",
-                          VERSION)
-                      .put(
-                          "deploy_config",
-                          deployConfig))
-            .build());
+                                                                                        .body(new JsonObject().put(
+                                                                                            "artifact_id", ARTIFACT_ID)
+                                                                                                              .put(
+                                                                                                                  "group_id",
+                                                                                                                  GROUP_ID)
+                                                                                                              .put(
+                                                                                                                  "version",
+                                                                                                                  VERSION)
+                                                                                                              .put(
+                                                                                                                  "deploy_config",
+                                                                                                                  deployConfig))
+                                                                                        .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            TestHelper.testComplete(async);
+                        }));
 
         async.awaitSuccess();
         testingDBUpdated(context, MODULE_ID, State.DISABLED, Status.FAILED);

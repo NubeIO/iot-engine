@@ -37,11 +37,11 @@ public class HandlerUpdateAndPatchSuccessfullyTest extends BaseEdgeVerticleTest 
     public void before(TestContext context) {
         super.before(context);
         this.insertModule(context, new TblModule().setServiceId(MODULE_ID)
-            .setServiceType(ModuleType.JAVA)
-            .setServiceName(SERVICE_NAME)
-            .setState(State.ENABLED)
-            .setVersion(VERSION)
-            .setModifiedAt(DateTimes.nowUTC()));
+                                                  .setServiceType(ModuleType.JAVA)
+                                                  .setServiceName(SERVICE_NAME)
+                                                  .setState(State.ENABLED)
+                                                  .setVersion(VERSION)
+                                                  .setModifiedAt(DateTimes.nowUTC()));
     }
 
     @After
@@ -59,31 +59,30 @@ public class HandlerUpdateAndPatchSuccessfullyTest extends BaseEdgeVerticleTest 
 
         JsonObject deployConfig = new JsonObject().put("", "");
         EventMessage eventMessage = EventMessage.success(EventAction.UPDATE, RequestData.builder()
-            .body(new JsonObject().put(
-                "service_id",
-                MODULE_ID)
-                      .put(
-                          "service_name",
-                          SERVICE_NAME)
-                      .put(
-                          "version",
-                          VERSION)
-                      .put(
-                          "deploy_config",
-                          deployConfig)
-                      .put(
-                          "state",
-                          State.ENABLED))
-            .build());
+                                                                                        .body(new JsonObject().put(
+                                                                                            "service_id", MODULE_ID)
+                                                                                                              .put(
+                                                                                                                  "service_name",
+                                                                                                                  SERVICE_NAME)
+                                                                                                              .put(
+                                                                                                                  "version",
+                                                                                                                  VERSION)
+                                                                                                              .put(
+                                                                                                                  "deploy_config",
+                                                                                                                  deployConfig)
+                                                                                                              .put(
+                                                                                                                  "state",
+                                                                                                                  State.ENABLED))
+                                                                                        .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      JsonObject body = (JsonObject) handle.body();
-                      context.assertEquals(body.getString("status"), Status.SUCCESS.name());
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            JsonObject body = (JsonObject) handle.body();
+                            context.assertEquals(body.getString("status"), Status.SUCCESS.name());
+                            TestHelper.testComplete(async);
+                        }));
 
         //testing the module state and transaction status after update
         testingDBUpdated(context, MODULE_ID, State.ENABLED, Status.SUCCESS);
@@ -93,19 +92,19 @@ public class HandlerUpdateAndPatchSuccessfullyTest extends BaseEdgeVerticleTest 
     public void test_update_module_not_available(TestContext context) {
 
         EventMessage eventMessage = EventMessage.success(EventAction.UPDATE, RequestData.builder()
-            .body(new JsonObject().put(
-                "service_id", "abc123"))
-            .build());
+                                                                                        .body(new JsonObject().put(
+                                                                                            "service_id", "abc123"))
+                                                                                        .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      JsonObject body = (JsonObject) handle.body();
-                      System.out.println(body);
-                      context.assertEquals(body.getString("status"), Status.FAILED.name());
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            JsonObject body = (JsonObject) handle.body();
+                            System.out.println(body);
+                            context.assertEquals(body.getString("status"), Status.FAILED.name());
+                            TestHelper.testComplete(async);
+                        }));
     }
 
     @Test
@@ -113,28 +112,27 @@ public class HandlerUpdateAndPatchSuccessfullyTest extends BaseEdgeVerticleTest 
 
         JsonObject deployConfig = new JsonObject().put("", "");
         EventMessage eventMessage = EventMessage.success(EventAction.UPDATE, RequestData.builder()
-            .body(new JsonObject().put(
-                "service_id",
-                MODULE_ID)
-                      .put(
-                          "service_name",
-                          SERVICE_NAME)
-                      .put(
-                          "deploy_config",
-                          deployConfig)
-                      .put(
-                          "state",
-                          State.DISABLED))
-            .build());
+                                                                                        .body(new JsonObject().put(
+                                                                                            "service_id", MODULE_ID)
+                                                                                                              .put(
+                                                                                                                  "service_name",
+                                                                                                                  SERVICE_NAME)
+                                                                                                              .put(
+                                                                                                                  "deploy_config",
+                                                                                                                  deployConfig)
+                                                                                                              .put(
+                                                                                                                  "state",
+                                                                                                                  State.DISABLED))
+                                                                                        .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      JsonObject body = (JsonObject) handle.body();
-                      context.assertEquals(body.getString("status"), Status.FAILED.name());
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            JsonObject body = (JsonObject) handle.body();
+                            context.assertEquals(body.getString("status"), Status.FAILED.name());
+                            TestHelper.testComplete(async);
+                        }));
     }
 
     @Test
@@ -142,28 +140,27 @@ public class HandlerUpdateAndPatchSuccessfullyTest extends BaseEdgeVerticleTest 
 
         JsonObject deployConfig = new JsonObject().put("", "");
         EventMessage eventMessage = EventMessage.success(EventAction.UPDATE, RequestData.builder()
-            .body(new JsonObject().put(
-                "service_id",
-                MODULE_ID)
-                      .put(
-                          "service_name",
-                          SERVICE_NAME)
-                      .put(
-                          "version",
-                          VERSION)
-                      .put(
-                          "deploy_config",
-                          deployConfig))
-            .build());
+                                                                                        .body(new JsonObject().put(
+                                                                                            "service_id", MODULE_ID)
+                                                                                                              .put(
+                                                                                                                  "service_name",
+                                                                                                                  SERVICE_NAME)
+                                                                                                              .put(
+                                                                                                                  "version",
+                                                                                                                  VERSION)
+                                                                                                              .put(
+                                                                                                                  "deploy_config",
+                                                                                                                  deployConfig))
+                                                                                        .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      JsonObject body = (JsonObject) handle.body();
-                      context.assertEquals(body.getString("status"), Status.FAILED.name());
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            JsonObject body = (JsonObject) handle.body();
+                            context.assertEquals(body.getString("status"), Status.FAILED.name());
+                            TestHelper.testComplete(async);
+                        }));
     }
 
     @Test
@@ -171,52 +168,50 @@ public class HandlerUpdateAndPatchSuccessfullyTest extends BaseEdgeVerticleTest 
 
         JsonObject deployConfig = new JsonObject().put("", "");
         EventMessage eventMessage = EventMessage.success(EventAction.UPDATE, RequestData.builder()
-            .body(new JsonObject().put(
-                "service_id",
-                MODULE_ID)
-                      .put(
-                          "service_name",
-                          SERVICE_NAME)
-                      .put(
-                          "version",
-                          VERSION)
-                      .put(
-                          "state",
-                          State.ENABLED))
-            .build());
+                                                                                        .body(new JsonObject().put(
+                                                                                            "service_id", MODULE_ID)
+                                                                                                              .put(
+                                                                                                                  "service_name",
+                                                                                                                  SERVICE_NAME)
+                                                                                                              .put(
+                                                                                                                  "version",
+                                                                                                                  VERSION)
+                                                                                                              .put(
+                                                                                                                  "state",
+                                                                                                                  State.ENABLED))
+                                                                                        .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      JsonObject body = (JsonObject) handle.body();
-                      context.assertEquals(body.getString("status"), Status.FAILED.name());
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            JsonObject body = (JsonObject) handle.body();
+                            context.assertEquals(body.getString("status"), Status.FAILED.name());
+                            TestHelper.testComplete(async);
+                        }));
     }
 
     @Test
     public void test_patch_success(TestContext context) {
         EventMessage eventMessage = EventMessage.success(EventAction.PATCH, RequestData.builder()
-            .body(new JsonObject().put(
-                "service_id",
-                MODULE_ID)
-                      .put(
-                          "service_name",
-                          SERVICE_NAME)
-                      .put(
-                          "state",
-                          State.DISABLED))
-            .build());
+                                                                                       .body(new JsonObject().put(
+                                                                                           "service_id", MODULE_ID)
+                                                                                                             .put(
+                                                                                                                 "service_name",
+                                                                                                                 SERVICE_NAME)
+                                                                                                             .put(
+                                                                                                                 "state",
+                                                                                                                 State.DISABLED))
+                                                                                       .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      JsonObject body = (JsonObject) handle.body();
-                      context.assertEquals(body.getString("status"), Status.SUCCESS.name());
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            JsonObject body = (JsonObject) handle.body();
+                            context.assertEquals(body.getString("status"), Status.SUCCESS.name());
+                            TestHelper.testComplete(async);
+                        }));
 
         //testing the module state and transaction status after update
         testingDBUpdated(context, MODULE_ID, State.DISABLED, Status.SUCCESS);
@@ -226,68 +221,66 @@ public class HandlerUpdateAndPatchSuccessfullyTest extends BaseEdgeVerticleTest 
     public void test_patch_module_not_available(TestContext context) {
 
         EventMessage eventMessage = EventMessage.success(EventAction.PATCH, RequestData.builder()
-            .body(new JsonObject().put(
-                "service_id", "abc123"))
-            .build());
+                                                                                       .body(new JsonObject().put(
+                                                                                           "service_id", "abc123"))
+                                                                                       .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      JsonObject body = (JsonObject) handle.body();
-                      context.assertEquals(body.getString("status"), Status.FAILED.name());
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            JsonObject body = (JsonObject) handle.body();
+                            context.assertEquals(body.getString("status"), Status.FAILED.name());
+                            TestHelper.testComplete(async);
+                        }));
     }
 
     @Test
     public void test_delete_successfully(TestContext context) {
 
         EventMessage eventMessage = EventMessage.success(EventAction.REMOVE, RequestData.builder()
-            .body(new JsonObject().put(
-                "service_id", MODULE_ID))
-            .build());
+                                                                                        .body(new JsonObject().put(
+                                                                                            "service_id", MODULE_ID))
+                                                                                        .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      JsonObject body = (JsonObject) handle.body();
-                      context.assertEquals(body.getString("status"), Status.SUCCESS.name());
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            JsonObject body = (JsonObject) handle.body();
+                            context.assertEquals(body.getString("status"), Status.SUCCESS.name());
+                            TestHelper.testComplete(async);
+                        }));
         Async async2 = context.async(2);
         //Event module is deployed/updated successfully, we still have a gap for DB update.
         long timer = this.vertx.setPeriodic(1000, event -> {
-            edgeVerticle.getEntityHandler()
-                .getModuleDao()
-                .findOneById(GROUP_ID)
-                .subscribe(result -> {
-                    TblModule tblModule = result.orElse(null);
+            edgeVerticle.getEntityHandler().getModuleDao().findOneById(GROUP_ID).subscribe(result -> {
+                TblModule tblModule = result.orElse(null);
 
-                    if (Objects.nonNull(tblModule) && tblModule.getState() != State.PENDING) {
-                        return;
-                    }
-                    context.assertNull(tblModule);
-                    TestHelper.testComplete(async2);
-                }, error -> {
-                    context.fail(error);
-                    TestHelper.testComplete(async2);
-                });
+                if (Objects.nonNull(tblModule) && tblModule.getState() != State.PENDING) {
+                    return;
+                }
+                context.assertNull(tblModule);
+                TestHelper.testComplete(async2);
+            }, error -> {
+                context.fail(error);
+                TestHelper.testComplete(async2);
+            });
             edgeVerticle.getEntityHandler()
-                .getTransDao()
-                .findManyByModuleId(Collections.singletonList(MODULE_ID))
-                .subscribe(result -> {
-                    if (Objects.nonNull(result) && !result.isEmpty() && result.get(0).getStatus() == Status.WIP) {
-                        //do nothing
-                    } else {
-                        context.assertTrue(result.isEmpty());
-                        TestHelper.testComplete(async2);
-                    }
-                }, error -> {
-                    context.fail(error);
-                    TestHelper.testComplete(async2);
-                });
+                        .getTransDao()
+                        .findManyByModuleId(Collections.singletonList(MODULE_ID))
+                        .subscribe(result -> {
+                            if (Objects.nonNull(result) && !result.isEmpty() &&
+                                result.get(0).getStatus() == Status.WIP) {
+                                //do nothing
+                            } else {
+                                context.assertTrue(result.isEmpty());
+                                TestHelper.testComplete(async2);
+                            }
+                        }, error -> {
+                            context.fail(error);
+                            TestHelper.testComplete(async2);
+                        });
         });
 
         this.vertx.setTimer(20000, event -> {
@@ -302,18 +295,18 @@ public class HandlerUpdateAndPatchSuccessfullyTest extends BaseEdgeVerticleTest 
     public void test_delete_invalid_module(TestContext context) {
 
         EventMessage eventMessage = EventMessage.success(EventAction.REMOVE, RequestData.builder()
-            .body(new JsonObject().put(
-                "service_id", "abc"))
-            .build());
+                                                                                        .body(new JsonObject().put(
+                                                                                            "service_id", "abc"))
+                                                                                        .build());
         Async async = context.async();
         this.vertx.getDelegate()
-            .eventBus()
-            .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                  context.asyncAssertSuccess(handle -> {
-                      JsonObject body = (JsonObject) handle.body();
-                      context.assertEquals(body.getString("status"), Status.FAILED.name());
-                      TestHelper.testComplete(async);
-                  }));
+                  .eventBus()
+                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
+                        context.asyncAssertSuccess(handle -> {
+                            JsonObject body = (JsonObject) handle.body();
+                            context.assertEquals(body.getString("status"), Status.FAILED.name());
+                            TestHelper.testComplete(async);
+                        }));
     }
 
 }

@@ -47,7 +47,8 @@ public final class ModuleTypeRule implements Shareable {
     }
 
     private NubeConfig computeNubeConfig(@NonNull Path parentDataDir, AppConfig appConfig, String serviceId) {
-        return NubeConfig.blank(FileUtils.recomputeDataDir(parentDataDir, serviceId), appConfig.toJson());
+        return NubeConfig.blank(FileUtils.recomputeDataDir(parentDataDir, FileUtils.normalize(serviceId)),
+                                appConfig.toJson());
     }
 
     public ModuleTypeRule registerRule(ModuleType moduleType, List<String> searchPattern) {

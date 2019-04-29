@@ -26,7 +26,7 @@ import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
-import com.nubeiot.eventbus.edge.EdgeEventBus;
+import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -125,7 +125,7 @@ public abstract class BaseEdgeVerticleTest {
 
             this.vertx.getDelegate()
                 .eventBus()
-                .send(EdgeEventBus.BIOS_TRANSACTION.getAddress(), transactionMessage.toJson(), result -> {
+                .send(EdgeInstallerEventBus.BIOS_TRANSACTION.getAddress(), transactionMessage.toJson(), result -> {
                     System.out.println("Asserting transaction");
                     JsonObject body = (JsonObject) result.result().body();
                     context.assertEquals(body.getString("status"), Status.SUCCESS.name());
