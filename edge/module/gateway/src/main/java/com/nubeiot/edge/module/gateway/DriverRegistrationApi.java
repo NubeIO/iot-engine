@@ -1,5 +1,6 @@
 package com.nubeiot.edge.module.gateway;
 
+import java.util.function.Function;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -58,17 +59,17 @@ public class DriverRegistrationApi implements RestApi {
         Networks.validPort(location.getPort());
         Future<JsonObject> future = Future.future();
         if (Strings.isBlank(body.getString("name"))) {
-            future.fail(new NubeException(ErrorCode.INVALID_ARGUMENT, "name should not be blank"));
-            return future;
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "name should not be blank");
+        }
+        if (Strings.isBlank(location.getRoot().replaceAll("/$", ""))) {
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "root should not be blank");
         }
         if (!Urls.validateHost(location.getHost())) {
-            future.fail(new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid host"));
-            return future;
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid host");
         }
         microContextProvider.getMicroContext()
                             .getLocalController()
-                            .contains(r -> location.getHost().equals(r.getLocation().getString("host")) &&
-                                           location.getPort() == r.getLocation().getInteger("port"), HttpEndpoint.TYPE)
+                            .contains(defaultHttpEndpointFilter(location, serviceName), HttpEndpoint.TYPE)
                             .flatMap(existed -> {
                                 if (existed) {
                                     throw new AlreadyExistException("Service is already registered");
@@ -78,6 +79,12 @@ public class DriverRegistrationApi implements RestApi {
                             .map(Record::toJson)
                             .subscribe(future::complete, future::fail);
         return future;
+    }
+
+    private Function<Record, Boolean> defaultHttpEndpointFilter(HttpLocation location, String serviceName) {
+        return r -> location.getHost().equals(r.getLocation().getString("host")) &&
+                    location.getPort() == r.getLocation().getInteger("port") &&
+                    location.getRoot().equals(r.getLocation().getString("root")) && r.getName().equals(serviceName);
     }
 
     private Single<Record> createRecord(RestMicroContextProvider microContextProvider, String serviceName,
