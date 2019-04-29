@@ -61,9 +61,6 @@ public class DriverRegistrationApi implements RestApi {
         if (Strings.isBlank(body.getString("name"))) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "name should not be blank");
         }
-        if (Strings.isBlank(location.getRoot().replaceAll("/$", ""))) {
-            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "root should not be blank");
-        }
         if (!Urls.validateHost(location.getHost())) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid host");
         }
