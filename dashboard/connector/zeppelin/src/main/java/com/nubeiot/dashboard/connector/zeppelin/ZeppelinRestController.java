@@ -1,6 +1,6 @@
 package com.nubeiot.dashboard.connector.zeppelin;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
+import static com.nubeiot.core.http.handler.ResponseDataWriter.serializeResponseData;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +59,7 @@ public class ZeppelinRestController implements RestApi {
             if (res.statusCode() < 500) {
                 cookieHandler(res, body, responseData);
             } else {
-                responseData(responseData, body.toString());
+                serializeResponseData(responseData, body.toString());
             }
             responseData.setStatus(res.statusCode());
             future.complete(responseData);
@@ -110,7 +110,7 @@ public class ZeppelinRestController implements RestApi {
         }
 
         responseData.setHeaders(headers);
-        responseData(responseData, body.toString());
+        serializeResponseData(responseData, body.toString());
     }
 
 }

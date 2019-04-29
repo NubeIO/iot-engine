@@ -1,7 +1,5 @@
 package com.nubeiot.dashboard.helpers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
-
 import java.util.UUID;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -11,6 +9,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.dashboard.Role;
@@ -30,7 +29,7 @@ public class DynamicCollectionHelper {
                     if (response == null) {
                         future.complete(new ResponseData());
                     } else {
-                        future.complete(responseData(response.toString()));
+                        future.complete(ResponseDataWriter.serializeResponseData(response.toString()));
                     }
                 }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
         } else {
@@ -52,7 +51,7 @@ public class DynamicCollectionHelper {
                 if (response == null) {
                     future.complete(new ResponseData());
                 } else {
-                    future.complete(responseData(response.encode()));
+                    future.complete(ResponseDataWriter.serializeResponseData(response.encode()));
                 }
             }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
         } else {
@@ -116,7 +115,8 @@ public class DynamicCollectionHelper {
         mongoClient.rxFind(collection, new JsonObject().put("site_id", siteId).put("id", id)).map(response -> {
             JsonObject body = ctx.getBodyAsJson();
             if (response.size() > 0) {
-                future.complete(responseData("We have already that id value.").setStatus(HttpResponseStatus.CONFLICT));
+                future.complete(ResponseDataWriter.serializeResponseData("We have already that id value.")
+                                                  .setStatus(HttpResponseStatus.CONFLICT));
             }
             body.put("site_id", siteId);
             body.put("id", id);

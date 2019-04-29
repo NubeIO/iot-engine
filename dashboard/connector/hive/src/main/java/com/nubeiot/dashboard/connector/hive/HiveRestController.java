@@ -1,7 +1,5 @@
 package com.nubeiot.dashboard.connector.hive;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
-
 import java.util.Collections;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -23,6 +21,7 @@ import io.vertx.reactivex.ext.sql.SQLConnection;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 
@@ -64,12 +63,11 @@ public class HiveRestController implements RestApi {
             future.complete(new ResponseData().setStatus(HttpResponseStatus.UNAUTHORIZED));
         } else {
             final String finalQuery = query;
-            executeQuery(vertx, hiveConfig, query)
-                .subscribe(
-                    result -> future.complete(responseData(messageWrapper(finalQuery, successMessage(result)).encode())
-                                                  .setStatus(HttpResponseStatus.OK)),
-                    error -> future.complete(responseData(messageWrapper(finalQuery, failureMessage(error)).encode())
-                                                 .setStatus(HttpResponseStatus.BAD_REQUEST)));
+            executeQuery(vertx, hiveConfig, query).subscribe(result -> future.complete(
+                ResponseDataWriter.serializeResponseData(messageWrapper(finalQuery, successMessage(result)).encode())
+                                  .setStatus(HttpResponseStatus.OK)), error -> future.complete(
+                ResponseDataWriter.serializeResponseData(messageWrapper(finalQuery, failureMessage(error)).encode())
+                                  .setStatus(HttpResponseStatus.BAD_REQUEST)));
         }
         return future;
     }

@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -40,6 +39,7 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.converter.RequestDataConverter;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
@@ -405,7 +405,7 @@ public class MultiTenantSiteController implements RestApi {
                 .fromIterable(sites)
                 .flatMapSingle(site -> associatedCompanyRepresentation(mongoClient, site))
                 .toList())
-            .subscribe(sites -> future.complete(responseData(sites.toString())),
+            .subscribe(sites -> future.complete(ResponseDataWriter.serializeResponseData(sites.toString())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
 
         return future;

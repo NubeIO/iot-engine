@@ -1,7 +1,5 @@
 package com.nubeiot.dashboard.connector.postgresql;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +25,7 @@ import io.vertx.reactivex.ext.sql.SQLConnection;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 import com.nubeiot.core.utils.Strings;
@@ -73,12 +72,11 @@ public class PostgreSqlRestController implements RestApi {
                 Strings.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
             final String finalQuery = query;
             executeQuery(vertx, settings, pgConfig, query)
-                .subscribe(
-                    result -> future
-                        .complete(responseData(messageWrapper(finalQuery, successMessage(result)).encode())),
-                    throwable -> future.complete(
-                        responseData(messageWrapper(finalQuery, failureMessage(throwable)).encode())
-                            .setStatus(HttpResponseStatus.BAD_REQUEST.code())));
+                .subscribe(result -> future.complete(ResponseDataWriter.serializeResponseData(
+                    messageWrapper(finalQuery, successMessage(result)).encode())), throwable -> future.complete(
+                    ResponseDataWriter.serializeResponseData(
+                        messageWrapper(finalQuery, failureMessage(throwable)).encode())
+                                      .setStatus(HttpResponseStatus.BAD_REQUEST.code())));
         }
         return future;
     }

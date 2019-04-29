@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -46,6 +45,7 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.converter.RequestDataConverter;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestConfigProvider;
@@ -164,9 +164,10 @@ public class MultiTenantUserController implements RestApi {
             }).collect(Collectors.toList()).size();
             logger.info("Size of user match: " + usersSize);
             if (usersSize > 0) {
-                future.complete(responseData(new JsonObject().put("exist", true).encode()));
+                future.complete(ResponseDataWriter.serializeResponseData(new JsonObject().put("exist", true).encode()));
             } else {
-                future.complete(responseData(new JsonObject().put("exist", false).encode()));
+                future.complete(
+                    ResponseDataWriter.serializeResponseData(new JsonObject().put("exist", false).encode()));
             }
         }, throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;

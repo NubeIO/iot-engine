@@ -1,7 +1,5 @@
 package com.nubeiot.dashboard.connector.ditto;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
-
 import java.util.Base64;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -104,7 +102,7 @@ public class ServerDittoRestController implements RestApi {
             logger.info("Proxying Response StatusCode: {}", res.statusCode());
             res.bodyHandler(data -> {
                 logger.info("Proxy Response Completed.");
-                future.complete(responseData(data.toString()).setStatus(res.statusCode()));
+                future.complete(ResponseDataWriter.serializeResponseData(data.toString()).setStatus(res.statusCode()));
             });
         }).exceptionHandler(e -> future.complete(ResponseDataConverter.convert(e)));
 

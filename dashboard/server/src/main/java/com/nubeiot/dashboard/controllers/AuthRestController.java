@@ -1,6 +1,6 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
+import static com.nubeiot.core.http.handler.ResponseDataWriter.serializeResponseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -37,6 +37,7 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestConfigProvider;
@@ -207,7 +208,7 @@ public class AuthRestController implements RestApi {
             }
         }).subscribe(groupAndSiteAndCompany -> {
             // Use case of header username: ditto NGINX
-            ResponseData responseData = responseData(
+            ResponseData responseData = ResponseDataWriter.serializeResponseData(
                 user.principal().mergeIn(groupAndSiteAndCompany).encode()).setHeaders(
                 new JsonObject().put("username", user.principal().getString("username")));
 
@@ -260,7 +261,7 @@ public class AuthRestController implements RestApi {
             response.bodyHandler(body$ -> {
                 responseData.setStatus(response.statusCode());
                 if (response.statusCode() == 200) {
-                    responseData(responseData, body$.toString());
+                    serializeResponseData(responseData, body$.toString());
                 }
                 future.complete(responseData);
             });
@@ -284,7 +285,8 @@ public class AuthRestController implements RestApi {
         String password = body.getString("password");
 
         loginAuth.rxAuthenticate(new JsonObject().put("username", username).put("password", password))
-            .subscribe(token -> future.complete(responseData(token.principal().encode())),
+                 .subscribe(
+                     token -> future.complete(ResponseDataWriter.serializeResponseData(token.principal().encode())),
                        error -> future.complete(ResponseDataHelper.unauthorized()));
         return future;
     }
