@@ -3,6 +3,7 @@ package com.nubeiot.edge.module.gateway;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -18,18 +19,25 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.edge.module.gateway.mock.ExternalHttpServer;
 
 import lombok.NonNull;
 
 @RunWith(VertxUnitRunner.class)
-public class DriverRegistrationTest extends EdgeGatewayTestBase {
+public class DriverRegistrationTest extends DynamicServiceTestBase {
 
     private int httpServicePort;
     private String registration;
+
+    @SuppressWarnings("unchecked")
+    protected <T extends ContainerVerticle> Supplier<T> gateway() {
+        return () -> (T) new EdgeGatewayVerticle();
+    }
 
     @BeforeClass
     public static void beforeSuite() {
@@ -40,8 +48,8 @@ public class DriverRegistrationTest extends EdgeGatewayTestBase {
     public void before(TestContext context) throws IOException {
         super.before(context);
         httpServicePort = TestHelper.getRandomPort();
-        startEdgeGateway(context, new ExternalHttpServer(),
-                         new DeploymentOptions().setConfig(overridePort(httpServicePort)));
+        startGatewayAndService(context, new ExternalHttpServer(),
+                               new DeploymentOptions().setConfig(deployConfig(httpServicePort)));
         create(context, "xyz", httpServicePort, successAsserter(context, "xyz", id -> registration = id));
     }
 
