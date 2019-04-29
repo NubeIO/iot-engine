@@ -2,6 +2,7 @@ package com.nubeiot.core;
 
 import java.net.InetSocketAddress;
 import java.util.Objects;
+import java.util.Optional;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -45,7 +46,15 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     public void afterConfigParsed(JsonObject config) {
         logger.info("Parsing and merging configuration...");
         logger.debug("CONFIG::INPUT: {}", config.encode());
-        this.config = IConfig.merge(Configs.loadJsonConfig("system.json"), config, NubeConfig.class);
+        Optional<NubeConfig> nubeConfig = new ConfigProcessor(Vertx.vertx()).processAndOverride(NubeConfig.class,
+                                                                                                Configs.loadJsonConfig(
+                                                                                                    "system.json"),
+                                                                                                config, false, true);
+        if (nubeConfig.isPresent()) {
+            this.config = nubeConfig.get();
+        } else {
+            this.config = IConfig.merge(Configs.loadJsonConfig("system.json"), config, NubeConfig.class);
+        }
         JsonObject cfg = this.config.toJson();
         logger.debug("CONFIG::FINAL: {}", cfg.encode());
         super.afterConfigParsed(cfg);
