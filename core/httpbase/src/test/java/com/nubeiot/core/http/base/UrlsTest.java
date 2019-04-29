@@ -72,6 +72,11 @@ public class UrlsTest {
     }
 
     @Test
+    public void test_validUrl_Host() {
+        assertTrue(Urls.validateHost("localhost"));
+    }
+
+    @Test
     public void test_validUrl_LocalWithoutPort() {
         assertTrue(Urls.validateURL("https://localhost"));
     }

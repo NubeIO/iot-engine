@@ -59,6 +59,11 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     }
 
     @Test
+    public void test_registerDriver_serviceName_invalid(TestContext context) {
+        create(context, null, 1234, resp -> context.assertEquals(HttpResponseStatus.BAD_REQUEST, resp.getStatus()));
+    }
+
+    @Test
     public void test_registerDriver_port_invalid(TestContext context) {
         create(context, "abc", -10, resp -> {
             context.assertEquals(HttpResponseStatus.BAD_REQUEST, resp.getStatus());
@@ -113,13 +118,13 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
 
     @Test
     public void test_register_alreadyExist(TestContext context) {
+        JsonObject body = new HttpLocation().setHost(DEFAULT_HOST).setPort(httpServicePort).toJson().put("name", "xyz");
         restRequest(context, HttpMethod.POST, "/api/drivers/registration",
-                    RequestData.builder().body(new JsonObject().put("port", httpServicePort)).build()).subscribe(
-            resp -> {
-                context.assertEquals(409, resp.getStatus().code());
-                context.assertEquals(ErrorCode.ALREADY_EXIST.name(), resp.body().getString("code"));
-                this.registration = resp.body().getString("registration");
-            });
+                    RequestData.builder().body(body).build()).subscribe(resp -> {
+            context.assertEquals(409, resp.getStatus().code());
+            context.assertEquals(ErrorCode.ALREADY_EXIST.name(), resp.body().getString("code"));
+            this.registration = resp.body().getString("registration");
+        });
     }
 
 }

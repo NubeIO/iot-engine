@@ -101,6 +101,17 @@ public final class Urls {
      * @return {@code True} if given input is valid URL syntax, otherwise {@code False}
      * @see #URL_PATTERN
      */
+    public static boolean validateHost(String url) {
+        return validate(url, AUTHORITY_PATTERN);
+    }
+
+    /**
+     * Validate URL.
+     *
+     * @param url String to serialize
+     * @return {@code True} if given input is valid URL syntax, otherwise {@code False}
+     * @see #URL_PATTERN
+     */
     public static boolean validateURL(String url) {
         return validate(url, URL_PATTERN);
     }

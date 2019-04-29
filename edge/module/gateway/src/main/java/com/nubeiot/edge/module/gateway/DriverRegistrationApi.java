@@ -20,10 +20,14 @@ import io.vertx.servicediscovery.types.HttpLocation;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.AlreadyExistException;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
 import com.nubeiot.core.utils.Networks;
+import com.nubeiot.core.utils.Strings;
 
 public class DriverRegistrationApi implements RestApi {
 
@@ -53,9 +57,18 @@ public class DriverRegistrationApi implements RestApi {
         JsonObject metadata = body.getJsonObject("metadata");
         Networks.validPort(location.getPort());
         Future<JsonObject> future = Future.future();
+        if (Strings.isBlank(body.getString("name"))) {
+            future.fail(new NubeException(ErrorCode.INVALID_ARGUMENT, "name should not be blank"));
+            return future;
+        }
+        if (!Urls.validateHost(location.getHost())) {
+            future.fail(new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid host"));
+            return future;
+        }
         microContextProvider.getMicroContext()
                             .getLocalController()
-                            .contains(r -> location.getPort() == r.getLocation().getInteger("port"), HttpEndpoint.TYPE)
+                            .contains(r -> location.getHost().equals(r.getLocation().getString("host")) &&
+                                           location.getPort() == r.getLocation().getInteger("port"), HttpEndpoint.TYPE)
                             .flatMap(existed -> {
                                 if (existed) {
                                     throw new AlreadyExistException("Service is already registered");
