@@ -1,6 +1,7 @@
 package com.nubeiot.edge.core;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.UUID;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.TableField;
+import org.jooq.impl.DSL;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -48,6 +50,7 @@ import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblRemoveHistory;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
+import com.nubeiot.edge.core.model.tables.records.TblTransactionRecord;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -116,7 +119,59 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     public Single<List<TblModule>> getModulesWhenBootstrap() {
-        return moduleDao.findManyByState(Collections.singletonList(State.ENABLED));
+        Single<List<TblModule>> enabledModules = moduleDao.findManyByState(Collections.singletonList(State.ENABLED));
+        enabledModules.flatMap(enabledModules1 -> {
+            System.out.println(enabledModules1.size());
+            return enabledModules;
+        });
+        Single<List<TblModule>> pendingModules = getPendingModules();
+        return Single.zip(enabledModules, pendingModules, (flattenEnabledModules, flattenPendingModules) -> {
+            if (Objects.nonNull(flattenEnabledModules)) {
+                flattenEnabledModules.addAll(flattenPendingModules);
+                return flattenEnabledModules;
+            }
+            return flattenPendingModules;
+        });
+    }
+
+    private Single<List<TblModule>> getPendingModules() {
+
+        return moduleDao.findManyByState(Collections.singletonList(State.PENDING))
+                        .flattenAsObservable(pendingModules -> pendingModules)
+                        .flatMapSingle(module -> {
+                            return transDao.queryExecutor().executeAny(dslContext -> {
+                                List<TblTransactionRecord> tblTransactionRecords = dslContext.select()
+                                                                                             .from(
+                                                                                                 Tables.TBL_TRANSACTION)
+                                                                                             .where(DSL.field(
+                                                                                                 Tables.TBL_TRANSACTION.MODULE_ID)
+                                                                                                       .eq(module.getServiceId()))
+                                                                                             .and(DSL.field(
+                                                                                                 Tables.TBL_TRANSACTION.STATUS)
+                                                                                                     .eq(Status.WIP))
+                                                                                             .orderBy(
+                                                                                                 Tables.TBL_TRANSACTION.MODIFIED_AT)
+                                                                                             .limit(1)
+                                                                                             .fetchInto(
+                                                                                                 TblTransactionRecord.class);
+                                if (tblTransactionRecords.isEmpty()) {
+                                    return null;
+                                }
+                                final TblTransactionRecord transaction = tblTransactionRecords.get(0);
+                                if (transaction.getEvent() == EventAction.CREATE ||
+                                    transaction.getEvent() == EventAction.INIT ||
+                                    ((transaction.getEvent() == EventAction.UPDATE ||
+                                      transaction.getEvent() == EventAction.PATCH) &&
+                                     new TblModule(transaction.getPrevState()).getState() != State.DISABLED)) {
+                                    return module;
+                                } else {
+                                    module.setState(State.DISABLED);
+                                    moduleDao.update(module);
+                                }
+                                return null;
+                            });
+                        })
+                        .collect(ArrayList::new, List::add);
     }
 
     public Single<Boolean> isFreshInstall() {
