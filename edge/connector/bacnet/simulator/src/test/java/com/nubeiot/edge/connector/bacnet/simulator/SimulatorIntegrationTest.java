@@ -31,7 +31,7 @@ import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 
 //TODO temporary ignore
-//@Ignore
+@Ignore
 @RunWith(VertxUnitRunner.class)
 public class SimulatorIntegrationTest {
 
