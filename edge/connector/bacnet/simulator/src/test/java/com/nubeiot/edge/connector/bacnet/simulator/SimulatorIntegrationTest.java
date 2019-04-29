@@ -26,12 +26,12 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
-import com.nubeiot.edge.connector.bacnet.Util.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 
 //TODO temporary ignore
-@Ignore
+//@Ignore
 @RunWith(VertxUnitRunner.class)
 public class SimulatorIntegrationTest {
 
@@ -199,6 +199,8 @@ public class SimulatorIntegrationTest {
             });
     }
 
+    //TODO: go over subscribing when finshed implementing
+    @Ignore
     @Test
     public void subscribeSuccessTest(TestContext context) throws Exception {
         Async async = context.async();

@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.Util;
+package com.nubeiot.edge.connector.bacnet.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

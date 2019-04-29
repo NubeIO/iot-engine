@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.Util;
+package com.nubeiot.edge.connector.bacnet.utils;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

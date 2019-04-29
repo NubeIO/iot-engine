@@ -9,7 +9,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.edge.connector.bacnet.Util.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
 import com.serotonin.bacnet4j.service.Service;
 import com.serotonin.bacnet4j.service.confirmed.CreateObjectRequest;

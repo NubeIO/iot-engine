@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.Util;
+package com.nubeiot.edge.connector.bacnet.utils;
 
 import java.util.List;
 import java.util.Map;
