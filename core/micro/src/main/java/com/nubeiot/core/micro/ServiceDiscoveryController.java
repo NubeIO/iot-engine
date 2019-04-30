@@ -9,6 +9,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -67,6 +69,14 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         logger.debug("{} Service Discovery | {} | {}", kind, BackendConfig.DEFAULT_SERVICE_DISCOVERY_BACKEND,
                      System.getProperty(BackendConfig.DEFAULT_SERVICE_DISCOVERY_BACKEND));
         return ServiceDiscovery.create(vertx, config);
+    }
+
+    public static Function<Record, Boolean> defaultHttpEndpointFilter(String serviceName,
+                                                                      @NonNull HttpLocation location) {
+        return r -> r.getType().equals(HttpEndpoint.TYPE) &&
+                    location.getHost().equals(r.getLocation().getString("host")) &&
+                    location.getPort() == r.getLocation().getInteger("port") &&
+                    location.getRoot().equals(r.getLocation().getString("root")) && r.getName().equals(serviceName);
     }
 
     abstract <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, @NonNull T announceMonitor);
@@ -178,6 +188,10 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     public Single<Boolean> contains(Function<Record, Boolean> filter, String type) {
         return getRx().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r)).count().map(c -> c > 0);
+    }
+
+    public Maybe<Record> get(@NonNull Function<Record, Boolean> filter) {
+        return getRx().rxGetRecord(filter);
     }
 
     public Single<List<Record>> getRecords() {
