@@ -11,6 +11,7 @@ import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.skyscreamer.jsonassert.Customization;
 
+import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientOptions;
@@ -33,6 +34,7 @@ import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.HttpUtils;
@@ -44,7 +46,7 @@ import com.zandero.rest.RestRouter;
 
 public class HttpServerTestBase {
 
-    private static final String DEFAULT_HOST = "127.0.0.1";
+    public static final String DEFAULT_HOST = "127.0.0.1";
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
     protected Vertx vertx;
@@ -107,6 +109,14 @@ public class HttpServerTestBase {
                               context.assertEquals(codeExpected, resp.getStatus().code());
                               JsonHelper.assertJson(context, async, bodyExpected, resp.body(), customizations);
                           }, context::fail);
+    }
+
+    protected Single<ResponseData> restRequest(TestContext context, HttpMethod method, String path,
+                                               RequestData requestData) {
+        Async async = context.async();
+        return HttpClientDelegate.create(vertx.getDelegate(), HostInfo.from(requestOptions))
+                                 .execute(path, method, requestData)
+                                 .doFinally(() -> TestHelper.testComplete(async));
     }
 
     protected HttpServer startServer(TestContext context, HttpServerRouter httpRouter) {

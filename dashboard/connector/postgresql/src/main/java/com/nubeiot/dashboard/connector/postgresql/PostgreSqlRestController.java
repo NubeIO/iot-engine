@@ -1,7 +1,5 @@
 package com.nubeiot.dashboard.connector.postgresql;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,12 +8,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
-
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.RestConfigProvider;
-import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.utils.Strings;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
@@ -30,6 +22,13 @@ import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.asyncsql.PostgreSQLClient;
 import io.vertx.reactivex.ext.sql.SQLClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
+
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
+import com.nubeiot.core.http.rest.RestApi;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.utils.Strings;
 
 public class PostgreSqlRestController implements RestApi {
 
@@ -73,12 +72,11 @@ public class PostgreSqlRestController implements RestApi {
                 Strings.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
             final String finalQuery = query;
             executeQuery(vertx, settings, pgConfig, query)
-                .subscribe(
-                    result -> future
-                        .complete(responseData(messageWrapper(finalQuery, successMessage(result)).encode())),
-                    throwable -> future.complete(
-                        responseData(messageWrapper(finalQuery, failureMessage(throwable)).encode())
-                            .setStatus(HttpResponseStatus.BAD_REQUEST.code())));
+                .subscribe(result -> future.complete(ResponseDataWriter.serializeResponseData(
+                    messageWrapper(finalQuery, successMessage(result)).encode())), throwable -> future.complete(
+                    ResponseDataWriter.serializeResponseData(
+                        messageWrapper(finalQuery, failureMessage(throwable)).encode())
+                                      .setStatus(HttpResponseStatus.BAD_REQUEST.code())));
         }
         return future;
     }

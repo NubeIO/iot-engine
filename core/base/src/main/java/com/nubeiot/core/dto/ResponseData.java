@@ -34,6 +34,10 @@ public final class ResponseData extends AbstractDTO {
         return responseData.setBody(message.getData());
     }
 
+    public static ResponseData noContent() {
+        return new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT);
+    }
+
     public ResponseData setStatus(HttpResponseStatus status) {
         this.status = status;
         return this;

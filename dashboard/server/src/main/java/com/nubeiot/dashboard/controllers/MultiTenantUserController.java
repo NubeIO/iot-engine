@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -44,10 +43,13 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
-import com.nubeiot.core.http.RestConfigProvider;
+import com.nubeiot.core.http.converter.RequestDataConverter;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
+import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.utils.RequestDataConverter;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
@@ -55,11 +57,9 @@ import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.DashboardServerConfig;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.constants.Services;
-import com.nubeiot.dashboard.helpers.ResponseDataHelper;
 import com.nubeiot.dashboard.models.KeycloakUserRepresentation;
 import com.nubeiot.dashboard.models.MongoUser;
 import com.nubeiot.dashboard.props.UserProps;
-import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.utils.UserUtils;
 import com.zandero.rest.annotation.RouteOrder;
 
@@ -164,9 +164,10 @@ public class MultiTenantUserController implements RestApi {
             }).collect(Collectors.toList()).size();
             logger.info("Size of user match: " + usersSize);
             if (usersSize > 0) {
-                future.complete(responseData(new JsonObject().put("exist", true).encode()));
+                future.complete(ResponseDataWriter.serializeResponseData(new JsonObject().put("exist", true).encode()));
             } else {
-                future.complete(responseData(new JsonObject().put("exist", false).encode()));
+                future.complete(
+                    ResponseDataWriter.serializeResponseData(new JsonObject().put("exist", false).encode()));
             }
         }, throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;

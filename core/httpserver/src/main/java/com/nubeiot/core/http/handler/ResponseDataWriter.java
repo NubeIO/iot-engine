@@ -1,6 +1,5 @@
 package com.nubeiot.core.http.handler;
 
-import java.util.Map;
 import java.util.Objects;
 
 import io.vertx.core.http.HttpHeaders;
@@ -12,29 +11,36 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.zandero.rest.writer.HttpResponseWriter;
 
+// FIXME: We will find better way to handle the serialization of ResponseData
+@Deprecated
 public class ResponseDataWriter implements HttpResponseWriter<ResponseData> {
 
-    public static ResponseData responseData(String message) {
-        return new ResponseData().setBody(new JsonObject().put("message", message));
+    private static String SERIALIZATION_KEY = "message";
+
+    public static ResponseData serializeResponseData(String message) {
+        return new ResponseData().setBody(new JsonObject().put(SERIALIZATION_KEY, message));
     }
 
-    public static void responseData(ResponseData responseData, String message) {
-        responseData.setBody(new JsonObject().put("message", message));
+    public static void serializeResponseData(ResponseData responseData, String message) {
+        responseData.setBody(new JsonObject().put(SERIALIZATION_KEY, message));
     }
 
     @Override
     public void write(ResponseData result, HttpServerRequest request, HttpServerResponse response) {
-        String message = result.body().getString("message");
+        String message = deSerializeResponseBody(result.body());
         response.setStatusCode(result.getStatus().code());
+        response.headers().setAll(HttpUtils.HttpHeaderUtils.deserializeHeaders(result.headers()));
         response.putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE);
-        for (Map.Entry<String, Object> key : result.headers()) {
-            response.putHeader(key.getKey(), key.getValue().toString());
-        }
+
         if (Objects.isNull(message)) {
             response.end();
         } else {
             response.end(message);
         }
+    }
+
+    private String deSerializeResponseBody(JsonObject body) {
+        return body.getString(SERIALIZATION_KEY);
     }
 
 }

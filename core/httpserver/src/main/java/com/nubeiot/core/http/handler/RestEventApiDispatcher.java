@@ -11,7 +11,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.http.utils.RequestDataConverter;
+import com.nubeiot.core.http.converter.RequestDataConverter;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 

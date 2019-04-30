@@ -1,17 +1,10 @@
 package com.nubeiot.dashboard.connector.hive;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
-
 import java.util.Collections;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
-
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.RestConfigProvider;
-import com.nubeiot.core.http.rest.RestApi;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
@@ -25,6 +18,12 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.jdbc.JDBCClient;
 import io.vertx.reactivex.ext.sql.SQLConnection;
+
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
+import com.nubeiot.core.http.rest.RestApi;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 
 public class HiveRestController implements RestApi {
 
@@ -64,12 +63,11 @@ public class HiveRestController implements RestApi {
             future.complete(new ResponseData().setStatus(HttpResponseStatus.UNAUTHORIZED));
         } else {
             final String finalQuery = query;
-            executeQuery(vertx, hiveConfig, query)
-                .subscribe(
-                    result -> future.complete(responseData(messageWrapper(finalQuery, successMessage(result)).encode())
-                                                  .setStatus(HttpResponseStatus.OK)),
-                    error -> future.complete(responseData(messageWrapper(finalQuery, failureMessage(error)).encode())
-                                                 .setStatus(HttpResponseStatus.BAD_REQUEST)));
+            executeQuery(vertx, hiveConfig, query).subscribe(result -> future.complete(
+                ResponseDataWriter.serializeResponseData(messageWrapper(finalQuery, successMessage(result)).encode())
+                                  .setStatus(HttpResponseStatus.OK)), error -> future.complete(
+                ResponseDataWriter.serializeResponseData(messageWrapper(finalQuery, failureMessage(error)).encode())
+                                  .setStatus(HttpResponseStatus.BAD_REQUEST)));
         }
         return future;
     }

@@ -18,6 +18,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.NetworkException;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -44,7 +46,7 @@ public final class Networks {
 
     public static int validPort(int port) {
         if (port < 1 || port > 65535) {
-            throw new IllegalArgumentException("Cluster public port is not in range [1, 65535]");
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Port is not in range [1, 65535]");
         }
         return port;
     }

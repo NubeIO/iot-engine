@@ -30,6 +30,7 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Urls {
 
+    public static final String HOST_PATTERN = "(www\\.)?(([\\w-]+\\.)+[\\w]{2,63}|[\\w-\\.]+)/?";
     /**
      * Authority syntax.
      *
@@ -92,6 +93,17 @@ public final class Urls {
             return normalize(base + normalizePath);
         }
         throw new InvalidUrlException("Invalid url - Base: " + base + " - Path: " + path);
+    }
+
+    /**
+     * Validate URL.
+     *
+     * @param url String to serialize
+     * @return {@code True} if given input is valid URL syntax, otherwise {@code False}
+     * @see #URL_PATTERN
+     */
+    public static boolean validateHost(String url) {
+        return validate(url, HOST_PATTERN);
     }
 
     /**

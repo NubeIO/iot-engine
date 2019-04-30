@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -33,6 +32,7 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
@@ -111,7 +111,7 @@ public class MultiTenantUserGroupController implements RestApi {
         String companyId = getCompanyId(user);
 
         Single.just(getRole(user))
-            .flatMap(role -> {
+              .flatMap(role -> {
                 if (role == Role.SUPER_ADMIN) {
                     return mongoClient.rxFind(USER_GROUP, new JsonObject());
                 } else if (role == Role.ADMIN) {
@@ -123,16 +123,16 @@ public class MultiTenantUserGroupController implements RestApi {
                     return mongoClient.rxFind(USER_GROUP, new JsonObject().put("_id", user.getString("group_id")));
                 }
             })
-            .flatMap(userGroups -> Observable.fromIterable(userGroups)
-                .flatMapSingle(userGroup -> mongoClient.rxFindOne(SITE, idQuery(userGroup.getString("site_id")), null)
+              .flatMap(userGroups -> Observable.fromIterable(userGroups)
+                                               .flatMapSingle(userGroup -> mongoClient.rxFindOne(SITE, idQuery(userGroup.getString("site_id")), null)
                     .flatMap(site -> associatedCompanyRepresentation(mongoClient, userGroup).map(ignored -> {
                         if (site != null) {
                             return userGroup.put("site", site);
                         }
                         return userGroup;
                     })))
-                .toList())
-            .subscribe(userGroups -> future.complete(responseData(userGroups.toString())),
+                                               .toList())
+              .subscribe(userGroups -> future.complete(ResponseDataWriter.serializeResponseData(userGroups.toString())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }

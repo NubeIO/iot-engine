@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.helpers.MultiTenantPermissionHelper.checkPermissionAndReturnValue;
@@ -28,6 +27,7 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.core.utils.Strings;
@@ -138,7 +138,7 @@ public class MultiTenantCompanyController implements RestApi {
             .flatMap(role -> getCompanies(mongoClient, companyId, role))
             .flatMap(response -> Observable.fromIterable(response)
                 .flatMapSingle(company -> associatedCompanyRepresentation(mongoClient, company)).toList())
-            .subscribe(response -> future.complete(responseData(response.toString())),
+            .subscribe(response -> future.complete(ResponseDataWriter.serializeResponseData(response.toString())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }

@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -38,10 +37,12 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
-import com.nubeiot.core.http.RestConfigProvider;
+import com.nubeiot.core.http.converter.RequestDataConverter;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.utils.RequestDataConverter;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.dashboard.DashboardServerConfig;
@@ -49,7 +50,6 @@ import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.constants.Services;
 import com.nubeiot.dashboard.models.Site;
 import com.nubeiot.dashboard.props.SiteProps;
-import com.nubeiot.dashboard.providers.RestMicroContextProvider;
 import com.nubeiot.dashboard.utils.DittoUtils;
 import com.zandero.rest.annotation.RouteOrder;
 
@@ -405,7 +405,7 @@ public class MultiTenantSiteController implements RestApi {
                 .fromIterable(sites)
                 .flatMapSingle(site -> associatedCompanyRepresentation(mongoClient, site))
                 .toList())
-            .subscribe(sites -> future.complete(responseData(sites.toString())),
+            .subscribe(sites -> future.complete(ResponseDataWriter.serializeResponseData(sites.toString())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
 
         return future;

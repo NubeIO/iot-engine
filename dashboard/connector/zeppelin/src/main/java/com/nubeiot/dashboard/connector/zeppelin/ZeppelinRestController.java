@@ -1,6 +1,6 @@
 package com.nubeiot.dashboard.connector.zeppelin;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
+import static com.nubeiot.core.http.handler.ResponseDataWriter.serializeResponseData;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,13 +9,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.RestConfigProvider;
-import com.nubeiot.core.http.converter.ResponseDataConverter;
-import com.nubeiot.core.http.rest.RestApi;
-
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
@@ -25,6 +18,12 @@ import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.http.HttpClient;
 import io.vertx.reactivex.core.http.HttpClientRequest;
 import io.vertx.reactivex.core.http.HttpClientResponse;
+
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.rest.RestApi;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 
 public class ZeppelinRestController implements RestApi {
 
@@ -60,7 +59,7 @@ public class ZeppelinRestController implements RestApi {
             if (res.statusCode() < 500) {
                 cookieHandler(res, body, responseData);
             } else {
-                responseData(responseData, body.toString());
+                serializeResponseData(responseData, body.toString());
             }
             responseData.setStatus(res.statusCode());
             future.complete(responseData);
@@ -111,7 +110,7 @@ public class ZeppelinRestController implements RestApi {
         }
 
         responseData.setHeaders(headers);
-        responseData(responseData, body.toString());
+        serializeResponseData(responseData, body.toString());
     }
 
 }

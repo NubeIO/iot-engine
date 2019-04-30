@@ -1,7 +1,5 @@
 package com.nubeiot.dashboard.connector.ditto;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
-
 import java.util.Base64;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -9,16 +7,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
-
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.HttpConfig;
-import com.nubeiot.core.http.RestConfigProvider;
-import com.nubeiot.core.http.converter.ResponseDataConverter;
-import com.nubeiot.core.http.handler.ResponseDataWriter;
-import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.utils.Strings;
-import com.zandero.rest.annotation.ResponseWriter;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -32,6 +20,16 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
+
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.HttpConfig;
+import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
+import com.nubeiot.core.http.rest.RestApi;
+import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.utils.Strings;
+import com.zandero.rest.annotation.ResponseWriter;
 
 public class ServerDittoRestController implements RestApi {
 
@@ -104,7 +102,7 @@ public class ServerDittoRestController implements RestApi {
             logger.info("Proxying Response StatusCode: {}", res.statusCode());
             res.bodyHandler(data -> {
                 logger.info("Proxy Response Completed.");
-                future.complete(responseData(data.toString()).setStatus(res.statusCode()));
+                future.complete(ResponseDataWriter.serializeResponseData(data.toString()).setStatus(res.statusCode()));
             });
         }).exceptionHandler(e -> future.complete(ResponseDataConverter.convert(e)));
 

@@ -1,10 +1,13 @@
 package com.nubeiot.core.micro;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -147,10 +150,27 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
-    private Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
+    public Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
         return get().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r))
                     .switchIfEmpty(Single.error(
                         new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
+    }
+
+    public Single<Boolean> contains(Function<Record, Boolean> filter, String type) {
+        return get().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r)).count().map(c -> c > 0);
+    }
+
+    public Single<List<Record>> getRecords() {
+        return get().rxGetRecords(r -> true, true);
+    }
+
+    public Completable removeRecord(String registration) {
+        return get().rxGetRecords(r -> true, true).flatMapCompletable(records -> {
+            if (records.stream().map(Record::getRegistration).collect(Collectors.toList()).contains(registration)) {
+                return serviceDiscovery.rxUnpublish(registration);
+            }
+            throw new NotFoundException("Not found that registration");
+        });
     }
 
     private Single<Record> addDecoratorRecord(@NonNull Record record) {

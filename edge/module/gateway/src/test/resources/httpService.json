@@ -1,0 +1,9 @@
+{
+  "__app__": {
+    "__http__": {
+      "__rest__": {
+        "rootApi": "/drivers/gpio"
+      }
+    }
+  }
+}

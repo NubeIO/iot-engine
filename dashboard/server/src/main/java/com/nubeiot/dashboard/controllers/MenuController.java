@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.dashboard.Role.ADMIN;
 import static com.nubeiot.dashboard.constants.Collection.MENU;
 import static com.nubeiot.dashboard.utils.UserUtils.getRole;
@@ -20,11 +19,12 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
+import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.helpers.DynamicCollectionHelper;
-import com.nubeiot.dashboard.helpers.ResponseDataHelper;
 import com.nubeiot.dashboard.props.DynamicCollectionProps;
 import com.zandero.rest.annotation.RouteOrder;
 
@@ -80,8 +80,7 @@ public class MenuController implements RestApi {
         Future<ResponseData> future = Future.future();
         JsonObject user = ctx.user().principal();
 
-        Single.just(getRole(user))
-            .flatMap(role -> {
+        Single.just(getRole(user)).flatMap(role -> {
                 if (role == Role.SUPER_ADMIN || role == ADMIN) {
                     String siteId = ctx.request().getParam("id");
                     return mongoClient.rxFindOne(MENU, new JsonObject().put("site_id", siteId), null)
@@ -89,8 +88,7 @@ public class MenuController implements RestApi {
                 } else {
                     throw HttpException.forbidden();
                 }
-            })
-            .subscribe(menu -> future.complete(responseData(menu.toString())),
+        }).subscribe(menu -> future.complete(ResponseDataWriter.serializeResponseData(menu.toString())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }

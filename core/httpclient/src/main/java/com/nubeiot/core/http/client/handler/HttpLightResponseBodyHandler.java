@@ -19,6 +19,7 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
@@ -61,9 +62,13 @@ public abstract class HttpLightResponseBodyHandler implements Handler<Buffer> {
             emitter.onError(new NubeException(code, body.encode()));
             return;
         }
-        emitter.onSuccess(new ResponseData().setStatus(response.statusCode())
-                                            .setHeaders(HttpHeaderUtils.serializeHeaders(response.headers()))
-                                            .setBody(body));
+        emitter.onSuccess(
+            new ResponseData().setStatus(response.statusCode()).setHeaders(overrideHeader(response)).setBody(body));
+    }
+
+    private JsonObject overrideHeader(HttpClientResponse response) {
+        return HttpHeaderUtils.serializeHeaders(response.headers())
+                              .put(HttpHeaders.CONTENT_TYPE.toString(), HttpUtils.DEFAULT_CONTENT_TYPE);
     }
 
     private JsonObject tryParse(Buffer buffer) {

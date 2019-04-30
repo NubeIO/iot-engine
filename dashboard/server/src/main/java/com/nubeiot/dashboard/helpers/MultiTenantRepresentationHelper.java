@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.helpers;
 
-import static com.nubeiot.core.http.handler.ResponseDataWriter.responseData;
 import static com.nubeiot.core.mongo.MongoUtils.idQuery;
 import static com.nubeiot.dashboard.constants.Collection.COMPANY;
 import static com.nubeiot.dashboard.constants.Collection.SITE;
@@ -15,19 +14,21 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
+import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.utils.Strings;
 
 public class MultiTenantRepresentationHelper {
 
     public static void userRepresentation(MongoClient mongoClient, JsonObject query, Future<ResponseData> future) {
         mongoClient.rxFind(USER, query)
-            .flatMap(response -> Observable.fromIterable(response)
-                .flatMapSingle(object ->
+                   .flatMap(response -> Observable.fromIterable(response)
+                                                  .flatMapSingle(object ->
                                    associatedCompanyRepresentation(mongoClient, object)
                                        .flatMap(obj -> companyRepresentation(mongoClient, obj))
                                        .flatMap(obj -> siteRepresentation(mongoClient, obj))
                                        .flatMap(obj -> groupRepresentation(mongoClient, obj))).toList())
-            .subscribe(response -> future.complete(responseData(response.toString())),
+                   .subscribe(
+                       response -> future.complete(ResponseDataWriter.serializeResponseData(response.toString())),
                        throwable -> future.complete(ResponseDataConverter.convert(throwable)));
     }
 
