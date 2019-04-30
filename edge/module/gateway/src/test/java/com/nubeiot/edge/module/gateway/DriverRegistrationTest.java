@@ -34,14 +34,14 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     private int httpServicePort;
     private String registration;
 
-    @SuppressWarnings("unchecked")
-    protected <T extends ContainerVerticle> Supplier<T> gateway() {
-        return () -> (T) new EdgeGatewayVerticle();
-    }
-
     @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T extends ContainerVerticle> Supplier<T> gateway() {
+        return () -> (T) new EdgeGatewayVerticle();
     }
 
     @Before
