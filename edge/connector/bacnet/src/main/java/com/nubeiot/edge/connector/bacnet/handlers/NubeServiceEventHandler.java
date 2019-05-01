@@ -28,7 +28,7 @@ public class NubeServiceEventHandler implements EventHandler {
 
     @Override
     public @NonNull List<EventAction> getAvailableEvents() {
-        return Collections.unmodifiableList(new ArrayList<>(BACnetEventModels.NUBE_SERVICE_SUB.getEvents()));
+        return Collections.unmodifiableList(new ArrayList<>(BACnetEventModels.NUBE_SERVICE.getEvents()));
     }
 
     @EventContractor(action = EventAction.CREATE, returnType = void.class)

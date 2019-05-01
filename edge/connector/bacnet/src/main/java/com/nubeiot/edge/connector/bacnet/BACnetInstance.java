@@ -60,31 +60,25 @@ public class BACnetInstance {
     // requests?
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    //    private Map<RemoteDevice, ArrayList<ObjectIdentifier>> cachedRemotePoints = new HashMap<>();
-    private final Map<String, Integer> remoteSubscriptions = new HashMap<>();
+    private Map<String, Integer> remoteSubscriptions = new HashMap<>();
     private Vertx vertx;
     private LocalDevice localDevice;
     private BACnetConfig config;
-    private PollingTimers pollingTimers;
 
-    private BACnetInstance(LocalDevice localDevice, Vertx vertx, PollingTimers timers) {
+    private BACnetInstance(LocalDevice localDevice, Vertx vertx) {
         this.vertx = vertx;
         this.localDevice = localDevice;
-        this.pollingTimers = timers;
         this.config = new BACnetConfig();
     }
 
-    private BACnetInstance(LocalDevice localDevice, Vertx vertx, PollingTimers timers,
-                           Map<String, Integer> remoteSubscriptions) {
-        this(localDevice, vertx, timers);
-        this.remoteSubscriptions.putAll(remoteSubscriptions);
+    private BACnetInstance(LocalDevice localDevice, Vertx vertx, Map<String, Integer> remoteSubscriptions) {
+        this(localDevice, vertx);
+        this.remoteSubscriptions = remoteSubscriptions;
     }
 
-    private BACnetInstance(BACnetConfig config, BACnetNetworkConfig netConfig, EventController eventController,
-                           PollingTimers pollingTimers, Vertx vertx) {
+    private BACnetInstance(BACnetConfig config, BACnetNetworkConfig netConfig, EventController eventController, Vertx vertx) {
         this.vertx = vertx;
         this.config = config;
-        this.pollingTimers = pollingTimers;
         Transport transport = TransportProvider.byConfig(netConfig).get();
 
         //TODO: set name and model name
@@ -105,19 +99,19 @@ public class BACnetInstance {
         }
     }
 
-    public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx, PollingTimers pollingTimers) {
-        return new BACnetInstance(localDevice, vertx, pollingTimers);
+    public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx) {
+        return new BACnetInstance(localDevice, vertx);
     }
 
-    public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx, PollingTimers pollingTimers,
+    public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx,
                                               Map<String, Integer> remoteSubscriptions) {
-        return new BACnetInstance(localDevice, vertx, pollingTimers, remoteSubscriptions);
+        return new BACnetInstance(localDevice, vertx, remoteSubscriptions);
     }
 
     public static BACnetInstance createBACnet(BACnetConfig bacnetConfig, BACnetNetworkConfig networkConfig,
-                                              EventController eventController, PollingTimers pollingTimers,
+                                              EventController eventController,
                                               Vertx vertx) {
-        return new BACnetInstance(bacnetConfig, networkConfig, eventController, pollingTimers, vertx);
+        return new BACnetInstance(bacnetConfig, networkConfig, eventController, vertx);
     }
 
     public void terminate() {
@@ -313,7 +307,6 @@ public class BACnetInstance {
             correctID = true;
             remoteSubscriptions.put(remoteObjectKey(rd, oid), subProcessID.intValue());
         }
-        initRemoteObjectPolling(rd, oid);
         return new JsonObject();
     }
 
@@ -348,43 +341,7 @@ public class BACnetInstance {
         //TODO: check don't need to confirm
         localDevice.send(remoteDevice, request);
         remoteSubscriptions.remove(remoteObjectKey(remoteDevice, oid));
-        pollingTimers.removePoint(remoteDevice, oid);
         return new JsonObject();
-    }
-
-    public Single<JsonObject> initRemoteObjectPolling(int instanceNumber, String oid, long pollTime) {
-        RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
-        if (remoteDevice == null) {
-            return Single.error(new BACnetRuntimeException("Remote device not found"));
-        }
-        try {
-            return initRemoteObjectPolling(remoteDevice, BACnetDataConversions.getObjectIdentifier(oid),
-                                           config.getDefaultPollingTime());
-        } catch (BACnetRuntimeException e) {
-            return Single.error(e);
-        }
-    }
-
-    public Single<JsonObject> initRemoteObjectPolling(RemoteDevice rd, ObjectIdentifier oid) {
-        return initRemoteObjectPolling(rd, oid, config.getDefaultPollingTime());
-    }
-
-    public Single<JsonObject> initRemoteObjectPolling(RemoteDevice rd, ObjectIdentifier oid, long pollTime) {
-        try {
-            pollingTimers.addPoint(this, rd, oid, pollTime);
-            return Single.just(new JsonObject());
-        } catch (BACnetException e) {
-            return Single.error(e);
-        }
-    }
-
-    public Single<JsonObject> removeRemoteObjectPolling(RemoteDevice rd, ObjectIdentifier oid) {
-        try {
-            pollingTimers.removePoint(rd, oid);
-            return Single.just(new JsonObject());
-        } catch (BACnetException e) {
-            return Single.error(e);
-        }
     }
 
     public Single<JsonObject> writeAtPriority(int instanceNumber, String obj, Object v, int priority) {

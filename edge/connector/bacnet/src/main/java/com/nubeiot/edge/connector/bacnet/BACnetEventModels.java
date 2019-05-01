@@ -8,16 +8,16 @@ import com.nubeiot.core.event.EventPattern;
 
 public final class BACnetEventModels {
 
-    public static final EventModel NUBE_SERVICE_SUB = EventModel.builder()
-                                                                //TODO: verify address
-                                                                .address("nubeiot.edge.connector.edgeapi")
-                                                                .pattern(EventPattern.PUBLISH_SUBSCRIBE)
-                                                                .local(true)
-                                                                .events(Arrays.asList(EventAction.CREATE,
+    public static final EventModel NUBE_SERVICE = EventModel.builder()
+                                                            //TODO: verify address
+                                                            .address("nubeiot.edge.connector.edgeapi")
+                                                            .pattern(EventPattern.REQUEST_RESPONSE)
+                                                            .local(true)
+                                                            .events(Arrays.asList(EventAction.CREATE,
                                                                                       EventAction.REMOVE,
                                                                                       EventAction.UPDATE,
                                                                                       EventAction.PATCH))
-                                                                .build();
+                                                            .build();
 
     public static final EventModel NETWORKS_ALL = EventModel.builder()
                                                             .address("nubeiot.edge.connector.bacnet")
@@ -42,15 +42,5 @@ public final class BACnetEventModels {
                                                                             EventAction.PATCH, EventAction.CREATE,
                                                                             EventAction.REMOVE))
                                                       .build();
-
-    //TODO: what's edge-api global eventbus publish address??
-    public static final EventModel GLOBAL_PUBLISHES = EventModel.builder()
-                                                                .address("nubeiot.edge.connector.bacnet")
-                                                                .pattern(EventPattern.PUBLISH_SUBSCRIBE)
-                                                                .local(true)
-                                                                .events(Arrays.asList(EventAction.GET_LIST,
-                                                                                      EventAction.CREATE,
-                                                                                      EventAction.REMOVE))
-                                                                .build();
 
 }

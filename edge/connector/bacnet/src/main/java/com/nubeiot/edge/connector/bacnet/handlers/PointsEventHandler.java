@@ -71,38 +71,10 @@ public class PointsEventHandler implements EventHandler {
         }
     }
 
-    //    @EventContractor(action = EventAction.CREATE, returnType = Single.class)
-    //    public Single<JsonObject> saveRemoteDevicePoint(@Param("network") String network,
-    //                                                    @Param("deviceId") int instanceNumber,
-    //                                                    @Param("objectId") String objectId,
-    //                                                    @Param("pollSeconds") long poll) {
-    //        try {
-    //            return bacnetInstances.get(network)
-    //                                  .remoteObjectSubscribeCOV(instanceNumber, objectId)
-    //                                  .flatMap(entries -> Single.just(new JsonObject().put("saveType", "COV")))
-    //                                  .onErrorResumeNext(throwable -> {
-    //                                      if (throwable instanceof ErrorAPDUException) {
-    //                                          bacnetInstances.get(network)
-    //                                                         .initRemoteObjectPolling(instanceNumber, objectId, poll)
-    //                                                         .onErrorResumeNext(throwable1 -> Single.error
-    //                                                         (throwable1));
-    //                                          return Single.just(new JsonObject().put("saveType", "POLL"));
-    //                                      }
-    //                                      return Single.error(throwable);
-    //                                  });
-    //        } catch (NullPointerException e) {
-    //            return Single.error(new BACnetException("No network found", e));
-    //        }
-    //    }
-    //
-    //    @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
-    //    public Single<JsonObject> removeRemoteDevicePoint(@Param("network") String network,
-    //                                                      @Param("deviceId") int instanceNumber,
-    //                                                      @Param("objectId") String objectId) {
-    //        try {
-    //            bacnetInstances.get(network).removeRemoteObjectSubscription(instanceNumber, objectId);
-    //        } catch (NullPointerException e) {
-    //            return Single.error(new BACnetException("No network found", e));
-    //        }
-    //    }
+        @EventContractor(action = EventAction.CREATE, returnType = Single.class)
+        public Single<JsonObject> saveRemoteDevicePoint(@Param("network") String network,
+                                                        @Param("deviceId") int instanceNumber,
+                                                        @Param("objectId") String objectId) {
+            return getRemoteDevicePointExtended(network, instanceNumber, objectId);
+        }
 }
