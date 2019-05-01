@@ -17,7 +17,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.edge.core.EdgeVerticle;
 
 @RunWith(VertxUnitRunner.class)
-public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
+public class HandlerCreateTest extends BaseEdgeVerticleTest {
 
     @BeforeClass
     public static void beforeSuite() {
@@ -36,23 +36,36 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
 
     @Override
     protected EdgeVerticle initMockupVerticle(TestContext context) {
-        return new MockBiosEdgeVerticle(this.getConsumer(context), true);
+        return new MockBiosEdgeVerticle(this.getConsumer(context));
     }
 
     @Test
-    public void test_deploy_failed(TestContext context) {
+    public void test_create_should_success(TestContext context) {
         JsonObject appConfig = new JsonObject().put("", "");
         JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
                                               .put("group_id", GROUP_ID)
-                                              .put("state", State.ENABLED)
-                                              .put("version", VERSION)
-                                              .put("service_name", SERVICE_NAME);
+                                              .put("version", VERSION);
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", appConfig);
         executeThenAssert(EventAction.CREATE, context, body, (response, async) -> {
             TestHelper.testComplete(async);
             async.awaitSuccess();
         });
-        testingDBUpdated(context, MODULE_ID, State.DISABLED, Status.FAILED);
+
+        //Checking module state and transaction status
+        testingDBUpdated(context, MODULE_ID, State.ENABLED, Status.SUCCESS);
+    }
+
+    @Test
+    public void test_create_missing_app_config_should_failed(TestContext context) {
+        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
+                                              .put("group_id", GROUP_ID)
+                                              .put("version", VERSION);
+        JsonObject body = new JsonObject().put("metadata", metadata);
+        executeThenAssert(EventAction.CREATE, context, body, (response, async) -> {
+            context.assertEquals(response.getString("status"), Status.FAILED.name());
+            context.assertEquals(response.getJsonObject("error").getString("message"), "App config is required!");
+            TestHelper.testComplete(async);
+        });
     }
 
 }
