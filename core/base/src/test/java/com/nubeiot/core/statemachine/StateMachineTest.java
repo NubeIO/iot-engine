@@ -67,6 +67,11 @@ public class StateMachineTest {
     }
 
     @Test
+    public void test_Update_From_Pending_To_Enable() {
+        StateMachine.instance().validateConflict(State.PENDING, EventAction.UPDATE, "module", State.ENABLED);
+    }
+
+    @Test
     public void test_Update_From_Disable_To_Disable() {
         StateMachine.instance().validateConflict(State.DISABLED, EventAction.UPDATE, "module", State.DISABLED);
     }

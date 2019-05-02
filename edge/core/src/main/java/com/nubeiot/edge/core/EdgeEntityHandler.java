@@ -120,10 +120,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     public Single<List<TblModule>> getModulesWhenBootstrap() {
         Single<List<TblModule>> enabledModules = moduleDao.findManyByState(Collections.singletonList(State.ENABLED));
-        enabledModules.flatMap(enabledModules1 -> {
-            System.out.println(enabledModules1.size());
-            return enabledModules;
-        });
         Single<List<TblModule>> pendingModules = getPendingModules();
         return Single.zip(enabledModules, pendingModules, (flattenEnabledModules, flattenPendingModules) -> {
             if (Objects.nonNull(flattenEnabledModules)) {
@@ -139,7 +135,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return moduleDao.findManyByState(Collections.singletonList(State.PENDING))
                         .flattenAsObservable(pendingModules -> pendingModules)
                         .flatMapSingle(module -> {
-                            return transDao.queryExecutor().executeAny(dslContext -> {
+                            return queryExecutor.executeAny(dslContext -> {
                                 List<TblTransactionRecord> tblTransactionRecords = dslContext.select()
                                                                                              .from(
                                                                                                  Tables.TBL_TRANSACTION)
@@ -150,28 +146,47 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                                                  Tables.TBL_TRANSACTION.STATUS)
                                                                                                      .eq(Status.WIP))
                                                                                              .orderBy(
-                                                                                                 Tables.TBL_TRANSACTION.MODIFIED_AT)
+                                                                                                 Tables.TBL_TRANSACTION.MODIFIED_AT
+                                                                                                     .desc())
                                                                                              .limit(1)
                                                                                              .fetchInto(
                                                                                                  TblTransactionRecord.class);
                                 if (tblTransactionRecords.isEmpty()) {
-                                    return null;
+                                    queryExecutor.executeAny(
+                                        c -> updateModuleState(c, module.getServiceId(), State.DISABLED, null))
+                                                 .subscribe();
+                                    return Optional.empty();
                                 }
                                 final TblTransactionRecord transaction = tblTransactionRecords.get(0);
-                                if (transaction.getEvent() == EventAction.CREATE ||
-                                    transaction.getEvent() == EventAction.INIT ||
-                                    ((transaction.getEvent() == EventAction.UPDATE ||
-                                      transaction.getEvent() == EventAction.PATCH) &&
-                                     new TblModule(transaction.getPrevState()).getState() != State.DISABLED)) {
-                                    return module;
+                                if (checkingTransaction(transaction)) {
+                                    return Optional.of(module);
                                 } else {
-                                    module.setState(State.DISABLED);
-                                    moduleDao.update(module);
+                                    queryExecutor.executeAny(
+                                        c -> updateModuleState(c, module.getServiceId(), State.DISABLED, null))
+                                                 .subscribe();
                                 }
-                                return null;
+                                return Optional.empty();
                             });
                         })
-                        .collect(ArrayList::new, List::add);
+                        .collect(ArrayList::new, (modules, optional) -> {
+                            if (optional.isPresent()) {
+                                modules.add((TblModule) optional.get());
+                            }
+                        });
+    }
+
+    private boolean checkingTransaction(TblTransactionRecord transaction) {
+        if (transaction.getEvent() == EventAction.CREATE || transaction.getEvent() == EventAction.INIT) {
+            return true;
+        }
+        if (transaction.getEvent() == EventAction.UPDATE || transaction.getEvent() == EventAction.PATCH) {
+            JsonObject prevState = transaction.getPrevState();
+            if (prevState == null) {
+                return true;
+            }
+            return new TblModule(transaction.getPrevState()).getState() != State.DISABLED;
+        }
+        return false;
     }
 
     public Single<Boolean> isFreshInstall() {
@@ -196,6 +211,11 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         if (event == EventAction.REMOVE) {
             module.setState(State.UNAVAILABLE);
         }
+
+        if (event == EventAction.UPDATE && module.getState() == State.PENDING) {
+            module.setState(State.ENABLED);
+        }
+
         return validateModuleState(module, event).flatMap(o -> {
             if (EventAction.INIT == event || EventAction.CREATE == event) {
                 module.setState(State.NONE);
