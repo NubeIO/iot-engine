@@ -33,7 +33,8 @@ public final class StateMachine {
         stateMachine = new StateMachine().addLifeCycle(EventAction.INIT, new StateLifeCycle(State.ENABLED))
                                          .addLifeCycle(EventAction.CREATE, new StateLifeCycle(State.ENABLED))
                                          .addLifeCycle(EventAction.UPDATE,
-                                                       new StateLifeCycle(State.ENABLED).addFrom(State.DISABLED))
+                                                       new StateLifeCycle(State.ENABLED).addFrom(State.DISABLED)
+                                                                                        .addFrom(State.PENDING))
                                          .addLifeCycle(EventAction.UPDATE,
                                                        new StateLifeCycle(State.DISABLED).addFrom(State.ENABLED))
                                          .addLifeCycle(EventAction.HALT,
@@ -119,9 +120,8 @@ public final class StateMachine {
             }
         }
 
-        if (State.PENDING == state || !(from.contains(state) ||
-                                        ((eventAction == EventAction.PATCH || eventAction == EventAction.UPDATE) &&
-                                         targetState == state))) {
+        if (!(from.contains(state) ||
+              ((eventAction == EventAction.PATCH || eventAction == EventAction.UPDATE) && targetState == state))) {
             throw new StateException(
                 String.format("%s is in state %s, cannot execute action %s to state %s", objName, state, eventAction,
                               targetState));
