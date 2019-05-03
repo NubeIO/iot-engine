@@ -71,7 +71,7 @@ public class GettingStartupModulesTest {
     }
 
     public void after(TestContext context) {
-        //this.vertx.close(context.asyncAssertSuccess());
+        this.vertx.close(context.asyncAssertSuccess());
     }
 
     protected @NonNull String getJdbcUrl() {

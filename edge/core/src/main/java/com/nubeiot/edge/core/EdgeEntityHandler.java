@@ -120,7 +120,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     public Single<List<TblModule>> getModulesWhenBootstrap() {
         Single<List<TblModule>> enabledModules = moduleDao.findManyByState(Collections.singletonList(State.ENABLED));
-        Single<List<TblModule>> pendingModules = getPendingModules();
+        Single<List<TblModule>> pendingModules = this.getPendingModules();
         return Single.zip(enabledModules, pendingModules, (flattenEnabledModules, flattenPendingModules) -> {
             if (Objects.nonNull(flattenEnabledModules)) {
                 flattenEnabledModules.addAll(flattenPendingModules);
@@ -131,7 +131,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     private Single<List<TblModule>> getPendingModules() {
-
         return moduleDao.findManyByState(Collections.singletonList(State.PENDING))
                         .flattenAsObservable(pendingModules -> pendingModules)
                         .flatMapSingle(module -> {
@@ -152,19 +151,15 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                                              .fetchInto(
                                                                                                  TblTransactionRecord.class);
                                 if (tblTransactionRecords.isEmpty()) {
-                                    queryExecutor.executeAny(
-                                        c -> updateModuleState(c, module.getServiceId(), State.DISABLED, null))
-                                                 .subscribe();
+                                    module.setState(State.DISABLED);
+                                    moduleDao.update(module).subscribe();
                                     return Optional.empty();
                                 }
-                                final TblTransactionRecord transaction = tblTransactionRecords.get(0);
-                                if (checkingTransaction(transaction)) {
+                                if (checkingTransaction(tblTransactionRecords.get(0))) {
                                     return Optional.of(module);
-                                } else {
-                                    queryExecutor.executeAny(
-                                        c -> updateModuleState(c, module.getServiceId(), State.DISABLED, null))
-                                                 .subscribe();
                                 }
+                                module.setState(State.DISABLED);
+                                moduleDao.update(module).subscribe();
                                 return Optional.empty();
                             });
                         })
@@ -181,10 +176,10 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         }
         if (transaction.getEvent() == EventAction.UPDATE || transaction.getEvent() == EventAction.PATCH) {
             JsonObject prevState = transaction.getPrevState();
-            if (prevState == null) {
+            if (Objects.isNull(prevState)) {
                 return true;
             }
-            return new TblModule(transaction.getPrevState()).getState() != State.DISABLED;
+            return new TblModule(prevState).getState() != State.DISABLED;
         }
         return false;
     }
