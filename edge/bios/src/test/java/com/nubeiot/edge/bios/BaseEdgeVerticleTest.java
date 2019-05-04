@@ -14,6 +14,7 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.reactivex.core.Vertx;
 
+import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.NubeConfig.DeployConfig;
@@ -40,6 +41,9 @@ public abstract class BaseEdgeVerticleTest {
     static final String VERSION = "1.0.0";
     static final String SERVICE_NAME = "bios-mytest";
     static final String MODULE_ID = GROUP_ID + ":" + ARTIFACT_ID;
+    static final JsonObject DEPLOY_CONFIG = new JsonObject(
+        "{\"__kafka__\":{\"__client__\":{\"bootstrap.servers\":[\"localhost:9092\"]},\"__security__\":{\"security" +
+        ".protocol\":\"PLAINTEXT\"}}}");
     private static boolean isAvailable;
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -100,26 +104,18 @@ public abstract class BaseEdgeVerticleTest {
 
     protected AssertmentConsumer getConsumer(TestContext context) {
         return (preDeploymentResult) -> {
-            EventMessage moduleMessage = EventMessage.success(EventAction.GET_ONE, RequestData.builder()
-                                                                                              .body(
-                                                                                                  new JsonObject().put(
-                                                                                                      "service_id",
-                                                                                                      preDeploymentResult
-                                                                                                          .getServiceId()))
-                                                                                              .build());
+            JsonObject serviceBody = new JsonObject().put("service_id", preDeploymentResult.getServiceId());
+            EventMessage serviceMessage = EventMessage.success(EventAction.GET_ONE,
+                                                               RequestData.builder().body(serviceBody).build());
 
-            EventMessage transactionMessage = EventMessage.success(EventAction.GET_ONE, RequestData.builder()
-                                                                                                   .body(
-                                                                                                       new JsonObject().put(
-                                                                                                           "transaction_id",
-                                                                                                           preDeploymentResult
-                                                                                                               .getTransactionId()))
-                                                                                                   .build());
+            JsonObject transactionBody = new JsonObject().put("transaction_id", preDeploymentResult.getTransactionId());
+            EventMessage transactionMessage = EventMessage.success(EventAction.GET_ONE,
+                                                                   RequestData.builder().body(transactionBody).build());
             final Async async = context.async(2);
 
             this.vertx.getDelegate()
                       .eventBus()
-                      .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), moduleMessage.toJson(), result -> {
+                      .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), serviceMessage.toJson(), result -> {
                           System.out.println("Asserting module");
                           JsonObject body = (JsonObject) result.result().body();
                           context.assertEquals(body.getString("status"), Status.SUCCESS.name());
@@ -139,30 +135,36 @@ public abstract class BaseEdgeVerticleTest {
                                 context.assertEquals(data.getString("status"), Status.WIP.name());
                                 TestHelper.testComplete(async);
                             });
-            //async.awaitSuccess();
         };
     }
 
-    protected void testingDBUpdated(TestContext context, String moduleId, State expectedModuleState,
-                                    Status expectedTransactionStatus) {
+    protected void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus,
+                                    JsonObject expectedConfig) {
         Async async = context.async(2);
         //Event module is deployed/updated successfully, we still have a gap for DB update.
         long timer = this.vertx.setPeriodic(1000, event -> {
-            edgeVerticle.getEntityHandler().getModuleDao().findOneById(moduleId).subscribe(result -> {
-                TblModule tblModule = result.orElse(null);
-                context.assertNotNull(tblModule);
-                if (tblModule.getState() != State.PENDING) {
-                    System.out.println("Ready. Testing module");
-                    context.assertEquals(tblModule.getState(), expectedModuleState);
-                    TestHelper.testComplete(async);
-                }
-            }, error -> {
-                context.fail(error);
-                TestHelper.testComplete(async);
-            });
+            edgeVerticle.getEntityHandler()
+                        .getModuleDao()
+                        .findOneById(BaseEdgeVerticleTest.MODULE_ID)
+                        .subscribe(result -> {
+                            TblModule tblModule = result.orElse(null);
+                            context.assertNotNull(tblModule);
+                            if (tblModule.getState() != State.PENDING) {
+                                System.out.println("Ready. Testing module");
+                                context.assertEquals(tblModule.getState(), expectedModuleState);
+                                JsonObject actualConfig = IConfig.from(tblModule.getDeployConfig(), NubeConfig.class)
+                                                                 .getAppConfig()
+                                                                 .toJson();
+                                context.assertEquals(actualConfig, expectedConfig);
+                                TestHelper.testComplete(async);
+                            }
+                        }, error -> {
+                            context.fail(error);
+                            TestHelper.testComplete(async);
+                        });
             edgeVerticle.getEntityHandler()
                         .getTransDao()
-                        .findManyByModuleId(Collections.singletonList(moduleId))
+                        .findManyByModuleId(Collections.singletonList(BaseEdgeVerticleTest.MODULE_ID))
                         .subscribe(result -> {
                             context.assertNotNull(result);
                             context.assertFalse(result.isEmpty());

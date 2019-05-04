@@ -41,18 +41,17 @@ public class HandlerCreateTest extends BaseEdgeVerticleTest {
 
     @Test
     public void test_create_should_success(TestContext context) {
-        JsonObject appConfig = new JsonObject().put("", "");
         JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
                                               .put("group_id", GROUP_ID)
                                               .put("version", VERSION);
-        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", appConfig);
+        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", DEPLOY_CONFIG);
         executeThenAssert(EventAction.CREATE, context, body, (response, async) -> {
             TestHelper.testComplete(async);
             async.awaitSuccess();
         });
 
         //Checking module state and transaction status
-        testingDBUpdated(context, MODULE_ID, State.ENABLED, Status.SUCCESS);
+        testingDBUpdated(context, State.ENABLED, Status.SUCCESS, DEPLOY_CONFIG);
     }
 
     @Test

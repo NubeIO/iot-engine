@@ -52,7 +52,7 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
             TestHelper.testComplete(async);
             async.awaitSuccess();
         });
-        testingDBUpdated(context, MODULE_ID, State.DISABLED, Status.FAILED);
+        testingDBUpdated(context, State.DISABLED, Status.FAILED, appConfig);
     }
 
 }

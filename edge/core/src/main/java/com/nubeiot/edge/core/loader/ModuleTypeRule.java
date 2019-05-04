@@ -38,7 +38,8 @@ public final class ModuleTypeRule implements Shareable {
 
     public ITblModule parse(JsonObject metadata) {
         ModuleType moduleType = ModuleType.factory(metadata.getString("service_type"));
-        JsonObject module = moduleType.serialize(metadata, this);
+        String serviceId = metadata.getString("service_id");
+        JsonObject module = Objects.isNull(serviceId) ? moduleType.serialize(metadata, this) : metadata;
         return new TblModule().fromJson(module);
     }
 

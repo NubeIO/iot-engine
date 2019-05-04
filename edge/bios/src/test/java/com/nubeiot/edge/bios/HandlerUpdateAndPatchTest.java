@@ -36,7 +36,7 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
                                                   .setServiceName(SERVICE_NAME)
                                                   .setState(State.ENABLED)
                                                   .setVersion(VERSION)
-                                                  .setDeployConfig(new JsonObject())
+                                                  .setDeployConfig(DEPLOY_CONFIG)
                                                   .setModifiedAt(DateTimes.nowUTC()));
     }
 
@@ -53,9 +53,7 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
     @Test
     public void test_update_with_happy_case_should_success(TestContext context) {
         JsonObject appConfig = new JsonObject().put("", "");
-        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
-                                              .put("group_id", GROUP_ID)
-                                              .put("state", State.ENABLED)
+        JsonObject metadata = new JsonObject().put("state", State.ENABLED)
                                               .put("version", VERSION)
                                               .put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID)
@@ -68,17 +66,15 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
         });
 
         //testing the module state and transaction status after update
-        testingDBUpdated(context, MODULE_ID, State.ENABLED, Status.SUCCESS);
+        testingDBUpdated(context, State.ENABLED, Status.SUCCESS, appConfig);
     }
 
     @Test
     public void test_update_module_not_available_should_failed(TestContext context) {
         JsonObject appConfig = new JsonObject().put("", "");
-        String groupIdNotExist = "com.nubeiot.edge.module.notexist";
-        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
-                                              .put("group_id", groupIdNotExist)
-                                              .put("version", VERSION);
-        JsonObject body = new JsonObject().put("service_id", ARTIFACT_ID + groupIdNotExist)
+        String idNotExist = ARTIFACT_ID + "com.nubeiot.edge.module.notexist";
+        JsonObject metadata = new JsonObject().put("version", VERSION);
+        JsonObject body = new JsonObject().put("service_id", ARTIFACT_ID + idNotExist)
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
 
@@ -92,10 +88,7 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
     @Test
     public void test_update_missing_version_should_failed(TestContext context) {
         JsonObject appConfig = new JsonObject().put("", "");
-        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
-                                              .put("group_id", GROUP_ID)
-                                              .put("state", State.DISABLED)
-                                              .put("service_name", SERVICE_NAME);
+        JsonObject metadata = new JsonObject().put("state", State.DISABLED).put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID)
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
@@ -110,10 +103,7 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
     @Test
     public void test_update_missing_state_should_failed(TestContext context) {
         JsonObject appConfig = new JsonObject().put("", "");
-        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
-                                              .put("group_id", GROUP_ID)
-                                              .put("version", VERSION)
-                                              .put("service_name", SERVICE_NAME);
+        JsonObject metadata = new JsonObject().put("version", VERSION).put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID)
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
@@ -127,9 +117,7 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
 
     @Test
     public void test_update_missing_app_config_should_failed(TestContext context) {
-        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
-                                              .put("group_id", GROUP_ID)
-                                              .put("version", VERSION)
+        JsonObject metadata = new JsonObject().put("version", VERSION)
                                               .put("state", State.ENABLED)
                                               .put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID).put("metadata", metadata);
@@ -143,11 +131,9 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
 
     @Test
     public void test_patch_should_success(TestContext context) {
-        JsonObject appConfig = new JsonObject().put("", "");
-        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
-                                              .put("group_id", GROUP_ID)
-                                              .put("state", State.DISABLED)
-                                              .put("service_name", SERVICE_NAME);
+        JsonObject appConfig = new JsonObject(
+            "{\"__kafka__\":{\"__client__\":{\"bootstrap" + ".servers\":[\"localhost:9094\"]}}}");
+        JsonObject metadata = new JsonObject().put("state", State.DISABLED).put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID)
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
@@ -157,8 +143,11 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
             TestHelper.testComplete(async);
         });
 
-        //testing the module state and transaction status after update
-        testingDBUpdated(context, MODULE_ID, State.DISABLED, Status.SUCCESS);
+        JsonObject expect = new JsonObject("{\"__kafka__\":{\"__client__\":{\"bootstrap" +
+                                           ".servers\":[\"localhost:9094\"]},\"__security__\":{\"security" +
+                                           ".protocol\":\"PLAINTEXT\"}}}");
+
+        testingDBUpdated(context, State.DISABLED, Status.SUCCESS, expect);
     }
 
     @Test
