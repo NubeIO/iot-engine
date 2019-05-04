@@ -11,7 +11,7 @@ import com.nubeiot.edge.core.ModuleEventHandler;
 import com.nubeiot.edge.core.TransactionEventHandler;
 import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 
-public class MockBiosVerticle extends EdgeBiosVerticle {
+public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
 
     private final Class<? extends EdgeEntityHandler> entityHandlerClass;
 
@@ -26,7 +26,7 @@ public class MockBiosVerticle extends EdgeBiosVerticle {
                                                                                    EventAction.UPDATE))
                                                              .build();
 
-    public MockBiosVerticle(Class<? extends EdgeEntityHandler> entityHandlerClass) {
+    public MockBiosStartupModulesVerticle(Class<? extends EdgeEntityHandler> entityHandlerClass) {
         this.entityHandlerClass = entityHandlerClass;
     }
 
@@ -37,9 +37,9 @@ public class MockBiosVerticle extends EdgeBiosVerticle {
 
     @Override
     public void registerEventbus(EventController controller) {
-        controller.register(MockBiosVerticle.MOCK_BIOS_INSTALLER,
-                            new ModuleEventHandler(this, MockBiosVerticle.MOCK_BIOS_INSTALLER));
-        controller.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, new MockDeploymentHandler());
+        controller.register(MockBiosStartupModulesVerticle.MOCK_BIOS_INSTALLER,
+                            new ModuleEventHandler(this, MockBiosStartupModulesVerticle.MOCK_BIOS_INSTALLER));
+        controller.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, new MockModuleLoader(null));
         controller.register(EdgeInstallerEventBus.BIOS_TRANSACTION,
                             new TransactionEventHandler(this, EdgeInstallerEventBus.BIOS_TRANSACTION));
     }
