@@ -2,6 +2,7 @@ package com.nubeiot.edge.bios;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -25,7 +26,9 @@ public class MockModuleLoader implements EventHandler {
     }, returnType = Single.class)
     public Single<JsonObject> sendEventMessage(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
-        assertmentConsumer.accept(preResult);
+        if (Objects.nonNull(assertmentConsumer)) {
+            assertmentConsumer.accept(preResult);
+        }
         return Single.just(new JsonObject().put("abc", "123"));
     }
 
