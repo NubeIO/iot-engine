@@ -39,7 +39,6 @@ public interface HttpClientWriter extends BiFunction<HttpClientRequest, RequestD
             request.headers()
                    .setAll(HttpHeaderUtils.deserializeHeaders(reqData.headers()))
                    .remove(HttpHeaders.ACCEPT_ENCODING)
-                   .remove(HttpHeaders.CONTENT_TYPE)
                    .remove(HttpHeaders.CONTENT_LENGTH);
         }
         if (Objects.nonNull(reqData.body()) && !reqData.body().isEmpty()) {
