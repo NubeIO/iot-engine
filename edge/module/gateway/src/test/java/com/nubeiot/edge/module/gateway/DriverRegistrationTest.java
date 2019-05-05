@@ -108,6 +108,13 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     }
 
     @Test
+    public void test_post_value_on_service_fromGateway(TestContext context) {
+        JsonObject body = new JsonObject().put("hello", "test");
+        assertRestByClient(context, HttpMethod.POST, "/api/drivers/gpio/test", RequestData.builder().body(body).build(),
+                           201, body);
+    }
+
+    @Test
     public void test_unregisterDriver_notFound(TestContext context) {
         restRequest(context, HttpMethod.DELETE, "/api/drivers/registration/d", RequestData.builder().build()).subscribe(
             resp -> context.assertEquals(410, resp.getStatus().code()));
