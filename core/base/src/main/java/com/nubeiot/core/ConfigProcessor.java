@@ -105,6 +105,7 @@ public class ConfigProcessor {
         } else {
             input = defaultConfig.mergeIn(provideConfig, true);
         }
+        logger.info("Input Nubeconfig: " + input.toString());
         return overrideConfig(clazz, envConfig, input, overrideAppConfig, overrideOtherConfigs);
     }
 

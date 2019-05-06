@@ -280,14 +280,16 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private JsonObject mergeDeployConfig(JsonObject oldOne, JsonObject newOne, boolean isUpdate) {
         if (Objects.isNull(newOne)) {
-            return new JsonObject().put(AppConfig.NAME, oldOne);
+            return oldOne;
         }
         if (isUpdate) {
             return newOne;
         }
-        JsonObject request = new JsonObject().put(AppConfig.NAME,
-                                                  IConfig.from(newOne, NubeConfig.class).getAppConfig().toJson());
-        return IConfig.merge(new JsonObject().put(AppConfig.NAME, oldOne), request, NubeConfig.class).toJson();
+        JsonObject oldApp = IConfig.from(oldOne, AppConfig.class).toJson();
+        JsonObject newApp = IConfig.from(newOne, AppConfig.class).toJson();
+        JsonObject appAfterMerge = IConfig.merge(oldApp, newApp, AppConfig.class).toJson();
+
+        return IConfig.merge(new JsonObject().put(AppConfig.NAME, appAfterMerge), oldOne, NubeConfig.class).toJson();
     }
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {

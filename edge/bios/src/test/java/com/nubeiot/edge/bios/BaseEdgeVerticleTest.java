@@ -41,9 +41,14 @@ public abstract class BaseEdgeVerticleTest {
     static final String VERSION = "1.0.0";
     static final String SERVICE_NAME = "bios-mytest";
     static final String MODULE_ID = GROUP_ID + ":" + ARTIFACT_ID;
+    static final String APP_CONFIG = "{\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:" +
+                                     "./bios-installer\",\"minimumIdle\":1,\"maximumPoolSize\":2," +
+                                     "\"connectionTimeout\":30000,\"idleTimeout\":180000,\"maxLifetime\":300000}}}";
     static final JsonObject DEPLOY_CONFIG = new JsonObject(
-        "{\"__kafka__\":{\"__client__\":{\"bootstrap.servers\":[\"localhost:9092\"]},\"__security__\":{\"security" +
-        ".protocol\":\"PLAINTEXT\"}}}");
+        "{\"__deploy__\":{\"ha\":false,\"instances\":1," + "\"maxWorkerExecuteTime\":60000000000," +
+        "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\"," + "\"multiThreaded\":false,\"worker\":false," +
+        "\"workerPoolSize\":20},\"dataDir\":\"file:///root/" + ".nubeio/com.nubeiot.edge.module_installer\"," +
+        "\"__app__\": " + APP_CONFIG + " }");
     private static boolean isAvailable;
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -140,6 +145,11 @@ public abstract class BaseEdgeVerticleTest {
 
     protected void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus,
                                     JsonObject expectedConfig) {
+        testingDBUpdated(context, expectedModuleState, expectedTransactionStatus, expectedConfig.toString());
+    }
+
+    protected void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus,
+                                    String expectedConfig) {
         Async async = context.async(2);
         //Event module is deployed/updated successfully, we still have a gap for DB update.
         long timer = this.vertx.setPeriodic(1000, event -> {
@@ -155,7 +165,7 @@ public abstract class BaseEdgeVerticleTest {
                                 JsonObject actualConfig = IConfig.from(tblModule.getDeployConfig(), NubeConfig.class)
                                                                  .getAppConfig()
                                                                  .toJson();
-                                context.assertEquals(actualConfig, expectedConfig);
+                                context.assertEquals(actualConfig.toString(), expectedConfig);
                                 TestHelper.testComplete(async);
                             }
                         }, error -> {

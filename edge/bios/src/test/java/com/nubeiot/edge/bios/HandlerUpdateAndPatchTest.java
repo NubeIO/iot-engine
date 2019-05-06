@@ -139,13 +139,16 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
                                           .put("appConfig", appConfig);
 
         executeThenAssert(EventAction.PATCH, context, body, (response, async) -> {
+            System.out.println(response);
             context.assertEquals(response.getString("status"), Status.SUCCESS.name());
             TestHelper.testComplete(async);
         });
 
         JsonObject expect = new JsonObject("{\"__kafka__\":{\"__client__\":{\"bootstrap" +
-                                           ".servers\":[\"localhost:9094\"]},\"__security__\":{\"security" +
-                                           ".protocol\":\"PLAINTEXT\"}}}");
+                                           ".servers\":[\"localhost:9094\"]}},\"__sql__\":{\"dialect\":\"H2\"," +
+                                           "\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:./bios-installer\"," +
+                                           "\"minimumIdle\":1,\"maximumPoolSize\":2,\"connectionTimeout\":30000," +
+                                           "\"idleTimeout\":180000,\"maxLifetime\":300000}}}");
 
         testingDBUpdated(context, State.DISABLED, Status.SUCCESS, expect);
     }

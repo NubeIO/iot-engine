@@ -85,7 +85,7 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
             TestHelper.testComplete(async);
             async.awaitSuccess();
         });
-        testingDBUpdated(context, State.DISABLED, Status.FAILED, DEPLOY_CONFIG);
+        testingDBUpdated(context, State.DISABLED, Status.FAILED, APP_CONFIG);
     }
 
     @Test
@@ -96,7 +96,7 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
             TestHelper.testComplete(async);
             async.awaitSuccess();
         });
-        testingDBUpdated(context, State.DISABLED, Status.FAILED, DEPLOY_CONFIG);
+        testingDBUpdated(context, State.DISABLED, Status.FAILED, APP_CONFIG);
     }
 
     private void createService(TestContext context) {
