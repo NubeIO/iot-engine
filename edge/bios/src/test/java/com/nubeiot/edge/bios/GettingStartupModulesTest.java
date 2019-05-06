@@ -211,20 +211,6 @@ public class GettingStartupModulesTest extends BaseEdgeVerticleTest {
         async1.awaitSuccess();
     }
 
-    @Test
-    public void test_getting_startup_modules(TestContext context) {
-        Async async = context.async(1);
-        this.edgeVerticle.getEntityHandler().getModulesWhenBootstrap().subscribe(modules -> {
-            System.out.println("Assert Size");
-            context.assertEquals(modules.size(), 6);
-            TestHelper.testComplete(async);
-        }, error -> {
-            context.fail();
-            TestHelper.testComplete(async);
-        });
-        async.awaitSuccess();
-    }
-
     private void assertModuleState(TestContext context, Async async1, TblModuleDao moduleDao, State expectedState,
                                    String moduleId) {
         moduleDao.findOneById(moduleId).subscribe(result -> {
