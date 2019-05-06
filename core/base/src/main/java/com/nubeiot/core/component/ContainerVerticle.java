@@ -51,10 +51,10 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     public void start() {
         Optional<NubeConfig> nubeConfig = new ConfigProcessor(vertx.getDelegate()).processAndOverride(NubeConfig.class,
-                                                                                                      config(),
                                                                                                       Configs.loadJsonConfig(
                                                                                                           configFile()),
-                                                                                                      true, false);
+                                                                                                      config(), true,
+                                                                                                      false);
 
         this.nubeConfig = nubeConfig.orElseGet(() -> computeConfig(config()));
         this.eventController = new EventController(vertx);

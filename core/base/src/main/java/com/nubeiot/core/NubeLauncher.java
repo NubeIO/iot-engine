@@ -48,10 +48,9 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         logger.info("Parsing and merging configuration...");
         logger.debug("CONFIG::INPUT: {}", config.encode());
         Optional<NubeConfig> nubeConfig = new ConfigProcessor(Vertx.vertx()).processAndOverride(NubeConfig.class,
-                                                                                                config,
                                                                                                 Configs.loadJsonConfig(
                                                                                                     "system.json"),
-                                                                                                false, true);
+                                                                                                config, false, true);
 
         this.config = nubeConfig.orElseGet(
             () -> IConfig.merge(Configs.loadJsonConfig("system.json"), config, NubeConfig.class));
