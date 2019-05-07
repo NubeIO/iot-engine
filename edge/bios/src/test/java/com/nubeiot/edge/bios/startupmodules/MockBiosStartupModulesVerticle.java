@@ -1,4 +1,4 @@
-package com.nubeiot.edge.bios;
+package com.nubeiot.edge.bios.startupmodules;
 
 import java.util.Arrays;
 
@@ -6,6 +6,8 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.edge.bios.EdgeBiosVerticle;
+import com.nubeiot.edge.bios.MockModuleLoader;
 import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.ModuleEventHandler;
 import com.nubeiot.edge.core.TransactionEventHandler;
