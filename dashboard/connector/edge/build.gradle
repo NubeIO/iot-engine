@@ -8,5 +8,5 @@ dependencies {
     compile project(':core:httpserver')
     compile project(':core:sql')
     compile project(':core:cluster:hazelcast')
-    compile project(':eventbus:edge')
+    compile project(':eventbus:edge:installer')
 }

@@ -13,7 +13,7 @@ import com.nubeiot.edge.core.ModuleEventListener;
 import com.nubeiot.edge.core.TransactionEventListener;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
 
@@ -39,15 +39,15 @@ public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
     private void publishService(MicroContext microContext) {
         final ServiceDiscoveryController localController = microContext.getLocalController();
         localController.addEventMessageRecord("service_installer",
-                                              EdgeInstallerEventBus.getServiceInstaller(true).getAddress(),
+                                              InstallerEventModel.getServiceInstaller(true).getAddress(),
                                               EventMethodDefinition.createDefault("/services", "/:service_id"))
                        .subscribe();
         localController.addEventMessageRecord("service_transaction",
-                                              EdgeInstallerEventBus.getServiceTransaction(true).getAddress(),
+                                              InstallerEventModel.getServiceTransaction(true).getAddress(),
                                               EventMethodDefinition.createDefault("/services/transactions",
                                                                                   "/:transaction_id")).subscribe();
         localController.addEventMessageRecord("service_last_transaction",
-                                              EdgeInstallerEventBus.getServiceLastTransaction(true).getAddress(),
+                                              InstallerEventModel.getServiceLastTransaction(true).getAddress(),
                                               EventMethodDefinition.createDefault("/services/:module_id/transactions",
                                                                                   "/:transaction_id")).subscribe();
     }
@@ -55,14 +55,14 @@ public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
     @Override
     public void registerEventbus(EventController controller) {
         boolean local = this.nubeConfig.getAppConfig().toJson().getBoolean("deviceLocal", false);
-        controller.register(EdgeInstallerEventBus.getServiceInstaller(local),
-                            new ModuleEventListener(this, EdgeInstallerEventBus.getServiceInstaller(local)));
-        controller.register(EdgeInstallerEventBus.getServiceTransaction(local),
-                            new TransactionEventListener(this, EdgeInstallerEventBus.getServiceTransaction(local)));
-        controller.register(EdgeInstallerEventBus.getServiceLastTransaction(local),
+        controller.register(InstallerEventModel.getServiceInstaller(local),
+                            new ModuleEventListener(this, InstallerEventModel.getServiceInstaller(local)));
+        controller.register(InstallerEventModel.getServiceTransaction(local),
+                            new TransactionEventListener(this, InstallerEventModel.getServiceTransaction(local)));
+        controller.register(InstallerEventModel.getServiceLastTransaction(local),
                             new LastTransactionEventListener(this,
-                                                             EdgeInstallerEventBus.getServiceLastTransaction(local)));
-        controller.register(EdgeInstallerEventBus.SERVICE_DEPLOYMENT, new ModuleLoader(vertx));
+                                                             InstallerEventModel.getServiceLastTransaction(local)));
+        controller.register(InstallerEventModel.SERVICE_DEPLOYMENT, new ModuleLoader(vertx));
     }
 
 }

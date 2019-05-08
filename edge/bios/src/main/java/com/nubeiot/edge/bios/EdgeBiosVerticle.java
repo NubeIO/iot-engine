@@ -9,7 +9,7 @@ import com.nubeiot.edge.core.ModuleEventListener;
 import com.nubeiot.edge.core.TransactionEventListener;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public class EdgeBiosVerticle extends EdgeVerticle {
 
@@ -33,11 +33,11 @@ public class EdgeBiosVerticle extends EdgeVerticle {
 
     @Override
     public void registerEventbus(EventController controller) {
-        controller.register(EdgeInstallerEventBus.BIOS_INSTALLER,
-                            new ModuleEventListener(this, EdgeInstallerEventBus.BIOS_INSTALLER));
-        controller.register(EdgeInstallerEventBus.BIOS_TRANSACTION,
-                            new TransactionEventListener(this, EdgeInstallerEventBus.BIOS_TRANSACTION));
-        controller.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, new ModuleLoader(vertx));
+        controller.register(InstallerEventModel.BIOS_INSTALLER,
+                            new ModuleEventListener(this, InstallerEventModel.BIOS_INSTALLER));
+        controller.register(InstallerEventModel.BIOS_TRANSACTION,
+                            new TransactionEventListener(this, InstallerEventModel.BIOS_TRANSACTION));
+        controller.register(InstallerEventModel.BIOS_DEPLOYMENT, new ModuleLoader(vertx));
     }
 
 }
