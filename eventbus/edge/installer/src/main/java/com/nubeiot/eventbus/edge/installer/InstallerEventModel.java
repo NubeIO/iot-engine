@@ -1,4 +1,4 @@
-package com.nubeiot.eventbus.edge;
+package com.nubeiot.eventbus.edge.installer;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
@@ -8,7 +8,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class EdgeInstallerEventBus {
+public final class InstallerEventModel {
 
     public static final EventModel SERVICE_DEPLOYMENT = EventModel.builder()
                                                                   .address("nubeiot.edge.app.installer.deployment")

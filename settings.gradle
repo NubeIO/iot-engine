@@ -36,7 +36,8 @@ include ':edge:connector:bacnet:simulator'
 include ':edge:connector:sample:kafka'
 include ':edge:rule'
 
-include ':eventbus:edge'
+include ':eventbus:edge:installer'
+include ':eventbus:edge:datapoint'
 include ':eventbus:edge:gateway'
 
 include ':ext:rx-jdbc'

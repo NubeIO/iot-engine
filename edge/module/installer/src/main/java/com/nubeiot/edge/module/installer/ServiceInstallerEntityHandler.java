@@ -11,7 +11,7 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.InstallerConfig;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public final class ServiceInstallerEntityHandler extends EdgeEntityHandler {
 
@@ -21,7 +21,7 @@ public final class ServiceInstallerEntityHandler extends EdgeEntityHandler {
 
     @Override
     protected EventModel deploymentEvent() {
-        return EdgeInstallerEventBus.SERVICE_DEPLOYMENT;
+        return InstallerEventModel.SERVICE_DEPLOYMENT;
     }
 
     @Override
