@@ -29,7 +29,7 @@ public class ResponseDataWriter implements HttpResponseWriter<ResponseData> {
     public void write(ResponseData result, HttpServerRequest request, HttpServerResponse response) {
         String message = deSerializeResponseBody(result.body());
         response.setStatusCode(result.getStatus().code());
-        response.headers().setAll(HttpUtils.HttpHeaderUtils.deserializeHeaders(result.headers()));
+        response.headers().addAll(HttpUtils.HttpHeaderUtils.deserializeHeaders(result.headers()));
         response.putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE);
 
         if (Objects.isNull(message)) {

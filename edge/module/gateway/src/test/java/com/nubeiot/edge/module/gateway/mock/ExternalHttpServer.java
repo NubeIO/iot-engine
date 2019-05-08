@@ -1,10 +1,13 @@
 package com.nubeiot.edge.module.gateway.mock;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.exceptions.NubeException;
@@ -31,6 +34,12 @@ public class ExternalHttpServer extends ContainerVerticle {
         @Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
         public JsonObject get() {
             return new JsonObject().put("hello", "test");
+        }
+
+        @POST
+        @Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
+        public JsonObject post(@Context RoutingContext ctx) {
+            return ctx.getBodyAsJson();
         }
 
         @GET
