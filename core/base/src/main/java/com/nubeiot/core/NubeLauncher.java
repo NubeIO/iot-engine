@@ -29,14 +29,15 @@ import com.nubeiot.core.utils.Strings;
 public final class NubeLauncher extends io.vertx.core.Launcher {
 
     private static final Logger logger;
-    private NubeConfig config;
-    private VertxOptions options;
-    private IClusterDelegate clusterDelegate;
 
     static {
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
         logger = LoggerFactory.getLogger(NubeLauncher.class);
     }
+
+    private NubeConfig config;
+    private VertxOptions options;
+    private IClusterDelegate clusterDelegate;
 
     public static void main(String[] args) {
         new NubeLauncher().dispatch(args);
@@ -50,11 +51,9 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
                                                                                                 Configs.loadJsonConfig(
                                                                                                     "system.json"),
                                                                                                 config, false, true);
-        if (nubeConfig.isPresent()) {
-            this.config = nubeConfig.get();
-        } else {
-            this.config = IConfig.merge(Configs.loadJsonConfig("system.json"), config, NubeConfig.class);
-        }
+
+        this.config = nubeConfig.orElseGet(
+            () -> IConfig.merge(Configs.loadJsonConfig("system.json"), config, NubeConfig.class));
         JsonObject cfg = this.config.toJson();
         logger.debug("CONFIG::FINAL: {}", cfg.encode());
         super.afterConfigParsed(cfg);
@@ -88,6 +87,19 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         super.beforeDeployingVerticle(options);
     }
 
+    @Override
+    public void afterStoppingVertx() {
+        ClusterManager clusterManager = this.options.getClusterManager();
+        if (Objects.nonNull(clusterManager)) {
+            clusterManager.leave(event -> {
+                if (event.failed()) {
+                    logger.error("Failed to leave cluster", event.cause());
+                }
+            });
+        }
+        super.afterStoppingVertx();
+    }
+
     private DeployConfig mergeDeployConfig(DeploymentOptions deploymentOptions) {
         JsonObject input = deploymentOptions.toJson();
         input.remove("config");
@@ -101,19 +113,6 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
         logger.debug("CONFIG::INPUT APP CFG: {}", input.encode());
         logger.debug("CONFIG::CURRENT APP CFG: {}", config.getAppConfig().toJson().encode());
         return IConfig.merge(config.getAppConfig(), input, NubeConfig.AppConfig.class);
-    }
-
-    @Override
-    public void afterStoppingVertx() {
-        ClusterManager clusterManager = this.options.getClusterManager();
-        if (Objects.nonNull(clusterManager)) {
-            clusterManager.leave(event -> {
-                if (event.failed()) {
-                    logger.error("Failed to leave cluster", event.cause());
-                }
-            });
-        }
-        super.afterStoppingVertx();
     }
 
     private VertxOptions reloadVertxOptions(VertxOptions vertxOptions) {

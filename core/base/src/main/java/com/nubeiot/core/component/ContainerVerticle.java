@@ -55,11 +55,8 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
                                                                                                           configFile()),
                                                                                                       config(), true,
                                                                                                       false);
-        if (nubeConfig.isPresent()) {
-            this.nubeConfig = nubeConfig.get();
-        } else {
-            this.nubeConfig = computeConfig(config());
-        }
+
+        this.nubeConfig = nubeConfig.orElseGet(() -> computeConfig(config()));
         this.eventController = new EventController(vertx);
         this.registerEventbus(eventController);
         this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController)

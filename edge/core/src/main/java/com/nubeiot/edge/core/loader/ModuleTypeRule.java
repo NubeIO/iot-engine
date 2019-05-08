@@ -38,7 +38,8 @@ public final class ModuleTypeRule implements Shareable {
 
     public ITblModule parse(JsonObject metadata) {
         ModuleType moduleType = ModuleType.factory(metadata.getString("service_type"));
-        JsonObject module = moduleType.serialize(metadata, this);
+        String serviceId = metadata.getString("service_id");
+        JsonObject module = Objects.isNull(serviceId) ? moduleType.serialize(metadata, this) : metadata;
         return new TblModule().fromJson(module);
     }
 
@@ -47,7 +48,8 @@ public final class ModuleTypeRule implements Shareable {
     }
 
     private NubeConfig computeNubeConfig(@NonNull Path parentDataDir, AppConfig appConfig, String serviceId) {
-        return NubeConfig.blank(FileUtils.recomputeDataDir(parentDataDir, serviceId), appConfig.toJson());
+        return NubeConfig.blank(FileUtils.recomputeDataDir(parentDataDir, FileUtils.normalize(serviceId)),
+                                appConfig.toJson());
     }
 
     public ModuleTypeRule registerRule(ModuleType moduleType, List<String> searchPattern) {

@@ -11,7 +11,7 @@ import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 
-public final class EdgeBiosVerticle extends EdgeVerticle {
+public class EdgeBiosVerticle extends EdgeVerticle {
 
     static final String SHARED_MODULE_RULE = "MODULE_RULE";
 

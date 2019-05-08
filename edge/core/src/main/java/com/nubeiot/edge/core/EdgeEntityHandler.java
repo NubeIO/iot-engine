@@ -152,11 +152,10 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
             ITblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
 
-            boolean isUpdated = EventAction.UPDATE == event;
             State targetState = Objects.isNull(module.getState()) ? oldOne.getState() : module.getState();
-            if (isUpdated || EventAction.PATCH == event) {
+            if (EventAction.UPDATE == event || EventAction.PATCH == event) {
                 return markModuleModify(module.setDeployLocation(config.getRepoConfig().getLocal()),
-                                        new TblModule(oldOne), isUpdated).flatMap(
+                                        new TblModule(oldOne), EventAction.UPDATE == event).flatMap(
                     key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
                         transId -> createPreDeployResult(key, transId, event, oldOne.getState(), targetState)));
             }
@@ -286,9 +285,11 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         if (isUpdate) {
             return newOne;
         }
-        JsonObject request = new JsonObject().put(AppConfig.NAME,
-                                                  IConfig.from(newOne, NubeConfig.class).getAppConfig().toJson());
-        return IConfig.merge(IConfig.from(oldOne, NubeConfig.class), request, NubeConfig.class).toJson();
+        JsonObject oldApp = IConfig.from(oldOne, AppConfig.class).toJson();
+        JsonObject newApp = IConfig.from(newOne, AppConfig.class).toJson();
+        JsonObject appAfterMerge = IConfig.merge(oldApp, newApp, AppConfig.class).toJson();
+
+        return IConfig.merge(new JsonObject().put(AppConfig.NAME, appAfterMerge), oldOne, NubeConfig.class).toJson();
     }
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {

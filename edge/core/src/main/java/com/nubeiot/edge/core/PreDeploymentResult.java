@@ -75,7 +75,7 @@ public class PreDeploymentResult implements JsonData, IRequestData {
 
         public PreDeploymentResult build() {
             NubeConfig deployCfg = parseDeployCfg(this.deployCfg);
-            deployCfg.setDataDir(FileUtils.recomputeDataDir(dataDir, serviceId));
+            deployCfg.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(serviceId)));
             return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
                                            Objects.isNull(targetState) ? State.NONE : targetState, serviceId,
                                            serviceFQN, deployId, deployCfg, silent);
