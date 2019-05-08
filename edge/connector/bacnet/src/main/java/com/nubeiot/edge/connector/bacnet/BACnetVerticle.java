@@ -18,6 +18,7 @@ import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.edge.connector.bacnet.handlers.DeviceEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.NubeServiceEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.PointsEventHandler;
@@ -29,7 +30,6 @@ public class BACnetVerticle extends ContainerVerticle {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected final Map<String, BACnetInstance> bacnetInstances = new HashMap<>();
-    protected PollingTimers pollingTimers;
 
     @Override
     public void start() {
@@ -43,13 +43,12 @@ public class BACnetVerticle extends ContainerVerticle {
             throw new NubeException("No network information provided");
         }
 
-        pollingTimers = new PollingTimers(vertx);
         startBACnet(bacnetConfig);
         initLocalPoints(bacnetConfig.getLocalPointsAddress());
         //TODO: init all configs from DB when ready to implement
         //REGISTER ENDPOINTS
         registerEventbus(new EventController(vertx));
-        //        addProvider(new MicroserviceProvider(), this::publishServices);
+        addProvider(new MicroserviceProvider(), this::publishServices);
     }
 
     @Override
@@ -57,7 +56,7 @@ public class BACnetVerticle extends ContainerVerticle {
         if (bacnetInstances.isEmpty()) {
             return; //Prevents super.start() from registering before BACnetInstance is started
         }
-        controller.register(BACnetEventModels.NUBE_SERVICE_SUB, new NubeServiceEventHandler(bacnetInstances));
+        controller.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.DEVICES, new DeviceEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.POINTS, new PointsEventHandler(bacnetInstances));
         this.eventController = controller;
@@ -75,12 +74,18 @@ public class BACnetVerticle extends ContainerVerticle {
         bacnetConfig.getIpConfigs().forEach(ipConfig -> {
             logger.info("Initialising bacnet instance for network {}", ipConfig.getName());
             bacnetInstances.put(ipConfig.getName(),
-                                BACnetInstance.createBACnet(bacnetConfig, ipConfig, eventController, pollingTimers,
-                                                            vertx));
+                                BACnetInstance.createBACnet(bacnetConfig, ipConfig, eventController, vertx));
         });
     }
 
     protected void publishServices(MicroContext microContext) {
+        microContext.getLocalController()
+                    .addEventMessageRecord("bacnet-local-service", BACnetEventModels.NUBE_SERVICE.getAddress(),
+                                           EventMethodDefinition.createDefault("/bacnet",
+                                                                               "/bacnet"),
+                                           new JsonObject())
+                    .subscribe();
+
         microContext.getLocalController()
                     .addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),
                                            EventMethodDefinition.createDefault("/bacnet/:network/",

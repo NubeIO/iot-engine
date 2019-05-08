@@ -90,13 +90,7 @@ public class BACnetEventListener extends DeviceEventAdapter {
 
         JsonObject reqBody = new JsonObject().put("value", val).put("priority", req.getPriority().intValue());
 
-        vertx.createHttpClient().put(4000, "localhost", "/points/" + id + "/value", response -> {
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                response.bodyHandler(body -> {
-                    System.err.println(body.toJsonObject());
-                });
-            }
-        }).putHeader("content-type", "application/json").end(reqBody.toString());
+        //TODO: send the shit off to fuck knows where anymore...
     }
 
 }
