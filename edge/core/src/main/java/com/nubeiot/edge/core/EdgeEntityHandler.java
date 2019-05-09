@@ -86,7 +86,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     protected Single<JsonObject> startupModules() {
         return this.getModulesWhenBootstrap()
                    .flattenAsObservable(tblModules -> tblModules)
-                   .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.UPDATE))
+                   .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.MIGRATE))
                    .collect(JsonArray::new, JsonArray::add)
                    .map(results -> new JsonObject().put("results", results));
     }
@@ -207,7 +207,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             module.setState(State.UNAVAILABLE);
         }
 
-        if (event == EventAction.UPDATE && module.getState() == State.PENDING) {
+        if (event == EventAction.MIGRATE && module.getState() == State.PENDING) {
             module.setState(State.ENABLED);
         }
 
@@ -223,9 +223,10 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             ITblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
 
             State targetState = Objects.isNull(module.getState()) ? oldOne.getState() : module.getState();
-            if (EventAction.UPDATE == event || EventAction.PATCH == event) {
+            if (EventAction.UPDATE == event || EventAction.PATCH == event || event == EventAction.MIGRATE) {
                 return markModuleModify(module.setDeployLocation(config.getRepoConfig().getLocal()),
-                                        new TblModule(oldOne), EventAction.UPDATE == event).flatMap(
+                                        new TblModule(oldOne),
+                                        EventAction.UPDATE == event || EventAction.MIGRATE == event).flatMap(
                     key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
                         transId -> createPreDeployResult(key, transId, event, oldOne.getState(), targetState)));
             }
@@ -242,7 +243,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                       State prevState, State targetState) {
         return PreDeploymentResult.builder()
                                   .transactionId(transactionId)
-                                  .action(event)
+                                  .action(event == EventAction.MIGRATE ? EventAction.UPDATE : event)
                                   .prevState(prevState)
                                   .targetState(targetState)
                                   .serviceId(module.getServiceId())

@@ -33,8 +33,7 @@ public final class StateMachine {
         stateMachine = new StateMachine().addLifeCycle(EventAction.INIT, new StateLifeCycle(State.ENABLED))
                                          .addLifeCycle(EventAction.CREATE, new StateLifeCycle(State.ENABLED))
                                          .addLifeCycle(EventAction.UPDATE,
-                                                       new StateLifeCycle(State.ENABLED).addFrom(State.DISABLED)
-                                                                                        .addFrom(State.PENDING))
+                                                       new StateLifeCycle(State.ENABLED).addFrom(State.DISABLED))
                                          .addLifeCycle(EventAction.UPDATE,
                                                        new StateLifeCycle(State.DISABLED).addFrom(State.ENABLED))
                                          .addLifeCycle(EventAction.HALT,
@@ -45,7 +44,12 @@ public final class StateMachine {
                                                        new StateLifeCycle(State.DISABLED).addFrom(State.ENABLED))
                                          .addLifeCycle(EventAction.REMOVE,
                                                        new StateLifeCycle(State.UNAVAILABLE).addFrom(State.ENABLED,
-                                                                                                     State.DISABLED));
+                                                                                                     State.DISABLED))
+                                         .addLifeCycle(EventAction.MIGRATE,
+                                                       new StateLifeCycle(State.ENABLED).addFrom(State.DISABLED)
+                                                                                        .addFrom(State.PENDING))
+                                         .addLifeCycle(EventAction.MIGRATE,
+                                                       new StateLifeCycle(State.DISABLED).addFrom(State.ENABLED));
     }
 
     private StateMachine addLifeCycle(EventAction event, StateLifeCycle lifeCycle) {
@@ -120,12 +124,16 @@ public final class StateMachine {
             }
         }
 
-        if (!(from.contains(state) ||
-              ((eventAction == EventAction.PATCH || eventAction == EventAction.UPDATE) && targetState == state))) {
-            throw new StateException(
-                String.format("%s is in state %s, cannot execute action %s to state %s", objName, state, eventAction,
-                              targetState));
+        if (from.contains(state)) {
+            return;
         }
+
+        if ((eventAction == EventAction.MIGRATE ||eventAction == EventAction.PATCH || eventAction == EventAction.UPDATE) && targetState == state) {
+            return;
+        }
+        throw new StateException(
+            String.format("%s is in state %s, cannot execute action %s to state %s", objName, state, eventAction,
+                          targetState));
     }
 
     public State transition(EventAction eventAction, Status status, State targetState) {
