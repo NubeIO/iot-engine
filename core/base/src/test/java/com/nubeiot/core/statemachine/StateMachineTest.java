@@ -57,6 +57,31 @@ public class StateMachineTest {
     }
 
     @Test
+    public void test_Migrate_From_Pending_To_Enable() {
+        StateMachine.instance().validateConflict(State.PENDING, EventAction.MIGRATE, "module", State.ENABLED);
+    }
+
+    @Test
+    public void test_Migrate_From_Enable_To_Enable() {
+        StateMachine.instance().validateConflict(State.ENABLED, EventAction.MIGRATE, "module", State.ENABLED);
+    }
+
+    @Test
+    public void test_Migrate_From_Disable_To_Enable() {
+        StateMachine.instance().validateConflict(State.DISABLED, EventAction.MIGRATE, "module", State.ENABLED);
+    }
+
+    @Test
+    public void test_Migrate_From_Disable_To_Disable() {
+        StateMachine.instance().validateConflict(State.DISABLED, EventAction.MIGRATE, "module", State.DISABLED);
+    }
+
+    @Test
+    public void test_Migrate_From_Enable_To_Disable() {
+        StateMachine.instance().validateConflict(State.ENABLED, EventAction.MIGRATE, "module", State.DISABLED);
+    }
+
+    @Test
     public void test_Update_From_Enable_To_Enable() {
         StateMachine.instance().validateConflict(State.ENABLED, EventAction.UPDATE, "module", State.ENABLED);
     }

@@ -1,6 +1,7 @@
 package com.nubeiot.edge.bios;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import org.jooq.SQLDialect;
@@ -27,6 +28,7 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 
@@ -207,6 +209,24 @@ public abstract class BaseEdgeVerticleTest {
                   .eventBus()
                   .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
                         context.asyncAssertSuccess(handle -> handler.accept((JsonObject) handle.body(), async)));
+    }
+
+    protected void assertModuleState(TestContext context, Async async1, TblModuleDao moduleDao, State expectedState,
+                                   String moduleId) {
+        moduleDao.findOneById(moduleId).subscribe(result -> {
+            TblModule tblModule = result.orElse(null);
+            context.assertNotNull(tblModule);
+            if (tblModule.getState() != State.PENDING) {
+                System.out.println("Checking state of " + moduleId);
+                if (Objects.nonNull(expectedState)) {
+                    context.assertEquals(tblModule.getState(), expectedState);
+                }
+                TestHelper.testComplete(async1);
+            }
+        }, error -> {
+            context.fail(error);
+            TestHelper.testComplete(async1);
+        });
     }
 
 }

@@ -1,6 +1,7 @@
 package com.nubeiot.edge.core;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.UUID;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.TableField;
+import org.jooq.impl.DSL;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -48,6 +50,7 @@ import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblRemoveHistory;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
+import com.nubeiot.edge.core.model.tables.records.TblTransactionRecord;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -83,7 +86,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     protected Single<JsonObject> startupModules() {
         return this.getModulesWhenBootstrap()
                    .flattenAsObservable(tblModules -> tblModules)
-                   .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.UPDATE))
+                   .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.MIGRATE))
                    .collect(JsonArray::new, JsonArray::add)
                    .map(results -> new JsonObject().put("results", results));
     }
@@ -116,7 +119,69 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     public Single<List<TblModule>> getModulesWhenBootstrap() {
-        return moduleDao.findManyByState(Collections.singletonList(State.ENABLED));
+        Single<List<TblModule>> enabledModules = moduleDao.findManyByState(Collections.singletonList(State.ENABLED));
+        Single<List<TblModule>> pendingModules = this.getPendingModules();
+        return Single.zip(enabledModules, pendingModules, (flattenEnabledModules, flattenPendingModules) -> {
+            if (Objects.nonNull(flattenEnabledModules)) {
+                flattenEnabledModules.addAll(flattenPendingModules);
+                return flattenEnabledModules;
+            }
+            return flattenPendingModules;
+        });
+    }
+
+    private Single<List<TblModule>> getPendingModules() {
+        return moduleDao.findManyByState(Collections.singletonList(State.PENDING))
+                        .flattenAsObservable(pendingModules -> pendingModules)
+                        .flatMapSingle(module -> {
+                            return queryExecutor.executeAny(dslContext -> {
+                                List<TblTransactionRecord> tblTransactionRecords = dslContext.select()
+                                                                                             .from(
+                                                                                                 Tables.TBL_TRANSACTION)
+                                                                                             .where(DSL.field(
+                                                                                                 Tables.TBL_TRANSACTION.MODULE_ID)
+                                                                                                       .eq(module.getServiceId()))
+                                                                                             .and(DSL.field(
+                                                                                                 Tables.TBL_TRANSACTION.STATUS)
+                                                                                                     .eq(Status.WIP))
+                                                                                             .orderBy(
+                                                                                                 Tables.TBL_TRANSACTION.MODIFIED_AT
+                                                                                                     .desc())
+                                                                                             .limit(1)
+                                                                                             .fetchInto(
+                                                                                                 TblTransactionRecord.class);
+                                if (tblTransactionRecords.isEmpty()) {
+                                    module.setState(State.DISABLED);
+                                    moduleDao.update(module).subscribe();
+                                    return Optional.empty();
+                                }
+                                if (checkingTransaction(tblTransactionRecords.get(0))) {
+                                    return Optional.of(module);
+                                }
+                                module.setState(State.DISABLED);
+                                moduleDao.update(module).subscribe();
+                                return Optional.empty();
+                            });
+                        })
+                        .collect(ArrayList::new, (modules, optional) -> {
+                            if (optional.isPresent()) {
+                                modules.add((TblModule) optional.get());
+                            }
+                        });
+    }
+
+    private boolean checkingTransaction(TblTransactionRecord transaction) {
+        if (transaction.getEvent() == EventAction.CREATE || transaction.getEvent() == EventAction.INIT) {
+            return true;
+        }
+        if (transaction.getEvent() == EventAction.UPDATE || transaction.getEvent() == EventAction.PATCH) {
+            JsonObject prevState = transaction.getPrevState();
+            if (Objects.isNull(prevState)) {
+                return true;
+            }
+            return new TblModule(prevState).getState() != State.DISABLED;
+        }
+        return false;
     }
 
     public Single<Boolean> isFreshInstall() {
@@ -141,6 +206,11 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         if (event == EventAction.REMOVE) {
             module.setState(State.UNAVAILABLE);
         }
+
+        if (event == EventAction.MIGRATE && module.getState() == State.PENDING) {
+            module.setState(State.ENABLED);
+        }
+
         return validateModuleState(module, event).flatMap(o -> {
             if (EventAction.INIT == event || EventAction.CREATE == event) {
                 module.setState(State.NONE);
@@ -153,9 +223,10 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             ITblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
 
             State targetState = Objects.isNull(module.getState()) ? oldOne.getState() : module.getState();
-            if (EventAction.UPDATE == event || EventAction.PATCH == event) {
+            if (EventAction.UPDATE == event || EventAction.PATCH == event || event == EventAction.MIGRATE) {
                 return markModuleModify(module.setDeployLocation(config.getRepoConfig().getLocal()),
-                                        new TblModule(oldOne), EventAction.UPDATE == event).flatMap(
+                                        new TblModule(oldOne),
+                                        EventAction.UPDATE == event || EventAction.MIGRATE == event).flatMap(
                     key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
                         transId -> createPreDeployResult(key, transId, event, oldOne.getState(), targetState)));
             }
@@ -172,7 +243,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                       State prevState, State targetState) {
         return PreDeploymentResult.builder()
                                   .transactionId(transactionId)
-                                  .action(event)
+                                  .action(event == EventAction.MIGRATE ? EventAction.UPDATE : event)
                                   .prevState(prevState)
                                   .targetState(targetState)
                                   .serviceId(module.getServiceId())
