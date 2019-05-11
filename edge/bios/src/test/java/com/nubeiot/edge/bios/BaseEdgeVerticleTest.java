@@ -43,7 +43,8 @@ public abstract class BaseEdgeVerticleTest {
     static final String VERSION = "1.0.0";
     static final String SERVICE_NAME = "bios-mytest";
     static final String MODULE_ID = GROUP_ID + ":" + ARTIFACT_ID;
-    static final String APP_CONFIG = "{\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:" +
+    static final String APP_CONFIG = "{\"__kafka__\":{\"__client__\":{\"bootstrap.servers\":[\"localhost:9092\"]}}," +
+                                     "\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:" +
                                      "./bios-installer\",\"minimumIdle\":1,\"maximumPoolSize\":2," +
                                      "\"connectionTimeout\":30000,\"idleTimeout\":180000,\"maxLifetime\":300000}}}";
     static final JsonObject DEPLOY_CONFIG = new JsonObject(
@@ -212,7 +213,7 @@ public abstract class BaseEdgeVerticleTest {
     }
 
     protected void assertModuleState(TestContext context, Async async1, TblModuleDao moduleDao, State expectedState,
-                                   String moduleId) {
+                                     String moduleId) {
         moduleDao.findOneById(moduleId).subscribe(result -> {
             TblModule tblModule = result.orElse(null);
             context.assertNotNull(tblModule);
