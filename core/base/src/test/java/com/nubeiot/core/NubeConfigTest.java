@@ -179,6 +179,23 @@ public class NubeConfigTest {
     }
 
     @Test
+    public void test_merge_app_config() throws JSONException {
+        String oldApp = "{\"__kafka__\":{\"__client__\":{\"bootstrap.servers\":[\"localhost:9092\"]}}," +
+                        "\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:" +
+                        "./bios-installer\",\"minimumIdle\":1,\"maximumPoolSize\":2," +
+                        "\"connectionTimeout\":30000,\"idleTimeout\":180000,\"maxLifetime\":300000}}}";
+
+        String newApp = "{\"__kafka__\":{\"__client__\":{\"bootstrap" + ".servers\":[\"localhost:9094\"]}}}";
+        AppConfig merge = IConfig.merge(oldApp, newApp, AppConfig.class);
+        System.out.println(merge.toJson());
+        JSONAssert.assertEquals("{\"__kafka__\":{\"__client__\":{\"bootstrap.servers\":[\"localhost:9094\"]}}," +
+                                "\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:" +
+                                "./bios-installer\",\"minimumIdle\":1,\"maximumPoolSize\":2," +
+                                "\"connectionTimeout\":30000,\"idleTimeout\":180000,\"maxLifetime\":300000}}}",
+                                merge.toJson().encode(), JSONCompareMode.STRICT);
+    }
+
+    @Test
     public void test_merge_with_blank_value() throws JSONException {
         AppConfig appconfig = IConfig.merge("{\"__app__\":{\"test\":\"1\"}}", "{\"__app__\":{\"test\":\"" + "\"}}",
                                             AppConfig.class);

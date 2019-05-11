@@ -133,41 +133,35 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private Single<List<TblModule>> getPendingModules() {
         return moduleDao.findManyByState(Collections.singletonList(State.PENDING))
                         .flattenAsObservable(pendingModules -> pendingModules)
-                        .flatMapSingle(module -> {
-                            return queryExecutor.executeAny(dslContext -> {
-                                List<TblTransactionRecord> tblTransactionRecords = dslContext.select()
-                                                                                             .from(
-                                                                                                 Tables.TBL_TRANSACTION)
-                                                                                             .where(DSL.field(
-                                                                                                 Tables.TBL_TRANSACTION.MODULE_ID)
-                                                                                                       .eq(module.getServiceId()))
-                                                                                             .and(DSL.field(
-                                                                                                 Tables.TBL_TRANSACTION.STATUS)
-                                                                                                     .eq(Status.WIP))
-                                                                                             .orderBy(
-                                                                                                 Tables.TBL_TRANSACTION.MODIFIED_AT
-                                                                                                     .desc())
-                                                                                             .limit(1)
-                                                                                             .fetchInto(
-                                                                                                 TblTransactionRecord.class);
-                                if (tblTransactionRecords.isEmpty()) {
-                                    module.setState(State.DISABLED);
-                                    moduleDao.update(module).subscribe();
-                                    return Optional.empty();
-                                }
-                                if (checkingTransaction(tblTransactionRecords.get(0))) {
-                                    return Optional.of(module);
-                                }
+                        .flatMapSingle(module -> queryExecutor.executeAny(dslContext -> {
+                            List<TblTransactionRecord> tblTransactionRecords = dslContext.select()
+                                                                                         .from(Tables.TBL_TRANSACTION)
+                                                                                         .where(DSL.field(
+                                                                                             Tables.TBL_TRANSACTION.MODULE_ID)
+                                                                                                   .eq(module.getServiceId()))
+                                                                                         .and(DSL.field(
+                                                                                             Tables.TBL_TRANSACTION.STATUS)
+                                                                                                 .eq(Status.WIP))
+                                                                                         .orderBy(
+                                                                                             Tables.TBL_TRANSACTION.MODIFIED_AT
+                                                                                                 .desc())
+                                                                                         .limit(1)
+                                                                                         .fetchInto(
+                                                                                             TblTransactionRecord.class);
+                            if (tblTransactionRecords.isEmpty()) {
                                 module.setState(State.DISABLED);
                                 moduleDao.update(module).subscribe();
                                 return Optional.empty();
-                            });
-                        })
-                        .collect(ArrayList::new, (modules, optional) -> {
-                            if (optional.isPresent()) {
-                                modules.add((TblModule) optional.get());
                             }
-                        });
+                            if (checkingTransaction(tblTransactionRecords.get(0))) {
+                                return Optional.of(module);
+                            }
+                            module.setState(State.DISABLED);
+                            moduleDao.update(module).subscribe();
+                            return Optional.empty();
+                        }))
+                        .collect(ArrayList::new,
+                                 (modules, optional) -> optional.ifPresent(o -> modules.add((TblModule) o)));
     }
 
     private boolean checkingTransaction(TblTransactionRecord transaction) {
@@ -360,7 +354,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         JsonObject newApp = IConfig.from(newOne, AppConfig.class).toJson();
         JsonObject appAfterMerge = IConfig.merge(oldApp, newApp, AppConfig.class).toJson();
 
-        return IConfig.merge(new JsonObject().put(AppConfig.NAME, appAfterMerge), oldOne, NubeConfig.class).toJson();
+        return IConfig.merge(oldOne, new JsonObject().put(AppConfig.NAME, appAfterMerge), NubeConfig.class).toJson();
     }
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {
