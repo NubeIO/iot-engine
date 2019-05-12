@@ -1,7 +1,9 @@
 package com.nubeiot.core.micro;
 
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
+import io.vertx.servicediscovery.Status;
 
 import com.nubeiot.core.micro.MicroConfig.LocalServiceDiscoveryConfig;
 
@@ -17,6 +19,7 @@ class LocalSDController extends ServiceDiscoveryController {
     @Override
     public <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, T announceMonitor) {
         eventBus.localConsumer(config.getAnnounceAddress(), announceMonitor);
+        eventBus.send(config.getAnnounceAddress(), new JsonObject().put("status", Status.OUT_OF_SERVICE));
     }
 
     @Override

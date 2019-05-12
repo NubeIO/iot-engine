@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import io.reactivex.Observable;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.servicediscovery.Record;
@@ -65,6 +66,14 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
 
     @Override
     protected void handle(Record record) {
+        if (record.getStatus() == Status.OUT_OF_SERVICE) {
+            registerServicesOnOnline();
+        } else {
+            registerService(record);
+        }
+    }
+
+    private void registerService(Record record) {
         DynamicRestApi api = DynamicRestApi.create(record);
         if (Objects.isNull(api)) {
             return;
@@ -92,6 +101,13 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
                 router.route(path).disable();
             });
         }
+    }
+
+    private void registerServicesOnOnline() {
+        getController().getRecords().flatMap(records -> Observable.fromIterable(records).map(r -> {
+            registerService(r);
+            return true;
+        }).toList()).subscribe();
     }
 
 }
