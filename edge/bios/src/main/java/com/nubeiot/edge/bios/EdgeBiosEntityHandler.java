@@ -17,6 +17,7 @@ import io.vertx.maven.ResolverOptions;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
@@ -56,7 +57,7 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
     private Single<EventMessage> bootstrap(EventAction action) {
         InstallerConfig installerCfg = IConfig.from(this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_INSTALLER_CFG),
                                                     InstallerConfig.class);
-        Path dataDir = FileUtils.toPath((String) this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_DATA_DIR));
+        Path dataDir = FileUtils.toPath((String) this.sharedDataFunc.apply(SharedDataDelegate.SHARED_DATADIR));
         logger.debug("Shared app configuration: {}", installerCfg);
         setupServiceRepository(installerCfg.getRepoConfig());
         return this.isFreshInstall()

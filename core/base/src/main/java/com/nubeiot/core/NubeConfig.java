@@ -27,19 +27,13 @@ import lombok.Setter;
 @AllArgsConstructor
 public final class NubeConfig implements IConfig {
 
-    private Path dataDir = FileUtils.DEFAULT_DATADIR;
+    private Path dataDir;
     @JsonProperty(value = SystemConfig.NAME)
     private SystemConfig systemConfig;
     @JsonProperty(value = DeployConfig.NAME)
     private DeployConfig deployConfig = new DeployConfig();
     @JsonProperty(value = AppConfig.NAME)
     private AppConfig appConfig = new AppConfig();
-
-    @Override
-    public String name() { return null; }
-
-    @Override
-    public Class<? extends IConfig> parent() { return null; }
 
     /**
      * Create {@link NubeConfig} with {@link AppConfig}, default {@link DeployConfig} and without {@link SystemConfig}
@@ -52,8 +46,7 @@ public final class NubeConfig implements IConfig {
     }
 
     public static NubeConfig blank(@NonNull Path dataDir, @NonNull JsonObject appConfig) {
-        return new NubeConfig(dataDir, null, new DeployConfig(),
-                              IConfig.from(appConfig, AppConfig.class));
+        return new NubeConfig(dataDir, null, new DeployConfig(), IConfig.from(appConfig, AppConfig.class));
     }
 
     /**
@@ -63,6 +56,19 @@ public final class NubeConfig implements IConfig {
      */
     public static NubeConfig blank() {
         return NubeConfig.blank(new JsonObject());
+    }
+
+    @Override
+    public String name() { return null; }
+
+    @Override
+    public Class<? extends IConfig> parent() { return null; }
+
+    public Path getDataDir() {
+        if (Objects.isNull(dataDir)) {
+            dataDir = FileUtils.DEFAULT_DATADIR;
+        }
+        return dataDir;
     }
 
     @Getter
@@ -143,15 +149,15 @@ public final class NubeConfig implements IConfig {
             @Override
             public Class<? extends IConfig> parent() { return SystemConfig.class; }
 
-            @Override
-            public JsonObject toJson() { return options.toJson(); }
-
             @SuppressWarnings("unchecked")
             @Override
             public <T extends IConfig> T merge(@NonNull T to) {
                 JsonObject jsonObject = JsonObject.mapFrom(this).mergeIn(new JsonObject(((Map) to)));
                 return (T) new EventBusConfig(jsonObject.getMap());
             }
+
+            @Override
+            public JsonObject toJson() { return options.toJson(); }
 
         }
 

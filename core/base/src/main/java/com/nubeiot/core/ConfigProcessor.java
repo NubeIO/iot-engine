@@ -25,7 +25,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.NubeConfig.DeployConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig;
@@ -129,6 +128,7 @@ public class ConfigProcessor {
         JsonObject appConfig = new JsonObject();
         JsonObject systemConfig = new JsonObject();
         JsonObject deployConfig = new JsonObject();
+        Object inputDataDir = input.getValue(DATA_DIR);
 
         for (Map.Entry<String, Object> entry : envConfig.entrySet()) {
             String[] keyArray = entry.getKey().split("\\.");
@@ -171,10 +171,11 @@ public class ConfigProcessor {
         nubeConfig.put(SystemConfig.NAME, new JsonObject(inputSystemConfig.toString()).mergeIn(systemConfig, true));
         nubeConfig.put(DeployConfig.NAME, new JsonObject(inputDeployConfig.toString()).mergeIn(deployConfig, true));
 
+        if (!nubeConfig.containsKey(DATA_DIR)) {
+            nubeConfig.put(DATA_DIR, inputDataDir);
+        }
         try {
-            return Optional.of(IConfig.MAPPER.copy()
-                                             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                             .readValue(nubeConfig.toString(), clazz));
+            return Optional.of(IConfig.MAPPER_IGNORE_UNKNOWN_PROPERTY.readValue(nubeConfig.toString(), clazz));
         } catch (IOException ex) {
             logger.warn("Converting to object failed", ex);
             throw new NubeException(ex);

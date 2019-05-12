@@ -16,7 +16,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class EdgeVerticle extends ContainerVerticle {
 
-    public static final String SHARED_DATA_DIR = "DATA_DIR";
     public static final String SHARED_INSTALLER_CFG = "INSTALLER_CFG";
     @Getter
     private ModuleTypeRule moduleRule;
@@ -30,8 +29,7 @@ public abstract class EdgeVerticle extends ContainerVerticle {
         super.start();
         this.installerConfig = IConfig.from(nubeConfig.getAppConfig(), InstallerConfig.class);
         this.installerConfig.getRepoConfig().recomputeLocal(nubeConfig.getDataDir());
-        this.addSharedData(SHARED_DATA_DIR, this.nubeConfig.getDataDir().toString())
-            .addSharedData(SHARED_INSTALLER_CFG, this.getInstallerConfig().toJson());
+        this.addSharedData(SHARED_INSTALLER_CFG, this.getInstallerConfig().toJson());
         this.moduleRule = this.getModuleRuleProvider().get();
         this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass()), this::handler);
     }

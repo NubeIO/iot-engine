@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import org.hamcrest.CoreMatchers;
 import org.json.JSONException;
 import org.junit.After;
 import org.junit.Assert;
@@ -357,6 +358,45 @@ public class ConfigProcessorTest {
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
                                                                              nubeConfig.toJson(), false, false);
         Assert.assertFalse(finalResult.isPresent());
+    }
+
+    @Test
+    public void test_dataDir_not_available_in_system_should_use_default_config() {
+        String jsonInput = "{\"dataDir\":\"/data\",\"__system__\":{\"__cluster__\":{\"active\":true," +
+                           "\"ha\":true,\"type\":\"HAZELCAST\",\"options\":{}}," +
+                           "\"__eventBus__\":{\"acceptBacklog\":-1,\"clientAuth\":\"REQUIRED\"," +
+                           "\"clusterPingInterval\":20000,\"clusterPingReplyInterval\":20000," +
+                           "\"clusterPublicPort\":-1,\"clustered\":true,\"connectTimeout\":60000,\"crlPaths\":[]," +
+                           "\"crlValues\":[],\"enabledCipherSuites\":[]," +
+                           "\"enabledSecureTransportProtocols\":[\"TLSv1\",\"TLSv1.1\",\"TLSv1.2\"],\"host\":\"0.0.0" +
+                           ".0\",\"idleTimeout\":0,\"idleTimeoutUnit\":\"SECONDS\"," +
+                           "\"keyStoreOptions\":{\"password\":\"nubesparkEventBus\",\"path\":\"eventBusKeystore" +
+                           ".jks\"},\"logActivity\":false,\"port\":5000,\"receiveBufferSize\":-1," +
+                           "\"reconnectAttempts\":0,\"reconnectInterval\":1000,\"reuseAddress\":true," +
+                           "\"reusePort\":false,\"sendBufferSize\":-1,\"soLinger\":-1,\"ssl\":true,\"tcpCork\":false," +
+                           "\"tcpFastOpen\":false,\"tcpKeepAlive\":false,\"tcpNoDelay\":true,\"tcpQuickAck\":false," +
+                           "\"trafficClass\":-1,\"trustAll\":true," +
+                           "\"trustStoreOptions\":{\"password\":\"nubesparkEventBus\",\"path\":\"eventBusKeystore" +
+                           ".jks\"},\"useAlpn\":false,\"usePooledBuffers\":false}},\"__deploy__\":{\"ha\":false," +
+                           "\"instances\":1,\"maxWorkerExecuteTime\":60000000000," +
+                           "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\",\"multiThreaded\":false,\"worker\":false," +
+                           "\"workerPoolSize\":20},\"__app__\":{\"__sql__\":{\"dialect\":\"H2\"," +
+                           "\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:/data/db/bios\"}}," +
+                           "\"__installer__\":{\"auto_install\":true," +
+                           "\"repository\":{\"remote\":{\"urls\":{\"java\":[{\"url\":\"http://nexus:8081/repository" +
+                           "/maven-releases/\"},{\"url\":\"http://nexus:8081/repository/maven-snapshots/\"}," +
+                           "{\"url\":\"http://nexus:8081/repository/maven-central/\"}]}}}," +
+                           "\"builtin_app\":[{\"metadata\":{\"group_id\":\"com.nubeiot.edge.module\"," +
+                           "\"artifact_id\":\"installer\",\"version\":\"1.0.0-SNAPSHOT\"," +
+                           "\"service_name\":\"bios-installer\"},\"appConfig\":{\"__sql__\":{\"dialect\":\"H2\"," +
+                           "\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:/data/db/bios-installer\"}}}}," +
+                           "{\"metadata\":{\"group_id\":\"com.nubeiot.edge.module\",\"artifact_id\":\"gateway\"," +
+                           "\"version\":\"1.0.0-SNAPSHOT\",\"service_name\":\"edge-gateway\"}}]}}}";
+        nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
+        Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, nubeConfig.toJson(),
+                                                                             null, true, true);
+        Assert.assertTrue(finalResult.isPresent());
+        Assert.assertThat(finalResult.get().getDataDir().toString(), CoreMatchers.containsString("data"));
     }
 
     private void overrideConfigThenAssert(Consumer<NubeConfig> configConsumer, boolean overrideAppConfig,

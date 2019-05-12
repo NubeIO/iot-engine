@@ -246,7 +246,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                  module.getServiceName()))
                                   .deployId(module.getDeployId())
                                   .deployCfg(module.getDeployConfig())
-                                  .dataDir((String) this.getSharedDataFunc().apply(EdgeVerticle.SHARED_DATA_DIR))
+                                  .dataDir((String) this.getSharedDataFunc().apply(SharedDataDelegate.SHARED_DATADIR))
                                   .build();
     }
 
