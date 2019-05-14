@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.HiddenException;
@@ -25,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public interface IConfig extends JsonData {
 
     ObjectMapper MAPPER = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
+    ObjectMapper MAPPER_IGNORE_UNKNOWN_PROPERTY = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     static <T extends IConfig> T fromClasspath(String jsonFile, Class<T> clazz) {
         return IConfig.from(Configs.loadJsonConfig(jsonFile), clazz);
