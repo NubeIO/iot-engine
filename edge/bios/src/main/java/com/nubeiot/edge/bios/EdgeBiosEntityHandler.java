@@ -117,8 +117,13 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
             String javaLocal = FileUtils.createFolder(local, type.name().toLowerCase(Locale.ENGLISH));
             logger.info("{} local repositories: {}", type, javaLocal);
             logger.info("{} remote repositories: {}", type, remoteUrls);
-            ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
-                remoteUrls.stream().map(RemoteUrl::getUrl).collect(Collectors.toList())).setLocalRepository(javaLocal);
+            ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(remoteUrls.stream()
+                                                                                             .map(
+                                                                                                 mavenUrl -> type.getAuthenticatedRemoteUrl(
+                                                                                                     mavenUrl))
+                                                                                             .collect(
+                                                                                                 Collectors.toList()))
+                                                            .setLocalRepository(javaLocal);
             vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
     }

@@ -27,6 +27,8 @@ import lombok.ToString;
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 public final class InstallerConfig implements IConfig {
 
+    public static final String NAME = "__installer__";
+
     private boolean autoInstall = true;
     @JsonProperty(value = RepositoryConfig.NAME)
     @Setter
@@ -36,7 +38,7 @@ public final class InstallerConfig implements IConfig {
 
     @Override
     public String name() {
-        return "__installer__";
+        return NAME;
     }
 
     @Override

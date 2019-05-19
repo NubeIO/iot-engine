@@ -6,6 +6,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.core.InstallerConfig.Credential;
+import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
@@ -72,6 +74,34 @@ public interface ModuleType {
                         .put("service_name", serviceName)
                         .put("service_type", name());
         }
+
+        @Override
+        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
+            Credential credential = defaultUrl.getCredential();
+            if (Objects.isNull(credential)) {
+                return defaultUrl.getUrl();
+            }
+
+            if (defaultUrl.getUrl().startsWith("http://")) {
+                return defaultUrl.getUrl()
+                                 .replaceFirst("http://", new StringBuilder("http://").append(credential.getUser())
+                                                                                     .append(":")
+                                                                                     .append(credential.getPassword())
+                                                                                     .append("@")
+                                                                                     .toString());
+            }
+
+            if (defaultUrl.getUrl().startsWith("https://")) {
+                return defaultUrl.getUrl()
+                                 .replaceFirst("https://", new StringBuilder("https://").append(credential.getUser())
+                                                                                     .append(":")
+                                                                                     .append(credential.getPassword())
+                                                                                     .append("@")
+                                                                                     .toString());
+            }
+
+            return defaultUrl.getUrl();
+        }
     };
     ModuleType JAVASCRIPT = new AbstractModuleType() {
         @Override
@@ -87,6 +117,11 @@ public interface ModuleType {
         @Override
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
+        }
+
+        @Override
+        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
+            return defaultUrl.getUrl();
         }
     };
     ModuleType GROOVY = new AbstractModuleType() {
@@ -104,6 +139,11 @@ public interface ModuleType {
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
+
+        @Override
+        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
+            return defaultUrl.getUrl();
+        }
     };
 
 
@@ -119,6 +159,8 @@ public interface ModuleType {
         }
 
     }
+
+
     ModuleType SCALA = new AbstractModuleType() {
         @Override
         public String name() {
@@ -133,6 +175,11 @@ public interface ModuleType {
         @Override
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
+        }
+
+        @Override
+        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
+            return defaultUrl.getUrl();
         }
     };
     ModuleType KOTLIN = new AbstractModuleType() {
@@ -150,6 +197,11 @@ public interface ModuleType {
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
+
+        @Override
+        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
+            return defaultUrl.getUrl();
+        }
     };
     ModuleType RUBY = new AbstractModuleType() {
         @Override
@@ -166,11 +218,17 @@ public interface ModuleType {
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
+
+        @Override
+        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
+            return defaultUrl.getUrl();
+        }
     };
 
     String generateFQN(String serviceId, String version, String serviceName);
 
     JsonObject serialize(@NonNull JsonObject input, @NonNull ModuleTypeRule rule) throws InvalidModuleType;
 
+    String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl);
 
 }
