@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.nubeiot.auth.Credential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.utils.FileUtils;
@@ -101,27 +102,6 @@ public final class InstallerConfig implements IConfig {
                 return this;
             }
 
-        }
-
-    }
-
-
-    @Getter
-    public static class Credential {
-
-        private final String user;
-        private final String password;
-
-        @JsonCreator
-        public Credential(@JsonProperty(value = "user", required = true) String user,
-                          @JsonProperty(value = "password", required = true) String password) {
-            this.user = user;
-            this.password = password;
-        }
-
-        @Override
-        public String toString() {
-            return "User: " + user + "::Password:*****";
         }
 
     }

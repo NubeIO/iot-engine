@@ -5,8 +5,8 @@ import java.util.Objects;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.nubeiot.auth.Credential;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.InstallerConfig.Credential;
 import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 
 import lombok.EqualsAndHashCode;
@@ -83,24 +83,21 @@ public interface ModuleType {
             }
 
             if (defaultUrl.getUrl().startsWith("http://")) {
-                return defaultUrl.getUrl()
-                                 .replaceFirst("http://", new StringBuilder("http://").append(credential.getUser())
-                                                                                     .append(":")
-                                                                                     .append(credential.getPassword())
-                                                                                     .append("@")
-                                                                                     .toString());
+                return getRemoteUrl(defaultUrl.getUrl(), credential, "http://");
             }
 
             if (defaultUrl.getUrl().startsWith("https://")) {
-                return defaultUrl.getUrl()
-                                 .replaceFirst("https://", new StringBuilder("https://").append(credential.getUser())
-                                                                                     .append(":")
-                                                                                     .append(credential.getPassword())
-                                                                                     .append("@")
-                                                                                     .toString());
+                return getRemoteUrl(defaultUrl.getUrl(), credential, "https://");
             }
 
             return defaultUrl.getUrl();
+        }
+
+        String getRemoteUrl(String defaultUrl, Credential credential, String urlPrefix) {
+
+            return defaultUrl.replaceFirst(urlPrefix,
+                                           new StringBuilder(urlPrefix).append(credential.computeCredentialUrl())
+                                                                       .toString());
         }
     };
     ModuleType JAVASCRIPT = new AbstractModuleType() {

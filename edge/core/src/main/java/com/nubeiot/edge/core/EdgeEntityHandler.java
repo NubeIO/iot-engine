@@ -22,6 +22,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.auth.BasicCredential;
+import com.nubeiot.auth.Credential;
+import com.nubeiot.auth.TokenCredential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
@@ -235,6 +238,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private PreDeploymentResult createPreDeployResult(ITblModule module, String transactionId, EventAction event,
                                                       State prevState, State targetState) {
+        module.setDeployConfig(this.removeInstallerNexusCredential(new TblModule(module)));
         return PreDeploymentResult.builder()
                                   .transactionId(transactionId)
                                   .action(event == EventAction.MIGRATE ? EventAction.UPDATE : event)
@@ -417,6 +421,42 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<Optional<JsonObject>> findHistoryTransactionById(String transactionId) {
         return historyDao.findOneById(transactionId).map(optional -> optional.map(ITblRemoveHistory::toJson));
+    }
+
+    public JsonObject removeInstallerNexusCredential(TblModule record) {
+        if ("com.nubeiot.edge.module:installer".equals(record.getServiceId())) {
+            logger.info("Removing nexus password from result");
+            NubeConfig deployConfig = IConfig.from(record.getDeployConfig(), NubeConfig.class);
+            Object installerObject = deployConfig.getAppConfig().get(InstallerConfig.NAME);
+            if (Objects.isNull(installerObject)) {
+                logger.debug("Installer config is not available");
+                return record.getDeployConfig();
+            }
+            InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
+            installerConfig.getRepoConfig().getRemoteConfig().getUrls().values().forEach(remoteUrl -> {
+                remoteUrl.forEach(url -> {
+                    Credential credential = url.getCredential();
+                    if (Objects.isNull(credential)) {
+                        return;
+                    }
+                    switch (credential.getType()) {
+                        case BASIC:
+                            url.setCredential(
+                                new BasicCredential(credential.getType(), ((BasicCredential) credential).getUser(),
+                                                    "******"));
+                            break;
+                        case TOKEN:
+                            url.setCredential(
+                                new TokenCredential(credential.getType(), "******************************"));
+                            break;
+                    }
+                });
+            });
+            deployConfig.getAppConfig().put(InstallerConfig.NAME, installerConfig);
+            logger.debug("Installer config {}", installerConfig.toJson().toString());
+            return deployConfig.toJson();
+        }
+        return record.getDeployConfig();
     }
 
 }

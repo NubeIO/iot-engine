@@ -34,6 +34,7 @@
             "java": [
               {
                 "credential": {
+                  "type": "BASIC",
                   "user": "admin",
                   "password": "admin123"
                 },
@@ -41,6 +42,7 @@
               },
               {
                 "credential": {
+                  "type": "BASIC",
                   "user": "admin",
                   "password": "admin123"
                 },
@@ -48,6 +50,7 @@
               },
               {
                 "credential": {
+                  "type": "BASIC",
                   "user": "admin",
                   "password": "admin123"
                 },

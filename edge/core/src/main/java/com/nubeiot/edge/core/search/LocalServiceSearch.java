@@ -20,8 +20,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
@@ -30,10 +28,9 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.EdgeEntityHandler;
-import com.nubeiot.edge.core.InstallerConfig;
-import com.nubeiot.edge.core.InstallerConfig.Credential;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.Tables;
+import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.model.tables.records.TblModuleRecord;
 
 import lombok.NonNull;
@@ -61,28 +58,7 @@ public final class LocalServiceSearch implements IServiceSearch {
     }
 
     private SingleSource<? extends JsonObject> removeCredentialsInDeployConfig(TblModuleRecord record) {
-        if ("com.nubeiot.edge.module:installer".equals(record.getServiceId())) {
-            logger.info("Removing nexus password from result");
-            NubeConfig deployConfig = IConfig.from(record.getDeployConfig(), NubeConfig.class);
-            Object installerObject = deployConfig.getAppConfig().get(InstallerConfig.NAME);
-            if (Objects.isNull(installerObject)) {
-                logger.debug("Installer config is not available");
-                return Single.just(record.toJson());
-            }
-            InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
-            installerConfig.getRepoConfig().getRemoteConfig().getUrls().values().forEach(remoteUrl -> {
-                remoteUrl.forEach(url -> {
-                    if (Objects.isNull(url.getCredential())) {
-                        logger.debug("Credential is not available");
-                        return;
-                    }
-                    url.setCredential(new Credential(url.getCredential().getUser(), "********"));
-                });
-                deployConfig.getAppConfig().put(InstallerConfig.NAME, installerConfig);
-                logger.debug("Installer config {}", installerConfig.toJson().toString());
-                record.setDeployConfig(deployConfig.toJson());
-            });
-        }
+        record.setDeployConfig(this.entityHandler.removeInstallerNexusCredential(new TblModule(record)));
         return Single.just(record.toJson());
     }
 
