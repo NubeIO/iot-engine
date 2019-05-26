@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -152,8 +153,14 @@ public final class Networks {
         }
 
         if (usableINetAddresses.size() > 1) {
-            throw new IllegalStateException(
-                "Don't know which INetAddress to use, there are more than one: " + usableINetAddresses);
+            logger.error("Don't know which INetAddress to use, there are more than one: {}", usableINetAddresses);
+            try {
+                String localHostAddress = InetAddress.getLocalHost().getHostAddress();
+                logger.error("Hence we are using localhost address: {}", localHostAddress);
+                return localHostAddress;
+            } catch (UnknownHostException e) {
+                throw new NetworkException("Cannot get the network interfaces", e);
+            }
         } else if (usableINetAddresses.size() == 1) {
             logger.info("Found default INetAddress: {}", usableINetAddresses.get(0).toString());
             return usableINetAddresses.get(0).getHostAddress();
