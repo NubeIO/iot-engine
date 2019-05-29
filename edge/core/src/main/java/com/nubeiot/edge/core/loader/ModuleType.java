@@ -5,9 +5,7 @@ import java.util.Objects;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.nubeiot.auth.Credential;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
@@ -75,30 +73,6 @@ public interface ModuleType {
                         .put("service_type", name());
         }
 
-        @Override
-        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
-            Credential credential = defaultUrl.getCredential();
-            if (Objects.isNull(credential)) {
-                return defaultUrl.getUrl();
-            }
-
-            if (defaultUrl.getUrl().startsWith("http://")) {
-                return getRemoteUrl(defaultUrl.getUrl(), credential, "http://");
-            }
-
-            if (defaultUrl.getUrl().startsWith("https://")) {
-                return getRemoteUrl(defaultUrl.getUrl(), credential, "https://");
-            }
-
-            return defaultUrl.getUrl();
-        }
-
-        String getRemoteUrl(String defaultUrl, Credential credential, String urlPrefix) {
-
-            return defaultUrl.replaceFirst(urlPrefix,
-                                           new StringBuilder(urlPrefix).append(credential.computeCredentialUrl())
-                                                                       .toString());
-        }
     };
     ModuleType JAVASCRIPT = new AbstractModuleType() {
         @Override
@@ -116,10 +90,6 @@ public interface ModuleType {
             return null;
         }
 
-        @Override
-        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
-            return defaultUrl.getUrl();
-        }
     };
     ModuleType GROOVY = new AbstractModuleType() {
         @Override
@@ -137,10 +107,6 @@ public interface ModuleType {
             return null;
         }
 
-        @Override
-        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
-            return defaultUrl.getUrl();
-        }
     };
 
 
@@ -174,10 +140,6 @@ public interface ModuleType {
             return null;
         }
 
-        @Override
-        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
-            return defaultUrl.getUrl();
-        }
     };
     ModuleType KOTLIN = new AbstractModuleType() {
         @Override
@@ -195,10 +157,6 @@ public interface ModuleType {
             return null;
         }
 
-        @Override
-        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
-            return defaultUrl.getUrl();
-        }
     };
     ModuleType RUBY = new AbstractModuleType() {
         @Override
@@ -216,16 +174,10 @@ public interface ModuleType {
             return null;
         }
 
-        @Override
-        public String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl) {
-            return defaultUrl.getUrl();
-        }
     };
 
     String generateFQN(String serviceId, String version, String serviceName);
 
     JsonObject serialize(@NonNull JsonObject input, @NonNull ModuleTypeRule rule) throws InvalidModuleType;
-
-    String getAuthenticatedRemoteUrl(RemoteUrl defaultUrl);
 
 }

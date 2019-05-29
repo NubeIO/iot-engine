@@ -18,7 +18,35 @@ public abstract class Credential {
     @Getter
     private final CredentialType type;
 
-    public abstract String computeCredentialUrl();
+    @Getter
+    private final String user;
+
+    public abstract String computeUrl(String defaultUrl);
+
+    protected abstract String getPrefixUrl(String urlPrefix);
+
+    public abstract String computeHeader();
+
+    protected String computeRemoteUrl(String defaultUrl) {
+        if (defaultUrl.startsWith("http://")) {
+            return computeUrl(defaultUrl, "http://");
+        }
+
+        if (defaultUrl.startsWith("https://")) {
+            return computeUrl(defaultUrl, "https://");
+        }
+
+        return defaultUrl;
+    }
+
+    private String computeUrl(String defaultUrl, String urlPrefix) {
+        return defaultUrl.replaceFirst(urlPrefix, this.getPrefixUrl(urlPrefix));
+    }
+
+    @Override
+    public String toString() {
+        return "User: " + user + "::Type: " + type;
+    }
 
     public enum CredentialType {
         BASIC, TOKEN;

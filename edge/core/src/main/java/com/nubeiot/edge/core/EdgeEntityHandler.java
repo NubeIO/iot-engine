@@ -22,9 +22,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import com.nubeiot.auth.BasicCredential;
 import com.nubeiot.auth.Credential;
-import com.nubeiot.auth.TokenCredential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
@@ -439,17 +437,22 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                     if (Objects.isNull(credential)) {
                         return;
                     }
-                    switch (credential.getType()) {
-                        case BASIC:
-                            url.setCredential(
-                                new BasicCredential(credential.getType(), ((BasicCredential) credential).getUser(),
-                                                    "******"));
-                            break;
-                        case TOKEN:
-                            url.setCredential(
-                                new TokenCredential(credential.getType(), "******************************"));
-                            break;
-                    }
+                    url.setCredential(new Credential(credential.getType(), credential.getUser()) {
+                        @Override
+                        public String computeUrl(String defaultUrl) {
+                            return null;
+                        }
+
+                        @Override
+                        public String getPrefixUrl(String urlPrefix) {
+                            return null;
+                        }
+
+                        @Override
+                        public String computeHeader() {
+                            return null;
+                        }
+                    });
                 });
             });
             deployConfig.getAppConfig().put(InstallerConfig.NAME, installerConfig);

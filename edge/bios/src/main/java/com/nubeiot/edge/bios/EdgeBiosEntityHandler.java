@@ -119,8 +119,10 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
             logger.info("{} remote repositories: {}", type, remoteUrls);
             ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(remoteUrls.stream()
                                                                                              .map(
-                                                                                                 mavenUrl -> type.getAuthenticatedRemoteUrl(
-                                                                                                     mavenUrl))
+                                                                                                 mavenUrl -> mavenUrl.getCredential()
+                                                                                                                     .computeUrl(
+                                                                                                                         mavenUrl
+                                                                                                                             .getUrl()))
                                                                                              .collect(
                                                                                                  Collectors.toList()))
                                                             .setLocalRepository(javaLocal);
