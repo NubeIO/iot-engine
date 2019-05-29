@@ -26,6 +26,12 @@
               },
               {
                 "url": "http://127.0.0.1:8081/repository/maven-central/"
+              },
+              {
+                "url": "https://maven.mangoautomation.net/repository/ias-snapshot/"
+              },
+              {
+                "url": "https://maven.mangoautomation.net/repository/ias-release/"
               }
             ]
           }
