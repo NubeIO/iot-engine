@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import io.reactivex.Observable;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.servicediscovery.Record;
@@ -66,8 +65,8 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
 
     @Override
     protected void handle(Record record) {
-        if (record.getStatus() == Status.OUT_OF_SERVICE) {
-            registerServicesOnOnline();
+        if (record.getStatus() == Status.UNKNOWN) {
+            rescanService();
         } else {
             registerService(record);
         }
@@ -103,11 +102,8 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
         }
     }
 
-    private void registerServicesOnOnline() {
-        getController().getRecords().flatMap(records -> Observable.fromIterable(records).map(r -> {
-            registerService(r);
-            return true;
-        }).toList()).subscribe();
+    private void rescanService() {
+        getController().getRecords().subscribe(records -> records.forEach(this::registerService));
     }
 
 }

@@ -22,7 +22,7 @@ class ClusterSDController extends ServiceDiscoveryController {
     @Override
     <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, @NonNull T announceMonitor) {
         eventBus.consumer(config.getAnnounceAddress(), announceMonitor);
-        eventBus.send(config.getAnnounceAddress(), new JsonObject().put("status", Status.OUT_OF_SERVICE));
+        eventBus.send(config.getAnnounceAddress(), new JsonObject().put("status", Status.UNKNOWN));
     }
 
     @Override

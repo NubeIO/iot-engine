@@ -97,6 +97,9 @@ public final class ModuleEventHandler implements EventHandler {
         if (Strings.isBlank(module.getServiceName())) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Missing service_name");
         }
+        if (Strings.isBlank(module.getVersion())) {
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Missing version");
+        }
         return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.CREATE);
     }
 

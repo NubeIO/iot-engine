@@ -112,10 +112,9 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
             Unit unit = entry.getValue().get().registerSharedData(getSharedKey());
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
-            return vertx.rxDeployVerticle(unit, options).doOnSuccess(deployId -> {
-                logger.info("{} verticle is deployed", unit.getClass().getName());
-                succeed(unit, deployId);
-            }).doOnError(t -> logger.error("Cannot start unit verticle {}", t, unit.getClass().getName()));
+            return vertx.rxDeployVerticle(unit, options)
+                        .doOnSuccess(deployId -> succeed(unit, deployId))
+                        .doOnError(t -> logger.error("Cannot start unit verticle {}", t, unit.getClass().getName()));
         }).toList().subscribe(ignored -> {
             if (Objects.nonNull(successHandler)) {
                 this.successHandler.handle(null);
