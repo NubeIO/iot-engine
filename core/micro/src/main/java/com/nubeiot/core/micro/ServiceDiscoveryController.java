@@ -66,6 +66,9 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     abstract <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, @NonNull T announceMonitor);
 
+    // TODO: find better way instead force rescan in every register call
+    abstract void rescanService(EventBus eventBus);
+
     abstract <T extends ServiceGatewayUsageMonitor> void subscribe(EventBus eventBus, @NonNull T usageMonitor);
 
     abstract String kind();
@@ -75,6 +78,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     final void subscribe(io.vertx.core.Vertx vertx, String announceMonitorClass, String usageMonitorClass) {
         subscribe(vertx.eventBus(), ServiceGatewayAnnounceMonitor.create(vertx, this, sharedKey, announceMonitorClass));
         subscribe(vertx.eventBus(), ServiceGatewayUsageMonitor.create(vertx, this, sharedKey, usageMonitorClass));
+        rescanService(vertx.eventBus());
     }
 
     public boolean isEnabled() {

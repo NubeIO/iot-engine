@@ -102,6 +102,8 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
         }
     }
 
+    // TODO: find better way instead force rescan in every register call
+    // TODO: for checking in cluster mode
     private void rescanService() {
         getController().getRecords().subscribe(records -> records.forEach(this::registerService));
     }

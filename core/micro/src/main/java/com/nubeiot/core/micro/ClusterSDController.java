@@ -22,6 +22,10 @@ class ClusterSDController extends ServiceDiscoveryController {
     @Override
     <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, @NonNull T announceMonitor) {
         eventBus.consumer(config.getAnnounceAddress(), announceMonitor);
+    }
+
+    @Override
+    void rescanService(EventBus eventBus) {
         eventBus.send(config.getAnnounceAddress(), new JsonObject().put("status", Status.UNKNOWN));
     }
 

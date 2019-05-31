@@ -19,6 +19,10 @@ class LocalSDController extends ServiceDiscoveryController {
     @Override
     public <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, T announceMonitor) {
         eventBus.localConsumer(config.getAnnounceAddress(), announceMonitor);
+    }
+
+    @Override
+    public void rescanService(EventBus eventBus) {
         eventBus.send(config.getAnnounceAddress(), new JsonObject().put("status", Status.UNKNOWN));
     }
 
