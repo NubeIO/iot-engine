@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
@@ -66,7 +67,24 @@ public final class EventController implements Shareable {
     public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
                         Handler<AsyncResult<Message<Object>>> replyConsumer) {
         logger.debug("Eventbus::Request:Address: {} - Pattern: {}", address, pattern);
-        fire(address, pattern, message.toJson(), replyConsumer);
+        fire(address, pattern, message.toJson(), replyConsumer, null);
+    }
+
+    /**
+     * Fire the request to event address
+     *
+     * @param address       Eventbus address
+     * @param pattern       Event pattern
+     * @param message       Request message message
+     * @param replyConsumer The consumer for handling message back after the system completes request process
+     * @param timeout       Timeout time in ms
+     * @see EventPattern
+     * @see EventMessage
+     */
+    public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
+                        Handler<AsyncResult<Message<Object>>> replyConsumer, Integer timeout) {
+        logger.debug("Eventbus::Request:Address: {} - Pattern: {}", address, pattern);
+        fire(address, pattern, message.toJson(), replyConsumer, timeout);
     }
 
     /**
@@ -139,7 +157,7 @@ public final class EventController implements Shareable {
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error,
                          Handler<AsyncResult<Message<Object>>> replyConsumer) {
         logger.debug("Eventbus::Error Response:Address: {} - Pattern: {}", address, pattern);
-        fire(address, pattern, error.toJson(), replyConsumer);
+        fire(address, pattern, error.toJson(), replyConsumer, null);
     }
 
     /**
@@ -155,7 +173,7 @@ public final class EventController implements Shareable {
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
                          Handler<AsyncResult<Message<Object>>> replyConsumer) {
         logger.debug("Eventbus::Response:Address: {} - Pattern: {}", address, pattern);
-        fire(address, pattern, data, replyConsumer);
+        fire(address, pattern, data, replyConsumer, null);
     }
 
     /**
@@ -234,17 +252,25 @@ public final class EventController implements Shareable {
     }
 
     private void fire(String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
-                      Handler<AsyncResult<Message<Object>>> replyConsumer) {
+                      Handler<AsyncResult<Message<Object>>> replyConsumer, Integer timeout) {
         Strings.requireNotBlank(address);
         if (pattern == EventPattern.PUBLISH_SUBSCRIBE) {
             eventBus.publish(address, data);
         }
         if (pattern == EventPattern.POINT_2_POINT) {
-            eventBus.send(address, data);
+            if (timeout == null) {
+                eventBus.send(address, data);
+            } else {
+                eventBus.send(address, data, new DeliveryOptions().setSendTimeout(timeout));
+            }
         }
         if (pattern == EventPattern.REQUEST_RESPONSE) {
             Objects.requireNonNull(replyConsumer, "Must provide reply consumer");
-            eventBus.send(address, data, replyConsumer);
+            if (timeout == null) {
+                eventBus.send(address, data, replyConsumer);
+            } else {
+                eventBus.send(address, data, new DeliveryOptions().setSendTimeout(timeout), replyConsumer);
+            }
         }
     }
 
