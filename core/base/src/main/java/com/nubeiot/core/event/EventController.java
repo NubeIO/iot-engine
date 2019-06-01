@@ -73,18 +73,18 @@ public final class EventController implements Shareable {
     /**
      * Fire the request to event address
      *
-     * @param address       Eventbus address
-     * @param pattern       Event pattern
-     * @param message       Request message message
-     * @param replyConsumer The consumer for handling message back after the system completes request process
-     * @param timeout       Timeout time in ms
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param message         Request message message
+     * @param replyConsumer   The consumer for handling message back after the system completes request process
+     * @param deliveryOptions DeliveryOptions
      * @see EventPattern
      * @see EventMessage
      */
     public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                        Handler<AsyncResult<Message<Object>>> replyConsumer, Integer timeout) {
+                        Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
         logger.debug("Eventbus::Request:Address: {} - Pattern: {}", address, pattern);
-        fire(address, pattern, message.toJson(), replyConsumer, timeout);
+        fire(address, pattern, message.toJson(), replyConsumer, deliveryOptions);
     }
 
     /**
@@ -252,24 +252,24 @@ public final class EventController implements Shareable {
     }
 
     private void fire(String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
-                      Handler<AsyncResult<Message<Object>>> replyConsumer, Integer timeout) {
+                      Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
         Strings.requireNotBlank(address);
         if (pattern == EventPattern.PUBLISH_SUBSCRIBE) {
             eventBus.publish(address, data);
         }
         if (pattern == EventPattern.POINT_2_POINT) {
-            if (timeout == null) {
+            if (deliveryOptions == null) {
                 eventBus.send(address, data);
             } else {
-                eventBus.send(address, data, new DeliveryOptions().setSendTimeout(timeout));
+                eventBus.send(address, data, deliveryOptions);
             }
         }
         if (pattern == EventPattern.REQUEST_RESPONSE) {
             Objects.requireNonNull(replyConsumer, "Must provide reply consumer");
-            if (timeout == null) {
+            if (deliveryOptions == null) {
                 eventBus.send(address, data, replyConsumer);
             } else {
-                eventBus.send(address, data, new DeliveryOptions().setSendTimeout(timeout), replyConsumer);
+                eventBus.send(address, data, deliveryOptions, replyConsumer);
             }
         }
     }
