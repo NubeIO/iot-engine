@@ -30,7 +30,6 @@ import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.Tables;
-import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.model.tables.records.TblModuleRecord;
 
 import lombok.NonNull;
@@ -58,7 +57,7 @@ public final class LocalServiceSearch implements IServiceSearch {
     }
 
     private SingleSource<? extends JsonObject> removeCredentialsInDeployConfig(TblModuleRecord record) {
-        record.setDeployConfig(this.entityHandler.removeInstallerNexusCredential(new TblModule(record)));
+        record.setDeployConfig(this.entityHandler.getSecureDeployConfig(record.getServiceId(), record.getDeployConfig()));
         return Single.just(record.toJson());
     }
 

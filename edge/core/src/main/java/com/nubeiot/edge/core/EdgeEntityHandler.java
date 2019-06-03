@@ -94,9 +94,23 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
         logger.info("{} module with data {}", action, module.toJson().encode());
-        return this.handlePreDeployment(module, action)
-                   .doAfterSuccess(this::deployModule)
-                   .map(result -> result.toJson().put("message", "Work in progress").put("status", Status.WIP));
+        return this.handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
+            JsonObject deployConfig = this.getSecureDeployConfig(result.getServiceId(), result.getDeployCfg().toJson());
+            PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
+                                                                         .transactionId(result.getTransactionId())
+                                                                         .action(result.getAction())
+                                                                         .prevState(result.getPrevState())
+                                                                         .targetState(result.getTargetState())
+                                                                         .serviceId(result.getServiceId())
+                                                                         .serviceFQN(result.getServiceFQN())
+                                                                         .deployId(result.getDeployId())
+                                                                         .deployCfg(deployConfig)
+                                                                         .dataDir((String) this.getSharedDataFunc()
+                                                                                               .apply(
+                                                                                                   SharedDataDelegate.SHARED_DATADIR))
+                                                                         .build();
+            return preDeploymentResult.toJson().put("message", "Work in progress").put("status", Status.WIP);
+        });
     }
 
     private void deployModule(PreDeploymentResult preDeployResult) {
@@ -236,7 +250,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private PreDeploymentResult createPreDeployResult(ITblModule module, String transactionId, EventAction event,
                                                       State prevState, State targetState) {
-        module.setDeployConfig(this.removeInstallerNexusCredential(new TblModule(module)));
         return PreDeploymentResult.builder()
                                   .transactionId(transactionId)
                                   .action(event == EventAction.MIGRATE ? EventAction.UPDATE : event)
@@ -421,14 +434,14 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return historyDao.findOneById(transactionId).map(optional -> optional.map(ITblRemoveHistory::toJson));
     }
 
-    public JsonObject removeInstallerNexusCredential(TblModule record) {
-        if ("com.nubeiot.edge.module:installer".equals(record.getServiceId())) {
+    public JsonObject getSecureDeployConfig(String serviceId, JsonObject deployConfigJson) {
+        if ("com.nubeiot.edge.module:installer".equals(serviceId)) {
             logger.info("Removing nexus password from result");
-            NubeConfig deployConfig = IConfig.from(record.getDeployConfig(), NubeConfig.class);
+            NubeConfig deployConfig = IConfig.from(deployConfigJson, NubeConfig.class);
             Object installerObject = deployConfig.getAppConfig().get(InstallerConfig.NAME);
             if (Objects.isNull(installerObject)) {
                 logger.debug("Installer config is not available");
-                return record.getDeployConfig();
+                return deployConfigJson;
             }
             InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
             installerConfig.getRepoConfig().getRemoteConfig().getUrls().values().forEach(remoteUrl -> {
@@ -459,7 +472,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             logger.debug("Installer config {}", installerConfig.toJson().toString());
             return deployConfig.toJson();
         }
-        return record.getDeployConfig();
+        return deployConfigJson;
     }
 
 }
