@@ -1,9 +1,9 @@
 package com.nubeiot.dashboard.models;
 
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.dashboard.GeoPoint;
 import com.nubeiot.dashboard.Model;
-
-import io.vertx.core.json.JsonObject;
 
 public class Site extends Model {
 
@@ -30,6 +30,7 @@ public class Site extends Model {
     private Boolean fixed_sidebar;
     private Boolean fixed_header;
     private Boolean auto_hide_header;
+    private Boolean icon_on_collapsed;
 
     public Site(JsonObject body) {
         super(body);
