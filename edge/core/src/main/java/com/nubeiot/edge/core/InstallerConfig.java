@@ -123,6 +123,9 @@ public final class InstallerConfig implements IConfig {
             this.url = Strings.requireNotBlank(url);
         }
 
+        public String computeUrl(){
+            return this.credential.computeUrl(this.url);
+        }
     }
 
 }

@@ -23,24 +23,12 @@ public abstract class Credential {
 
     public abstract String computeUrl(String defaultUrl);
 
-    protected abstract String getPrefixUrl(String urlPrefix);
+    protected abstract String getUrlCredential();
 
     public abstract String computeHeader();
 
     protected String computeRemoteUrl(String defaultUrl) {
-        if (defaultUrl.startsWith("http://")) {
-            return computeUrl(defaultUrl, "http://");
-        }
-
-        if (defaultUrl.startsWith("https://")) {
-            return computeUrl(defaultUrl, "https://");
-        }
-
-        return defaultUrl;
-    }
-
-    private String computeUrl(String defaultUrl, String urlPrefix) {
-        return defaultUrl.replaceFirst(urlPrefix, this.getPrefixUrl(urlPrefix));
+        return defaultUrl.replaceFirst("^((https?|wss?)\\:\\/\\/)(.+)", "$1" + this.getUrlCredential() + "$3");
     }
 
     @Override

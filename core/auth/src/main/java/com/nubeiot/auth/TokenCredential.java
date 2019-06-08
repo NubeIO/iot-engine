@@ -26,11 +26,10 @@ public class TokenCredential extends Credential {
     }
 
     @Override
-    public String getPrefixUrl(String prefixUrl) {
-        return new StringBuilder(prefixUrl).append(Objects.nonNull(this.getUser()) ? this.getUser() + ":" : "")
-                                           .append(this.getToken())
-                                           .append("@")
-                                           .toString();
+    public String getUrlCredential() {
+        return new StringBuilder(Objects.nonNull(this.getUser()) ? this.getUser() + ":" : "").append(this.getToken())
+                                                                                             .append("@")
+                                                                                             .toString();
     }
 
     @Override

@@ -70,4 +70,17 @@ public class CredentialTest {
         Assert.assertEquals("Bearer abcdef", credential.computeHeader());
     }
 
+    @Test
+    public void test_compute_url() {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.put("type", "BASIC");
+        jsonObject.put("user", "xx");
+        jsonObject.put("password", "abc");
+        BasicCredential credential = JsonData.convert(jsonObject, BasicCredential.class);
+        Assert.assertEquals("https://xx:abc@abc.xyz", credential.computeUrl("https://abc.xyz"));
+        Assert.assertEquals("http://xx:abc@abc.xyz", credential.computeUrl("http://abc.xyz"));
+        Assert.assertEquals("ws://xx:abc@abc.xyz", credential.computeUrl("ws://abc.xyz"));
+        Assert.assertEquals("wss://xx:abc@abc.xyz", credential.computeUrl("wss://abc.xyz"));
+    }
+
 }

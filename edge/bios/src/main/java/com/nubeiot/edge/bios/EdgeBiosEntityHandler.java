@@ -113,19 +113,14 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
     private void handleVerticleFactory(String local, Entry<ModuleType, List<RemoteUrl>> entry) {
         final ModuleType type = entry.getKey();
         if (ModuleType.JAVA == type) {
-            List<RemoteUrl> remoteUrls = entry.getValue();
+            List<RemoteUrl> urls = entry.getValue();
             String javaLocal = FileUtils.createFolder(local, type.name().toLowerCase(Locale.ENGLISH));
             logger.info("{} local repositories: {}", type, javaLocal);
-            logger.info("{} remote repositories: {}", type, remoteUrls);
-            ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(remoteUrls.stream()
-                                                                                             .map(
-                                                                                                 mavenUrl -> mavenUrl.getCredential()
-                                                                                                                     .computeUrl(
-                                                                                                                         mavenUrl
-                                                                                                                             .getUrl()))
-                                                                                             .collect(
-                                                                                                 Collectors.toList()))
-                                                            .setLocalRepository(javaLocal);
+            logger.info("{} remote repositories: {}", type, urls);
+            ResolverOptions resolver = new ResolverOptions().setLocalRepository(javaLocal)
+                                                            .setRemoteRepositories(urls.stream()
+                                                                                       .map(RemoteUrl::computeUrl)
+                                                                                       .collect(Collectors.toList()));
             vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
     }

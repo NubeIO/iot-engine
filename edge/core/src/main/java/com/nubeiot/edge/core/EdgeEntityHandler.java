@@ -148,35 +148,32 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private Single<List<TblModule>> getPendingModules() {
         return moduleDao.findManyByState(Collections.singletonList(State.PENDING))
                         .flattenAsObservable(pendingModules -> pendingModules)
-                        .flatMapSingle(module -> queryExecutor.executeAny(dslContext -> {
-                            List<TblTransactionRecord> tblTransactionRecords = dslContext.select()
-                                                                                         .from(Tables.TBL_TRANSACTION)
-                                                                                         .where(DSL.field(
-                                                                                             Tables.TBL_TRANSACTION.MODULE_ID)
-                                                                                                   .eq(module.getServiceId()))
-                                                                                         .and(DSL.field(
-                                                                                             Tables.TBL_TRANSACTION.STATUS)
-                                                                                                 .eq(Status.WIP))
-                                                                                         .orderBy(
-                                                                                             Tables.TBL_TRANSACTION.MODIFIED_AT
-                                                                                                 .desc())
-                                                                                         .limit(1)
-                                                                                         .fetchInto(
-                                                                                             TblTransactionRecord.class);
-                            if (tblTransactionRecords.isEmpty()) {
-                                module.setState(State.DISABLED);
-                                moduleDao.update(module).subscribe();
-                                return Optional.empty();
-                            }
-                            if (checkingTransaction(tblTransactionRecords.get(0))) {
-                                return Optional.of(module);
-                            }
-                            module.setState(State.DISABLED);
-                            moduleDao.update(module).subscribe();
-                            return Optional.empty();
-                        }))
+                        .flatMapSingle(module -> queryExecutor.executeAny(context -> getTransactions(module, context)))
                         .collect(ArrayList::new,
                                  (modules, optional) -> optional.ifPresent(o -> modules.add((TblModule) o)));
+    }
+
+    private Optional<?> getTransactions(TblModule module, DSLContext dslContext) {
+        List<TblTransactionRecord> tblTransactionRecords = dslContext.select()
+                                                                     .from(Tables.TBL_TRANSACTION)
+                                                                     .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID)
+                                                                               .eq(module.getServiceId()))
+                                                                     .and(DSL.field(Tables.TBL_TRANSACTION.STATUS)
+                                                                             .eq(Status.WIP))
+                                                                     .orderBy(Tables.TBL_TRANSACTION.MODIFIED_AT.desc())
+                                                                     .limit(1)
+                                                                     .fetchInto(TblTransactionRecord.class);
+        if (tblTransactionRecords.isEmpty()) {
+            module.setState(State.DISABLED);
+            moduleDao.update(module).subscribe();
+            return Optional.empty();
+        }
+        if (checkingTransaction(tblTransactionRecords.get(0))) {
+            return Optional.of(module);
+        }
+        module.setState(State.DISABLED);
+        moduleDao.update(module).subscribe();
+        return Optional.empty();
     }
 
     private boolean checkingTransaction(TblTransactionRecord transaction) {
@@ -457,7 +454,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                         }
 
                         @Override
-                        public String getPrefixUrl(String urlPrefix) {
+                        protected String getUrlCredential() {
                             return null;
                         }
 

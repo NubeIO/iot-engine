@@ -21,6 +21,7 @@ import io.vertx.reactivex.core.Future;
 import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.exceptions.DatabaseException;
+import com.nubeiot.core.exceptions.HiddenException;
 
 /**
  * Created by jensklingsporn on 05.02.18.
@@ -45,7 +46,7 @@ public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
             try {
                 blockingCodeHandler.handle((Future<X>) event);
             } catch (DataAccessException e) {
-                throw new DatabaseException(e);
+                throw new DatabaseException("Database error. Code: " + e.sqlStateClass(), new HiddenException(e));
             }
         }).toSingle();
     }
