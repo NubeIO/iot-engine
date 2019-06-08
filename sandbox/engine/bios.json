@@ -33,12 +33,27 @@
           "urls": {
             "java": [
               {
+                "credential": {
+                  "type": "BASIC",
+                  "user": "admin",
+                  "password": "admin123"
+                },
                 "url": "http://nexus:8081/repository/maven-releases/"
               },
               {
+                "credential": {
+                  "type": "BASIC",
+                  "user": "admin",
+                  "password": "admin123"
+                },
                 "url": "http://nexus:8081/repository/maven-snapshots/"
               },
               {
+                "credential": {
+                  "type": "BASIC",
+                  "user": "admin",
+                  "password": "admin123"
+                },
                 "url": "http://nexus:8081/repository/maven-central/"
               }
             ]

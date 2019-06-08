@@ -22,6 +22,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.auth.Credential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
@@ -93,9 +94,23 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
         logger.info("{} module with data {}", action, module.toJson().encode());
-        return this.handlePreDeployment(module, action)
-                   .doAfterSuccess(this::deployModule)
-                   .map(result -> result.toJson().put("message", "Work in progress").put("status", Status.WIP));
+        return this.handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
+            JsonObject deployConfig = this.getSecureDeployConfig(result.getServiceId(), result.getDeployCfg().toJson());
+            PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
+                                                                         .transactionId(result.getTransactionId())
+                                                                         .action(result.getAction())
+                                                                         .prevState(result.getPrevState())
+                                                                         .targetState(result.getTargetState())
+                                                                         .serviceId(result.getServiceId())
+                                                                         .serviceFQN(result.getServiceFQN())
+                                                                         .deployId(result.getDeployId())
+                                                                         .deployCfg(deployConfig)
+                                                                         .dataDir((String) this.getSharedDataFunc()
+                                                                                               .apply(
+                                                                                                   SharedDataDelegate.SHARED_DATADIR))
+                                                                         .build();
+            return preDeploymentResult.toJson().put("message", "Work in progress").put("status", Status.WIP);
+        });
     }
 
     private void deployModule(PreDeploymentResult preDeployResult) {
@@ -133,35 +148,32 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private Single<List<TblModule>> getPendingModules() {
         return moduleDao.findManyByState(Collections.singletonList(State.PENDING))
                         .flattenAsObservable(pendingModules -> pendingModules)
-                        .flatMapSingle(module -> queryExecutor.executeAny(dslContext -> {
-                            List<TblTransactionRecord> tblTransactionRecords = dslContext.select()
-                                                                                         .from(Tables.TBL_TRANSACTION)
-                                                                                         .where(DSL.field(
-                                                                                             Tables.TBL_TRANSACTION.MODULE_ID)
-                                                                                                   .eq(module.getServiceId()))
-                                                                                         .and(DSL.field(
-                                                                                             Tables.TBL_TRANSACTION.STATUS)
-                                                                                                 .eq(Status.WIP))
-                                                                                         .orderBy(
-                                                                                             Tables.TBL_TRANSACTION.MODIFIED_AT
-                                                                                                 .desc())
-                                                                                         .limit(1)
-                                                                                         .fetchInto(
-                                                                                             TblTransactionRecord.class);
-                            if (tblTransactionRecords.isEmpty()) {
-                                module.setState(State.DISABLED);
-                                moduleDao.update(module).subscribe();
-                                return Optional.empty();
-                            }
-                            if (checkingTransaction(tblTransactionRecords.get(0))) {
-                                return Optional.of(module);
-                            }
-                            module.setState(State.DISABLED);
-                            moduleDao.update(module).subscribe();
-                            return Optional.empty();
-                        }))
+                        .flatMapSingle(module -> queryExecutor.executeAny(context -> getTransactions(module, context)))
                         .collect(ArrayList::new,
                                  (modules, optional) -> optional.ifPresent(o -> modules.add((TblModule) o)));
+    }
+
+    private Optional<?> getTransactions(TblModule module, DSLContext dslContext) {
+        List<TblTransactionRecord> tblTransactionRecords = dslContext.select()
+                                                                     .from(Tables.TBL_TRANSACTION)
+                                                                     .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID)
+                                                                               .eq(module.getServiceId()))
+                                                                     .and(DSL.field(Tables.TBL_TRANSACTION.STATUS)
+                                                                             .eq(Status.WIP))
+                                                                     .orderBy(Tables.TBL_TRANSACTION.MODIFIED_AT.desc())
+                                                                     .limit(1)
+                                                                     .fetchInto(TblTransactionRecord.class);
+        if (tblTransactionRecords.isEmpty()) {
+            module.setState(State.DISABLED);
+            moduleDao.update(module).subscribe();
+            return Optional.empty();
+        }
+        if (checkingTransaction(tblTransactionRecords.get(0))) {
+            return Optional.of(module);
+        }
+        module.setState(State.DISABLED);
+        moduleDao.update(module).subscribe();
+        return Optional.empty();
     }
 
     private boolean checkingTransaction(TblTransactionRecord transaction) {
@@ -417,6 +429,47 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<Optional<JsonObject>> findHistoryTransactionById(String transactionId) {
         return historyDao.findOneById(transactionId).map(optional -> optional.map(ITblRemoveHistory::toJson));
+    }
+
+    public JsonObject getSecureDeployConfig(String serviceId, JsonObject deployConfigJson) {
+        if ("com.nubeiot.edge.module:installer".equals(serviceId)) {
+            logger.info("Removing nexus password from result");
+            NubeConfig deployConfig = IConfig.from(deployConfigJson, NubeConfig.class);
+            Object installerObject = deployConfig.getAppConfig().get(InstallerConfig.NAME);
+            if (Objects.isNull(installerObject)) {
+                logger.debug("Installer config is not available");
+                return deployConfigJson;
+            }
+            InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
+            installerConfig.getRepoConfig().getRemoteConfig().getUrls().values().forEach(remoteUrl -> {
+                remoteUrl.forEach(url -> {
+                    Credential credential = url.getCredential();
+                    if (Objects.isNull(credential)) {
+                        return;
+                    }
+                    url.setCredential(new Credential(credential.getType(), credential.getUser()) {
+                        @Override
+                        public String computeUrl(String defaultUrl) {
+                            return null;
+                        }
+
+                        @Override
+                        protected String getUrlCredential() {
+                            return null;
+                        }
+
+                        @Override
+                        public String computeHeader() {
+                            return null;
+                        }
+                    });
+                });
+            });
+            deployConfig.getAppConfig().put(InstallerConfig.NAME, installerConfig);
+            logger.debug("Installer config {}", installerConfig.toJson().toString());
+            return deployConfig.toJson();
+        }
+        return deployConfigJson;
     }
 
 }

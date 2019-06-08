@@ -72,6 +72,7 @@ public interface ModuleType {
                         .put("service_name", serviceName)
                         .put("service_type", name());
         }
+
     };
     ModuleType JAVASCRIPT = new AbstractModuleType() {
         @Override
@@ -88,6 +89,7 @@ public interface ModuleType {
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
+
     };
     ModuleType GROOVY = new AbstractModuleType() {
         @Override
@@ -104,6 +106,7 @@ public interface ModuleType {
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
+
     };
 
 
@@ -119,6 +122,8 @@ public interface ModuleType {
         }
 
     }
+
+
     ModuleType SCALA = new AbstractModuleType() {
         @Override
         public String name() {
@@ -134,6 +139,7 @@ public interface ModuleType {
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
+
     };
     ModuleType KOTLIN = new AbstractModuleType() {
         @Override
@@ -150,6 +156,7 @@ public interface ModuleType {
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
+
     };
     ModuleType RUBY = new AbstractModuleType() {
         @Override
@@ -166,11 +173,11 @@ public interface ModuleType {
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
             return null;
         }
+
     };
 
     String generateFQN(String serviceId, String version, String serviceName);
 
     JsonObject serialize(@NonNull JsonObject input, @NonNull ModuleTypeRule rule) throws InvalidModuleType;
-
 
 }

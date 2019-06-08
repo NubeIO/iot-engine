@@ -7,6 +7,7 @@ import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
 
 dependencies {
     compile project(':core:base')
+    compile project(':core:auth')
     compile project(':core:sql')
     compile project(':eventbus:edge')
     compile project.deps.database.h2

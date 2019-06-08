@@ -14,10 +14,12 @@ import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 
 import io.reactivex.Single;
+import io.reactivex.SingleSource;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
@@ -49,9 +51,14 @@ public final class LocalServiceSearch implements IServiceSearch {
                                  .executeAny(context -> filter(validateFilter(requestData.getFilter()),
                                                                requestData.getPagination(), context))
                                  .flattenAsObservable(records -> records)
-                                 .flatMapSingle(record -> Single.just(record.toJson()))
+                                 .flatMapSingle(record -> removeCredentialsInDeployConfig(record))
                                  .collect(JsonArray::new, JsonArray::add)
                                  .map(results -> new JsonObject().put("services", results));
+    }
+
+    private SingleSource<? extends JsonObject> removeCredentialsInDeployConfig(TblModuleRecord record) {
+        record.setDeployConfig(this.entityHandler.getSecureDeployConfig(record.getServiceId(), record.getDeployConfig()));
+        return Single.just(record.toJson());
     }
 
     JsonObject validateFilter(JsonObject filter) {
