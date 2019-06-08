@@ -6,7 +6,10 @@ import java.util.Map;
 import java.util.Objects;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.MultiMap;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBusOptions;
+import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -137,6 +140,10 @@ public final class NubeConfig implements IConfig {
             @JsonIgnore
             private EventBusOptions options;
 
+            @Getter
+            @JsonIgnore
+            private DeliveryOptions deliveryOptions = new DeliveryOptions();
+
             public EventBusConfig() {
                 this(null);
             }
@@ -150,6 +157,15 @@ public final class NubeConfig implements IConfig {
                 this.putIfAbsent("host", "0.0.0.0");
                 this.putIfAbsent("port", 5000);
                 options = new EventBusOptions(JsonObject.mapFrom(this));
+                if (this.containsKey("deliveryOptions")) {
+                    final DeliveryOptionsConfig deliveryOptionsConfig = IConfig.from(this.get("deliveryOptions"),
+                                                                                     DeliveryOptionsConfig.class);
+                    this.deliveryOptions.setCodecName(deliveryOptionsConfig.getCodecName());
+                    this.deliveryOptions.setSendTimeout(deliveryOptionsConfig.getTimeout());
+                    MultiMap header = new CaseInsensitiveHeaders();
+                    header.addAll(deliveryOptionsConfig.getHeaders());
+                    this.deliveryOptions.setHeaders(header);
+                }
             }
 
             @Override
@@ -167,6 +183,34 @@ public final class NubeConfig implements IConfig {
 
             @Override
             public JsonObject toJson() { return options.toJson(); }
+
+        }
+
+
+        private static final class DeliveryOptionsConfig implements IConfig {
+
+            static final String NAME = "deliveryOptions";
+            @Getter
+            @JsonProperty
+            private String codecName;
+
+            @Getter
+            @JsonProperty
+            private long timeout;
+
+            @Getter
+            @JsonProperty
+            private final Map<String, String> headers = new HashMap<>();
+
+            @Override
+            public String name() {
+                return NAME;
+            }
+
+            @Override
+            public Class<? extends IConfig> parent() {
+                return EventBusConfig.class;
+            }
 
         }
 

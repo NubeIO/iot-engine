@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.http.ClientAuth;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.JksOptions;
@@ -61,6 +62,25 @@ public class EventbusConfigTest {
         Assert.assertEquals(-1, merge.getOptions().getClusterPublicPort());
         Assert.assertEquals(-1, merge.getOptions().getAcceptBacklog());
         Assert.assertEquals(ClientAuth.REQUIRED, merge.getOptions().getClientAuth());
+    }
+
+    @Test
+    public void test_parse_delivery_option_from_eventbus() {
+        EventBusConfig eventBusConfig = IConfig.from(
+            "{\"clientAuth\":\"REQUIRED\",\"ssl\":true,\"keyStoreOptions\":{\"path" +
+            "\":\"eventBusKeystore.jks\"," + "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path" +
+            "\":\"eventBusKeystore.jks\"," + "\"password\":\"nubesparkEventBus\"}," +
+            "\"deliveryOptions\":{\"codecName\":\"abc\"," +
+            "\"timeout\":\"300000\", \"headers\":{\"Content-type\":\"application/json\", \"Method\":\"GET\"}}}",
+            EventBusConfig.class);
+        DeliveryOptions deliveryOptions = eventBusConfig.getDeliveryOptions();
+        Assert.assertNotNull(deliveryOptions);
+        Assert.assertEquals("abc", deliveryOptions.getCodecName());
+        Assert.assertEquals(300000, deliveryOptions.getSendTimeout());
+        Assert.assertNotNull(deliveryOptions.getHeaders());
+        Assert.assertEquals(2, deliveryOptions.getHeaders().size());
+        Assert.assertEquals("application/json", deliveryOptions.getHeaders().get("Content-type"));
+        Assert.assertEquals("GET", deliveryOptions.getHeaders().get("Method"));
     }
 
 }

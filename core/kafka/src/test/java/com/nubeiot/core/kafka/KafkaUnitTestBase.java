@@ -113,7 +113,7 @@ public class KafkaUnitTestBase {
         DeploymentOptions options = new DeploymentOptions().setConfig(config.toJson());
         String sharedKey = KafkaUnit.class.getName();
         KafkaUnit verticle = (KafkaUnit) new KafkaUnit(router).registerSharedData(sharedKey);
-        vertx.sharedData().getLocalMap(sharedKey).put(SharedDataDelegate.SHARED_EVENTBUS, new EventController(vertx));
+        vertx.sharedData().getLocalMap(sharedKey).put(SharedDataDelegate.SHARED_EVENTBUS, EventController.getInstance(vertx));
         return VertxHelper.deploy(vertx, context, options, verticle, TEST_TIMEOUT_SEC);
     }
 

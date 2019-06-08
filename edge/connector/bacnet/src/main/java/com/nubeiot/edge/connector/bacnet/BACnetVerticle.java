@@ -47,7 +47,7 @@ public class BACnetVerticle extends ContainerVerticle {
         initLocalPoints(bacnetConfig.getLocalPointsAddress());
         //TODO: init all configs from DB when ready to implement
         //REGISTER ENDPOINTS
-        registerEventbus(new EventController(vertx));
+        registerEventbus(EventController.getInstance(vertx));
         addProvider(new MicroserviceProvider(), this::publishServices);
     }
 

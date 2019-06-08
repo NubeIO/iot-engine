@@ -32,7 +32,7 @@ class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketCli
 
     @Override
     public void open(WebsocketClientEventMetadata metadata, MultiMap headers) {
-        EventController controller = new EventController(vertx);
+        EventController controller = EventController.getInstance(vertx);
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> ref = new AtomicReference<>();
         HandlerConfig handler = getHandlerConfig();

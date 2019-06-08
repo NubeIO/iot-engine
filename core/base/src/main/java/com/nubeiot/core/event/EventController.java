@@ -30,14 +30,47 @@ public final class EventController implements Shareable {
     private static final Logger logger = LoggerFactory.getLogger(EventController.class);
     //    private final Vertx vertx;
     private final EventBus eventBus;
+    private final DeliveryOptions deliveryOptions;
+    private static EventController instance;
 
     public EventController(@NonNull io.vertx.core.Vertx vertx) {
         //        this.vertx = vertx;
         this.eventBus = vertx.eventBus();
+        this.deliveryOptions = null;
     }
 
-    public EventController(@NonNull Vertx vertx) {
+    private EventController(@NonNull io.vertx.core.Vertx vertx, DeliveryOptions deliveryOptions) {
+        //        this.vertx = vertx;
+        this.eventBus = vertx.eventBus();
+        this.deliveryOptions = deliveryOptions;
+    }
+
+    private EventController(@NonNull Vertx vertx) {
         this(vertx.getDelegate());
+    }
+
+    public static EventController getInstance(@NonNull Vertx vertx) {
+        return getInstance(vertx.getDelegate());
+    }
+
+    public static EventController getInstance(@NonNull io.vertx.core.Vertx vertx) {
+        if (Objects.nonNull(instance)) {
+            return instance;
+        }
+        instance = new EventController(vertx);
+        return instance;
+    }
+
+    public static EventController getInstance(@NonNull Vertx vertx, DeliveryOptions deliveryOptions) {
+        return getInstance(vertx.getDelegate(), deliveryOptions);
+    }
+
+    public static EventController getInstance(@NonNull io.vertx.core.Vertx vertx, DeliveryOptions deliveryOptions) {
+        if (Objects.nonNull(instance)) {
+            return instance;
+        }
+        instance = new EventController(vertx, deliveryOptions);
+        return instance;
     }
 
     /**

@@ -54,7 +54,7 @@ public class SimulatorIntegrationTest {
         TestHelper.setup();
         verticle = new BACnetMasterTest();
         vertx = Vertx.vertx();
-        eventController = new EventController(vertx);
+        eventController = EventController.getInstance(vertx);
         JsonObject masterConfig = IConfig.fromClasspath("master.json", NubeConfig.class).toJson();
         masterBACnetConfig = IConfig.from(masterConfig, BACnetConfig.class);
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(masterConfig), verticle);
