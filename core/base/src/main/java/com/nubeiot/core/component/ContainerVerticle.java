@@ -3,17 +3,15 @@ package com.nubeiot.core.component;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
-import io.reactivex.Single;
+import io.reactivex.Observable;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -110,20 +108,18 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
             future.complete();
             return;
         }
-        List<Single<String>> collect = components.entrySet().stream().map(entry -> {
+        Observable.fromIterable(components.entrySet()).flatMapSingle(entry -> {
             Unit unit = entry.getValue().get().registerSharedData(getSharedKey());
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
             return vertx.rxDeployVerticle(unit, options)
                         .doOnSuccess(deployId -> succeed(unit, deployId))
                         .doOnError(t -> logger.error("Cannot start unit verticle {}", t, unit.getClass().getName()));
-        }).collect(Collectors.toList());
-        Single.zip(collect, objects -> objects.length).doOnSuccess(i -> {
+        }).toList().subscribe(ignored -> {
             if (Objects.nonNull(successHandler)) {
                 this.successHandler.handle(null);
             }
-        }).subscribe(count -> {
-            logger.info("Deployed {} verticle(s)...", count);
+            logger.info("Deployed {} verticle(s)...", components.size());
             future.complete();
         }, throwable -> fail(future, throwable));
     }

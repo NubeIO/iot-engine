@@ -55,7 +55,7 @@ public final class StateMachine {
     private StateMachine addLifeCycle(EventAction event, StateLifeCycle lifeCycle) {
         Map<State, StateLifeCycle> stateStateLifeCycleMap = this.eventLifeCycles.get(Objects.requireNonNull(event));
         if (Objects.isNull(stateStateLifeCycleMap)) {
-            stateStateLifeCycleMap = new EnumMap<State, StateLifeCycle>(State.class);
+            stateStateLifeCycleMap = new EnumMap<>(State.class);
             stateStateLifeCycleMap.put(Objects.requireNonNull(lifeCycle).getResult(), lifeCycle);
             this.eventLifeCycles.put(Objects.requireNonNull(event), stateStateLifeCycleMap);
         } else {

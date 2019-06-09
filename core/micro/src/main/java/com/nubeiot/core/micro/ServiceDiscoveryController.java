@@ -22,6 +22,7 @@ import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.reactivex.servicediscovery.ServiceReference;
 import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.Status;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.types.HttpLocation;
 
@@ -75,6 +76,11 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     final void subscribe(io.vertx.core.Vertx vertx, String announceMonitorClass, String usageMonitorClass) {
         subscribe(vertx.eventBus(), ServiceGatewayAnnounceMonitor.create(vertx, this, sharedKey, announceMonitorClass));
         subscribe(vertx.eventBus(), ServiceGatewayUsageMonitor.create(vertx, this, sharedKey, usageMonitorClass));
+    }
+
+    // TODO: find better way instead force rescan in every register call
+    final void rescanService(EventBus eventBus) {
+        eventBus.send(config.getAnnounceAddress(), new JsonObject().put("status", Status.UNKNOWN));
     }
 
     public boolean isEnabled() {

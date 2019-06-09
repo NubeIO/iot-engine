@@ -74,7 +74,6 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
         return Single.just(new JsonObject());
     }
 
-    //TODO Fix multiple apps
     private Single<JsonObject> initInstaller(Path dataDir, RepositoryConfig repoConfig,
                                              List<RequestedServiceData> builtinApps) {
         if (builtinApps.isEmpty()) {

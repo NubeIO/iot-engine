@@ -65,6 +65,14 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
 
     @Override
     protected void handle(Record record) {
+        if (record.getStatus() == Status.UNKNOWN) {
+            rescanService();
+        } else {
+            registerService(record);
+        }
+    }
+
+    private void registerService(Record record) {
         DynamicRestApi api = DynamicRestApi.create(record);
         if (Objects.isNull(api)) {
             return;
@@ -92,6 +100,12 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
                 router.route(path).disable();
             });
         }
+    }
+
+    // TODO: find better way instead force rescan in every register call
+    // TODO: for checking in cluster mode
+    private void rescanService() {
+        getController().getRecords().subscribe(records -> records.forEach(this::registerService));
     }
 
 }

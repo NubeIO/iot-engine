@@ -62,8 +62,10 @@ public class DashboardServerVerticle extends ContainerVerticle {
         this.addProvider(new HttpServerProvider(router))
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
-        this.registerSuccessHandler(event -> RestRouter.addProvider(RestMicroContextProvider.class,
-                                                                    ctx -> new RestMicroContextProvider(microContext)));
+        this.registerSuccessHandler(event -> {
+            this.microContext.rescanService(vertx.eventBus().getDelegate());
+            RestRouter.addProvider(RestMicroContextProvider.class, ctx -> new RestMicroContextProvider(microContext));
+        });
 
         JsonObject appConfig = this.nubeConfig.getAppConfig().toJson();
         HttpConfig httpConfig = IConfig.from(appConfig, HttpConfig.class);
@@ -79,7 +81,6 @@ public class DashboardServerVerticle extends ContainerVerticle {
         RestRouter.addProvider(RestOAuth2AuthProvider.class, ctx -> new RestOAuth2AuthProvider(oAuth2Auth));
         RestRouter.addProvider(RestMongoClientProvider.class, ctx -> new RestMongoClientProvider(mongoClient));
         RestRouter.addProvider(RestMediaDirProvider.class, ctx -> new RestMediaDirProvider(mediaAbsoluteDir));
-
     }
 
     private void registerHttpScheme(HttpScheme scheme) {

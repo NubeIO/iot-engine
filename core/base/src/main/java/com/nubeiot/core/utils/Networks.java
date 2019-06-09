@@ -152,8 +152,10 @@ public final class Networks {
         }
 
         if (usableINetAddresses.size() > 1) {
-            throw new IllegalStateException(
-                "Don't know which INetAddress to use, there are more than one: " + usableINetAddresses);
+            logger.warn("Don't know which INetAddress to use, there are more than one: {}", usableINetAddresses);
+            // TODO: switch case between Docker environment and Bare-metal server | device
+            logger.warn("Hence we are using localhost address: {}", DEFAULT_ADDRESS);
+            return DEFAULT_ADDRESS;
         } else if (usableINetAddresses.size() == 1) {
             logger.info("Found default INetAddress: {}", usableINetAddresses.get(0).toString());
             return usableINetAddresses.get(0).getHostAddress();

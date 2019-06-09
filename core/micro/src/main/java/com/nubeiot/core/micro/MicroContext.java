@@ -1,6 +1,9 @@
 package com.nubeiot.core.micro;
 
+import java.util.Objects;
+
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.Vertx;
@@ -60,6 +63,15 @@ public final class MicroContext extends UnitContext {
     void unregister(Future future) {
         this.clusterController.unregister(future);
         this.localController.unregister(future);
+    }
+
+    public void rescanService(EventBus eventBus) {
+        if (Objects.nonNull(clusterController)) {
+            clusterController.rescanService(eventBus);
+        }
+        if (Objects.nonNull(localController)) {
+            localController.rescanService(eventBus);
+        }
     }
 
 }
