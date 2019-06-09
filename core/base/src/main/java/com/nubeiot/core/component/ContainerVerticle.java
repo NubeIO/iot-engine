@@ -108,7 +108,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
             future.complete();
             return;
         }
-        Observable.fromIterable(components.entrySet()).concatMapSingle(entry -> {
+        Observable.fromIterable(components.entrySet()).flatMapSingle(entry -> {
             Unit unit = entry.getValue().get().registerSharedData(getSharedKey());
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);

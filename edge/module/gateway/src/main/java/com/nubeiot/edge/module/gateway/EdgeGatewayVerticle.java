@@ -19,8 +19,10 @@ public class EdgeGatewayVerticle extends ContainerVerticle {
         this.addProvider(new HttpServerProvider(router))
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
-        this.registerSuccessHandler(event -> RestRouter.addProvider(RestMicroContextProvider.class,
-                                                                    ctx -> new RestMicroContextProvider(microContext)));
+        this.registerSuccessHandler(event -> {
+            this.microContext.rescanService(vertx.eventBus().getDelegate());
+            RestRouter.addProvider(RestMicroContextProvider.class, ctx -> new RestMicroContextProvider(microContext));
+        });
     }
 
 }

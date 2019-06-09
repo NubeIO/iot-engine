@@ -1,9 +1,7 @@
 package com.nubeiot.core.micro;
 
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
-import io.vertx.servicediscovery.Status;
 
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
 import com.nubeiot.core.utils.Networks;
@@ -22,11 +20,6 @@ class ClusterSDController extends ServiceDiscoveryController {
     @Override
     <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, @NonNull T announceMonitor) {
         eventBus.consumer(config.getAnnounceAddress(), announceMonitor);
-    }
-
-    @Override
-    void rescanService(EventBus eventBus) {
-        eventBus.send(config.getAnnounceAddress(), new JsonObject().put("status", Status.UNKNOWN));
     }
 
     @Override
