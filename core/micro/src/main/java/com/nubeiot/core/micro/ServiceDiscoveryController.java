@@ -1,11 +1,11 @@
 package com.nubeiot.core.micro;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -51,6 +51,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     private final String sharedKey;
     private final ServiceDiscovery serviceDiscovery;
     private final CircuitBreakerController circuitController;
+    private List<String> recordsRegistration = new ArrayList<>();
 
     static ServiceDiscovery createServiceDiscovery(Vertx vertx, ServiceDiscoveryConfig config, String kind,
                                                    Predicate<Vertx> predicate) {
@@ -94,7 +95,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     void unregister(Future future) {
         if (Objects.nonNull(serviceDiscovery)) {
-            serviceDiscovery.rxGetRecords(r -> true, true)
+            serviceDiscovery.rxGetRecords(r -> recordsRegistration.contains(r.getName()), true)
                             .flattenAsObservable(rs -> rs)
                             .flatMapCompletable(r -> serviceDiscovery.rxUnpublish(r.getRegistration()))
                             .subscribe(future::complete, err -> {
@@ -171,8 +172,8 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     }
 
     public Completable removeRecord(String registration) {
-        return get().rxGetRecords(r -> true, true).flatMapCompletable(records -> {
-            if (records.stream().map(Record::getRegistration).collect(Collectors.toList()).contains(registration)) {
+        return get().rxGetRecords(r -> r.getRegistration().equals(registration), true).flatMapCompletable(records -> {
+            if (records.size() != 0) {
                 return serviceDiscovery.rxUnpublish(registration);
             }
             throw new NotFoundException("Not found that registration");
@@ -180,9 +181,10 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     }
 
     private Single<Record> addDecoratorRecord(@NonNull Record record) {
-        return get().rxPublish(record)
-                    .doOnSuccess(rec -> logger.info("Published {} Service: {}", kind(), rec.toJson()))
-                    .doOnError(t -> logger.error("Cannot publish {} record: {}", t, kind(), record));
+        return get().rxPublish(record).doOnSuccess(rec -> {
+            recordsRegistration.add(rec.getRegistration());
+            logger.info("Published {} Service: {}", kind(), rec.toJson());
+        }).doOnError(t -> logger.error("Cannot publish {} record: {}", t, kind(), record));
     }
 
     private Record decorator(Record record) {
