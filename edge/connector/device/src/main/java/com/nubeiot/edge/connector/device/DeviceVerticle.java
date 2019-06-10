@@ -21,8 +21,6 @@ public class DeviceVerticle extends ContainerVerticle {
     public void start() {
         logger.info("Starting DeviceVerticle");
         super.start();
-        registerEventbus(new EventController(vertx));
-
         addProvider(new MicroserviceProvider(), this::publishServices);
     }
 

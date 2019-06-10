@@ -1,4 +1,6 @@
 dependencies {
     compile project(':core:base')
     compile project(':core:micro')
+
+    compile project.deps.oshi
 }

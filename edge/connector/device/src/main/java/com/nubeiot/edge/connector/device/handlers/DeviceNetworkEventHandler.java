@@ -1,75 +1,72 @@
 package com.nubeiot.edge.connector.device.handlers;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
-import com.nubeiot.edge.connector.device.utils.Command;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import oshi.SystemInfo;
+import oshi.hardware.HardwareAbstractionLayer;
+import oshi.hardware.NetworkIF;
+import oshi.software.os.NetworkParams;
+import oshi.software.os.OperatingSystem;
+import oshi.util.FormatUtil;
 
 @NoArgsConstructor
 public class DeviceNetworkEventHandler implements EventHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     @EventContractor(action = EventAction.GET_LIST)
     public JsonObject getList(RequestData data) {
-        // Network interface
-        JsonObject interfaces = getNetworkInterfaces();
-        logger.info("Interfaces:" + interfaces);
-        // Simple network interface
-        List<String> simpleIP = Command.executeWithSplit("ifconfig |  grep inet");
-        logger.info("SimpleIp:" + simpleIP);
-        // Network arp list of devices on the network
-        List<String> networkScan = Command.executeWithSplit("arp -a");
-        logger.info("Network Scan:" + networkScan);
+        SystemInfo si = new SystemInfo();
+        HardwareAbstractionLayer hal = si.getHardware();
+        OperatingSystem os = si.getOperatingSystem();
+
         JsonObject jsonObject = new JsonObject();
-        jsonObject.put("interfaces", interfaces);
-        jsonObject.put("simpleIP", simpleIP);
-        jsonObject.put("networkScan", networkScan);
+        jsonObject.put("network_interfaces", getNetworkInterfaces(hal.getNetworkIFs()));
+        jsonObject.put("network_params", getNetworkParams(os.getNetworkParams()));
         return jsonObject;
     }
 
-    private JsonObject getNetworkInterfaces() {
-        JsonObject networkInterfaces = new JsonObject();
+    private static JsonArray getNetworkInterfaces(NetworkIF[] networkIFs) {
+        JsonArray networkInterfaces = new JsonArray();
+        for (NetworkIF net : networkIFs) {
+            boolean hasData = net.getBytesRecv() > 0 || net.getBytesSent() > 0 || net.getPacketsRecv() > 0 ||
+                              net.getPacketsSent() > 0;
 
-        try {
-            Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
-            for (NetworkInterface netInt : Collections.list(nets)) {
-                networkInterfaces.put(netInt.getName(), getInetAddress(netInt.getInetAddresses()));
-            }
-        } catch (SocketException e) {
-            logger.warn("Could not get Network Interface", e);
+            String traffic = String.format("received %s/%s%s; transmitted %s/%s%s %n",
+                                           hasData ? net.getPacketsRecv() + " packets" : "?",
+                                           hasData ? FormatUtil.formatBytes(net.getBytesRecv()) : "?",
+                                           hasData ? " (" + net.getInErrors() + " err)" : "",
+                                           hasData ? net.getPacketsSent() + " packets" : "?",
+                                           hasData ? FormatUtil.formatBytes(net.getBytesSent()) : "?",
+                                           hasData ? " (" + net.getOutErrors() + " err)" : "");
+            networkInterfaces.add(new JsonObject().put("name", net.getName())
+                                                  .put("display_name", net.getDisplayName())
+                                                  .put("mac_address", net.getMacaddr())
+                                                  .put("mtu", net.getMTU())
+                                                  .put("speed", FormatUtil.formatValue(net.getSpeed(), "bps"))
+                                                  .put("ipv4", Arrays.toString(net.getIPv4addr()))
+                                                  .put("ipv6", Arrays.toString(net.getIPv6addr()))
+                                                  .put("traffic", traffic));
         }
-
         return networkInterfaces;
     }
 
-    private JsonArray getInetAddress(Enumeration<InetAddress> inetAddresses) {
-        JsonArray jsonArray = new JsonArray();
-        for (InetAddress inetAddress : Collections.list(inetAddresses)) {
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.put("address", inetAddress.toString());
-            jsonObject.put("hostName", inetAddress.getHostName());
-            jsonObject.put("canonicalHostName", inetAddress.getCanonicalHostName());
-            jsonObject.put("hostAddress", inetAddress.getHostAddress());
-            jsonArray.add(jsonObject);
-        }
-        return jsonArray;
+    private static JsonObject getNetworkParams(NetworkParams networkParams) {
+        return new JsonObject().put("host_name", networkParams.getHostName())
+                               .put("domain_name", networkParams.getDomainName())
+                               .put("dns_servers", Arrays.toString(networkParams.getDnsServers()))
+                               .put("ipv4_gateway", networkParams.getIpv4DefaultGateway())
+                               .put("ipv6_gateway", networkParams.getIpv6DefaultGateway());
     }
 
     @Override
