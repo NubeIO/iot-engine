@@ -26,10 +26,8 @@ public class TokenCredential extends Credential {
     }
 
     @Override
-    public String getUrlCredential() {
-        return new StringBuilder(Objects.nonNull(this.getUser()) ? this.getUser() + ":" : "").append(this.getToken())
-                                                                                             .append("@")
-                                                                                             .toString();
+    public String computeUrlCredential() {
+        return (Objects.nonNull(this.getUser()) ? this.getUser() + ":" : "") + this.getToken() + "@";
     }
 
     @Override

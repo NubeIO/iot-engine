@@ -490,7 +490,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                         }
 
                         @Override
-                        protected String getUrlCredential() {
+                        protected String computeUrlCredential() {
                             return null;
                         }
 

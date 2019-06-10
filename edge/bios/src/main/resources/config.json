@@ -50,31 +50,6 @@
                 "idleTimeout": 180000,
                 "maxLifetime": 300000
               }
-            },
-            "__installer__": {
-              "repository": {
-                "remote": {
-                  "urls": {
-                    "java": [
-                      {
-                        "url": "http://nexus:8081/repository/maven-releases/"
-                      },
-                      {
-                        "url": "http://nexus:8081/repository/maven-snapshots/"
-                      },
-                      {
-                        "url": "http://nexus:8081/repository/maven-central/"
-                      },
-                      {
-                        "url": "https://maven.mangoautomation.net/repository/ias-snapshot/"
-                      },
-                      {
-                        "url": "https://maven.mangoautomation.net/repository/ias-release/"
-                      }
-                    ]
-                  }
-                }
-              }
             }
           }
         },

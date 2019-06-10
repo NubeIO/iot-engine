@@ -55,6 +55,12 @@
                   "password": "admin123"
                 },
                 "url": "http://nexus:8081/repository/maven-central/"
+              },
+              {
+                "url": "https://maven.mangoautomation.net/repository/ias-snapshot/"
+              },
+              {
+                "url": "https://maven.mangoautomation.net/repository/ias-release/"
               }
             ]
           }
@@ -81,12 +87,27 @@
                   "urls": {
                     "java": [
                       {
+                        "credential": {
+                          "type": "BASIC",
+                          "user": "admin",
+                          "password": "admin123"
+                        },
                         "url": "http://nexus:8081/repository/maven-releases/"
                       },
                       {
+                        "credential": {
+                          "type": "BASIC",
+                          "user": "admin",
+                          "password": "admin123"
+                        },
                         "url": "http://nexus:8081/repository/maven-snapshots/"
                       },
                       {
+                        "credential": {
+                          "type": "BASIC",
+                          "user": "admin",
+                          "password": "admin123"
+                        },
                         "url": "http://nexus:8081/repository/maven-central/"
                       },
                       {
