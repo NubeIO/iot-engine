@@ -2,9 +2,6 @@ package com.nubeiot.edge.bios;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import org.jooq.Configuration;
 
@@ -12,8 +9,6 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.maven.MavenVerticleFactory;
-import io.vertx.maven.ResolverOptions;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
@@ -24,11 +19,8 @@ import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.InstallerConfig;
-import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
-import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
 import com.nubeiot.edge.core.RequestedServiceData;
-import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
@@ -97,31 +89,6 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
                                       serviceData.getAppConfig(), AppConfig.class);
         }
         return rule.parse(dataDir, tblModule, appConfig).setPublishedBy("NubeIO");
-    }
-
-    private void setupServiceRepository(RepositoryConfig repositoryCfg) {
-        logger.info("Setting up service local and remote repository");
-        RemoteRepositoryConfig remoteConfig = repositoryCfg.getRemoteConfig();
-        remoteConfig.getUrls()
-                    .entrySet()
-                    .stream()
-                    .parallel()
-                    .forEach(entry -> handleVerticleFactory(repositoryCfg.getLocal(), entry));
-    }
-
-    private void handleVerticleFactory(String local, Entry<ModuleType, List<RemoteUrl>> entry) {
-        final ModuleType type = entry.getKey();
-        if (ModuleType.JAVA == type) {
-            List<RemoteUrl> urls = entry.getValue();
-            String javaLocal = FileUtils.createFolder(local, type.name().toLowerCase(Locale.ENGLISH));
-            logger.info("{} local repositories: {}", type, javaLocal);
-            logger.info("{} remote repositories: {}", type, urls);
-            ResolverOptions resolver = new ResolverOptions().setLocalRepository(javaLocal)
-                                                            .setRemoteRepositories(urls.stream()
-                                                                                       .map(RemoteUrl::computeUrl)
-                                                                                       .collect(Collectors.toList()));
-            vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
-        }
     }
 
 }

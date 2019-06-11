@@ -27,8 +27,8 @@ public class BasicCredential extends Credential {
     }
 
     @Override
-    public String getUrlCredential() {
-        return new StringBuilder(this.getUser()).append(":").append(this.getPassword()).append("@").toString();
+    public String computeUrlCredential() {
+        return this.getUser() + ":" + this.getPassword() + "@";
     }
 
     @Override

@@ -22,7 +22,10 @@
         "enabled": true
       },
       "__circuitBreaker__": {
-        "enabled": true
+        "enabled": true,
+        "options": {
+          "timeout": 60000
+        }
       }
     },
     "__http__": {
