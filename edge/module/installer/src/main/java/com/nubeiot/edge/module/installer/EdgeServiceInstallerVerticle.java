@@ -48,6 +48,11 @@ public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
                                                                                   "/services/transactions" +
                                                                                   "/:transaction_id"), null)
                        .subscribe();
+        localController.addEventMessageRecord("service_last_transaction",
+                                              EdgeInstallerEventBus.getServiceLastTransaction(true).getAddress(),
+                                              EventMethodDefinition.createDefault("/services/last_transactions",
+                                                                                  "/services/last_transactions" +
+                                                                                  "/:module_id"), null).subscribe();
     }
 
     @Override
@@ -57,6 +62,9 @@ public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
                             new ModuleEventHandler(this, EdgeInstallerEventBus.getServiceInstaller(local)));
         controller.register(EdgeInstallerEventBus.getServiceTransaction(local),
                             new TransactionEventHandler(this, EdgeInstallerEventBus.getServiceTransaction(local)));
+        controller.register(EdgeInstallerEventBus.getServiceLastTransaction(local),
+                            new LastTransactionEventHandler(this,
+                                                            EdgeInstallerEventBus.getServiceLastTransaction(local)));
         controller.register(EdgeInstallerEventBus.SERVICE_DEPLOYMENT, new ModuleLoader(vertx));
     }
 

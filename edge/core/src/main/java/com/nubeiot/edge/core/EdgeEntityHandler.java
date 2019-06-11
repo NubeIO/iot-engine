@@ -241,6 +241,14 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                             : this.findHistoryTransactionById(transactionId));
     }
 
+    public Single<Optional<JsonObject>> findTransactionByModuleId(String moduleId) {
+        return transDao.queryExecutor()
+                       .findOne(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
+                                                        .where("module_id='" + moduleId + "'")
+                                                        .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()))
+                       .map(optional -> optional.map(TblTransaction::toJson));
+    }
+
     private Single<PreDeploymentResult> handlePreDeployment(ITblModule module, EventAction event) {
         logger.info("Handle entities before do deployment...");
         InstallerConfig config = IConfig.from(sharedDataFunc.apply(EdgeVerticle.SHARED_INSTALLER_CFG),
