@@ -1,8 +1,9 @@
 package com.nubeiot.core.micro;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -51,7 +52,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     private final String sharedKey;
     private final ServiceDiscovery serviceDiscovery;
     private final CircuitBreakerController circuitController;
-    private List<String> recordsRegistration = new ArrayList<>();
+    private final Map<String, Record> registrationMap = new ConcurrentHashMap<>();
 
     static ServiceDiscovery createServiceDiscovery(Vertx vertx, ServiceDiscoveryConfig config, String kind,
                                                    Predicate<Vertx> predicate) {
@@ -95,7 +96,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     void unregister(Future future) {
         if (Objects.nonNull(serviceDiscovery)) {
-            serviceDiscovery.rxGetRecords(r -> recordsRegistration.contains(r.getName()), true)
+            serviceDiscovery.rxGetRecords(r -> registrationMap.keySet().contains(r.getRegistration()), true)
                             .flattenAsObservable(rs -> rs)
                             .flatMapCompletable(r -> serviceDiscovery.rxUnpublish(r.getRegistration()))
                             .subscribe(future::complete, err -> {
@@ -172,17 +173,17 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     }
 
     public Completable removeRecord(String registration) {
-        return get().rxGetRecords(r -> r.getRegistration().equals(registration), true).flatMapCompletable(records -> {
-            if (records.size() != 0) {
-                return serviceDiscovery.rxUnpublish(registration);
-            }
-            throw new NotFoundException("Not found that registration");
-        });
+        return get().rxGetRecord(r -> r.getRegistration().equals(registration), true)
+                    .switchIfEmpty(Single.error(new NotFoundException("Not found that registration")))
+                    .flatMapCompletable(record -> {
+                        registrationMap.remove(registration);
+                        return serviceDiscovery.rxUnpublish(registration);
+                    });
     }
 
     private Single<Record> addDecoratorRecord(@NonNull Record record) {
         return get().rxPublish(record).doOnSuccess(rec -> {
-            recordsRegistration.add(rec.getRegistration());
+            registrationMap.put(rec.getRegistration(), rec);
             logger.info("Published {} Service: {}", kind(), rec.toJson());
         }).doOnError(t -> logger.error("Cannot publish {} record: {}", t, kind(), record));
     }
