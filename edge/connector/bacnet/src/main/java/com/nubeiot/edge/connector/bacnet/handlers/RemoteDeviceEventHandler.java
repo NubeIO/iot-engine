@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
  *  calls respective messages in BACnetInstance
  */
 @RequiredArgsConstructor
-public class DeviceEventHandler implements EventHandler {
+public class RemoteDeviceEventHandler implements EventHandler {
 
     private final Map<String, BACnetInstance> bacnetInstances;
 

@@ -13,7 +13,6 @@ import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.ObjectPropertyReference;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
-import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
@@ -71,25 +70,24 @@ public class BACnetDataConversions {
         return data;
     }
 
-    public static JsonObject CovNotification(ObjectIdentifier initiatingDeviceIdentifier,
-                                             ObjectIdentifier monitoredObjectIdentifier,
-                                             SequenceOf<PropertyValue> listOfValues) {
-        JsonObject data = new JsonObject();
-        try {
-            listOfValues.forEach(propertyValue -> {
-                if (propertyValue.getPropertyIdentifier() == PropertyIdentifier.presentValue) {
-                    data.put("value", encodableToPrimitive(propertyValue.getValue()));
-                    data.put("priority", encodableToPrimitive(propertyValue.getPriority()));
-                }
-            });
-        } catch (Exception e) {
-            return null;
-        }
-        if (data.isEmpty()) {
-            return null;
-        }
-        return data;
-    }
+    //TODO: probably won't be used anymore
+//    public static EdgeWriteRequest CovNotification(ObjectIdentifier initiatingDeviceIdentifier,
+//                                                   ObjectIdentifier monitoredObjectIdentifier,
+//                                                   SequenceOf<PropertyValue> listOfValues) {
+//        EdgeWriteRequest req;
+//        try {
+//            listOfValues.forEach(propertyValue -> {
+//                if (propertyValue.getPropertyIdentifier() == PropertyIdentifier.presentValue) {
+//                    Object value = encodableToPrimitive(propertyValue.getValue());
+//                    int priority = propertyValue.getPriority().intValue();
+//                    req = new EdgeWriteRequest()
+//                }
+//            });
+//        } catch (Exception e) {
+//            return null;
+//        }
+//        return req;
+//    }
 
     public static Object encodableToPrimitive(Encodable val) {
         if (val instanceof Real) {
@@ -129,13 +127,13 @@ public class BACnetDataConversions {
         return BinaryPV.inactive;
     }
 
-    public static Encodable primitiveToReal(Object obj) throws BACnetException {
+    public static Real primitiveToReal(Object obj) throws BACnetException {
         if (obj == null) {
             throw new BACnetException("Null value");
         }
         String str = obj.toString();
         if (str == null || str.equalsIgnoreCase("null")) {
-            return Null.instance;
+            return new Real(0f);
         } else {
             try {
                 return new Real(Float.parseFloat(str));
@@ -217,6 +215,7 @@ public class BACnetDataConversions {
         if (str.equals("value")) {
             return new PropertyValue(PropertyIdentifier.presentValue, new Real((Float) val));
         }
+        //TODO: support more properties (i.e historySettings, etc...)
         throw new BACnetException("Unsupported property: " + str);
     }
 
