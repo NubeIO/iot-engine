@@ -40,6 +40,7 @@ import com.serotonin.bacnet4j.type.error.ErrorClassAndCode;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.util.DiscoveryUtils;
+import com.serotonin.bacnet4j.util.RemoteDeviceDiscoverer;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
 import lombok.NonNull;
@@ -60,21 +61,16 @@ public class BACnetInstance {
     // requests?
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-//    private Map<String, Integer> remoteSubscriptions = new HashMap<>();
     private Vertx vertx;
     private LocalDevice localDevice;
     private BACnetConfig config;
+    private RemoteDeviceDiscoverer deviceDiscoverer;
 
     private BACnetInstance(LocalDevice localDevice, Vertx vertx) {
         this.vertx = vertx;
         this.localDevice = localDevice;
         this.config = new BACnetConfig();
     }
-
-//    private BACnetInstance(LocalDevice localDevice, Vertx vertx, Map<String, Integer> remoteSubscriptions) {
-//        this(localDevice, vertx);
-//        this.remoteSubscriptions = remoteSubscriptions;
-//    }
 
     private BACnetInstance(BACnetConfig config, BACnetNetworkConfig netConfig, EventController eventController,
                            Vertx vertx) {
@@ -88,7 +84,7 @@ public class BACnetInstance {
         try {
             localDevice.initialize();
             localDevice.getEventHandler().addListener(new BACnetEventListener(eventController, config));
-            localDevice.startRemoteDeviceDiscovery();
+            deviceDiscoverer = localDevice.startRemoteDeviceDiscovery();
             //TODO: should this be stopped? does it stop handling IAM req if stopped?
             if (!localDevice.isInitialized()) {
                 throw new NubeException(new BACnetServiceException(ErrorClass.device, ErrorCode.internalError));
@@ -104,17 +100,15 @@ public class BACnetInstance {
         return new BACnetInstance(localDevice, vertx);
     }
 
-//    public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx,
-//                                              Map<String, Integer> remoteSubscriptions) {
-//        return new BACnetInstance(localDevice, vertx, remoteSubscriptions);
-//    }
-
     public static BACnetInstance createBACnet(BACnetConfig bacnetConfig, BACnetNetworkConfig networkConfig,
                                               EventController eventController, Vertx vertx) {
         return new BACnetInstance(bacnetConfig, networkConfig, eventController, vertx);
     }
 
     public void terminate() {
+        clearLocalObjects();
+        localDevice.clearRemoteDevices();
+        deviceDiscoverer.stop();
         localDevice.terminate();
     }
 

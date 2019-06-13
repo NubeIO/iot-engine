@@ -44,7 +44,7 @@ public class SimulatorIntegrationTest {
     static int remoteDeviceId;
 
     @AfterClass
-    public static void after(TestContext context) {
+    public static void after(TestContext context) throws Exception {
         verticle.stop();
         vertx.close(context.asyncAssertSuccess());
     }
