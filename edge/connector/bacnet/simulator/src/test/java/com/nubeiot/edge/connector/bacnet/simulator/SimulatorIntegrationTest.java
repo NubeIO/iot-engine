@@ -19,7 +19,6 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
-import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -55,14 +54,13 @@ public class SimulatorIntegrationTest {
         TestHelper.setup();
         verticle = new BACnetMasterTest();
         vertx = Vertx.vertx();
-        eventController = SharedDataDelegate.getEventController(vertx.getDelegate(), verticle.getSharedKey());
+        eventController = new EventController(vertx);
         JsonObject masterConfig = IConfig.fromClasspath("master.json", NubeConfig.class).toJson();
         masterBACnetConfig = IConfig.from(masterConfig, BACnetConfig.class);
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(masterConfig), verticle);
         simConfig = IConfig.fromClasspath("config.json", BACnetConfig.class);
         remoteDeviceId = simConfig.getDeviceId();
         testPoints = Configs.loadJsonConfig("points.json");
-        //        System.out.println("SIMULATOR ID: " + remoteDeviceId);
         ThreadUtils.sleep(1000); //just to assure enough discovery time
     }
 
@@ -73,11 +71,11 @@ public class SimulatorIntegrationTest {
                              EventMessage.initial(EventAction.GET_LIST, addNetWorkToJson(new JsonObject())),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body(), true);
-                                 System.out.println(message.getData());
+                                 //                                 System.out.println(message.getData());
                                  context.assertTrue(message.isSuccess());
                                  context.assertTrue(message.getData().containsKey(Integer.toString(remoteDeviceId)));
                                  TestHelper.testComplete(async);
-                             }, null);
+                             });
     }
 
     @Test
@@ -94,7 +92,7 @@ public class SimulatorIntegrationTest {
                                  //                                 context.assertEquals(simConfig.getDeviceName(),
                                  //                                 data.getString("name"));
                                  TestHelper.testComplete(async);
-                             }, null);
+                             });
     }
 
     @Test
@@ -108,13 +106,13 @@ public class SimulatorIntegrationTest {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  context.assertTrue(message.isError());
                                  TestHelper.testComplete(async);
-                             }, null);
+                             });
     }
 
     @Test
     public void readAllPoints(TestContext context) throws Exception {
         Async async = context.async();
-        String address = "nubeiot.edge.connector.bacnet.device.points";
+        String address = "nubeiot.edge.connector.bacnet.device.points-info";
         eventController.fire(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_LIST,
                                                                                           addNetWorkToJson(
                                                                                               new JsonObject()).put(
@@ -134,7 +132,7 @@ public class SimulatorIntegrationTest {
                                      }
                                  });
                                  TestHelper.testComplete(async);
-                             }, null);
+                             });
     }
 
     @Test
@@ -142,7 +140,7 @@ public class SimulatorIntegrationTest {
         Async async = context.async();
         String p1 = testPoints.getMap().keySet().iterator().next();
         JsonObject p1o = testPoints.getJsonObject(p1);
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+        eventController.fire("nubeiot.edge.connector.bacnet.device.points-info", EventPattern.REQUEST_RESPONSE,
                              EventMessage.initial(EventAction.GET_ONE,
                                                   addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId)
                                                                                     .put("objectId",
@@ -160,7 +158,31 @@ public class SimulatorIntegrationTest {
                                                                   .getValue(
                                                                       PropertyIdentifier.presentValue.toString()));
                                  TestHelper.testComplete(async);
-                             }, null);
+                             });
+    }
+
+    @Test
+    public void readSinglePointValue(TestContext context) throws Exception {
+        Async async = context.async();
+        String p1 = testPoints.getMap().keySet().iterator().next();
+        JsonObject p1o = testPoints.getJsonObject(p1);
+        eventController.fire("nubeiot.edge.connector.bacnet.device.point", EventPattern.REQUEST_RESPONSE,
+                             EventMessage.initial(EventAction.GET_ONE,
+                                                  addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId)
+                                                                                    .put("objectId",
+                                                                                         BACnetDataConversions.pointIDNubeToBACnet(
+                                                                                             p1))),
+                             messageAsyncResult -> {
+                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
+                                 context.assertTrue(message.isSuccess());
+
+                                 Object val = p1o.getValue("value");
+                                 if (val instanceof Integer) {
+                                     val = new Float((Integer) val);
+                                 }
+                                 context.assertEquals(val, message.getData().getValue("value"));
+                                 TestHelper.testComplete(async);
+                             });
     }
 
     @Test
@@ -196,29 +218,8 @@ public class SimulatorIntegrationTest {
                                                                                 .getValue(
                                                                                     PropertyIdentifier.presentValue.toString()));
                                          TestHelper.testComplete(async);
-                                     }, null);
-            }, null);
-    }
-
-    //TODO: go over subscribing when finshed implementing
-    @Ignore
-    @Test
-    public void subscribeSuccessTest(TestContext context) throws Exception {
-        Async async = context.async();
-
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.CREATE,
-                                                  addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId)
-                                                                                    .put("objectId", "analog-input:1")
-                                                                                    .put("pollSeconds", 0)),
-                             messageAsyncResult -> {
-                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
-                                 context.assertTrue(message.isSuccess());
-                                 context.assertTrue(message.getData().containsKey("saveType"));
-                                 context.assertEquals("COV", message.getData().getString("saveType"));
-
-                                 TestHelper.testComplete(async);
-                             }, null);
+                                     });
+            });
     }
 
     private JsonObject addNetWorkToJson(JsonObject json) {
