@@ -18,19 +18,19 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.serotonin.bacnet4j.exception.BACnetException;
 
-public class DeviceEventHandlerTest {
+public class RemoteDeviceEventHandlerTest {
 
     @Mock
     BACnetInstance bacnetInstance;
     Map<String, BACnetInstance> bacnetInstances = new HashMap<>();
     @InjectMocks
-    DeviceEventHandler eventHandler;
+    RemoteDeviceEventHandler eventHandler;
 
     @Before
     public void beforeEach() throws Exception {
         MockitoAnnotations.initMocks(this);
         bacnetInstances.put("testNet", bacnetInstance);
-        eventHandler = new DeviceEventHandler(bacnetInstances);
+        eventHandler = new RemoteDeviceEventHandler(bacnetInstances);
     }
 
     @Test

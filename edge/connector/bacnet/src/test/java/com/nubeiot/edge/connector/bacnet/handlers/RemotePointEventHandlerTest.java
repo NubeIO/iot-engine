@@ -19,7 +19,7 @@ import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.type.Encodable;
 
-public class PointsEventHandlerTest {
+public class RemotePointEventHandlerTest {
 
     String n = "testNet";
     int id = 1234;
@@ -31,13 +31,13 @@ public class PointsEventHandlerTest {
     Map<String, BACnetInstance> bacnetInstances = new HashMap<>();
 
     @InjectMocks
-    PointsEventHandler eventHandler;
+    RemotePointEventHandler eventHandler;
 
     @Before
     public void beforeEach() throws Exception {
         MockitoAnnotations.initMocks(this);
-        bacnetInstances.put("testNet", bacnetInstance);
-        eventHandler = new PointsEventHandler(bacnetInstances);
+        bacnetInstances.put(n, bacnetInstance);
+        eventHandler = new RemotePointEventHandler(bacnetInstances);
     }
 
     @Test
@@ -49,15 +49,10 @@ public class PointsEventHandlerTest {
     }
 
     @Test
-    public void writeRemoteDevicePointValueTest_invalidPriority() throws Exception {
-        eventHandler.writeRemoteDevicePointValue(n, id, p, 0, "1").test().assertError(BACnetException.class);
-        eventHandler.writeRemoteDevicePointValue(n, id, p, 17, "1").test().assertError(BACnetException.class);
-    }
-
-    @Test
     public void noNetworkTest() throws Exception {
-        eventHandler.getRemoteDevicePoints("testNetFalse", id).test().assertError(BACnetException.class);
-        eventHandler.getRemoteDevicePointExtended("testNetFalse", id, p).test().assertError(BACnetException.class);
+        eventHandler.readRemoteDevicePointValue("testNetFalse", id, p)
+                    .test()
+                    .assertError(BACnetException.class);
         eventHandler.writeRemoteDevicePointValue("testNetFalse", id, p, pr, 1)
                     .test()
                     .assertError(BACnetException.class);
