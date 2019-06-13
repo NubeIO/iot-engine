@@ -28,7 +28,7 @@ public class BACnetEventListener extends DeviceEventAdapter {
     private final String POINTS_API;
     private EventController eventController;
 
-    BACnetEventListener(EventController eventController, BACnetConfig config) {
+    public BACnetEventListener(EventController eventController, BACnetConfig config) {
         this.eventController = eventController;
         this.POINTS_API = config.getLocalPointsApiAddress();
     }
