@@ -1,14 +1,9 @@
-package com.nubeiot.edge.connector.bacnet.handlers;
+package com.nubeiot.edge.connector.bacnet;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.ReplyEventHandler;
-import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
 import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
@@ -28,7 +23,7 @@ public class BACnetEventListener extends DeviceEventAdapter {
     private final String POINTS_API;
     private EventController eventController;
 
-    public BACnetEventListener(EventController eventController, BACnetConfig config) {
+    BACnetEventListener(EventController eventController, BACnetConfig config) {
         this.eventController = eventController;
         this.POINTS_API = config.getLocalPointsApiAddress();
     }
@@ -38,8 +33,7 @@ public class BACnetEventListener extends DeviceEventAdapter {
                                         ObjectIdentifier initiatingDeviceIdentifier,
                                         ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
                                         SequenceOf<PropertyValue> listOfValues) {
-        //        logger.warn("COV notification unsupported", new UnsupportedOperationException("COV notification
-        //        unsupported"));
+        logger.warn("COV notification unsupported", new UnsupportedOperationException("COV notification unsupported"));
         //        logger.info(
         //            "COV Notification: " + monitoredObjectIdentifier.toString() + " from " +
         //            initiatingDeviceIdentifier);
@@ -92,15 +86,9 @@ public class BACnetEventListener extends DeviceEventAdapter {
         EdgeWriteRequest edgeReq = new EdgeWriteRequest(id, val, req.getPriority().intValue());
         logger.info("REQUEST RECIEVED FOR POINT " + id + " value " + val + " @ " + req.getPriority().intValue());
 
-        ReplyEventHandler handler = ReplyEventHandler.builder()
-                                                     .system("BACNET_API")
-                                                     .action(EventAction.GET_LIST)
-                                                     .success(null)
-                                                     .error(error -> logger.error(error.toJson()))
-                                                     .build();
-
-        EventMessage message = EventMessage.initial(EventAction.PATCH, edgeReq.toJson());
-        eventController.fire(POINTS_API + "." + id + ".value", EventPattern.POINT_2_POINT, message);
+        //TODO: send write request to edge-api
+//        EventMessage message = EventMessage.initial(EventAction., edgeReq.toJson());
+//        eventController.fire(POINTS_API+"."+id+".value", EventPattern.POINT_2_POINT, message);
     }
 
 }
