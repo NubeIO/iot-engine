@@ -16,7 +16,6 @@ import io.vertx.reactivex.core.Vertx;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig.BACnetNetworkConfig;
-import com.nubeiot.edge.connector.bacnet.handlers.BACnetEventListener;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
 import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
@@ -28,6 +27,7 @@ import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
 import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;
+import com.serotonin.bacnet4j.service.confirmed.SubscribeCOVRequest;
 import com.serotonin.bacnet4j.transport.Transport;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.ObjectPropertyReference;
@@ -37,10 +37,11 @@ import com.serotonin.bacnet4j.type.enumerated.ErrorCode;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.error.ErrorClassAndCode;
+import com.serotonin.bacnet4j.type.primitive.Boolean;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
+import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 import com.serotonin.bacnet4j.util.DiscoveryUtils;
-import com.serotonin.bacnet4j.util.RemoteDeviceDiscoverer;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
 import lombok.NonNull;
@@ -61,16 +62,21 @@ public class BACnetInstance {
     // requests?
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+//    private Map<String, Integer> remoteSubscriptions = new HashMap<>();
     private Vertx vertx;
     private LocalDevice localDevice;
     private BACnetConfig config;
-    private RemoteDeviceDiscoverer deviceDiscoverer;
 
     private BACnetInstance(LocalDevice localDevice, Vertx vertx) {
         this.vertx = vertx;
         this.localDevice = localDevice;
         this.config = new BACnetConfig();
     }
+
+//    private BACnetInstance(LocalDevice localDevice, Vertx vertx, Map<String, Integer> remoteSubscriptions) {
+//        this(localDevice, vertx);
+//        this.remoteSubscriptions = remoteSubscriptions;
+//    }
 
     private BACnetInstance(BACnetConfig config, BACnetNetworkConfig netConfig, EventController eventController,
                            Vertx vertx) {
@@ -84,7 +90,7 @@ public class BACnetInstance {
         try {
             localDevice.initialize();
             localDevice.getEventHandler().addListener(new BACnetEventListener(eventController, config));
-            deviceDiscoverer = localDevice.startRemoteDeviceDiscovery();
+            localDevice.startRemoteDeviceDiscovery();
             //TODO: should this be stopped? does it stop handling IAM req if stopped?
             if (!localDevice.isInitialized()) {
                 throw new NubeException(new BACnetServiceException(ErrorClass.device, ErrorCode.internalError));
@@ -100,15 +106,17 @@ public class BACnetInstance {
         return new BACnetInstance(localDevice, vertx);
     }
 
+//    public static BACnetInstance createBACnet(LocalDevice localDevice, Vertx vertx,
+//                                              Map<String, Integer> remoteSubscriptions) {
+//        return new BACnetInstance(localDevice, vertx, remoteSubscriptions);
+//    }
+
     public static BACnetInstance createBACnet(BACnetConfig bacnetConfig, BACnetNetworkConfig networkConfig,
                                               EventController eventController, Vertx vertx) {
         return new BACnetInstance(bacnetConfig, networkConfig, eventController, vertx);
     }
 
     public void terminate() {
-        clearLocalObjects();
-        localDevice.clearRemoteDevices();
-        deviceDiscoverer.stop();
         localDevice.terminate();
     }
 
