@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -65,11 +66,12 @@ public class BACnetVerticle extends ContainerVerticle {
     }
 
     @Override
-    public void stop() {
+    public void stop(Future<Void> future) {
         bacnetInstances.forEach((s, baCnet) -> {
             logger.info("Terminating Network Transport {}", s);
             baCnet.terminate();
         });
+        this.stopUnits(future);
     }
 
     protected void startBACnet(BACnetConfig bacnetConfig) {
