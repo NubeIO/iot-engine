@@ -61,7 +61,6 @@ public class SimulatorIntegrationTest {
         simConfig = IConfig.fromClasspath("config.json", BACnetConfig.class);
         remoteDeviceId = simConfig.getDeviceId();
         testPoints = Configs.loadJsonConfig("points.json");
-        //        System.out.println("SIMULATOR ID: " + remoteDeviceId);
         ThreadUtils.sleep(1000); //just to assure enough discovery time
     }
 
@@ -72,7 +71,7 @@ public class SimulatorIntegrationTest {
                              EventMessage.initial(EventAction.GET_LIST, addNetWorkToJson(new JsonObject())),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body(), true);
-                                 System.out.println(message.getData());
+                                 //                                 System.out.println(message.getData());
                                  context.assertTrue(message.isSuccess());
                                  context.assertTrue(message.getData().containsKey(Integer.toString(remoteDeviceId)));
                                  TestHelper.testComplete(async);
@@ -113,7 +112,7 @@ public class SimulatorIntegrationTest {
     @Test
     public void readAllPoints(TestContext context) throws Exception {
         Async async = context.async();
-        String address = "nubeiot.edge.connector.bacnet.device.points";
+        String address = "nubeiot.edge.connector.bacnet.device.points-info";
         eventController.fire(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_LIST,
                                                                                           addNetWorkToJson(
                                                                                               new JsonObject()).put(
@@ -141,7 +140,7 @@ public class SimulatorIntegrationTest {
         Async async = context.async();
         String p1 = testPoints.getMap().keySet().iterator().next();
         JsonObject p1o = testPoints.getJsonObject(p1);
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+        eventController.fire("nubeiot.edge.connector.bacnet.device.points-info", EventPattern.REQUEST_RESPONSE,
                              EventMessage.initial(EventAction.GET_ONE,
                                                   addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId)
                                                                                     .put("objectId",
@@ -158,6 +157,30 @@ public class SimulatorIntegrationTest {
                                  context.assertEquals(val, message.getData()
                                                                   .getValue(
                                                                       PropertyIdentifier.presentValue.toString()));
+                                 TestHelper.testComplete(async);
+                             });
+    }
+
+    @Test
+    public void readSinglePointValue(TestContext context) throws Exception {
+        Async async = context.async();
+        String p1 = testPoints.getMap().keySet().iterator().next();
+        JsonObject p1o = testPoints.getJsonObject(p1);
+        eventController.fire("nubeiot.edge.connector.bacnet.device.point", EventPattern.REQUEST_RESPONSE,
+                             EventMessage.initial(EventAction.GET_ONE,
+                                                  addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId)
+                                                                                    .put("objectId",
+                                                                                         BACnetDataConversions.pointIDNubeToBACnet(
+                                                                                             p1))),
+                             messageAsyncResult -> {
+                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
+                                 context.assertTrue(message.isSuccess());
+
+                                 Object val = p1o.getValue("value");
+                                 if (val instanceof Integer) {
+                                     val = new Float((Integer) val);
+                                 }
+                                 context.assertEquals(val, message.getData().getValue("value"));
                                  TestHelper.testComplete(async);
                              });
     }
@@ -197,27 +220,6 @@ public class SimulatorIntegrationTest {
                                          TestHelper.testComplete(async);
                                      });
             });
-    }
-
-    //TODO: go over subscribing when finshed implementing
-    @Ignore
-    @Test
-    public void subscribeSuccessTest(TestContext context) throws Exception {
-        Async async = context.async();
-
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.CREATE,
-                                                  addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId)
-                                                                                    .put("objectId", "analog-input:1")
-                                                                                    .put("pollSeconds", 0)),
-                             messageAsyncResult -> {
-                                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
-                                 context.assertTrue(message.isSuccess());
-                                 context.assertTrue(message.getData().containsKey("saveType"));
-                                 context.assertEquals("COV", message.getData().getString("saveType"));
-
-                                 TestHelper.testComplete(async);
-                             });
     }
 
     private JsonObject addNetWorkToJson(JsonObject json) {

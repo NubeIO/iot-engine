@@ -19,9 +19,10 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.edge.connector.bacnet.handlers.DeviceEventHandler;
+import com.nubeiot.edge.connector.bacnet.handlers.RemoteDeviceEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.NubeServiceEventHandler;
-import com.nubeiot.edge.connector.bacnet.handlers.PointsEventHandler;
+import com.nubeiot.edge.connector.bacnet.handlers.RemotePointEventHandler;
+import com.nubeiot.edge.connector.bacnet.handlers.RemotePointsInfoEventHandler;
 
 /*
  * Main BACnetInstance verticle
@@ -44,7 +45,7 @@ public class BACnetVerticle extends ContainerVerticle {
         }
 
         startBACnet(bacnetConfig);
-        initLocalPoints(bacnetConfig.getLocalPointsAddress());
+        initLocalPoints(bacnetConfig.getLocalPointsApiAddress());
         //TODO: init all configs from DB when ready to implement
         //REGISTER ENDPOINTS
         registerEventbus(new EventController(vertx));
@@ -57,8 +58,9 @@ public class BACnetVerticle extends ContainerVerticle {
             return; //Prevents super.start() from registering before BACnetInstance is started
         }
         controller.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
-        controller.register(BACnetEventModels.DEVICES, new DeviceEventHandler(bacnetInstances));
-        controller.register(BACnetEventModels.POINTS, new PointsEventHandler(bacnetInstances));
+        controller.register(BACnetEventModels.DEVICES, new RemoteDeviceEventHandler(bacnetInstances));
+        controller.register(BACnetEventModels.POINTS_INFO, new RemotePointsInfoEventHandler(bacnetInstances));
+        controller.register(BACnetEventModels.POINT, new RemotePointEventHandler(bacnetInstances));
         this.eventController = controller;
     }
 
@@ -94,9 +96,16 @@ public class BACnetVerticle extends ContainerVerticle {
                     .subscribe();
 
         microContext.getLocalController()
-                    .addEventMessageRecord("bacnet-points-service", BACnetEventModels.POINTS.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet/:network/:deviceID/points",
-                                                                               "/bacnet/:network/:deviceID/points" +
+                    .addEventMessageRecord("bacnet-points-info-service", BACnetEventModels.POINTS_INFO.getAddress(),
+                                           EventMethodDefinition.createDefault("/bacnet/:network/:deviceID/points-info",
+                                                                               "/bacnet/:network/:deviceID/points-info" +
+                                                                               "/:objectID"), new JsonObject())
+                    .subscribe();
+
+        microContext.getLocalController()
+                    .addEventMessageRecord("bacnet-point-service", BACnetEventModels.POINT.getAddress(),
+                                           EventMethodDefinition.createDefault("/bacnet/:network/:deviceID/point",
+                                                                               "/bacnet/:network/:deviceID/point" +
                                                                                "/:objectID"), new JsonObject())
                     .subscribe();
     }

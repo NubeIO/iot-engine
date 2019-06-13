@@ -13,10 +13,9 @@ public final class BACnetEventModels {
                                                             .address("nubeiot.edge.connector.edgeapi")
                                                             .pattern(EventPattern.REQUEST_RESPONSE)
                                                             .local(true)
-                                                            .events(Arrays.asList(EventAction.CREATE,
-                                                                                      EventAction.REMOVE,
-                                                                                      EventAction.UPDATE,
-                                                                                      EventAction.PATCH))
+                                                            .events(
+                                                                Arrays.asList(EventAction.CREATE, EventAction.REMOVE,
+                                                                              EventAction.UPDATE, EventAction.PATCH))
                                                             .build();
 
     public static final EventModel NETWORKS_ALL = EventModel.builder()
@@ -34,13 +33,18 @@ public final class BACnetEventModels {
                                                        .events(Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE))
                                                        .build();
 
-    public static final EventModel POINTS = EventModel.builder()
-                                                      .address("nubeiot.edge.connector.bacnet.device.points")
-                                                      .pattern(EventPattern.REQUEST_RESPONSE)
-                                                      .local(true)
-                                                      .events(Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE,
-                                                                            EventAction.PATCH, EventAction.CREATE,
-                                                                            EventAction.REMOVE))
-                                                      .build();
+    public static final EventModel POINTS_INFO = EventModel.builder()
+                                                           .address("nubeiot.edge.connector.bacnet.device.points")
+                                                           .pattern(EventPattern.REQUEST_RESPONSE)
+                                                           .local(true)
+                                                           .events(Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE))
+                                                           .build();
+
+    public static final EventModel POINT = EventModel.builder()
+                                                     .address("nubeiot.edge.connector.bacnet.device.point")
+                                                     .pattern(EventPattern.REQUEST_RESPONSE)
+                                                     .local(true)
+                                                     .events(Arrays.asList(EventAction.GET_ONE, EventAction.PATCH))
+                                                     .build();
 
 }

@@ -59,25 +59,25 @@ public class BACnetDataConversionsTest {
         Assert.assertEquals("binary-output:11", BACnetDataConversions.pointIDNubeToBACnet(R));
     }
 
-    @Test
-    public void CovNotificationTest() throws Exception {
-        ObjectIdentifier initObj = new ObjectIdentifier(ObjectType.device, 1);
-        ObjectIdentifier monObj = new ObjectIdentifier(ObjectType.analogOutput, 1);
-        SequenceOf<PropertyValue> listOfValues = new SequenceOf<>();
-
-        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
-
-        listOfValues.add(new PropertyValue(PropertyIdentifier.objectName, new CharacterString("yeet")));
-        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
-
-        listOfValues.add(new PropertyValue(PropertyIdentifier.presentValue, new Real(1)));
-        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
-
-        listOfValues = new SequenceOf<>();
-        listOfValues.add(new PropertyValue(PropertyIdentifier.presentValue, new UnsignedInteger(1), new Real(1),
-                                           new UnsignedInteger(16)));
-        Assert.assertNotNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
-    }
+//    @Test
+//    public void CovNotificationTest() throws Exception {
+//        ObjectIdentifier initObj = new ObjectIdentifier(ObjectType.device, 1);
+//        ObjectIdentifier monObj = new ObjectIdentifier(ObjectType.analogOutput, 1);
+//        SequenceOf<PropertyValue> listOfValues = new SequenceOf<>();
+//
+//        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
+//
+//        listOfValues.add(new PropertyValue(PropertyIdentifier.objectName, new CharacterString("yeet")));
+//        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
+//
+//        listOfValues.add(new PropertyValue(PropertyIdentifier.presentValue, new Real(1)));
+//        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
+//
+//        listOfValues = new SequenceOf<>();
+//        listOfValues.add(new PropertyValue(PropertyIdentifier.presentValue, new UnsignedInteger(1), new Real(1),
+//                                           new UnsignedInteger(16)));
+//        Assert.assertNotNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
+//    }
 
     @Test
     public void getObjectIdentifierTest() throws Exception {

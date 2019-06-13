@@ -15,6 +15,7 @@ import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
+import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
@@ -37,8 +38,8 @@ public class NubeServiceEventHandlerTest {
         localDevice1 = new LocalDevice(111, transport);
         localDevice2 = new LocalDevice(111, transport);
         Vertx vertx = Mockito.mock(Vertx.class);
-        bacnetInstances.put("net1", BACnetInstance.createBACnet(localDevice1, vertx, null));
-        bacnetInstances.put("net2", BACnetInstance.createBACnet(localDevice2, vertx, null));
+        bacnetInstances.put("net1", BACnetInstance.createBACnet(localDevice1, vertx));
+        bacnetInstances.put("net2", BACnetInstance.createBACnet(localDevice2, vertx));
         eventHandler = new NubeServiceEventHandler(bacnetInstances);
 
         final URL POINTS_RESOURCE = FileUtils.class.getClassLoader().getResource("points.json");
@@ -50,7 +51,11 @@ public class NubeServiceEventHandlerTest {
         localDevice1.getLocalObjects().clear();
         localDevice2.getLocalObjects().clear();
         bacnetInstances.forEach((s, baCnetInstance) -> {
-            baCnetInstance.addLocalObjectFromJson("UI1", points.getJsonObject("UI1"));
+            try {
+                baCnetInstance.addLocalObject(EdgePoint.fromJson("UI1", points.getJsonObject("UI1")));
+            }catch (Exception e){
+                Assert.fail(e.getMessage());
+            }
         });
     }
 

@@ -1,14 +1,10 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
 import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
 import com.serotonin.bacnet4j.service.Service;
@@ -24,13 +20,12 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 public class BACnetEventListener extends DeviceEventAdapter {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final String POINTS_API = "nubeio.edge.connector.pointsapi";
-    private Vertx vertx;
+    private final String POINTS_API;
     private EventController eventController;
 
-    BACnetEventListener(Vertx vertx, EventController eventController) {
-        this.vertx = vertx;
+    BACnetEventListener(EventController eventController, BACnetConfig config) {
         this.eventController = eventController;
+        this.POINTS_API = config.getLocalPointsApiAddress();
     }
 
     @Override
@@ -38,18 +33,21 @@ public class BACnetEventListener extends DeviceEventAdapter {
                                         ObjectIdentifier initiatingDeviceIdentifier,
                                         ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
                                         SequenceOf<PropertyValue> listOfValues) {
-        logger.info(
-            "COV Notification: " + monitoredObjectIdentifier.toString() + " from " + initiatingDeviceIdentifier);
-
-        JsonObject json = BACnetDataConversions.CovNotification(initiatingDeviceIdentifier, monitoredObjectIdentifier,
-                                                                listOfValues);
-        if (json == null) {
-            logger.warn("Invalid COV Notification from {} for {}", initiatingDeviceIdentifier,
-                        monitoredObjectIdentifier);
-        } else {
-            EventMessage message = EventMessage.initial(EventAction.UPDATE, json);
-            eventController.fire(POINTS_API, EventPattern.POINT_2_POINT, message);
-        }
+        logger.warn("COV notification unsupported", new UnsupportedOperationException("COV notification unsupported"));
+        //        logger.info(
+        //            "COV Notification: " + monitoredObjectIdentifier.toString() + " from " +
+        //            initiatingDeviceIdentifier);
+        //
+        //        JsonObject json = BACnetDataConversions.CovNotification(initiatingDeviceIdentifier,
+        //        monitoredObjectIdentifier,
+        //                                                                listOfValues);
+        //        if (json == null) {
+        //            logger.warn("Invalid COV Notification from {} for {}", initiatingDeviceIdentifier,
+        //                        monitoredObjectIdentifier);
+        //        } else {
+        //            EventMessage message = EventMessage.initial(EventAction.UPDATE, json);
+        //            eventController.fire(POINTS_API, EventPattern.POINT_2_POINT, message);
+        //        }
     }
 
     @Override
@@ -65,15 +63,13 @@ public class BACnetEventListener extends DeviceEventAdapter {
     }
 
     private void handleCreateObjectRequest(CreateObjectRequest req) {
-        //TODO: send request to bonescript api for createObjectRequests
-        //  resolve why this is a private method
-        //  req.getListOfInitialValues();
+        logger.warn("Create new point request unsupported",
+                    new UnsupportedOperationException("Create new point request unsupported"));
     }
 
     private void handleWriteRequest(WritePropertyRequest req) {
-        //TODO: need to support more propertyId's??
         if (!req.getPropertyIdentifier().equals(PropertyIdentifier.presentValue)) {
-            System.out.println("\n\nBAD PROP ID: " + req.getPropertyIdentifier().toString());
+            logger.warn("Unsupported Property Id: " + req.getPropertyIdentifier().toString());
             return;
         }
         ObjectIdentifier oid = req.getObjectIdentifier();
@@ -83,14 +79,16 @@ public class BACnetEventListener extends DeviceEventAdapter {
             id = BACnetDataConversions.pointIDBACnetToNube(oid);
             val = BACnetDataConversions.encodableToPrimitive(req.getPropertyValue());
         } catch (Exception e) {
-            logger.warn("External BACnet write request error", e);
+            logger.warn("External BACnet write request error ", e);
             return;
         }
+
+        EdgeWriteRequest edgeReq = new EdgeWriteRequest(id, val, req.getPriority().intValue());
         logger.info("REQUEST RECIEVED FOR POINT " + id + " value " + val + " @ " + req.getPriority().intValue());
 
-        JsonObject reqBody = new JsonObject().put("value", val).put("priority", req.getPriority().intValue());
-
-        //TODO: send the shit off to fuck knows where anymore...
+        //TODO: send write request to edge-api
+//        EventMessage message = EventMessage.initial(EventAction., edgeReq.toJson());
+//        eventController.fire(POINTS_API+"."+id+".value", EventPattern.POINT_2_POINT, message);
     }
 
 }

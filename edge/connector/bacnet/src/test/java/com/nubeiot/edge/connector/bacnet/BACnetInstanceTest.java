@@ -31,15 +31,16 @@ public class BACnetInstanceTest {
     private LocalDevice localDevice;
     private DefaultTransport transport;
     private BACnetInstance bacnetInstance;
-    private Map<String, Integer> remoteSubscriptions;
+//    private Map<String, Integer> remoteSubscriptions;
 
     @Before
     public void beforeEach() throws Exception {
         Vertx vertx = Mockito.mock(Vertx.class);
         transport = Mockito.mock(DefaultTransport.class);
         localDevice = new LocalDevice(1234, transport);
-        remoteSubscriptions = new HashMap<>();
-        bacnetInstance = BACnetInstance.createBACnet(localDevice, vertx, remoteSubscriptions);
+//        remoteSubscriptions = new HashMap<>();
+//        bacnetInstance = BACnetInstance.createBACnet(localDevice, vertx, remoteSubscriptions);
+        bacnetInstance = BACnetInstance.createBACnet(localDevice, vertx);
     }
 
     @After
