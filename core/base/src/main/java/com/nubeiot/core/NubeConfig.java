@@ -144,6 +144,9 @@ public final class NubeConfig implements IConfig {
             @JsonIgnore
             private DeliveryOptions deliveryOptions = new DeliveryOptions();
 
+            @JsonProperty(value = "deliveryOptions")
+            private DeliveryOptionsConfig deliveryOptionsConfig;
+
             public EventBusConfig() {
                 this(null);
             }
@@ -157,9 +160,9 @@ public final class NubeConfig implements IConfig {
                 this.putIfAbsent("host", "0.0.0.0");
                 this.putIfAbsent("port", 5000);
                 options = new EventBusOptions(JsonObject.mapFrom(this));
-                if (this.containsKey("deliveryOptions")) {
-                    final DeliveryOptionsConfig deliveryOptionsConfig = IConfig.from(this.get("deliveryOptions"),
-                                                                                     DeliveryOptionsConfig.class);
+                if (this.containsKey(DeliveryOptionsConfig.NAME)) {
+                    this.deliveryOptionsConfig = IConfig.from(this.get(DeliveryOptionsConfig.NAME),
+                                                              DeliveryOptionsConfig.class);
                     this.deliveryOptions.setCodecName(deliveryOptionsConfig.getCodecName());
                     this.deliveryOptions.setSendTimeout(deliveryOptionsConfig.getTimeout());
                     MultiMap header = new CaseInsensitiveHeaders();
@@ -182,7 +185,12 @@ public final class NubeConfig implements IConfig {
             }
 
             @Override
-            public JsonObject toJson() { return options.toJson(); }
+            public JsonObject toJson() {
+                if (Objects.isNull(deliveryOptionsConfig)) {
+                    return options.toJson();
+                }
+                return options.toJson().mergeIn(this.deliveryOptions.toJson(), true);
+            }
 
         }
 

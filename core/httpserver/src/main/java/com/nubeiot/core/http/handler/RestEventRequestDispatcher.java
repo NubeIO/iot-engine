@@ -24,7 +24,7 @@ public interface RestEventRequestDispatcher extends Handler<RoutingContext> {
                                                      })
                                                      .exception(context::fail)
                                                      .build();
-        getController().request(address, pattern, message, handler);
+        getController().request(address, pattern, message, handler, null);
     }
 
 }

@@ -51,7 +51,7 @@ public abstract class WsLightResponseDispatcher implements Handler<Buffer> {
     public void handle(Buffer data) {
         logger.info("Websocket Client received message then dispatch data to '{}'", listener.getAddress());
         controller.request(listener.getAddress(), listener.getPattern(),
-                           EventMessage.tryParse(JsonData.tryParse(data), true));
+                           EventMessage.tryParse(JsonData.tryParse(data), true), null);
     }
 
 }

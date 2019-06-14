@@ -110,7 +110,7 @@ public class BACnetVerticle extends ContainerVerticle {
                                                      .error(error -> logger.error(error.toJson()))
                                                      .build();
         eventController.fire(localPointsAddress, EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_LIST), handler);
+                             EventMessage.initial(EventAction.GET_LIST), handler, null);
     }
 
     private void initLocalPoints(EventMessage msg) {

@@ -40,7 +40,7 @@ class Pusher implements EventMessagePusher {
                                                      .success(msg -> dataConsumer.accept(ResponseData.from(msg)))
                                                      .exception(errorConsumer)
                                                      .build();
-        controller.request(address, pattern, EventMessage.initial(action, requestData), handler, options);
+        controller.request(address, pattern, EventMessage.initial(action, requestData), handler, null);
     }
 
 }

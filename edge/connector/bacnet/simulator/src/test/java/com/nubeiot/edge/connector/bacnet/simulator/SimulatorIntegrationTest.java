@@ -76,7 +76,7 @@ public class SimulatorIntegrationTest {
                                  context.assertTrue(message.isSuccess());
                                  context.assertTrue(message.getData().containsKey(Integer.toString(remoteDeviceId)));
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -93,7 +93,7 @@ public class SimulatorIntegrationTest {
                                  //                                 context.assertEquals(simConfig.getDeviceName(),
                                  //                                 data.getString("name"));
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class SimulatorIntegrationTest {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  context.assertTrue(message.isError());
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -133,7 +133,7 @@ public class SimulatorIntegrationTest {
                                      }
                                  });
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -159,7 +159,7 @@ public class SimulatorIntegrationTest {
                                                                   .getValue(
                                                                       PropertyIdentifier.presentValue.toString()));
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -195,8 +195,8 @@ public class SimulatorIntegrationTest {
                                                                                 .getValue(
                                                                                     PropertyIdentifier.presentValue.toString()));
                                          TestHelper.testComplete(async);
-                                     });
-            });
+                                     }, null);
+            }, null);
     }
 
     //TODO: go over subscribing when finshed implementing
@@ -217,7 +217,7 @@ public class SimulatorIntegrationTest {
                                  context.assertEquals("COV", message.getData().getString("saveType"));
 
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     private JsonObject addNetWorkToJson(JsonObject json) {

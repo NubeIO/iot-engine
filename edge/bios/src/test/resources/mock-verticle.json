@@ -1,4 +1,12 @@
 {
+  "__system__": {
+    "__eventBus__": {
+      "deliveryOptions": {
+        "timeout": 5000,
+        "headers": {}
+      }
+    }
+  },
   "__app__": {
     "__sql__": {
 

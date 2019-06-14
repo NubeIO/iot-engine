@@ -1,13 +1,14 @@
 package com.nubeiot.core.cluster;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.spi.cluster.NodeListener;
+
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.core.spi.cluster.NodeListener;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public final class ClusterNodeListener implements NodeListener {
         logger.info("Add node: {}", nodeID);
         ClusterNode clusterNode = clusterDelegate.lookupNodeById(nodeID);
         controller.fire(listenerAddress, EventPattern.PUBLISH_SUBSCRIBE,
-                        EventMessage.success(EventAction.CREATE, clusterNode.toRequestData()));
+                        EventMessage.success(EventAction.CREATE, clusterNode.toRequestData()), null);
     }
 
     @Override
@@ -31,7 +32,7 @@ public final class ClusterNodeListener implements NodeListener {
         logger.info("Remove node: {}", nodeID);
         ClusterNode clusterNode = ClusterNode.builder().id(nodeID).build();
         controller.fire(listenerAddress, EventPattern.PUBLISH_SUBSCRIBE,
-                        EventMessage.success(EventAction.REMOVE, clusterNode.toRequestData()));
+                        EventMessage.success(EventAction.REMOVE, clusterNode.toRequestData()), null);
     }
 
 }

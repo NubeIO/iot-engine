@@ -30,7 +30,7 @@ public class MockKafkaConsumer {
             System.err.println("CONSUMER Topic: " + record.topic());
             System.err.println(record.value().toJson().encodePrettily());
             EventModel eventModel = eventModelSupplier.get();
-            controller.response(eventModel.getAddress(), eventModel.getPattern(), record.value());
+            controller.response(eventModel.getAddress(), eventModel.getPattern(), record.value(), null);
         }).exceptionHandler(Throwable::printStackTrace);
         consumer.subscribe(Collections.singleton(topic));
     }

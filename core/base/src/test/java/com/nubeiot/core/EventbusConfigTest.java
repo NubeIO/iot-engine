@@ -67,10 +67,9 @@ public class EventbusConfigTest {
     @Test
     public void test_parse_delivery_option_from_eventbus() {
         EventBusConfig eventBusConfig = IConfig.from(
-            "{\"clientAuth\":\"REQUIRED\",\"ssl\":true,\"keyStoreOptions\":{\"path" +
-            "\":\"eventBusKeystore.jks\"," + "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path" +
-            "\":\"eventBusKeystore.jks\"," + "\"password\":\"nubesparkEventBus\"}," +
-            "\"deliveryOptions\":{\"codecName\":\"abc\"," +
+            "{\"clientAuth\":\"REQUIRED\",\"ssl\":true,\"keyStoreOptions\":{\"path" + "\":\"eventBusKeystore.jks\"," +
+            "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path" + "\":\"eventBusKeystore.jks\"," +
+            "\"password\":\"nubesparkEventBus\"}," + "\"deliveryOptions\":{\"codecName\":\"abc\"," +
             "\"timeout\":\"300000\", \"headers\":{\"Content-type\":\"application/json\", \"Method\":\"GET\"}}}",
             EventBusConfig.class);
         DeliveryOptions deliveryOptions = eventBusConfig.getDeliveryOptions();

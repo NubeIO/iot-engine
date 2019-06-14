@@ -33,32 +33,18 @@ public final class EventController implements Shareable {
     private final DeliveryOptions deliveryOptions;
     private static EventController instance;
 
-    public EventController(@NonNull io.vertx.core.Vertx vertx) {
-        //        this.vertx = vertx;
-        this.eventBus = vertx.eventBus();
-        this.deliveryOptions = null;
-    }
-
     private EventController(@NonNull io.vertx.core.Vertx vertx, DeliveryOptions deliveryOptions) {
         //        this.vertx = vertx;
         this.eventBus = vertx.eventBus();
-        this.deliveryOptions = deliveryOptions;
-    }
-
-    private EventController(@NonNull Vertx vertx) {
-        this(vertx.getDelegate());
+        this.deliveryOptions = Objects.nonNull(deliveryOptions) ? deliveryOptions : new DeliveryOptions();
     }
 
     public static EventController getInstance(@NonNull Vertx vertx) {
-        return getInstance(vertx.getDelegate());
+        return getInstance(vertx.getDelegate(), new DeliveryOptions());
     }
 
     public static EventController getInstance(@NonNull io.vertx.core.Vertx vertx) {
-        if (Objects.nonNull(instance)) {
-            return instance;
-        }
-        instance = new EventController(vertx);
-        return instance;
+        return getInstance(vertx, new DeliveryOptions());
     }
 
     public static EventController getInstance(@NonNull Vertx vertx, DeliveryOptions deliveryOptions) {
@@ -66,9 +52,9 @@ public final class EventController implements Shareable {
     }
 
     public static EventController getInstance(@NonNull io.vertx.core.Vertx vertx, DeliveryOptions deliveryOptions) {
-        if (Objects.nonNull(instance)) {
-            return instance;
-        }
+//        if (Objects.nonNull(instance)) {
+//            return instance;
+//        }
         instance = new EventController(vertx, deliveryOptions);
         return instance;
     }
@@ -76,31 +62,17 @@ public final class EventController implements Shareable {
     /**
      * Fire the request to event address
      *
-     * @param address Eventbus address
-     * @param pattern Event pattern
-     * @param message Request data message
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param message         Request data message
+     * @param deliveryOptions
      * @see EventPattern
      * @see EventMessage
-     * @see #request(String, EventPattern, EventMessage, Handler)
-     */
-    public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message) {
-        request(address, pattern, message, null);
-    }
-
-    /**
-     * Fire the request to event address
-     *
-     * @param address       Eventbus address
-     * @param pattern       Event pattern
-     * @param message       Request message message
-     * @param replyConsumer The consumer for handling message back after the system completes request process
-     * @see EventPattern
-     * @see EventMessage
+     * @see #request(String, EventPattern, EventMessage, Handler, DeliveryOptions)
      */
     public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                        Handler<AsyncResult<Message<Object>>> replyConsumer) {
-        logger.debug("Eventbus::Request:Address: {} - Pattern: {}", address, pattern);
-        fire(address, pattern, message.toJson(), replyConsumer, null);
+                        DeliveryOptions deliveryOptions) {
+        request(address, pattern, message, null, deliveryOptions);
     }
 
     /**
@@ -110,7 +82,7 @@ public final class EventController implements Shareable {
      * @param pattern         Event pattern
      * @param message         Request message message
      * @param replyConsumer   The consumer for handling message back after the system completes request process
-     * @param deliveryOptions DeliveryOptions
+     * @param deliveryOptions
      * @see EventPattern
      * @see EventMessage
      */
@@ -123,90 +95,101 @@ public final class EventController implements Shareable {
     /**
      * Fire the response to event address
      *
-     * @param address Eventbus address
-     * @param pattern Event pattern
-     * @param message Event message
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param message         Event message
+     * @param deliveryOptions
      * @see EventMessage
      * @see EventPattern
      */
-    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message) {
-        response(address, pattern, message, null);
+    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
+                         DeliveryOptions deliveryOptions) {
+        response(address, pattern, message, null, deliveryOptions);
     }
 
     /**
      * Fire the response to event address
      *
-     * @param address       Eventbus address
-     * @param pattern       Event pattern
-     * @param message       Event message
-     * @param replyConsumer The consumer for handling message back after an external system completes handling response
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param message         Event message
+     * @param replyConsumer   The consumer for handling message back after an external system completes handling
+     *                        response
+     * @param deliveryOptions
      * @see EventMessage
      * @see EventPattern
      */
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                         Handler<AsyncResult<Message<Object>>> replyConsumer) {
+                         Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
         if (message.isError()) {
-            response(address, pattern, message.getError(), replyConsumer);
+            response(address, pattern, message.getError(), replyConsumer, deliveryOptions);
         } else {
-            response(address, pattern, message.toJson(), replyConsumer);
+            response(address, pattern, message.toJson(), replyConsumer, deliveryOptions);
         }
     }
 
     /**
      * Fire the response to event address
      *
-     * @param address Eventbus address
-     * @param pattern Event pattern
-     * @param data    Response data
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param data            Response data
+     * @param deliveryOptions
      * @see EventPattern
      */
-    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data) {
-        response(address, pattern, data, null);
+    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
+                         DeliveryOptions deliveryOptions) {
+        response(address, pattern, data, null, deliveryOptions);
     }
 
     /**
      * Fire the error response to event address
      *
-     * @param address Eventbus address
-     * @param pattern Event pattern
-     * @param error   Error message
-     * @see EventPattern
-     * @see ErrorMessage
-     */
-    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error) {
-        response(address, pattern, error.toJson(), null);
-    }
-
-    /**
-     * Fire the error response to event address
-     *
-     * @param address       Eventbus address
-     * @param pattern       Event pattern
-     * @param error         Error message
-     * @param replyConsumer The consumer for handling message back after an external system completes handling response
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param error           Error message
+     * @param deliveryOptions
      * @see EventPattern
      * @see ErrorMessage
      */
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error,
-                         Handler<AsyncResult<Message<Object>>> replyConsumer) {
+                         DeliveryOptions deliveryOptions) {
+        response(address, pattern, error.toJson(), null, deliveryOptions);
+    }
+
+    /**
+     * Fire the error response to event address
+     *
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param error           Error message
+     * @param replyConsumer   The consumer for handling message back after an external system completes handling
+     *                        response
+     * @param deliveryOptions
+     * @see EventPattern
+     * @see ErrorMessage
+     */
+    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error,
+                         Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
         logger.debug("Eventbus::Error Response:Address: {} - Pattern: {}", address, pattern);
-        fire(address, pattern, error.toJson(), replyConsumer, null);
+        fire(address, pattern, error.toJson(), replyConsumer, deliveryOptions);
     }
 
     /**
      * Fire the response to event address
      *
-     * @param address       Eventbus address
-     * @param pattern       Event pattern
-     * @param data          Response data
-     * @param replyConsumer The consumer for handling message back after an external system completes handling *
-     *                      response
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param data            Response data
+     * @param replyConsumer   The consumer for handling message back after an external system completes handling *
+     *                        response
+     * @param deliveryOptions
      * @see EventPattern
      */
     public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
-                         Handler<AsyncResult<Message<Object>>> replyConsumer) {
+                         Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
         logger.debug("Eventbus::Response:Address: {} - Pattern: {}", address, pattern);
-        fire(address, pattern, data, replyConsumer, null);
+        fire(address, pattern, data, replyConsumer, deliveryOptions);
     }
 
     /**
@@ -214,13 +197,14 @@ public final class EventController implements Shareable {
      * <p>
      * It will call response if {@code event message action} equals {@link EventAction#RETURN}, else otherwise
      *
-     * @param address Eventbus address
-     * @param pattern Event pattern
-     * @param message Event message
-     * @see #fire(String, EventPattern, EventMessage, Handler)
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param message         Event message
+     * @param deliveryOptions
+     * @see #fire(String, EventPattern, EventMessage, Handler, DeliveryOptions)
      */
-    public void fire(String address, EventPattern pattern, EventMessage message) {
-        fire(address, pattern, message, null);
+    public void fire(String address, EventPattern pattern, EventMessage message, DeliveryOptions deliveryOptions) {
+        fire(address, pattern, message, null, deliveryOptions);
     }
 
     /**
@@ -228,19 +212,20 @@ public final class EventController implements Shareable {
      * <p>
      * It will call response if {@code event message action} equals {@link EventAction#RETURN}, else otherwise
      *
-     * @param address       Eventbus address
-     * @param pattern       Event pattern
-     * @param message       Event message
-     * @param replyConsumer The consumer for handling message back
-     * @see #request(String, EventPattern, EventMessage, Handler)
-     * @see #response(String, EventPattern, EventMessage, Handler)
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param message         Event message
+     * @param replyConsumer   The consumer for handling message back
+     * @param deliveryOptions
+     * @see #request(String, EventPattern, EventMessage, Handler, DeliveryOptions)
+     * @see #response(String, EventPattern, EventMessage, Handler, DeliveryOptions)
      */
     public void fire(String address, EventPattern pattern, EventMessage message,
-                     Handler<AsyncResult<Message<Object>>> replyConsumer) {
+                     Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
         if (message.getAction() == EventAction.RETURN) {
-            response(address, pattern, message, replyConsumer);
+            response(address, pattern, message, replyConsumer, deliveryOptions);
         } else {
-            request(address, pattern, message, replyConsumer);
+            request(address, pattern, message, replyConsumer, deliveryOptions);
         }
     }
 
@@ -286,9 +271,10 @@ public final class EventController implements Shareable {
 
     private void fire(String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
                       Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
+        DeliveryOptions registerOptions = Objects.nonNull(deliveryOptions) ? deliveryOptions : this.deliveryOptions;
         Strings.requireNotBlank(address);
         if (pattern == EventPattern.PUBLISH_SUBSCRIBE) {
-            eventBus.publish(address, data);
+            eventBus.publish(address, data, registerOptions);
         }
         if (pattern == EventPattern.POINT_2_POINT) {
             if (deliveryOptions == null) {
@@ -304,6 +290,10 @@ public final class EventController implements Shareable {
             } else {
                 eventBus.send(address, data, deliveryOptions, replyConsumer);
             }
+        }
+        if (pattern == EventPattern.REQUEST_RESPONSE) {
+            Objects.requireNonNull(replyConsumer, "Must provide reply consumer");
+            eventBus.send(address, data, registerOptions, replyConsumer);
         }
     }
 

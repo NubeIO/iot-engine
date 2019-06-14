@@ -167,8 +167,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                                        preDeployResult.getTargetState()))
                                                    .error(e -> errorPostDeployment(serviceId, transactionId, action, e))
                                                    .build();
-        controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply,
-                           new DeliveryOptions().setSendTimeout(600000));
+        controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply, null);
     }
 
     public Single<List<TblModule>> getModulesWhenBootstrap() {

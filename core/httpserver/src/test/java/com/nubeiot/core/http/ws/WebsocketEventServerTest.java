@@ -116,7 +116,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         EventMessage echo = EventMessage.success(EventAction.GET_ONE, new JsonObject().put("echo", 1));
         EventModel publisher = MockWebsocketEvent.ONLY_PUBLISHER.getPublisher();
         EventController controller = EventController.getInstance(vertx);
-        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo));
+        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo, null));
         Async async = context.async(1);
         assertConsumerData(async, publisher.getAddress(),
                            o -> JsonHelper.assertJson(context, async, echo.toJson(), (JsonObject) o));
@@ -129,7 +129,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         JsonObject expected = createWebsocketMsg(publisher.getAddress(), echo, BridgeEventType.RECEIVE);
         EventController controller = EventController.getInstance(vertx);
         startServer(context, new HttpServerRouter().registerEventBusSocket(MockWebsocketEvent.ONLY_PUBLISHER));
-        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo));
+        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo, null));
         Async async = context.async(1);
         WebSocket ws = setupSockJsClient(context, async,
                                          Urls.combinePath("/ws", MockWebsocketEvent.ONLY_PUBLISHER.getPath()),
