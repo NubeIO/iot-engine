@@ -33,16 +33,24 @@ public final class LastTransactionEventHandler implements EventHandler {
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
 
-    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
-    public Single<JsonObject> getOne(RequestData data) {
+    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
+    public Single<JsonObject> getList(RequestData data) {
+        JsonObject filter = data.getFilter();
+        boolean lastTransaction = "true".equals(filter.getString("last"));
         ITblTransaction transaction = new TblTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getModuleId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Module Id cannot be blank");
         }
-        return this.verticle.getEntityHandler()
-                            .findTransactionByModuleId(transaction.getModuleId())
-                            .map(o -> o.orElseThrow(() -> new NotFoundException(
-                                String.format("Not found module_id '%s'", transaction.getModuleId()))));
+        if (lastTransaction) {
+            return this.verticle.getEntityHandler()
+                                .findOneTransactionByModuleId(transaction.getModuleId())
+                                .map(o -> o.orElseThrow(() -> new NotFoundException(
+                                    String.format("Not found module_id '%s'", transaction.getModuleId()))));
+        } else {
+            return this.verticle.getEntityHandler()
+                                .findTransactionByModuleId(transaction.getModuleId())
+                                .map(transactions -> new JsonObject().put("transactions", transactions));
+        }
     }
 
 }

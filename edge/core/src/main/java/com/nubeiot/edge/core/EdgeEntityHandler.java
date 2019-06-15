@@ -241,10 +241,18 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                             : this.findHistoryTransactionById(transactionId));
     }
 
-    public Single<Optional<JsonObject>> findTransactionByModuleId(String moduleId) {
+    public Single<List<TblTransaction>> findTransactionByModuleId(String moduleId) {
+        return transDao.queryExecutor()
+                       .findMany(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
+                                                         .where(
+                                                             DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
+                                                         .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()));
+    }
+
+    public Single<Optional<JsonObject>> findOneTransactionByModuleId(String moduleId) {
         return transDao.queryExecutor()
                        .findOne(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
-                                                        .where("module_id='" + moduleId + "'")
+                                                        .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
                                                         .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()))
                        .map(optional -> optional.map(TblTransaction::toJson));
     }
