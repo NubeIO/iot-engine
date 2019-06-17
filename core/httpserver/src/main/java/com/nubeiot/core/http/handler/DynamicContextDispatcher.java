@@ -8,14 +8,12 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.servicediscovery.Record;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
-import com.nubeiot.core.http.converter.RequestDataConverter;
 import com.nubeiot.core.http.rest.DynamicEventRestApi;
 import com.nubeiot.core.http.rest.DynamicHttpRestApi;
 import com.nubeiot.core.http.rest.DynamicRestApi;
@@ -48,7 +46,7 @@ public interface DynamicContextDispatcher<T extends DynamicRestApi> extends Hand
 
     @NonNull String getGatewayPath();
 
-    Single<ResponseData> process(HttpMethod httpMethod, String path, RequestData requestData);
+    Single<ResponseData> process(HttpMethod httpMethod, String path, RoutingContext context);
 
     default boolean filter(Record record) {
         return record.getName().equals(get().name());
@@ -57,10 +55,9 @@ public interface DynamicContextDispatcher<T extends DynamicRestApi> extends Hand
     @Override
     default void handle(RoutingContext context) {
         HttpMethod httpMethod = validateMethod(context.request().method());
-        RequestData requestData = RequestDataConverter.convert(context);
         String path = context.request().path();
         String servicePath = Urls.normalize(path.replaceAll("^" + getGatewayPath(), ""));
-        this.process(httpMethod, servicePath, requestData)
+        this.process(httpMethod, servicePath, context)
             .subscribe(responseData -> handleResponse(context, responseData),
                        throwable -> handleError(context, throwable));
     }

@@ -116,6 +116,10 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return addDecoratorRecord(record);
     }
 
+    public Single<Record> addEventMessageRecord(String name, String address, EventMethodDefinition definition) {
+        return addDecoratorRecord(EventMessageService.createRecord(name, address, definition));
+    }
+
     public Single<Record> addEventMessageRecord(String name, String address, EventMethodDefinition definition,
                                                 JsonObject metadata) {
         return addDecoratorRecord(EventMessageService.createRecord(name, address, definition, metadata));
@@ -138,13 +142,17 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {}::{}", t, method, path));
     }
 
+    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path, HttpMethod method, RequestData requestData) {
+        return executeEventMessageService(filter, path, method, requestData.toJson());
+    }
+
     public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
-                                                           HttpMethod method, RequestData requestData) {
+                                                           HttpMethod method, JsonObject requestData) {
         return executeEventMessageService(filter, path, method, requestData, null);
     }
 
     public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
-                                                           HttpMethod method, RequestData requestData,
+                                                           HttpMethod method, JsonObject requestData,
                                                            DeliveryOptions options) {
         return findRecord(filter, EventMessageService.TYPE).flatMap(record -> {
             JsonObject config = new JsonObject().put(EventMessageService.SHARED_KEY_CONFIG, this.sharedKey)

@@ -32,6 +32,8 @@ public interface JsonData {
 
     ObjectMapper MAPPER = Json.mapper.copy().registerModule(Deserializer.SIMPLE_MODULE);
     ObjectMapper LENIENT_MAPPER = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    String SUCCESS_KEY = "data";
+    String ERROR_KEY = "error";
 
     static <T> T convert(@NonNull JsonObject jsonObject, @NonNull Class<T> clazz) {
         return convert(jsonObject, clazz, MAPPER);
@@ -54,12 +56,40 @@ public interface JsonData {
         return mapper.convertValue(jsonObject.getMap(), clazz);
     }
 
-    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean isError) {
-        return DefaultJsonData.tryParse(buffer, isJson, isError);
+    /**
+     * Try parse {@code buffer} to {@code json data}
+     *
+     * @param buffer    Buffer data
+     * @param isJson    Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
+     * @param backupKey Fallback key if given {@code buffer} is not {@link JsonObject}
+     * @return default {@code json data} instance
+     */
+    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, @NonNull String backupKey) {
+        return DefaultJsonData.tryParse(buffer, isJson, backupKey);
     }
 
+    /**
+     * Try parse {@code buffer} to {@code json data}
+     *
+     * @param buffer      Buffer data
+     * @param isJson      Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
+     * @param useErrorKey Use whether {@link #ERROR_KEY} or {@link #SUCCESS_KEY} in case of fallback if given {@code
+     *                    buffer} is not {@link JsonObject}
+     * @return default {@code json data} instance
+     */
+    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean useErrorKey) {
+        return tryParse(buffer, isJson, useErrorKey ? ERROR_KEY : SUCCESS_KEY);
+    }
+
+    /**
+     * Try parse {@code buffer} to {@code json data} with {@link #SUCCESS_KEY}
+     *
+     * @param buffer Buffer data
+     * @return default {@code json data} instance
+     * @see JsonData#tryParse(Buffer, boolean, boolean)
+     */
     static JsonData tryParse(@NonNull Buffer buffer) {
-        return DefaultJsonData.tryParse(buffer, false, false);
+        return tryParse(buffer, false, false);
     }
 
     static JsonData tryParse(@NonNull Object obj) {
@@ -102,26 +132,23 @@ public interface JsonData {
     @NoArgsConstructor
     class DefaultJsonData extends HashMap<String, Object> implements JsonData {
 
-        private static final String SUCCESS_KEY = "data";
-        private static final String ERROR_KEY = "error";
         private static final Logger logger = LoggerFactory.getLogger(DefaultJsonData.class);
 
-        public DefaultJsonData(@NonNull Map<String, Object> map) { this.putAll(map); }
+        DefaultJsonData(@NonNull Map<String, Object> map) { this.putAll(map); }
 
-        public DefaultJsonData(@NonNull JsonObject json)         { this(json.getMap()); }
+        DefaultJsonData(@NonNull JsonObject json)         { this(json.getMap()); }
 
-        static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean isError) {
+        static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, String backupKey) {
             if (buffer.length() == 0) {
-                return new DefaultJsonData(new JsonObject());
+                return new DefaultJsonData();
             }
             try {
                 return new DefaultJsonData(buffer.toJsonObject());
             } catch (DecodeException e) {
                 logger.trace("Failed to parse json. Try json array", e);
-                String key = isError ? ERROR_KEY : SUCCESS_KEY;
                 JsonObject data = new JsonObject();
                 try {
-                    data.put(key, buffer.toJsonArray());
+                    data.put(backupKey, buffer.toJsonArray());
                 } catch (DecodeException ex) {
                     if (isJson) {
                         throw new NubeException(ErrorCode.INVALID_ARGUMENT,
@@ -130,7 +157,7 @@ public interface JsonData {
                     logger.trace("Failed to parse json array. Use text", ex);
                 }
                 //TODO check length, check encode
-                data.put(key, buffer.toString());
+                data.put(backupKey, buffer.toString());
                 return new DefaultJsonData(data);
             }
         }
@@ -139,7 +166,11 @@ public interface JsonData {
             if (obj instanceof JsonData) {
                 return (JsonData) obj;
             }
-            return new DefaultJsonData(SerializerFunction.builder().lenient(true).mapper(MAPPER).build().apply(obj));
+            if (obj instanceof Buffer) {
+                return tryParse((Buffer) obj, true, SUCCESS_KEY);
+            }
+            return new DefaultJsonData(
+                SerializerFunction.builder().backupKey(SUCCESS_KEY).lenient(true).mapper(MAPPER).build().apply(obj));
         }
 
     }

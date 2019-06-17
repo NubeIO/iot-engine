@@ -1,15 +1,11 @@
 package com.nubeiot.core.http.converter;
 
-import java.util.Objects;
-
 import io.vertx.core.http.ServerWebSocket;
-import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
-import com.nubeiot.core.dto.Pagination;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
 import com.nubeiot.core.http.base.HttpUtils.HttpRequests;
 import com.nubeiot.core.utils.Strings;
@@ -22,27 +18,17 @@ import lombok.NoArgsConstructor;
 public final class RequestDataConverter {
 
     public static RequestData convert(RoutingContext context) {
-        JsonObject mergeInput = JsonObject.mapFrom(context.pathParams());
-        String body = context.getBodyAsString();
-        if (Strings.isNotBlank(body)) {
-            try {
-                JsonObject bodyAsJson = context.getBodyAsJson();
-                if (Objects.nonNull(bodyAsJson)) {
-                    mergeInput.mergeIn(bodyAsJson, true);
-                }
-            } catch (DecodeException ex) {
-                throw new HttpException("JSON payload is invalid", ex);
-            }
-        }
-        final RequestData.Builder builder = RequestData.builder();
-        Pagination pagination = HttpRequests.pagination(context.request());
-        if (Objects.nonNull(pagination)) {
-            builder.pagination(pagination);
-        }
-        return builder.headers(HttpHeaderUtils.serializeHeaders(context.request()))
-                      .body(mergeInput)
-                      .filter(HttpRequests.query(context.request()))
-                      .build();
+        return RequestData.builder()
+                          .headers(HttpHeaderUtils.serializeHeaders(context.request()))
+                          .body(body(context))
+                          .filter(HttpRequests.query(context.request()))
+                          .pagination(HttpRequests.pagination(context.request()))
+                          .build();
+    }
+
+    public static JsonObject body(RoutingContext context) {
+        JsonObject body = JsonObject.mapFrom(context.pathParams());
+        return body.mergeIn(JsonData.tryParse(context.getBody()).toJson(), true);
     }
 
     public static RequestData convert(ServerWebSocket context) {
@@ -51,7 +37,7 @@ public final class RequestDataConverter {
         if (Strings.isBlank(query)) {
             return builder.build();
         }
-        return builder.filter(JsonObject.mapFrom(HttpHeaderUtils.deserializeQuery(query))).build();
+        return builder.filter(JsonObject.mapFrom(HttpRequests.deserializeQuery(query))).build();
     }
 
 }

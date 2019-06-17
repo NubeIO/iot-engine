@@ -51,10 +51,9 @@ public class MockEventMessageService extends ContainerVerticle {
     private void publishService(MicroContext microContext) {
         final ServiceDiscoveryController localController = microContext.getLocalController();
         localController.addEventMessageRecord("event-message-service-1", TEST_EVENT_MODEL_1.getAddress(),
-                                              EventMethodDefinition.createDefault("/hey", "/hey/:id"), new JsonObject())
-                       .subscribe();
+                                              EventMethodDefinition.createDefault("/hey", "/hey/:id")).subscribe();
         localController.addEventMessageRecord("event-message-service-2", TEST_EVENT_MODEL_2.getAddress(),
-                                              EventMethodDefinition.createDefault("/c/:cId/p", "/c/:cId/p/:pId"), null)
+                                              EventMethodDefinition.createDefault("/c/:cId/p", "/c/:cId/p/:pId"))
                        .subscribe();
     }
 

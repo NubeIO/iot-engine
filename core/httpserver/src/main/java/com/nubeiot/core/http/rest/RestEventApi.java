@@ -1,6 +1,6 @@
 package com.nubeiot.core.http.rest;
 
-import java.util.List;
+import java.util.Collection;
 
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
@@ -11,7 +11,7 @@ import com.nubeiot.core.http.handler.RestEventApiDispatcher;
  */
 public interface RestEventApi extends ActionMethodMapping {
 
-    List<RestEventApiMetadata> getRestMetadata();
+    Collection<RestEventApiMetadata> getRestMetadata();
 
     @SuppressWarnings("unchecked")
     default <T extends RestEventApiDispatcher> Class<T> dispatcher() {
