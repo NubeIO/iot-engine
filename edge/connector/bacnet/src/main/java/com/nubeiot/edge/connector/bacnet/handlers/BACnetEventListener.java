@@ -38,7 +38,8 @@ public class BACnetEventListener extends DeviceEventAdapter {
                                         ObjectIdentifier initiatingDeviceIdentifier,
                                         ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
                                         SequenceOf<PropertyValue> listOfValues) {
-        logger.warn("COV notification unsupported", new UnsupportedOperationException("COV notification unsupported"));
+        //        logger.warn("COV notification unsupported", new UnsupportedOperationException("COV notification
+        //        unsupported"));
         //        logger.info(
         //            "COV Notification: " + monitoredObjectIdentifier.toString() + " from " +
         //            initiatingDeviceIdentifier);
@@ -98,9 +99,8 @@ public class BACnetEventListener extends DeviceEventAdapter {
                                                      .error(error -> logger.error(error.toJson()))
                                                      .build();
 
-
         EventMessage message = EventMessage.initial(EventAction.PATCH, edgeReq.toJson());
-        eventController.fire(POINTS_API+"."+id+".value", EventPattern.POINT_2_POINT, message);
+        eventController.fire(POINTS_API + "." + id + ".value", EventPattern.POINT_2_POINT, message);
     }
 
 }
