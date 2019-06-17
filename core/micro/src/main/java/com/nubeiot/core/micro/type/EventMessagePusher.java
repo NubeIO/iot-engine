@@ -3,8 +3,8 @@ package com.nubeiot.core.micro.type;
 import java.util.function.Consumer;
 
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 
 public interface EventMessagePusher {
@@ -18,7 +18,7 @@ public interface EventMessagePusher {
      * @param dataConsumer  Success Data consumer
      * @param errorConsumer Error consumer
      */
-    void execute(String path, HttpMethod httpMethod, RequestData requestData, Consumer<ResponseData> dataConsumer,
+    void execute(String path, HttpMethod httpMethod, JsonObject requestData, Consumer<ResponseData> dataConsumer,
                  Consumer<Throwable> errorConsumer);
 
 }

@@ -4,8 +4,8 @@ import java.util.function.Consumer;
 
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
@@ -31,8 +31,8 @@ class Pusher implements EventMessagePusher {
     private final EventPattern pattern;
 
     @Override
-    public void execute(String path, HttpMethod httpMethod, RequestData requestData,
-                        Consumer<ResponseData> dataConsumer, Consumer<Throwable> errorConsumer) {
+    public void execute(String path, HttpMethod httpMethod, JsonObject requestData, Consumer<ResponseData> dataConsumer,
+                        Consumer<Throwable> errorConsumer) {
         EventAction action = definition.search(path, httpMethod);
         ReplyEventHandler handler = ReplyEventHandler.builder()
                                                      .system("SERVICE_DISCOVERY")
@@ -40,7 +40,7 @@ class Pusher implements EventMessagePusher {
                                                      .success(msg -> dataConsumer.accept(ResponseData.from(msg)))
                                                      .exception(errorConsumer)
                                                      .build();
-        controller.request(address, pattern, EventMessage.initial(action, requestData.toJson()), handler);
+        controller.request(address, pattern, EventMessage.initial(action, requestData), handler, options);
     }
 
 }

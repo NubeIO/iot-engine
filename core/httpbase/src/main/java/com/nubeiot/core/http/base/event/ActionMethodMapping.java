@@ -2,6 +2,7 @@ package com.nubeiot.core.http.base.event;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -10,6 +11,11 @@ import io.vertx.core.http.HttpMethod;
 import com.nubeiot.core.event.EventAction;
 
 public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMethod>> {
+
+    /**
+     * Default mapping with {@link #defaultEventHttpMap()}
+     */
+    ActionMethodMapping DEFAULT = new ActionMethodMapping() {};
 
     static Map<EventAction, HttpMethod> defaultEventHttpMap() {
         Map<EventAction, HttpMethod> map = new HashMap<>();
@@ -25,6 +31,10 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
     @Override
     default Map<EventAction, HttpMethod> get() {
         return Collections.unmodifiableMap(defaultEventHttpMap());
+    }
+
+    default boolean hasDuplicateMethod() {
+        return get().size() != new HashSet<>(get().values()).size();
     }
 
 }

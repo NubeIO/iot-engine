@@ -52,7 +52,11 @@ public final class ReplyEventHandler implements Handler<AsyncResult<Message<Obje
     }
 
     private void handleReplySuccess(EventMessage eventMessage) {
-        logger.info("{}::Backend eventbus response: {}", system, eventMessage.toJson().encode());
+        logger.info("{}::Backend eventbus response | Status: {} | Action: {}", system, eventMessage.getStatus(),
+                    eventMessage.getAction());
+        if (logger.isTraceEnabled()) {
+            logger.trace("{}::Backend eventbus response | {}", eventMessage.toJson());
+        }
         if (eventMessage.isError() && Objects.nonNull(error)) {
             error.accept(eventMessage.getError());
         } else {

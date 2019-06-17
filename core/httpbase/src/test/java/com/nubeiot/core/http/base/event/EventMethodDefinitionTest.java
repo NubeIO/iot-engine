@@ -1,5 +1,8 @@
 package com.nubeiot.core.http.base.event;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,8 +18,27 @@ import com.nubeiot.core.exceptions.NotFoundException;
 public class EventMethodDefinitionTest {
 
     @Test(expected = IllegalArgumentException.class)
-    public void test_wrong_argument() {
+    public void test_default_wrong_argument_1() {
         EventMethodDefinition.createDefault("", "");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void test_default_wrong_argument_2() {
+        EventMethodDefinition.createDefault("/abc", "");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void test_create_duplicate() {
+        ActionMethodMapping mapping = new ActionMethodMapping() {
+            @Override
+            public Map<EventAction, HttpMethod> get() {
+                Map<EventAction, HttpMethod> test = new HashMap<>();
+                test.put(EventAction.GET_LIST, HttpMethod.GET);
+                test.put(EventAction.GET_ONE, HttpMethod.GET);
+                return test;
+            }
+        };
+        EventMethodDefinition.create("/abc", mapping);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -38,8 +60,32 @@ public class EventMethodDefinitionTest {
     }
 
     @Test
+    public void test_no_capture() {
+        ActionMethodMapping mapping = new ActionMethodMapping() {
+            @Override
+            public Map<EventAction, HttpMethod> get() {
+                Map<EventAction, HttpMethod> test = new HashMap<>();
+                test.put(EventAction.GET_LIST, HttpMethod.GET);
+                test.put(EventAction.CREATE, HttpMethod.POST);
+                test.put(EventAction.UPDATE, HttpMethod.PUT);
+                test.put(EventAction.PATCH, HttpMethod.PATCH);
+                test.put(EventAction.REMOVE, HttpMethod.DELETE);
+                return test;
+            }
+        };
+        EventMethodDefinition definition = EventMethodDefinition.create("/translate", mapping);
+        Assert.assertTrue(definition.isUseRequestData());
+        Assert.assertEquals(EventAction.GET_LIST, definition.search("/translate", HttpMethod.GET));
+        Assert.assertEquals(EventAction.CREATE, definition.search("/translate", HttpMethod.POST));
+        Assert.assertEquals(EventAction.UPDATE, definition.search("/translate", HttpMethod.PUT));
+        Assert.assertEquals(EventAction.PATCH, definition.search("/translate", HttpMethod.PATCH));
+        Assert.assertEquals(EventAction.REMOVE, definition.search("/translate", HttpMethod.DELETE));
+    }
+
+    @Test
     public void test_search() {
         EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/abc/:id");
+        Assert.assertTrue(definition.isUseRequestData());
         Assert.assertEquals(EventAction.GET_LIST, definition.search("/abc", HttpMethod.GET));
         Assert.assertEquals(EventAction.GET_ONE, definition.search("/abc/xyz", HttpMethod.GET));
         Assert.assertEquals(EventAction.CREATE, definition.search("/abc", HttpMethod.POST));
@@ -52,6 +98,7 @@ public class EventMethodDefinitionTest {
     public void test_search_multiParam_pattern_has_resource_between() {
         EventMethodDefinition definition = EventMethodDefinition.createDefault("/client/:clientId/product",
                                                                                "/client/:clientId/product/:productId");
+        Assert.assertTrue(definition.isUseRequestData());
         Assert.assertEquals(EventAction.GET_LIST, definition.search("/client/123/product", HttpMethod.GET));
         Assert.assertEquals(EventAction.GET_ONE, definition.search("/client/123/product/456", HttpMethod.GET));
         Assert.assertEquals(EventAction.CREATE, definition.search("/client/123/product", HttpMethod.POST));
@@ -64,6 +111,7 @@ public class EventMethodDefinitionTest {
     public void test_search_multiParam_pattern_no_resource_between() {
         EventMethodDefinition definition = EventMethodDefinition.createDefault("/client/:clientId/",
                                                                                "/client/:clientId/:productId");
+        Assert.assertTrue(definition.isUseRequestData());
         Assert.assertEquals(EventAction.GET_LIST, definition.search("/client/123/", HttpMethod.GET));
         Assert.assertEquals(EventAction.GET_ONE, definition.search("/client/123/456", HttpMethod.GET));
         Assert.assertEquals(EventAction.CREATE, definition.search("/client/123/", HttpMethod.POST));
@@ -76,6 +124,7 @@ public class EventMethodDefinitionTest {
     public void test_to_json() throws JSONException {
         EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/abc/:id");
         System.out.println(definition.toJson());
+        Assert.assertTrue(definition.isUseRequestData());
         JSONAssert.assertEquals("{\"servicePath\":\"/abc\",\"mapping\":[{\"action\":\"GET_LIST\",\"method\":\"GET\"}," +
                                 "{\"action\":\"CREATE\",\"method\":\"POST\"},{\"action\":\"UPDATE\"," +
                                 "\"method\":\"PUT\",\"capturePath\":\"/abc/:id\",\"regexPath\":\"/abc/.+\"}," +
@@ -90,6 +139,7 @@ public class EventMethodDefinitionTest {
     public void test_to_json_multiParams() throws JSONException {
         EventMethodDefinition definition = EventMethodDefinition.createDefault("/c/:cId/p", "/c/:cId/p/:pId");
         System.out.println(definition.toJson());
+        Assert.assertTrue(definition.isUseRequestData());
         JSONAssert.assertEquals("{\"servicePath\":\"/c/[^/]+/p\",\"mapping\":[{\"action\":\"GET_LIST\"," +
                                 "\"method\":\"GET\",\"capturePath\":\"/c/:cId/p\",\"regexPath\":\"/c/[^/]+/p\"}," +
                                 "{\"action\":\"CREATE\",\"method\":\"POST\",\"capturePath\":\"/c/:cId/p\"," +
@@ -99,26 +149,37 @@ public class EventMethodDefinitionTest {
                                 "\"regexPath\":\"/c/[^/]+/p/.+\"},{\"action\":\"PATCH\",\"method\":\"PATCH\"," +
                                 "\"capturePath\":\"/c/:cId/p/:pId\",\"regexPath\":\"/c/[^/]+/p/.+\"}," +
                                 "{\"action\":\"REMOVE\",\"method\":\"DELETE\",\"capturePath\":\"/c/:cId/p/:pId\"," +
-                                "\"regexPath\":\"/c/[^/]+/p/.+\"}]}",
-                                definition.toJson().encode(), JSONCompareMode.LENIENT);
+                                "\"regexPath\":\"/c/[^/]+/p/.+\"}]}", definition.toJson().encode(),
+                                JSONCompareMode.LENIENT);
     }
 
     @Test
     public void test_from_json() {
         EventMethodDefinition definition = JsonData.from(
-            "{\"servicePath\":\"/abc\",\"mapping\":[{\"action\":\"GET_LIST\",\"method\":\"GET\"}," +
-            "{\"action\":\"CREATE\",\"method\":\"POST\"},{\"action\":\"UPDATE\",\"method\":\"PUT\"," +
-            "\"capturePath\":\"/abc/:id\"},{\"action\":\"GET_ONE\",\"method\":\"GET\"," +
+            "{\"servicePath\":\"/abc\", \"mapping\":[{\"action\":\"GET_LIST\"," +
+            "\"method\":\"GET\"},{\"action\":\"CREATE\",\"method\":\"POST\"},{\"action\":\"UPDATE\"," +
+            "\"method\":\"PUT\",\"capturePath\":\"/abc/:id\"},{\"action\":\"GET_ONE\",\"method\":\"GET\"," +
             "\"capturePath\":\"/abc/:id\"},{\"action\":\"PATCH\",\"method\":\"PATCH\"," +
             "\"capturePath\":\"/abc/:id\"},{\"action\":\"REMOVE\",\"method\":\"DELETE\"," +
             "\"capturePath\":\"/abc/:id\"}]}", EventMethodDefinition.class);
         System.out.println(definition.toJson());
+        Assert.assertTrue(definition.isUseRequestData());
         Assert.assertEquals(EventAction.GET_LIST, definition.search("/abc", HttpMethod.GET));
         Assert.assertEquals(EventAction.GET_ONE, definition.search("/abc/xyz", HttpMethod.GET));
         Assert.assertEquals(EventAction.CREATE, definition.search("/abc", HttpMethod.POST));
         Assert.assertEquals(EventAction.UPDATE, definition.search("/abc/xyz", HttpMethod.PUT));
         Assert.assertEquals(EventAction.PATCH, definition.search("/abc/xyz", HttpMethod.PATCH));
         Assert.assertEquals(EventAction.REMOVE, definition.search("/abc/xyz", HttpMethod.DELETE));
+    }
+
+    @Test
+    public void test_from_json_1() {
+        EventMethodDefinition definition = JsonData.from(
+            "{\"servicePath\":\"/abc\",\"useRequestData\":false, \"mapping\":[{\"action\":\"GET_LIST\"," +
+            "\"method\":\"GET\"}]}", EventMethodDefinition.class);
+        System.out.println(definition.toJson());
+        Assert.assertFalse(definition.isUseRequestData());
+        Assert.assertEquals(EventAction.GET_LIST, definition.search("/abc", HttpMethod.GET));
     }
 
 }

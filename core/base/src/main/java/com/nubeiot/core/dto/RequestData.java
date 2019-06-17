@@ -58,7 +58,7 @@ public final class RequestData extends AbstractDTO {
         }
 
         public Builder pagination(Pagination pagination) {
-            this.pagination = Objects.isNull(pagination) ? Pagination.builder().build() : pagination;
+            this.pagination = pagination;
             return this;
         }
 

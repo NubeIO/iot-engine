@@ -1,11 +1,15 @@
 package com.nubeiot.core.http.rest;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
@@ -13,9 +17,13 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
 
+import lombok.NonNull;
+
 public abstract class AbstractRestEventApi implements RestEventApi {
 
-    private final List<RestEventApiMetadata> restMetadata = new ArrayList<>();
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final SortedMap<String, RestEventApiMetadata> restMetadata = new TreeMap<>(
+        Comparator.comparingInt(String::length));
     private final Map<EventAction, HttpMethod> httpEventMapping;
 
     protected AbstractRestEventApi() {
@@ -29,24 +37,30 @@ public abstract class AbstractRestEventApi implements RestEventApi {
         return ActionMethodMapping.defaultEventHttpMap();
     }
 
-    protected void addRouter(RestEventApiMetadata metadata) {
-        restMetadata.add(metadata);
-    }
-
-    protected void addRouter(EventModel eventModel, String apiPath) {
+    protected void addRouter(@NonNull EventModel eventModel, String apiPath) {
         addRouter(eventModel, apiPath, null);
     }
 
-    protected void addRouter(EventModel eventModel, String apiPath, String capturePath) {
-        restMetadata.add(RestEventApiMetadata.builder()
-                                             .address(eventModel.getAddress())
-                                             .pattern(eventModel.getPattern())
-                                             .definition(EventMethodDefinition.create(apiPath, capturePath, this))
-                                             .build());
+    protected void addRouter(@NonNull EventModel eventModel, String apiPath, String capturePath) {
+        addRouter(eventModel, EventMethodDefinition.create(apiPath, capturePath, this));
+    }
+
+    protected void addRouter(@NonNull EventModel eventModel, @NonNull EventMethodDefinition definition) {
+        if (restMetadata.containsKey(definition.getServicePath())) {
+            logger.warn("HTTP path '{}' is already registered, but might different Event address '{}'",
+                        definition.getServicePath(), restMetadata.get(definition.getServicePath()).getAddress());
+        }
+        restMetadata.putIfAbsent(definition.getServicePath(), RestEventApiMetadata.builder()
+                                                                                  .address(eventModel.getAddress())
+                                                                                  .pattern(eventModel.getPattern())
+                                                                                  .definition(definition)
+                                                                                  .build());
     }
 
     @Override
-    public List<RestEventApiMetadata> getRestMetadata() { return Collections.unmodifiableList(restMetadata); }
+    public Collection<RestEventApiMetadata> getRestMetadata() {
+        return Collections.unmodifiableCollection(restMetadata.values());
+    }
 
     @Override
     public Map<EventAction, HttpMethod> get() { return httpEventMapping; }

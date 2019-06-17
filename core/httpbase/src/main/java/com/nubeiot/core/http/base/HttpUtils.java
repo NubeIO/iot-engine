@@ -99,19 +99,6 @@ public final class HttpUtils {
             return map;
         }
 
-        public static Map<String, Object> deserializeQuery(String query) {
-            Map<String, Object> map = new HashMap<>();
-            for (String property : query.split("\\" + HttpRequests.SEPARATE)) {
-                String[] keyValues = property.split("\\" + HttpRequests.EQUAL);
-                if (keyValues.length != 2) {
-                    throw new InvalidUrlException(
-                        "Property doesn't conform the syntax: `key`" + HttpRequests.EQUAL + "`value`");
-                }
-                map.put(Urls.decode(keyValues[0]), Urls.decode(keyValues[1]));
-            }
-            return map;
-        }
-
     }
 
 
@@ -141,8 +128,19 @@ public final class HttpUtils {
         public static JsonObject query(@NonNull HttpServerRequest request) {
             String query = request.query();
             return Strings.isBlank(query)
-                   ? new JsonObject()
-                   : JsonObject.mapFrom(HttpHeaderUtils.deserializeQuery(query));
+                   ? new JsonObject() : JsonObject.mapFrom(deserializeQuery(query));
+        }
+
+        public static Map<String, Object> deserializeQuery(String query) {
+            Map<String, Object> map = new HashMap<>();
+            for (String property : query.split("\\" + SEPARATE)) {
+                String[] keyValues = property.split("\\" + EQUAL);
+                if (keyValues.length != 2) {
+                    throw new InvalidUrlException("Property doesn't conform the syntax: `key`" + EQUAL + "`value`");
+                }
+                map.put(Urls.decode(keyValues[0]), Urls.decode(keyValues[1]));
+            }
+            return map;
         }
 
     }

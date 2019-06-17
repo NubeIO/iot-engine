@@ -116,6 +116,10 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return addDecoratorRecord(record);
     }
 
+    public Single<Record> addEventMessageRecord(String name, String address, EventMethodDefinition definition) {
+        return addDecoratorRecord(EventMessageService.createRecord(name, address, definition));
+    }
+
     public Single<Record> addEventMessageRecord(String name, String address, EventMethodDefinition definition,
                                                 JsonObject metadata) {
         return addDecoratorRecord(EventMessageService.createRecord(name, address, definition, metadata));
@@ -140,11 +144,16 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
                                                            HttpMethod method, RequestData requestData) {
+        return executeEventMessageService(filter, path, method, requestData.toJson());
+    }
+
+    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
+                                                           HttpMethod method, JsonObject requestData) {
         return executeEventMessageService(filter, path, method, requestData, null);
     }
 
     public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
-                                                           HttpMethod method, RequestData requestData,
+                                                           HttpMethod method, JsonObject requestData,
                                                            DeliveryOptions options) {
         return findRecord(filter, EventMessageService.TYPE).flatMap(record -> {
             JsonObject config = new JsonObject().put(EventMessageService.SHARED_KEY_CONFIG, this.sharedKey)
@@ -184,8 +193,12 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     private Single<Record> addDecoratorRecord(@NonNull Record record) {
         return get().rxPublish(record).doOnSuccess(rec -> {
             registrationMap.put(rec.getRegistration(), rec);
-            logger.info("Published {} Service: {}", kind(), rec.toJson());
-        }).doOnError(t -> logger.error("Cannot publish {} record: {}", t, kind(), record));
+            logger.info("Published {} Service | Registration: {} | API: {} | Type: {} | Endpoint: {}", kind(),
+                        rec.getRegistration(), rec.getName(), rec.getType(), rec.getLocation().getString("endpoint"));
+            if (logger.isDebugEnabled()) {
+                logger.debug("Published {} Service: {}", kind(), rec.toJson());
+            }
+        }).doOnError(t -> logger.error("Cannot publish {} record: {}", t, kind(), record.toJson()));
     }
 
     private Record decorator(Record record) {

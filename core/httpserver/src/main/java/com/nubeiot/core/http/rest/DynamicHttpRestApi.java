@@ -10,28 +10,31 @@ import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.utils.Networks;
 
 import lombok.NonNull;
 
 public interface DynamicHttpRestApi extends DynamicRestApi {
 
     static DynamicHttpRestApi create(@NonNull Record record) {
-        HttpLocation location = record.getLocation().mapTo(HttpLocation.class);
+        final HttpLocation location = record.getLocation().mapTo(HttpLocation.class);
+        final int order = Networks.priorityOrder(location.getRoot().length());
+        final String path = Urls.combinePath(location.getRoot(), ApiConstants.WILDCARDS_ANY_PATH);
         return new DynamicHttpRestApi() {
             @Override
-            public String path() {
-                return Urls.combinePath(location.getRoot(), ApiConstants.WILDCARDS_ANY_PATH);
-            }
+            public String path() { return path; }
 
             @Override
-            public @NonNull String name() {
-                return record.getName();
-            }
+            public int order() { return order; }
 
             @Override
-            public JsonObject byMetadata() {
-                return record.getMetadata();
-            }
+            public boolean useRequestData() { return true; }
+
+            @Override
+            public @NonNull String name() { return record.getName(); }
+
+            @Override
+            public JsonObject byMetadata() { return record.getMetadata(); }
         };
     }
 
