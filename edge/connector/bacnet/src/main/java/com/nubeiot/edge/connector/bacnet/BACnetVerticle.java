@@ -85,30 +85,30 @@ public class BACnetVerticle extends ContainerVerticle {
     protected void publishServices(MicroContext microContext) {
         microContext.getLocalController()
                     .addEventMessageRecord("bacnet-local-service", BACnetEventModels.NUBE_SERVICE.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet",
-                                                                               "/bacnet"),
-                                           new JsonObject())
+                                           EventMethodDefinition.createDefault("/bacnet", "/bacnet"), new JsonObject())
                     .subscribe();
 
         microContext.getLocalController()
                     .addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet/:network/",
-                                                                               "/bacnet/:network/:deviceID"),
+                                           EventMethodDefinition.createDefault("/bacnet/:network/device",
+                                                                               "/bacnet/:network/device/:deviceID"),
                                            new JsonObject())
                     .subscribe();
 
         microContext.getLocalController()
                     .addEventMessageRecord("bacnet-points-info-service", BACnetEventModels.POINTS_INFO.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet/:network/:deviceID/points-info",
-                                                                               "/bacnet/:network/:deviceID/points-info" +
-                                                                               "/:objectID"), new JsonObject())
+                                           EventMethodDefinition.createDefault(
+                                               "/bacnet/:network/device/:deviceID/points-info",
+                                               "/bacnet/:network/device/:deviceID/points-info/:objectID"),
+                                           new JsonObject())
                     .subscribe();
 
         microContext.getLocalController()
                     .addEventMessageRecord("bacnet-point-service", BACnetEventModels.POINT.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet/:network/:deviceID/point",
-                                                                               "/bacnet/:network/:deviceID/point" +
-                                                                               "/:objectID"), new JsonObject())
+                                           EventMethodDefinition.createDefault(
+                                               "/bacnet/:network/device/:deviceID/point",
+                                               "/bacnet/:network/device/:deviceID/point/:objectID"),
+                                           new JsonObject())
                     .subscribe();
     }
 
