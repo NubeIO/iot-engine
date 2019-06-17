@@ -10,7 +10,7 @@ import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.http.base.event.EventMethodDefinition.EventMethodMapping;
+import com.nubeiot.core.http.base.event.EventMethodMapping;
 import com.nubeiot.core.micro.type.EventMessageService;
 import com.nubeiot.core.utils.Strings;
 
@@ -19,7 +19,7 @@ import lombok.NonNull;
 public interface DynamicEventRestApi extends DynamicRestApi {
 
     static DynamicEventRestApi create(Record record) {
-        EventMethodDefinition definition = JsonData.from(
+        final EventMethodDefinition definition = JsonData.from(
             record.getMetadata().getJsonObject(EventMessageService.EVENT_METHOD_CONFIG, new JsonObject()),
             EventMethodDefinition.class);
         Set<String> paths = Collections.unmodifiableSet(definition.getMapping()
@@ -31,6 +31,12 @@ public interface DynamicEventRestApi extends DynamicRestApi {
 
             @Override
             public String path() { return definition.getServicePath(); }
+
+            @Override
+            public int order() { return definition.getOrder(); }
+
+            @Override
+            public boolean useRequestData() { return definition.isUseRequestData(); }
 
             @Override
             public Optional<Set<String>> alternativePaths() { return Optional.of(paths); }

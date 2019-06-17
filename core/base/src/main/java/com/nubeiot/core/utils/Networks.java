@@ -32,6 +32,7 @@ public final class Networks {
                                                                       !(address instanceof Inet6Address) &&
                                                                       !address.isLoopbackAddress();
     public static final Predicate<InterfaceAddress> IS_V4 = address -> IS_NAT_V4.test(address.getAddress());
+    public static final int PRIORITY_FACTOR = 100;
 
     static final String CLUSTER_PUBLIC_PROP = "nube.cluster.public";
     static final String CLUSTER_PUBLIC_HOST_PROP = "nube.cluster.public.host";
@@ -204,6 +205,14 @@ public final class Networks {
             }
         }
         throw new NetworkException("Cannot find any IPv4 network interface");
+    }
+
+    public static int priorityOrder(int len) {
+        return priorityOrder(len, PRIORITY_FACTOR);
+    }
+
+    public static int priorityOrder(int len, int factor) {
+        return len > factor ? priorityOrder(len, factor * 10) : (factor - len) * factor;
     }
 
 }

@@ -2,7 +2,6 @@ package com.nubeiot.core.http.rest;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -15,7 +14,8 @@ import io.vertx.ext.web.Router;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.base.event.EventMethodDefinition.EventMethodMapping;
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
+import com.nubeiot.core.http.base.event.EventMethodMapping;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
 import com.nubeiot.core.http.handler.RestEventApiDispatcher;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
@@ -86,24 +86,25 @@ public final class RestEventApisBuilder {
     }
 
     private void createRouter(RestEventApi restApi) {
-        restApi.getRestMetadata()
-               .stream()
-               .sorted(Comparator.comparingInt(o -> o.getDefinition().getServicePath().length()))
-               .forEach(metadata -> this.createRouter(metadata, restApi));
+        restApi.getRestMetadata().forEach(metadata -> this.createRouter(metadata, restApi));
     }
 
     private void createRouter(RestEventApiMetadata metadata, RestEventApi api) {
-        for (EventMethodMapping mapping : metadata.getDefinition().getMapping()) {
+        final EventMethodDefinition definition = metadata.getDefinition();
+        for (EventMethodMapping mapping : definition.getMapping()) {
             RestEventApiDispatcher restHandler = RestEventApiDispatcher.create(api.dispatcher(), eventController,
                                                                                metadata.getAddress(),
                                                                                mapping.getAction(),
-                                                                               metadata.getPattern());
-            final String path = Strings.isBlank(mapping.getCapturePath())
-                                ? metadata.getDefinition().getServicePath()
-                                : mapping.getCapturePath();
+                                                                               metadata.getPattern(),
+                                                                               definition.isUseRequestData());
+            final String path = Strings.isBlank(mapping.getCapturePath()) ? definition.getServicePath()
+                                                                          : mapping.getCapturePath();
             logger.info("Registering route | Event Binding:\t{} {} --- {} {} {}", mapping.getMethod(), path,
                         metadata.getPattern(), mapping.getAction(), metadata.getAddress());
-            router.route(mapping.getMethod(), path).produces(HttpUtils.DEFAULT_CONTENT_TYPE).handler(restHandler);
+            router.route(mapping.getMethod(), path)
+                  .order(definition.getOrder())
+                  .produces(HttpUtils.DEFAULT_CONTENT_TYPE)
+                  .handler(restHandler);
         }
     }
 

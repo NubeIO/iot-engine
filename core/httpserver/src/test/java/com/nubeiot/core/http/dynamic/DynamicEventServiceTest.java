@@ -20,7 +20,6 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.dynamic.mock.MockEventMessageService;
 
-
 @RunWith(VertxUnitRunner.class)
 public class DynamicEventServiceTest extends DynamicServiceTestBase {
 
@@ -71,6 +70,18 @@ public class DynamicEventServiceTest extends DynamicServiceTestBase {
     public void test_get_one_multiple_success(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/c/123/p/456", 200,
                            new JsonObject("{\"cId\":\"123\",\"pId\":\"456\"}"));
+    }
+
+    @Test
+    public void test_get_list_not_use_request_data(TestContext context) {
+        assertRestByClient(context, HttpMethod.GET, "/api/s/x/123/y", 200,
+                           new JsonObject().put("data", Collections.singletonList("123")));
+    }
+
+    @Test
+    public void test_get_one_not_use_request_data(TestContext context) {
+        assertRestByClient(context, HttpMethod.GET, "/api/s/x/123/y/456", 200,
+                           new JsonObject("{\"xId\":\"123\",\"yId\":\"456\"}"));
     }
 
 }

@@ -21,7 +21,12 @@ public interface EventMessageService extends ServiceType {
     String EVENT_METHOD_CONFIG = "eventMethods";
     String DELIVERY_OPTIONS_CONFIG = "options";
 
-    static Record createRecord(String name, String address, @NonNull EventMethodDefinition definition,
+    static Record createRecord(@NonNull String name, @NonNull String address,
+                               @NonNull EventMethodDefinition definition) {
+        return createRecord(name, address, definition, null);
+    }
+
+    static Record createRecord(@NonNull String name, @NonNull String address, @NonNull EventMethodDefinition definition,
                                JsonObject metadata) {
         JsonObject meta = Objects.isNull(metadata) ? new JsonObject() : metadata.copy();
         return new Record().setType(TYPE)

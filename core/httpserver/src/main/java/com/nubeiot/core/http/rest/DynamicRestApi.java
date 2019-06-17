@@ -8,6 +8,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.micro.type.EventMessageService;
 
@@ -28,7 +30,7 @@ public interface DynamicRestApi {
         if (EventMessageService.TYPE.equals(record.getType())) {
             return (T) DynamicEventRestApi.create(record);
         }
-        return null;
+        throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Dynamic Rest API unsupported type " + record.getType());
     }
 
     /**
@@ -37,6 +39,20 @@ public interface DynamicRestApi {
      * @return HTTP path for dynamic service
      */
     String path();
+
+    /**
+     * Router order
+     *
+     * @return Router order
+     */
+    int order();
+
+    /**
+     * Identify using whether {@code RequestData} or not
+     *
+     * @return {@code true} if using {@code RequestData}
+     */
+    boolean useRequestData();
 
     /**
      * It is capturePath paths. It might be empty
