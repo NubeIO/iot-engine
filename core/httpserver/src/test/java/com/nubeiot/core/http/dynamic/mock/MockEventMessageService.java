@@ -12,6 +12,7 @@ import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventModel;
@@ -33,6 +34,8 @@ public class MockEventMessageService extends ContainerVerticle {
                                                              .build();
     private static EventModel TEST_EVENT_MODEL_2 = EventModel.clone(TEST_EVENT_MODEL_1,
                                                                     "test.MockEventMessageService.2");
+    private static EventModel TEST_EVENT_MODEL_3 = EventModel.clone(TEST_EVENT_MODEL_1,
+                                                                    "test.MockEventMessageService.3");
 
     public String configFile() { return "eventService.json"; }
 
@@ -46,14 +49,19 @@ public class MockEventMessageService extends ContainerVerticle {
     public void registerEventbus(EventController controller) {
         controller.register(TEST_EVENT_MODEL_1, new EventBusTestHandler(TEST_EVENT_MODEL_1.getEvents()));
         controller.register(TEST_EVENT_MODEL_2, new EventBusMultiParamTestHandler(TEST_EVENT_MODEL_2.getEvents()));
+        controller.register(TEST_EVENT_MODEL_3,
+                            new EventBusNotUseRequestDataTestHandler(TEST_EVENT_MODEL_3.getEvents()));
     }
 
     private void publishService(MicroContext microContext) {
         final ServiceDiscoveryController localController = microContext.getLocalController();
-        localController.addEventMessageRecord("event-message-service-1", TEST_EVENT_MODEL_1.getAddress(),
+        localController.addEventMessageRecord("test-ems-1", TEST_EVENT_MODEL_1.getAddress(),
                                               EventMethodDefinition.createDefault("/hey", "/hey/:id")).subscribe();
-        localController.addEventMessageRecord("event-message-service-2", TEST_EVENT_MODEL_2.getAddress(),
+        localController.addEventMessageRecord("test-ems-2", TEST_EVENT_MODEL_2.getAddress(),
                                               EventMethodDefinition.createDefault("/c/:cId/p", "/c/:cId/p/:pId"))
+                       .subscribe();
+        localController.addEventMessageRecord("test-ems-3", TEST_EVENT_MODEL_3.getAddress(),
+                                              EventMethodDefinition.createDefault("/x/:xId/y", "/x/:xId/y/:yId", false))
                        .subscribe();
     }
 
@@ -87,6 +95,27 @@ public class MockEventMessageService extends ContainerVerticle {
 
         @EventContractor(action = EventAction.GET_ONE)
         public JsonObject get(RequestData data) { return data.body(); }
+
+    }
+
+
+    @RequiredArgsConstructor
+    static class EventBusNotUseRequestDataTestHandler implements EventHandler {
+
+        private final Set<EventAction> actions;
+
+        @Override
+        public @NonNull List<EventAction> getAvailableEvents() { return new ArrayList<>(actions); }
+
+        @EventContractor(action = EventAction.GET_LIST, returnType = List.class)
+        public List<String> list(@Param("xId") String xId) {
+            return Collections.singletonList(xId);
+        }
+
+        @EventContractor(action = EventAction.GET_ONE)
+        public JsonObject get(@Param("xId") String xId, @Param("yId") String yId) {
+            return new JsonObject().put("xId", xId).put("yId", yId);
+        }
 
     }
 

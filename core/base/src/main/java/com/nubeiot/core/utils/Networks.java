@@ -212,7 +212,7 @@ public final class Networks {
     }
 
     public static int priorityOrder(int len, int factor) {
-        return len > factor ? priorityOrder(len, factor * 10) : (factor - len) * 10;
+        return len > factor ? priorityOrder(len, factor * 10) : (factor - len) * factor;
     }
 
 }

@@ -62,7 +62,8 @@ public final class EventMethodDefinition implements JsonData {
         }
         this.useRequestData = useRequestData;
         if (!useRequestData) {
-            logger.warn("Not using `RequestData` will omit data in `HTTP Request Query` and `HTTP Request Header`");
+            logger.warn("HTTP Path '{}' is not using `RequestData` that will omit data in `HTTP Request Query` and " +
+                        "`HTTP Request Header`", this.servicePath);
         }
         this.order = Networks.priorityOrder(this.servicePath.length());
         this.mapping = mapping;

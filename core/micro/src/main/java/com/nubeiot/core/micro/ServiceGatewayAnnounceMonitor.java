@@ -27,8 +27,11 @@ public class ServiceGatewayAnnounceMonitor extends AbstractServiceGatewayMonitor
 
     @Override
     public final void handle(Message<Object> message) {
-        logger.info("SERVICE ANNOUNCEMENT GATEWAY::Receive message from: \"{}\" - Headers: \"{}\" - Record: \"{}\"",
-                    message.address(), message.headers(), message.body());
+        String msg = "SERVICE ANNOUNCEMENT GATEWAY::Receive message from:";
+        logger.info("{} '{}'", msg, message.address());
+        if (logger.isTraceEnabled()) {
+            logger.trace("{} '{}' - Headers: '{}' - Body: '{}'", message.address(), message.headers(), message.body());
+        }
         handle(new Record((JsonObject) message.body()));
     }
 

@@ -142,7 +142,8 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {}::{}", t, method, path));
     }
 
-    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path, HttpMethod method, RequestData requestData) {
+    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
+                                                           HttpMethod method, RequestData requestData) {
         return executeEventMessageService(filter, path, method, requestData.toJson());
     }
 
@@ -192,8 +193,12 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     private Single<Record> addDecoratorRecord(@NonNull Record record) {
         return get().rxPublish(record).doOnSuccess(rec -> {
             registrationMap.put(rec.getRegistration(), rec);
-            logger.info("Published {} Service: {}", kind(), rec.toJson());
-        }).doOnError(t -> logger.error("Cannot publish {} record: {}", t, kind(), record));
+            logger.info("Published {} Service | Registration: {} | API: {} | Type: {} | Endpoint: {}", kind(),
+                        rec.getRegistration(), rec.getName(), rec.getType(), rec.getLocation().getString("endpoint"));
+            if (logger.isDebugEnabled()) {
+                logger.debug("Published {} Service: {}", kind(), rec.toJson());
+            }
+        }).doOnError(t -> logger.error("Cannot publish {} record: {}", t, kind(), record.toJson()));
     }
 
     private Record decorator(Record record) {

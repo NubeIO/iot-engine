@@ -89,12 +89,12 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
                 DynamicContextDispatcher<DynamicRestApi> handler = DynamicContextDispatcher.create(api, gatewayPath,
                                                                                                    getController());
                 paths.forEach(path -> {
-                    logger.info("Enable dynamic route | Service: {} --- {}", path, api.name());
+                    logger.info("Enable dynamic route | API: {} | Order: {} | Path: {}", api.name(), api.order(), path);
                     router.route(path).order(api.order()).handler(handler).enable();
                 });
             } else {
                 paths.forEach(path -> {
-                    logger.info("Disable dynamic route | Service: {} --- {}", path, api.name());
+                    logger.info("Disable dynamic route | API: {} | Path: {}", api.name(), path);
                     router.route(path).disable();
                 });
             }
