@@ -17,6 +17,7 @@ import com.nubeiot.core.exceptions.ServiceException;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.NonNull;
 
 @Builder(builderClassName = "Builder")
@@ -25,7 +26,7 @@ public final class ReplyEventHandler implements Handler<AsyncResult<Message<Obje
     private static final String REPLY_SYSTEM = "REPLY";
     private static final Logger logger = LoggerFactory.getLogger(ReplyEventHandler.class);
     @NonNull
-    @lombok.Builder.Default
+    @Default
     private final String system = REPLY_SYSTEM;
     @NonNull
     private final EventAction action;

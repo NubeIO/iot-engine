@@ -133,7 +133,7 @@ public final class Urls {
     }
 
     public static String normalize(@NonNull String url) {
-        return url.replaceAll("/+", "/").replaceFirst("(https?:)/", "$1//");
+        return url.replaceAll("/+", "/").replaceAll("^(https?:)/", "$1//");
     }
 
     private static boolean validate(String s, String pattern) {

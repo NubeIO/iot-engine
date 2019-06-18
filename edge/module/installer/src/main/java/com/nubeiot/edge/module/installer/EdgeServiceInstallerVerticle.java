@@ -40,20 +40,16 @@ public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
         final ServiceDiscoveryController localController = microContext.getLocalController();
         localController.addEventMessageRecord("service_installer",
                                               EdgeInstallerEventBus.getServiceInstaller(true).getAddress(),
-                                              EventMethodDefinition.createDefault("/services", "/services/:service_id"))
+                                              EventMethodDefinition.createDefault("/services", "/:service_id"))
                        .subscribe();
         localController.addEventMessageRecord("service_transaction",
                                               EdgeInstallerEventBus.getServiceTransaction(true).getAddress(),
                                               EventMethodDefinition.createDefault("/services/transactions",
-                                                                                  "/services/transactions" +
-                                                                                  "/:transaction_id"))
-                       .subscribe();
+                                                                                  "/:transaction_id")).subscribe();
         localController.addEventMessageRecord("service_last_transaction",
                                               EdgeInstallerEventBus.getServiceLastTransaction(true).getAddress(),
                                               EventMethodDefinition.createDefault("/services/:module_id/transactions",
-                                                                                  "/services/:module_id/transactions" +
-                                                                                  "/:transaction_id"), null)
-                       .subscribe();
+                                                                                  "/:transaction_id")).subscribe();
     }
 
     @Override

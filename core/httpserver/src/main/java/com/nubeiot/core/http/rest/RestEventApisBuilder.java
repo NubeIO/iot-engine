@@ -97,8 +97,9 @@ public final class RestEventApisBuilder {
                                                                                mapping.getAction(),
                                                                                metadata.getPattern(),
                                                                                definition.isUseRequestData());
-            final String path = Strings.isBlank(mapping.getCapturePath()) ? definition.getServicePath()
-                                                                          : mapping.getCapturePath();
+            final String path = Strings.isBlank(mapping.getCapturePath())
+                                ? definition.getServicePath()
+                                : mapping.getCapturePath();
             logger.info("Registering route | Event Binding:\t{} {} --- {} {} {}", mapping.getMethod(), path,
                         metadata.getPattern(), mapping.getAction(), metadata.getAddress());
             router.route(mapping.getMethod(), path)

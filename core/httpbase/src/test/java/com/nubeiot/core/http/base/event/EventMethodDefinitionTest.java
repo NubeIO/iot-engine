@@ -28,6 +28,11 @@ public class EventMethodDefinitionTest {
     }
 
     @Test(expected = IllegalStateException.class)
+    public void test_same_capture() {
+        EventMethodDefinition.createDefault("abc", "/abc");
+    }
+
+    @Test(expected = IllegalStateException.class)
     public void test_create_duplicate() {
         ActionMethodMapping mapping = new ActionMethodMapping() {
             @Override
@@ -43,19 +48,18 @@ public class EventMethodDefinitionTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void test_wrong_multiParam_pattern() {
-        EventMethodDefinition.createDefault("/client/:clientId/product/:productId",
-                                            "/client/:clientId/product/:productId");
+        EventMethodDefinition.createDefault("/client/:clientId", "/:productId");
     }
 
     @Test(expected = NotFoundException.class)
     public void test_not_found() {
-        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/abc/:id");
+        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/:id");
         definition.search("/abcd", HttpMethod.GET);
     }
 
     @Test(expected = NotFoundException.class)
     public void test_not_found_multiParam_pattern() {
-        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc/:cid/prod", "/abc/:cid/prod/:pid");
+        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc/:cid/prod", "/:pid");
         definition.search("/abc/222/xyz/prod", HttpMethod.GET);
     }
 
@@ -84,7 +88,7 @@ public class EventMethodDefinitionTest {
 
     @Test
     public void test_search() {
-        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/abc/:id");
+        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/:id");
         Assert.assertTrue(definition.isUseRequestData());
         Assert.assertEquals(EventAction.GET_LIST, definition.search("/abc", HttpMethod.GET));
         Assert.assertEquals(EventAction.GET_ONE, definition.search("/abc/xyz", HttpMethod.GET));
@@ -97,7 +101,7 @@ public class EventMethodDefinitionTest {
     @Test
     public void test_search_multiParam_pattern_has_resource_between() {
         EventMethodDefinition definition = EventMethodDefinition.createDefault("/client/:clientId/product",
-                                                                               "/client/:clientId/product/:productId");
+                                                                               "/:productId");
         Assert.assertTrue(definition.isUseRequestData());
         Assert.assertEquals(EventAction.GET_LIST, definition.search("/client/123/product", HttpMethod.GET));
         Assert.assertEquals(EventAction.GET_ONE, definition.search("/client/123/product/456", HttpMethod.GET));
@@ -109,8 +113,7 @@ public class EventMethodDefinitionTest {
 
     @Test
     public void test_search_multiParam_pattern_no_resource_between() {
-        EventMethodDefinition definition = EventMethodDefinition.createDefault("/client/:clientId/",
-                                                                               "/client/:clientId/:productId");
+        EventMethodDefinition definition = EventMethodDefinition.createDefault("/client/:clientId/", "/:productId");
         Assert.assertTrue(definition.isUseRequestData());
         Assert.assertEquals(EventAction.GET_LIST, definition.search("/client/123/", HttpMethod.GET));
         Assert.assertEquals(EventAction.GET_ONE, definition.search("/client/123/456", HttpMethod.GET));
@@ -122,7 +125,7 @@ public class EventMethodDefinitionTest {
 
     @Test
     public void test_to_json() throws JSONException {
-        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/abc/:id");
+        EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/:id");
         System.out.println(definition.toJson());
         Assert.assertTrue(definition.isUseRequestData());
         JSONAssert.assertEquals("{\"servicePath\":\"/abc\",\"mapping\":[{\"action\":\"GET_LIST\",\"method\":\"GET\"}," +
@@ -137,7 +140,7 @@ public class EventMethodDefinitionTest {
 
     @Test
     public void test_to_json_multiParams() throws JSONException {
-        EventMethodDefinition definition = EventMethodDefinition.createDefault("/c/:cId/p", "/c/:cId/p/:pId");
+        EventMethodDefinition definition = EventMethodDefinition.createDefault("/c/:cId/p", "/:pId");
         System.out.println(definition.toJson());
         Assert.assertTrue(definition.isUseRequestData());
         JSONAssert.assertEquals("{\"servicePath\":\"/c/[^/]+/p\",\"mapping\":[{\"action\":\"GET_LIST\"," +
@@ -173,7 +176,7 @@ public class EventMethodDefinitionTest {
     }
 
     @Test
-    public void test_from_json_1() {
+    public void test_from_json_not_use_request_data() {
         EventMethodDefinition definition = JsonData.from(
             "{\"servicePath\":\"/abc\",\"useRequestData\":false, \"mapping\":[{\"action\":\"GET_LIST\"," +
             "\"method\":\"GET\"}]}", EventMethodDefinition.class);

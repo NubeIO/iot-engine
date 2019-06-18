@@ -38,11 +38,11 @@ public abstract class AbstractRestEventApi implements RestEventApi {
     }
 
     protected void addRouter(@NonNull EventModel eventModel, String apiPath) {
-        addRouter(eventModel, apiPath, null);
+        addRouter(eventModel, EventMethodDefinition.create(apiPath, this));
     }
 
-    protected void addRouter(@NonNull EventModel eventModel, String apiPath, String capturePath) {
-        addRouter(eventModel, EventMethodDefinition.create(apiPath, capturePath, this));
+    protected void addRouter(@NonNull EventModel eventModel, String apiPath, String paramPath) {
+        addRouter(eventModel, EventMethodDefinition.create(apiPath, paramPath, this));
     }
 
     protected void addRouter(@NonNull EventModel eventModel, @NonNull EventMethodDefinition definition) {
