@@ -78,7 +78,7 @@ public final class EventMethodDefinition implements JsonData {
     }
 
     /**
-     * Create default definition with default {@link ActionMethodMapping#DEFAULT}.
+     * Create default definition with default {@link ActionMethodMapping#CRUD_MAP}.
      *
      * @param servicePath Origin service path that represents for manipulating {@code resource} in default {@code
      *                    HTTPMethod} list
@@ -96,7 +96,7 @@ public final class EventMethodDefinition implements JsonData {
     }
 
     /**
-     * Create default definition with default {@link ActionMethodMapping#DEFAULT}.
+     * Create default definition with default {@link ActionMethodMapping#CRUD_MAP}.
      *
      * @param servicePath    Origin service path that represents for manipulating {@code resource} in default {@code
      *                       HTTPMethod} list
@@ -110,7 +110,7 @@ public final class EventMethodDefinition implements JsonData {
      *     </ul>
      */
     public static EventMethodDefinition createDefault(String servicePath, String paramPath, boolean useRequestData) {
-        return create(servicePath, Strings.requireNotBlank(paramPath), ActionMethodMapping.DEFAULT, useRequestData);
+        return create(servicePath, Strings.requireNotBlank(paramPath), ActionMethodMapping.CRUD_MAP, useRequestData);
     }
 
     /**
