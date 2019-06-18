@@ -62,4 +62,13 @@ public final class EdgeInstallerEventBus {
                          .build();
     }
 
+    public static EventModel getServiceLastTransaction(boolean local) {
+        return EventModel.builder()
+                         .address("nubeiot.edge.app.installer.last_transaction")
+                         .pattern(EventPattern.REQUEST_RESPONSE)
+                         .local(local).event(EventAction.GET_LIST)
+                         .build();
+    }
+
+
 }
