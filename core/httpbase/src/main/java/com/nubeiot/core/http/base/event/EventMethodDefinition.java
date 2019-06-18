@@ -1,7 +1,7 @@
 package com.nubeiot.core.http.base.event;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.logging.Logger;
@@ -16,7 +16,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.exceptions.NotFoundException;
-import com.nubeiot.core.http.base.HttpUtils.HttpMethods;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 
@@ -78,31 +78,39 @@ public final class EventMethodDefinition implements JsonData {
     }
 
     /**
-     * Create default definition with default {@link ActionMethodMapping#DEFAULT}.
+     * Create default definition with default {@link ActionMethodMapping#CRUD_MAP}.
      *
-     * @param servicePath Origin service path that represents for manipulating {@code resource} in all given {@code
-     *                    HTTPMethod}
-     * @param capturePath Capturing path parameters for manipulating {@code resource}. E.g: {@code
-     *                    /catalogue/products/:productType/:productId/}
+     * @param servicePath Origin service path that represents for manipulating {@code resource} in default {@code
+     *                    HTTPMethod} list
+     * @param paramPath   Parameter path for manipulating {@code resource}
      * @return new instance of {@link EventMethodDefinition}
+     * @implNote {@code paramPath} will be append after {@code servicePath}. For example:
+     *     <ul>
+     *     <li>{@code servicePath}: {@code /client/:clientId/product}</li>
+     *     <li>{@code paramPath}: {@code /:productId}</li>
+     *     </ul>
      * @see #createDefault(String, String, boolean)
      */
-    public static EventMethodDefinition createDefault(String servicePath, String capturePath) {
-        return createDefault(servicePath, capturePath, true);
+    public static EventMethodDefinition createDefault(String servicePath, String paramPath) {
+        return createDefault(servicePath, paramPath, true);
     }
 
     /**
-     * Create default definition with default {@link ActionMethodMapping#DEFAULT}.
+     * Create default definition with default {@link ActionMethodMapping#CRUD_MAP}.
      *
-     * @param servicePath    Origin service path that represents for manipulating {@code resource} in all given {@code
-     *                       HTTPMethod}
-     * @param capturePath    Capturing path parameters for manipulating {@code resource}. E.g: {@code
-     *                       /catalogue/products/:productType/:productId/}
+     * @param servicePath    Origin service path that represents for manipulating {@code resource} in default {@code
+     *                       HTTPMethod} list
+     * @param paramPath      Parameter path for manipulating {@code resource}
      * @param useRequestData Whether use {@link RequestData} in parameter in {@link EventHandler} or not
      * @return new instance of {@link EventMethodDefinition}
+     * @implNote {@code paramPath} will be append after {@code servicePath}. For example:
+     *     <ul>
+     *     <li>{@code servicePath}: {@code /client/:clientId/product}</li>
+     *     <li>{@code paramPath}: {@code /:productId}</li>
+     *     </ul>
      */
-    public static EventMethodDefinition createDefault(String servicePath, String capturePath, boolean useRequestData) {
-        return create(servicePath, Strings.requireNotBlank(capturePath), ActionMethodMapping.DEFAULT, useRequestData);
+    public static EventMethodDefinition createDefault(String servicePath, String paramPath, boolean useRequestData) {
+        return create(servicePath, Strings.requireNotBlank(paramPath), ActionMethodMapping.CRUD_MAP, useRequestData);
     }
 
     /**
@@ -140,14 +148,19 @@ public final class EventMethodDefinition implements JsonData {
      * It is appropriate to handle {@code resource} with common {@code CRUD} operations
      *
      * @param servicePath Origin service path that represents for manipulating {@code resource}
-     * @param capturePath Capturing path parameters for manipulating {@code resource}
+     * @param paramPath   Parameter path for manipulating {@code resource}
      * @param mapping     Mapping between {@code EventAction} and {@code HTTPMethod}
      * @return new instance of {@link EventMethodDefinition}
+     * @implNote {@code paramPath} will be append after {@code servicePath}. For example:
+     *     <ul>
+     *     <li>{@code servicePath}: {@code /client/:clientId/product}</li>
+     *     <li>{@code paramPath}: {@code /:productId}</li>
+     *     </ul>
      * @see ActionMethodMapping
      */
-    public static EventMethodDefinition create(String servicePath, String capturePath,
+    public static EventMethodDefinition create(String servicePath, String paramPath,
                                                @NonNull ActionMethodMapping mapping) {
-        return create(servicePath, capturePath, mapping, true);
+        return create(servicePath, paramPath, mapping, true);
     }
 
     /**
@@ -156,29 +169,35 @@ public final class EventMethodDefinition implements JsonData {
      * It is appropriate to handle {@code resource} with common {@code CRUD} operations
      *
      * @param servicePath Origin service path that represents for manipulating {@code resource}
-     * @param capturePath Capturing path parameters for manipulating {@code resource}
+     * @param paramPath   Parameter path for manipulating {@code resource}
      * @param mapping     Mapping between {@code EventAction} and {@code HTTPMethod}
      * @return new instance of {@link EventMethodDefinition}
+     * @implNote {@code paramPath} will be append after {@code servicePath}. For example:
+     *     <ul>
+     *     <li>{@code servicePath}: {@code /client/:clientId/product}</li>
+     *     <li>{@code paramPath}: {@code /:productId}</li>
+     *     </ul>
      * @see ActionMethodMapping
      */
-    public static EventMethodDefinition create(String servicePath, String capturePath,
+    public static EventMethodDefinition create(String servicePath, String paramPath,
                                                @NonNull ActionMethodMapping mapping, boolean useRequestData) {
-        if (Strings.isBlank(capturePath) && mapping.hasDuplicateMethod()) {
+        final String sPath = Urls.combinePath(Strings.requireNotBlank(servicePath));
+        final String pPath = Strings.isBlank(paramPath) ? paramPath : Urls.combinePath(paramPath);
+        if ((Strings.isBlank(pPath) || sPath.equals(pPath)) && mapping.hasDuplicateMethod()) {
             throw new IllegalStateException("Has duplicate HTTP method for same endpoint");
         }
-        Set<EventMethodMapping> map = new HashSet<>();
-        mapping.get().forEach((action, method) -> {
-            String path = servicePath;
-            if (action == EventAction.GET_ONE || (HttpMethods.isSingular(method) && action != EventAction.GET_LIST)) {
-                path = capturePath;
-            }
-            map.add(EventMethodMapping.builder().action(action).method(method).capturePath(path).build());
-        });
-        return EventMethodDefinition.builder()
-                                    .servicePath(servicePath)
-                                    .useRequestData(useRequestData)
-                                    .mapping(map)
-                                    .build();
+        final String cPath = Strings.isBlank(pPath) ? pPath : Urls.combinePath(sPath, pPath);
+        Set<EventMethodMapping> map = mapping.get()
+                                             .entrySet()
+                                             .stream()
+                                             .map(entry -> EventMethodMapping.builder()
+                                                                             .action(entry.getKey())
+                                                                             .method(entry.getValue())
+                                                                             .servicePath(sPath)
+                                                                             .capturePath(cPath)
+                                                                             .build())
+                                             .collect(Collectors.toSet());
+        return EventMethodDefinition.builder().servicePath(sPath).useRequestData(useRequestData).mapping(map).build();
     }
 
     public EventAction search(String actualPath, @NonNull HttpMethod method) {

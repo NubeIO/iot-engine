@@ -10,14 +10,29 @@ import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.event.EventAction;
 
+import lombok.NonNull;
+
 public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMethod>> {
 
     /**
-     * Default mapping with {@link #defaultEventHttpMap()}
+     * Default mapping for common {@code CREATE | READ | UPDATE | DELETE} operations
+     *
+     * @see #defaultCRUDMap()
      */
-    ActionMethodMapping DEFAULT = new ActionMethodMapping() {};
+    ActionMethodMapping CRUD_MAP = ActionMethodMapping.create(defaultCRUDMap());
 
-    static Map<EventAction, HttpMethod> defaultEventHttpMap() {
+    /**
+     * Default mapping for common {@code CREATE | UPDATE | DELETE} operations
+     *
+     * @see #defaultCUDMap()
+     */
+    ActionMethodMapping CUD_MAP = ActionMethodMapping.create(defaultCUDMap());
+
+    static ActionMethodMapping create(@NonNull Map<EventAction, HttpMethod> map) {
+        return () -> Collections.unmodifiableMap(map);
+    }
+
+    static Map<EventAction, HttpMethod> defaultCRUDMap() {
         Map<EventAction, HttpMethod> map = new HashMap<>();
         map.put(EventAction.CREATE, HttpMethod.POST);
         map.put(EventAction.UPDATE, HttpMethod.PUT);
@@ -28,9 +43,13 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
         return map;
     }
 
-    @Override
-    default Map<EventAction, HttpMethod> get() {
-        return Collections.unmodifiableMap(defaultEventHttpMap());
+    static Map<EventAction, HttpMethod> defaultCUDMap() {
+        Map<EventAction, HttpMethod> map = new HashMap<>();
+        map.put(EventAction.CREATE, HttpMethod.POST);
+        map.put(EventAction.UPDATE, HttpMethod.PUT);
+        map.put(EventAction.PATCH, HttpMethod.PATCH);
+        map.put(EventAction.REMOVE, HttpMethod.DELETE);
+        return map;
     }
 
     default boolean hasDuplicateMethod() {

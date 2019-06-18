@@ -45,6 +45,7 @@ public interface TestHelper {
     static void setup() {
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
         ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.INFO);
+        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.DEBUG);
     }
 
     static void testComplete(Async async) {

@@ -27,7 +27,8 @@ import lombok.RequiredArgsConstructor;
 
 public class MockEventMessageService extends ContainerVerticle {
 
-    private static EventModel TEST_EVENT_MODEL_1 = EventModel.builder().address("test.MockEventMessageService.1")
+    private static EventModel TEST_EVENT_MODEL_1 = EventModel.builder()
+                                                             .address("test.MockEventMessageService.1")
                                                              .local(true)
                                                              .pattern(EventPattern.REQUEST_RESPONSE)
                                                              .addEvents(EventAction.GET_ONE, EventAction.GET_LIST)
@@ -56,12 +57,11 @@ public class MockEventMessageService extends ContainerVerticle {
     private void publishService(MicroContext microContext) {
         final ServiceDiscoveryController localController = microContext.getLocalController();
         localController.addEventMessageRecord("test-ems-1", TEST_EVENT_MODEL_1.getAddress(),
-                                              EventMethodDefinition.createDefault("/hey", "/hey/:id")).subscribe();
+                                              EventMethodDefinition.createDefault("/hey", "/:id")).subscribe();
         localController.addEventMessageRecord("test-ems-2", TEST_EVENT_MODEL_2.getAddress(),
-                                              EventMethodDefinition.createDefault("/c/:cId/p", "/c/:cId/p/:pId"))
-                       .subscribe();
+                                              EventMethodDefinition.createDefault("/c/:cId/p", "/:pId")).subscribe();
         localController.addEventMessageRecord("test-ems-3", TEST_EVENT_MODEL_3.getAddress(),
-                                              EventMethodDefinition.createDefault("/x/:xId/y", "/x/:xId/y/:yId", false))
+                                              EventMethodDefinition.createDefault("/x/:xId/y", "/:yId", false))
                        .subscribe();
     }
 

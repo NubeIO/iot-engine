@@ -46,7 +46,7 @@ public class MockApiDefinition {
                                          .addEvents(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE,
                                                     EventAction.UPDATE, EventAction.PATCH)
                                          .build();
-            this.addRouter(model, "/test/events", "/test/events/:event_id");
+            this.addRouter(model, "/test/events", "/:event_id");
         }
 
     }

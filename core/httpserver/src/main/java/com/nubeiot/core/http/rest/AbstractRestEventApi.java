@@ -24,25 +24,25 @@ public abstract class AbstractRestEventApi implements RestEventApi {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final SortedMap<String, RestEventApiMetadata> restMetadata = new TreeMap<>(
         Comparator.comparingInt(String::length));
-    private final Map<EventAction, HttpMethod> httpEventMapping;
+    private final ActionMethodMapping mapping;
 
     protected AbstractRestEventApi() {
-        this.httpEventMapping = Collections.unmodifiableMap(initHttpEventMap());
+        this.mapping = initHttpEventMap();
         initRoute();
     }
 
     protected abstract void initRoute();
 
-    protected Map<EventAction, HttpMethod> initHttpEventMap() {
-        return ActionMethodMapping.defaultEventHttpMap();
+    protected ActionMethodMapping initHttpEventMap() {
+        return ActionMethodMapping.CRUD_MAP;
     }
 
     protected void addRouter(@NonNull EventModel eventModel, String apiPath) {
-        addRouter(eventModel, apiPath, null);
+        addRouter(eventModel, EventMethodDefinition.create(apiPath, this));
     }
 
-    protected void addRouter(@NonNull EventModel eventModel, String apiPath, String capturePath) {
-        addRouter(eventModel, EventMethodDefinition.create(apiPath, capturePath, this));
+    protected void addRouter(@NonNull EventModel eventModel, String apiPath, String paramPath) {
+        addRouter(eventModel, EventMethodDefinition.create(apiPath, paramPath, this));
     }
 
     protected void addRouter(@NonNull EventModel eventModel, @NonNull EventMethodDefinition definition) {
@@ -63,6 +63,6 @@ public abstract class AbstractRestEventApi implements RestEventApi {
     }
 
     @Override
-    public Map<EventAction, HttpMethod> get() { return httpEventMapping; }
+    public Map<EventAction, HttpMethod> get() { return mapping.get(); }
 
 }

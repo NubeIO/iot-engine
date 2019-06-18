@@ -15,7 +15,7 @@ import com.nubeiot.core.http.base.Urls;
 public class RestEventApiMetadataTest {
 
     private RestEventApiMetadata.Builder createBuilder(EventAction event, HttpMethod method) {
-        return createBuilder(event, method, "/api/golds", "/api/golds/:gold_id");
+        return createBuilder(event, method, "/api/golds", "/:gold_id");
     }
 
     private RestEventApiMetadata.Builder createBuilder(String path, String... params) {
@@ -30,7 +30,7 @@ public class RestEventApiMetadataTest {
                                    .pattern(EventPattern.PUBLISH_SUBSCRIBE)
                                    .address("address.1")
                                    .definition(
-                                       EventMethodDefinition.create(path, Urls.capturePath(path, params), mapping));
+                                       EventMethodDefinition.create(path, Urls.capturePath("/", params), mapping));
     }
 
     private ActionMethodMapping createMapping(EventAction action, HttpMethod method) {
@@ -68,9 +68,9 @@ public class RestEventApiMetadataTest {
     }
 
     @Test
-    public void test_combine_not_pattern() {
-        String p = "/catalogue/products/";
-        EventMethodDefinition def = EventMethodDefinition.create(p, p + ":catalog_id/:product_type/:product_id",
+    public void test_combine_multiple_param_sequential() {
+        EventMethodDefinition def = EventMethodDefinition.create("/catalogue/products",
+                                                                 "/:catalog_id/:product_type/:product_id",
                                                                  createMapping(EventAction.GET_ONE, HttpMethod.GET));
         RestEventApiMetadata metadata = RestEventApiMetadata.builder()
                                                             .address("address.1")
@@ -83,9 +83,9 @@ public class RestEventApiMetadataTest {
 
     @Test
     public void test_combine_pattern() {
-        String p = "/catalogue/:catalog_id/products/type/:product_type/product";
-        EventMethodDefinition def = EventMethodDefinition.create(p, p + "/:product_id",
-                                                                 createMapping(EventAction.GET_ONE, HttpMethod.GET));
+        EventMethodDefinition def = EventMethodDefinition.create(
+            "/catalogue/:catalog_id/products/type/:product_type/product", "/:product_id",
+            createMapping(EventAction.GET_ONE, HttpMethod.GET));
         RestEventApiMetadata metadata = RestEventApiMetadata.builder()
                                                             .address("address.1")
                                                             .pattern(EventPattern.REQUEST_RESPONSE)

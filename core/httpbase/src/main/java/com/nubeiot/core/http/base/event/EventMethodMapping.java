@@ -9,17 +9,17 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.http.base.HttpUtils.HttpMethods;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.ToString;
 
 @Getter
 @Builder(builderClassName = "Builder")
-@ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(builder = EventMethodMapping.Builder.class)
@@ -31,7 +31,7 @@ public final class EventMethodMapping implements JsonData {
     @Include
     @NonNull
     private final HttpMethod method;
-    private String capturePath;
+    private final String capturePath;
     /**
      * Optional
      */
@@ -39,9 +39,19 @@ public final class EventMethodMapping implements JsonData {
 
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static class Builder {
+    static class Builder {
 
-        public EventMethodMapping build() {
+        private String servicePath;
+
+        Builder servicePath(String servicePath) {
+            this.servicePath = servicePath;
+            return this;
+        }
+
+        EventMethodMapping build() {
+            boolean singular = HttpMethods.isSingular(method) && action != EventAction.GET_LIST ||
+                               action == EventAction.GET_ONE;
+            capturePath = Strings.isBlank(servicePath) || singular ? capturePath : servicePath;
             if (Objects.nonNull(capturePath) && Objects.isNull(regexPath)) {
                 regexPath = EventMethodDefinition.toRegex(capturePath);
             }
