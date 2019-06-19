@@ -3,7 +3,7 @@ ext {
 }
 
 dependencies {
-    compile project(':core:micro') //todo: remove this one, related to issue #141
+    compile project(':core:iovertx') // loading all vertx dependencies in main classpath
     compile project(':edge:core')
     compile project(':core:cluster:hazelcast')
     testCompile project(":core:base").sourceSets.test.output

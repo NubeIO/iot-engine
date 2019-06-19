@@ -12,6 +12,7 @@ include ':core:httpclient'
 include ':core:httpserver'
 include ':core:auth'
 include ':core:kafka'
+include 'core:iovertx'
 
 include ':dashboard:server'
 include ':dashboard:connector:edge'
