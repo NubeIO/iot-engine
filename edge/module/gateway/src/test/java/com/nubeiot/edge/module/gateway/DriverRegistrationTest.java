@@ -74,7 +74,7 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
 
     private Consumer<ResponseData> successAsserter(TestContext context, String serviceName, Consumer<String> register) {
         return resp -> {
-            context.assertEquals(HttpResponseStatus.OK, resp.getStatus());
+            context.assertEquals(HttpResponseStatus.CREATED, resp.getStatus());
             context.assertEquals(serviceName, resp.body().getString("name"));
             context.assertNotNull(resp.body().getString("registration"));
             if (Objects.nonNull(register)) {
@@ -97,7 +97,7 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     public void test_getRecords(TestContext context) {
         restRequest(context, HttpMethod.GET, "/api/drivers", RequestData.builder().build()).subscribe(resp -> {
             context.assertEquals(200, resp.getStatus().code());
-            context.assertEquals(resp.body().getJsonArray("records").size(), 1);
+            context.assertNotEquals(resp.body().getJsonArray("records").size(), 0);
         }, context::fail);
     }
 
