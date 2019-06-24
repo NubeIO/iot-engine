@@ -80,10 +80,10 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
 
         EventMessage eventMessage = EventMessage.success(EventAction.CREATE, RequestData.builder().body(body).build());
         Async async = context.async();
-        EventController controller = EventController.getInstance(this.vertx, this.edgeVerticle.getNubeConfig()
-                                                                                              .getSystemConfig()
-                                                                                              .getEventBusConfig()
-                                                                                              .getDeliveryOptions());
+        EventController controller = new EventController(this.vertx, this.edgeVerticle.getNubeConfig()
+                                                                                      .getSystemConfig()
+                                                                                      .getEventBusConfig()
+                                                                                      .getDeliveryOptions());
         //create loading takes 7 seconds when timeout is 5 seconds
         controller.request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
                            EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,

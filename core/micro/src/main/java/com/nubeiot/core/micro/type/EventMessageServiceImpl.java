@@ -33,9 +33,8 @@ public class EventMessageServiceImpl implements EventMessageService {
                                      @NonNull JsonObject config) {
             super(vertx, discovery, record);
             String sharedKey = config.getString(SHARED_KEY_CONFIG);
-            this.controller = Strings.isBlank(sharedKey)
-                              ? EventController.getInstance(vertx)
-                              : SharedDataDelegate.getLocalDataValue(vertx, sharedKey,
+            this.controller = Strings.isBlank(sharedKey) ? new EventController(vertx)
+                                                         : SharedDataDelegate.getLocalDataValue(vertx, sharedKey,
                                                                      SharedDataDelegate.SHARED_EVENTBUS);
             this.config = new DeliveryOptions(config.getJsonObject(DELIVERY_OPTIONS_CONFIG, new JsonObject()));
         }

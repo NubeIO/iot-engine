@@ -72,7 +72,7 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
             String addr = config.getSystemConfig().getClusterConfig().getListenerAddress();
             ClusterManager clusterManager = this.options.getClusterManager();
             if (Strings.isNotBlank(addr)) {
-                clusterManager.nodeListener(new ClusterNodeListener(clusterDelegate, EventController.getInstance(vertx), addr));
+                clusterManager.nodeListener(new ClusterNodeListener(clusterDelegate, new EventController(vertx), addr));
             }
         }
         super.afterStartingVertx(vertx);

@@ -24,7 +24,7 @@ public class MockKafkaConsumer {
     private KafkaConsumer<String, EventMessage> consumer;
 
     public void start() {
-        EventController controller = EventController.getInstance(vertx);
+        EventController controller = new EventController(vertx);
         consumer = KafkaConsumerProvider.create(vertx, consumerCfg, String.class, EventMessage.class);
         consumer.handler(record -> {
             System.err.println("CONSUMER Topic: " + record.topic());

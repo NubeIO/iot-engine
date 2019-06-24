@@ -178,7 +178,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                                  .dynamicRouteConfig(restConfig.getDynamicConfig())
                                                  .addEventController(
                                                      this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS,
-                                                                        EventController.getInstance(vertx)))
+                                                                        new EventController(vertx)))
                                                  .build();
     }
 
@@ -214,8 +214,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         logger.info("Init Upload router: '{}'...", uploadCfg.getPath());
-        EventController controller = this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS,
-                                                        EventController.getInstance(vertx));
+        EventController controller = this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS, new EventController(vertx));
         EventModel listenerEvent = EventModel.builder()
                                              .address(Strings.fallback(uploadCfg.getListenerAddress(),
                                                                        getSharedKey() + ".upload"))

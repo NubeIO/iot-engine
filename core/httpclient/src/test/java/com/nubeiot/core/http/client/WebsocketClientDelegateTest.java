@@ -62,7 +62,7 @@ public class WebsocketClientDelegateTest {
     public void setup() {
         vertx = Vertx.vertx();
         config = new HttpClientConfig();
-        controller = EventController.getInstance(vertx);
+        controller = new EventController(vertx);
         hostInfo = HostInfo.builder().host("echo.websocket.org").port(443).ssl(true).build();
     }
 

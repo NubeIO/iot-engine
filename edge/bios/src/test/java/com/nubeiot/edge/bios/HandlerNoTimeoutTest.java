@@ -6,8 +6,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.vertx.core.eventbus.ReplyException;
-import io.vertx.core.eventbus.ReplyFailure;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -90,10 +88,10 @@ public class HandlerNoTimeoutTest extends BaseEdgeVerticleTest {
         EventMessage eventMessage = EventMessage.success(EventAction.PATCH, RequestData.builder().body(body).build());
         Async async = context.async();
         //loading patch takes 3 seconds when timeout is 5 seconds
-        EventController controller = EventController.getInstance(this.vertx, this.edgeVerticle.getNubeConfig()
-                                                                                              .getSystemConfig()
-                                                                                              .getEventBusConfig()
-                                                                                              .getDeliveryOptions());
+        EventController controller = new EventController(this.vertx, this.edgeVerticle.getNubeConfig()
+                                                                                      .getSystemConfig()
+                                                                                      .getEventBusConfig()
+                                                                                      .getDeliveryOptions());
 
         controller.request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
                            EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
