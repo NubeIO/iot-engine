@@ -97,7 +97,7 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     public void test_getRecords(TestContext context) {
         restRequest(context, HttpMethod.GET, "/api/drivers", RequestData.builder().build()).subscribe(resp -> {
             context.assertEquals(200, resp.getStatus().code());
-            context.assertNotEquals(resp.body().getJsonArray("records").size(), 1);
+            context.assertEquals(resp.body().getJsonArray("records").size(), 2);
         }, context::fail);
     }
 

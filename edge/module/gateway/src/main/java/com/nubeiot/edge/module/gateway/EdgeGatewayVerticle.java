@@ -19,30 +19,27 @@ public class EdgeGatewayVerticle extends ContainerVerticle {
 
     @Getter
     private MicroContext microContext;
-    private EventController controller;
 
     @Override
     public void start() {
         super.start();
         this.addProvider(new HttpServerProvider(new HttpServerRouter()))
-            .addProvider(new MicroserviceProvider(), this::publishService);
+            .addProvider(new MicroserviceProvider(), microContext -> this.microContext = (MicroContext) microContext);
 
         this.registerSuccessHandler(event -> {
             this.microContext.rescanService(vertx.eventBus().getDelegate());
             RestRouter.addProvider(RestMicroContextProvider.class, ctx -> new RestMicroContextProvider(microContext));
-
-            controller.register(GatewayEventBus.DRIVER_REGISTRATION,
-                                new DriverRegistrationEventHandler(this, GatewayEventBus.DRIVER_REGISTRATION));
+            publishService();
         });
     }
 
     @Override
     public void registerEventbus(EventController controller) {
-        this.controller = controller;
+        controller.register(GatewayEventBus.DRIVER_REGISTRATION,
+                            new DriverRegistrationEventHandler(this, GatewayEventBus.DRIVER_REGISTRATION));
     }
 
-    private void publishService(MicroContext microContext) {
-        this.microContext = microContext;
+    private void publishService() {
         final ServiceDiscoveryController localController = microContext.getLocalController();
         localController.addEventMessageRecord("drivers_registration", GatewayEventBus.DRIVER_REGISTRATION.getAddress(),
                                               EventMethodDefinition.createDefault("/drivers", "/:registration", false))
