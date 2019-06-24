@@ -5,13 +5,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventContractor.Param;
@@ -49,6 +52,15 @@ public class DriverRegistrationEventHandler implements EventHandler {
     private Single<Record> createRecord(MicroContext microContext, String serviceName, HttpLocation location,
                                         JsonObject metadata) {
         return microContext.getLocalController().addHttpRecord(serviceName, location, metadata);
+    }
+
+    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
+    public Single<JsonObject> getList(RequestData data) {
+        return verticle.getMicroContext()
+                       .getLocalController()
+                       .getRecords()
+                       .flatMap(records -> Observable.fromIterable(records).map(Record::toJson).toList())
+                       .map(records -> new JsonObject().put("records", new JsonArray(records)));
     }
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)

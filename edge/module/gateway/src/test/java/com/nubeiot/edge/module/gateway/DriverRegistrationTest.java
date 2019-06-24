@@ -89,7 +89,7 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
                                             .setRoot("/drivers/gpio")
                                             .toJson()
                                             .put("name", serviceName);
-        restRequest(context, HttpMethod.POST, "/api/drivers/registration",
+        restRequest(context, HttpMethod.POST, "/api/drivers",
                     RequestData.builder().body(data).build()).subscribe(asserter::accept, context::fail);
     }
 
@@ -97,7 +97,7 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     public void test_getRecords(TestContext context) {
         restRequest(context, HttpMethod.GET, "/api/drivers", RequestData.builder().build()).subscribe(resp -> {
             context.assertEquals(200, resp.getStatus().code());
-            context.assertNotEquals(resp.body().getJsonArray("records").size(), 0);
+            context.assertNotEquals(resp.body().getJsonArray("records").size(), 1);
         }, context::fail);
     }
 
@@ -116,13 +116,13 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
 
     @Test
     public void test_unregisterDriver_notFound(TestContext context) {
-        restRequest(context, HttpMethod.DELETE, "/api/drivers/registration/d", RequestData.builder().build()).subscribe(
+        restRequest(context, HttpMethod.DELETE, "/api/drivers/d", RequestData.builder().build()).subscribe(
             resp -> context.assertEquals(410, resp.getStatus().code()));
     }
 
     @Test
     public void test_unregisterDriver_success(TestContext context) {
-        restRequest(context, HttpMethod.DELETE, "/api/drivers/registration/" + registration,
+        restRequest(context, HttpMethod.DELETE, "/api/drivers/" + registration,
                     RequestData.builder().body(new JsonObject().put("port", httpServicePort)).build()).subscribe(
             resp -> context.assertEquals(204, resp.getStatus().code()), context::fail);
     }
@@ -134,7 +134,7 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
                                             .setRoot("/drivers/gpio")
                                             .toJson()
                                             .put("name", "xyz");
-        restRequest(context, HttpMethod.POST, "/api/drivers/registration",
+        restRequest(context, HttpMethod.POST, "/api/drivers",
                     RequestData.builder().body(body).build()).subscribe(resp -> {
             context.assertEquals(409, resp.getStatus().code());
             context.assertEquals(ErrorCode.ALREADY_EXIST.name(), resp.body().getString("code"));
