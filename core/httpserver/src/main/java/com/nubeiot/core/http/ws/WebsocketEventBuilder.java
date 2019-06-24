@@ -17,6 +17,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
+import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.InitializerError;
@@ -90,7 +91,7 @@ public final class WebsocketEventBuilder {
 
     public Router build() {
         SockJSHandler sockJSHandler = SockJSHandler.create(vertx, config().getSockjsOptions());
-        EventController controller = new EventController(vertx);
+        EventController controller = EventControllerBridge.getInstance().getEventController(vertx);
         validate().forEach((path, socketMapping) -> {
             String fullPath = Urls.combinePath(rootWs, path, ApiConstants.WILDCARDS_ANY_PATH);
             router.route(fullPath)

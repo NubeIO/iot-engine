@@ -12,6 +12,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
@@ -88,10 +89,12 @@ public class HandlerNoTimeoutTest extends BaseEdgeVerticleTest {
         EventMessage eventMessage = EventMessage.success(EventAction.PATCH, RequestData.builder().body(body).build());
         Async async = context.async();
         //loading patch takes 3 seconds when timeout is 5 seconds
-        EventController controller = new EventController(this.vertx, this.edgeVerticle.getNubeConfig()
-                                                                                      .getSystemConfig()
-                                                                                      .getEventBusConfig()
-                                                                                      .getDeliveryOptions());
+        EventController controller = EventControllerBridge.getInstance()
+                                                          .getEventController(this.vertx,
+                                                                              this.edgeVerticle.getNubeConfig()
+                                                                                               .getSystemConfig()
+                                                                                               .getEventBusConfig()
+                                                                                               .getDeliveryOptions());
 
         controller.request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
                            EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,

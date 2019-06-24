@@ -12,6 +12,9 @@
       "trustStoreOptions": {
         "path": "eventBusKeystore.jks",
         "password": "nubesparkEventBus"
+      },
+      "deliveryOptions": {
+        "timeout": 300000
       }
     },
     "__cluster__": {

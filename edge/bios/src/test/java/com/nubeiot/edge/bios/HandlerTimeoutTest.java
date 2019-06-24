@@ -14,9 +14,8 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.enums.State;
-import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -48,28 +47,30 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         return new MockTimeoutVerticle();
     }
 
-    @Test
-    public void test_create_should_timeout(TestContext context) {
-        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
-                                              .put("group_id", GROUP_ID)
-                                              .put("version", VERSION);
-        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", DEPLOY_CONFIG);
-
-        EventMessage eventMessage = EventMessage.success(EventAction.CREATE, RequestData.builder().body(body).build());
-        Async async = context.async();
-        //create loading takes 7 seconds when timeout is 5 seconds
-        this.vertx.getDelegate()
-                  .eventBus()
-                  .send(MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER.getAddress(), eventMessage.toJson(),
-                        context.asyncAssertSuccess(handle -> {
-                            System.out.println(handle.body());
-                            TestHelper.testComplete(async);
-                            async.awaitSuccess();
-                        }));
-
-        this.testingDBUpdated(context, State.DISABLED, Status.FAILED, DEPLOY_CONFIG);
-        async.awaitSuccess();
-    }
+    //    @Test
+    //    public void test_create_should_timeout(TestContext context) {
+    //        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
+    //                                              .put("group_id", GROUP_ID)
+    //                                              .put("version", VERSION);
+    //        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", DEPLOY_CONFIG);
+    //
+    //        EventMessage eventMessage = EventMessage.success(EventAction.CREATE, RequestData.builder().body(body)
+    //        .build());
+    //        Async async = context.async();
+    //        //create loading takes 7 seconds when timeout is 5 seconds
+    //        this.getEdgeVerticle()
+    //            .getEventController()
+    //            .request(MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER.getAddress(),
+    //                     MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER.getPattern(), eventMessage,
+    //                     context.asyncAssertSuccess(handle -> {
+    //                         System.out.println(handle);
+    //                         TestHelper.testComplete(async);
+    //                         async.awaitSuccess();
+    //                     }), null);
+    //
+    //        this.testingDBUpdated(context, State.DISABLED, Status.FAILED, DEPLOY_CONFIG);
+    //        async.awaitSuccess();
+    //    }
 
     @Test
     public void test_send_request_directly_should_timeout(TestContext context) {
@@ -80,10 +81,12 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
 
         EventMessage eventMessage = EventMessage.success(EventAction.CREATE, RequestData.builder().body(body).build());
         Async async = context.async();
-        EventController controller = new EventController(this.vertx, this.edgeVerticle.getNubeConfig()
-                                                                                      .getSystemConfig()
-                                                                                      .getEventBusConfig()
-                                                                                      .getDeliveryOptions());
+        EventController controller = EventControllerBridge.getInstance()
+                                                          .getEventController(this.vertx,
+                                                                              this.edgeVerticle.getNubeConfig()
+                                                                                               .getSystemConfig()
+                                                                                               .getEventBusConfig()
+                                                                                               .getDeliveryOptions());
         //create loading takes 7 seconds when timeout is 5 seconds
         controller.request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
                            EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,

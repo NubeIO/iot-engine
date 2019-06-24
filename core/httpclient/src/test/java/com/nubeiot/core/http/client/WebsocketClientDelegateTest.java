@@ -19,6 +19,7 @@ import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventController;
@@ -62,7 +63,7 @@ public class WebsocketClientDelegateTest {
     public void setup() {
         vertx = Vertx.vertx();
         config = new HttpClientConfig();
-        controller = new EventController(vertx);
+        controller = EventControllerBridge.getInstance().getEventController(vertx);
         hostInfo = HostInfo.builder().host("echo.websocket.org").port(443).ssl(true).build();
     }
 

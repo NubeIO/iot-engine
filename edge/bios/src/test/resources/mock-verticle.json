@@ -2,8 +2,7 @@
   "__system__": {
     "__eventBus__": {
       "deliveryOptions": {
-        "timeout": 5000,
-        "headers": {}
+        "timeout": 5000
       }
     }
   },

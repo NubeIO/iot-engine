@@ -33,6 +33,7 @@ import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import lombok.Getter;
 import lombok.NonNull;
 
 public abstract class BaseEdgeVerticleTest {
@@ -55,6 +56,8 @@ public abstract class BaseEdgeVerticleTest {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
     protected Vertx vertx;
+
+    @Getter
     protected EdgeVerticle edgeVerticle;
 
     protected static void beforeSuite() {

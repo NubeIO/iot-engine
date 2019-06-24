@@ -21,9 +21,9 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
+import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 
@@ -113,7 +113,9 @@ public class KafkaUnitTestBase {
         DeploymentOptions options = new DeploymentOptions().setConfig(config.toJson());
         String sharedKey = KafkaUnit.class.getName();
         KafkaUnit verticle = (KafkaUnit) new KafkaUnit(router).registerSharedData(sharedKey);
-        vertx.sharedData().getLocalMap(sharedKey).put(SharedDataDelegate.SHARED_EVENTBUS, new EventController(vertx));
+        vertx.sharedData()
+             .getLocalMap(sharedKey)
+             .put(SharedDataDelegate.SHARED_EVENTBUS, EventControllerBridge.getInstance().getEventController(vertx));
         return VertxHelper.deploy(vertx, context, options, verticle, TEST_TIMEOUT_SEC);
     }
 

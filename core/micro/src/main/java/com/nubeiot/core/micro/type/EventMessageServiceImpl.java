@@ -8,6 +8,7 @@ import io.vertx.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.ServiceReference;
 import io.vertx.servicediscovery.types.AbstractServiceReference;
 
+import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventController;
@@ -33,8 +34,9 @@ public class EventMessageServiceImpl implements EventMessageService {
                                      @NonNull JsonObject config) {
             super(vertx, discovery, record);
             String sharedKey = config.getString(SHARED_KEY_CONFIG);
-            this.controller = Strings.isBlank(sharedKey) ? new EventController(vertx)
-                                                         : SharedDataDelegate.getLocalDataValue(vertx, sharedKey,
+            this.controller = Strings.isBlank(sharedKey)
+                              ? EventControllerBridge.getInstance().getEventController(vertx)
+                              : SharedDataDelegate.getLocalDataValue(vertx, sharedKey,
                                                                      SharedDataDelegate.SHARED_EVENTBUS);
             this.config = new DeliveryOptions(config.getJsonObject(DELIVERY_OPTIONS_CONFIG, new JsonObject()));
         }

@@ -19,7 +19,7 @@ import com.nubeiot.core.NubeConfig.SystemConfig.ClusterConfig;
 import com.nubeiot.core.cluster.ClusterNodeListener;
 import com.nubeiot.core.cluster.ClusterRegistry;
 import com.nubeiot.core.cluster.IClusterDelegate;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.Configs;
@@ -72,7 +72,10 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
             String addr = config.getSystemConfig().getClusterConfig().getListenerAddress();
             ClusterManager clusterManager = this.options.getClusterManager();
             if (Strings.isNotBlank(addr)) {
-                clusterManager.nodeListener(new ClusterNodeListener(clusterDelegate, new EventController(vertx), addr));
+                clusterManager.nodeListener(new ClusterNodeListener(clusterDelegate, EventControllerBridge.getInstance()
+                                                                                                          .getEventController(
+                                                                                                              vertx),
+                                                                    addr));
             }
         }
         super.afterStartingVertx(vertx);

@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -47,7 +48,7 @@ public class BACnetVerticle extends ContainerVerticle {
         initLocalPoints(bacnetConfig.getLocalPointsAddress());
         //TODO: init all configs from DB when ready to implement
         //REGISTER ENDPOINTS
-        registerEventbus(new EventController(vertx));
+        registerEventbus(EventControllerBridge.getInstance().getEventController(vertx));
         addProvider(new MicroserviceProvider(), this::publishServices);
     }
 
@@ -81,9 +82,7 @@ public class BACnetVerticle extends ContainerVerticle {
     protected void publishServices(MicroContext microContext) {
         microContext.getLocalController()
                     .addEventMessageRecord("bacnet-local-service", BACnetEventModels.NUBE_SERVICE.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet",
-                                                                               "/bacnet"),
-                                           new JsonObject())
+                                           EventMethodDefinition.createDefault("/bacnet", "/bacnet"), new JsonObject())
                     .subscribe();
 
         microContext.getLocalController()
