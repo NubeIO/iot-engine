@@ -33,6 +33,7 @@ include ':edge:connector:sample:kafka'
 include ':edge:rule:sample'
 
 include ':eventbus:edge'
+include ':eventbus:edge:gateway'
 include ':eventbus:sensor'
 
 include ':ext:rx-jdbc'
