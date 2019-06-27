@@ -20,9 +20,11 @@ import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.obj.AnalogInputObject;
 import com.serotonin.bacnet4j.obj.AnalogOutputObject;
+import com.serotonin.bacnet4j.obj.AnalogValueObject;
 import com.serotonin.bacnet4j.obj.BACnetObject;
 import com.serotonin.bacnet4j.obj.BinaryInputObject;
 import com.serotonin.bacnet4j.obj.BinaryOutputObject;
+import com.serotonin.bacnet4j.obj.BinaryValueObject;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
 import com.serotonin.bacnet4j.transport.Transport;
 import com.serotonin.bacnet4j.type.constructed.PriorityArray;
@@ -108,6 +110,46 @@ public class LocalPointObjectUtilsTest {
             }
             BinaryPV v1 = BinaryPV.forId((int)pa1[i]);
             BinaryPV v2 = pa2.get(i).getValue();
+            assertEquals(v1, v2);
+        }
+    }
+
+    @Test
+    public void createLocalObjectBVTest() throws Exception {
+        EdgePoint p = EdgePoint.fromJson("4AB28169_MOVEMENT", points.getJsonObject("4AB28169_MOVEMENT"));
+        BACnetObject obj = LocalPointObjectUtils.createLocalObject(p, localDevice);
+        assertNotNull(obj);
+        assertTrue(obj instanceof BinaryValueObject);
+        assertEquals("test_MOVEMENT", obj.getObjectName());
+        assertEquals(BACnetDataConversions.primitiveToBinary(p.getValue()), obj.get(PropertyIdentifier.presentValue));
+        Object[] pa1 = p.getPriorityArray();
+        PriorityArray pa2 = obj.get(PropertyIdentifier.priorityArray);
+        for (int i = 0; i < 16; i++) {
+            if (pa1[i] instanceof String) {
+                continue;
+            }
+            Real v1 = BACnetDataConversions.primitiveToReal(pa1[i]);
+            Real v2 = pa2.get(i).getRealValue();
+            assertEquals(v1, v2);
+        }
+    }
+
+    @Test
+    public void createLocalObjectAVTest() throws Exception {
+        EdgePoint p = EdgePoint.fromJson("4AB28169_TEMP", points.getJsonObject("4AB28169_TEMP"));
+        BACnetObject obj = LocalPointObjectUtils.createLocalObject(p, localDevice);
+        assertNotNull(obj);
+        assertTrue(obj instanceof AnalogValueObject);
+        assertEquals("test_TEMP", obj.getObjectName());
+        assertEquals(BACnetDataConversions.primitiveToReal(p.getValue()), obj.get(PropertyIdentifier.presentValue));
+        Object[] pa1 = p.getPriorityArray();
+        PriorityArray pa2 = obj.get(PropertyIdentifier.priorityArray);
+        for (int i = 0; i < 16; i++) {
+            if (pa1[i] instanceof String) {
+                continue;
+            }
+            Real v1 = BACnetDataConversions.primitiveToReal(pa1[i]);
+            Real v2 = pa2.get(i).getRealValue();
             assertEquals(v1, v2);
         }
     }

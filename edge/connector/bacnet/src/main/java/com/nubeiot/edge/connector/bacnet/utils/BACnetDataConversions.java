@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint.Kind;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
@@ -48,7 +49,6 @@ public class BACnetDataConversions {
         return data;
     }
 
-    //TODO: create method to map Encodables to primitives
     public static JsonObject deviceObjectList(List<Pair<ObjectPropertyReference, Encodable>> list) {
         JsonObject data = new JsonObject();
         list.forEach(objectPropertyReferenceEncodablePair -> {
@@ -70,7 +70,7 @@ public class BACnetDataConversions {
         return data;
     }
 
-    //TODO: probably won't be used anymore
+    //probably won't be used anymore
 //    public static EdgeWriteRequest CovNotification(ObjectIdentifier initiatingDeviceIdentifier,
 //                                                   ObjectIdentifier monitoredObjectIdentifier,
 //                                                   SequenceOf<PropertyValue> listOfValues) {
@@ -147,7 +147,7 @@ public class BACnetDataConversions {
         return oid.getObjectType().toString() + ":" + oid.getInstanceNumber();
     }
 
-    public static String pointIDNubeToBACnet(String id) throws Exception {
+    public static String  pointIDNubeToBACnet(String id) throws Exception {
         String pointPrefix = id.substring(0, id.length() - 1);
         int inst;
         try {
@@ -194,7 +194,7 @@ public class BACnetDataConversions {
         }
     }
 
-    public static ObjectIdentifier getObjectIdentifierFromNube(String id) throws BACnetRuntimeException, Exception {
+    public static ObjectIdentifier getObjectIdentifierFromNube(String id) throws Exception {
         return getObjectIdentifier(pointIDNubeToBACnet(id));
     }
 

@@ -1,36 +1,61 @@
 package com.nubeiot.edge.connector.bacnet.handlers;
 
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.event.EventAction;
+import com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.ReplyEventHandler;
+import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
 import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.utils.LocalPointObjectUtils;
+import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
+import com.serotonin.bacnet4j.exception.BACnetErrorException;
+import com.serotonin.bacnet4j.exception.BACnetServiceException;
+import com.serotonin.bacnet4j.obj.BACnetObject;
+import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.service.Service;
 import com.serotonin.bacnet4j.service.confirmed.CreateObjectRequest;
+import com.serotonin.bacnet4j.service.confirmed.ReadPropertyMultipleRequest;
+import com.serotonin.bacnet4j.service.confirmed.ReadPropertyRequest;
 import com.serotonin.bacnet4j.service.confirmed.WritePropertyRequest;
+import com.serotonin.bacnet4j.service.unconfirmed.IAmRequest;
+import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.Address;
+import com.serotonin.bacnet4j.type.constructed.OptionalUnsigned;
+import com.serotonin.bacnet4j.type.constructed.PriorityValue;
+import com.serotonin.bacnet4j.type.constructed.PropertyReference;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
+import com.serotonin.bacnet4j.type.constructed.ReadAccessSpecification;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
+import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 
 public class BACnetEventListener extends DeviceEventAdapter {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private LocalDevice localDevice;
     private final String POINTS_API;
     private EventController eventController;
+    private ServiceDiscoveryController localController;
+    private Vertx vertx;
 
-    public BACnetEventListener(EventController eventController, BACnetConfig config) {
+    public BACnetEventListener(BACnetConfig config, LocalDevice localDevice, EventController eventController,
+                               ServiceDiscoveryController localController, Vertx vertx) {
+        this.localDevice = localDevice;
         this.eventController = eventController;
+        this.localController = localController;
         this.POINTS_API = config.getLocalPointsApiAddress();
+        this.vertx = vertx;
     }
 
     @Override
@@ -38,8 +63,6 @@ public class BACnetEventListener extends DeviceEventAdapter {
                                         ObjectIdentifier initiatingDeviceIdentifier,
                                         ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
                                         SequenceOf<PropertyValue> listOfValues) {
-        //        logger.warn("COV notification unsupported", new UnsupportedOperationException("COV notification
-        //        unsupported"));
         //        logger.info(
         //            "COV Notification: " + monitoredObjectIdentifier.toString() + " from " +
         //            initiatingDeviceIdentifier);
@@ -74,33 +97,68 @@ public class BACnetEventListener extends DeviceEventAdapter {
     }
 
     private void handleWriteRequest(WritePropertyRequest req) {
+        logger.info(
+            "Write request received for point " + req.getObjectIdentifier() + " value " + req.getPropertyValue() +
+            " @ " + req.getPriority().intValue());
+
         if (!req.getPropertyIdentifier().equals(PropertyIdentifier.presentValue)) {
-            logger.warn("Unsupported Property Id: " + req.getPropertyIdentifier().toString());
+            logger.warn(
+                "Unsupported external write request for property Id: " + req.getPropertyIdentifier().toString());
             return;
         }
+
         ObjectIdentifier oid = req.getObjectIdentifier();
+        if (localDevice.getObject(oid) == null) {
+            logger.error("Error in write request for {}. Object does not exist.", oid.toString());
+            return;
+        }
+
         String id;
         Object val;
+        int priority = 16;
         try {
             id = BACnetDataConversions.pointIDBACnetToNube(oid);
             val = BACnetDataConversions.encodableToPrimitive(req.getPropertyValue());
+            priority = req.getPriority() != null ? req.getPriority().intValue() : 16;
         } catch (Exception e) {
             logger.warn("External BACnet write request error ", e);
             return;
         }
+        sendWriteRequest(new EdgeWriteRequest(id, val, priority));
+        //TODO: notify all other networks intances if successful
+    }
 
-        EdgeWriteRequest edgeReq = new EdgeWriteRequest(id, val, req.getPriority().intValue());
-        logger.info("REQUEST RECIEVED FOR POINT " + id + " value " + val + " @ " + req.getPriority().intValue());
+    private void sendWriteRequest(EdgeWriteRequest writeRequest) {
 
-        ReplyEventHandler handler = ReplyEventHandler.builder()
-                                                     .system("BACNET_API")
-                                                     .action(EventAction.GET_LIST)
-                                                     .success(null)
-                                                     .error(error -> logger.error(error.toJson()))
-                                                     .build();
+        try {
+            BACnetObject point = localDevice.getObject(
+                BACnetDataConversions.getObjectIdentifierFromNube(writeRequest.getId()));
 
-        EventMessage message = EventMessage.initial(EventAction.PATCH, edgeReq.toJson());
-        eventController.fire(POINTS_API + "." + id + ".value", EventPattern.POINT_2_POINT, message);
+            Encodable oldVal = ((PriorityValue) point.readProperty(PropertyIdentifier.priorityArray,
+                                                                   new UnsignedInteger(
+                                                                       writeRequest.getPriority()))).getConstructedValue();
+
+            //TODO: write point framework problem...
+            // the framework will write to the BACnetObject straight after this method and if not connected to the
+            // edge-api, the http is too fast to allow a revert unless called with executeBlocking or something like
+            // that
+
+            //            System.out.println(oldVal + "  :  " + writeRequest.getPriority());
+            //            vertx.executeBlocking(future -> {
+
+            localController.executeHttpService(r -> r.getName().equals("edge-api"), "/edge-api/points", HttpMethod.GET,
+                                               RequestData.builder().build()).subscribe(responseData -> {
+                logger.info("Successfully wrote to point {}", writeRequest.getId());
+            }, error -> {
+                logger.error(error.getMessage());
+                LocalPointObjectUtils.writeToLocalOutput(point, oldVal,
+                                                         new UnsignedInteger(writeRequest.getPriority()));
+            });
+            //                future.complete();
+            //            }, result -> {});
+        } catch (Exception e) {
+            logger.error("error writing to point ", e);
+        }
     }
 
 }

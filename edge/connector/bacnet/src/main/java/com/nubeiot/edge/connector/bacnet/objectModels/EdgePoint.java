@@ -29,6 +29,12 @@ public class EdgePoint {
     private Integer priority = null;
     private Object[] priorityArray = null;
     private Float covTolerance = 0f;
+    private Kind kind = Kind.OTHER;
+
+
+    public enum Kind {
+        NUMBER, BOOL, OTHER;
+    }
 
     public EdgePoint(String id, Object value) {
         this.id = id;
@@ -48,22 +54,39 @@ public class EdgePoint {
         this.priority = priority;
     }
 
-    public EdgePoint(String id, String name, Object value, Integer priority, Float covTolerance) {
+    public EdgePoint(String id, String name, Object value, Integer priority, String kind) {
         this(id, name, value, priority);
+        try {
+            this.kind = Kind.valueOf(kind.toUpperCase());
+        } catch (Exception e) {
+            this.kind = Kind.OTHER;
+        }
+    }
+
+    public EdgePoint(String id, String name, Object value, Integer priority, String kind, Float covTolerance) {
+        this(id, name, value, priority, kind);
         this.covTolerance = covTolerance;
     }
 
     public static EdgePoint fromJson(String id, JsonObject json) {
         String name = json.getString("name");
         Object value = json.getValue("value");
-        Integer priority = json.getInteger("priority");
+        Integer priority;
+        try {
+            priority = json.getInteger("priority");
+        } catch (ClassCastException ex) {
+            priority = new Integer(16);
+        }
+
+        String kind = json.getString("kind");
+
         Float covTolerance = 0f;
         if (json.containsKey("historySettings") && json.getJsonObject("historySettings").containsKey("tolerance")) {
             covTolerance = json.getJsonObject("historySettings").getFloat("tolerance");
         }
 
-        EdgePoint point = new EdgePoint(id, name, value, priority, covTolerance);
-        if (priority != null && json.containsKey("priorityArray")) {
+        EdgePoint point = new EdgePoint(id, name, value, priority, kind, covTolerance);
+        if (json.containsKey("priorityArray")) {
             writePriorityArray(point, json.getJsonObject("priorityArray"));
         }
 
@@ -77,7 +100,7 @@ public class EdgePoint {
 
         Object[] arr = new Object[16];
         for (int i = 0; i < 16; i++) {
-            arr[i] = priorityArray.getValue(Integer.toString(i+1));
+            arr[i] = priorityArray.getValue(Integer.toString(i + 1));
         }
         point.priorityArray = arr;
     }
