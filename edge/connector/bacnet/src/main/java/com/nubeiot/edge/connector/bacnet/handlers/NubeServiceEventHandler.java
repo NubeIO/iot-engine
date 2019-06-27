@@ -51,16 +51,23 @@ public class NubeServiceEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.REMOVE, returnType = void.class)
     public void objectRemoved(@Param("id") String id) {
-        bacnetInstances.forEach((s, bacnetInstance) -> bacnetInstance.removeLocalObject(id));
+        bacnetInstances.forEach((s, bacnetInstance) -> {
+            try {
+                bacnetInstance.removeLocalObject(id);
+            } catch (Exception e) {
+                logger.warn("Error removing point {}", e, id);
+                return;
+            }
+        });
     }
 
     @EventContractor(action = EventAction.PATCH, returnType = void.class)
     public void objectWritten(@Param("id") String id, @Param("data") JsonObject data) {
         EdgeWriteRequest req = EdgeWriteRequest.fromJson(id, data);
         bacnetInstances.forEach((s, bacnetInstance) -> {
-            try{
+            try {
                 bacnetInstance.writeLocalObject(req);
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.warn("Error writing to point {}", e, id);
                 return;
             }
@@ -71,9 +78,9 @@ public class NubeServiceEventHandler implements EventHandler {
     public void objectUpdated(@Param("id") String id, @Param("property") String property,
                               @Param("value") Object value) {
         bacnetInstances.forEach((s, bacnetInstance) -> {
-            try{
+            try {
                 bacnetInstance.updateLocalObject(id, property, value);
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.warn("Error updating point {} property {}", e, id, property);
                 return;
             }

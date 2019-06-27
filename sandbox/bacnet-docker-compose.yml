@@ -2,7 +2,7 @@ version: "2.4"
 services:
 
   bacnet:
-    image: amd64/nube-edge-connector-bacnet-simulator:${IOT_VERSION}
+    image: amd64/openjdk/nube-edge-connector-bacnet-simulator:${IOT_VERSION}
     mem_limit: 480m
     cpuset: "0"
     environment:
