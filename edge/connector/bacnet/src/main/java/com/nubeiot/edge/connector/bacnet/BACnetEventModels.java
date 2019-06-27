@@ -9,8 +9,7 @@ import com.nubeiot.core.event.EventPattern;
 public final class BACnetEventModels {
 
     public static final EventModel NUBE_SERVICE = EventModel.builder()
-                                                            //TODO: verify address
-                                                            .address("nubeiot.edge.connector.edgeapi")
+                                                            .address("nubeiot.edge.connector.bacnet.local")
                                                             .pattern(EventPattern.REQUEST_RESPONSE)
                                                             .local(true)
                                                             .events(
@@ -19,11 +18,10 @@ public final class BACnetEventModels {
                                                             .build();
 
     public static final EventModel NETWORKS_ALL = EventModel.builder()
-                                                            .address("nubeiot.edge.connector.bacnet")
+                                                            .address("nubeiot.edge.connector.bacnet.all")
                                                             .pattern(EventPattern.REQUEST_RESPONSE)
                                                             .local(true)
-                                                            .events(Arrays.asList(EventAction.GET_LIST,
-                                                                                  EventAction.GET_ONE))
+                                                            .events(Arrays.asList(EventAction.GET_LIST))
                                                             .build();
 
     public static final EventModel DEVICES = EventModel.builder()
@@ -37,7 +35,8 @@ public final class BACnetEventModels {
                                                            .address("nubeiot.edge.connector.bacnet.device.points")
                                                            .pattern(EventPattern.REQUEST_RESPONSE)
                                                            .local(true)
-                                                           .events(Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE))
+                                                           .events(
+                                                               Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE))
                                                            .build();
 
     public static final EventModel POINT = EventModel.builder()

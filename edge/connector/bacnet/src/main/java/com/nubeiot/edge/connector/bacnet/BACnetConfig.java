@@ -23,9 +23,10 @@ public class BACnetConfig implements IConfig {
 
     public static final String NAME = "__bacnet__";
 
-    private String deviceName = "NubeIOEdge28";
+    private String deviceName = "NubeIO-Edge28";
+    private String modelName = deviceName;
     private int deviceId = 123456;
-    private String localPointsApiAddress = "NO_DEFAULT_ADDRESS";
+    private String localPointsApiAddress = "/edge-api/points";
     @JsonProperty(value = "__ipConfigs__")
     private List<IPConfig> ipConfigs = new ArrayList<>();
     @JsonProperty(value = "__mstpConfigs__")

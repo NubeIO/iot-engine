@@ -2,24 +2,25 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
+import com.nubeiot.core.micro.ServiceDiscoveryController;
+import com.nubeiot.edge.connector.bacnet.handlers.MultipleNetworkEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.NubeServiceEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.RemoteDeviceEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.RemotePointEventHandler;
@@ -32,6 +33,7 @@ public class BACnetVerticle extends ContainerVerticle {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected final Map<String, BACnetInstance> bacnetInstances = new HashMap<>();
+    protected MicroContext microContext;
 
     @Override
     public void start() {
@@ -45,12 +47,14 @@ public class BACnetVerticle extends ContainerVerticle {
             throw new NubeException("No network information provided");
         }
 
-        startBACnet(bacnetConfig);
-        initLocalPoints(bacnetConfig.getLocalPointsApiAddress());
-        //TODO: init all configs from DB when ready to implement
-        //REGISTER ENDPOINTS
-        registerEventbus(new EventController(vertx));
-        addProvider(new MicroserviceProvider(), this::publishServices);
+        addProvider(new MicroserviceProvider(), microContext -> {
+            ServiceDiscoveryController localController = ((MicroContext) microContext).getLocalController();
+            this.microContext = (MicroContext) microContext;
+            startBACnet(bacnetConfig, localController);
+            registerEventbus(new EventController(vertx));
+            publishServices(localController);
+            initLocalPoints(bacnetConfig.getLocalPointsApiAddress(), localController);
+        });
     }
 
     @Override
@@ -59,6 +63,7 @@ public class BACnetVerticle extends ContainerVerticle {
             return; //Prevents super.start() from registering before BACnetInstance is started
         }
         controller.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
+        controller.register(BACnetEventModels.NETWORKS_ALL, new MultipleNetworkEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.DEVICES, new RemoteDeviceEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.POINTS_INFO, new RemotePointsInfoEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.POINT, new RemotePointEventHandler(bacnetInstances));
@@ -74,57 +79,74 @@ public class BACnetVerticle extends ContainerVerticle {
         this.stopUnits(future);
     }
 
-    protected void startBACnet(BACnetConfig bacnetConfig) {
+    protected void startBACnet(BACnetConfig bacnetConfig, ServiceDiscoveryController localController) {
         bacnetConfig.getIpConfigs().forEach(ipConfig -> {
             logger.info("Initialising bacnet instance for network {}", ipConfig.getName());
             bacnetInstances.put(ipConfig.getName(),
-                                BACnetInstance.createBACnet(bacnetConfig, ipConfig, eventController, vertx));
+                                BACnetInstance.createBACnet(bacnetConfig, ipConfig, eventController, localController,
+                                                            vertx));
         });
     }
 
-    protected void publishServices(MicroContext microContext) {
-        microContext.getLocalController()
-                    .addEventMessageRecord("bacnet-local-service", BACnetEventModels.NUBE_SERVICE.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet", "/bacnet", false))
-                    .subscribe();
+    protected void publishServices(ServiceDiscoveryController localController) {
+        localController.addEventMessageRecord("bacnet-local-service", BACnetEventModels.NUBE_SERVICE.getAddress(),
+                                              EventMethodDefinition.create("/bacnet/local", new ActionMethodMapping() {
+                                                                               @Override
+                                                                               public Map<EventAction, HttpMethod> get() {
+                                                                                   Map<EventAction, HttpMethod> map = new HashMap<>();
+                                                                                   map.put(EventAction.CREATE, HttpMethod.POST);
+                                                                                   map.put(EventAction.UPDATE, HttpMethod.PUT);
+                                                                                   map.put(EventAction.PATCH, HttpMethod.PATCH);
+                                                                                   map.put(EventAction.REMOVE, HttpMethod.DELETE);
+                                                                                   return map;
+                                                                               }
+                                                                           },
+                                                                           false)).subscribe();
 
-        microContext.getLocalController()
-                    .addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet/:network/device",
-                                                                               "/bacnet/:network/device/:deviceID",
-                                                                               false))
-                    .subscribe();
+        localController.addEventMessageRecord("bacnet-all-network-service", BACnetEventModels.NETWORKS_ALL.getAddress(),
+                                              EventMethodDefinition.create("/bacnet/remote",
+                                                                           new ActionMethodMapping() {
+                                                                               @Override
+                                                                               public Map<EventAction, HttpMethod> get() {
+                                                                                   Map<EventAction, HttpMethod> map = new HashMap<>();
+                                                                                   map.put(EventAction.GET_LIST, HttpMethod.GET);
+                                                                                   return map;
+                                                                               }
+                                                                           }, false))
+                       .subscribe();
 
-        microContext.getLocalController()
-                    .addEventMessageRecord("bacnet-points-info-service", BACnetEventModels.POINTS_INFO.getAddress(),
-                                           EventMethodDefinition.createDefault(
-                                               "/bacnet/:network/device/:deviceID/points-info",
-                                               "/bacnet/:network/device/:deviceID/points-info/:objectID", false))
-                    .subscribe();
+        localController.addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),
+                                              EventMethodDefinition.createDefault("/bacnet/remote/:network/device",
+                                                                                  "/bacnet/remote/:network/device" +
+                                                                                  "/:deviceID", false)).subscribe();
 
-        microContext.getLocalController()
-                    .addEventMessageRecord("bacnet-point-service", BACnetEventModels.POINT.getAddress(),
-                                           EventMethodDefinition.createDefault(
-                                               "/bacnet/:network/device/:deviceID/point",
-                                               "/bacnet/:network/device/:deviceID/point/:objectID", false))
-                    .subscribe();
+        localController.addEventMessageRecord("bacnet-points-info-service", BACnetEventModels.POINTS_INFO.getAddress(),
+                                              EventMethodDefinition.createDefault(
+                                                  "/bacnet/remote/:network/device/:deviceID/points-info",
+                                                  "/bacnet/remote/:network/device/:deviceID/points-info/:objectID",
+                                                  false)).subscribe();
+
+        localController.addEventMessageRecord("bacnet-point-service", BACnetEventModels.POINT.getAddress(),
+                                              EventMethodDefinition.createDefault(
+                                                  "/bacnet/remote/:network/device/:deviceID/point",
+                                                  "/bacnet/remote/:network/device/:deviceID/point/:objectID", false))
+                       .subscribe();
     }
 
-    protected void initLocalPoints(String localPointsAddress) {
+    protected void initLocalPoints(String localPointsAddress, ServiceDiscoveryController localController) {
         logger.info("Requesting local points from address {}", localPointsAddress);
-        ReplyEventHandler handler = ReplyEventHandler.builder()
-                                                     .system("BACNET_API")
-                                                     .action(EventAction.GET_LIST)
-                                                     .success(this::initLocalPoints)
-                                                     .error(error -> logger.error(error.toJson()))
-                                                     .build();
-        eventController.fire(localPointsAddress, EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_LIST), handler);
+
+        localController.executeHttpService(r -> r.getName().equals("edge-api"), "/edge-api/points", HttpMethod.GET,
+                                           RequestData.builder().build())
+                       .subscribe(responseData -> initLocalPoints(responseData.body()),
+                                  error -> logger.error(error.getMessage()));
     }
 
-    private void initLocalPoints(EventMessage msg) {
-        final JsonObject data = Objects.isNull(msg.getData()) ? new JsonObject() : msg.getData();
-        bacnetInstances.values().forEach(instance -> instance.initialiseLocalObjectsFromJson(data));
+    private void initLocalPoints(JsonObject points) {
+        if (points.isEmpty()) {
+            return;
+        }
+        bacnetInstances.values().forEach(instance -> instance.initialiseLocalObjectsFromJson(points));
     }
 
 }

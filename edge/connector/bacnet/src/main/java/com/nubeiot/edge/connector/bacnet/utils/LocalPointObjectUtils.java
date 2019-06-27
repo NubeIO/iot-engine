@@ -1,17 +1,18 @@
 package com.nubeiot.edge.connector.bacnet.utils;
 
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
+import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint.Kind;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
 import com.serotonin.bacnet4j.obj.AnalogInputObject;
 import com.serotonin.bacnet4j.obj.AnalogOutputObject;
+import com.serotonin.bacnet4j.obj.AnalogValueObject;
 import com.serotonin.bacnet4j.obj.BACnetObject;
 import com.serotonin.bacnet4j.obj.BinaryInputObject;
 import com.serotonin.bacnet4j.obj.BinaryOutputObject;
@@ -26,7 +27,6 @@ import com.serotonin.bacnet4j.type.enumerated.Polarity;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
-import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 
 /*
@@ -40,9 +40,18 @@ public class LocalPointObjectUtils {
 
     public static BACnetObject createLocalObject(EdgePoint point, LocalDevice localDevice) {
         BACnetObject obj;
+        ObjectIdentifier oid;
 
         try {
-            ObjectIdentifier oid = BACnetDataConversions.getObjectIdentifierFromNube(point.getId());
+            oid = BACnetDataConversions.getObjectIdentifierFromNube(point.getId());
+        } catch (Exception e) {
+            oid = createNewVirtualObjectId(localDevice, point.getKind());
+            if (oid == null) {
+                logger.error("Failed creating point {}. not IO or Virtual", point.getId());
+                return null;
+            }
+        }
+        try {
             ObjectType t = oid.getObjectType();
             if (t == ObjectType.analogInput) {
                 obj = new AnalogInputObject(localDevice, oid.getInstanceNumber(), point.getName(),
@@ -62,10 +71,15 @@ public class LocalPointObjectUtils {
                 BinaryPV binaryVal2 = BACnetDataConversions.primitiveToBinary(point.getValue());
                 obj = new BinaryOutputObject(localDevice, oid.getInstanceNumber(), point.getName(), binaryVal2, false,
                                              Polarity.normal, BinaryPV.inactive).supportCovReporting();
-            }
-            //TODO: what to do for virtual points?
-            else {
-                return null;
+            } else if (t == ObjectType.analogValue) {
+                return new AnalogValueObject(localDevice, oid.getInstanceNumber(), point.getName(),
+                                             BACnetDataConversions.primitiveToReal(point.getValue()).floatValue(),
+                                             EngineeringUnits.noUnits, false);
+            } else if (t == ObjectType.binaryValue) {
+                return new BinaryValueObject(localDevice, oid.getInstanceNumber(), point.getName(),
+                                             BACnetDataConversions.primitiveToBinary(point.getValue()), false);
+            } else {
+                throw new BACnetException("Point type creation error");
             }
         } catch (Exception ex) {
             logger.error("Failure creating point {}", ex, point.getId());
@@ -103,7 +117,7 @@ public class LocalPointObjectUtils {
             } catch (Exception ex) {
                 logger.warn(
                     "Error creating priority array -> Object: " + obj.getInstanceId() + "  - Issue writing value " + o +
-                    " of type " + o.getClass() + " @ priority " + (i+1), ex);
+                    " of type " + o.getClass() + " @ priority " + (i + 1), ex);
             }
         }
     }
@@ -117,6 +131,23 @@ public class LocalPointObjectUtils {
         return tags;
     }
 
+    private static ObjectIdentifier createNewVirtualObjectId(LocalDevice localDevice, Kind kind) {
+        ObjectType type;
+        if (kind == Kind.BOOL) {
+            type = ObjectType.binaryValue;
+        } else if (kind == Kind.NUMBER) {
+            type = ObjectType.analogValue;
+        } else {
+            return null;
+        }
+
+        return new ObjectIdentifier(type, localDevice.getNextInstanceObjectNumber(type));
+    }
+
+    public static void getValueAtpriority(String nubeId, LocalDevice localDevice) {
+
+    }
+
     public static void writeLocalObject(EdgeWriteRequest req, LocalDevice localDevice) throws Exception {
         if (isInputFromNube(req.getId())) {
             writeToLocalInput(localDevice.getObject(BACnetDataConversions.getObjectIdentifierFromNube(req.getId())),
@@ -125,6 +156,14 @@ public class LocalPointObjectUtils {
             writeToLocalOutput(localDevice.getObject(BACnetDataConversions.getObjectIdentifierFromNube(req.getId())),
                                req.getValue(), req.getPriority());
         }
+    }
+
+    public static void writeToLocalOutput(BACnetObject obj, Encodable value, UnsignedInteger priority)
+        throws Exception {
+        if (priority.intValue() > 16 || priority.intValue() < 1) {
+            throw new BACnetException("Invalid priority: " + priority);
+        }
+        obj.writeProperty(new ValueSource(), new PropertyValue(PropertyIdentifier.presentValue, null, value, priority));
     }
 
     private static void writeToLocalInput(BACnetObject obj, Object value) throws Exception {
@@ -138,18 +177,15 @@ public class LocalPointObjectUtils {
     }
 
     private static void writeToLocalOutput(BACnetObject obj, Object value, int priority)
-        throws BACnetException, BACnetServiceException {
-        if (priority > 16 || priority < 1) {
-            throw new BACnetException("Invalid priority: " + priority);
-        }
+        throws BACnetException, BACnetServiceException, Exception {
+
         Encodable val;
         if (isBinary(obj)) {
             val = BACnetDataConversions.primitiveToBinary(value);
         } else {
             val = BACnetDataConversions.primitiveToReal(value);
         }
-        obj.writeProperty(new ValueSource(),
-                          new PropertyValue(PropertyIdentifier.presentValue, null, val, new UnsignedInteger(priority)));
+        writeToLocalOutput(obj, val, new UnsignedInteger(priority));
     }
 
     public static void updateLocalObjectProperty(LocalDevice localDevice, String nubeId, String property, Object val)
@@ -162,7 +198,6 @@ public class LocalPointObjectUtils {
     public static void updateLocalObjectProperty(BACnetObject obj, PropertyIdentifier pid, Encodable val)
         throws Exception {
         if (pid == PropertyIdentifier.presentValue) {
-            //TODO: support updating present value from "update" instead of "write"
             throw new BACnetException("Use write to point instead");
         }
         if (obj == null) {
