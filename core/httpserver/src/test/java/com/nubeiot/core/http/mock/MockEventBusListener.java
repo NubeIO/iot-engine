@@ -7,14 +7,14 @@ import java.util.List;
 import io.vertx.reactivex.core.eventbus.EventBus;
 
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventModel;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public abstract class MockEventBusHandler implements EventHandler {
+public abstract class MockEventBusListener implements EventListener {
 
     private final EventBus eventBus;
     private final String address;
@@ -23,7 +23,7 @@ public abstract class MockEventBusHandler implements EventHandler {
                                                               EventAction.CREATE, EventAction.UPDATE,
                                                               EventAction.PATCH);
 
-    public MockEventBusHandler(EventBus eventBus, EventModel model) {
+    public MockEventBusListener(EventBus eventBus, EventModel model) {
         this(eventBus, model.getAddress());
         this.availableEvents = new ArrayList<>(model.getEvents());
     }

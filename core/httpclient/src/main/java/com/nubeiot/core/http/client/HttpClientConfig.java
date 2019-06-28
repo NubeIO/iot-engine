@@ -39,7 +39,7 @@ public final class HttpClientConfig implements IConfig {
     HttpClientConfig() {
         this(new HttpClientOptions().setIdleTimeout(HTTP_IDLE_TIMEOUT_SECOND)
                                     .setIdleTimeoutUnit(TimeUnit.SECONDS)
-                                    .setConnectTimeout(45000)
+                                    .setConnectTimeout(CONNECT_TIMEOUT_SECOND * 1000)
                                     .setTryUseCompression(true)
                                     .setWebsocketCompressionAllowClientNoContext(true)
                                     .setWebsocketCompressionRequestServerNoContext(true)
@@ -62,11 +62,16 @@ public final class HttpClientConfig implements IConfig {
         if (Objects.nonNull(hostInfo)) {
             return hostInfo;
         }
-        return HostInfo.builder()
-                       .host(this.getOptions().getDefaultHost())
-                       .port(this.getOptions().getDefaultPort())
-                       .ssl(this.getOptions().isSsl())
-                       .build();
+        return initHostInfo();
+    }
+
+    private synchronized HostInfo initHostInfo() {
+        hostInfo = HostInfo.builder()
+                           .host(this.getOptions().getDefaultHost())
+                           .port(this.getOptions().getDefaultPort())
+                           .ssl(this.getOptions().isSsl())
+                           .build();
+        return hostInfo;
     }
 
     @Getter

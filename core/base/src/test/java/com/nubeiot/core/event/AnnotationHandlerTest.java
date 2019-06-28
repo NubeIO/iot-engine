@@ -17,9 +17,9 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.MockEventHandler.MockEventUnsupportedHandler;
-import com.nubeiot.core.event.MockEventHandler.MockEventWithDiffParam;
-import com.nubeiot.core.event.MockEventHandler.MockParam;
+import com.nubeiot.core.event.MockEventListener.MockEventUnsupportedListener;
+import com.nubeiot.core.event.MockEventListener.MockEventWithDiffParam;
+import com.nubeiot.core.event.MockEventListener.MockParam;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
@@ -30,10 +30,10 @@ import ch.qos.logback.classic.Logger;
 
 public class AnnotationHandlerTest {
 
-    private static Supplier<AnnotationHandler<MockEventHandler>> MH = () -> new AnnotationHandler<>(
-        new MockEventHandler());
-    private static Supplier<AnnotationHandler<MockEventUnsupportedHandler>> MEH = () -> new AnnotationHandler<>(
-        new MockEventUnsupportedHandler());
+    private static Supplier<AnnotationHandler<MockEventListener>> MH = () -> new AnnotationHandler<>(
+        new MockEventListener());
+    private static Supplier<AnnotationHandler<MockEventUnsupportedListener>> MEH = () -> new AnnotationHandler<>(
+        new MockEventUnsupportedListener());
     private static Supplier<AnnotationHandler<MockEventWithDiffParam>> MPH = () -> new AnnotationHandler<>(
         new MockEventWithDiffParam());
 
@@ -45,7 +45,8 @@ public class AnnotationHandlerTest {
 
     @Test
     public void test_get_method_one_contractor() {
-        Method method = AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.UPDATE).getMethod();
+        Method method = AnnotationHandler.getMethodByAnnotation(MockEventListener.class, EventAction.UPDATE)
+                                         .getMethod();
         Assert.assertNotNull(method);
         Assert.assertEquals("throwException", method.getName());
     }
@@ -62,22 +63,22 @@ public class AnnotationHandlerTest {
 
     @Test(expected = ImplementationError.class)
     public void test_get_method_public_static() {
-        AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.GET_ONE);
+        AnnotationHandler.getMethodByAnnotation(MockEventListener.class, EventAction.GET_ONE);
     }
 
     @Test(expected = ImplementationError.class)
     public void test_more_than_one_method_defined() {
-        AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.RETURN);
+        AnnotationHandler.getMethodByAnnotation(MockEventListener.class, EventAction.RETURN);
     }
 
     @Test(expected = ImplementationError.class)
     public void test_get_method_none_public_method() {
-        AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.MIGRATE);
+        AnnotationHandler.getMethodByAnnotation(MockEventListener.class, EventAction.MIGRATE);
     }
 
     @Test(expected = ImplementationError.class)
     public void test_get_method_no_output() {
-        AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.PATCH);
+        AnnotationHandler.getMethodByAnnotation(MockEventListener.class, EventAction.PATCH);
     }
 
     @Test
@@ -103,8 +104,8 @@ public class AnnotationHandlerTest {
 
     @Test
     public void test_get_method_with_multiple_contractor() {
-        Method method1 = AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.HALT).getMethod();
-        Method method2 = AnnotationHandler.getMethodByAnnotation(MockEventHandler.class, EventAction.REMOVE)
+        Method method1 = AnnotationHandler.getMethodByAnnotation(MockEventListener.class, EventAction.HALT).getMethod();
+        Method method2 = AnnotationHandler.getMethodByAnnotation(MockEventListener.class, EventAction.REMOVE)
                                           .getMethod();
         Assert.assertNotNull(method1);
         Assert.assertNotNull(method2);

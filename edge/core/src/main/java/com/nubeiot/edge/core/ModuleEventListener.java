@@ -15,7 +15,7 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
@@ -29,13 +29,13 @@ import com.nubeiot.edge.core.search.LocalServiceSearch;
 import lombok.Getter;
 import lombok.NonNull;
 
-public final class ModuleEventHandler implements EventHandler {
+public final class ModuleEventListener implements EventListener {
 
     private final EdgeVerticle verticle;
     @Getter
     private final List<EventAction> availableEvents;
 
-    public ModuleEventHandler(@NonNull EdgeVerticle verticle, @NonNull EventModel eventModel) {
+    public ModuleEventListener(@NonNull EdgeVerticle verticle, @NonNull EventModel eventModel) {
         this.verticle = verticle;
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }

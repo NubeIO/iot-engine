@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventContractor.Param;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 
@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
  *  calls respective messages in BACnetInstance
  */
 @RequiredArgsConstructor
-public class NubeServiceEventHandler implements EventHandler {
+public class NubeServiceEventHandler implements EventListener {
 
     private final Map<String, BACnetInstance> bacnetInstances;
 

@@ -3,26 +3,26 @@ package com.nubeiot.core.http.mock;
 import java.util.Arrays;
 import java.util.List;
 
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventContractor;
-
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.eventbus.EventBus;
 
-public class MockEventBusSuccessHandler extends MockEventBusHandler {
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventContractor;
 
-    private MockEventBusSuccessHandler(EventBus eventBus, String address) {
+public class MockEventBusSuccessListener extends MockEventBusListener {
+
+    private MockEventBusSuccessListener(EventBus eventBus, String address) {
         super(eventBus, address);
     }
 
-    public static MockEventBusHandler create(EventBus eventBus, String address) {
-        return new MockEventBusSuccessHandler(eventBus, address);
+    public static MockEventBusListener create(EventBus eventBus, String address) {
+        return new MockEventBusSuccessListener(eventBus, address);
     }
 
-    public static MockEventBusHandler create(EventBus eventBus) {
-        return new MockEventBusSuccessHandler(eventBus, "http.server.test");
+    public static MockEventBusListener create(EventBus eventBus) {
+        return new MockEventBusSuccessListener(eventBus, "http.server.test");
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = List.class)

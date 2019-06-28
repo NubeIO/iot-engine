@@ -32,7 +32,7 @@ import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
-import com.nubeiot.core.http.mock.MockWebsocketEvent.MockWebsocketEventServerHandler;
+import com.nubeiot.core.http.mock.MockWebsocketEvent.MockWebsocketEventServerListener;
 
 @RunWith(VertxUnitRunner.class)
 public class WebsocketEventServerTest extends HttpServerTestBase {
@@ -50,7 +50,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         super.before(context);
         this.enableWebsocket();
         try {
-            new MockWebsocketEventServerHandler(vertx.eventBus()).start();
+            new MockWebsocketEventServerListener(vertx.eventBus()).start();
         } catch (Exception e) {
             context.fail(e);
         }

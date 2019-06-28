@@ -1,6 +1,6 @@
 package com.nubeiot.core.event;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.function.Consumer;
 
 import io.vertx.core.eventbus.Message;
@@ -23,14 +23,14 @@ import lombok.NonNull;
  * @see EventAction
  * @see EventPattern#REQUEST_RESPONSE
  */
-public interface EventHandler extends Consumer<Message<Object>> {
+public interface EventListener extends Consumer<Message<Object>> {
 
     /**
      * Available events that this handler can process
      *
      * @return list of possible events
      */
-    @NonNull List<EventAction> getAvailableEvents();
+    @NonNull Collection<EventAction> getAvailableEvents();
 
     @SuppressWarnings("unchecked")
     default void accept(io.vertx.reactivex.core.eventbus.Message<Object> message) {
@@ -56,7 +56,7 @@ public interface EventHandler extends Consumer<Message<Object>> {
         Logger logger = LoggerFactory.getLogger(this.getClass());
         EventMessage msg = EventMessage.tryParse(message.body());
         EventAction action = msg.getAction();
-        AnnotationHandler<? extends EventHandler> handler = new AnnotationHandler<>(this);
+        AnnotationHandler<? extends EventListener> handler = new AnnotationHandler<>(this);
         try {
             handler.execute(msg)
                    .subscribe(data -> message.reply(EventMessage.success(action, data).toJson()),

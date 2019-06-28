@@ -1,26 +1,26 @@
 package com.nubeiot.core.http.mock;
 
+import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.core.eventbus.EventBus;
+
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.exceptions.NubeException;
 
-import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.eventbus.EventBus;
+public class MockEventBusErrorListener extends MockEventBusListener {
 
-public class MockEventBusErrorHandler extends MockEventBusHandler {
-
-    private MockEventBusErrorHandler(EventBus eventBus, String address) {
+    private MockEventBusErrorListener(EventBus eventBus, String address) {
         super(eventBus, address);
     }
 
-    public static MockEventBusHandler create(EventBus eventBus, String address) {
-        return new MockEventBusErrorHandler(eventBus, address);
+    public static MockEventBusListener create(EventBus eventBus, String address) {
+        return new MockEventBusErrorListener(eventBus, address);
     }
 
-    public static MockEventBusHandler create(EventBus eventBus) {
-        return new MockEventBusErrorHandler(eventBus, "http.server.test");
+    public static MockEventBusListener create(EventBus eventBus) {
+        return new MockEventBusErrorListener(eventBus, "http.server.test");
     }
 
     @EventContractor(action = EventAction.GET_LIST)

@@ -43,7 +43,7 @@ public class DashboardKafkaDemo extends ContainerVerticle {
 
     @Override
     public void registerEventbus(EventController controller) {
-        controller.register(KAFKA_ENABLED, new EnableKafkaEventHandler());
+        controller.register(KAFKA_ENABLED, new EnableKafkaEventListener());
     }
 
     private KafkaRouter initKafkaRouter() {

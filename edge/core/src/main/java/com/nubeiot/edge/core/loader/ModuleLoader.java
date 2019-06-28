@@ -3,7 +3,7 @@ package com.nubeiot.edge.core.loader;
 import static com.nubeiot.core.NubeConfig.constructNubeConfig;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import io.reactivex.CompletableObserver;
 import io.reactivex.Single;
@@ -18,14 +18,15 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.edge.core.PreDeploymentResult;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class ModuleLoader implements EventHandler {
+public final class ModuleLoader implements EventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ModuleLoader.class);
     private final Vertx vertx;
@@ -69,7 +70,7 @@ public final class ModuleLoader implements EventHandler {
     }
 
     @Override
-    public List<EventAction> getAvailableEvents() {
+    public @NonNull Collection<EventAction> getAvailableEvents() {
         return Arrays.asList(EventAction.INIT, EventAction.CREATE, EventAction.UPDATE, EventAction.HALT,
                              EventAction.PATCH, EventAction.REMOVE);
     }
