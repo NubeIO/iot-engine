@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpClient;
@@ -19,10 +20,9 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.Vertx;
-import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
-import io.vertx.reactivex.servicediscovery.ServiceReference;
 import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.ServiceDiscovery;
+import io.vertx.servicediscovery.ServiceReference;
 import io.vertx.servicediscovery.Status;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.types.HttpLocation;
@@ -75,7 +75,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     abstract String computeINet(String host);
 
-    final void subscribe(io.vertx.core.Vertx vertx, String announceMonitorClass, String usageMonitorClass) {
+    final void subscribe(Vertx vertx, String announceMonitorClass, String usageMonitorClass) {
         subscribe(vertx.eventBus(), ServiceGatewayAnnounceMonitor.create(vertx, this, sharedKey, announceMonitorClass));
         subscribe(vertx.eventBus(), ServiceGatewayUsageMonitor.create(vertx, this, sharedKey, usageMonitorClass));
     }
@@ -96,6 +96,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     void unregister(Future future) {
         if (Objects.nonNull(serviceDiscovery)) {
+            io.vertx.reactivex.servicediscovery.ServiceDiscovery serviceDiscovery = getRx();
             serviceDiscovery.rxGetRecords(r -> registrationMap.keySet().contains(r.getRegistration()), true)
                             .flattenAsObservable(rs -> rs)
                             .flatMapCompletable(r -> serviceDiscovery.rxUnpublish(r.getRegistration()))
@@ -168,30 +169,30 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     }
 
     public Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
-        return get().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r))
-                    .switchIfEmpty(Single.error(
-                        new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
+        return getRx().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r))
+                      .switchIfEmpty(Single.error(
+                          new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
     }
 
     public Single<Boolean> contains(Function<Record, Boolean> filter, String type) {
-        return get().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r)).count().map(c -> c > 0);
+        return getRx().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r)).count().map(c -> c > 0);
     }
 
     public Single<List<Record>> getRecords() {
-        return get().rxGetRecords(r -> true, true);
+        return getRx().rxGetRecords(r -> true, true);
     }
 
     public Completable removeRecord(String registration) {
-        return get().rxGetRecord(r -> r.getRegistration().equals(registration), true)
-                    .switchIfEmpty(Single.error(new NotFoundException("Not found that registration")))
-                    .flatMapCompletable(record -> {
-                        registrationMap.remove(registration);
-                        return serviceDiscovery.rxUnpublish(registration);
-                    });
+        return getRx().rxGetRecord(r -> r.getRegistration().equals(registration), true)
+                      .switchIfEmpty(Single.error(new NotFoundException("Not found that registration")))
+                      .flatMapCompletable(record -> {
+                          registrationMap.remove(registration);
+                          return getRx().rxUnpublish(registration);
+                      });
     }
 
     private Single<Record> addDecoratorRecord(@NonNull Record record) {
-        return get().rxPublish(record).doOnSuccess(rec -> {
+        return getRx().rxPublish(record).doOnSuccess(rec -> {
             registrationMap.put(rec.getRegistration(), rec);
             logger.info("Published {} Service | Registration: {} | API: {} | Type: {} | Endpoint: {}", kind(),
                         rec.getRegistration(), rec.getName(), rec.getType(), rec.getLocation().getString("endpoint"));
@@ -208,6 +209,10 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         HttpLocation location = new HttpLocation(record.getLocation());
         location.setHost(computeINet(location.getHost()));
         return record.setLocation(location.toJson());
+    }
+
+    private io.vertx.reactivex.servicediscovery.ServiceDiscovery getRx() {
+        return io.vertx.reactivex.servicediscovery.ServiceDiscovery.newInstance(get());
     }
 
 }

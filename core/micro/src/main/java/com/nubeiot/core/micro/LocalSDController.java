@@ -1,7 +1,7 @@
 package com.nubeiot.core.micro;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.micro.MicroConfig.LocalServiceDiscoveryConfig;
 

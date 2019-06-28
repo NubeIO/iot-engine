@@ -4,10 +4,10 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 import io.reactivex.Single;
+import io.vertx.circuitbreaker.CircuitBreaker;
+import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.micro.MicroConfig.CircuitBreakerConfig;
 
@@ -40,7 +40,11 @@ public class CircuitBreakerController implements Supplier<CircuitBreaker> {
         if (Objects.isNull(circuitBreaker)) {
             return command;
         }
-        return circuitBreaker.rxExecuteCommand(event -> command.subscribe(event::complete, event::fail));
+        return getRx().rxExecuteCommand(event -> command.subscribe(event::complete, event::fail));
+    }
+
+    private io.vertx.reactivex.circuitbreaker.CircuitBreaker getRx() {
+        return io.vertx.reactivex.circuitbreaker.CircuitBreaker.newInstance(get());
     }
 
 }
