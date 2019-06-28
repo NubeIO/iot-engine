@@ -183,19 +183,21 @@ public class LocalPointObjectUtilsTest {
 
         EdgeWriteRequest req = new EdgeWriteRequest("UI1", 1, 16);
 
-        LocalPointObjectUtils.writeLocalObject(req, localDevice);
+        Assert.assertEquals(new Real(0), localDevice.getObject(analogIn.getId()).get(PropertyIdentifier.presentValue));
+        LocalPointObjectUtils.writeLocalObject(req, BACnetDataConversions.getObjectIdentifierFromNube(req.getId()), localDevice);
         Assert.assertEquals(new Real(1), localDevice.getObject("UI1").get(PropertyIdentifier.presentValue));
+        Assert.assertEquals(new Real(1), localDevice.getObject(analogIn.getId()).get(PropertyIdentifier.presentValue));
 
         req = new EdgeWriteRequest("UO1", 1, 16);
-        LocalPointObjectUtils.writeLocalObject(req, localDevice);
+        LocalPointObjectUtils.writeLocalObject(req, BACnetDataConversions.getObjectIdentifierFromNube(req.getId()), localDevice);
         Assert.assertEquals(new Real(1), localDevice.getObject("UO1").get(PropertyIdentifier.presentValue));
 
         req = new EdgeWriteRequest("DO1", 1, 16);
-        LocalPointObjectUtils.writeLocalObject(req, localDevice);
+        LocalPointObjectUtils.writeLocalObject(req, BACnetDataConversions.getObjectIdentifierFromNube(req.getId()), localDevice);
         Assert.assertEquals(BinaryPV.active, localDevice.getObject("DO1").get(PropertyIdentifier.presentValue));
 
         req = new EdgeWriteRequest("DI1", 1, 16);
-        LocalPointObjectUtils.writeLocalObject(req, localDevice);
+        LocalPointObjectUtils.writeLocalObject(req, BACnetDataConversions.getObjectIdentifierFromNube(req.getId()), localDevice);
         Assert.assertEquals(BinaryPV.active, localDevice.getObject("DI1").get(PropertyIdentifier.presentValue));
     }
 
@@ -203,17 +205,17 @@ public class LocalPointObjectUtilsTest {
     public void updatePointProperty_Test() throws Exception {
         BACnetObject analogIn = new AnalogInputObject(localDevice, 1, "UI1", 0, EngineeringUnits.noUnits, false);
 
-        LocalPointObjectUtils.updateLocalObjectProperty(localDevice, "UI1", "name", "testName");
+        LocalPointObjectUtils.updateLocalObjectProperty(localDevice, BACnetDataConversions.getObjectIdentifierFromNube("UI1"), "name", "testName");
         Assert.assertEquals("testName", analogIn.getObjectName());
     }
 
     @Test(expected = BACnetException.class)
     public void updatePointProperty_InvalidProperty() throws Exception {
-        LocalPointObjectUtils.updateLocalObjectProperty(localDevice, "UI1", "badName", "testName");
+        LocalPointObjectUtils.updateLocalObjectProperty(localDevice, BACnetDataConversions.getObjectIdentifierFromNube("UI1"), "badName", "testName");
     }
 
     @Test(expected = BACnetException.class)
     public void updatePointProperty_InvalidObject() throws Exception {
-        LocalPointObjectUtils.updateLocalObjectProperty(localDevice, "test", "name", "testName");
+        LocalPointObjectUtils.updateLocalObjectProperty(localDevice, BACnetDataConversions.getObjectIdentifierFromNube("test"), "name", "testName");
     }
 }

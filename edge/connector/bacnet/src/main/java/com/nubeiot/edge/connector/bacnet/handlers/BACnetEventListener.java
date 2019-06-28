@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.handlers;
 
+import java.util.Map;
+
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -12,12 +14,14 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
+import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
 import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.utils.LocalPointObjectUtils;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
 import com.serotonin.bacnet4j.exception.BACnetErrorException;
+import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
 import com.serotonin.bacnet4j.obj.BACnetObject;
 import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
@@ -43,18 +47,21 @@ import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 public class BACnetEventListener extends DeviceEventAdapter {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private BACnetInstance bacnetInstance;
     private LocalDevice localDevice;
-    private final String POINTS_API;
     private EventController eventController;
     private ServiceDiscoveryController localController;
+    private Map<String, BACnetInstance> bacnetInstances;
     private Vertx vertx;
 
-    public BACnetEventListener(BACnetConfig config, LocalDevice localDevice, EventController eventController,
-                               ServiceDiscoveryController localController, Vertx vertx) {
+    public BACnetEventListener(BACnetConfig config, BACnetInstance bacnetInstance, LocalDevice localDevice,
+                               EventController eventController, ServiceDiscoveryController localController,
+                               Map bacnetInstances, Vertx vertx) {
+        this.bacnetInstance = bacnetInstance;
         this.localDevice = localDevice;
         this.eventController = eventController;
         this.localController = localController;
-        this.POINTS_API = config.getLocalPointsApiAddress();
+        this.bacnetInstances = bacnetInstances;
         this.vertx = vertx;
     }
 
@@ -117,48 +124,62 @@ public class BACnetEventListener extends DeviceEventAdapter {
         Object val;
         int priority = 16;
         try {
-            id = BACnetDataConversions.pointIDBACnetToNube(oid);
+            id = bacnetInstance.getLocalObjectNubeId(oid);
+            if (id == null) {
+                throw new BACnetException();
+            }
             val = BACnetDataConversions.encodableToPrimitive(req.getPropertyValue());
             priority = req.getPriority() != null ? req.getPriority().intValue() : 16;
         } catch (Exception e) {
             logger.warn("External BACnet write request error ", e);
             return;
         }
-        sendWriteRequest(new EdgeWriteRequest(id, val, priority));
-        //TODO: notify all other networks intances if successful
+        sendWriteRequest(new EdgeWriteRequest(id, val, priority), localDevice.getObject(oid));
     }
 
-    private void sendWriteRequest(EdgeWriteRequest writeRequest) {
+    private void sendWriteRequest(EdgeWriteRequest writeRequest, BACnetObject point) {
 
         try {
-            BACnetObject point = localDevice.getObject(
-                BACnetDataConversions.getObjectIdentifierFromNube(writeRequest.getId()));
-
             Encodable oldVal = ((PriorityValue) point.readProperty(PropertyIdentifier.priorityArray,
                                                                    new UnsignedInteger(
                                                                        writeRequest.getPriority()))).getConstructedValue();
 
             //TODO: write point framework problem...
             // the framework will write to the BACnetObject straight after this method and if not connected to the
-            // edge-api, the http is too fast to allow a revert unless called with executeBlocking or something like
-            // that
-
-            //            System.out.println(oldVal + "  :  " + writeRequest.getPriority());
-            //            vertx.executeBlocking(future -> {
+            // edge-api, the http is too fast to allow a revert unless called with setTime / executeBlocking or
+            // something like that
 
             localController.executeHttpService(r -> r.getName().equals("edge-api"), "/edge-api/points", HttpMethod.GET,
                                                RequestData.builder().build()).subscribe(responseData -> {
                 logger.info("Successfully wrote to point {}", writeRequest.getId());
+                writeToOtherNetworks(writeRequest);
             }, error -> {
-                logger.error(error.getMessage());
-                LocalPointObjectUtils.writeToLocalOutput(point, oldVal,
-                                                         new UnsignedInteger(writeRequest.getPriority()));
+                logger.error("Failed writing point to database", error);
+                revertWriteRequest(point, oldVal, writeRequest.getPriority());
             });
-            //                future.complete();
-            //            }, result -> {});
         } catch (Exception e) {
             logger.error("error writing to point ", e);
         }
+    }
+
+    private void writeToOtherNetworks(EdgeWriteRequest writeRequest) {
+        bacnetInstances.forEach((s, baCnetInstance) -> {
+            try {
+                baCnetInstance.writeLocalObject(writeRequest);
+            } catch (Exception e) {
+                logger.error("Failed writing point update from external BACnet request to network {}", e, s);
+            }
+        });
+    }
+
+    private void revertWriteRequest(BACnetObject point, Encodable oldVal, int priority) {
+        vertx.setTimer(500, f -> {
+            try {
+                LocalPointObjectUtils.writeToLocalOutput(point, oldVal, new UnsignedInteger(priority));
+            } catch (Exception e) {
+                logger.error("Cannot revert point write request on failure for point {}", e, point.getId());
+            }
+        });
     }
 
 }

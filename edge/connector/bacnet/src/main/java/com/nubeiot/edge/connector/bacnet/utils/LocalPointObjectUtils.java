@@ -131,7 +131,7 @@ public class LocalPointObjectUtils {
         return tags;
     }
 
-    private static ObjectIdentifier createNewVirtualObjectId(LocalDevice localDevice, Kind kind) {
+    public static ObjectIdentifier createNewVirtualObjectId(LocalDevice localDevice, Kind kind) {
         ObjectType type;
         if (kind == Kind.BOOL) {
             type = ObjectType.binaryValue;
@@ -148,13 +148,13 @@ public class LocalPointObjectUtils {
 
     }
 
-    public static void writeLocalObject(EdgeWriteRequest req, LocalDevice localDevice) throws Exception {
+    public static void writeLocalObject(EdgeWriteRequest req, ObjectIdentifier oid, LocalDevice localDevice)
+        throws Exception {
         if (isInputFromNube(req.getId())) {
             writeToLocalInput(localDevice.getObject(BACnetDataConversions.getObjectIdentifierFromNube(req.getId())),
                               req.getValue());
         } else {
-            writeToLocalOutput(localDevice.getObject(BACnetDataConversions.getObjectIdentifierFromNube(req.getId())),
-                               req.getValue(), req.getPriority());
+            writeToLocalOutput(localDevice.getObject(oid), req.getValue(), req.getPriority());
         }
     }
 
@@ -176,8 +176,7 @@ public class LocalPointObjectUtils {
         obj.writePropertyInternal(PropertyIdentifier.presentValue, val);
     }
 
-    private static void writeToLocalOutput(BACnetObject obj, Object value, int priority)
-        throws BACnetException, BACnetServiceException, Exception {
+    private static void writeToLocalOutput(BACnetObject obj, Object value, int priority) throws Exception {
 
         Encodable val;
         if (isBinary(obj)) {
@@ -188,10 +187,10 @@ public class LocalPointObjectUtils {
         writeToLocalOutput(obj, val, new UnsignedInteger(priority));
     }
 
-    public static void updateLocalObjectProperty(LocalDevice localDevice, String nubeId, String property, Object val)
-        throws Exception {
+    public static void updateLocalObjectProperty(LocalDevice localDevice, ObjectIdentifier oid, String property,
+                                                 Object val) throws Exception {
         PropertyValue propertyValue = BACnetDataConversions.nubeStringToPropertyValue(property, val);
-        BACnetObject obj = localDevice.getObject(BACnetDataConversions.getObjectIdentifierFromNube(nubeId));
+        BACnetObject obj = localDevice.getObject(oid);
         updateLocalObjectProperty(obj, propertyValue.getPropertyIdentifier(), propertyValue.getValue());
     }
 
