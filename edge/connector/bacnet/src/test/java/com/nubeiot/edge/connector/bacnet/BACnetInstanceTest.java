@@ -27,6 +27,7 @@ import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
 import com.serotonin.bacnet4j.type.constructed.Address;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -85,6 +86,27 @@ public class BACnetInstanceTest {
     public void getLocalObjectIdError() throws Exception {
         bacnetInstance.getLocalObjectId("no_point");
     }
+
+    @Test
+    public void getLocalObjectNubeId() throws Exception {
+
+        points.getMap().keySet().forEach(s -> {
+            try {
+                EdgePoint p = EdgePoint.fromJson(s, points.getJsonObject(s));
+                ObjectIdentifier oid = bacnetInstance.addLocalObject(p).getId();
+                Assert.assertEquals(s, bacnetInstance.getLocalObjectNubeId(oid));
+            } catch (Exception e) {
+                Assert.fail(e.getMessage());
+            }
+        });
+    }
+
+
+    @Test
+    public void getLocalObjectNubeIdError() throws Exception {
+        Assert.assertNull(bacnetInstance.getLocalObjectNubeId(new ObjectIdentifier(ObjectType.binaryValue, 11)));
+    }
+
 
     @Test
     public void addLocalPoint() throws Exception {
