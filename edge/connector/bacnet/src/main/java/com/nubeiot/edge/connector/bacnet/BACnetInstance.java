@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
@@ -81,7 +82,7 @@ public class BACnetInstance {
     }
 
     private BACnetInstance(BACnetConfig config, BACnetNetworkConfig netConfig, EventController eventController,
-                           ServiceDiscoveryController localController, Vertx vertx) {
+                           ServiceDiscoveryController localController, Map bacnetInstances, Vertx vertx) {
         this.vertx = vertx;
         this.config = config;
         virtualPointsMap = new HashMap<>();
@@ -96,8 +97,8 @@ public class BACnetInstance {
         try {
             localDevice.initialize();
             localDevice.getEventHandler()
-                       .addListener(
-                           new BACnetEventListener(config, localDevice, eventController, localController, vertx));
+                       .addListener(new BACnetEventListener(config, this, localDevice, eventController, localController,
+                                                            bacnetInstances, vertx));
             deviceDiscoverer = localDevice.startRemoteDeviceDiscovery();
             //TODO: should this be stopped? does it stop handling IAM req if stopped?
             if (!localDevice.isInitialized()) {
@@ -116,8 +117,10 @@ public class BACnetInstance {
 
     public static BACnetInstance createBACnet(BACnetConfig bacnetConfig, BACnetNetworkConfig networkConfig,
                                               EventController eventController,
-                                              ServiceDiscoveryController localController, Vertx vertx) {
-        return new BACnetInstance(bacnetConfig, networkConfig, eventController, localController, vertx);
+                                              ServiceDiscoveryController localController, Map bacnetInstances,
+                                              Vertx vertx) {
+        return new BACnetInstance(bacnetConfig, networkConfig, eventController, localController, bacnetInstances,
+                                  vertx);
     }
 
     public void terminate() {
@@ -153,6 +156,21 @@ public class BACnetInstance {
         throw new BACnetException("Local point " + id + " doesnt exists");
     }
 
+    public String getLocalObjectNubeId(ObjectIdentifier oid) {
+        if (virtualPointsMap.containsValue(oid)) {
+            for (Entry<String, ObjectIdentifier> e : virtualPointsMap.entrySet()) {
+                if (e.getValue().equals(oid)) {
+                    return e.getKey();
+                }
+            }
+        }
+        try {
+            return BACnetDataConversions.pointIDBACnetToNube(oid);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public void clearLocalObjects() {
         for (BACnetObject obj : localDevice.getLocalObjects()) {
             try {
@@ -165,7 +183,7 @@ public class BACnetInstance {
         }
     }
 
-    public void addLocalObject(EdgePoint point) throws Exception {
+    public BACnetObject addLocalObject(EdgePoint point) throws Exception {
         try {
             getLocalObjectId(point.getId());
             throw new BACnetException("Local point " + point.getId() + " already exists");
@@ -174,6 +192,7 @@ public class BACnetInstance {
             if (obj instanceof BinaryValueObject || obj instanceof AnalogValueObject) {
                 virtualPointsMap.put(point.getId(), obj.getId());
             }
+            return obj;
         }
     }
 
@@ -186,11 +205,11 @@ public class BACnetInstance {
     }
 
     public void writeLocalObject(EdgeWriteRequest req) throws Exception {
-        LocalPointObjectUtils.writeLocalObject(req, localDevice);
+        LocalPointObjectUtils.writeLocalObject(req, getLocalObjectId(req.getId()), localDevice);
     }
 
     public void updateLocalObject(String id, String property, Object value) throws Exception {
-        LocalPointObjectUtils.updateLocalObjectProperty(localDevice, id, property, value);
+        LocalPointObjectUtils.updateLocalObjectProperty(localDevice, getLocalObjectId(id), property, value);
     }
 
     //REMOTE DEVICE FUNCTIONS

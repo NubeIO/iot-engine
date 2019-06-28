@@ -84,36 +84,33 @@ public class BACnetVerticle extends ContainerVerticle {
             logger.info("Initialising bacnet instance for network {}", ipConfig.getName());
             bacnetInstances.put(ipConfig.getName(),
                                 BACnetInstance.createBACnet(bacnetConfig, ipConfig, eventController, localController,
-                                                            vertx));
+                                                            bacnetInstances, vertx));
         });
     }
 
     protected void publishServices(ServiceDiscoveryController localController) {
         localController.addEventMessageRecord("bacnet-local-service", BACnetEventModels.NUBE_SERVICE.getAddress(),
                                               EventMethodDefinition.create("/bacnet/local", new ActionMethodMapping() {
-                                                                               @Override
-                                                                               public Map<EventAction, HttpMethod> get() {
-                                                                                   Map<EventAction, HttpMethod> map = new HashMap<>();
-                                                                                   map.put(EventAction.CREATE, HttpMethod.POST);
-                                                                                   map.put(EventAction.UPDATE, HttpMethod.PUT);
-                                                                                   map.put(EventAction.PATCH, HttpMethod.PATCH);
-                                                                                   map.put(EventAction.REMOVE, HttpMethod.DELETE);
-                                                                                   return map;
-                                                                               }
-                                                                           },
-                                                                           false)).subscribe();
+                                                  @Override
+                                                  public Map<EventAction, HttpMethod> get() {
+                                                      Map<EventAction, HttpMethod> map = new HashMap<>();
+                                                      map.put(EventAction.CREATE, HttpMethod.POST);
+                                                      map.put(EventAction.UPDATE, HttpMethod.PUT);
+                                                      map.put(EventAction.PATCH, HttpMethod.PATCH);
+                                                      map.put(EventAction.REMOVE, HttpMethod.DELETE);
+                                                      return map;
+                                                  }
+                                              }, false)).subscribe();
 
         localController.addEventMessageRecord("bacnet-all-network-service", BACnetEventModels.NETWORKS_ALL.getAddress(),
-                                              EventMethodDefinition.create("/bacnet/remote",
-                                                                           new ActionMethodMapping() {
-                                                                               @Override
-                                                                               public Map<EventAction, HttpMethod> get() {
-                                                                                   Map<EventAction, HttpMethod> map = new HashMap<>();
-                                                                                   map.put(EventAction.GET_LIST, HttpMethod.GET);
-                                                                                   return map;
-                                                                               }
-                                                                           }, false))
-                       .subscribe();
+                                              EventMethodDefinition.create("/bacnet/remote", new ActionMethodMapping() {
+                                                  @Override
+                                                  public Map<EventAction, HttpMethod> get() {
+                                                      Map<EventAction, HttpMethod> map = new HashMap<>();
+                                                      map.put(EventAction.GET_LIST, HttpMethod.GET);
+                                                      return map;
+                                                  }
+                                              }, false)).subscribe();
 
         localController.addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),
                                               EventMethodDefinition.createDefault("/bacnet/remote/:network/device",
