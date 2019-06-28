@@ -66,9 +66,10 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     public EventController initEventController() {
         EventBusConfig eventBusConfig = this.nubeConfig.getSystemConfig().getEventBusConfig();
-        return new DefaultEventController(vertx, Objects.isNull(eventBusConfig)
-                                                  ? new DeliveryOptions()
-                                                  : eventBusConfig.getDeliveryOptions());
+        return EventControllerBridge.getInstance()
+                                    .getEventController(vertx.getDelegate(), Objects.isNull(eventBusConfig)
+                                                                             ? new DeliveryOptions()
+                                                                             : eventBusConfig.getDeliveryOptions());
     }
 
     @Override

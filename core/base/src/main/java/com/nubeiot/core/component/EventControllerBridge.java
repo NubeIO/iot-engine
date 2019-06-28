@@ -21,21 +21,12 @@ public class EventControllerBridge {
         return instance;
     }
 
-    public EventController getEventController(@NonNull io.vertx.core.Vertx vertx, DeliveryOptions deliveryOptions) {
+    EventController getEventController(@NonNull io.vertx.core.Vertx vertx, DeliveryOptions deliveryOptions) {
         return new DefaultEventController(vertx, deliveryOptions);
     }
 
-    public EventController getEventController(@NonNull io.vertx.reactivex.core.Vertx vertx) {
-        return getEventController(vertx.getDelegate(), null);
-    }
-
-    public EventController getEventController(@NonNull io.vertx.core.Vertx vertx) {
+    EventController getEventController(@NonNull io.vertx.core.Vertx vertx) {
         return getEventController(vertx, null);
-    }
-
-    public EventController getEventController(@NonNull io.vertx.reactivex.core.Vertx vertx,
-                                              DeliveryOptions deliveryOptions) {
-        return getEventController(vertx.getDelegate(), deliveryOptions);
     }
 
 }

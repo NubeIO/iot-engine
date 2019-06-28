@@ -12,12 +12,10 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
-import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.core.EdgeVerticle;
@@ -89,16 +87,9 @@ public class HandlerNoTimeoutTest extends BaseEdgeVerticleTest {
         EventMessage eventMessage = EventMessage.success(EventAction.PATCH, RequestData.builder().body(body).build());
         Async async = context.async();
         //loading patch takes 3 seconds when timeout is 5 seconds
-        EventController controller = EventControllerBridge.getInstance()
-                                                          .getEventController(this.vertx,
-                                                                              this.edgeVerticle.getNubeConfig()
-                                                                                               .getSystemConfig()
-                                                                                               .getEventBusConfig()
-                                                                                               .getDeliveryOptions());
-
-        controller.request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
-                           EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
-                           context.asyncAssertSuccess(response -> {
+        this.edgeVerticle.getEventController().request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
+                                                       EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
+                                                       context.asyncAssertSuccess(response -> {
                                TestHelper.testComplete(async);
                            }), null);
 

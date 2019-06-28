@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 
-import com.nubeiot.core.component.EventControllerBridge;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.InitializerError;
@@ -33,7 +33,7 @@ class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketCli
 
     @Override
     public void open(WebsocketClientEventMetadata metadata, MultiMap headers) {
-        EventController controller = EventControllerBridge.getInstance().getEventController(vertx);
+        EventController controller = SharedDataDelegate.getEventController(vertx, this.getClass().getName());
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> ref = new AtomicReference<>();
         HandlerConfig handler = getHandlerConfig();

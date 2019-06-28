@@ -6,16 +6,15 @@ import java.util.Map;
 import java.util.Objects;
 
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBusOptions;
-import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.cluster.ClusterType;
+import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.FileUtils;
 
 import lombok.AllArgsConstructor;
@@ -136,6 +135,8 @@ public final class NubeConfig implements IConfig {
 
             public static final String NAME = "__eventBus__";
 
+            static final String DELIVERY_OPTIONS = "deliveryOptions";
+
             @Getter
             @JsonIgnore
             private EventBusOptions options;
@@ -143,9 +144,6 @@ public final class NubeConfig implements IConfig {
             @Getter
             @JsonIgnore
             private DeliveryOptions deliveryOptions = new DeliveryOptions();
-
-            @JsonProperty(value = "deliveryOptions")
-            private DeliveryOptionsConfig deliveryOptionsConfig;
 
             public EventBusConfig() {
                 this(null);
@@ -160,15 +158,11 @@ public final class NubeConfig implements IConfig {
                 this.putIfAbsent("host", "0.0.0.0");
                 this.putIfAbsent("port", 5000);
                 options = new EventBusOptions(JsonObject.mapFrom(this));
-                if (this.containsKey(DeliveryOptionsConfig.NAME)) {
-                    this.deliveryOptionsConfig = IConfig.from(this.get(DeliveryOptionsConfig.NAME),
-                                                              DeliveryOptionsConfig.class);
-                    this.deliveryOptions.setCodecName(deliveryOptionsConfig.getCodecName());
-                    this.deliveryOptions.setSendTimeout(deliveryOptionsConfig.getTimeout());
-                    MultiMap header = new CaseInsensitiveHeaders();
-                    header.addAll(deliveryOptionsConfig.getHeaders());
-                    this.deliveryOptions.setHeaders(header);
+                Object deliveryOptionsConfig = this.get(DELIVERY_OPTIONS);
+                if (Objects.isNull(deliveryOptionsConfig) || !(deliveryOptionsConfig instanceof Map)) {
+                    throw new NubeException("Invalid delivery options config!");
                 }
+                this.deliveryOptions = new DeliveryOptions(new JsonObject((Map) deliveryOptionsConfig));
             }
 
             @Override
@@ -186,38 +180,10 @@ public final class NubeConfig implements IConfig {
 
             @Override
             public JsonObject toJson() {
-                if (Objects.isNull(deliveryOptionsConfig)) {
+                if (Objects.isNull(deliveryOptions)) {
                     return options.toJson();
                 }
                 return options.toJson().mergeIn(this.deliveryOptions.toJson(), true);
-            }
-
-        }
-
-
-        private static final class DeliveryOptionsConfig implements IConfig {
-
-            static final String NAME = "deliveryOptions";
-            @Getter
-            @JsonProperty
-            private String codecName;
-
-            @Getter
-            @JsonProperty
-            private long timeout;
-
-            @Getter
-            @JsonProperty
-            private final Map<String, String> headers = new HashMap<>();
-
-            @Override
-            public String name() {
-                return NAME;
-            }
-
-            @Override
-            public Class<? extends IConfig> parent() {
-                return EventBusConfig.class;
             }
 
         }

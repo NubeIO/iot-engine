@@ -14,7 +14,6 @@ import io.vertx.ext.web.handler.ResponseContentTypeHandler;
 import io.vertx.ext.web.handler.ResponseTimeHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
-import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.event.EventAction;
@@ -178,10 +177,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                                  .registerEventBusApi(httpRouter.getRestEventApiClass())
                                                  .dynamicRouteConfig(restConfig.getDynamicConfig())
                                                  .addEventController(
-                                                     this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS,
-                                                                        EventControllerBridge.getInstance()
-                                                                                             .getEventController(
-                                                                                                 vertx)))
+                                                     SharedDataDelegate.getEventController(vertx, this.getSharedKey()))
                                                  .build();
     }
 
@@ -217,8 +213,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         logger.info("Init Upload router: '{}'...", uploadCfg.getPath());
-        EventController controller = this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS,
-                                                        EventControllerBridge.getInstance().getEventController(vertx));
+        EventController controller = SharedDataDelegate.getEventController(vertx, this.getSharedKey());
         EventModel listenerEvent = EventModel.builder()
                                              .address(Strings.fallback(uploadCfg.getListenerAddress(),
                                                                        getSharedKey() + ".upload"))

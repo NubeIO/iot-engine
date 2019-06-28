@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
-import com.nubeiot.core.component.EventControllerBridge;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
@@ -25,7 +25,7 @@ public class MockKafkaConsumer {
     private KafkaConsumer<String, EventMessage> consumer;
 
     public void start() {
-        EventController controller = EventControllerBridge.getInstance().getEventController(vertx);
+        EventController controller = SharedDataDelegate.getEventController(vertx, this.getClass().getName());
         consumer = KafkaConsumerProvider.create(vertx, consumerCfg, String.class, EventMessage.class);
         consumer.handler(record -> {
             System.err.println("CONSUMER Topic: " + record.topic());

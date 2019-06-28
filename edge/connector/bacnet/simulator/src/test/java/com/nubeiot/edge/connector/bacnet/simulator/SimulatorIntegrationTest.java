@@ -19,7 +19,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
-import com.nubeiot.core.component.EventControllerBridge;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -55,7 +55,7 @@ public class SimulatorIntegrationTest {
         TestHelper.setup();
         verticle = new BACnetMasterTest();
         vertx = Vertx.vertx();
-        eventController = EventControllerBridge.getInstance().getEventController(vertx);
+        eventController = SharedDataDelegate.getEventController(vertx.getDelegate(), verticle.getSharedKey());
         JsonObject masterConfig = IConfig.fromClasspath("master.json", NubeConfig.class).toJson();
         masterBACnetConfig = IConfig.from(masterConfig, BACnetConfig.class);
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(masterConfig), verticle);

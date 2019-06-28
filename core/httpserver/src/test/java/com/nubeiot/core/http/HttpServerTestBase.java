@@ -191,12 +191,15 @@ public class HttpServerTestBase {
     }
 
     private HttpServer createHttpServer(TestContext context, HttpServerRouter httpRouter) {
-        final HttpServer verticle = new HttpServer(httpRouter);
-        verticle.registerSharedData(HttpServerTestBase.class.getName());
+        HttpServer verticle = new HttpServer(httpRouter);
+        String sharedKey = HttpServerTestBase.class.getName();
+        verticle.registerSharedData(sharedKey);
         try {
-            SharedDataDelegate.addLocalDataValue(vertx.getDelegate(), HttpServerTestBase.class.getName(),
+            SharedDataDelegate.addLocalDataValue(vertx.getDelegate(), sharedKey,
                                                  SharedDataDelegate.SHARED_DATADIR,
                                                  tempFolder.newFolder(this.getClass().getName()).toString());
+            SharedDataDelegate.addLocalDataValue(vertx.getDelegate(), sharedKey, SharedDataDelegate.SHARED_EVENTBUS,
+                                                 SharedDataDelegate.getEventController(vertx.getDelegate(), sharedKey));
         } catch (IOException e) {
             context.fail(e);
         }

@@ -1,14 +1,16 @@
 package com.nubeiot.core.component;
 
+import java.util.Objects;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.shareddata.Shareable;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
@@ -27,17 +29,16 @@ import lombok.NonNull;
  * @see EventMessage
  * @see ErrorMessage
  */
-final class DefaultEventController extends EventController implements Shareable {
+final class DefaultEventController implements EventController, Shareable {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultEventController.class);
-    //    private final Vertx vertx;
 
-    public DefaultEventController(@NonNull io.vertx.core.Vertx vertx, DeliveryOptions deliveryOptions) {
-        super(vertx, deliveryOptions);
-    }
+    private final EventBus eventBus;
+    private final DeliveryOptions deliveryOptions;
 
-    public DefaultEventController(@NonNull Vertx vertx, DeliveryOptions deliveryOptions) {
-        this(vertx.getDelegate(), deliveryOptions);
+    DefaultEventController(@NonNull io.vertx.core.Vertx vertx, DeliveryOptions deliveryOptions) {
+        this.eventBus = vertx.eventBus();
+        this.deliveryOptions = Objects.nonNull(deliveryOptions) ? deliveryOptions : new DeliveryOptions();
     }
 
     /**
@@ -233,9 +234,9 @@ final class DefaultEventController extends EventController implements Shareable 
     public void register(String address, boolean local, @NonNull EventHandler handler) {
         Strings.requireNotBlank(address);
         if (local) {
-            this.getEventBus().localConsumer(address, handler::accept);
+            this.eventBus.localConsumer(address, handler::accept);
         } else {
-            this.getEventBus().consumer(address, handler::accept);
+            this.eventBus.consumer(address, handler::accept);
         }
     }
 
@@ -248,6 +249,30 @@ final class DefaultEventController extends EventController implements Shareable 
      */
     public void register(@NonNull EventModel eventModel, @NonNull EventHandler handler) {
         this.register(eventModel.getAddress(), eventModel.isLocal(), handler);
+    }
+
+    protected void fire(String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
+                        Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
+        DeliveryOptions registerOptions = Objects.nonNull(deliveryOptions) ? deliveryOptions : this.deliveryOptions;
+        Strings.requireNotBlank(address);
+        if (pattern == EventPattern.PUBLISH_SUBSCRIBE) {
+            eventBus.publish(address, data, registerOptions);
+        }
+        if (pattern == EventPattern.POINT_2_POINT) {
+            if (deliveryOptions == null) {
+                eventBus.send(address, data);
+            } else {
+                eventBus.send(address, data, registerOptions);
+            }
+        }
+        if (pattern == EventPattern.REQUEST_RESPONSE) {
+            Objects.requireNonNull(replyConsumer, "Must provide reply consumer");
+            if (deliveryOptions == null) {
+                eventBus.send(address, data, replyConsumer);
+            } else {
+                eventBus.send(address, data, registerOptions, replyConsumer);
+            }
+        }
     }
 
 }

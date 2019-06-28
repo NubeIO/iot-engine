@@ -70,7 +70,7 @@ public class EventbusConfigTest {
             "{\"clientAuth\":\"REQUIRED\",\"ssl\":true,\"keyStoreOptions\":{\"path" + "\":\"eventBusKeystore.jks\"," +
             "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path" + "\":\"eventBusKeystore.jks\"," +
             "\"password\":\"nubesparkEventBus\"}," + "\"deliveryOptions\":{\"codecName\":\"abc\"," +
-            "\"timeout\":\"300000\", \"headers\":{\"Content-type\":\"application/json\", \"Method\":\"GET\"}}}",
+            "\"timeout\": 300000, \"headers\":{\"Content-type\":\"application/json\", \"Method\":\"GET\"}}}",
             EventBusConfig.class);
         DeliveryOptions deliveryOptions = eventBusConfig.getDeliveryOptions();
         Assert.assertNotNull(deliveryOptions);

@@ -21,7 +21,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
-import com.nubeiot.core.component.EventControllerBridge;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -116,7 +116,8 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
     public void test_client_listen_only_publisher(TestContext context) {
         EventMessage echo = EventMessage.success(EventAction.GET_ONE, new JsonObject().put("echo", 1));
         EventModel publisher = MockWebsocketEvent.ONLY_PUBLISHER.getPublisher();
-        EventController controller = EventControllerBridge.getInstance().getEventController(vertx);
+        EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(),
+                                                                           this.getClass().getName());
         vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo, null));
         Async async = context.async(1);
         assertConsumerData(async, publisher.getAddress(),
@@ -128,7 +129,8 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         EventModel publisher = MockWebsocketEvent.ONLY_PUBLISHER.getPublisher();
         EventMessage echo = EventMessage.success(EventAction.GET_ONE, new JsonObject().put("echo", 1));
         JsonObject expected = createWebsocketMsg(publisher.getAddress(), echo, BridgeEventType.RECEIVE);
-        EventController controller = EventControllerBridge.getInstance().getEventController(vertx);
+        EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(),
+                                                                           this.getClass().getName());
         startServer(context, new HttpServerRouter().registerEventBusSocket(MockWebsocketEvent.ONLY_PUBLISHER));
         vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo, null));
         Async async = context.async(1);

@@ -14,10 +14,8 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
-import com.nubeiot.core.component.EventControllerBridge;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
@@ -81,16 +79,11 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
 
         EventMessage eventMessage = EventMessage.success(EventAction.CREATE, RequestData.builder().body(body).build());
         Async async = context.async();
-        EventController controller = EventControllerBridge.getInstance()
-                                                          .getEventController(this.vertx,
-                                                                              this.edgeVerticle.getNubeConfig()
-                                                                                               .getSystemConfig()
-                                                                                               .getEventBusConfig()
-                                                                                               .getDeliveryOptions());
+
         //create loading takes 7 seconds when timeout is 5 seconds
-        controller.request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
-                           EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
-                           context.asyncAssertFailure(response -> {
+        this.edgeVerticle.getEventController().request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
+                                                       EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
+                                                       context.asyncAssertFailure(response -> {
                                context.assertTrue(response instanceof ReplyException);
                                context.assertEquals(((ReplyException) response).failureType(), ReplyFailure.TIMEOUT);
                                context.assertEquals(((ReplyException) response).failureCode(), -1);
