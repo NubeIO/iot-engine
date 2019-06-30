@@ -15,7 +15,6 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.NubeConfig.DeployConfig;
@@ -43,15 +42,15 @@ public abstract class BaseEdgeVerticleTest {
     static final String VERSION = "1.0.0";
     static final String SERVICE_NAME = "bios-mytest";
     static final String MODULE_ID = GROUP_ID + ":" + ARTIFACT_ID;
-    static final String APP_CONFIG = "{\"__kafka__\":{\"__client__\":{\"bootstrap.servers\":[\"localhost:9092\"]}}," +
-                                     "\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:" +
-                                     "./bios-installer\",\"minimumIdle\":1,\"maximumPoolSize\":2," +
-                                     "\"connectionTimeout\":30000,\"idleTimeout\":180000,\"maxLifetime\":300000}}}";
-    static final JsonObject DEPLOY_CONFIG = new JsonObject(
-        "{\"__deploy__\":{\"ha\":false,\"instances\":1," + "\"maxWorkerExecuteTime\":60000000000," +
-        "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\"," + "\"multiThreaded\":false,\"worker\":false," +
-        "\"workerPoolSize\":20},\"dataDir\":\"file:///root/" + ".nubeio/com.nubeiot.edge.module_installer\"," +
-        "\"__app__\": " + APP_CONFIG + " }");
+    static final JsonObject APP_CONFIG = new JsonObject(
+        "{\"__kafka__\":{\"__client__\":{\"bootstrap" + ".servers\":[\"localhost:9092\"]}}," +
+        "\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:" +
+        "./bios-installer\",\"minimumIdle\":1,\"maximumPoolSize\":2," +
+        "\"connectionTimeout\":30000,\"idleTimeout\":180000,\"maxLifetime\":300000}}}");
+    static final JsonObject APP_SYSTEM_CONFIG = new JsonObject(
+        "{\"__deploy__\":{\"ha\":false,\"instances\":1,\"maxWorkerExecuteTime\":60000000000," +
+        "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\",\"multiThreaded\":false,\"worker\":false," +
+        "\"workerPoolSize\":20},\"dataDir\":\"file:///root/.nubeio/com.nubeiot.edge.module_installer\"}");
     private static boolean isAvailable;
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -60,7 +59,7 @@ public abstract class BaseEdgeVerticleTest {
 
     protected static void beforeSuite() {
         TestHelper.setup();
-        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.ERROR);
+        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.INFO);
         if (!isAvailable) {
             StateMachine.init();
             isAvailable = true;
@@ -165,9 +164,7 @@ public abstract class BaseEdgeVerticleTest {
                             if (tblModule.getState() != State.PENDING) {
                                 System.out.println("Ready. Testing module");
                                 context.assertEquals(tblModule.getState(), expectedModuleState);
-                                JsonObject actualConfig = IConfig.from(tblModule.getDeployConfig(), NubeConfig.class)
-                                                                 .getAppConfig()
-                                                                 .toJson();
+                                JsonObject actualConfig = tblModule.getAppConfig();
                                 context.assertEquals(actualConfig.toString(), expectedConfig);
                                 TestHelper.testComplete(async);
                             }

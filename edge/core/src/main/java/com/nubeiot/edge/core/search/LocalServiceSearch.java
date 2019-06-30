@@ -51,14 +51,23 @@ public final class LocalServiceSearch implements IServiceSearch {
                                  .executeAny(context -> filter(validateFilter(requestData.getFilter()),
                                                                requestData.getPagination(), context))
                                  .flattenAsObservable(records -> records)
-                                 .flatMapSingle(record -> removeCredentialsInDeployConfig(record))
+                                 .flatMapSingle(this::removeCredentialsInAppConfig)
+                                 .collect(JsonArray::new, JsonArray::add)
+                                 .flattenAsObservable(results -> results)
+                                 .flatMapSingle(record -> removeSystemConfig((JsonObject) record))
                                  .collect(JsonArray::new, JsonArray::add)
                                  .map(results -> new JsonObject().put("services", results));
     }
 
-    private SingleSource<? extends JsonObject> removeCredentialsInDeployConfig(TblModuleRecord record) {
-        record.setDeployConfig(this.entityHandler.getSecureDeployConfig(record.getServiceId(), record.getDeployConfig()));
+    public SingleSource<? extends JsonObject> removeCredentialsInAppConfig(TblModuleRecord record) {
+        record.setAppConfig(this.entityHandler.getSecureAppConfig(record.getServiceId(), record.getAppConfig()));
         return Single.just(record.toJson());
+    }
+
+    private SingleSource<? extends JsonObject> removeSystemConfig(JsonObject record) {
+        // TODO: replace with POJO constant later
+        record.remove("system_config");
+        return Single.just(record);
     }
 
     JsonObject validateFilter(JsonObject filter) {

@@ -49,6 +49,10 @@ public final class NubeConfig implements IConfig {
         return new NubeConfig(dataDir, null, new DeployConfig(), IConfig.from(appConfig, AppConfig.class));
     }
 
+    public static NubeConfig blank(@NonNull Path dataDir) {
+        return new NubeConfig(dataDir, null, new DeployConfig(), null);
+    }
+
     /**
      * Create {@link NubeConfig} with default {@link DeployConfig} and without {@link SystemConfig}
      *

@@ -6,6 +6,7 @@ import java.util.List;
 
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
@@ -33,6 +34,8 @@ public final class TransactionEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
+        JsonObject filter = data.getFilter();
+        boolean systemCfg = "true".equals(filter.getString("system_cfg"));
         ITblTransaction transaction = new TblTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getTransactionId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");
@@ -40,7 +43,16 @@ public final class TransactionEventHandler implements EventHandler {
         return this.verticle.getEntityHandler()
                             .findTransactionById(transaction.getTransactionId())
                             .map(o -> o.orElseThrow(() -> new NotFoundException(
-                                String.format("Not found transaction id '%s'", transaction.getTransactionId()))));
+                                String.format("Not found transaction id '%s'", transaction.getTransactionId()))))
+                            .map(trans -> removePrevSystemConfig(trans, systemCfg));
+    }
+
+    private JsonObject removePrevSystemConfig(JsonObject transaction, boolean systemCfg) {
+        if (!systemCfg) {
+            // TODO: replace with POJO constant later
+            transaction.remove("prev_system_config");
+        }
+        return transaction;
     }
 
 }

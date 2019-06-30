@@ -56,9 +56,15 @@ public final class ModuleEventHandler implements EventHandler {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
         return this.verticle.getEntityHandler()
-                            .findModuleById(serviceId)
+                            .findModuleById(serviceId).map(o -> o.map(this::removeCredentialsInAppConfig))
                             .map(o -> o.orElseThrow(
                                 () -> new NotFoundException(String.format("Not found service id '%s'", serviceId))));
+    }
+
+    private JsonObject removeCredentialsInAppConfig(TblModule record) {
+        record.setAppConfig(
+            this.verticle.getEntityHandler().getSecureAppConfig(record.getServiceId(), record.getAppConfig()));
+        return record.toJson();
     }
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)

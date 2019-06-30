@@ -33,16 +33,15 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
                            .setState(State.PENDING)
                            .setCreatedAt(DateTimes.nowUTC())
                            .setModifiedAt(DateTimes.nowUTC())
-                           .setDeployConfig(new JsonObject()));
+                           .setSystemConfig(new JsonObject())
+                           .setAppConfig(new JsonObject()));
         Single<Integer> insertTransaction05 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId(
                                     "pending-service-with-transaction-is-wip-prestate-action-is-update-disabled")
                                 .setStatus(Status.WIP)
                                 .setEvent(EventAction.UPDATE)
-                                .setPrevState(new JsonObject())
-                                .setModifiedAt(DateTimes.nowUTC())
-                                .setPrevState(new JsonObject(
+                                .setModifiedAt(DateTimes.nowUTC()).setPrevMetadata(new JsonObject(
                                     "{\"service_id" + "\": \"pending" + "-service-with" + "-transaction" + "-is-wip" +
                                     "-prestate" + "-action-is" + "-patch" + "-disabled\"," + "\"service_name" +
                                     "\": \"service6" +
@@ -60,16 +59,15 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
                                                                       .setState(State.PENDING)
                                                                       .setCreatedAt(DateTimes.nowUTC())
                                                                       .setModifiedAt(DateTimes.nowUTC())
-                                                                      .setDeployConfig(new JsonObject()));
+                                                                      .setSystemConfig(new JsonObject())
+                                                                      .setAppConfig(new JsonObject()));
         Single<Integer> insertTransaction06 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId(
                                     "pending-service-with-transaction-is-wip-prestate-action-is-patch-disabled")
                                 .setStatus(Status.WIP)
                                 .setEvent(EventAction.PATCH)
-                                .setPrevState(new JsonObject())
-                                .setModifiedAt(DateTimes.nowUTC())
-                                .setPrevState(new JsonObject(
+                                .setModifiedAt(DateTimes.nowUTC()).setPrevMetadata(new JsonObject(
                                     "{\"service_id" + "\":\"pending" + "-service-with" + "-transaction" + "-is-wip" +
                                     "-prestate" + "-action-is" + "-update" + "-disabled\"," + "\"service_name" +
                                     "\":\"service5" + "\",\"service_type\":\"JAVA\"," + "\"version\":\"1.0.0\"," +
@@ -85,7 +83,8 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
                                                                       .setState(State.DISABLED)
                                                                       .setCreatedAt(DateTimes.nowUTC())
                                                                       .setModifiedAt(DateTimes.nowUTC())
-                                                                      .setDeployConfig(new JsonObject()));
+                                                                      .setAppConfig(new JsonObject())
+                                                                      .setSystemConfig(new JsonObject()));
 
         Single<Integer> insert09 = tblModuleDao.insert(
             new TblModule().setServiceId("pending_module_with_two_transactions_invalid")
@@ -95,24 +94,20 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
                            .setState(State.PENDING)
                            .setCreatedAt(DateTimes.nowUTC())
                            .setModifiedAt(DateTimes.nowUTC())
-                           .setDeployConfig(new JsonObject()));
+                           .setSystemConfig(new JsonObject())
+                           .setAppConfig(new JsonObject()));
         Single<Integer> insertTransaction09_1 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending_module_with_two_transactions_invalid")
                                 .setStatus(Status.WIP)
-                                .setEvent(EventAction.CREATE)
-                                .setPrevState(new JsonObject())
-                                .setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 25))
-                                .setPrevState(new JsonObject()));
+                                .setEvent(EventAction.CREATE).setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 25)));
 
         Single<Integer> insertTransaction09_2 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending_module_with_two_transactions_invalid")
                                 .setStatus(Status.WIP)
                                 .setEvent(EventAction.PATCH)
-                                .setPrevState(new JsonObject())
-                                .setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 30))
-                                .setPrevState(new JsonObject(
+                                .setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 30)).setPrevMetadata(new JsonObject(
                                     "{\"service_id" + "\":\"pending_module_with_two_transactions_invalid\"," +
                                     "\"service_name" + "\":\"service9" + "\",\"service_type\":\"JAVA\"," +
                                     "\"version\":\"1.0.0\"," + "\"published_by\":null," + "\"state\":\"DISABLED\"," +
@@ -126,16 +121,13 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
                                                                       .setVersion("1.0.0")
                                                                       .setState(State.PENDING)
                                                                       .setCreatedAt(DateTimes.nowUTC())
-                                                                      .setModifiedAt(DateTimes.nowUTC())
-                                                                      .setDeployConfig(new JsonObject()));
+                                                                      .setModifiedAt(DateTimes.nowUTC()));
+
         Single<Integer> insertTransaction10 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending-but-failed-module")
                                 .setStatus(Status.FAILED)
-                                .setEvent(EventAction.CREATE)
-                                .setPrevState(new JsonObject())
-                                .setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 30))
-                                .setPrevState(new JsonObject()));
+                                .setEvent(EventAction.CREATE).setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 30)));
 
         final Single<Integer> insertModules = Single.zip(insert05, insert06, insert07, insert09, insert10,
                                                          (r1, r2, r3, r4, r5) -> r1 + r2 + r3 + r4 + r5);

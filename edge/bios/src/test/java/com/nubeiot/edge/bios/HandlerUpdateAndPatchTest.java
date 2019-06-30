@@ -36,7 +36,8 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
                                                   .setServiceName(SERVICE_NAME)
                                                   .setState(State.ENABLED)
                                                   .setVersion(VERSION)
-                                                  .setDeployConfig(DEPLOY_CONFIG)
+                                                  .setAppConfig(APP_CONFIG)
+                                                  .setSystemConfig(APP_SYSTEM_CONFIG)
                                                   .setModifiedAt(DateTimes.nowUTC()));
     }
 

@@ -32,15 +32,15 @@ public class PendingModuleWithUpdateActionInitData extends MockInitDataEntityHan
                            .setState(State.PENDING)
                            .setCreatedAt(DateTimes.nowUTC())
                            .setModifiedAt(DateTimes.nowUTC())
-                           .setDeployConfig(new JsonObject()));
+                           .setSystemConfig(new JsonObject())
+                           .setAppConfig(new JsonObject()));
 
         Single<Integer> insertTransaction03 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending-service-with-transaction-is-wip-prestate-action-is-update")
                                 .setStatus(Status.WIP)
                                 .setEvent(EventAction.UPDATE)
-                                .setModifiedAt(DateTimes.nowUTC())
-                                .setPrevState(new JsonObject(
+                                .setModifiedAt(DateTimes.nowUTC()).setPrevMetadata(new JsonObject(
                                     "{\"service_id\":\"pending-service-with-transaction-is-wip" +
                                     "-prestate-action-is-update\"," +
                                     "\"service_name\":\"service3\",\"service_type\":\"JAVA\"," +

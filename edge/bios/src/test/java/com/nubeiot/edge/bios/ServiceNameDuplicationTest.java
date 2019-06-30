@@ -35,7 +35,8 @@ public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
                                                   .setServiceName(SERVICE_NAME)
                                                   .setState(State.ENABLED)
                                                   .setVersion(VERSION)
-                                                  .setDeployConfig(DEPLOY_CONFIG)
+                                                  .setSystemConfig(APP_SYSTEM_CONFIG)
+                                                  .setAppConfig(APP_CONFIG)
                                                   .setModifiedAt(DateTimes.nowUTC()));
     }
 
@@ -55,7 +56,7 @@ public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
         JsonObject metadata = new JsonObject().put("state", State.ENABLED)
                                               .put("version", VERSION)
                                               .put("service_name", SERVICE_NAME);
-        JsonObject body = new JsonObject().put("service_id", MODULE_ID+"test")
+        JsonObject body = new JsonObject().put("service_id", MODULE_ID + "test")
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
 
@@ -63,7 +64,6 @@ public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
             TestHelper.testComplete(async);
         });
-
     }
 
 }

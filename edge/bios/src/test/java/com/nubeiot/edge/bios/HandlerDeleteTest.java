@@ -42,7 +42,8 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
                                                   .setServiceName(SERVICE_NAME)
                                                   .setState(State.ENABLED)
                                                   .setVersion(VERSION)
-                                                  .setDeployConfig(DEPLOY_CONFIG)
+                                                  .setSystemConfig(APP_SYSTEM_CONFIG)
+                                                  .setAppConfig(APP_CONFIG)
                                                   .setModifiedAt(DateTimes.nowUTC()));
     }
 

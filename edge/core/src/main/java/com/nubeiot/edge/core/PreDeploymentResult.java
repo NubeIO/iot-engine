@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.dto.IRequestData;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
@@ -45,7 +46,8 @@ public class PreDeploymentResult implements JsonData, IRequestData {
     private final String serviceId;
     private final String serviceFQN;
     private final String deployId;
-    private final NubeConfig deployCfg;
+    private final AppConfig appConfig;
+    private final NubeConfig systemConfig;
     @Setter
     @Default
     private boolean silent = false;
@@ -55,16 +57,27 @@ public class PreDeploymentResult implements JsonData, IRequestData {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
-        private JsonObject deployCfg;
+        private JsonObject appConfig;
+        private JsonObject systemConfig;
         private Path dataDir = FileUtils.DEFAULT_DATADIR;
 
-        @JsonProperty("deploy_cfg")
-        public Builder deployCfg(Map<String, Object> deployCfg) {
-            return this.deployCfg(JsonObject.mapFrom(deployCfg));
+        @JsonProperty("app_config")
+        public Builder appConfig(Map<String, Object> appConfig) {
+            return this.appConfig(JsonObject.mapFrom(appConfig));
         }
 
-        public Builder deployCfg(JsonObject deployCfg) {
-            this.deployCfg = JsonObject.mapFrom(deployCfg);
+        public Builder appConfig(JsonObject appConfig) {
+            this.appConfig = JsonObject.mapFrom(appConfig);
+            return this;
+        }
+
+        @JsonProperty("system_config")
+        public Builder systemConfig(Map<String, Object> systemConfig) {
+            return this.systemConfig(JsonObject.mapFrom(systemConfig));
+        }
+
+        public Builder systemConfig(JsonObject systemConfig) {
+            this.systemConfig = JsonObject.mapFrom(systemConfig);
             return this;
         }
 
@@ -74,19 +87,33 @@ public class PreDeploymentResult implements JsonData, IRequestData {
         }
 
         public PreDeploymentResult build() {
-            NubeConfig deployCfg = parseDeployCfg(this.deployCfg);
-            deployCfg.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(serviceId)));
+            AppConfig appConfig = parseAppConfig(this.appConfig);
+
+            NubeConfig systemConfig = parseSystemConfig(this.systemConfig);
+            systemConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(serviceId)));
+
             return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
                                            Objects.isNull(targetState) ? State.NONE : targetState, serviceId,
-                                           serviceFQN, deployId, deployCfg, silent);
+                                           serviceFQN, deployId, appConfig, systemConfig, silent);
         }
 
-        private NubeConfig parseDeployCfg(JsonObject deployCfg) {
+        private AppConfig parseAppConfig(JsonObject appConfig) {
             try {
-                return Objects.nonNull(deployCfg) ? IConfig.from(deployCfg, NubeConfig.class) : NubeConfig.blank();
+                return IConfig.from(appConfig, AppConfig.class);
             } catch (NubeException ex) {
-                logger.trace("Try to parse deploy_cfg to {}", ex, NubeConfig.class);
-                return NubeConfig.blank(deployCfg);
+                logger.trace("Try to parse app_config to {}", ex, AppConfig.class);
+                return IConfig.from(new JsonObject(), AppConfig.class);
+            }
+        }
+
+        private NubeConfig parseSystemConfig(JsonObject systemConfig) {
+            try {
+                return Objects.nonNull(systemConfig)
+                       ? IConfig.from(systemConfig, NubeConfig.class)
+                       : NubeConfig.blank();
+            } catch (NubeException ex) {
+                logger.trace("Try to parse system_config to {}", ex, NubeConfig.class);
+                return NubeConfig.blank(systemConfig);
             }
         }
 
