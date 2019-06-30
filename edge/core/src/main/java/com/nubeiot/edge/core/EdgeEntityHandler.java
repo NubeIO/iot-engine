@@ -255,7 +255,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return transDao.queryExecutor()
                        .findOne(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
                                                         .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
-                                                        .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()))
+                                                        .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc())
+                                                        .limit(1))
                        .map(optional -> optional.map(TblTransaction::toJson));
     }
 
