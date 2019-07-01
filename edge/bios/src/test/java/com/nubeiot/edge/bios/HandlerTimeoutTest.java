@@ -81,14 +81,16 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         Async async = context.async();
 
         //create loading takes 7 seconds when timeout is 5 seconds
-        this.edgeVerticle.getEventController().request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
-                                                       EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
-                                                       context.asyncAssertFailure(response -> {
-                               context.assertTrue(response instanceof ReplyException);
-                               context.assertEquals(((ReplyException) response).failureType(), ReplyFailure.TIMEOUT);
-                               context.assertEquals(((ReplyException) response).failureCode(), -1);
-                               TestHelper.testComplete(async);
-                           }), null);
+        this.edgeVerticle.getEventController()
+                         .request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
+                                  EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
+                                  context.asyncAssertFailure(response -> {
+                                      context.assertTrue(response instanceof ReplyException);
+                                      context.assertEquals(((ReplyException) response).failureType(),
+                                                           ReplyFailure.TIMEOUT);
+                                      context.assertEquals(((ReplyException) response).failureCode(), -1);
+                                      TestHelper.testComplete(async);
+                                  }));
 
         async.awaitSuccess();
     }

@@ -1,6 +1,5 @@
 package com.nubeiot.core.component;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 import io.vertx.core.Vertx;
@@ -47,13 +46,7 @@ public interface SharedDataDelegate {
     }
 
     static EventController getEventController(@NonNull Vertx vertx, String sharedKey) {
-        EventController sharedDataValue = SharedDataDelegate.getSharedDataValue(
-            k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).get(k),
-            SharedDataDelegate.SHARED_EVENTBUS);
-        if (Objects.isNull(sharedDataValue)) {
-            return EventControllerBridge.getInstance().getEventController(vertx);
-        }
-        return sharedDataValue;
+        return getLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS);
     }
 
     /**

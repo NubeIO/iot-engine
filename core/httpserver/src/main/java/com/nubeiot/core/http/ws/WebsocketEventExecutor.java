@@ -37,9 +37,9 @@ public class WebsocketEventExecutor {
                                                          .action(msg.getAction())
                                                          .success(callback(metadata.getPublisher(), callback))
                                                          .build();
-            controller.request(processor.getAddress(), processor.getPattern(), msg, handler, null);
+            controller.request(processor.getAddress(), processor.getPattern(), msg, handler);
         } else {
-            controller.request(processor.getAddress(), processor.getPattern(), msg, null);
+            controller.request(processor.getAddress(), processor.getPattern(), msg);
             callback.accept(EventMessage.success(EventAction.RETURN));
         }
     }

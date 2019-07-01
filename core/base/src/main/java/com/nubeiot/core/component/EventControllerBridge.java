@@ -2,6 +2,7 @@ package com.nubeiot.core.component;
 
 import java.util.Objects;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 
 import com.nubeiot.core.event.EventController;
@@ -21,11 +22,11 @@ public class EventControllerBridge {
         return instance;
     }
 
-    EventController getEventController(@NonNull io.vertx.core.Vertx vertx, DeliveryOptions deliveryOptions) {
+    EventController getEventController(@NonNull Vertx vertx, DeliveryOptions deliveryOptions) {
         return new DefaultEventController(vertx, deliveryOptions);
     }
 
-    EventController getEventController(@NonNull io.vertx.core.Vertx vertx) {
+    EventController getEventController(@NonNull Vertx vertx) {
         return getEventController(vertx, null);
     }
 

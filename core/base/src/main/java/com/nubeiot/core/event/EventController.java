@@ -5,26 +5,69 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.shareddata.Shareable;
 
 import com.nubeiot.core.exceptions.ErrorMessage;
 
 import lombok.NonNull;
 
-public interface EventController {
+public interface EventController extends Shareable {
+
+    Logger LOGGER = LoggerFactory.getLogger(EventController.class);
 
     /**
-     * Fire the request to event address
+     * Fire the request to event address.
+     * <p>
+     * It is equivalent to call {@link #request(String, EventPattern, EventMessage, DeliveryOptions)} with {@code
+     * deliveryOptions} is {@code null}
+     *
+     * @param address Eventbus address
+     * @param pattern Event pattern
+     * @param message Request data message
+     */
+    default void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message) {
+        request(address, pattern, message, null, null);
+    }
+
+    /**
+     * Fire the request to event address.
+     * <p>
+     * It is equivalent to call {@link #request(String, EventPattern, EventMessage, Handler, DeliveryOptions)} with
+     * {@code handler} is {@code null}
      *
      * @param address         Eventbus address
      * @param pattern         Event pattern
      * @param message         Request data message
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see EventPattern
      * @see EventMessage
      * @see #request(String, EventPattern, EventMessage, Handler, DeliveryOptions)
      */
-    public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                        DeliveryOptions deliveryOptions);
+    default void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
+                         DeliveryOptions deliveryOptions) {
+        request(address, pattern, message, null, deliveryOptions);
+    }
+
+    /**
+     * Fire the request to event address.
+     * <p>
+     * It is equivalent to call {@link #request(String, EventPattern, EventMessage, Handler, DeliveryOptions)} with
+     * {@code deliveryOptions} is {@code null}
+     *
+     * @param address       Eventbus address
+     * @param pattern       Event pattern
+     * @param message       Request data message
+     * @param replyConsumer The consumer for handling message back after the system completes request process
+     * @see EventPattern
+     * @see EventMessage
+     * @see #request(String, EventPattern, EventMessage, Handler, DeliveryOptions)
+     */
+    default void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
+                         Handler<AsyncResult<Message<Object>>> replyConsumer) {
+        request(address, pattern, message, replyConsumer, null);
+    }
 
     /**
      * Fire the request to event address
@@ -33,25 +76,49 @@ public interface EventController {
      * @param pattern         Event pattern
      * @param message         Request message message
      * @param replyConsumer   The consumer for handling message back after the system completes request process
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see EventPattern
      * @see EventMessage
      */
-    public void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                        Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions);
+    default void request(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
+                         Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
+        LOGGER.debug("Eventbus::Request:Address: {} - Pattern: {}", address, pattern);
+        fire(address, pattern, message.toJson(), replyConsumer, deliveryOptions);
+    }
 
     /**
-     * Fire the response to event address
+     * Fire the response to event address.
+     * <p>
+     * It is equivalent to call {@link #response(String, EventPattern, EventMessage, DeliveryOptions)} with {@code
+     * deliveryOptions} is {@code null}
+     *
+     * @param address Eventbus address
+     * @param pattern Event pattern
+     * @param message Event message
+     * @see EventMessage
+     * @see EventPattern
+     */
+    default void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message) {
+        response(address, pattern, message, null, null);
+    }
+
+    /**
+     * Fire the response to event address.
+     * <p>
+     * It is equivalent to call {@link #response(String, EventPattern, EventMessage, Handler, DeliveryOptions)} with
+     * {@code handler} is {@code null}
      *
      * @param address         Eventbus address
      * @param pattern         Event pattern
      * @param message         Event message
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see EventMessage
      * @see EventPattern
      */
-    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                         DeliveryOptions deliveryOptions);
+    default void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
+                          DeliveryOptions deliveryOptions) {
+        response(address, pattern, message, null, deliveryOptions);
+    }
 
     /**
      * Fire the response to event address
@@ -61,12 +128,18 @@ public interface EventController {
      * @param message         Event message
      * @param replyConsumer   The consumer for handling message back after an external system completes handling
      *                        response
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see EventMessage
      * @see EventPattern
      */
-    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                         Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions);
+    default void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
+                          Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
+        if (message.isError()) {
+            response(address, pattern, message.getError(), replyConsumer, deliveryOptions);
+        } else {
+            response(address, pattern, message.toJson(), replyConsumer, deliveryOptions);
+        }
+    }
 
     /**
      * Fire the response to event address
@@ -74,11 +147,13 @@ public interface EventController {
      * @param address         Eventbus address
      * @param pattern         Event pattern
      * @param data            Response data
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see EventPattern
      */
-    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
-                         DeliveryOptions deliveryOptions);
+    default void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
+                          DeliveryOptions deliveryOptions) {
+        response(address, pattern, data, null, deliveryOptions);
+    }
 
     /**
      * Fire the error response to event address
@@ -86,12 +161,14 @@ public interface EventController {
      * @param address         Eventbus address
      * @param pattern         Event pattern
      * @param error           Error message
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see EventPattern
      * @see ErrorMessage
      */
-    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error,
-                         DeliveryOptions deliveryOptions);
+    default void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error,
+                          DeliveryOptions deliveryOptions) {
+        response(address, pattern, error.toJson(), null, deliveryOptions);
+    }
 
     /**
      * Fire the error response to event address
@@ -101,12 +178,15 @@ public interface EventController {
      * @param error           Error message
      * @param replyConsumer   The consumer for handling message back after an external system completes handling
      *                        response
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see EventPattern
      * @see ErrorMessage
      */
-    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error,
-                         Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions);
+    default void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull ErrorMessage error,
+                          Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
+        LOGGER.debug("Eventbus::Error Response:Address: {} - Pattern: {}", address, pattern);
+        fire(address, pattern, error.toJson(), replyConsumer, deliveryOptions);
+    }
 
     /**
      * Fire the response to event address
@@ -116,28 +196,32 @@ public interface EventController {
      * @param data            Response data
      * @param replyConsumer   The consumer for handling message back after an external system completes handling *
      *                        response
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see EventPattern
      */
-    public void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
-                         Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions);
+    default void response(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
+                          Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
+        LOGGER.debug("Eventbus::Response:Address: {} - Pattern: {}", address, pattern);
+        fire(address, pattern, data, replyConsumer, deliveryOptions);
+    }
 
     /**
-     * Fire event data to event address
+     * Fire event data to event address.
      * <p>
      * It will call response if {@code event message action} equals {@link EventAction#RETURN}, else otherwise
      *
      * @param address         Eventbus address
      * @param pattern         Event pattern
      * @param message         Event message
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see #fire(String, EventPattern, EventMessage, Handler, DeliveryOptions)
      */
-    public void fire(String address, EventPattern pattern, EventMessage message,
-                     DeliveryOptions deliveryOptions);
+    default void fire(String address, EventPattern pattern, EventMessage message, DeliveryOptions deliveryOptions) {
+        fire(address, pattern, message, null, deliveryOptions);
+    }
 
     /**
-     * Fire event data to event address
+     * Fire event data to event address.
      * <p>
      * It will call response if {@code event message action} equals {@link EventAction#RETURN}, else otherwise
      *
@@ -145,24 +229,57 @@ public interface EventController {
      * @param pattern         Event pattern
      * @param message         Event message
      * @param replyConsumer   The consumer for handling message back
-     * @param deliveryOptions
+     * @param deliveryOptions Delivery options
      * @see #request(String, EventPattern, EventMessage, Handler, DeliveryOptions)
      * @see #response(String, EventPattern, EventMessage, Handler, DeliveryOptions)
      */
-    public void fire(String address, EventPattern pattern, EventMessage message,
-                     Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions);
+    default void fire(String address, EventPattern pattern, EventMessage message,
+                      Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
+        if (message.getAction() == EventAction.RETURN) {
+            response(address, pattern, message, replyConsumer, deliveryOptions);
+        } else {
+            request(address, pattern, message, replyConsumer, deliveryOptions);
+        }
+    }
 
     /**
-     * Register event listener
+     * Fire event data to event address.
+     *
+     * @param address         Eventbus address
+     * @param pattern         Event pattern
+     * @param data            Data message
+     * @param replyConsumer   The consumer for handling message back
+     * @param deliveryOptions Delivery options
+     */
+    void fire(String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
+              Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions);
+
+    /**
+     * Register event listener with event model.
+     *
+     * @param eventModel Event model
+     * @param handler    Handler when receiving message
+     * @see EventModel
+     */
+    default void register(@NonNull EventModel eventModel, @NonNull EventHandler handler) {
+        this.register(eventModel.getAddress(), eventModel.isLocal(), handler);
+    }
+
+    /**
+     * Register event listener.
+     * <p>
+     * It is equivalent to call {@link #register(String, boolean, EventHandler)} with {@code local} is {@code true}
      *
      * @param address Event bus address
      * @param handler Handler when receiving message
      * @see EventHandler
      */
-    public void register(String address, @NonNull EventHandler handler);
+    default void register(String address, @NonNull EventHandler handler) {
+        this.register(address, true, handler);
+    }
 
     /**
-     * Register event listener
+     * Register event listener.
      *
      * @param address Event bus address
      * @param local   If {@code true}, only register for local event address
@@ -170,15 +287,6 @@ public interface EventController {
      * @see EventHandler
      * @see #register(String, EventHandler)
      */
-    public void register(String address, boolean local, @NonNull EventHandler handler);
-
-    /**
-     * Register event listener
-     *
-     * @param eventModel Event model
-     * @param handler    Handler when receiving message
-     * @see EventModel
-     */
-    public void register(@NonNull EventModel eventModel, @NonNull EventHandler handler);
+    void register(String address, boolean local, @NonNull EventHandler handler);
 
 }

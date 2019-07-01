@@ -3,7 +3,7 @@ package com.nubeiot.core;
 import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -29,6 +30,11 @@ public class ConfigProcessorTest {
 
     private ConfigProcessor processor;
     private NubeConfig nubeConfig;
+
+    @BeforeClass
+    public static void beforeSuite() {
+        TestHelper.setup();
+    }
 
     @Before
     public void before() {
@@ -51,7 +57,7 @@ public class ConfigProcessorTest {
         SystemHelper.setEnvironment(Collections.singletonMap("NUBEIO_APP_HTTP_HOST", "2.2.2.2"));
         System.setProperty("nubeio.app.http.host", "1.1.1.1");
 
-        String value = processor.mergeEnvAndSys().get("nubeio.app.http.host").toString();
+        String value = processor.mergeEnvVarAndSystemVar().get("nubeio.app.http.host").toString();
         Assert.assertEquals("2.2.2.2", value);
     }
 
@@ -76,11 +82,9 @@ public class ConfigProcessorTest {
     public void test_invalid_type() {
         System.setProperty("nubeio.app.http", "123");
 
-        overrideConfigThenAssert(finalResult -> {
-            Assert.assertEquals(
-                "{host=0.0.0.0, port=8086, enabled=true, rootApi=/api, alpnVersions=[HTTP_2, HTTP_1_1]}",
-                finalResult.getAppConfig().get("__http__").toString());
-        }, true, true);
+        overrideConfigThenAssert(finalResult -> Assert.assertEquals(
+            "{host=0.0.0.0, port=8086, enabled=true, rootApi=/api, alpnVersions=[HTTP_2, HTTP_1_1]}",
+            finalResult.getAppConfig().get("__http__").toString()), true, true);
     }
 
     @Test
@@ -92,8 +96,9 @@ public class ConfigProcessorTest {
 
         overrideConfigThenAssert(finalResult -> {
             String httpConfig = finalResult.getAppConfig().get("__http__").toString();
-            Assert.assertEquals(httpConfig, "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test, alpnVersions=[" +
-                                            "HTTP_2, HTTP_1_1]}");
+            Assert.assertEquals(
+                "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test, alpnVersions=[" + "HTTP_2, HTTP_1_1]}",
+                httpConfig);
         }, true, true);
     }
 
@@ -107,8 +112,8 @@ public class ConfigProcessorTest {
 
         overrideConfigThenAssert(finalResult -> {
             String httpConfig = finalResult.getAppConfig().get("__http__").toString();
-            Assert.assertEquals(httpConfig, "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test, alpnVersions=[" +
-                                            "HTTP_2, HTTP_1_2]}");
+            Assert.assertEquals(
+                "{host=2.2.2.2, port=8088, enabled=false, rootApi=/test, alpnVersions=[HTTP_2, HTTP_1_2]}", httpConfig);
         }, true, true);
     }
 
@@ -164,7 +169,7 @@ public class ConfigProcessorTest {
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
-        Assert.assertEquals(httpConfig.toString(), "anyvalue");
+        Assert.assertEquals("anyvalue", httpConfig.toString());
     }
 
     @Test
@@ -183,16 +188,16 @@ public class ConfigProcessorTest {
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
-        Assert.assertEquals(httpConfig.toString(),
-                            "{host=1.1.1.1, port=8087, enabled=false, rootApi=/api, alpnVersions=[" +
-                            "HTTP_3, HTTP_1_1]}");
+        Assert.assertEquals(
+            "{host=1.1.1.1, port=8087, enabled=false, rootApi=/api, alpnVersions=[" + "HTTP_3, HTTP_1_1]}",
+            httpConfig.toString());
     }
 
     @Test
     public void test_data_dir() {
         System.setProperty("nubeio.dataDir", OSHelper.getAbsolutePathByOs("test").toString());
         overrideConfigThenAssert(
-            finalResult -> Assert.assertEquals(finalResult.getDataDir(), OSHelper.getAbsolutePathByOs("test")), true,
+            finalResult -> Assert.assertEquals(OSHelper.getAbsolutePathByOs("test"), finalResult.getDataDir()), true,
             true);
     }
 
@@ -206,7 +211,7 @@ public class ConfigProcessorTest {
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
-        Assert.assertEquals(httpConfig.toString(), "{port=8087.0}");
+        Assert.assertEquals("{port=8087.0}", httpConfig.toString());
     }
 
     @Test
@@ -214,13 +219,13 @@ public class ConfigProcessorTest {
         System.setProperty("nubeio.app.http.port", String.valueOf(3.4e+038));
         String jsonInput = "{\"__app__\":{\"__http__\":{\"port\":8080}}}";
         nubeConfig = IConfig.from(jsonInput, NubeConfig.class);
-        ((LinkedHashMap) nubeConfig.getAppConfig().get("__http__")).put("port", (float) 3.4e+028);
+        ((Map<String, Object>) nubeConfig.getAppConfig().get("__http__")).put("port", (float) 3.4e+028);
         Optional<NubeConfig> finalResult = this.processor.processAndOverride(NubeConfig.class, null,
                                                                              nubeConfig.toJson(), true, true);
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
-        Assert.assertEquals(httpConfig.toString(), "{port=3.4E38}");
+        Assert.assertEquals("{port=3.4E38}", httpConfig.toString());
     }
 
     @Test
@@ -236,9 +241,8 @@ public class ConfigProcessorTest {
         Assert.assertTrue(finalResult.isPresent());
         Object httpsConfig = finalResult.get().getAppConfig().get("__https__");
         Assert.assertNotNull(httpsConfig);
-        Assert.assertEquals(httpsConfig.toString(),
-                            "[{host=2.2.2.2, port=8088, enabled=false, rootApi=/test}, {host=2.2.2.3, port=8089, " +
-                            "enabled=true, rootApi=/test1}]");
+        Assert.assertEquals("[{host=2.2.2.2, port=8088, enabled=false, rootApi=/test}, {host=2.2.2.3, port=8089, " +
+                            "enabled=true, rootApi=/test1}]", httpsConfig.toString());
     }
 
     @Test
@@ -251,7 +255,7 @@ public class ConfigProcessorTest {
         Assert.assertTrue(finalResult.isPresent());
         Object httpsConfig = finalResult.get().getAppConfig().get("__https__").toString();
         Assert.assertNotNull(httpsConfig);
-        Assert.assertEquals(httpsConfig.toString(), "[abc1, def1]");
+        Assert.assertEquals("[abc1, def1]", httpsConfig.toString());
     }
 
     @Test
@@ -264,7 +268,7 @@ public class ConfigProcessorTest {
         Assert.assertTrue(finalResult.isPresent());
         Object httpsConfig = finalResult.get().getAppConfig().get("__https__");
         Assert.assertNotNull(httpsConfig);
-        Assert.assertEquals(httpsConfig.toString(), "[abc, def]");
+        Assert.assertEquals("[abc, def]", httpsConfig.toString());
     }
 
     @Test
@@ -279,7 +283,7 @@ public class ConfigProcessorTest {
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
-        Assert.assertEquals(httpConfig.toString(), "{host=[{name=abc.com}, {name=def.com}]}");
+        Assert.assertEquals("{host=[{name=abc.com}, {name=def.com}]}", httpConfig.toString());
     }
 
     @Test
@@ -292,7 +296,7 @@ public class ConfigProcessorTest {
         Assert.assertTrue(finalResult.isPresent());
         Object httpConfig = finalResult.get().getAppConfig().get("__http__");
         Assert.assertNotNull(httpConfig);
-        Assert.assertEquals(httpConfig.toString(), "{host=[abc.com, def.com]}");
+        Assert.assertEquals("{host=[abc.com, def.com]}", httpConfig.toString());
     }
 
     @Test
@@ -312,9 +316,9 @@ public class ConfigProcessorTest {
             Assert.assertTrue(finalResult.getSystemConfig().getClusterConfig().isActive());
             Object httpConfig = finalResult.getAppConfig().get("__http__");
             Assert.assertNotNull(httpConfig);
-            Assert.assertEquals(httpConfig.toString(),
-                                "{host=0.0.0.0, port=8088, enabled=true, rootApi=/api, alpnVersions=[" +
-                                "HTTP_2, HTTP_1_1]}");
+            Assert.assertEquals(
+                "{host=0.0.0.0, port=8088, enabled=true, rootApi=/api, alpnVersions=[" + "HTTP_2, HTTP_1_1]}",
+                httpConfig.toString());
         }, true, false);
     }
 
@@ -335,9 +339,9 @@ public class ConfigProcessorTest {
             Assert.assertFalse(finalResult.getSystemConfig().getClusterConfig().isActive());
             Object httpConfig = finalResult.getAppConfig().get("__http__");
             Assert.assertNotNull(httpConfig);
-            Assert.assertEquals(httpConfig.toString(),
-                                "{host=0.0.0.0, port=8086, enabled=true, rootApi=/api, alpnVersions=[" +
-                                "HTTP_2, HTTP_1_1]}");
+            Assert.assertEquals(
+                "{host=0.0.0.0, port=8086, enabled=true, rootApi=/api, alpnVersions=[" + "HTTP_2, HTTP_1_1]}",
+                httpConfig.toString());
         }, false, true);
     }
 

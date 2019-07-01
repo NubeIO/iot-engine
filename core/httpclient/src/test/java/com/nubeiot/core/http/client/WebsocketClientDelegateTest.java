@@ -88,7 +88,7 @@ public class WebsocketClientDelegateTest {
         client.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
         Thread.sleep(1000);
         controller.request(PUBLISHER_ADDRESS, EventPattern.PUBLISH_SUBSCRIBE,
-                           EventMessage.initial(EventAction.SEND, new JsonObject().put("k", 1)), null);
+                           EventMessage.initial(EventAction.SEND, new JsonObject().put("k", 1)));
     }
 
     @Test(expected = HttpException.class)

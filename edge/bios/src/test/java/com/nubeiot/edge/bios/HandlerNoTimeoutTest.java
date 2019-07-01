@@ -87,11 +87,10 @@ public class HandlerNoTimeoutTest extends BaseEdgeVerticleTest {
         EventMessage eventMessage = EventMessage.success(EventAction.PATCH, RequestData.builder().body(body).build());
         Async async = context.async();
         //loading patch takes 3 seconds when timeout is 5 seconds
-        this.edgeVerticle.getEventController().request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
-                                                       EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
-                                                       context.asyncAssertSuccess(response -> {
-                               TestHelper.testComplete(async);
-                           }), null);
+        this.edgeVerticle.getEventController()
+                         .request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
+                                  EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
+                                  context.asyncAssertSuccess(response -> TestHelper.testComplete(async)));
 
         async.awaitSuccess();
     }
