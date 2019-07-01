@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.cluster.ClusterType;
-import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.FileUtils;
 
 import lombok.AllArgsConstructor;
@@ -29,6 +28,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public final class NubeConfig implements IConfig {
 
+    public static final String DATA_DIR = "dataDir";
+
+    @JsonProperty(value = NubeConfig.DATA_DIR)
     private Path dataDir;
     @JsonProperty(value = SystemConfig.NAME)
     private SystemConfig systemConfig;
@@ -135,7 +137,7 @@ public final class NubeConfig implements IConfig {
 
             public static final String NAME = "__eventBus__";
 
-            static final String DELIVERY_OPTIONS = "deliveryOptions";
+            public static final String DELIVERY_OPTIONS = "__delivery__";
 
             @Getter
             @JsonIgnore
@@ -143,7 +145,7 @@ public final class NubeConfig implements IConfig {
 
             @Getter
             @JsonIgnore
-            private DeliveryOptions deliveryOptions = new DeliveryOptions();
+            private DeliveryOptions deliveryOptions;
 
             public EventBusConfig() {
                 this(null);
@@ -157,12 +159,16 @@ public final class NubeConfig implements IConfig {
                 this.computeIfPresent("clusterPublicPort", (s, o) -> (int) o == -1 ? null : o);
                 this.putIfAbsent("host", "0.0.0.0");
                 this.putIfAbsent("port", 5000);
-                options = new EventBusOptions(JsonObject.mapFrom(this));
-                Object deliveryOptionsConfig = this.get(DELIVERY_OPTIONS);
-                if (Objects.isNull(deliveryOptionsConfig) || !(deliveryOptionsConfig instanceof Map)) {
-                    throw new NubeException("Invalid delivery options config!");
+                this.options = new EventBusOptions(JsonObject.mapFrom(this));
+                this.deliveryOptions = createDeliveryConfig();
+            }
+
+            private DeliveryOptions createDeliveryConfig() {
+                Object deliveryConfig = this.get(DELIVERY_OPTIONS);
+                if (Objects.isNull(deliveryConfig)) {
+                    return new DeliveryOptions();
                 }
-                this.deliveryOptions = new DeliveryOptions(new JsonObject((Map) deliveryOptionsConfig));
+                return new DeliveryOptions(JsonObject.mapFrom(deliveryConfig));
             }
 
             @Override
@@ -180,10 +186,7 @@ public final class NubeConfig implements IConfig {
 
             @Override
             public JsonObject toJson() {
-                if (Objects.isNull(deliveryOptions)) {
-                    return options.toJson();
-                }
-                return options.toJson().mergeIn(this.deliveryOptions.toJson(), true);
+                return options.toJson().put(DELIVERY_OPTIONS, this.deliveryOptions.toJson());
             }
 
         }
