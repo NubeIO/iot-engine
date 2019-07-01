@@ -6,6 +6,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.EqualsAndHashCode;
@@ -24,6 +27,7 @@ import lombok.ToString;
 @EqualsAndHashCode(doNotUseGetters = true, onlyExplicitlyIncluded = true)
 @Builder(builderClassName = "Builder")
 @ToString(onlyExplicitlyIncluded = true)
+@JsonDeserialize(builder = EventModel.Builder.class)
 public final class EventModel {
 
     @NonNull
@@ -55,6 +59,7 @@ public final class EventModel {
         return Collections.unmodifiableSet(this.events.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
     }
 
+    @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
         public Builder addEvents(EventAction... actions) {

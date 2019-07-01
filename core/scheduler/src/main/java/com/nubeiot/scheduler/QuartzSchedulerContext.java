@@ -1,8 +1,5 @@
 package com.nubeiot.scheduler;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
@@ -10,32 +7,19 @@ import org.quartz.impl.StdSchedulerFactory;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.component.UnitContext;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.scheduler.solution.SchedulerConfig;
 
 import lombok.Getter;
 
 public class QuartzSchedulerContext extends UnitContext {
 
-    static final List<EventAction> REGISTER_ACTION = Arrays.asList(EventAction.CREATE, EventAction.REMOVE);
-
     @Getter
     private Scheduler scheduler;
-    @Getter
-    private EventModel registerEventModel;
 
-    QuartzSchedulerContext init(Vertx vertx, SchedulerConfig config) {
-        registerEventModel = EventModel.builder()
-                                       .address(config.getAddress())
-                                       .local(vertx.isClustered())
-                                       .pattern(EventPattern.REQUEST_RESPONSE)
-                                       .events(REGISTER_ACTION)
-                                       .build();
+    QuartzSchedulerContext init(Vertx vertx, String sharedKey, SchedulerConfig config) {
         try {
             scheduler = StdSchedulerFactory.getDefaultScheduler();
+            scheduler.setJobFactory(new VertxJobFactory(vertx, sharedKey, config));
             scheduler.start();
             return this;
         } catch (SchedulerException e) {
