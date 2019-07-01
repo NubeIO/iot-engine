@@ -361,8 +361,10 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     private Single<String> createTransaction(String moduleId, EventAction action, ITblModule module) {
-        logger.debug("Create new transaction for {}::::{}...", moduleId, action);
-        logger.debug("Previous module state: {}", module.toJson());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Create new transaction for {}::::{}...", moduleId, action);
+            logger.debug("Previous module state: {}", module.toJson());
+        }
         final LocalDateTime now = DateTimes.nowUTC();
         final String transactionId = UUID.randomUUID().toString();
         JsonObject metadata = module.toJson();
@@ -401,8 +403,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         old.setVersion(Strings.isBlank(newOne.getVersion()) ? old.getVersion() : newOne.getVersion());
         old.setPublishedBy(Strings.isBlank(newOne.getPublishedBy()) ? old.getPublishedBy() : newOne.getPublishedBy());
         old.setState(Objects.isNull(newOne.getState()) ? old.getState() : newOne.getState());
-        old.setSystemConfig(mergeAppSystemConfig(old.getSystemConfig(), newOne.getSystemConfig(), isUpdated));
-        old.setAppConfig(mergeAppConfig(old.getAppConfig(), newOne.getAppConfig(), isUpdated));
+        old.setSystemConfig(
+            IConfig.merge(old.getSystemConfig(), newOne.getSystemConfig(), isUpdated, NubeConfig.class).toJson());
+        old.setAppConfig(IConfig.merge(old.getAppConfig(), newOne.getAppConfig(), isUpdated, AppConfig.class).toJson());
         return old;
     }
 
@@ -416,30 +419,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         if (Objects.isNull(newOne.getAppConfig()) && isUpdated) {
             throw new NubeException("App config is required!");
         }
-    }
-
-    private JsonObject mergeAppSystemConfig(JsonObject oldOne, JsonObject newOne, boolean isUpdate) {
-        if (Objects.isNull(newOne)) {
-            return oldOne;
-        }
-        if (isUpdate) {
-            return newOne;
-        }
-        JsonObject oldApp = IConfig.from(oldOne, NubeConfig.class).toJson();
-        JsonObject newApp = IConfig.from(newOne, NubeConfig.class).toJson();
-        return IConfig.merge(oldApp, newApp, NubeConfig.class).toJson();
-    }
-
-    private JsonObject mergeAppConfig(JsonObject oldOne, JsonObject newOne, boolean isUpdate) {
-        if (Objects.isNull(newOne)) {
-            return oldOne;
-        }
-        if (isUpdate) {
-            return newOne;
-        }
-        JsonObject oldApp = IConfig.from(oldOne, AppConfig.class).toJson();
-        JsonObject newApp = IConfig.from(newOne, AppConfig.class).toJson();
-        return IConfig.merge(oldApp, newApp, AppConfig.class).toJson();
     }
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {

@@ -37,7 +37,7 @@ public final class LastTransactionEventHandler implements EventHandler {
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getList(RequestData data) {
         JsonObject filter = data.getFilter();
-        boolean lastTransaction = "true".equals(filter.getString("last"));
+        boolean lastTransaction = Boolean.parseBoolean(filter.getString("last"));
         ITblTransaction transaction = new TblTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getModuleId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Module Id cannot be blank");

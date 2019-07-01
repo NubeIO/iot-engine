@@ -1,6 +1,6 @@
 package com.nubeiot.edge.core;
 
-import static com.nubeiot.edge.core.loader.ModuleLoader.constructNubeConfig;
+import static com.nubeiot.core.NubeConfig.constructNubeConfig;
 
 import java.util.Collections;
 
@@ -33,8 +33,7 @@ public class PreDeploymentResultTest {
                                                            .appConfig(JsonObject.mapFrom(
                                                                Collections.singletonMap("testAbc", "ab")))
                                                            .build();
-        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig().toJson(),
-                                                 preResult.getAppConfig().toJson());
+        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
         JsonObject preResultJson = preResult.toJson();
         preResultJson.remove("app_config");
         preResultJson.remove("system_config");
@@ -63,8 +62,7 @@ public class PreDeploymentResultTest {
                                                            .systemConfig(new JsonObject())
                                                            .appConfig(new JsonObject())
                                                            .build();
-        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig().toJson(),
-                                                 preResult.getAppConfig().toJson());
+        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
         JsonObject preResultJson = preResult.toJson();
         preResultJson.remove("app_config");
         preResultJson.remove("system_config");
@@ -89,7 +87,9 @@ public class PreDeploymentResultTest {
                                                    .targetState(State.ENABLED)
                                                    .serviceId("serviceId")
                                                    .serviceFQN("serviceFQN")
-                                                   .deployId("deployId").systemConfig(new JsonObject()).appConfig(
+                                                   .deployId("deployId")
+                                                   .systemConfig(new JsonObject())
+                                                   .appConfig(
                                                        JsonObject.mapFrom(Collections.singletonMap("testAbc", "ab")))
                                                    .build()
                                                    .toJson();

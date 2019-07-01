@@ -1,5 +1,7 @@
 package com.nubeiot.edge.core.loader;
 
+import static com.nubeiot.core.NubeConfig.constructNubeConfig;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -11,9 +13,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.Vertx;
 
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
@@ -31,16 +30,12 @@ public final class ModuleLoader implements EventHandler {
     private static final Logger logger = LoggerFactory.getLogger(ModuleLoader.class);
     private final Vertx vertx;
 
-    public static NubeConfig constructNubeConfig(JsonObject appSystemCfg, JsonObject appCfg) {
-        return IConfig.from(appSystemCfg.mergeIn(new JsonObject().put(AppConfig.NAME, appCfg)), NubeConfig.class);
-    }
-
     @EventContractor(action = {EventAction.CREATE, EventAction.INIT}, returnType = Single.class)
     public Single<JsonObject> installModule(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
         logger.info("Vertx install module {}...", preResult.getServiceFQN());
         DeploymentOptions options = new DeploymentOptions().setConfig(
-            constructNubeConfig(preResult.getSystemConfig().toJson(), preResult.getAppConfig().toJson()).toJson());
+            constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig()).toJson());
         return vertx.rxDeployVerticle(preResult.getServiceFQN(), options).doOnError(throwable -> {
             throw new EngineException(throwable);
         }).map(id -> new JsonObject().put("deploy_id", id));

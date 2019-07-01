@@ -21,7 +21,6 @@ import com.nubeiot.core.dto.IRequestData;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 
@@ -87,34 +86,16 @@ public class PreDeploymentResult implements JsonData, IRequestData {
         }
 
         public PreDeploymentResult build() {
-            AppConfig appConfig = parseAppConfig(this.appConfig);
+            AppConfig appConfig = IConfig.parseConfig(this.appConfig, AppConfig.class,
+                                                      () -> IConfig.from(new JsonObject(), AppConfig.class));
 
-            NubeConfig systemConfig = parseSystemConfig(this.systemConfig);
+            NubeConfig systemConfig = IConfig.parseConfig(this.systemConfig, NubeConfig.class,
+                                                          () -> NubeConfig.blank(this.systemConfig));
             systemConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(serviceId)));
 
             return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
                                            Objects.isNull(targetState) ? State.NONE : targetState, serviceId,
                                            serviceFQN, deployId, appConfig, systemConfig, silent);
-        }
-
-        private AppConfig parseAppConfig(JsonObject appConfig) {
-            try {
-                return IConfig.from(appConfig, AppConfig.class);
-            } catch (NubeException ex) {
-                logger.trace("Try to parse app_config to {}", ex, AppConfig.class);
-                return IConfig.from(new JsonObject(), AppConfig.class);
-            }
-        }
-
-        private NubeConfig parseSystemConfig(JsonObject systemConfig) {
-            try {
-                return Objects.nonNull(systemConfig)
-                       ? IConfig.from(systemConfig, NubeConfig.class)
-                       : NubeConfig.blank();
-            } catch (NubeException ex) {
-                logger.trace("Try to parse system_config to {}", ex, NubeConfig.class);
-                return NubeConfig.blank(systemConfig);
-            }
         }
 
     }

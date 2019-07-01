@@ -35,7 +35,7 @@ public final class TransactionEventHandler implements EventHandler {
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
         JsonObject filter = data.getFilter();
-        boolean systemCfg = "true".equals(filter.getString("system_cfg"));
+        boolean systemCfg = Boolean.parseBoolean(filter.getString("system_cfg"));
         ITblTransaction transaction = new TblTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getTransactionId())) {
             throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");
@@ -43,7 +43,7 @@ public final class TransactionEventHandler implements EventHandler {
         return this.verticle.getEntityHandler()
                             .findTransactionById(transaction.getTransactionId())
                             .map(o -> o.orElseThrow(() -> new NotFoundException(
-                                String.format("Not found transaction id '%s'", transaction.getTransactionId()))))
+                                Strings.format("Not found transaction id '{0}'", transaction.getTransactionId()))))
                             .map(trans -> removePrevSystemConfig(trans, systemCfg));
     }
 
