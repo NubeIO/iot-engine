@@ -49,6 +49,10 @@ public final class NubeConfig implements IConfig {
         return new NubeConfig(dataDir, null, new DeployConfig(), IConfig.from(appConfig, AppConfig.class));
     }
 
+    public static NubeConfig blank(@NonNull Path dataDir) {
+        return new NubeConfig(dataDir, null, new DeployConfig(), null);
+    }
+
     /**
      * Create {@link NubeConfig} with default {@link DeployConfig} and without {@link SystemConfig}
      *
@@ -56,6 +60,11 @@ public final class NubeConfig implements IConfig {
      */
     public static NubeConfig blank() {
         return NubeConfig.blank(new JsonObject());
+    }
+
+    public static NubeConfig constructNubeConfig(NubeConfig nubeConfig, AppConfig appConfig) {
+        return IConfig.from(nubeConfig.toJson().mergeIn(new JsonObject().put(AppConfig.NAME, appConfig.toJson())),
+                            NubeConfig.class);
     }
 
     @Override

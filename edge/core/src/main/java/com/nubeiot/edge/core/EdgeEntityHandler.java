@@ -130,7 +130,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
         logger.info("{} module with data {}", action, module.toJson().encode());
         return this.handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
-            JsonObject deployConfig = this.getSecureDeployConfig(result.getServiceId(), result.getDeployCfg().toJson());
+            JsonObject appConfig = this.getSecureAppConfig(result.getServiceId(), result.getAppConfig().toJson());
             PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
                                                                          .transactionId(result.getTransactionId())
                                                                          .action(result.getAction())
@@ -139,7 +139,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                          .serviceId(result.getServiceId())
                                                                          .serviceFQN(result.getServiceFQN())
                                                                          .deployId(result.getDeployId())
-                                                                         .deployCfg(deployConfig)
+                                                                         .appConfig(appConfig)
+                                                                         .systemConfig(
+                                                                             result.getSystemConfig().toJson())
                                                                          .dataDir((String) this.getSharedDataFunc()
                                                                                                .apply(
                                                                                                    SharedDataDelegate.SHARED_DATADIR))
@@ -217,11 +219,11 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             return true;
         }
         if (transaction.getEvent() == EventAction.UPDATE || transaction.getEvent() == EventAction.PATCH) {
-            JsonObject prevState = transaction.getPrevState();
-            if (Objects.isNull(prevState)) {
+            JsonObject prevMetadata = transaction.getPrevMetadata();
+            if (Objects.isNull(prevMetadata)) {
                 return true;
             }
-            return new TblModule(prevState).getState() != State.DISABLED;
+            return new TblModule(prevMetadata).getState() != State.DISABLED;
         }
         return false;
     }
@@ -230,8 +232,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return queryExecutor.executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
     }
 
-    public Single<Optional<JsonObject>> findModuleById(String serviceId) {
-        return moduleDao.findOneById(serviceId).map(optional -> optional.map(ITblModule::toJson));
+    public Single<Optional<TblModule>> findModuleById(String serviceId) {
+        return moduleDao.findOneById(serviceId);
     }
 
     public Single<Optional<JsonObject>> findTransactionById(String transactionId) {
@@ -253,7 +255,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return transDao.queryExecutor()
                        .findOne(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
                                                         .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
-                                                        .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()))
+                                                        .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc())
+                                                        .limit(1))
                        .map(optional -> optional.map(TblTransaction::toJson));
     }
 
@@ -274,7 +277,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                 module.setState(State.NONE);
                 TblModule tblModule = new TblModule(module).setDeployLocation(config.getRepoConfig().getLocal());
                 return markModuleInsert(tblModule).flatMap(
-                    key -> createTransaction(key.getServiceId(), event, module.toJson()).map(
+                    key -> createTransaction(key.getServiceId(), event, module).map(
                         transId -> createPreDeployResult(module, transId, event, module.getState(), State.ENABLED)));
             }
 
@@ -285,12 +288,12 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                 return markModuleModify(module.setDeployLocation(config.getRepoConfig().getLocal()),
                                         new TblModule(oldOne),
                                         EventAction.UPDATE == event || EventAction.MIGRATE == event).flatMap(
-                    key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
+                    key -> createTransaction(key.getServiceId(), event, oldOne).map(
                         transId -> createPreDeployResult(key, transId, event, oldOne.getState(), targetState)));
             }
             if (EventAction.REMOVE == event) {
                 return markModuleDelete(new TblModule(oldOne)).flatMap(
-                    key -> createTransaction(key.getServiceId(), event, oldOne.toJson()).map(
+                    key -> createTransaction(key.getServiceId(), event, oldOne).map(
                         transId -> createPreDeployResult(key, transId, event, oldOne.getState(), targetState)));
             }
             throw new UnsupportedOperationException("Unsupported event " + event);
@@ -309,7 +312,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                     .generateFQN(module.getServiceId(), module.getVersion(),
                                                                  module.getServiceName()))
                                   .deployId(module.getDeployId())
-                                  .deployCfg(module.getDeployConfig())
+                                  .appConfig(module.getAppConfig())
+                                  .systemConfig(module.getSystemConfig())
                                   .dataDir((String) this.getSharedDataFunc().apply(SharedDataDelegate.SHARED_DATADIR))
                                   .build();
     }
@@ -356,11 +360,17 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                      .subscribe();
     }
 
-    private Single<String> createTransaction(String moduleId, EventAction action, JsonObject prevState) {
-        logger.debug("Create new transaction for {}::::{}...", moduleId, action);
-        logger.debug("Previous module state: {}", prevState.encode());
+    private Single<String> createTransaction(String moduleId, EventAction action, ITblModule module) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Create new transaction for {}::::{}...", moduleId, action);
+            logger.debug("Previous module state: {}", module.toJson());
+        }
         final LocalDateTime now = DateTimes.nowUTC();
         final String transactionId = UUID.randomUUID().toString();
+        JsonObject metadata = module.toJson();
+        // TODO: replace with POJO constant later
+        metadata.remove("system_config");
+        metadata.remove("app_config");
         final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)
                                                                .setModuleId(moduleId)
                                                                .setStatus(Status.WIP)
@@ -368,7 +378,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                .setIssuedAt(now)
                                                                .setModifiedAt(now)
                                                                .setRetry(0)
-                                                               .setPrevState(prevState);
+                                                               .setPrevMetadata(metadata)
+                                                               .setPrevSystemConfig(module.getSystemConfig())
+                                                               .setPrevAppConfig(module.getAppConfig());
         return transDao.insert(transaction).map(i -> transactionId);
     }
 
@@ -391,7 +403,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         old.setVersion(Strings.isBlank(newOne.getVersion()) ? old.getVersion() : newOne.getVersion());
         old.setPublishedBy(Strings.isBlank(newOne.getPublishedBy()) ? old.getPublishedBy() : newOne.getPublishedBy());
         old.setState(Objects.isNull(newOne.getState()) ? old.getState() : newOne.getState());
-        old.setDeployConfig(mergeDeployConfig(old.getDeployConfig(), newOne.getDeployConfig(), isUpdated));
+        old.setSystemConfig(
+            IConfig.merge(old.getSystemConfig(), newOne.getSystemConfig(), isUpdated, NubeConfig.class).toJson());
+        old.setAppConfig(IConfig.merge(old.getAppConfig(), newOne.getAppConfig(), isUpdated, AppConfig.class).toJson());
         return old;
     }
 
@@ -402,23 +416,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         if (Objects.isNull(newOne.getState()) && isUpdated) {
             throw new NubeException("State is required!");
         }
-        if (Objects.isNull(newOne.getDeployConfig()) && isUpdated) {
-            throw new NubeException("Deploy config is required!");
+        if (Objects.isNull(newOne.getAppConfig()) && isUpdated) {
+            throw new NubeException("App config is required!");
         }
-    }
-
-    private JsonObject mergeDeployConfig(JsonObject oldOne, JsonObject newOne, boolean isUpdate) {
-        if (Objects.isNull(newOne)) {
-            return oldOne;
-        }
-        if (isUpdate) {
-            return newOne;
-        }
-        JsonObject oldApp = IConfig.from(oldOne, AppConfig.class).toJson();
-        JsonObject newApp = IConfig.from(newOne, AppConfig.class).toJson();
-        JsonObject appAfterMerge = IConfig.merge(oldApp, newApp, AppConfig.class).toJson();
-
-        return IConfig.merge(oldOne, new JsonObject().put(AppConfig.NAME, appAfterMerge), NubeConfig.class).toJson();
     }
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {
@@ -483,14 +483,14 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return historyDao.findOneById(transactionId).map(optional -> optional.map(ITblRemoveHistory::toJson));
     }
 
-    public JsonObject getSecureDeployConfig(String serviceId, JsonObject deployConfigJson) {
+    public JsonObject getSecureAppConfig(String serviceId, JsonObject appConfigJson) {
         if ("com.nubeiot.edge.module:installer".equals(serviceId)) {
             logger.info("Removing nexus password from result");
-            NubeConfig deployConfig = IConfig.from(deployConfigJson, NubeConfig.class);
-            Object installerObject = deployConfig.getAppConfig().get(InstallerConfig.NAME);
+            AppConfig appConfig = IConfig.from(appConfigJson, AppConfig.class);
+            Object installerObject = appConfig.get(InstallerConfig.NAME);
             if (Objects.isNull(installerObject)) {
                 logger.debug("Installer config is not available");
-                return deployConfigJson;
+                return appConfigJson;
             }
             InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
             installerConfig.getRepoConfig().getRemoteConfig().getUrls().values().forEach(remoteUrl -> {
@@ -517,11 +517,11 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                     });
                 });
             });
-            deployConfig.getAppConfig().put(InstallerConfig.NAME, installerConfig);
+            appConfig.put(InstallerConfig.NAME, installerConfig);
             logger.debug("Installer config {}", installerConfig.toJson().toString());
-            return deployConfig.toJson();
+            return appConfig.toJson();
         }
-        return deployConfigJson;
+        return appConfigJson;
     }
 
 }

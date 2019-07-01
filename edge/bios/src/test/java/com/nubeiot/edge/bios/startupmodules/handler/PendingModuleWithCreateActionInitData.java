@@ -32,7 +32,8 @@ public class PendingModuleWithCreateActionInitData extends MockInitDataEntityHan
                            .setState(State.PENDING)
                            .setCreatedAt(DateTimes.nowUTC())
                            .setModifiedAt(DateTimes.nowUTC())
-                           .setDeployConfig(new JsonObject()));
+                           .setSystemConfig(new JsonObject())
+                           .setAppConfig(new JsonObject()));
         Single<Integer> insertTransaction02 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending-service-with-transaction-is-wip-prestate-action-is-create")

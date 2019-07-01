@@ -1,5 +1,7 @@
 package com.nubeiot.edge.core.loader;
 
+import static com.nubeiot.core.NubeConfig.constructNubeConfig;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,8 +34,8 @@ public final class ModuleLoader implements EventHandler {
     public Single<JsonObject> installModule(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
         logger.info("Vertx install module {}...", preResult.getServiceFQN());
-        DeploymentOptions options = new DeploymentOptions(preResult.getDeployCfg().getDeployConfig()).setConfig(
-            preResult.getDeployCfg().toJson());
+        DeploymentOptions options = new DeploymentOptions().setConfig(
+            constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig()).toJson());
         return vertx.rxDeployVerticle(preResult.getServiceFQN(), options).doOnError(throwable -> {
             throw new EngineException(throwable);
         }).map(id -> new JsonObject().put("deploy_id", id));

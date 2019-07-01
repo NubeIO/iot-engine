@@ -33,15 +33,14 @@ public class PendingModuleWithTwoTransactionsInitData extends MockInitDataEntity
                            .setState(State.PENDING)
                            .setCreatedAt(DateTimes.nowUTC())
                            .setModifiedAt(DateTimes.nowUTC())
-                           .setDeployConfig(new JsonObject()));
+                           .setSystemConfig(new JsonObject())
+                           .setAppConfig(new JsonObject()));
         Single<Integer> insertTransaction08_1 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending_module_with_two_transactions")
                                 .setStatus(Status.WIP)
                                 .setEvent(EventAction.PATCH)
-                                .setPrevState(new JsonObject())
-                                .setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 25))
-                                .setPrevState(new JsonObject(
+                                .setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 25)).setPrevMetadata(new JsonObject(
                                     "{\"service_id" + "\":\"pending_module_with_two_transactions\"," +
                                     "\"service_name" + "\":\"service5" + "\",\"service_type\":\"JAVA\"," +
                                     "\"version\":\"1.0.0\"," + "\"published_by\":null," + "\"state\":\"DISABLED\"," +
@@ -53,10 +52,7 @@ public class PendingModuleWithTwoTransactionsInitData extends MockInitDataEntity
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending_module_with_two_transactions")
                                 .setStatus(Status.WIP)
-                                .setEvent(EventAction.CREATE)
-                                .setPrevState(new JsonObject())
-                                .setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 30))
-                                .setPrevState(new JsonObject()));
+                                .setEvent(EventAction.CREATE).setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 30)));
         return Single.zip(insert08, insertTransaction08_1, insertTransaction08_2, (r1, r2, r3) -> r1 + r2 + r3);
     }
 

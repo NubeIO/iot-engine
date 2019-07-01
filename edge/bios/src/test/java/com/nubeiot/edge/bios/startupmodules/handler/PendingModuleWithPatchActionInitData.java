@@ -32,15 +32,15 @@ public class PendingModuleWithPatchActionInitData extends MockInitDataEntityHand
                            .setState(State.PENDING)
                            .setCreatedAt(DateTimes.nowUTC())
                            .setModifiedAt(DateTimes.nowUTC())
-                           .setDeployConfig(new JsonObject()));
+                           .setSystemConfig(new JsonObject())
+                           .setAppConfig(new JsonObject()));
 
         Single<Integer> insertTransaction04 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending-service-with-transaction-is-wip-prestate-action-is-patch")
                                 .setStatus(Status.WIP)
                                 .setEvent(EventAction.PATCH)
-                                .setModifiedAt(DateTimes.nowUTC())
-                                .setPrevState(new JsonObject(
+                                .setModifiedAt(DateTimes.nowUTC()).setPrevMetadata(new JsonObject(
                                     "{\"service_id\":\"pending-service-with-transaction-is-wip" +
                                     "-prestate-action-is-patch\"," +
                                     "\"service_name\":\"service4\",\"service_type\":\"JAVA\"," +

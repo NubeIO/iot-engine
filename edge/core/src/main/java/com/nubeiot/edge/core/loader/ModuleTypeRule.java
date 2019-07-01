@@ -33,7 +33,9 @@ public final class ModuleTypeRule implements Shareable {
 
     public ITblModule parse(@NonNull Path dataDir, @NonNull JsonObject metadata, AppConfig appConfig) {
         ITblModule tblModule = parse(metadata);
-        return tblModule.setDeployConfig(computeNubeConfig(dataDir, appConfig, tblModule.getServiceId()).toJson());
+        tblModule = tblModule.setAppConfig(appConfig.toJson());
+        tblModule = tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
+        return tblModule;
     }
 
     public ITblModule parse(JsonObject metadata) {
@@ -44,12 +46,13 @@ public final class ModuleTypeRule implements Shareable {
     }
 
     public ITblModule parse(@NonNull Path dataDir, @NonNull ITblModule tblModule, AppConfig appConfig) {
-        return tblModule.setDeployConfig(computeNubeConfig(dataDir, appConfig, tblModule.getServiceId()).toJson());
+        tblModule = tblModule.setAppConfig(appConfig.toJson());
+        tblModule = tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
+        return tblModule;
     }
 
-    private NubeConfig computeNubeConfig(@NonNull Path parentDataDir, AppConfig appConfig, String serviceId) {
-        return NubeConfig.blank(FileUtils.recomputeDataDir(parentDataDir, FileUtils.normalize(serviceId)),
-                                appConfig.toJson());
+    private JsonObject computeAppSystemConfig(@NonNull Path parentDataDir, String serviceId) {
+        return NubeConfig.blank(FileUtils.recomputeDataDir(parentDataDir, FileUtils.normalize(serviceId))).toJson();
     }
 
     public ModuleTypeRule registerRule(ModuleType moduleType, List<String> searchPattern) {

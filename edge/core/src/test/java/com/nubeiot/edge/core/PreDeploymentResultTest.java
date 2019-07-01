@@ -1,5 +1,7 @@
 package com.nubeiot.edge.core;
 
+import static com.nubeiot.core.NubeConfig.constructNubeConfig;
+
 import java.util.Collections;
 
 import org.json.JSONException;
@@ -27,23 +29,25 @@ public class PreDeploymentResultTest {
                                                            .serviceId("serviceId")
                                                            .serviceFQN("serviceFQN")
                                                            .deployId("deployId")
-                                                           .deployCfg(JsonObject.mapFrom(
+                                                           .systemConfig(new JsonObject())
+                                                           .appConfig(JsonObject.mapFrom(
                                                                Collections.singletonMap("testAbc", "ab")))
                                                            .build();
-        NubeConfig deployCfg = preResult.getDeployCfg();
+        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
         JsonObject preResultJson = preResult.toJson();
-        preResultJson.remove("deploy_cfg");
+        preResultJson.remove("app_config");
+        preResultJson.remove("system_config");
         JSONAssert.assertEquals(
             "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
             "\"service_id\":\"serviceId\",\"service_fqn\":\"serviceFQN\",\"deploy_id\":\"deployId\"," +
             "\"silent\":false}", preResultJson.encode(), JSONCompareMode.STRICT);
-        Assert.assertNotNull(deployCfg);
-        Assert.assertNull(deployCfg.getSystemConfig());
-        Assert.assertNotNull(deployCfg.getDataDir());
-        Assert.assertNotNull(deployCfg.getAppConfig());
-        Assert.assertEquals(1, deployCfg.getAppConfig().size());
-        Assert.assertEquals("ab", deployCfg.getAppConfig().get("testAbc"));
-        Assert.assertNotNull(deployCfg.getDeployConfig());
+        Assert.assertNotNull(nubeCfg);
+        Assert.assertNull(nubeCfg.getSystemConfig());
+        Assert.assertNotNull(nubeCfg.getDataDir());
+        Assert.assertNotNull(nubeCfg.getAppConfig());
+        Assert.assertEquals(1, nubeCfg.getAppConfig().size());
+        Assert.assertEquals("ab", nubeCfg.getAppConfig().get("testAbc"));
+        Assert.assertNotNull(nubeCfg.getDeployConfig());
     }
 
     @Test
@@ -55,20 +59,23 @@ public class PreDeploymentResultTest {
                                                            .targetState(State.ENABLED)
                                                            .serviceId("serviceId")
                                                            .serviceFQN("serviceFQN")
+                                                           .systemConfig(new JsonObject())
+                                                           .appConfig(new JsonObject())
                                                            .build();
+        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
         JsonObject preResultJson = preResult.toJson();
-        preResultJson.remove("deploy_cfg");
-        NubeConfig deployCfg = preResult.getDeployCfg();
-        System.out.println(deployCfg.toJson());
+        preResultJson.remove("app_config");
+        preResultJson.remove("system_config");
+        System.out.println(nubeCfg.toJson());
         JSONAssert.assertEquals(
             "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
             "\"service_id\":\"serviceId\",\"service_fqn\":\"serviceFQN\",\"silent\":false}", preResultJson.encode(),
             JSONCompareMode.STRICT);
-        Assert.assertNotNull(deployCfg);
-        Assert.assertNotNull(deployCfg.getAppConfig());
-        Assert.assertTrue(deployCfg.getAppConfig().isEmpty());
-        Assert.assertNotNull(deployCfg.getDeployConfig());
-        Assert.assertNull(deployCfg.getSystemConfig());
+        Assert.assertNotNull(nubeCfg);
+        Assert.assertNotNull(nubeCfg.getAppConfig());
+        Assert.assertTrue(nubeCfg.getAppConfig().isEmpty());
+        Assert.assertNotNull(nubeCfg.getDeployConfig());
+        Assert.assertNull(nubeCfg.getSystemConfig());
     }
 
     @Test
@@ -81,11 +88,11 @@ public class PreDeploymentResultTest {
                                                    .serviceId("serviceId")
                                                    .serviceFQN("serviceFQN")
                                                    .deployId("deployId")
-                                                   .deployCfg(
+                                                   .systemConfig(new JsonObject())
+                                                   .appConfig(
                                                        JsonObject.mapFrom(Collections.singletonMap("testAbc", "ab")))
                                                    .build()
                                                    .toJson();
-        System.out.println(jsonObject);
         PreDeploymentResult preResult = JsonData.from(jsonObject, PreDeploymentResult.class);
         Assert.assertNotNull(preResult);
         Assert.assertEquals("1", preResult.getTransactionId());
@@ -95,7 +102,7 @@ public class PreDeploymentResultTest {
         Assert.assertEquals(EventAction.REMOVE, preResult.getAction());
         Assert.assertEquals(State.ENABLED, preResult.getPrevState());
         Assert.assertEquals(State.ENABLED, preResult.getTargetState());
-        Assert.assertEquals("{\"testAbc\":\"ab\"}", preResult.getDeployCfg().getAppConfig().toJson().encode());
+        Assert.assertEquals("{\"testAbc\":\"ab\"}", preResult.getAppConfig().toJson().encode());
     }
 
 }
