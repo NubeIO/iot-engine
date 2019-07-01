@@ -10,7 +10,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -47,8 +46,6 @@ public class BACnetVerticle extends ContainerVerticle {
         startBACnet(bacnetConfig);
         initLocalPoints(bacnetConfig.getLocalPointsAddress());
         //TODO: init all configs from DB when ready to implement
-        //REGISTER ENDPOINTS
-        registerEventbus(SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey()));
         addProvider(new MicroserviceProvider(), this::publishServices);
     }
 

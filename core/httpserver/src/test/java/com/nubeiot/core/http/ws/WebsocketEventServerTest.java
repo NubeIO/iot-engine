@@ -118,7 +118,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         EventModel publisher = MockWebsocketEvent.ONLY_PUBLISHER.getPublisher();
         EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(),
                                                                            this.getClass().getName());
-        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo, null));
+        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo));
         Async async = context.async(1);
         assertConsumerData(async, publisher.getAddress(),
                            o -> JsonHelper.assertJson(context, async, echo.toJson(), (JsonObject) o));
@@ -132,7 +132,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(),
                                                                            this.getClass().getName());
         startServer(context, new HttpServerRouter().registerEventBusSocket(MockWebsocketEvent.ONLY_PUBLISHER));
-        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo, null));
+        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo));
         Async async = context.async(1);
         WebSocket ws = setupSockJsClient(context, async,
                                          Urls.combinePath("/ws", MockWebsocketEvent.ONLY_PUBLISHER.getPath()),

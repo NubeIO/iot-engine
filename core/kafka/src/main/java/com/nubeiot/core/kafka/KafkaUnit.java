@@ -1,5 +1,7 @@
 package com.nubeiot.core.kafka;
 
+import java.nio.file.Path;
+
 import io.vertx.core.Future;
 
 import com.nubeiot.core.component.UnitVerticle;
@@ -11,8 +13,13 @@ public final class KafkaUnit extends UnitVerticle<KafkaConfig, KafkaContext> {
 
     private final KafkaRouter router;
 
-    public KafkaUnit(KafkaRouter router) {
+    KafkaUnit(KafkaRouter router) {
         super(new KafkaContext());
+        this.router = router;
+    }
+
+    KafkaUnit(KafkaRouter router, String sharedKey, Path dataDir) {
+        super(new KafkaContext(), sharedKey, dataDir);
         this.router = router;
     }
 

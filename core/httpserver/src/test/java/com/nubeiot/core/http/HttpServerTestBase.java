@@ -32,7 +32,6 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
-import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.event.EventMessage;
@@ -191,19 +190,13 @@ public class HttpServerTestBase {
     }
 
     private HttpServer createHttpServer(TestContext context, HttpServerRouter httpRouter) {
-        HttpServer verticle = new HttpServer(httpRouter);
-        String sharedKey = HttpServerTestBase.class.getName();
-        verticle.registerSharedData(sharedKey);
         try {
-            SharedDataDelegate.addLocalDataValue(vertx.getDelegate(), sharedKey,
-                                                 SharedDataDelegate.SHARED_DATADIR,
-                                                 tempFolder.newFolder(this.getClass().getName()).toString());
-            SharedDataDelegate.addLocalDataValue(vertx.getDelegate(), sharedKey, SharedDataDelegate.SHARED_EVENTBUS,
-                                                 SharedDataDelegate.getEventController(vertx.getDelegate(), sharedKey));
+            return new HttpServer(httpRouter, this.getClass().getName(),
+                                  tempFolder.newFolder(this.getClass().getName()).toPath());
         } catch (IOException e) {
             context.fail(e);
+            return null;
         }
-        return verticle;
     }
 
 }

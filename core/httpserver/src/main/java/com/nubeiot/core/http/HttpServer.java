@@ -61,6 +61,11 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         this.httpRouter = httpRouter;
     }
 
+    HttpServer(HttpServerRouter httpRouter, String sharedKey, Path testDir) {
+        super(new HttpServerContext(), sharedKey, testDir);
+        this.httpRouter = httpRouter;
+    }
+
     @Override
     public void start(Future<Void> future) {
         logger.info("Starting HTTP Server...");
@@ -255,11 +260,11 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         logger.info("Init Websocket router...");
-        return new WebsocketEventBuilder(vertx, router).rootWs(websocketCfg.getRootWs())
-                                                       .register(httpRouter.getWebsocketEvents())
-                                                       .handler(WebsocketBridgeEventHandler.class)
-                                                       .options(websocketCfg)
-                                                       .build();
+        return new WebsocketEventBuilder(vertx, router, getSharedKey()).rootWs(websocketCfg.getRootWs())
+                                                                       .register(httpRouter.getWebsocketEvents())
+                                                                       .handler(WebsocketBridgeEventHandler.class)
+                                                                       .options(websocketCfg)
+                                                                       .build();
     }
 
     private Router initHttp2Router(Router router) { return router; }

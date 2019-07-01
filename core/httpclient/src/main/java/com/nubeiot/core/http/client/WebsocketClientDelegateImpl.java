@@ -22,18 +22,17 @@ import com.nubeiot.core.http.client.handler.WsResponseErrorHandler;
 
 class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketClientDelegate {
 
-    private final Vertx vertx;
     private final int connTimeout;
+    private final EventController controller;
 
     WebsocketClientDelegateImpl(Vertx vertx, HttpClientConfig config) {
         super(vertx, config);
-        this.vertx = vertx;
         this.connTimeout = config.getOptions().getConnectTimeout();
+        this.controller = SharedDataDelegate.getEventController(vertx, WebsocketClientDelegate.class.getName());
     }
 
     @Override
     public void open(WebsocketClientEventMetadata metadata, MultiMap headers) {
-        EventController controller = SharedDataDelegate.getEventController(vertx, this.getClass().getName());
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> ref = new AtomicReference<>();
         HandlerConfig handler = getHandlerConfig();
@@ -66,6 +65,11 @@ class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketCli
     @Override
     public void asyncOpen(WebsocketClientEventMetadata metadata, MultiMap headers) {
         throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public EventController getEventController() {
+        return controller;
     }
 
 }

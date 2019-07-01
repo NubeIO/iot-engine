@@ -15,7 +15,6 @@ import io.reactivex.Observable;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -24,7 +23,6 @@ import io.vertx.reactivex.core.AbstractVerticle;
 import com.nubeiot.core.ConfigProcessor;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.NubeConfig.SystemConfig.EventBusConfig;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
@@ -58,18 +56,12 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
         this.nubeConfig = nubeConfig.orElseGet(() -> computeConfig(config()));
 
-        this.eventController = initEventController();
+        this.eventController = new DefaultEventController(this.vertx.getDelegate(), this.nubeConfig.getSystemConfig()
+                                                                                                   .getEventBusConfig()
+                                                                                                   .getDeliveryOptions());
         this.registerEventbus(eventController);
         this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController)
             .addSharedData(SharedDataDelegate.SHARED_DATADIR, this.nubeConfig.getDataDir().toAbsolutePath().toString());
-    }
-
-    public EventController initEventController() {
-        EventBusConfig eventBusConfig = this.nubeConfig.getSystemConfig().getEventBusConfig();
-        return EventControllerBridge.getInstance()
-                                    .getEventController(vertx.getDelegate(), Objects.isNull(eventBusConfig)
-                                                                             ? new DeliveryOptions()
-                                                                             : eventBusConfig.getDeliveryOptions());
     }
 
     @Override

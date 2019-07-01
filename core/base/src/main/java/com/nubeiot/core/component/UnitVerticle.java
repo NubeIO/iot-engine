@@ -1,5 +1,6 @@
 package com.nubeiot.core.component;
 
+import java.nio.file.Path;
 import java.util.Objects;
 
 import io.vertx.core.AbstractVerticle;
@@ -7,6 +8,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
+import com.nubeiot.core.utils.FileUtils;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,12 +26,23 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
     protected C config;
     @Getter(value = AccessLevel.PROTECTED)
     private String sharedKey;
+    private Path testDir;
+
+    /**
+     * For test independent
+     */
+    protected UnitVerticle(T context, String sharedKey, Path testDir) {
+        this(context);
+        this.registerSharedData(Strings.isBlank(sharedKey) ? toString() : sharedKey);
+        this.testDir = Objects.isNull(testDir) ? FileUtils.DEFAULT_DATADIR : testDir;
+    }
 
     @Override
     public void start() {
         logger.debug("Computing component configure from {} of {}", configFile(), configClass());
         this.config = computeConfig(config());
         logger.debug("Unit Configuration: {}", config.toJson().encode());
+        this.initTestSharedData(testDir);
     }
 
     @Override
@@ -48,6 +62,15 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
         logger.debug("Retrieve SharedData by SharedKey {}", sharedKey);
         final R dataValue = SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
         return Objects.isNull(dataValue) ? fallback : dataValue;
+    }
+
+    private void initTestSharedData(Path testDir) {
+        if (Objects.isNull(testDir)) {
+            return;
+        }
+        SharedDataDelegate.addLocalDataValue(vertx, sharedKey, SharedDataDelegate.SHARED_DATADIR, testDir.toString());
+        SharedDataDelegate.addLocalDataValue(vertx, sharedKey, SharedDataDelegate.SHARED_EVENTBUS,
+                                             new DefaultEventController(vertx));
     }
 
 }

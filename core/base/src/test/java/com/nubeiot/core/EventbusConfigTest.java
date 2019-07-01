@@ -69,7 +69,7 @@ public class EventbusConfigTest {
         EventBusConfig eventBusConfig = IConfig.from(
             "{\"clientAuth\":\"REQUIRED\",\"ssl\":true,\"keyStoreOptions\":{\"path" + "\":\"eventBusKeystore.jks\"," +
             "\"password\":\"nubesparkEventBus\"},\"trustStoreOptions\":{\"path" + "\":\"eventBusKeystore.jks\"," +
-            "\"password\":\"nubesparkEventBus\"}," + "\"deliveryOptions\":{\"codecName\":\"abc\"," +
+            "\"password\":\"nubesparkEventBus\"}," + "\"__delivery__\":{\"codecName\":\"abc\"," +
             "\"timeout\": 300000, \"headers\":{\"Content-type\":\"application/json\", \"Method\":\"GET\"}}}",
             EventBusConfig.class);
         DeliveryOptions deliveryOptions = eventBusConfig.getDeliveryOptions();

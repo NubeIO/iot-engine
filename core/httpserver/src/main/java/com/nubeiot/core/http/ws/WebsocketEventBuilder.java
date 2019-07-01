@@ -41,6 +41,7 @@ public final class WebsocketEventBuilder {
     private final Logger logger = LoggerFactory.getLogger(WebsocketEventBuilder.class);
     private final Vertx vertx;
     private final Router router;
+    private final String sharedKey;
     private final Map<String, List<WebsocketServerEventMetadata>> socketsByPath = new HashMap<>();
     private WebsocketConfig websocketConfig;
     private Class<? extends WebsocketBridgeEventHandler> bridgeHandlerClass = WebsocketBridgeEventHandler.class;
@@ -51,7 +52,7 @@ public final class WebsocketEventBuilder {
      * For test
      */
     WebsocketEventBuilder() {
-        this(null, null);
+        this(null, null, WebsocketEventBuilder.class.getName());
     }
 
     public WebsocketEventBuilder rootWs(String rootWs) {
@@ -91,7 +92,7 @@ public final class WebsocketEventBuilder {
 
     public Router build() {
         SockJSHandler sockJSHandler = SockJSHandler.create(vertx, config().getSockjsOptions());
-        EventController controller = SharedDataDelegate.getEventController(vertx, this.getClass().getName());
+        EventController controller = SharedDataDelegate.getEventController(vertx, sharedKey);
         validate().forEach((path, socketMapping) -> {
             String fullPath = Urls.combinePath(rootWs, path, ApiConstants.WILDCARDS_ANY_PATH);
             router.route(fullPath)
