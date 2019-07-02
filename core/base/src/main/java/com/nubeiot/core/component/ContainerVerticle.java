@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -26,7 +25,6 @@ import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
-import com.nubeiot.core.utils.Configs;
 
 import lombok.Getter;
 
@@ -48,14 +46,11 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     @Override
     public void start() {
-        Optional<NubeConfig> nubeConfig = new ConfigProcessor(vertx.getDelegate()).processAndOverride(NubeConfig.class,
-                                                                                                      Configs.loadJsonConfig(
-                                                                                                          configFile()),
-                                                                                                      config(), true,
-                                                                                                      false);
-
-        this.nubeConfig = nubeConfig.orElseGet(() -> computeConfig(config()));
-        this.eventController = new EventController(vertx);
+        final NubeConfig fileConfig = computeConfig(config());
+        this.nubeConfig = new ConfigProcessor(vertx).override(fileConfig.toJson(), true, false).orElse(fileConfig);
+        this.eventController = new DefaultEventController(this.vertx.getDelegate(), this.nubeConfig.getSystemConfig()
+                                                                                                   .getEventBusConfig()
+                                                                                                   .getDeliveryOptions());
         this.registerEventbus(eventController);
         this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController)
             .addSharedData(SharedDataDelegate.SHARED_DATADIR, this.nubeConfig.getDataDir().toAbsolutePath().toString());

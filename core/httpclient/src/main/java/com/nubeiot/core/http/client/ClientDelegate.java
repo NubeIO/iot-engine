@@ -12,10 +12,8 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -67,13 +65,6 @@ abstract class ClientDelegate implements IClientDelegate {
             return clientConfig.getHostInfo();
         }
         return JsonData.from(clientConfig.getHostInfo().toJson().mergeIn(options.toJson(), true), HostInfo.class);
-    }
-
-    static String computePath(String path, RequestData requestData) {
-        if (Strings.isBlank(path)) {
-            return "";
-        }
-        return path;
     }
 
     @Override

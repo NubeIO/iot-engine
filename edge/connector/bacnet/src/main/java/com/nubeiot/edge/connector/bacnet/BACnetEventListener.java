@@ -48,7 +48,7 @@ public class BACnetEventListener extends DeviceEventAdapter {
                         monitoredObjectIdentifier);
         } else {
             EventMessage message = EventMessage.initial(EventAction.UPDATE, json);
-            eventController.fire(POINTS_API, EventPattern.POINT_2_POINT, message);
+            eventController.fire(POINTS_API, EventPattern.POINT_2_POINT, message, null);
         }
     }
 

@@ -21,9 +21,7 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
-import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 
@@ -32,25 +30,23 @@ import ch.qos.logback.classic.Logger;
 
 public class KafkaUnitTestBase {
 
-    static final Customization IGNORE_TIMESTAMP = new Customization("data.timestamp", (o1, o2) -> true);
-    static final Customization IGNORE_CHECKSUM = new Customization("data.checksum", (o1, o2) -> true);
-    static final Customization IGNORE_HEADERS = new Customization("data.headers", (o1, o2) -> true);
-    static final Customization IGNORE_EPOCH = new Customization("data.leaderEpoch", (o1, o2) -> true);
-
-    @ClassRule
-    public static TemporaryFolder tempFolder = new TemporaryFolder();
-    static final int TEST_TIMEOUT_SEC = 8;
-    protected static KafkaCluster kafkaCluster;
-    protected static int kafkaPort;
-
-    protected Vertx vertx;
-    protected KafkaConfig kafkaConfig;
-
     public static final EventModel KAFKA_PUBLISHER = EventModel.builder()
                                                                .address("kafka.broadcaster")
                                                                .pattern(EventPattern.PUBLISH_SUBSCRIBE)
                                                                .event(EventAction.CREATE)
                                                                .build();
+    static final Customization IGNORE_TIMESTAMP = new Customization("data.timestamp", (o1, o2) -> true);
+    static final Customization IGNORE_CHECKSUM = new Customization("data.checksum", (o1, o2) -> true);
+    static final Customization IGNORE_HEADERS = new Customization("data.headers", (o1, o2) -> true);
+    static final Customization IGNORE_EPOCH = new Customization("data.leaderEpoch", (o1, o2) -> true);
+    static final int TEST_TIMEOUT_SEC = 8;
+    @ClassRule
+    public static TemporaryFolder tempFolder = new TemporaryFolder();
+    protected static KafkaCluster kafkaCluster;
+    protected static int kafkaPort;
+    private static File dataDir;
+    protected Vertx vertx;
+    protected KafkaConfig kafkaConfig;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -78,7 +74,7 @@ public class KafkaUnitTestBase {
         if (kafkaCluster != null) {
             throw new IllegalStateException();
         }
-        File dataDir = tempFolder.newFolder("kafka");
+        dataDir = tempFolder.newFolder("kafka");
         kafkaPort = TestHelper.getRandomPort();
         kafkaCluster = new KafkaCluster().usingDirectory(dataDir).withPorts(TestHelper.getRandomPort(), kafkaPort)
                                          .deleteDataPriorToStartup(true)
@@ -94,8 +90,14 @@ public class KafkaUnitTestBase {
         return kafkaConfig;
     }
 
+    private static KafkaUnit startKafkaUnit(Vertx vertx, TestContext context, KafkaConfig config, KafkaRouter router) {
+        DeploymentOptions options = new DeploymentOptions().setConfig(config.toJson());
+        KafkaUnit verticle = new KafkaUnit(router, KafkaUnit.class.getName(), dataDir.toPath().resolve("kafka"));
+        return VertxHelper.deploy(vertx, context, options, verticle, TEST_TIMEOUT_SEC);
+    }
+
     @Before
-    public void before(TestContext context) throws IOException {
+    public void before(TestContext context) {
         vertx = Vertx.vertx();
         kafkaConfig = createKafkaConfig();
     }
@@ -107,14 +109,6 @@ public class KafkaUnitTestBase {
 
     KafkaUnit startKafkaUnit(TestContext context, KafkaRouter router) {
         return startKafkaUnit(vertx, context, kafkaConfig, router);
-    }
-
-    private static KafkaUnit startKafkaUnit(Vertx vertx, TestContext context, KafkaConfig config, KafkaRouter router) {
-        DeploymentOptions options = new DeploymentOptions().setConfig(config.toJson());
-        String sharedKey = KafkaUnit.class.getName();
-        KafkaUnit verticle = (KafkaUnit) new KafkaUnit(router).registerSharedData(sharedKey);
-        vertx.sharedData().getLocalMap(sharedKey).put(SharedDataDelegate.SHARED_EVENTBUS, new EventController(vertx));
-        return VertxHelper.deploy(vertx, context, options, verticle, TEST_TIMEOUT_SEC);
     }
 
 }

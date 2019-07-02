@@ -13,7 +13,6 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -32,11 +31,8 @@ public class EventMessageServiceImpl implements EventMessageService {
         EventMessageServiceReference(@NonNull Vertx vertx, @NonNull ServiceDiscovery discovery, @NonNull Record record,
                                      @NonNull JsonObject config) {
             super(vertx, discovery, record);
-            String sharedKey = config.getString(SHARED_KEY_CONFIG);
-            this.controller = Strings.isBlank(sharedKey)
-                              ? new EventController(vertx)
-                              : SharedDataDelegate.getLocalDataValue(vertx, sharedKey,
-                                                                     SharedDataDelegate.SHARED_EVENTBUS);
+            String sharedKey = config.getString(SHARED_KEY_CONFIG, this.getClass().getName());
+            this.controller = SharedDataDelegate.getEventController(vertx, sharedKey);
             this.config = new DeliveryOptions(config.getJsonObject(DELIVERY_OPTIONS_CONFIG, new JsonObject()));
         }
 

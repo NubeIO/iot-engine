@@ -46,8 +46,6 @@ public class BACnetVerticle extends ContainerVerticle {
         startBACnet(bacnetConfig);
         initLocalPoints(bacnetConfig.getLocalPointsAddress());
         //TODO: init all configs from DB when ready to implement
-        //REGISTER ENDPOINTS
-        registerEventbus(new EventController(vertx));
         addProvider(new MicroserviceProvider(), this::publishServices);
     }
 
@@ -81,9 +79,7 @@ public class BACnetVerticle extends ContainerVerticle {
     protected void publishServices(MicroContext microContext) {
         microContext.getLocalController()
                     .addEventMessageRecord("bacnet-local-service", BACnetEventModels.NUBE_SERVICE.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet",
-                                                                               "/bacnet"),
-                                           new JsonObject())
+                                           EventMethodDefinition.createDefault("/bacnet", "/bacnet"), new JsonObject())
                     .subscribe();
 
         microContext.getLocalController()
@@ -110,7 +106,7 @@ public class BACnetVerticle extends ContainerVerticle {
                                                      .error(error -> logger.error(error.toJson()))
                                                      .build();
         eventController.fire(localPointsAddress, EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_LIST), handler);
+                             EventMessage.initial(EventAction.GET_LIST), handler, null);
     }
 
     private void initLocalPoints(EventMessage msg) {

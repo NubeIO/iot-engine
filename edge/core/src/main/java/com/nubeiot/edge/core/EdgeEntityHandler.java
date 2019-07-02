@@ -20,7 +20,6 @@ import org.jooq.impl.DSL;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -167,8 +166,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                                        preDeployResult.getTargetState()))
                                                    .error(e -> errorPostDeployment(serviceId, transactionId, action, e))
                                                    .build();
-        controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply,
-                           new DeliveryOptions().setSendTimeout(600000));
+        controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply);
     }
 
     public Single<List<TblModule>> getModulesWhenBootstrap() {

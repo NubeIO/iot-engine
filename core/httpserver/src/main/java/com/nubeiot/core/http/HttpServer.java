@@ -61,6 +61,11 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         this.httpRouter = httpRouter;
     }
 
+    HttpServer(HttpServerRouter httpRouter, String sharedKey, Path testDir) {
+        super(new HttpServerContext(), sharedKey, testDir);
+        this.httpRouter = httpRouter;
+    }
+
     @Override
     public void start(Future<Void> future) {
         logger.info("Starting HTTP Server...");
@@ -177,8 +182,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                                  .registerEventBusApi(httpRouter.getRestEventApiClass())
                                                  .dynamicRouteConfig(restConfig.getDynamicConfig())
                                                  .addEventController(
-                                                     this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS,
-                                                                        new EventController(vertx)))
+                                                     SharedDataDelegate.getEventController(vertx, this.getSharedKey()))
                                                  .build();
     }
 
@@ -214,7 +218,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         logger.info("Init Upload router: '{}'...", uploadCfg.getPath());
-        EventController controller = this.getSharedData(SharedDataDelegate.SHARED_EVENTBUS, new EventController(vertx));
+        EventController controller = SharedDataDelegate.getEventController(vertx, this.getSharedKey());
         EventModel listenerEvent = EventModel.builder()
                                              .address(Strings.fallback(uploadCfg.getListenerAddress(),
                                                                        getSharedKey() + ".upload"))
@@ -256,11 +260,11 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         logger.info("Init Websocket router...");
-        return new WebsocketEventBuilder(vertx, router).rootWs(websocketCfg.getRootWs())
-                                                       .register(httpRouter.getWebsocketEvents())
-                                                       .handler(WebsocketBridgeEventHandler.class)
-                                                       .options(websocketCfg)
-                                                       .build();
+        return new WebsocketEventBuilder(vertx, router, getSharedKey()).rootWs(websocketCfg.getRootWs())
+                                                                       .register(httpRouter.getWebsocketEvents())
+                                                                       .handler(WebsocketBridgeEventHandler.class)
+                                                                       .options(websocketCfg)
+                                                                       .build();
     }
 
     private Router initHttp2Router(Router router) { return router; }

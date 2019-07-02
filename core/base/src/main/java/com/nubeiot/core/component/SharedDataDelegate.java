@@ -1,5 +1,6 @@
 package com.nubeiot.core.component;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 import io.vertx.core.Vertx;
@@ -16,6 +17,8 @@ import lombok.NonNull;
  */
 public interface SharedDataDelegate {
 
+    Logger LOGGER = LoggerFactory.getLogger(SharedDataDelegate.class);
+
     /**
      * Data key for EventBus controller
      *
@@ -26,23 +29,33 @@ public interface SharedDataDelegate {
 
     @SuppressWarnings("unchecked")
     static <D> D getSharedDataValue(Function<String, Object> sharedDataFunc, String dataKey) {
-        final Logger logger = LoggerFactory.getLogger(SharedDataDelegate.class);
         try {
-            logger.debug("Shared Data Key: \"{}\"", dataKey);
             return (D) sharedDataFunc.apply(dataKey);
         } catch (ClassCastException e) {
-            logger.warn("Data value Type is not matching with expected data key {}", e, dataKey);
+            LOGGER.warn("Data value Type is not matching with expected data key {}", e, dataKey);
             return null;
         }
     }
 
     static <D> D getLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey) {
+        LOGGER.debug("GET | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
         return SharedDataDelegate.getSharedDataValue(
             k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).get(k), dataKey);
     }
 
     static <D> void addLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey, D data) {
+        LOGGER.debug("ADD | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
         vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).put(Strings.requireNotBlank(dataKey), data);
+    }
+
+    static EventController getEventController(@NonNull Vertx vertx, String sharedKey) {
+        final EventController eventController = getLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS);
+        if (Objects.nonNull(eventController)) {
+            return eventController;
+        }
+        final EventController controller = new DefaultEventController(vertx);
+        addLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS, controller);
+        return controller;
     }
 
     /**

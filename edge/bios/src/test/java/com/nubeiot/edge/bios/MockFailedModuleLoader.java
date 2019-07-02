@@ -19,14 +19,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MockFailedModuleLoader implements EventHandler {
 
-    private final AssertmentConsumer assertmentConsumer;
+    private final DeploymentAsserter deploymentAsserter;
 
     @EventContractor(action = {
         EventAction.UPDATE, EventAction.PATCH, EventAction.INIT, EventAction.CREATE
     }, returnType = Single.class)
     public Single<JsonObject> runThenThrowException(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
-        assertmentConsumer.accept(preResult);
+        deploymentAsserter.accept(preResult);
         throw new EngineException("Module deployment failed");
     }
 

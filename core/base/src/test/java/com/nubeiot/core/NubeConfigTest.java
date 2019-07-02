@@ -21,7 +21,7 @@ public class NubeConfigTest {
 
     @Test
     public void test_default() throws JSONException {
-        NubeConfig from = IConfig.from(Configs.loadJsonConfig("system.json"), NubeConfig.class);
+        NubeConfig from = IConfig.fromClasspath("system.json", NubeConfig.class);
         System.out.println(from.toJson());
         assertEquals(FileUtils.DEFAULT_DATADIR, from.getDataDir());
         Assert.assertNotNull(from.getSystemConfig());
@@ -40,7 +40,8 @@ public class NubeConfigTest {
                                 "\"reuseAddress\":true,\"reusePort\":false,\"sendBufferSize\":-1,\"soLinger\":-1," +
                                 "\"ssl\":false,\"tcpCork\":false,\"tcpFastOpen\":false,\"tcpKeepAlive\":false," +
                                 "\"tcpNoDelay\":true,\"tcpQuickAck\":false,\"trafficClass\":-1,\"trustAll\":true," +
-                                "\"useAlpn\":false,\"usePooledBuffers\":false}\n",
+                                "\"useAlpn\":false,\"usePooledBuffers\":false,\"__delivery__\":{\"timeout\":30000," +
+                                "\"localOnly\":false}}\n",
                                 from.getSystemConfig().getEventBusConfig().toJson().encode(), JSONCompareMode.STRICT);
         Assert.assertNotNull(from.getDeployConfig());
         JSONAssert.assertEquals("{\"ha\":false,\"instances\":1,\"maxWorkerExecuteTime\":60000000000," +
@@ -54,7 +55,7 @@ public class NubeConfigTest {
     @Test
     public void test_init() {
         NubeConfig from = new NubeConfig();
-        System.out.println(from.toJson());
+        System.out.println(from.toJson().encodePrettily());
         Assert.assertNotNull(from.getDataDir());
         Assert.assertNull(from.getSystemConfig());
         Assert.assertNotNull(from.getAppConfig());

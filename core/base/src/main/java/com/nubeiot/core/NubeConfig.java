@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBusOptions;
 import io.vertx.core.json.JsonObject;
 
@@ -27,6 +28,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public final class NubeConfig implements IConfig {
 
+    public static final String DATA_DIR = "dataDir";
+
+    @JsonProperty(value = NubeConfig.DATA_DIR)
     private Path dataDir;
     @JsonProperty(value = SystemConfig.NAME)
     private SystemConfig systemConfig;
@@ -133,9 +137,15 @@ public final class NubeConfig implements IConfig {
 
             public static final String NAME = "__eventBus__";
 
+            public static final String DELIVERY_OPTIONS = "__delivery__";
+
             @Getter
             @JsonIgnore
             private EventBusOptions options;
+
+            @Getter
+            @JsonIgnore
+            private DeliveryOptions deliveryOptions;
 
             public EventBusConfig() {
                 this(null);
@@ -149,7 +159,16 @@ public final class NubeConfig implements IConfig {
                 this.computeIfPresent("clusterPublicPort", (s, o) -> (int) o == -1 ? null : o);
                 this.putIfAbsent("host", "0.0.0.0");
                 this.putIfAbsent("port", 5000);
-                options = new EventBusOptions(JsonObject.mapFrom(this));
+                this.options = new EventBusOptions(JsonObject.mapFrom(this));
+                this.deliveryOptions = createDeliveryConfig();
+            }
+
+            private DeliveryOptions createDeliveryConfig() {
+                Object deliveryConfig = this.get(DELIVERY_OPTIONS);
+                if (Objects.isNull(deliveryConfig)) {
+                    return new DeliveryOptions();
+                }
+                return new DeliveryOptions(JsonObject.mapFrom(deliveryConfig));
             }
 
             @Override
@@ -166,7 +185,9 @@ public final class NubeConfig implements IConfig {
             }
 
             @Override
-            public JsonObject toJson() { return options.toJson(); }
+            public JsonObject toJson() {
+                return options.toJson().put(DELIVERY_OPTIONS, this.deliveryOptions.toJson());
+            }
 
         }
 
@@ -186,7 +207,7 @@ public final class NubeConfig implements IConfig {
     }
 
 
-    public static final class AppConfig extends HashMap implements IConfig {
+    public static final class AppConfig extends HashMap<String, Object> implements IConfig {
 
         public static final String NAME = "__app__";
 

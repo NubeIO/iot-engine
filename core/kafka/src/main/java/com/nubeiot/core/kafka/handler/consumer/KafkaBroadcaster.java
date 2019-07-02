@@ -37,7 +37,7 @@ public final class KafkaBroadcaster<K, V, T extends KafkaBroadcasterTransformer<
     @Override
     public void execute(EventMessage result) {
         EventController controller = this.getSharedDataValue(SharedDataDelegate.SHARED_EVENTBUS);
-        controller.fire(model.getAddress(), model.getPattern(), result);
+        controller.fire(model.getAddress(), model.getPattern(), result, null);
     }
 
 }

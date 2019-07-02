@@ -54,7 +54,7 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
 
     @Override
     protected EdgeVerticle initMockupVerticle(TestContext context) {
-        return new MockBiosEdgeVerticle(this.getConsumer(context));
+        return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context));
     }
 
     @Test
@@ -62,8 +62,7 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
         JsonObject body = new JsonObject().put("service_id", MODULE_ID);
         EventMessage eventMessage = EventMessage.success(EventAction.REMOVE, RequestData.builder().body(body).build());
         Async async = context.async();
-        this.vertx.getDelegate()
-                  .eventBus()
+        this.vertx.eventBus()
                   .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
                         context.asyncAssertSuccess(handle -> {
                             JsonObject response = (JsonObject) handle.body();

@@ -21,7 +21,6 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
@@ -50,7 +49,6 @@ public class WebsocketClientDelegateTest {
     public Timeout timeout = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
     private Vertx vertx;
     private HttpClientConfig config;
-    private EventController controller;
     private HostInfo hostInfo;
 
     @BeforeClass
@@ -62,7 +60,6 @@ public class WebsocketClientDelegateTest {
     public void setup() {
         vertx = Vertx.vertx();
         config = new HttpClientConfig();
-        controller = new EventController(vertx);
         hostInfo = HostInfo.builder().host("echo.websocket.org").port(443).ssl(true).build();
     }
 
@@ -82,12 +79,14 @@ public class WebsocketClientDelegateTest {
     @Test
     public void test_connect_and_send(TestContext context) throws InterruptedException {
         Async async = context.async();
-        controller.register(LISTENER, new EventAsserter(LISTENER, context, async, new JsonObject().put("k", 1)));
         WebsocketClientDelegate client = WebsocketClientDelegate.create(vertx, config, hostInfo);
+        client.getEventController()
+              .register(LISTENER, new EventAsserter(LISTENER, context, async, new JsonObject().put("k", 1)));
         client.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
         Thread.sleep(1000);
-        controller.request(PUBLISHER_ADDRESS, EventPattern.PUBLISH_SUBSCRIBE,
-                           EventMessage.initial(EventAction.SEND, new JsonObject().put("k", 1)));
+        client.getEventController()
+              .request(PUBLISHER_ADDRESS, EventPattern.PUBLISH_SUBSCRIBE,
+                       EventMessage.initial(EventAction.SEND, new JsonObject().put("k", 1)));
     }
 
     @Test(expected = HttpException.class)

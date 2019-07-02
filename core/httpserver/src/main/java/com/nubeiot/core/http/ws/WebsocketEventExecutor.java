@@ -48,7 +48,7 @@ public class WebsocketEventExecutor {
         if (Objects.isNull(publisher)) {
             return defCallback;
         }
-        return eventMessage -> controller.response(publisher.getAddress(), publisher.getPattern(), eventMessage);
+        return eventMessage -> controller.response(publisher.getAddress(), publisher.getPattern(), eventMessage, null);
     }
 
 }
