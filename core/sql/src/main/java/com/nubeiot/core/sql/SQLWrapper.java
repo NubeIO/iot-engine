@@ -25,7 +25,9 @@ import org.jooq.impl.DefaultConfiguration;
 
 import io.reactivex.Single;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.NubeConfig.SecretConfig;
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
@@ -78,7 +80,9 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     public String configFile() { return "sql.json"; }
 
     private void complete(Future<Void> future, EventMessage result) {
-        logger.info("Result: {}", result.toJson().encode());
+        JsonObject output = result.toJson().copy();
+        output.remove(SecretConfig.NAME);
+        logger.info("Result: {}", output.encode());
         logger.info("DATABASE IS READY TO USE");
         future.complete();
     }

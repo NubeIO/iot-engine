@@ -20,9 +20,7 @@ public class Secret {
     }
 
     public static void setInstance(SecretConfig secretConfig) {
-        if (secret == null) {
-            secret = new Secret(secretConfig);
-        }
+        secret = new Secret(secretConfig);
     }
 
 }

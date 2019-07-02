@@ -97,7 +97,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     protected void setupServiceRepository(RepositoryConfig repositoryCfg) {
         logger.info("Setting up service local and remote repository");
         RemoteRepositoryConfig remoteConfig = repositoryCfg.getRemoteConfig();
-        logger.info("URLs" + remoteConfig.getUrls());
+        logger.info("URLs: " + remoteConfig.getUrls());
         remoteConfig.getUrls()
                     .entrySet()
                     .stream()
