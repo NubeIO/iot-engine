@@ -21,8 +21,6 @@ public abstract class Credential {
     @Getter
     private final String user;
 
-    public abstract String decryptedUser();
-
     public abstract String computeUrl(String defaultUrl);
 
     protected abstract String computeUrlCredential();
