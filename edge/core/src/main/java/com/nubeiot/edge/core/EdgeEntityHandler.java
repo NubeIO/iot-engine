@@ -27,7 +27,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
 
-import com.nubeiot.auth.Credential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
@@ -130,7 +129,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
         logger.info("{} module with data {}", action, module.toJson().encode());
         return this.handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
-            JsonObject appConfig = this.getSecureAppConfig(result.getServiceId(), result.getAppConfig().toJson());
             PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
                                                                          .transactionId(result.getTransactionId())
                                                                          .action(result.getAction())
@@ -139,7 +137,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                          .serviceId(result.getServiceId())
                                                                          .serviceFQN(result.getServiceFQN())
                                                                          .deployId(result.getDeployId())
-                                                                         .appConfig(appConfig)
+                                                                         .appConfig(result.getAppConfig().toJson())
                                                                          .systemConfig(
                                                                              result.getSystemConfig().toJson())
                                                                          .dataDir((String) this.getSharedDataFunc()
@@ -480,50 +478,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<Optional<JsonObject>> findHistoryTransactionById(String transactionId) {
         return historyDao.findOneById(transactionId).map(optional -> optional.map(ITblRemoveHistory::toJson));
-    }
-
-    public JsonObject getSecureAppConfig(String serviceId, JsonObject appConfigJson) {
-        if ("com.nubeiot.edge.module:installer".equals(serviceId)) {
-            logger.info("Removing nexus password from result");
-            AppConfig appConfig = IConfig.from(appConfigJson, AppConfig.class);
-            Object installerObject = appConfig.get(InstallerConfig.NAME);
-            if (Objects.isNull(installerObject)) {
-                logger.debug("Installer config is not available");
-                return appConfigJson;
-            }
-            InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
-            installerConfig.getRepoConfig().getRemoteConfig().getUrls().values().forEach(remoteUrl -> {
-                remoteUrl.forEach(url -> {
-                    Credential credential = url.getCredential();
-                    if (Objects.isNull(credential)) {
-                        return;
-                    }
-                    url.setCredential(new Credential(credential.getType(), credential.getUser()) {
-                        @Override
-                        public String decryptedUser() { return null; }
-
-                        @Override
-                        public String computeUrl(String defaultUrl) {
-                            return null;
-                        }
-
-                        @Override
-                        protected String computeUrlCredential() {
-                            return null;
-                        }
-
-                        @Override
-                        public String computeHeader() {
-                            return null;
-                        }
-                    });
-                });
-            });
-            appConfig.put(InstallerConfig.NAME, installerConfig);
-            logger.debug("Installer config {}", installerConfig.toJson().toString());
-            return appConfig.toJson();
-        }
-        return appConfigJson;
     }
 
 }

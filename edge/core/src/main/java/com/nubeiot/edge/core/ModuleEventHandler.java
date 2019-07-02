@@ -57,15 +57,9 @@ public final class ModuleEventHandler implements EventHandler {
         }
         return this.verticle.getEntityHandler()
                             .findModuleById(serviceId)
-                            .map(o -> o.map(this::removeCredentialsInAppConfig))
+                            .map(o -> o.map(r -> JsonData.removeKeys(r.toJson(), "secret_config")))
                             .map(o -> o.orElseThrow(
                                 () -> new NotFoundException(String.format("Not found service id '%s'", serviceId))));
-    }
-
-    private JsonObject removeCredentialsInAppConfig(TblModule record) {
-        record.setAppConfig(
-            this.verticle.getEntityHandler().getSecureAppConfig(record.getServiceId(), record.getAppConfig()));
-        return record.toJson();
     }
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
