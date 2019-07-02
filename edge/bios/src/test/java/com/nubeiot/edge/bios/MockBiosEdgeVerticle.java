@@ -15,31 +15,27 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MockBiosEdgeVerticle extends EdgeBiosVerticle {
 
-    public static EventModel MOCK_BIOS_INSTALLER = EventModel.builder()
-                                                             .address("mockup.nubeiot.edge.bios.installer")
-                                                             .pattern(EventPattern.REQUEST_RESPONSE)
-                                                             .events(Arrays.asList(EventAction.INIT, EventAction.CREATE,
-                                                                                   EventAction.GET_ONE,
-                                                                                   EventAction.GET_LIST,
-                                                                                   EventAction.PATCH,
-                                                                                   EventAction.REMOVE,
-                                                                                   EventAction.UPDATE))
-                                                             .build();
-    private final AssertmentConsumer assertmentConsumer;
-
+    static EventModel MOCK_BIOS_INSTALLER = EventModel.builder()
+                                                      .address("mockup.nubeiot.edge.bios.installer")
+                                                      .pattern(EventPattern.REQUEST_RESPONSE)
+                                                      .events(Arrays.asList(EventAction.INIT, EventAction.CREATE,
+                                                                            EventAction.GET_ONE, EventAction.GET_LIST,
+                                                                            EventAction.PATCH, EventAction.REMOVE,
+                                                                            EventAction.UPDATE))
+                                                      .build();
+    private final DeploymentAsserter deploymentAsserter;
     private final boolean failed;
 
-    public MockBiosEdgeVerticle(AssertmentConsumer assertmentConsumer) {
-        this(assertmentConsumer, false);
+    MockBiosEdgeVerticle(DeploymentAsserter deploymentAsserter) {
+        this(deploymentAsserter, false);
     }
 
     @Override
     public void registerEventbus(EventController controller) {
         controller.register(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER,
                             new ModuleEventHandler(this, MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER));
-        controller.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, failed
-                                                                   ? new MockFailedModuleLoader(assertmentConsumer)
-                                                                   : new MockModuleLoader(assertmentConsumer));
+        controller.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, failed ? new MockFailedModuleLoader(
+            deploymentAsserter) : new MockModuleLoader(deploymentAsserter));
         controller.register(EdgeInstallerEventBus.BIOS_TRANSACTION,
                             new TransactionEventHandler(this, EdgeInstallerEventBus.BIOS_TRANSACTION));
     }

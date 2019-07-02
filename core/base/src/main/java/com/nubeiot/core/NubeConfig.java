@@ -207,7 +207,7 @@ public final class NubeConfig implements IConfig {
     }
 
 
-    public static final class AppConfig extends HashMap implements IConfig {
+    public static final class AppConfig extends HashMap<String, Object> implements IConfig {
 
         public static final String NAME = "__app__";
 

@@ -1,15 +1,5 @@
 {
-  "__system__": {
-    "__eventBus__": {
-      "deliveryOptions": {
-        "timeout": 5000
-      }
-    }
-  },
   "__app__": {
-    "__sql__": {
-
-    },
     "__installer__": {
       "auto_install": false
     }

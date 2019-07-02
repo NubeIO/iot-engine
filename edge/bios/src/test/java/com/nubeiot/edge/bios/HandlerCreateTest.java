@@ -36,7 +36,7 @@ public class HandlerCreateTest extends BaseEdgeVerticleTest {
 
     @Override
     protected EdgeVerticle initMockupVerticle(TestContext context) {
-        return new MockBiosEdgeVerticle(this.getConsumer(context));
+        return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context));
     }
 
     @Test

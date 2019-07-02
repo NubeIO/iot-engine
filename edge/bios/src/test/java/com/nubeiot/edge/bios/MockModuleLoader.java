@@ -19,15 +19,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MockModuleLoader implements EventHandler {
 
-    private final AssertmentConsumer assertmentConsumer;
+    private final DeploymentAsserter deploymentAsserter;
 
     @EventContractor(action = {
         EventAction.UPDATE, EventAction.PATCH, EventAction.INIT, EventAction.CREATE, EventAction.REMOVE
     }, returnType = Single.class)
     public Single<JsonObject> sendEventMessage(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
-        if (Objects.nonNull(assertmentConsumer)) {
-            assertmentConsumer.accept(preResult);
+        if (Objects.nonNull(deploymentAsserter)) {
+            deploymentAsserter.accept(preResult);
         }
         return Single.just(new JsonObject().put("abc", "123"));
     }
