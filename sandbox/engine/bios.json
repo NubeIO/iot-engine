@@ -13,7 +13,7 @@
         "path": "eventBusKeystore.jks",
         "password": "nubesparkEventBus"
       },
-      "deliveryOptions": {
+      "__delivery__": {
         "timeout": 300000
       }
     },
