@@ -43,7 +43,8 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                                                   .setServiceName(SERVICE_NAME)
                                                   .setState(State.ENABLED)
                                                   .setVersion(VERSION)
-                                                  .setDeployConfig(DEPLOY_CONFIG)
+                                                  .setAppConfig(APP_CONFIG)
+                                                  .setSystemConfig(APP_SYSTEM_CONFIG)
                                                   .setModifiedAt(DateTimes.nowUTC()));
     }
 
@@ -70,7 +71,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
                                               .put("group_id", GROUP_ID)
                                               .put("version", VERSION);
-        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", DEPLOY_CONFIG);
+        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
 
         //loading patch takes 3 seconds when timeout is 5 seconds
         EventMessage eventMessage = EventMessage.success(EventAction.PATCH, RequestData.builder().body(body).build());
@@ -92,7 +93,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
                                               .put("group_id", GROUP_ID)
                                               .put("version", VERSION);
-        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", DEPLOY_CONFIG);
+        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
 
         EventMessage eventMessage = EventMessage.success(EventAction.PATCH, RequestData.builder().body(body).build());
         Async async = context.async();
@@ -134,7 +135,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
                                               .put("group_id", GROUP_ID)
                                               .put("version", VERSION);
-        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", DEPLOY_CONFIG);
+        JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
 
         EventMessage eventMessage = EventMessage.success(EventAction.CREATE, RequestData.builder().body(body).build());
         Async async = context.async();
