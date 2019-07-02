@@ -56,7 +56,8 @@ public final class ModuleEventHandler implements EventHandler {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
         return this.verticle.getEntityHandler()
-                            .findModuleById(serviceId).map(o -> o.map(this::removeCredentialsInAppConfig))
+                            .findModuleById(serviceId)
+                            .map(o -> o.map(this::removeCredentialsInAppConfig))
                             .map(o -> o.orElseThrow(
                                 () -> new NotFoundException(String.format("Not found service id '%s'", serviceId))));
     }
@@ -125,7 +126,9 @@ public final class ModuleEventHandler implements EventHandler {
         if (Strings.isNotBlank(serviceId)) {
             serviceData.getMetadata().put("service_id", serviceId);
         }
-        return verticle.getModuleRule().parse(getDataDir(), serviceData.getMetadata(), serviceData.getAppConfig());
+        return verticle.getModuleRule()
+                       .parse(getDataDir(), serviceData.getMetadata(), serviceData.getAppConfig(),
+                              serviceData.getSecretConfig());
     }
 
     private Path getDataDir() {

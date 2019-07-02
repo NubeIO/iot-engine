@@ -50,7 +50,6 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
         InstallerConfig installerCfg = IConfig.from(this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_INSTALLER_CFG),
                                                     InstallerConfig.class);
         Path dataDir = FileUtils.toPath((String) this.sharedDataFunc.apply(SharedDataDelegate.SHARED_DATADIR));
-        logger.debug("Shared app configuration: {}", installerCfg);
         setupServiceRepository(installerCfg.getRepoConfig());
         return this.isFreshInstall()
                    .flatMap(f -> startup(dataDir, installerCfg, f).map(r -> EventMessage.success(action, r)));
@@ -88,7 +87,7 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
             appConfig = IConfig.merge(new JsonObject().put(installerConfig.name(), installerConfig.toJson()),
                                       serviceData.getAppConfig(), AppConfig.class);
         }
-        return rule.parse(dataDir, tblModule, appConfig).setPublishedBy("NubeIO");
+        return rule.parse(dataDir, tblModule, appConfig, serviceData.getSecretConfig()).setPublishedBy("NubeIO");
     }
 
 }

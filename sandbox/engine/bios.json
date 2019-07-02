@@ -124,6 +124,10 @@
                 }
               }
             }
+          },
+          "secretConfig": {
+            "@user": "admin",
+            "@password": "admin123"
           }
         },
         {
