@@ -2,7 +2,6 @@ package com.nubeiot.core;
 
 import java.net.InetSocketAddress;
 import java.util.Objects;
-import java.util.Optional;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -46,14 +45,13 @@ public final class NubeLauncher extends io.vertx.core.Launcher {
     @Override
     public void afterConfigParsed(JsonObject config) {
         logger.info("Parsing and merging configuration...");
-        logger.debug("CONFIG::INPUT: {}", config.encode());
-        Optional<NubeConfig> nubeConfig = new ConfigProcessor(Vertx.vertx()).processAndOverride(NubeConfig.class,
-                                                                                                Configs.loadJsonConfig(
-                                                                                                    "system.json"),
-                                                                                                config, false, true);
-
-        this.config = nubeConfig.orElseGet(
-            () -> IConfig.merge(Configs.loadJsonConfig("system.json"), config, NubeConfig.class));
+        if (logger.isDebugEnabled()) {
+            logger.debug("CONFIG::INPUT: {}", config.encode());
+        }
+        NubeConfig fileConfig = IConfig.merge(Configs.loadJsonConfig("system.json"), config, NubeConfig.class);
+        Vertx dummy = Vertx.vertx();
+        this.config = new ConfigProcessor(dummy).override(fileConfig.toJson(), false, true).orElse(fileConfig);
+        dummy.close();
         JsonObject cfg = this.config.toJson();
         logger.debug("CONFIG::FINAL: {}", cfg.encode());
         super.afterConfigParsed(cfg);
