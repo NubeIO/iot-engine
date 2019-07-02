@@ -1,9 +1,12 @@
-package com.nubeiot.scheduler;
+package com.nubeiot.scheduler.job;
 
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 
 import io.vertx.core.Vertx;
+
+import com.nubeiot.scheduler.SchedulerConfig;
+import com.nubeiot.scheduler.job.JobModel;
 
 public interface VertxJob<J extends JobModel> extends Job {
 

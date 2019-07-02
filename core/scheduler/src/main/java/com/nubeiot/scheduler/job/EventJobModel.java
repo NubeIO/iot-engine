@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.scheduler.JobModel;
 
 import lombok.Builder;
 import lombok.Getter;

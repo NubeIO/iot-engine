@@ -1,4 +1,4 @@
-package com.nubeiot.scheduler;
+package com.nubeiot.scheduler.job;
 
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -13,7 +13,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.scheduler.job.EventJobModel;
 
 @JsonTypeInfo(use = Id.NAME, property = "type", visible = true)
 @JsonSubTypes( {

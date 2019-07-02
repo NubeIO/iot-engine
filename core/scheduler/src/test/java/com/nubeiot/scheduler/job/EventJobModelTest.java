@@ -15,29 +15,27 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.scheduler.JobModel;
-import com.nubeiot.scheduler.JobModel.JobType;
+import com.nubeiot.scheduler.job.JobModel.JobType;
 
 public class EventJobModelTest {
 
+    public static final EventModel PROCESS_EVENT = EventModel.builder()
+                                                             .pattern(EventPattern.REQUEST_RESPONSE)
+                                                             .addEvents(EventAction.CREATE)
+                                                             .local(true)
+                                                             .address("event.job.model.test")
+                                                             .build();
+    public static final EventModel CALLBACK_EVENT = EventModel.builder()
+                                                              .pattern(EventPattern.PUBLISH_SUBSCRIBE)
+                                                              .addEvents(EventAction.CREATE)
+                                                              .local(true)
+                                                              .address("event.job.model.callback.test")
+                                                              .build();
     private static final EventJobModel JOB_MODEL = EventJobModel.builder()
                                                                 .key(JobKey.jobKey("abc"))
                                                                 .payload(EventMessage.initial(EventAction.CREATE))
-                                                                .process(EventModel.builder()
-                                                                                   .pattern(
-                                                                                       EventPattern.REQUEST_RESPONSE)
-                                                                                   .addEvents(EventAction.CREATE)
-                                                                                   .local(true)
-                                                                                   .address("event.job.model.test")
-                                                                                   .build())
-                                                                .callback(EventModel.builder()
-                                                                                    .pattern(
-                                                                                        EventPattern.PUBLISH_SUBSCRIBE)
-                                                                                    .addEvents(EventAction.CREATE)
-                                                                                    .local(true)
-                                                                                    .address(
-                                                                                        "event.job.model.callback.test")
-                                                                                    .build())
+                                                                .process(PROCESS_EVENT)
+                                                                .callback(CALLBACK_EVENT)
                                                                 .build();
 
     @Test

@@ -8,6 +8,7 @@ import io.vertx.core.Vertx;
 
 import com.nubeiot.core.component.UnitContext;
 import com.nubeiot.core.exceptions.InitializerError;
+import com.nubeiot.scheduler.job.VertxJobFactory;
 
 import lombok.Getter;
 

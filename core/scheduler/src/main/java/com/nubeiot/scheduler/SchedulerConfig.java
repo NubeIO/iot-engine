@@ -1,16 +1,19 @@
 package com.nubeiot.scheduler;
 
+import java.util.UUID;
+
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 
 import lombok.Getter;
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 @Getter
+@RequiredArgsConstructor
 public class SchedulerConfig implements IConfig {
 
-    @NonNull
-    private String address = "com.nubeiot.scheduler";
+    private static final String BASE_ADDRESS = "com.nubeiot.scheduler";
+    private String address = BASE_ADDRESS + "." + UUID.randomUUID().toString();
 
     @Override
     public String name() { return "__scheduler__"; }

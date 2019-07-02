@@ -8,9 +8,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.scheduler.JobModel;
 import com.nubeiot.scheduler.SchedulerConfig;
-import com.nubeiot.scheduler.VertxJob;
 
 public abstract class AbstractVertxJob<J extends JobModel> implements VertxJob<J> {
 

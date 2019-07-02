@@ -20,6 +20,8 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.scheduler.job.JobModel;
+import com.nubeiot.scheduler.trigger.TriggerModel;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

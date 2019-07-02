@@ -1,10 +1,9 @@
-package com.nubeiot.scheduler;
+package com.nubeiot.scheduler.solution;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,7 +14,6 @@ import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
-import io.reactivex.subscribers.TestSubscriber;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.reactivex.RxHelper;
@@ -26,7 +24,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
 @RunWith(VertxUnitRunner.class)
-public class KeyTest {
+public class SchedulerTest {
 
     private Vertx vertx;
 
@@ -70,7 +68,6 @@ public class KeyTest {
         subscriber.assertNoErrors();
         subscriber.assertValueCount(5);
         subscriber.assertValues("0-A", "1-B", "2-C", "3-D", "4-E");
-
     }
 
 }
