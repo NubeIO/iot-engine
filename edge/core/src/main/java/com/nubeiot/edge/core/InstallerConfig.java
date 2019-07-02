@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -123,9 +124,10 @@ public final class InstallerConfig implements IConfig {
             this.url = Strings.requireNotBlank(url);
         }
 
-        public String computeUrl(){
-            return this.credential.computeUrl(this.url);
+        public String computeUrl() {
+            return Objects.isNull(this.credential) ? url : this.credential.computeUrl(this.url);
         }
+
     }
 
 }

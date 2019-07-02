@@ -5,6 +5,7 @@ import java.util.Base64;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
 
@@ -22,13 +23,24 @@ public class BasicCredential extends Credential {
     }
 
     @Override
-    public String computeUrl(String defaultUrl) {
-        return this.computeRemoteUrl(defaultUrl);
+    public String decryptedUser() {
+        return Strings.getFirstNotNull(Secret.getInstance().getSecretConfig().toJson().getString(this.getUser()),
+                                       this.getUser());
     }
 
     @Override
     public String computeUrlCredential() {
-        return this.getUser() + ":" + this.getPassword() + "@";
+        return this.decryptedUser() + ":" + this.decryptedPassword() + "@";
+    }
+
+    @Override
+    public String computeUrl(String defaultUrl) {
+        return this.computeRemoteUrl(defaultUrl);
+    }
+
+    private String decryptedPassword() {
+        return Strings.getFirstNotNull(Secret.getInstance().getSecretConfig().toJson().getString(this.getPassword()),
+                                       this.getPassword());
     }
 
     @Override

@@ -113,7 +113,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             logger.info("{} local repositories: {}", type, javaLocal);
             logger.info("{} remote repositories: {}", type, remoteUrls);
             ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
-                remoteUrls.stream().map(RemoteUrl::getUrl).collect(Collectors.toList())).setLocalRepository(javaLocal);
+                remoteUrls.stream().map(RemoteUrl::computeUrl).collect(Collectors.toList()))
+                                                            .setLocalRepository(javaLocal);
             vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
     }
@@ -498,6 +499,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                         return;
                     }
                     url.setCredential(new Credential(credential.getType(), credential.getUser()) {
+                        @Override
+                        public String decryptedUser() { return null; }
+
                         @Override
                         public String computeUrl(String defaultUrl) {
                             return null;

@@ -38,6 +38,8 @@ public final class NubeConfig implements IConfig {
     private DeployConfig deployConfig = new DeployConfig();
     @JsonProperty(value = AppConfig.NAME)
     private AppConfig appConfig = new AppConfig();
+    @JsonProperty(value = SecretConfig.NAME)
+    private SecretConfig secretConfig = new SecretConfig();
 
     /**
      * Create {@link NubeConfig} with {@link AppConfig}, default {@link DeployConfig} and without {@link SystemConfig}
@@ -50,11 +52,11 @@ public final class NubeConfig implements IConfig {
     }
 
     public static NubeConfig blank(@NonNull Path dataDir, @NonNull JsonObject appConfig) {
-        return new NubeConfig(dataDir, null, new DeployConfig(), IConfig.from(appConfig, AppConfig.class));
+        return new NubeConfig(dataDir, null, new DeployConfig(), IConfig.from(appConfig, AppConfig.class), null);
     }
 
     public static NubeConfig blank(@NonNull Path dataDir) {
-        return new NubeConfig(dataDir, null, new DeployConfig(), null);
+        return new NubeConfig(dataDir, null, new DeployConfig(), null, null);
     }
 
     /**
@@ -210,6 +212,19 @@ public final class NubeConfig implements IConfig {
     public static final class AppConfig extends HashMap<String, Object> implements IConfig {
 
         public static final String NAME = "__app__";
+
+        @Override
+        public String name() { return NAME; }
+
+        @Override
+        public Class<? extends IConfig> parent() { return NubeConfig.class; }
+
+    }
+
+
+    public static final class SecretConfig extends HashMap implements IConfig {
+
+        public static final String NAME = "__secret__";
 
         @Override
         public String name() { return NAME; }

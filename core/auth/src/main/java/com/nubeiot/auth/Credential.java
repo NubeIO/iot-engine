@@ -21,6 +21,8 @@ public abstract class Credential {
     @Getter
     private final String user;
 
+    public abstract String decryptedUser();
+
     public abstract String computeUrl(String defaultUrl);
 
     protected abstract String computeUrlCredential();
@@ -28,7 +30,7 @@ public abstract class Credential {
     public abstract String computeHeader();
 
     protected String computeRemoteUrl(String defaultUrl) {
-        return defaultUrl.replaceFirst("^((https?|wss?)\\:\\/\\/)(.+)", "$1" + this.computeUrlCredential() + "$3");
+        return defaultUrl.replaceFirst("^((https?|wss?)://)(.+)", "$1" + this.computeUrlCredential() + "$3");
     }
 
     @Override

@@ -38,24 +38,24 @@
               {
                 "credential": {
                   "type": "BASIC",
-                  "user": "admin",
-                  "password": "admin123"
+                  "user": "@user",
+                  "password": "@password"
                 },
                 "url": "http://nexus:8081/repository/maven-releases/"
               },
               {
                 "credential": {
                   "type": "BASIC",
-                  "user": "admin",
-                  "password": "admin123"
+                  "user": "@user",
+                  "password": "@password"
                 },
                 "url": "http://nexus:8081/repository/maven-snapshots/"
               },
               {
                 "credential": {
                   "type": "BASIC",
-                  "user": "admin",
-                  "password": "admin123"
+                  "user": "@user",
+                  "password": "@password"
                 },
                 "url": "http://nexus:8081/repository/maven-central/"
               },
@@ -92,24 +92,24 @@
                       {
                         "credential": {
                           "type": "BASIC",
-                          "user": "admin",
-                          "password": "admin123"
+                          "user": "@user",
+                          "password": "@password"
                         },
                         "url": "http://nexus:8081/repository/maven-releases/"
                       },
                       {
                         "credential": {
                           "type": "BASIC",
-                          "user": "admin",
-                          "password": "admin123"
+                          "user": "@user",
+                          "password": "@password"
                         },
                         "url": "http://nexus:8081/repository/maven-snapshots/"
                       },
                       {
                         "credential": {
                           "type": "BASIC",
-                          "user": "admin",
-                          "password": "admin123"
+                          "user": "@user",
+                          "password": "@password"
                         },
                         "url": "http://nexus:8081/repository/maven-central/"
                       },
@@ -136,5 +136,9 @@
         }
       ]
     }
+  },
+  "__secret__": {
+    "@user": "admin",
+    "@password": "admin123"
   }
 }

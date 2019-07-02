@@ -63,5 +63,9 @@
         }
       ]
     }
+  },
+  "__secret__": {
+    "@user": "admin",
+    "@password": "admin123"
   }
 }
