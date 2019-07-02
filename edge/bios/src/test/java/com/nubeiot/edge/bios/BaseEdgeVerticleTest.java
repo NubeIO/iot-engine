@@ -9,10 +9,10 @@ import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
@@ -30,7 +30,6 @@ import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 
-import lombok.Getter;
 import lombok.NonNull;
 
 public abstract class BaseEdgeVerticleTest {
@@ -53,8 +52,6 @@ public abstract class BaseEdgeVerticleTest {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
     protected Vertx vertx;
-
-    @Getter
     protected EdgeVerticle edgeVerticle;
 
     protected static void beforeSuite() {
@@ -70,8 +67,7 @@ public abstract class BaseEdgeVerticleTest {
         Async async = context.async();
         this.vertx = Vertx.vertx();
         this.edgeVerticle = initMockupVerticle(context);
-        this.vertx.getDelegate()
-                  .deployVerticle(this.edgeVerticle, options,
+        this.vertx.deployVerticle(this.edgeVerticle, options,
                                   context.asyncAssertSuccess(result -> TestHelper.testComplete(async)));
         async.awaitSuccess();
     }
@@ -177,8 +173,7 @@ public abstract class BaseEdgeVerticleTest {
                                      BiConsumer<JsonObject, Async> handler) {
         EventMessage eventMessage = EventMessage.success(eventAction, RequestData.builder().body(body).build());
         Async async = context.async();
-        this.vertx.getDelegate()
-                  .eventBus()
+        this.vertx.eventBus()
                   .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
                         context.asyncAssertSuccess(handle -> handler.accept((JsonObject) handle.body(), async)));
     }

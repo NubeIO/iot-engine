@@ -13,7 +13,7 @@ import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class MockBiosEdgeVerticle extends EdgeBiosVerticle {
+public final class MockBiosEdgeVerticle extends EdgeBiosVerticle {
 
     static EventModel MOCK_BIOS_INSTALLER = EventModel.builder()
                                                       .address("mockup.nubeiot.edge.bios.installer")
