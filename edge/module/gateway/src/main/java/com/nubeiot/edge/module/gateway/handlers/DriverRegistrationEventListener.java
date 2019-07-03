@@ -18,7 +18,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventContractor.Param;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.AlreadyExistException;
 import com.nubeiot.core.exceptions.NubeException;
@@ -32,13 +32,13 @@ import com.nubeiot.edge.module.gateway.EdgeGatewayVerticle;
 import lombok.Getter;
 import lombok.NonNull;
 
-public class DriverRegistrationEventHandler implements EventHandler {
+public class DriverRegistrationEventListener implements EventListener {
 
     @Getter
     private final List<EventAction> availableEvents;
     private final EdgeGatewayVerticle verticle;
 
-    public DriverRegistrationEventHandler(EdgeGatewayVerticle verticle, @NonNull EventModel eventModel) {
+    public DriverRegistrationEventListener(EdgeGatewayVerticle verticle, @NonNull EventModel eventModel) {
         this.verticle = verticle;
         this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }

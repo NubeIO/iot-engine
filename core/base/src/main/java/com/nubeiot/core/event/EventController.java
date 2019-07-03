@@ -261,20 +261,20 @@ public interface EventController extends Shareable {
      * @param handler    Handler when receiving message
      * @see EventModel
      */
-    default void register(@NonNull EventModel eventModel, @NonNull EventHandler handler) {
+    default void register(@NonNull EventModel eventModel, @NonNull EventListener handler) {
         this.register(eventModel.getAddress(), eventModel.isLocal(), handler);
     }
 
     /**
      * Register event listener.
      * <p>
-     * It is equivalent to call {@link #register(String, boolean, EventHandler)} with {@code local} is {@code true}
+     * It is equivalent to call {@link #register(String, boolean, EventListener)} with {@code local} is {@code true}
      *
      * @param address Event bus address
      * @param handler Handler when receiving message
-     * @see EventHandler
+     * @see EventListener
      */
-    default void register(String address, @NonNull EventHandler handler) {
+    default void register(String address, @NonNull EventListener handler) {
         this.register(address, true, handler);
     }
 
@@ -284,9 +284,9 @@ public interface EventController extends Shareable {
      * @param address Event bus address
      * @param local   If {@code true}, only register for local event address
      * @param handler Message handler when receive
-     * @see EventHandler
-     * @see #register(String, EventHandler)
+     * @see EventListener
+     * @see #register(String, EventListener)
      */
-    void register(String address, boolean local, @NonNull EventHandler handler);
+    void register(String address, boolean local, @NonNull EventListener handler);
 
 }
