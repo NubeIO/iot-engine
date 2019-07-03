@@ -68,8 +68,11 @@ public final class NubeConfig implements IConfig {
         return NubeConfig.blank(new JsonObject());
     }
 
-    public static NubeConfig constructNubeConfig(NubeConfig nubeConfig, AppConfig appConfig) {
-        return IConfig.from(nubeConfig.toJson().mergeIn(new JsonObject().put(AppConfig.NAME, appConfig.toJson())),
+    public static NubeConfig constructNubeConfig(NubeConfig nubeConfig, AppConfig appConfig,
+                                                 SecretConfig secretConfig) {
+        return IConfig.from(nubeConfig.toJson()
+                                      .mergeIn(new JsonObject().put(AppConfig.NAME, appConfig.toJson()))
+                                      .mergeIn(new JsonObject().put(SecretConfig.NAME, secretConfig.toJson())),
                             NubeConfig.class);
     }
 

@@ -142,6 +142,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                          .appConfig(result.getAppConfig().toJson())
                                                                          .systemConfig(
                                                                              result.getSystemConfig().toJson())
+                                                                         .secretConfig(
+                                                                             result.getSecretConfig().toJson())
                                                                          .dataDir((String) this.getSharedDataFunc()
                                                                                                .apply(
                                                                                                    SharedDataDelegate.SHARED_DATADIR))
@@ -314,7 +316,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                  module.getServiceName()))
                                   .deployId(module.getDeployId())
                                   .appConfig(module.getAppConfig())
-                                  .systemConfig(module.getSystemConfig()).secretConfig(module.getSecretConfig())
+                                  .systemConfig(module.getSystemConfig())
+                                  .secretConfig(module.getSecretConfig())
                                   .dataDir((String) this.getSharedDataFunc().apply(SharedDataDelegate.SHARED_DATADIR))
                                   .build();
     }

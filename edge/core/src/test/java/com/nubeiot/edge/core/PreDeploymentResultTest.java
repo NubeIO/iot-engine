@@ -34,7 +34,8 @@ public class PreDeploymentResultTest {
                                                                Collections.singletonMap("testAbc", "ab")))
                                                            .secretConfig(new JsonObject())
                                                            .build();
-        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
+        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig(),
+                                                 preResult.getSecretConfig());
         JsonObject preResultJson = preResult.toJson();
         JsonData.removeKeys(preResultJson, "app_config", "system_config", "secret_config");
         JSONAssert.assertEquals(
@@ -63,7 +64,8 @@ public class PreDeploymentResultTest {
                                                            .appConfig(new JsonObject())
                                                            .secretConfig(new JsonObject())
                                                            .build();
-        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
+        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig(),
+                                                 preResult.getSecretConfig());
         JsonObject preResultJson = preResult.toJson();
         JsonData.removeKeys(preResultJson, "app_config", "system_config", "secret_config");
         System.out.println(nubeCfg.toJson());
