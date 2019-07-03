@@ -32,13 +32,6 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
     }
 
     @Override
-    public void init() {
-        InstallerConfig installerCfg = IConfig.from(this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_INSTALLER_CFG),
-                                                    InstallerConfig.class);
-        setupServiceRepository(installerCfg.getRepoConfig());
-    }
-
-    @Override
     public Single<EventMessage> initData() {
         return bootstrap(EventAction.INIT);
     }

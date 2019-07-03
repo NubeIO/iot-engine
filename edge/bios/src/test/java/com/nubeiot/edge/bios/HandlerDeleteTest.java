@@ -44,6 +44,7 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
                                                   .setVersion(VERSION)
                                                   .setSystemConfig(APP_SYSTEM_CONFIG)
                                                   .setAppConfig(APP_CONFIG)
+                                                  .setSecretConfig(new JsonObject())
                                                   .setModifiedAt(DateTimes.nowUTC()));
     }
 

@@ -3,6 +3,8 @@ package com.nubeiot.auth;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.nubeiot.core.NubeConfig.SecretConfig;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +23,24 @@ public abstract class Credential {
     @Getter
     private final String user;
 
-    public abstract String computeUrl(String defaultUrl);
+    public abstract String computeUrl(String defaultUrl, SecretConfig secretConfig);
 
-    protected abstract String computeUrlCredential();
+    abstract String computeUrlCredential(SecretConfig secretConfig);
 
     public abstract String computeHeader();
 
-    protected String computeRemoteUrl(String defaultUrl) {
-        return defaultUrl.replaceFirst("^((https?|wss?)://)(.+)", "$1" + this.computeUrlCredential() + "$3");
+    String computeRemoteUrl(String defaultUrl, SecretConfig secretConfig) {
+        return defaultUrl.replaceFirst("^((https?|wss?)://)(.+)",
+                                       "$1" + this.computeUrlCredential(secretConfig) + "$3");
+    }
+
+    String decode(SecretConfig secretConfig, String key) {
+        String value = key;
+        if (key.startsWith("@secret.")) {
+            key = key.replaceAll("^@secret.", "@");
+            value = "";
+        }
+        return Strings.getFirstNotNull(secretConfig.toJson().getString(key), value);
     }
 
     @Override
