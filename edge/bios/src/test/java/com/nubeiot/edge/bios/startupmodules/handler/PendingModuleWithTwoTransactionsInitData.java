@@ -34,7 +34,8 @@ public class PendingModuleWithTwoTransactionsInitData extends MockInitDataEntity
                            .setCreatedAt(DateTimes.nowUTC())
                            .setModifiedAt(DateTimes.nowUTC())
                            .setSystemConfig(new JsonObject())
-                           .setAppConfig(new JsonObject()));
+                           .setAppConfig(new JsonObject())
+                           .setSecretConfig(new JsonObject()));
         Single<Integer> insertTransaction08_1 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending_module_with_two_transactions")

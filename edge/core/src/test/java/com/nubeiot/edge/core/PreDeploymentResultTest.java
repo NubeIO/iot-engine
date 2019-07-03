@@ -32,11 +32,11 @@ public class PreDeploymentResultTest {
                                                            .systemConfig(new JsonObject())
                                                            .appConfig(JsonObject.mapFrom(
                                                                Collections.singletonMap("testAbc", "ab")))
+                                                           .secretConfig(new JsonObject())
                                                            .build();
         NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
         JsonObject preResultJson = preResult.toJson();
-        preResultJson.remove("app_config");
-        preResultJson.remove("system_config");
+        JsonData.removeKeys(preResultJson, "app_config", "system_config", "secret_config");
         JSONAssert.assertEquals(
             "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
             "\"service_id\":\"serviceId\",\"service_fqn\":\"serviceFQN\",\"deploy_id\":\"deployId\"," +
@@ -61,11 +61,11 @@ public class PreDeploymentResultTest {
                                                            .serviceFQN("serviceFQN")
                                                            .systemConfig(new JsonObject())
                                                            .appConfig(new JsonObject())
+                                                           .secretConfig(new JsonObject())
                                                            .build();
         NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
         JsonObject preResultJson = preResult.toJson();
-        preResultJson.remove("app_config");
-        preResultJson.remove("system_config");
+        JsonData.removeKeys(preResultJson, "app_config", "system_config", "secret_config");
         System.out.println(nubeCfg.toJson());
         JSONAssert.assertEquals(
             "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
@@ -91,6 +91,7 @@ public class PreDeploymentResultTest {
                                                    .systemConfig(new JsonObject())
                                                    .appConfig(
                                                        JsonObject.mapFrom(Collections.singletonMap("testAbc", "ab")))
+                                                   .secretConfig(new JsonObject())
                                                    .build()
                                                    .toJson();
         PreDeploymentResult preResult = JsonData.from(jsonObject, PreDeploymentResult.class);

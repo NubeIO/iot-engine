@@ -30,6 +30,7 @@ import io.vertx.maven.ResolverOptions;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.NubeConfig.SecretConfig;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
@@ -145,7 +146,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                                                .apply(
                                                                                                    SharedDataDelegate.SHARED_DATADIR))
                                                                          .build();
-            return preDeploymentResult.toJson().put("message", "Work in progress").put("status", Status.WIP);
+            JsonObject preDeploymentResultJson = preDeploymentResult.toJson().copy();
+            preDeploymentResultJson.remove("secret_config");
+            return preDeploymentResultJson.put("message", "Work in progress").put("status", Status.WIP);
         });
     }
 
@@ -311,7 +314,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                  module.getServiceName()))
                                   .deployId(module.getDeployId())
                                   .appConfig(module.getAppConfig())
-                                  .systemConfig(module.getSystemConfig())
+                                  .systemConfig(module.getSystemConfig()).secretConfig(module.getSecretConfig())
                                   .dataDir((String) this.getSharedDataFunc().apply(SharedDataDelegate.SHARED_DATADIR))
                                   .build();
     }
@@ -402,6 +405,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         old.setSystemConfig(
             IConfig.merge(old.getSystemConfig(), newOne.getSystemConfig(), isUpdated, NubeConfig.class).toJson());
         old.setAppConfig(IConfig.merge(old.getAppConfig(), newOne.getAppConfig(), isUpdated, AppConfig.class).toJson());
+        old.setSecretConfig(
+            IConfig.merge(old.getSecretConfig(), newOne.getSecretConfig(), isUpdated, SecretConfig.class).toJson());
         return old;
     }
 

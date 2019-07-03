@@ -45,9 +45,6 @@ public class SecretEventHandler implements EventHandler {
                             .map(o -> o.orElseThrow(
                                 () -> new NotFoundException(String.format("Not found module_id '%s'", serviceId))))
                             .flatMap(module -> {
-                                System.out.println("Secret Config....");
-                                System.out.println(
-                                    "Secret Config...." + requestedServiceData.getSecretConfig().toJson().encode());
                                 module.setSecretConfig(requestedServiceData.getSecretConfig().toJson());
                                 return this.verticle.getEntityHandler()
                                                     .processDeploymentTransaction(module, EventAction.UPDATE);
