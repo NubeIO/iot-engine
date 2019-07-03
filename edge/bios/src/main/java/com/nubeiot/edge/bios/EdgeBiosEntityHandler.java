@@ -32,6 +32,13 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
     }
 
     @Override
+    public void init() {
+        InstallerConfig installerCfg = IConfig.from(this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_INSTALLER_CFG),
+                                                    InstallerConfig.class);
+        setupServiceRepository(installerCfg.getRepoConfig());
+    }
+
+    @Override
     public Single<EventMessage> initData() {
         return bootstrap(EventAction.INIT);
     }
@@ -50,7 +57,6 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
         InstallerConfig installerCfg = IConfig.from(this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_INSTALLER_CFG),
                                                     InstallerConfig.class);
         Path dataDir = FileUtils.toPath((String) this.sharedDataFunc.apply(SharedDataDelegate.SHARED_DATADIR));
-        setupServiceRepository(installerCfg.getRepoConfig());
         return this.isFreshInstall()
                    .flatMap(f -> startup(dataDir, installerCfg, f).map(r -> EventMessage.success(action, r)));
     }

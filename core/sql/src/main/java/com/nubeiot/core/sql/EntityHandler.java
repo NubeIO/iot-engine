@@ -48,6 +48,8 @@ public abstract class EntityHandler {
      */
     public abstract boolean isNew();
 
+    public void init() { }
+
     /**
      * Init data in case of new database
      *

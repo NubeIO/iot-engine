@@ -129,7 +129,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
-        logger.info("{} module with data {}", action, module.toJson().encode());
+        JsonObject moduleJson = module.toJson().copy();
+        moduleJson.remove("secret_config");
+        logger.info("{} module with data {}", action, moduleJson.encode());
         return this.handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
             PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
                                                                          .transactionId(result.getTransactionId())

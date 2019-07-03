@@ -90,6 +90,7 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     private Single<EventMessage> createDatabase(Configuration jooqConfig) {
         try {
             EntityHandler handler = getContext().createHandler(jooqConfig, vertx).registerFunc(this::getSharedData);
+            handler.init();
             if (handler.isNew()) {
                 createNewDatabase(jooqConfig);
                 logger.info("Initializing data...");
