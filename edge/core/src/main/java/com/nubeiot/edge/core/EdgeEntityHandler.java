@@ -31,6 +31,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
@@ -365,9 +366,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         final LocalDateTime now = DateTimes.nowUTC();
         final String transactionId = UUID.randomUUID().toString();
         JsonObject metadata = module.toJson();
-        // TODO: replace with POJO constant later
-        metadata.remove("system_config");
-        metadata.remove("app_config");
+        JsonData.removeKeys(metadata, "system_config", "app_config");
         final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)
                                                                .setModuleId(moduleId)
                                                                .setStatus(Status.WIP)

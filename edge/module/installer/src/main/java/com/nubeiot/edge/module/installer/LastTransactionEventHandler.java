@@ -8,6 +8,7 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
@@ -47,23 +48,18 @@ public final class LastTransactionEventHandler implements EventHandler {
                                 .findOneTransactionByModuleId(transaction.getModuleId())
                                 .map(o -> o.orElseThrow(() -> new NotFoundException(
                                     String.format("Not found module_id '%s'", transaction.getModuleId()))))
-                                .map(this::removePrevSystemConfig)
+                                .map(trans -> JsonData.removeKeys(trans, "prev_system_config"))
                                 .map(transactions -> new JsonObject().put("transactions",
                                                                           new JsonArray().add(transactions)));
         } else {
             return this.verticle.getEntityHandler()
                                 .findTransactionByModuleId(transaction.getModuleId())
                                 .flattenAsObservable(transactions -> transactions)
-                                .flatMapSingle(trans -> Single.just(removePrevSystemConfig(trans.toJson())))
+                                .flatMapSingle(
+                                    trans -> Single.just(JsonData.removeKeys(trans.toJson(), "prev_system_config")))
                                 .toList()
                                 .map(transactions -> new JsonObject().put("transactions", transactions));
         }
-    }
-
-    private JsonObject removePrevSystemConfig(JsonObject transaction) {
-        // TODO: replace with POJO constant later
-        transaction.remove("prev_system_config");
-        return transaction;
     }
 
 }

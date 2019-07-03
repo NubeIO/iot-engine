@@ -50,11 +50,11 @@ public abstract class AbstractRestEventApi implements RestEventApi {
             logger.warn("HTTP path '{}' is already registered, but might different Event address '{}'",
                         definition.getServicePath(), restMetadata.get(definition.getServicePath()).getAddress());
         }
-        restMetadata.putIfAbsent(definition.getServicePath(), RestEventApiMetadata.builder()
-                                                                                  .address(eventModel.getAddress())
-                                                                                  .pattern(eventModel.getPattern())
-                                                                                  .definition(definition)
-                                                                                  .build());
+        restMetadata.put(definition.getServicePath(), RestEventApiMetadata.builder()
+                                                                          .address(eventModel.getAddress())
+                                                                          .pattern(eventModel.getPattern())
+                                                                          .definition(definition)
+                                                                          .build());
     }
 
     @Override

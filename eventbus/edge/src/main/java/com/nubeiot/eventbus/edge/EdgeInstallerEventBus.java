@@ -42,6 +42,12 @@ public final class EdgeInstallerEventBus {
                                                            .pattern(EventPattern.REQUEST_RESPONSE)
                                                            .event(EventAction.GET_ONE)
                                                            .build();
+    public static final EventModel BIOS_SECRET = EventModel.builder()
+                                                           .address("nubeiot.edge.app.module.secret")
+                                                           .pattern(EventPattern.REQUEST_RESPONSE)
+                                                           .addEvents(EventAction.GET_ONE, EventAction.UPDATE,
+                                                                      EventAction.PATCH)
+                                                           .build();
 
     public static EventModel getServiceInstaller(boolean local) {
         return EventModel.builder()
@@ -65,10 +71,16 @@ public final class EdgeInstallerEventBus {
     public static EventModel getServiceLastTransaction(boolean local) {
         return EventModel.builder()
                          .address("nubeiot.edge.app.installer.last_transaction")
-                         .pattern(EventPattern.REQUEST_RESPONSE)
-                         .local(local).event(EventAction.GET_LIST)
-                         .build();
+                         .pattern(EventPattern.REQUEST_RESPONSE).local(local).event(EventAction.GET_LIST).build();
     }
 
+    public static EventModel getServiceSecret(boolean local) {
+        return EventModel.builder()
+                         .address("nubeiot.edge.app.installer.secret")
+                         .pattern(EventPattern.REQUEST_RESPONSE)
+                         .local(local)
+                         .addEvents(EventAction.GET_ONE, EventAction.UPDATE, EventAction.PATCH)
+                         .build();
+    }
 
 }
