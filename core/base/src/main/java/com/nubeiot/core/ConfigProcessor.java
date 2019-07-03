@@ -27,6 +27,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.NubeConfig.DeployConfig;
+import com.nubeiot.core.NubeConfig.SecretConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.FileUtils;
@@ -136,7 +137,9 @@ public final class ConfigProcessor {
         }
         JsonObject input = defaultConfig.mergeIn(provideConfig, true);
         if (logger.isDebugEnabled()) {
-            logger.debug("Input NubeConfig: {}", input.encode());
+            JsonObject inputCopy = input.copy();
+            input.remove(SecretConfig.NAME);
+            logger.debug("Input NubeConfig: {}", inputCopy.encode());
         }
         return input;
     }
@@ -155,9 +158,11 @@ public final class ConfigProcessor {
                                                 boolean overrideAppConfig, boolean overrideSystemConfig) {
         JsonObject nubeConfig = new JsonObject();
         JsonObject inputAppConfig = fileConfig.getJsonObject(AppConfig.NAME, new JsonObject());
+        JsonObject inputSecretConfig = fileConfig.getJsonObject(SecretConfig.NAME, new JsonObject());
         JsonObject inputSystemConfig = fileConfig.getJsonObject(SystemConfig.NAME, new JsonObject());
         JsonObject inputDeployConfig = fileConfig.getJsonObject(DeployConfig.NAME, new JsonObject());
         JsonObject destAppConfig = new JsonObject();
+        JsonObject destSecretConfig = new JsonObject();
         JsonObject destSystemConfig = new JsonObject();
         JsonObject destDeployConfig = new JsonObject();
         Object inputDataDir = fileConfig.getValue(NubeConfig.DATA_DIR);
@@ -185,9 +190,13 @@ public final class ConfigProcessor {
             if (standardKey.equals(AppConfig.NAME) && overrideAppConfig) {
                 handleDomainConfig(destAppConfig, inputAppConfig, envValue, envKeyParts);
             }
+            if (standardKey.equals(SecretConfig.NAME) && overrideAppConfig) {
+                handleDomainConfig(destSecretConfig, inputSecretConfig, envValue, envKeyParts);
+            }
         }
 
         nubeConfig.put(AppConfig.NAME, new JsonObject(inputAppConfig.toString()).mergeIn(destAppConfig, true));
+        nubeConfig.put(SecretConfig.NAME, new JsonObject(inputSecretConfig.toString()).mergeIn(destSecretConfig, true));
         nubeConfig.put(SystemConfig.NAME, new JsonObject(inputSystemConfig.toString()).mergeIn(destSystemConfig, true));
         nubeConfig.put(DeployConfig.NAME, new JsonObject(inputDeployConfig.toString()).mergeIn(destDeployConfig, true));
 
