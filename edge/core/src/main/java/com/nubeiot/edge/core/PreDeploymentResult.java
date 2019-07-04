@@ -60,7 +60,7 @@ public class PreDeploymentResult implements JsonData, IRequestData {
 
         private JsonObject appConfig;
         private JsonObject systemConfig;
-        private JsonObject secretConfig = new JsonObject();
+        private JsonObject secretConfig;
         private Path dataDir = FileUtils.DEFAULT_DATADIR;
 
         @JsonProperty("app_config")
