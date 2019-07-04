@@ -1,10 +1,15 @@
 package com.nubeiot.edge.connector.device;
 
+import java.util.HashMap;
+
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
@@ -35,27 +40,40 @@ public class DeviceVerticle extends ContainerVerticle {
     private void publishServices(MicroContext microContext) {
         microContext.getLocalController()
                     .addEventMessageRecord("device-status", DeviceEventModels.DEVICE_STATUS.getAddress(),
-                                           EventMethodDefinition.createDefault("/device/status", "/device/status/:id"),
-                                           null)
+                                           EventMethodDefinition.create("/device/status", getListActionMethodMapping()))
                     .subscribe();
 
         microContext.getLocalController()
                     .addEventMessageRecord("device-network", DeviceEventModels.DEVICE_NETWORK.getAddress(),
-                                           EventMethodDefinition.createDefault("/device/network",
-                                                                               "/device/network/:id"),
-                                           null)
+                                           EventMethodDefinition.create("/device/network",
+                                                                        getListActionMethodMapping()))
                     .subscribe();
 
         microContext.getLocalController()
                     .addEventMessageRecord("device-ip", DeviceEventModels.DEVICE_IP.getAddress(),
-                                           EventMethodDefinition.createDefault("/device/ip", "/device/ip/:id"), null)
+                                           EventMethodDefinition.create("/device/ip", createActionMethodMapping()))
                     .subscribe();
 
         microContext.getLocalController()
                     .addEventMessageRecord("device-dhcp", DeviceEventModels.DEVICE_DHCP.getAddress(),
-                                           EventMethodDefinition.createDefault("/device/dhcp", "/device/dhcp/:id"),
-                                           null)
+                                           EventMethodDefinition.create("/device/dhcp", createActionMethodMapping()))
                     .subscribe();
+    }
+
+    private ActionMethodMapping getListActionMethodMapping() {
+        return () -> new HashMap<EventAction, HttpMethod>() {
+            {
+                put(EventAction.GET_LIST, HttpMethod.GET);
+            }
+        };
+    }
+
+    private ActionMethodMapping createActionMethodMapping() {
+        return () -> new HashMap<EventAction, HttpMethod>() {
+            {
+                put(EventAction.CREATE, HttpMethod.POST);
+            }
+        };
     }
 
 }
