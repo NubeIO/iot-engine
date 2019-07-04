@@ -11,11 +11,9 @@ import com.nubeiot.edge.bios.MockModuleLoader;
 import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.ModuleEventListener;
 import com.nubeiot.edge.core.TransactionEventListener;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
-
-    private final Class<? extends EdgeEntityHandler> entityHandlerClass;
 
     public static EventModel MOCK_BIOS_INSTALLER = EventModel.builder()
                                                              .address("mockup.nubeiot.edge.bios.installer")
@@ -27,6 +25,7 @@ public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
                                                                                    EventAction.REMOVE,
                                                                                    EventAction.UPDATE))
                                                              .build();
+    private final Class<? extends EdgeEntityHandler> entityHandlerClass;
 
     public MockBiosStartupModulesVerticle(Class<? extends EdgeEntityHandler> entityHandlerClass) {
         this.entityHandlerClass = entityHandlerClass;
@@ -41,9 +40,9 @@ public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
     public void registerEventbus(EventController controller) {
         controller.register(MockBiosStartupModulesVerticle.MOCK_BIOS_INSTALLER,
                             new ModuleEventListener(this, MockBiosStartupModulesVerticle.MOCK_BIOS_INSTALLER));
-        controller.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, new MockModuleLoader(null));
-        controller.register(EdgeInstallerEventBus.BIOS_TRANSACTION,
-                            new TransactionEventListener(this, EdgeInstallerEventBus.BIOS_TRANSACTION));
+        controller.register(InstallerEventModel.BIOS_DEPLOYMENT, new MockModuleLoader(null));
+        controller.register(InstallerEventModel.BIOS_TRANSACTION,
+                            new TransactionEventListener(this, InstallerEventModel.BIOS_TRANSACTION));
     }
 
     @Override

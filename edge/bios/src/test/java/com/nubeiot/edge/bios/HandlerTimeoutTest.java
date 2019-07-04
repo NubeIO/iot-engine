@@ -25,7 +25,7 @@ import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 @RunWith(VertxUnitRunner.class)
 public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
@@ -99,8 +99,8 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         Async async = context.async();
         //loading patch takes 3 seconds when timeout is 5 seconds
         this.edgeVerticle.getEventController()
-                         .request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
-                                  EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
+                         .request(InstallerEventModel.BIOS_DEPLOYMENT.getAddress(),
+                                  InstallerEventModel.BIOS_DEPLOYMENT.getPattern(), eventMessage,
                                   context.asyncAssertSuccess(response -> TestHelper.testComplete(async)));
 
         async.awaitSuccess();
@@ -142,8 +142,8 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
 
         //create loading takes 7 seconds when timeout is 5 seconds
         this.edgeVerticle.getEventController()
-                         .request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
-                                  EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
+                         .request(InstallerEventModel.BIOS_DEPLOYMENT.getAddress(),
+                                  InstallerEventModel.BIOS_DEPLOYMENT.getPattern(), eventMessage,
                                   context.asyncAssertFailure(response -> {
                                       context.assertTrue(response instanceof ReplyException);
                                       context.assertEquals(((ReplyException) response).failureType(),

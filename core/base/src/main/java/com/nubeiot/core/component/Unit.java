@@ -29,11 +29,11 @@ public interface Unit<C extends IConfig, T extends UnitContext> extends HasConfi
      * This method will be called automatically by system before deploying verticle.
      *
      * @param sharedKey shared data key
-     * @param <V> Type of Unit Verticle
+     * @param <U>       Type of Unit Verticle
      * @return a reference to this, so the API can be used fluently
      * @see Container
      */
-    Unit<C, T> registerSharedKey(String sharedKey);
+    <U extends Unit<C, T>> U registerSharedKey(String sharedKey);
 
     /**
      * Retrieve {@code Vertx} shared data value by key data
