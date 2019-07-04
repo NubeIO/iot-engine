@@ -3,9 +3,6 @@ package com.nubeiot.edge.connector.device.utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -35,14 +32,6 @@ public class Command {
             logger.error("Could not run command line: " + command, e);
         }
         return null;
-    }
-
-    public static List<String> executeWithSplit(String command) {
-        String executeResult = Command.execute(command);
-        if (executeResult != null) {
-            return Arrays.asList(executeResult.split("\n"));
-        }
-        return new ArrayList<>();
     }
 
 }
