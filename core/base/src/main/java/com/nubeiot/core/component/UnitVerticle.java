@@ -49,11 +49,12 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
         return unitContext;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public final Unit<C, T> registerSharedKey(String sharedKey) {
+    public final <U extends Unit<C, T>> U registerSharedKey(String sharedKey) {
         logger.debug("Register SharedData with shared key: {}", sharedKey);
         this.sharedKey = sharedKey;
-        return this;
+        return (U) this;
     }
 
     @Override

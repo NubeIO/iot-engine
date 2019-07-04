@@ -5,7 +5,7 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.edge.core.ModuleEventListener;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public class MockTimeoutVerticle extends EdgeBiosVerticle {
 
@@ -19,7 +19,7 @@ public class MockTimeoutVerticle extends EdgeBiosVerticle {
     public void registerEventbus(EventController eventClient) {
         eventClient.register(MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER,
                              new ModuleEventListener(this, MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER));
-        eventClient.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, new MockTimeoutLoader());
+        eventClient.register(InstallerEventModel.BIOS_DEPLOYMENT, new MockTimeoutLoader());
     }
 
     @Override

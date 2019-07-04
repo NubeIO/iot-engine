@@ -92,10 +92,11 @@ abstract class BaseSqlTest {
                      String assertFieldName, Object expect, Class expectedClass) {
         try {
             context.assertNotNull(tblSample_01);
-            context.assertEquals(expect, ReflectionField.getFieldValue(tblSample_01,
-                                                                       com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01.class
-                                                                           .getDeclaredField(assertFieldName),
-                                                                       expectedClass));
+            final Class<com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01> clazz
+                = com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01.class;
+            context.assertEquals(expect,
+                                 ReflectionField.getFieldValue(tblSample_01, clazz.getDeclaredField(assertFieldName),
+                                                               expectedClass));
         } catch (AssertionError | NoSuchFieldException ex) {
             context.fail(ex);
         } finally {

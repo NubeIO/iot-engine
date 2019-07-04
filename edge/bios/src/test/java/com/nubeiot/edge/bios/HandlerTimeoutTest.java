@@ -25,7 +25,7 @@ import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 @RunWith(VertxUnitRunner.class)
 public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
@@ -94,7 +94,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                                                     .put("action", EventAction.PATCH)
                                                     .put("data", new JsonObject("{\"abc\":\"123\"}"));
         this.edgeVerticle.getEventController()
-                         .request(DeliveryEvent.from(EdgeInstallerEventBus.BIOS_DEPLOYMENT, EventAction.PATCH,
+                         .request(DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.PATCH,
                                                      RequestData.builder().body(body).build().toJson()),
                                   EventbusHelper.replyAsserter(context, async, expected));
     }
@@ -106,7 +106,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                                               .put("version", VERSION);
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
         Async async = context.async();
-        final DeliveryEvent deliveryEvent = DeliveryEvent.from(EdgeInstallerEventBus.BIOS_DEPLOYMENT,
+        final DeliveryEvent deliveryEvent = DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT,
                                                                EventAction.CREATE,
                                                                RequestData.builder().body(body).build().toJson());
         //create loading takes 9 seconds when timeout is 3 seconds
