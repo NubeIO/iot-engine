@@ -20,6 +20,44 @@ public interface EventController extends Shareable {
     /**
      * Fire the request to event address.
      * <p>
+     * It is equivalent to call {@link #request(DeliveryEvent, Handler)} with no {@code reply handler}
+     *
+     * @param deliveryEvent Delivery Event
+     */
+    default void request(@NonNull DeliveryEvent deliveryEvent) {
+        request(deliveryEvent, null);
+    }
+
+    /**
+     * Fire the request to event address.
+     * <p>
+     * It is equivalent to call {@link #request(DeliveryEvent, DeliveryOptions, Handler)} with {@code deliveryOptions}
+     * is {@code null}
+     *
+     * @param deliveryEvent Delivery Event
+     * @param replyConsumer The consumer for handling message back after the system completes request process
+     */
+    default void request(@NonNull DeliveryEvent deliveryEvent, Handler<AsyncResult<Message<Object>>> replyConsumer) {
+        request(deliveryEvent, null, replyConsumer);
+    }
+
+    /**
+     * Fire the request to event address.
+     * <p>
+     *
+     * @param deliveryEvent   Delivery Event
+     * @param deliveryOptions Delivery Options
+     * @param replyConsumer   The consumer for handling message back after the system completes request process
+     */
+    default void request(@NonNull DeliveryEvent deliveryEvent, DeliveryOptions deliveryOptions,
+                         Handler<AsyncResult<Message<Object>>> replyConsumer) {
+        request(deliveryEvent.getAddress(), deliveryEvent.getPattern(), deliveryEvent.payload(), replyConsumer,
+                deliveryOptions);
+    }
+
+    /**
+     * Fire the request to event address.
+     * <p>
      * It is equivalent to call {@link #request(String, EventPattern, EventMessage, DeliveryOptions)} with {@code
      * deliveryOptions} is {@code null}
      *

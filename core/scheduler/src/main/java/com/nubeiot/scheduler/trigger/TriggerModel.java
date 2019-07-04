@@ -37,6 +37,8 @@ public interface TriggerModel extends JsonData {
 
     Trigger toTrigger();
 
+    String toString();
+
     enum TriggerType {
         CRON, PERIODIC
     }
@@ -60,22 +62,26 @@ public interface TriggerModel extends JsonData {
             return TriggerBuilder.newTrigger().withIdentity(getKey()).withSchedule(scheduleBuilder()).build();
         }
 
-        public static abstract class AbstractTriggerBuilder {
+        @SuppressWarnings("unchecked")
+        public static abstract class AbstractTriggerModelBuilder<T extends TriggerModel,
+                                                                            B extends AbstractTriggerModelBuilder> {
 
-            protected String name;
-            protected String group;
+            String name;
+            String group;
 
-            public <B extends AbstractTriggerBuilder> B group(String group) {
+            public B group(String group) {
                 this.group = group;
                 return (B) this;
             }
 
-            public <B extends AbstractTriggerBuilder> B name(String name) {
+            public B name(String name) {
                 this.name = name;
                 return (B) this;
             }
 
-            public abstract <T extends TriggerModel> T build();
+            protected TriggerKey key() { return createKey(group, name); }
+
+            public abstract T build();
 
         }
 

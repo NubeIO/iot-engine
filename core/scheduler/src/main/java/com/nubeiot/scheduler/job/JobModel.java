@@ -14,7 +14,10 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
 
-@JsonTypeInfo(use = Id.NAME, property = "type", visible = true)
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes( {
     @JsonSubTypes.Type(value = EventJobModel.class, name = "EVENT_JOB")
 })
@@ -34,6 +37,8 @@ public interface JobModel<T extends VertxJob> extends JsonData {
 
     Class<T> implementation();
 
+    String toString();
+
     default JobDetail toJobDetail() {
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(JOB_DATA_KEY, this);
@@ -42,6 +47,41 @@ public interface JobModel<T extends VertxJob> extends JsonData {
 
     enum JobType {
         EVENT_JOB
+    }
+
+
+    @RequiredArgsConstructor
+    abstract class AbstractJobModel implements JobModel {
+
+        @Getter
+        private final JobKey key;
+        private final JobType type;
+
+        @Override
+        public final JobType type() { return type; }
+
+        @SuppressWarnings("unchecked")
+        public static abstract class AbstractJobModelBuilder<T extends JobModel, B extends AbstractJobModelBuilder> {
+
+            String name;
+            String group;
+
+            public B group(String group) {
+                this.group = group;
+                return (B) this;
+            }
+
+            public B name(String name) {
+                this.name = name;
+                return (B) this;
+            }
+
+            protected JobKey key() { return createKey(group, name); }
+
+            public abstract T build();
+
+        }
+
     }
 
 }

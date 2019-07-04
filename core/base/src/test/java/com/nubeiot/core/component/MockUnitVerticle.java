@@ -1,12 +1,11 @@
-package com.nubeiot.core.utils.mock;
+package com.nubeiot.core.component;
 
-import com.nubeiot.core.component.UnitContext;
-import com.nubeiot.core.component.UnitVerticle;
+import com.nubeiot.core.utils.mock.MockConfig;
 
 import lombok.Getter;
 import lombok.NonNull;
 
-public class MockUnitVerticle extends UnitVerticle<MockConfig, UnitContext> {
+public final class MockUnitVerticle extends UnitVerticle<MockConfig, UnitContext> {
 
     @Getter
     private final boolean error;

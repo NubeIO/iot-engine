@@ -1,5 +1,6 @@
 package com.nubeiot.core.utils.mock;
 
+import com.nubeiot.core.component.MockUnitVerticle;
 import com.nubeiot.core.component.UnitProvider;
 
 import lombok.Getter;

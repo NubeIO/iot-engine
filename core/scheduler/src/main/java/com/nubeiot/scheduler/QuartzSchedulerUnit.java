@@ -6,7 +6,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 
-public class QuartzSchedulerUnit extends UnitVerticle<SchedulerConfig, QuartzSchedulerContext> {
+public final class QuartzSchedulerUnit extends UnitVerticle<SchedulerConfig, QuartzSchedulerContext> {
 
     QuartzSchedulerUnit() {
         super(new QuartzSchedulerContext());

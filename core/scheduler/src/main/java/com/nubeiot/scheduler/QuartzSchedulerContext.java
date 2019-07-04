@@ -12,7 +12,7 @@ import com.nubeiot.scheduler.job.VertxJobFactory;
 
 import lombok.Getter;
 
-public class QuartzSchedulerContext extends UnitContext {
+public final class QuartzSchedulerContext extends UnitContext {
 
     @Getter
     private Scheduler scheduler;

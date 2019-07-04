@@ -72,7 +72,7 @@ public class WebsocketClientDelegateTest {
     @Test(expected = HttpException.class)
     public void test_connect_failed_due_unknown_dns() {
         config.getOptions().setConnectTimeout(6 * 1000);
-        HostInfo opt = HostInfo.builder().host("echo.websocket.orgxx").port(443).ssl(true).build();
+        HostInfo opt = HostInfo.builder().host("echo.websocket.test").port(443).ssl(true).build();
         WebsocketClientDelegate client = WebsocketClientDelegate.create(vertx, config, opt);
         client.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
     }

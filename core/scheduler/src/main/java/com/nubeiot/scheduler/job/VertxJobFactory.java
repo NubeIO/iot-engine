@@ -10,12 +10,11 @@ import org.quartz.spi.TriggerFiredBundle;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.scheduler.SchedulerConfig;
-import com.nubeiot.scheduler.job.VertxJob;
 
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class VertxJobFactory extends SimpleJobFactory implements JobFactory {
+public final class VertxJobFactory extends SimpleJobFactory implements JobFactory {
 
     private final Vertx vertx;
     private final String sharedKey;
@@ -25,7 +24,7 @@ public class VertxJobFactory extends SimpleJobFactory implements JobFactory {
     public Job newJob(TriggerFiredBundle bundle, Scheduler scheduler) throws SchedulerException {
         Job job = super.newJob(bundle, scheduler);
         final Class<? extends Job> jobClass = bundle.getJobDetail().getJobClass();
-        if (jobClass.isAssignableFrom(VertxJob.class)) {
+        if (VertxJob.class.isAssignableFrom(jobClass)) {
             return ((VertxJob) job).init(vertx, sharedKey, config);
         }
         return job;

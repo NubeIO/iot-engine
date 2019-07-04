@@ -83,8 +83,8 @@ public class MicroContextTest {
                                              ".interface\":\"com.nubeiot.core.micro.mock.MockEventbusService\"}," +
                                              "\"name\":\"test\",\"status\":\"UP\"," +
                                              "\"type\":\"eventbus-service-proxy\"}");
-        EventbusHelper.assertConsumerData(vertx, async, micro.getLocalController().getConfig().getAnnounceAddress(),
-                                          o -> JsonHelper.assertJson(context, async, expected, (JsonObject) o));
+        EventbusHelper.assertReceivedData(vertx, async, micro.getLocalController().getConfig().getAnnounceAddress(),
+                                          JsonHelper.asserter(context, async, expected));
         micro.getLocalController()
              .addRecord(EventBusService.createRecord("test", "address1", MockEventbusService.class))
              .subscribe();
@@ -98,8 +98,8 @@ public class MicroContextTest {
                                              "\"host\":\"123.456.0.1\",\"port\":1234,\"root\":\"/api\"," +
                                              "\"ssl\":false},\"metadata\":{\"meta\":\"test\"},\"name\":\"http.test\"," +
                                              "\"status\":\"UP\",\"type\":\"http-endpoint\"}");
-        EventbusHelper.assertConsumerData(vertx, async, micro.getLocalController().getConfig().getAnnounceAddress(),
-                                          o -> JsonHelper.assertJson(context, async, expected, (JsonObject) o));
+        EventbusHelper.assertReceivedData(vertx, async, micro.getLocalController().getConfig().getAnnounceAddress(),
+                                          JsonHelper.asserter(context, async, expected));
         micro.getLocalController()
              .addHttpRecord("http.test", new HttpLocation().setHost("123.456.0.1").setPort(1234).setRoot("/api"),
                             new JsonObject().put("meta", "test"))

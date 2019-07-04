@@ -6,9 +6,12 @@ import org.quartz.JobKey;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.DeliveryEvent;
+import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.scheduler.job.JobModel.AbstractJobModel;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -17,41 +20,36 @@ import lombok.NonNull;
 @Getter
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = EventJobModel.Builder.class)
-public final class EventJobModel implements JobModel<EventJob> {
+public final class EventJobModel extends AbstractJobModel {
 
-    private final JobType type;
-    private final JobKey key;
-    private final EventMessage payload;
     @NonNull
-    private final EventModel process;
-    private final EventModel callback;
+    private final DeliveryEvent process;
+    private final DeliveryEvent callback;
 
-    @Override
-    public JobType type() { return type; }
+    private EventJobModel(JobKey key, DeliveryEvent process, DeliveryEvent callback) {
+        super(key, JobType.EVENT_JOB);
+        this.process = process;
+        this.callback = callback;
+    }
 
     @Override
     public Class<EventJob> implementation() { return EventJob.class; }
 
+    @Override
+    public String toString() {
+        return Strings.format("Type: {0} - Process Address: {1} - Callback Address: {2}", type(), process.getAddress(),
+                              Objects.isNull(callback) ? "" : callback.getAddress());
+    }
+
     @JsonPOJOBuilder(withPrefix = "")
-    public static class Builder {
-
-        private String name;
-        private String group;
-
-        public Builder group(String group) {
-            this.group = group;
-            return this;
-        }
-
-        public Builder name(String name) {
-            this.name = name;
-            return this;
-        }
+    public static class Builder extends AbstractJobModelBuilder<EventJobModel, Builder> {
 
         public EventJobModel build() {
-            key = Objects.isNull(key) ? JobModel.createKey(group, name) : key;
-            payload = Objects.isNull(payload) ? EventMessage.initial(EventAction.UNKNOWN) : payload;
-            return new EventJobModel(type, key, payload, process, callback);
+            if (Objects.nonNull(callback) && callback.getPattern() == EventPattern.REQUEST_RESPONSE) {
+                throw new NubeException(ErrorCode.INVALID_ARGUMENT,
+                                        "Callback Pattern doesn't support " + EventPattern.REQUEST_RESPONSE);
+            }
+            return new EventJobModel(key(), process, callback);
         }
 
     }

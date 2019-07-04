@@ -2,6 +2,7 @@ package com.nubeiot.scheduler.trigger;
 
 import java.text.ParseException;
 import java.time.ZoneOffset;
+import java.util.Objects;
 import java.util.TimeZone;
 
 import org.quartz.CronExpression;
@@ -14,7 +15,6 @@ import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
@@ -30,34 +30,63 @@ import lombok.NonNull;
 @JsonDeserialize(builder = CronTriggerModel.Builder.class)
 public final class CronTriggerModel extends AbstractTriggerModel {
 
-    private final String expr;
-    private final String tz;
+    @NonNull
+    private final CronExpression expression;
+    @NonNull
+    private final TimeZone timezone;
 
-    CronTriggerModel(TriggerType type, TriggerKey key, String expr, String tz) {
+    private CronTriggerModel(TriggerType type, TriggerKey key, CronExpression expression, TimeZone timezone) {
         super(key, type);
-        this.expr = expr;
-        this.tz = tz;
+        this.expression = expression;
+        this.timezone = timezone;
     }
 
     @Override
     protected @NonNull ScheduleBuilder<CronTrigger> scheduleBuilder() {
-        TimeZone timeZone = TimeZone.getTimeZone(Strings.isBlank(tz) ? ZoneOffset.UTC.getId() : tz);
-        return CronScheduleBuilder.cronSchedule(toCronExpr()).inTimeZone(timeZone);
+        return CronScheduleBuilder.cronSchedule(expression).inTimeZone(timezone);
     }
 
-    private CronExpression toCronExpr() {
-        try {
-            return new CronExpression(expr);
-        } catch (IllegalArgumentException | ParseException e) {
-            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Cannot parse cron expression", new HiddenException(e));
-        }
+    @Override
+    public JsonObject toJson() {
+        return super.toJson().put("timezone", timezone.getID()).put("expression", expression.getCronExpression());
+    }
+
+    @Override
+    public String toString() {
+        return Strings.format("Expr: \"{0}\" - TimeZone: \"{1}\"", expression, timezone.getID());
     }
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static class Builder extends AbstractTriggerBuilder {
+    public static class Builder extends AbstractTriggerModelBuilder<CronTriggerModel, Builder> {
+
+        private String expr;
+        private String tz;
+
+        static CronExpression toCronExpr(String expression) {
+            try {
+                return new CronExpression(expression);
+            } catch (IllegalArgumentException | ParseException e) {
+                throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Cannot parse cron expression",
+                                        new HiddenException(e));
+            }
+        }
+
+        public Builder tz(String timezone) {
+            this.tz = timezone;
+            return this;
+        }
+
+        public Builder expr(String expression) {
+            this.expr = expression;
+            return this;
+        }
 
         public CronTriggerModel build() {
-            return new CronTriggerModel(TriggerType.CRON, TriggerModel.createKey(group, name), expr, tz);
+            timezone = Objects.nonNull(timezone)
+                       ? timezone
+                       : TimeZone.getTimeZone(Strings.isBlank(tz) ? ZoneOffset.UTC.getId() : tz);
+            expression = Objects.nonNull(expression) ? expression : toCronExpr(expr);
+            return new CronTriggerModel(TriggerType.CRON, key(), expression, timezone);
         }
 
     }

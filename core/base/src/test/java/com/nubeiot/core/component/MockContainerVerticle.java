@@ -1,6 +1,4 @@
-package com.nubeiot.core.utils.mock;
-
-import com.nubeiot.core.component.ContainerVerticle;
+package com.nubeiot.core.component;
 
 import lombok.Getter;
 import lombok.Setter;

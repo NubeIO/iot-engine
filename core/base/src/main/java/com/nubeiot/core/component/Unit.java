@@ -32,7 +32,7 @@ public interface Unit<C extends IConfig, T extends UnitContext> extends HasConfi
      * @return a reference to this, so the API can be used fluently
      * @see Container
      */
-    Unit<C, T> registerSharedData(String sharedKey);
+    Unit<C, T> registerSharedKey(String sharedKey);
 
     /**
      * Retrieve {@code Vertx} shared data value by key data

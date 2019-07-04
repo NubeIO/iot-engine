@@ -55,9 +55,11 @@ public interface SharedDataDelegate {
         if (Objects.nonNull(eventController)) {
             return eventController;
         }
-        final EventController controller = new DefaultEventController(vertx);
-        addLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS, controller);
-        return controller;
+        synchronized (EventController.class) {
+            final EventController controller = new DefaultEventController(vertx);
+            addLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS, controller);
+            return controller;
+        }
     }
 
     static Path getDataDir(@NonNull Vertx vertx, String sharedKey) {

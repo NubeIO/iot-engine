@@ -10,16 +10,15 @@ import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.utils.mock.MockUnitVerticle;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -44,7 +43,7 @@ public class UnitVerticleTest {
     public void not_have_config_file_should_deploy_success(TestContext context) {
         MockUnitVerticle unitVerticle = new MockUnitVerticle();
         Async async = context.async();
-        VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions(), unitVerticle, deployId -> {
+        VertxHelper.deploy(vertx, context, new DeploymentOptions(), unitVerticle, deployId -> {
             context.assertNotNull(deployId);
             TestHelper.testComplete(async);
         });
@@ -55,7 +54,7 @@ public class UnitVerticleTest {
         MockUnitVerticle unitVerticle = new MockUnitVerticle();
         Async async = context.async();
         DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("xx", "yyy"));
-        VertxHelper.deployFailed(vertx.getDelegate(), context, options, unitVerticle, t -> {
+        VertxHelper.deployFailed(vertx, context, options, unitVerticle, t -> {
             TestHelper.testComplete(async);
             Assert.assertTrue(t instanceof NubeException);
             Assert.assertEquals("Invalid config format", t.getMessage());
@@ -67,11 +66,11 @@ public class UnitVerticleTest {
     public void test_register_shared_data(TestContext context) {
         MockUnitVerticle unitVerticle = new MockUnitVerticle();
         final String key = MockUnitVerticle.class.getName();
-        unitVerticle.registerSharedData(key);
+        unitVerticle.registerSharedKey(key);
 
         Async async = context.async();
         DeploymentOptions options = new DeploymentOptions();
-        VertxHelper.deploy(vertx.getDelegate(), context, options, unitVerticle, t -> {
+        VertxHelper.deploy(vertx, context, options, unitVerticle, t -> {
             unitVerticle.getSharedData(key);
             TestHelper.testComplete(async);
         });
@@ -82,17 +81,15 @@ public class UnitVerticleTest {
         MockUnitVerticle unitVerticle = new MockUnitVerticle(true);
         Async async = context.async();
         DeploymentOptions options = new DeploymentOptions();
-        VertxHelper.deployFailed(vertx.getDelegate(), context, options, unitVerticle, t -> {
+        VertxHelper.deployFailed(vertx, context, options, unitVerticle, t -> {
             TestHelper.testComplete(async);
             Assert.assertTrue(t instanceof RuntimeException);
-            Assert.assertEquals(0, vertx.getDelegate().deploymentIDs().size());
+            Assert.assertEquals(0, vertx.deploymentIDs().size());
         });
     }
 
     @After
-    public void after() {
-        vertx.close();
-    }
+    public void after() { vertx.close(); }
 
 }
 

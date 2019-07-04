@@ -52,9 +52,7 @@ abstract class BaseSqlTest {
     }
 
     static void beforeSuite() {
-        System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
-        ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.INFO);
-        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.DEBUG);
+        TestHelper.setup();
         ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.zaxxer.hikari")).setLevel(Level.DEBUG);
     }
@@ -113,9 +111,7 @@ abstract class BaseSqlTest {
                                                                        com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01.class
                                                                            .getDeclaredField(assertFieldName),
                                                                        expectedClass));
-        } catch (AssertionError ex) {
-            context.fail(ex);
-        } catch (NoSuchFieldException ex) {
+        } catch (AssertionError | NoSuchFieldException ex) {
             context.fail(ex);
         } finally {
             TestHelper.testComplete(async);

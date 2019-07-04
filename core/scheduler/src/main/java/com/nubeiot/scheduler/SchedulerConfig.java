@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class SchedulerConfig implements IConfig {
+public final class SchedulerConfig implements IConfig {
 
     private static final String BASE_ADDRESS = "com.nubeiot.scheduler";
     private String address = BASE_ADDRESS + "." + UUID.randomUUID().toString();
@@ -20,5 +20,10 @@ public class SchedulerConfig implements IConfig {
 
     @Override
     public Class<? extends IConfig> parent() { return AppConfig.class; }
+
+    SchedulerConfig setAddress(String address) {
+        this.address = address;
+        return this;
+    }
 
 }
