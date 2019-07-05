@@ -45,4 +45,18 @@ public class NetworksTest {
         Assert.assertEquals(1234, address.getPort());
     }
 
+    @Test
+    public void test_valid_ip() {
+        Assert.assertTrue(Networks.validIP("255.255.255.255"));
+        Assert.assertTrue(Networks.validIP("0.0.0.0"));
+        Assert.assertTrue(Networks.validIP("192.168.1.1"));
+        Assert.assertTrue(Networks.validIP("10.0.1.1"));
+    }
+
+    @Test
+    public void test_invalid_ip() {
+        Assert.assertFalse(Networks.validIP("256.255.255.255"));
+        Assert.assertFalse(Networks.validIP("0.0.0"));
+    }
+
 }

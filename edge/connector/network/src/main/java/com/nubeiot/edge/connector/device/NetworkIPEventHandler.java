@@ -14,6 +14,9 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.connector.device.utils.Command;
 import com.nubeiot.edge.connector.device.utils.OS;
@@ -34,6 +37,26 @@ public class NetworkIPEventHandler implements EventHandler {
         String ipAddress = address.getString("ip_address");
         String subnetMask = address.getString("subnet_mask");
         String gateway = address.getString("gateway");
+
+        boolean isInvalid = false;
+        List<String> messages = new ArrayList<>();
+
+        if (!Networks.validIP(ipAddress)) {
+            isInvalid = true;
+            messages.add("IP Address");
+        }
+        if (!Networks.validIP(subnetMask)) {
+            isInvalid = true;
+            messages.add("Subnet Mask");
+        }
+        if (!Networks.validIP(gateway)) {
+            isInvalid = true;
+            messages.add("Gateway");
+        }
+
+        if (isInvalid) {
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid " + String.join(", ", messages));
+        }
 
         if (OS.isUnix()) {
             String getIp = Command.execute("connmanctl services");
