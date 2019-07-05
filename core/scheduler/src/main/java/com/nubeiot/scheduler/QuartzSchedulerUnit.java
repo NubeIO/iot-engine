@@ -2,9 +2,6 @@ package com.nubeiot.scheduler;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.component.UnitVerticle;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventPattern;
 
 public final class QuartzSchedulerUnit extends UnitVerticle<SchedulerConfig, QuartzSchedulerContext> {
 
@@ -30,15 +27,11 @@ public final class QuartzSchedulerUnit extends UnitVerticle<SchedulerConfig, Qua
         this.getContext().shutdown();
     }
 
-    private void initRegisterListener(QuartzSchedulerContext context) {
-        EventModel model = EventModel.builder()
-                                     .address(config.getAddress())
-                                     .local(vertx.isClustered())
-                                     .pattern(EventPattern.REQUEST_RESPONSE)
-                                     .addEvents(EventAction.CREATE, EventAction.REMOVE)
-                                     .build();
+    private void initRegisterListener(QuartzSchedulerContext ctx) {
         SharedDataDelegate.getEventController(vertx, getSharedKey())
-                          .register(model, new RegisterScheduleListener(context.getScheduler(), model.getEvents()));
+                          .register(ctx.getRegisterModel(), new RegisterScheduleListener(ctx.getScheduler(),
+                                                                                         ctx.getRegisterModel()
+                                                                                            .getEvents()));
     }
 
 }

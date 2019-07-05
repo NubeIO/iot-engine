@@ -1,7 +1,6 @@
 package com.nubeiot.scheduler;
 
 import java.time.ZoneOffset;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -61,7 +60,7 @@ public class QuartzSchedulerUnitTest {
     @Before
     public void before(TestContext context) {
         vertx = Vertx.vertx();
-        config = new SchedulerConfig().setAddress(UUID.randomUUID().toString());
+        config = new SchedulerConfig("test");
         VertxHelper.deploy(vertx, context, new DeploymentOptions().setConfig(config.toJson()),
                            new QuartzSchedulerUnit(),
                            successId -> controller = SharedDataDelegate.getEventController(vertx,
@@ -170,7 +169,7 @@ public class QuartzSchedulerUnitTest {
 
     private DeliveryEvent initRegisterEvent(EventJobModel job, TriggerModel trigger) {
         return DeliveryEvent.builder()
-                            .address(config.getAddress())
+                            .address(config.getRegisterAddress())
                             .pattern(EventPattern.REQUEST_RESPONSE)
                             .action(EventAction.CREATE)
                             .payload(new JsonObject().put("job", job.toJson()).put("trigger", trigger.toJson()))
@@ -179,7 +178,7 @@ public class QuartzSchedulerUnitTest {
 
     private DeliveryEvent initRemoveRegisterEvent(TriggerKey triggerKey) {
         return DeliveryEvent.builder()
-                            .address(config.getAddress())
+                            .address(config.getRegisterAddress())
                             .pattern(EventPattern.REQUEST_RESPONSE)
                             .action(EventAction.REMOVE)
                             .payload(new JsonObject().put("trigger_group", triggerKey.getGroup())

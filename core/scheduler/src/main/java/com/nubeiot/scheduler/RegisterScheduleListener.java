@@ -6,11 +6,11 @@ import java.util.Date;
 import java.util.Set;
 
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.ObjectAlreadyExistsException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
-import org.quartz.TriggerKey;
 import org.quartz.utils.Key;
 
 import io.vertx.core.json.JsonObject;
@@ -61,15 +61,14 @@ final class RegisterScheduleListener implements EventListener {
     }
 
     @EventContractor(action = EventAction.REMOVE)
-    public JsonObject remove(@Param("trigger_group") String triggerGroup, @Param("trigger_name") String triggerName) {
-        if (Strings.isBlank(triggerName)) {
-            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Missing trigger name");
+    public JsonObject remove(@Param("job_group") String jobGroup, @Param("job_name") String jobName) {
+        if (Strings.isBlank(jobName)) {
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Missing job name");
         }
         try {
-            return new JsonObject().put("unschedule",
-                                        scheduler.unscheduleJob(TriggerKey.triggerKey(triggerName, triggerGroup)));
+            return new JsonObject().put("unschedule", scheduler.deleteJob(JobKey.jobKey(jobName, jobGroup)));
         } catch (SchedulerException e) {
-            throw new NubeException(ErrorCode.SERVICE_ERROR, "Cannot remove trigger", e);
+            throw new NubeException(ErrorCode.SERVICE_ERROR, "Cannot job trigger", e);
         }
     }
 

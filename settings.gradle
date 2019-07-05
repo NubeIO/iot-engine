@@ -31,6 +31,7 @@ include ':edge:connector:sensor'
 include ':edge:connector:bacnet'
 include ':edge:connector:bacnet:simulator'
 include ':edge:connector:sample:kafka'
+include ':edge:connector:scheduler'
 include ':edge:rule:sample'
 
 include ':eventbus:edge'
