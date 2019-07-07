@@ -37,8 +37,8 @@ public final class EventJobModel extends AbstractJobModel {
 
     @Override
     public String toString() {
-        return Strings.format("Type: {0} - Process Address: {1} - Callback Address: {2}", type(), process.getAddress(),
-                              Objects.isNull(callback) ? "" : callback.getAddress());
+        return Strings.format("Type: \"{0}\" - Process Address: \"{1}\" - Callback Address: \"{2}\"", type(),
+                              process.getAddress(), Objects.isNull(callback) ? "" : callback.getAddress());
     }
 
     @JsonPOJOBuilder(withPrefix = "")

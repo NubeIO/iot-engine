@@ -149,7 +149,7 @@ public class QuartzSchedulerUnitTest {
     public void test_remove_should_success(TestContext context) throws InterruptedException {
         final Async async = context.async(2);
         controller.register(MockEventScheduler.PROCESS_EVENT, new MockProcessEventSchedulerListener());
-        final DeliveryEvent removeEvent = initRemoveRegisterEvent(new TriggerKey("t1"));
+        final DeliveryEvent removeEvent = initRemoveRegisterEvent(new TriggerKey("abc"));
         JsonObject r = new JsonObject("{\"status\":\"SUCCESS\",\"action\":\"REMOVE\",\"data\":{\"unschedule\":false}}");
         controller.request(removeEvent, EventbusHelper.replyAsserter(context, async, r));
         DeliveryEvent event = initRegisterEvent(MockJobModel.create("abc"), CronTriggerModel.builder()
@@ -181,8 +181,8 @@ public class QuartzSchedulerUnitTest {
                             .address(config.getRegisterAddress())
                             .pattern(EventPattern.REQUEST_RESPONSE)
                             .action(EventAction.REMOVE)
-                            .payload(new JsonObject().put("trigger_group", triggerKey.getGroup())
-                                                     .put("trigger_name", triggerKey.getName()))
+                            .payload(new JsonObject().put("job_group", triggerKey.getGroup())
+                                                     .put("job_name", triggerKey.getName()))
                             .build();
     }
 
