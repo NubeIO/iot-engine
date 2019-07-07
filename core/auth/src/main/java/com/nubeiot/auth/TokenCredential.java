@@ -4,7 +4,6 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.nubeiot.core.NubeConfig.SecretConfig;
 
 import lombok.Getter;
 
@@ -22,14 +21,13 @@ public class TokenCredential extends Credential {
     }
 
     @Override
-    public String computeUrl(String defaultUrl, SecretConfig secretConfig) {
-        return this.computeRemoteUrl(defaultUrl, secretConfig);
+    public String computeUrl(String defaultUrl) {
+        return this.computeRemoteUrl(defaultUrl);
     }
 
     @Override
-    public String computeUrlCredential(SecretConfig secretConfig) {
-        return (Objects.nonNull(this.getUser()) ? decode(secretConfig, this.getUser()) + ":" : "") +
-               decode(secretConfig, this.getToken()) + "@";
+    public String computeUrlCredential() {
+        return (Objects.nonNull(this.getUser()) ? this.getUser() + ":" : "") + this.getToken() + "@";
     }
 
     @Override

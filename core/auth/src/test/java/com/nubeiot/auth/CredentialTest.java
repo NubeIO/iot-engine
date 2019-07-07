@@ -6,7 +6,6 @@ import org.junit.Test;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.auth.Credential.CredentialType;
-import com.nubeiot.core.NubeConfig.SecretConfig;
 import com.nubeiot.core.dto.JsonData;
 
 public class CredentialTest {
@@ -30,7 +29,7 @@ public class CredentialTest {
         jsonObject.put("user", "xx");
         jsonObject.put("password", "abc");
         Credential credential = JsonData.convert(jsonObject, BasicCredential.class);
-        Assert.assertEquals("http://xx:abc@123.com", credential.computeUrl("http://123.com", new SecretConfig()));
+        Assert.assertEquals("http://xx:abc@123.com", credential.computeUrl("http://123.com"));
     }
 
     @Test
@@ -59,7 +58,7 @@ public class CredentialTest {
         jsonObject.put("type", "TOKEN");
         jsonObject.put("token", "abcdef");
         Credential credential = JsonData.convert(jsonObject, TokenCredential.class);
-        Assert.assertEquals("http://abcdef@123.com", credential.computeUrl("http://123.com", new SecretConfig()));
+        Assert.assertEquals("http://abcdef@123.com", credential.computeUrl("http://123.com"));
     }
 
     @Test
@@ -78,10 +77,10 @@ public class CredentialTest {
         jsonObject.put("user", "xx");
         jsonObject.put("password", "abc");
         BasicCredential credential = JsonData.convert(jsonObject, BasicCredential.class);
-        Assert.assertEquals("https://xx:abc@abc.xyz", credential.computeUrl("https://abc.xyz", new SecretConfig()));
-        Assert.assertEquals("http://xx:abc@abc.xyz", credential.computeUrl("http://abc.xyz", new SecretConfig()));
-        Assert.assertEquals("ws://xx:abc@abc.xyz", credential.computeUrl("ws://abc.xyz", new SecretConfig()));
-        Assert.assertEquals("wss://xx:abc@abc.xyz", credential.computeUrl("wss://abc.xyz", new SecretConfig()));
+        Assert.assertEquals("https://xx:abc@abc.xyz", credential.computeUrl("https://abc.xyz"));
+        Assert.assertEquals("http://xx:abc@abc.xyz", credential.computeUrl("http://abc.xyz"));
+        Assert.assertEquals("ws://xx:abc@abc.xyz", credential.computeUrl("ws://abc.xyz"));
+        Assert.assertEquals("wss://xx:abc@abc.xyz", credential.computeUrl("wss://abc.xyz"));
     }
 
 }

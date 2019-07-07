@@ -87,9 +87,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     public void init() {
         InstallerConfig installerCfg = IConfig.from(this.sharedDataFunc.apply(EdgeVerticle.SHARED_INSTALLER_CFG),
                                                     InstallerConfig.class);
-        SecretConfig secretConfig = IConfig.from(sharedDataFunc.apply(SharedDataDelegate.SHARED_SECRET),
-                                                 SecretConfig.class);
-        setupServiceRepository(installerCfg.getRepoConfig(), secretConfig);
+        setupServiceRepository(installerCfg.getRepoConfig());
     }
 
     @Override
@@ -104,19 +102,17 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     protected abstract EventModel deploymentEvent();
 
-    protected void setupServiceRepository(RepositoryConfig repositoryCfg, SecretConfig secretConfig) {
+    protected void setupServiceRepository(RepositoryConfig repositoryCfg) {
         logger.info("Setting up service local and remote repository");
         RemoteRepositoryConfig remoteConfig = repositoryCfg.getRemoteConfig();
         logger.info("URLs: " + remoteConfig.getUrls());
         remoteConfig.getUrls()
                     .entrySet()
                     .stream()
-                    .parallel()
-                    .forEach(entry -> handleVerticleFactory(repositoryCfg.getLocal(), entry, secretConfig));
+                    .parallel().forEach(entry -> handleVerticleFactory(repositoryCfg.getLocal(), entry));
     }
 
-    private void handleVerticleFactory(String local, Entry<ModuleType, List<RemoteUrl>> entry,
-                                       SecretConfig secretConfig) {
+    private void handleVerticleFactory(String local, Entry<ModuleType, List<RemoteUrl>> entry) {
         final ModuleType type = entry.getKey();
         if (ModuleType.JAVA == type) {
             List<RemoteUrl> remoteUrls = entry.getValue();
@@ -124,7 +120,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             logger.info("{} local repositories: {}", type, javaLocal);
             logger.info("{} remote repositories: {}", type, remoteUrls);
             ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
-                remoteUrls.stream().map(remoteUrl -> remoteUrl.computeUrl(secretConfig)).collect(Collectors.toList()))
+                remoteUrls.stream().map(RemoteUrl::computeUrl).collect(Collectors.toList()))
                                                             .setLocalRepository(javaLocal);
             vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
         }

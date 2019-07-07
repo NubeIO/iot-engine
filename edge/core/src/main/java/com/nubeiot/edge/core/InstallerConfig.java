@@ -16,7 +16,6 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.auth.Credential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.NubeConfig.SecretConfig;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.loader.ModuleType;
@@ -125,8 +124,8 @@ public final class InstallerConfig implements IConfig {
             this.url = Strings.requireNotBlank(url);
         }
 
-        public String computeUrl(SecretConfig secretConfig) {
-            return Objects.isNull(this.credential) ? url : this.credential.computeUrl(this.url, secretConfig);
+        public String computeUrl() {
+            return Objects.isNull(this.credential) ? url : this.credential.computeUrl(this.url);
         }
 
     }

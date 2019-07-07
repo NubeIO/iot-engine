@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.utils.FileUtils;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -225,7 +226,7 @@ public final class NubeConfig implements IConfig {
     }
 
 
-    public static final class SecretConfig extends HashMap implements IConfig {
+    public static final class SecretConfig extends HashMap<String, String> implements IConfig {
 
         public static final String NAME = "__secret__";
 
@@ -234,6 +235,16 @@ public final class NubeConfig implements IConfig {
 
         @Override
         public Class<? extends IConfig> parent() { return NubeConfig.class; }
+
+        public SecretProperty decode(String key) {
+            String value = key;
+            if (key.startsWith("@secret.")) {
+                key = key.replaceAll("^@secret.", "@");
+                value = "";
+            }
+            value = Strings.getFirstNotNull(this.get(key), value);
+            return new SecretProperty(key, value);
+        }
 
     }
 
