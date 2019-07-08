@@ -10,7 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.quartz.TriggerKey;
+import org.quartz.JobKey;
 import org.skyscreamer.jsonassert.Customization;
 
 import io.vertx.core.DeploymentOptions;
@@ -131,34 +131,33 @@ public class QuartzSchedulerUnitTest {
     public void test_add_job_to_multi_trigger_should_success(TestContext context) throws InterruptedException {
         final Async async = context.async(2);
         controller.register(MockEventScheduler.PROCESS_EVENT, new MockProcessEventSchedulerListener());
-        PeriodicTriggerModel periodicTrigger = PeriodicTriggerModel.builder().name("t2").intervalInSeconds(10).build();
+        PeriodicTriggerModel periodicTrigger = PeriodicTriggerModel.builder().name("tr2").intervalInSeconds(10).build();
         DeliveryEvent event1 = initRegisterEvent(MockJobModel.create("abc"), periodicTrigger);
         DeliveryEvent event2 = initRegisterEvent(MockJobModel.create("xxx"), periodicTrigger);
         CountDownLatch latch = new CountDownLatch(1);
         controller.request(event1, e -> {
-            EventbusHelper.replyAsserter(context, async, registerResponse("t2", "abc"), SKIP_LOCAL_DATE, SKIP_UTC_DATE)
+            EventbusHelper.replyAsserter(context, async, registerResponse("tr2", "abc"), SKIP_LOCAL_DATE, SKIP_UTC_DATE)
                           .handle(e);
             latch.countDown();
         });
         latch.await(1, TimeUnit.SECONDS);
         controller.request(event2,
-                           EventbusHelper.replyAsserter(context, registerAsserter(context, async, "t2", "xxx")));
+                           EventbusHelper.replyAsserter(context, registerAsserter(context, async, "tr2", "xxx")));
     }
 
     @Test
     public void test_remove_should_success(TestContext context) throws InterruptedException {
         final Async async = context.async(2);
         controller.register(MockEventScheduler.PROCESS_EVENT, new MockProcessEventSchedulerListener());
-        final DeliveryEvent removeEvent = initRemoveRegisterEvent(new TriggerKey("abc"));
+        final DeliveryEvent removeEvent = initRemoveRegisterEvent(new JobKey("abc"));
         JsonObject r = new JsonObject("{\"status\":\"SUCCESS\",\"action\":\"REMOVE\",\"data\":{\"unschedule\":false}}");
         controller.request(removeEvent, EventbusHelper.replyAsserter(context, async, r));
-        DeliveryEvent event = initRegisterEvent(MockJobModel.create("abc"), CronTriggerModel.builder()
-                                                                                            .name("t1")
+        DeliveryEvent event = initRegisterEvent(MockJobModel.create("abc"), CronTriggerModel.builder().name("tr1")
                                                                                             .expr("0 0/1 * 1/1 * ? *")
                                                                                             .build());
         CountDownLatch latch = new CountDownLatch(1);
         controller.request(event, e -> {
-            final JsonObject resp = registerResponse("t1", "abc");
+            final JsonObject resp = registerResponse("tr1", "abc");
             EventbusHelper.replyAsserter(context, async, resp, SKIP_LOCAL_DATE, SKIP_UTC_DATE).handle(e);
             latch.countDown();
         });
@@ -176,13 +175,13 @@ public class QuartzSchedulerUnitTest {
                             .build();
     }
 
-    private DeliveryEvent initRemoveRegisterEvent(TriggerKey triggerKey) {
+    private DeliveryEvent initRemoveRegisterEvent(JobKey jobKey) {
+        final JsonObject payload = new JsonObject().put("job_group", jobKey.getGroup())
+                                                   .put("job_name", jobKey.getName());
         return DeliveryEvent.builder()
                             .address(config.getRegisterAddress())
                             .pattern(EventPattern.REQUEST_RESPONSE)
-                            .action(EventAction.REMOVE)
-                            .payload(new JsonObject().put("job_group", triggerKey.getGroup())
-                                                     .put("job_name", triggerKey.getName()))
+                            .action(EventAction.REMOVE).payload(payload)
                             .build();
     }
 
