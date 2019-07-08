@@ -2,7 +2,7 @@ package com.nubeiot.iotdata.unit;
 
 public final class PercentageDataType extends NumberDataType {
 
-    PercentageDataType() { super("PERCENTAGE", "%"); }
+    PercentageDataType() { super("percentage", "%"); }
 
     @Override
     public Double parse(Object data) {

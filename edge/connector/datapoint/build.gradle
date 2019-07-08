@@ -12,6 +12,9 @@ ext {
 dependencies {
     compile project(":core:iotdata")
     compile project.deps.database.h2
+    compile project(":core:scheduler")
+    compile project(":core:micro")
+    compile 'com.jayway.jsonpath:json-path:2.4.0'
 }
 
 task jooqGen(type: JooqGenerateTask) {

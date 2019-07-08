@@ -2,7 +2,6 @@ package com.nubeiot.iotdata.unit;
 
 import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -33,7 +32,7 @@ public interface DataType extends EnumType {
 
     @NonNull
     static Predicate<Field> filter(String t) {
-        return f -> ReflectionField.getConstant(DataType.class, f, def()).type().equals(t);
+        return f -> ReflectionField.getConstant(DataType.class, f, def()).type().equalsIgnoreCase(t);
     }
 
     @NonNull
@@ -48,8 +47,7 @@ public interface DataType extends EnumType {
 
     @NonNull
     static DataType factory(String type, String unit) {
-        String t = Strings.requireNotBlank(type).toUpperCase(Locale.ENGLISH);
-        return ReflectionField.streamConstants(DataType.class, DataType.class, filter(t))
+        return ReflectionField.streamConstants(DataType.class, DataType.class, filter(Strings.requireNotBlank(type)))
                               .findFirst()
                               .orElse(new NumberDataType(type, unit));
     }

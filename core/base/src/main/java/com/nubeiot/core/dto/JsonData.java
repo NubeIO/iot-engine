@@ -1,6 +1,7 @@
 package com.nubeiot.core.dto;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,7 +29,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public interface JsonData {
+public interface JsonData extends Serializable {
 
     ObjectMapper MAPPER = Json.mapper.copy().registerModule(Deserializer.SIMPLE_MODULE);
     ObjectMapper LENIENT_MAPPER = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

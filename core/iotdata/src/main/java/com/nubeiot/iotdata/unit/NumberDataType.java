@@ -11,7 +11,7 @@ public class NumberDataType implements DataType {
     private final String unit;
 
     NumberDataType() {
-        this("NUMBER", null);
+        this("number", null);
     }
 
     @Override
