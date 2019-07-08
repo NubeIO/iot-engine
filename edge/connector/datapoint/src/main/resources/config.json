@@ -1,5 +1,9 @@
 {
   "__app__": {
+    "__datapoint__": {
+      "lowDb": true,
+      "lowDbPath": ""
+    },
     "__micro__": {
       "__gateway__": {
         "enabled": false
@@ -13,6 +17,15 @@
       "__circuitBreaker__": {
         "enabled": false
       }
+    },
+    "__scheduler__": {
+      "__schedule_worker__": {
+        "poolName": "worker-pool-scheduler-abc",
+        "poolSize": 2,
+        "maxExecuteTime": 60,
+        "maxExecuteTimeUnit": "SECONDS"
+      },
+      "schedulerName": "datapoint"
     },
     "__sql__": {
       "dialect": "H2",

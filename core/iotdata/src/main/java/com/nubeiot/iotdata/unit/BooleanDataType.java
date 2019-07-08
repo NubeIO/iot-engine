@@ -11,7 +11,7 @@ public final class BooleanDataType extends NumberDataType {
     private final Map<Double, List<String>> possibleValues = new HashMap<>();
 
     BooleanDataType() {
-        super("BOOL", null);
+        super("bool", null);
         possibleValues.put(0.5d, Arrays.asList("true", "on", "start", "1"));
         possibleValues.put(0d, Arrays.asList("false", "off", "stop", "0", "null"));
     }

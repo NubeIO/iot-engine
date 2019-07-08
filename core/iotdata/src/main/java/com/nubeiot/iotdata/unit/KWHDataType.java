@@ -3,7 +3,7 @@ package com.nubeiot.iotdata.unit;
 public final class KWHDataType extends NumberDataType implements Power {
 
     public KWHDataType() {
-        super("KWH", "kWh");
+        super("kWh", "kWh");
     }
 
     @Override

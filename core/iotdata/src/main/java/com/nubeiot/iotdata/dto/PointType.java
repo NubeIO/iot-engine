@@ -14,12 +14,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PointType implements EnumType {
 
-    public static final PointType DIGITAL = new PointType("digital");
-    public static final PointType DC_10 = new PointType("0-10dc");
-    public static final PointType DC_12 = new PointType("0-12dc");
-    public static final PointType MA_20 = new PointType("4-20ma");
-    public static final PointType THERMISTOR_10K = new PointType("10k-thermistor");
-    public static final PointType UNKNOWN = new PointType("unknown");
+    public static final PointType DIGITAL = new PointType("DIGITAL");
+    public static final PointType DC_10 = new PointType("0-10DC");
+    public static final PointType DC_12 = new PointType("0-12DC");
+    public static final PointType MA_20 = new PointType("4-20MA");
+    public static final PointType THERMISTOR_10K = new PointType("10K-THERMISTOR");
+    public static final PointType UNKNOWN = new PointType("UNKNOWN");
 
     private final String type;
 
@@ -29,7 +29,7 @@ public final class PointType implements EnumType {
 
     @JsonCreator
     public static PointType factory(String type) {
-        String t = Strings.optimizeMultipleSpace(type).toLowerCase(Locale.ENGLISH);
+        String t = Strings.optimizeMultipleSpace(type).toUpperCase(Locale.ENGLISH);
         if (UNKNOWN.type.equals(t)) {
             return UNKNOWN;
         }

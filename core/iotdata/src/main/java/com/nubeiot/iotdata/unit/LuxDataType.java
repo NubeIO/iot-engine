@@ -3,7 +3,7 @@ package com.nubeiot.iotdata.unit;
 public final class LuxDataType extends NumberDataType implements Illuminance {
 
     LuxDataType() {
-        super("LUX", "lx");
+        super("lux", "lx");
     }
 
     @Override

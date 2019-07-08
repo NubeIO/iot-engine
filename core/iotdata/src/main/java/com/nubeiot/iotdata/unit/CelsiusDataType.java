@@ -3,7 +3,7 @@ package com.nubeiot.iotdata.unit;
 public final class CelsiusDataType extends NumberDataType implements Temperature {
 
     CelsiusDataType() {
-        super("CELSIUS", "U+2103");
+        super("celsius", "U+2103");
     }
 
     @Override

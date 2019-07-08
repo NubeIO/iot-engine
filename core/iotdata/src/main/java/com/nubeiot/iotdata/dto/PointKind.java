@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @EqualsAndHashCode
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class PointKind implements EnumType {
+public final class PointKind implements EnumType {
 
     public static final PointKind INPUT = new PointKind("INPUT");
     public static final PointKind OUTPUT = new PointKind("OUTPUT");

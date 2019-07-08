@@ -2,7 +2,7 @@ package com.nubeiot.iotdata.unit;
 
 public final class VoltageDataType extends NumberDataType implements Power {
 
-    VoltageDataType() { super("VOLTAGE", "V"); }
+    VoltageDataType() { super("voltage", "V"); }
 
     @Override
     public Double parse(Object data) {

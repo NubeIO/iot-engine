@@ -2,7 +2,7 @@ package com.nubeiot.iotdata.unit;
 
 public final class DBMDataType extends NumberDataType implements Power {
 
-    DBMDataType() { super("DBM", "dBm"); }
+    DBMDataType() { super("dBm", "dBm"); }
 
     @Override
     public Double parse(Object data) {

@@ -3,7 +3,7 @@ package com.nubeiot.iotdata.unit;
 public class HPADataType extends NumberDataType implements Pressure {
 
     HPADataType() {
-        super("HPA", "hPa");
+        super("hPa", "hPa");
     }
 
     @Override
