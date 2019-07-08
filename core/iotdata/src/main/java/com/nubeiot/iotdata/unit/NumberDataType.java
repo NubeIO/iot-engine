@@ -1,4 +1,4 @@
-package com.nubeio.iotdata;
+package com.nubeiot.iotdata.unit;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

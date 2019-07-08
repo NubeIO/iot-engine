@@ -1,4 +1,4 @@
-package com.nubeio.iotdata;
+package com.nubeiot.iotdata.unit;
 
 public final class LuxDataType extends NumberDataType implements Illuminance {
 

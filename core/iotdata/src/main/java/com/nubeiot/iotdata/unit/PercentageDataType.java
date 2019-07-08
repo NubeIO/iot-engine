@@ -1,8 +1,8 @@
-package com.nubeio.iotdata;
+package com.nubeiot.iotdata.unit;
 
-public final class DBMDataType extends NumberDataType implements Power {
+public final class PercentageDataType extends NumberDataType {
 
-    DBMDataType() { super("DBM", "dBm"); }
+    PercentageDataType() { super("PERCENTAGE", "%"); }
 
     @Override
     public Double parse(Object data) {

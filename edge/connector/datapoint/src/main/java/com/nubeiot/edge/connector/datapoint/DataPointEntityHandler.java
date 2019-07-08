@@ -8,7 +8,7 @@ import io.vertx.core.Vertx;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.edge.connector.datapoint.model.Tables;
+import com.nubeiot.iotdata.model.Tables;
 
 import lombok.NonNull;
 

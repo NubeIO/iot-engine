@@ -1,8 +1,8 @@
 package com.nubeiot.edge.connector.datapoint.model;
 
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.edge.connector.datapoint.dto.PointCategory;
-import com.nubeiot.edge.connector.datapoint.model.tables.interfaces.IPoint;
+import com.nubeiot.iotdata.dto.PointCategory;
+import com.nubeiot.iotdata.model.tables.interfaces.IPoint;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
