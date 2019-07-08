@@ -14,9 +14,12 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.scheduler.job.VertxJobFactory;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class QuartzSchedulerContext extends UnitContext {
 
     private Scheduler scheduler;

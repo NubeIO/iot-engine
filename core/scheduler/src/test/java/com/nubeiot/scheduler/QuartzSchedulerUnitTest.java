@@ -1,6 +1,7 @@
 package com.nubeiot.scheduler;
 
 import java.time.ZoneOffset;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -60,7 +61,7 @@ public class QuartzSchedulerUnitTest {
     @Before
     public void before(TestContext context) {
         vertx = Vertx.vertx();
-        config = new SchedulerConfig("test");
+        config = new SchedulerConfig(UUID.randomUUID().toString());
         VertxHelper.deploy(vertx, context, new DeploymentOptions().setConfig(config.toJson()),
                            new QuartzSchedulerUnit(),
                            successId -> controller = SharedDataDelegate.getEventController(vertx,
@@ -115,9 +116,9 @@ public class QuartzSchedulerUnitTest {
         DeliveryEvent event2 = initRegisterEvent(MockJobModel.create("abc"), periodicTrigger);
         CountDownLatch latch = new CountDownLatch(1);
         controller.request(event1, e -> {
+            latch.countDown();
             EventbusHelper.replyAsserter(context, async, registerResponse("t1", "abc"), SKIP_LOCAL_DATE, SKIP_UTC_DATE)
                           .handle(e);
-            latch.countDown();
         });
         latch.await(1, TimeUnit.SECONDS);
         final JsonObject error = new JsonObject(
@@ -128,19 +129,22 @@ public class QuartzSchedulerUnitTest {
     }
 
     @Test
-    public void test_add_job_to_multi_trigger_should_success(TestContext context) throws InterruptedException {
+    public void test_add_multi_job_to_one_trigger_should_success(TestContext context) throws InterruptedException {
         final Async async = context.async(2);
         controller.register(MockEventScheduler.PROCESS_EVENT, new MockProcessEventSchedulerListener());
-        PeriodicTriggerModel periodicTrigger = PeriodicTriggerModel.builder().name("tr2").intervalInSeconds(10).build();
+        PeriodicTriggerModel periodicTrigger = PeriodicTriggerModel.builder()
+                                                                   .name("tr2")
+                                                                   .intervalInSeconds(100)
+                                                                   .build();
         DeliveryEvent event1 = initRegisterEvent(MockJobModel.create("abc"), periodicTrigger);
         DeliveryEvent event2 = initRegisterEvent(MockJobModel.create("xxx"), periodicTrigger);
         CountDownLatch latch = new CountDownLatch(1);
         controller.request(event1, e -> {
+            latch.countDown();
             EventbusHelper.replyAsserter(context, async, registerResponse("tr2", "abc"), SKIP_LOCAL_DATE, SKIP_UTC_DATE)
                           .handle(e);
-            latch.countDown();
         });
-        latch.await(1, TimeUnit.SECONDS);
+        latch.await(2, TimeUnit.SECONDS);
         controller.request(event2,
                            EventbusHelper.replyAsserter(context, registerAsserter(context, async, "tr2", "xxx")));
     }
@@ -152,14 +156,15 @@ public class QuartzSchedulerUnitTest {
         final DeliveryEvent removeEvent = initRemoveRegisterEvent(new JobKey("abc"));
         JsonObject r = new JsonObject("{\"status\":\"SUCCESS\",\"action\":\"REMOVE\",\"data\":{\"unschedule\":false}}");
         controller.request(removeEvent, EventbusHelper.replyAsserter(context, async, r));
-        DeliveryEvent event = initRegisterEvent(MockJobModel.create("abc"), CronTriggerModel.builder().name("tr1")
+        DeliveryEvent event = initRegisterEvent(MockJobModel.create("abc"), CronTriggerModel.builder()
+                                                                                            .name("tr1")
                                                                                             .expr("0 0/1 * 1/1 * ? *")
                                                                                             .build());
         CountDownLatch latch = new CountDownLatch(1);
         controller.request(event, e -> {
+            latch.countDown();
             final JsonObject resp = registerResponse("tr1", "abc");
             EventbusHelper.replyAsserter(context, async, resp, SKIP_LOCAL_DATE, SKIP_UTC_DATE).handle(e);
-            latch.countDown();
         });
         latch.await(1, TimeUnit.SECONDS);
         r = new JsonObject("{\"status\":\"SUCCESS\",\"action\":\"REMOVE\",\"data\":{\"unschedule\":true}}");
@@ -181,7 +186,8 @@ public class QuartzSchedulerUnitTest {
         return DeliveryEvent.builder()
                             .address(config.getRegisterAddress())
                             .pattern(EventPattern.REQUEST_RESPONSE)
-                            .action(EventAction.REMOVE).payload(payload)
+                            .action(EventAction.REMOVE)
+                            .payload(payload)
                             .build();
     }
 

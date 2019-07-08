@@ -9,11 +9,12 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class SchedulerConfig implements IConfig {
 
     private static final String BASE_ADDRESS = "com.nubeiot.scheduler";
@@ -55,6 +56,7 @@ public final class SchedulerConfig implements IConfig {
     }
 
     @Getter
+    @NoArgsConstructor(access = AccessLevel.PACKAGE)
     public static final class WorkerPoolConfig implements IConfig {
 
         public static final String NAME = "__schedule_worker__";

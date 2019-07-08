@@ -21,7 +21,7 @@ import com.nubeiot.scheduler.SchedulerConfig.WorkerPoolConfig;
 
 import lombok.NonNull;
 
-public class QuartzVertxThreadPool implements ThreadPool {
+public final class QuartzVertxThreadPool implements ThreadPool {
 
     private final WorkerExecutor worker;
     private final EventController controller;
@@ -71,7 +71,7 @@ public class QuartzVertxThreadPool implements ThreadPool {
     private void asyncResultHandler(AsyncResult<Object> result) {
         JsonObject data = result.failed()
                           ? ErrorMessage.parse(result.cause()).toJson()
-                          : JsonData.tryParse(result.result()).toJson();
+                          : Objects.isNull(result.result()) ? null : JsonData.tryParse(result.result()).toJson();
         controller.request(DeliveryEvent.builder()
                                         .address(monitorAddress)
                                         .pattern(EventPattern.PUBLISH_SUBSCRIBE)
