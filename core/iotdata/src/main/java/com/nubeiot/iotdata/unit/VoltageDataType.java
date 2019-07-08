@@ -1,8 +1,8 @@
-package com.nubeio.iotdata;
+package com.nubeiot.iotdata.unit;
 
-public final class PercentageDataType extends NumberDataType {
+public final class VoltageDataType extends NumberDataType implements Power {
 
-    PercentageDataType() { super("PERCENTAGE", "%"); }
+    VoltageDataType() { super("VOLTAGE", "V"); }
 
     @Override
     public Double parse(Object data) {

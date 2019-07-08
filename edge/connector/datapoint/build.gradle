@@ -11,60 +11,59 @@ ext {
 
 dependencies {
     compile project(":core:iotdata")
-    compile project(":core:sql")
     compile project.deps.database.h2
 }
 
 task jooqGen(type: JooqGenerateTask) {
-    packageName = "com.nubeiot.edge.connector.datapoint.model"
+    packageName = "com.nubeiot.iotdata.model"
     enumTypes = project(':core:sql').ext.enumTypes
     dbTypes = project(':core:sql').ext.dbTypes + [
-        new ForcedType(userType: "com.nubeiot.edge.connector.datapoint.dto.HistorySettingType",
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.HistorySettingType",
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("history_setting_type"),
-                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.HistorySettingTypeConverter"),
-        new ForcedType(userType: "com.nubeio.iotdata.DataType",
+                       converter: "com.nubeiot.iotdata.converter.HistorySettingTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.unit.DataType",
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("point_unit"),
-                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.DataTypeConverter"),
-        new ForcedType(userType: "com.nubeiot.edge.connector.datapoint.dto.PointCategory",
+                       converter: "com.nubeiot.iotdata.converter.DataTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.PointCategory",
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("point_category"),
-                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.PointCategoryConverter"),
-        new ForcedType(userType: "com.nubeiot.edge.connector.datapoint.dto.PointKind",
+                       converter: "com.nubeiot.iotdata.converter.PointCategoryConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.PointKind",
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("point_kind"),
-                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.PointKindConverter"),
-        new ForcedType(userType: "com.nubeiot.edge.connector.datapoint.dto.PointType",
+                       converter: "com.nubeiot.iotdata.converter.PointKindConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.PointType",
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("point_type"),
-                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.PointTypeConverter"),
+                       converter: "com.nubeiot.iotdata.converter.PointTypeConverter"),
         new ForcedType(userType: "io.vertx.core.json.JsonArray",
                        types: DB.TYPES.array,
                        expression: Strings.toRegexIgnoreCase("weekdays"),
-                       converter: "com.nubeiot.edge.connector.datapoint.converter.model.WeekDaysConverter")
+                       converter: "com.nubeiot.iotdata.converter.WeekDaysConverter")
 
     ]
     javaTypes = project(':core:sql').ext.javaTypes + [
-        new JsonDataType(className: "com.nubeio.iotdata.DataType",
+        new JsonDataType(className: "com.nubeiot.iotdata.unit.DataType",
                          converter: "%s.value()",
-                         parser: "com.nubeio.iotdata.DataType.factory((String)%s)",
-                         defVal: "com.nubeio.iotdata.DataType.def()"),
-        new JsonDataType(className: "com.nubeiot.edge.connector.datapoint.dto.HistorySettingType",
+                         parser: "com.nubeiot.iotdata.unit.DataType.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.unit.DataType.def()"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.HistorySettingType",
                          converter: "%s.type()",
-                         parser: "com.nubeiot.edge.connector.datapoint.dto.HistorySettingType.factory((String)%s)",
-                         defVal: "com.nubeiot.edge.connector.datapoint.dto.HistorySettingType.def()"),
-        new JsonDataType(className: "com.nubeiot.edge.connector.datapoint.dto.PointCategory",
+                         parser: "com.nubeiot.iotdata.dto.HistorySettingType.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.dto.HistorySettingType.def()"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointCategory",
                          converter: "%s.type()",
-                         parser: "com.nubeiot.edge.connector.datapoint.dto.PointCategory.factory((String)%s)",
-                         defVal: "com.nubeiot.edge.connector.datapoint.dto.PointCategory.def()"),
-        new JsonDataType(className: "com.nubeiot.edge.connector.datapoint.dto.PointKind",
+                         parser: "com.nubeiot.iotdata.dto.PointCategory.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.dto.PointCategory.def()"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointKind",
                          converter: "%s.type()",
-                         parser: "com.nubeiot.edge.connector.datapoint.dto.PointKind.factory((String)%s)",
-                         defVal: "com.nubeiot.edge.connector.datapoint.dto.PointKind.def()"),
-        new JsonDataType(className: "com.nubeiot.edge.connector.datapoint.dto.PointType",
+                         parser: "com.nubeiot.iotdata.dto.PointKind.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.dto.PointKind.def()"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointType",
                          converter: "%s.type()",
-                         parser: "com.nubeiot.edge.connector.datapoint.dto.PointType.factory((String)%s)",
-                         defVal: "com.nubeiot.edge.connector.datapoint.dto.PointType.def()")
+                         parser: "com.nubeiot.iotdata.dto.PointType.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.dto.PointType.def()")
     ]
 }

@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.datapoint.dto;
+package com.nubeiot.iotdata.dto;
 
 public enum WeekDay {
 

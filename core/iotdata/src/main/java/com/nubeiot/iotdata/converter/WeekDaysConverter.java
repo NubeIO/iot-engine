@@ -1,7 +1,7 @@
-package com.nubeiot.edge.connector.datapoint.converter.model;
+package com.nubeiot.iotdata.converter;
 
 import com.nubeiot.core.sql.converter.ArrayConverter;
-import com.nubeiot.edge.connector.datapoint.dto.WeekDay;
+import com.nubeiot.iotdata.dto.WeekDay;
 
 public final class WeekDaysConverter extends ArrayConverter<WeekDay> {
 
@@ -14,5 +14,4 @@ public final class WeekDaysConverter extends ArrayConverter<WeekDay> {
     public Class<WeekDay> itemClass() {
         return WeekDay.class;
     }
-
 }

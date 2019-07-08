@@ -1,10 +1,10 @@
-package com.nubeiot.edge.connector.datapoint.converter.model;
+package com.nubeiot.iotdata.converter;
 
 import java.util.Objects;
 
 import org.jooq.Converter;
 
-import com.nubeiot.edge.connector.datapoint.dto.PointKind;
+import com.nubeiot.iotdata.dto.PointKind;
 
 public final class PointKindConverter implements Converter<String, PointKind> {
 

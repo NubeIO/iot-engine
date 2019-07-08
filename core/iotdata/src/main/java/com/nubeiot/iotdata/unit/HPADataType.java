@@ -1,8 +1,10 @@
-package com.nubeio.iotdata;
+package com.nubeiot.iotdata.unit;
 
-public final class VoltageDataType extends NumberDataType implements Power {
+public class HPADataType extends NumberDataType implements Pressure {
 
-    VoltageDataType() { super("VOLTAGE", "V"); }
+    HPADataType() {
+        super("HPA", "hPa");
+    }
 
     @Override
     public Double parse(Object data) {

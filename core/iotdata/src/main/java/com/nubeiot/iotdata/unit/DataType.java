@@ -1,4 +1,4 @@
-package com.nubeio.iotdata;
+package com.nubeiot.iotdata.unit;
 
 import java.lang.reflect.Field;
 import java.util.List;

@@ -1,3 +1,3 @@
-package com.nubeio.iotdata;
+package com.nubeiot.iotdata.unit;
 
 public interface Power extends DataType {}
