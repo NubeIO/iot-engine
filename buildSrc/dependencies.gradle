@@ -1,6 +1,6 @@
 def versions = [
     vertx   : "3.6.0",
-    lombok  : "1.18.4",
+    lombok  : "1.18.8",
     jackson : "2.9.8",
     logs    : [
         slf4j  : "1.7.25",
