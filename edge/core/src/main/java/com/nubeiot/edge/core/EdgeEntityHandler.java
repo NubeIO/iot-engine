@@ -97,28 +97,25 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         JsonObject moduleJson = module.toJson().copy();
         moduleJson.remove("secret_config");
         logger.info("{} module with data {}", action, moduleJson.encode());
-        return this.handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
-            PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
-                                                                         .transactionId(result.getTransactionId())
-                                                                         .action(result.getAction())
-                                                                         .prevState(result.getPrevState())
-                                                                         .targetState(result.getTargetState())
-                                                                         .serviceId(result.getServiceId())
-                                                                         .serviceFQN(result.getServiceFQN())
-                                                                         .deployId(result.getDeployId())
-                                                                         .appConfig(result.getAppConfig().toJson())
-                                                                         .systemConfig(
-                                                                             result.getSystemConfig().toJson())
-                                                                         .secretConfig(
-                                                                             result.getSecretConfig().toJson())
-                                                                         .dataDir((String) this.getSharedDataFunc()
-                                                                                               .apply(
-                                                                                                   SharedDataDelegate.SHARED_DATADIR))
-                                                                         .build();
-            JsonObject preDeploymentResultJson = preDeploymentResult.toJson().copy();
-            preDeploymentResultJson.remove("secret_config");
-            return preDeploymentResultJson.put("message", "Work in progress").put("status", Status.WIP);
-        });
+        return this.handlePreDeployment(module, action)
+                   .doAfterSuccess(this::deployModule)
+                   .map(result -> PreDeploymentResult.builder()
+                                                     .transactionId(result.getTransactionId())
+                                                     .action(result.getAction())
+                                                     .prevState(result.getPrevState())
+                                                     .targetState(result.getTargetState())
+                                                     .serviceId(result.getServiceId())
+                                                     .serviceFQN(result.getServiceFQN())
+                                                     .deployId(result.getDeployId())
+                                                     .appConfig(result.getAppConfig().toJson())
+                                                     .systemConfig(result.getSystemConfig().toJson())
+                                                     .secretConfig(result.getSecretConfig().toJson())
+                                                     .dataDir((String) this.getSharedDataFunc()
+                                                                           .apply(SharedDataDelegate.SHARED_DATADIR))
+                                                     .message("Work in progress")
+                                                     .status(Status.WIP)
+                                                     .build()
+                                                     .toJson());
     }
 
     private void deployModule(PreDeploymentResult preDeployResult) {

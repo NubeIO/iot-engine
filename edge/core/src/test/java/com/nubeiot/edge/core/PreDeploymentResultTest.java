@@ -37,7 +37,7 @@ public class PreDeploymentResultTest {
         NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig(),
                                                  preResult.getSecretConfig());
         JsonObject preResultJson = preResult.toJson();
-        JsonData.removeKeys(preResultJson, "app_config", "system_config", "secret_config");
+        JsonData.removeKeys(preResultJson, "app_config", "system_config");
         JSONAssert.assertEquals(
             "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
             "\"service_id\":\"serviceId\",\"service_fqn\":\"serviceFQN\",\"deploy_id\":\"deployId\"," +
@@ -67,7 +67,7 @@ public class PreDeploymentResultTest {
         NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig(),
                                                  preResult.getSecretConfig());
         JsonObject preResultJson = preResult.toJson();
-        JsonData.removeKeys(preResultJson, "app_config", "system_config", "secret_config");
+        JsonData.removeKeys(preResultJson, "app_config", "system_config");
         System.out.println(nubeCfg.toJson());
         JSONAssert.assertEquals(
             "{\"transaction_id\":\"1\",\"action\":\"REMOVE\",\"prev_state\":\"ENABLED\",\"target_state\":\"ENABLED\"," +
@@ -82,21 +82,21 @@ public class PreDeploymentResultTest {
 
     @Test
     public void test_deserialize() {
-        JsonObject jsonObject = PreDeploymentResult.builder()
-                                                   .transactionId("1")
-                                                   .action(EventAction.REMOVE)
-                                                   .prevState(State.ENABLED)
-                                                   .targetState(State.ENABLED)
-                                                   .serviceId("serviceId")
-                                                   .serviceFQN("serviceFQN")
-                                                   .deployId("deployId")
-                                                   .systemConfig(new JsonObject())
-                                                   .appConfig(
-                                                       JsonObject.mapFrom(Collections.singletonMap("testAbc", "ab")))
-                                                   .secretConfig(new JsonObject())
-                                                   .build()
-                                                   .toJson();
-        PreDeploymentResult preResult = JsonData.from(jsonObject, PreDeploymentResult.class);
+        PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
+                                                                     .transactionId("1")
+                                                                     .action(EventAction.REMOVE)
+                                                                     .prevState(State.ENABLED)
+                                                                     .targetState(State.ENABLED)
+                                                                     .serviceId("serviceId")
+                                                                     .serviceFQN("serviceFQN")
+                                                                     .deployId("deployId")
+                                                                     .systemConfig(new JsonObject())
+                                                                     .appConfig(JsonObject.mapFrom(
+                                                                         Collections.singletonMap("testAbc", "ab")))
+                                                                     .secretConfig(new JsonObject())
+                                                                     .build();
+        PreDeploymentResult preResult = JsonData.from(preDeploymentResult.toRequestData().body(),
+                                                      PreDeploymentResult.class);
         Assert.assertNotNull(preResult);
         Assert.assertEquals("1", preResult.getTransactionId());
         Assert.assertEquals("serviceId", preResult.getServiceId());

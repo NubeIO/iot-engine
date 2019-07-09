@@ -21,6 +21,7 @@ import com.nubeiot.core.NubeConfig.SecretConfig;
 import com.nubeiot.core.dto.IRequestData;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
+import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
@@ -49,9 +50,18 @@ public class PreDeploymentResult implements JsonData, IRequestData {
     private final AppConfig appConfig;
     private final NubeConfig systemConfig;
     private final SecretConfig secretConfig;
+    private final String message;
+    private final Status status;
     @Setter
     @Default
     private boolean silent = false;
+
+    @Override
+    public JsonObject toJson() {
+        JsonObject output = toJson(mapper());
+        output.remove("secret_config");
+        return output;
+    }
 
 
     @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
@@ -109,7 +119,8 @@ public class PreDeploymentResult implements JsonData, IRequestData {
 
             return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
                                            Objects.isNull(targetState) ? State.NONE : targetState, serviceId,
-                                           serviceFQN, deployId, appConfig, systemConfig, secretConfig, silent);
+                                           serviceFQN, deployId, appConfig, systemConfig, secretConfig, message, status,
+                                           silent);
         }
 
     }
