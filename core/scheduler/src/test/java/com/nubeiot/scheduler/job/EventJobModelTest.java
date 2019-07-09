@@ -25,7 +25,7 @@ public class EventJobModelTest {
         JSONAssert.assertEquals("{\"type\":\"EVENT_JOB\",\"name\":\"abc\",\"group\":\"DEFAULT\"," +
                                 "\"process\":{\"address\":\"event.job.model.test\",\"pattern\":\"REQUEST_RESPONSE\"," +
                                 "\"action\":\"CREATE\"},\"callback\":{\"address\":\"event.job.model.callback.test\"," +
-                                "\"pattern\":\"PUBLISH_SUBSCRIBE\",\"action\":\"PUBLISH\"}}",
+                                "\"pattern\":\"PUBLISH_SUBSCRIBE\",\"action\":\"PUBLISH\"},\"forwardIfFailure\":true}",
                                 jobModel.toJson().encode(), JSONCompareMode.STRICT);
     }
 
@@ -45,14 +45,16 @@ public class EventJobModelTest {
     @Test
     public void test_deserialize() {
         EventJobModel jobModel = JsonData.convert(new JsonObject(
-            "{\"type\":\"EVENT_JOB\",\"name\":\"abc\",\"group\":\"DEFAULT\"," +
-            "\"process\":{\"address\":\"event.job.model.test\",\"pattern\":\"REQUEST_RESPONSE\"," +
-            "\"action\":\"CREATE\"},\"callback\":{\"address\":\"event.job.model.callback.test\"," +
-            "\"pattern\":\"PUBLISH_SUBSCRIBE\",\"action\":\"PUBLISH\"}}"), EventJobModel.class);
+            "{\"type\":\"EVENT_JOB\",\"name\":\"abc\",\"group\":\"DEFAULT\",\"process\":{\"address\":\"event.job" +
+            ".model.test\",\"pattern\":\"REQUEST_RESPONSE\"," +
+            "\"action\":\"CREATE\"},\"callback\":{\"address\":\"event.job" +
+            ".model.callback.test\",\"pattern\":\"PUBLISH_SUBSCRIBE\",\"action\":\"PUBLISH\"}," +
+            "\"forwardIfFailure\":false}"), EventJobModel.class);
+        Assert.assertNotNull(jobModel);
         Assert.assertEquals("DEFAULT", jobModel.getKey().getGroup());
         Assert.assertEquals("abc", jobModel.getKey().getName());
         Assert.assertEquals(JobType.EVENT_JOB, jobModel.type());
-        Assert.assertNotNull(jobModel);
+        Assert.assertFalse(jobModel.forwardIfFailure());
     }
 
 }
