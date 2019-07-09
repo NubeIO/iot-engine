@@ -11,6 +11,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.NubeConfig.DeployConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.exceptions.NubeException;
@@ -266,6 +267,37 @@ public class NubeConfigTest {
         System.out.println("===========================================");
         System.out.println(merge1.toJson().encodePrettily());
         JSONAssert.assertEquals(mergeJson.encode(), merge1.toJson().encode(), JSONCompareMode.STRICT);
+    }
+
+    @Test
+    public void test_construct_nube_config_with_deploy_check() throws JSONException {
+        NubeConfig blank = NubeConfig.blank();
+        String inputAppconfig = "{\"__deploy__\":{\"isolatedClasses\":" +
+                                "[\"io.vertx.reactivex.servicediscovery.*\",\"io" +
+                                ".vertx.reactivex.circuitbreaker.*\"]}," +
+                                "\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":" +
+                                "{\"jdbcUrl\":\"jdbc:h2:file:/data/db/bios-installer\"}}}";
+
+
+        AppConfig appConfig = IConfig.from(inputAppconfig, AppConfig.class);
+        System.out.println("App config before sending");
+        System.out.println(appConfig.toJson().encodePrettily());
+        NubeConfig nubeConfig = NubeConfig.constructNubeConfig(blank, appConfig, true);
+        System.out.println("===========================================");
+        System.out.println("Final config..");
+        System.out.println(nubeConfig.toJson().encodePrettily());
+
+        JSONAssert.assertEquals("{\"ha\":false,\"instances\":1,\"isolatedClasses\":[\"io.vertx.reactivex" +
+                                ".servicediscovery.*\",\"io.vertx.reactivex.circuitbreaker.*\"]," +
+                                "\"maxWorkerExecuteTime\":60000000000,\"maxWorkerExecuteTimeUnit\":" +
+                                "\"NANOSECONDS\",\"multiThreaded\":false,\"worker\":false," +
+                                "\"workerPoolSize\":20}",
+                                nubeConfig.getDeployConfig().toJson().encode(), JSONCompareMode.STRICT);
+
+        JSONAssert.assertEquals("{\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":" +
+                                "{\"jdbcUrl\":\"jdbc:h2:file:/data/db" +
+                                "/bios-installer\"}}}",
+                                nubeConfig.getAppConfig().toJson().encode(), JSONCompareMode.STRICT);
     }
 
 }

@@ -71,6 +71,21 @@ public final class NubeConfig implements IConfig {
                             NubeConfig.class);
     }
 
+    public static NubeConfig constructNubeConfig(@NonNull NubeConfig nubeConfig, @NonNull AppConfig appConfig,
+                                                 boolean checkDeploy) {
+        JsonObject appConfigJson = appConfig.toJson();
+        if(checkDeploy && appConfigJson.containsKey(DeployConfig.NAME)) {
+            DeployConfig deployConfig = IConfig.from(appConfigJson, DeployConfig.class);
+            appConfigJson.remove(DeployConfig.NAME);
+            NubeConfig mergedConfig = new NubeConfig(nubeConfig.getDataDir(), nubeConfig.getSystemConfig(),
+                                                     deployConfig, nubeConfig.getAppConfig());
+            AppConfig cleanedAppConfig = IConfig.from(appConfigJson, AppConfig.class);
+            return constructNubeConfig(mergedConfig, cleanedAppConfig);
+        } else {
+            return constructNubeConfig(nubeConfig, appConfig);
+        }
+    }
+
     @Override
     public String name() { return null; }
 
