@@ -35,8 +35,8 @@ public final class QuartzSchedulerContext extends UnitContext {
         try {
             final DirectSchedulerFactory factory = DirectSchedulerFactory.getInstance();
             factory.createScheduler(config.getSchedulerName(), config.getSchedulerName(),
-                                    new QuartzVertxThreadPool(vertx, sharedKey, config.getMonitorAddress(),
-                                                              config.getWorkerConfig()), new RAMJobStore());
+                                    new QuartzVertxThreadPool(vertx, config.getWorkerConfig()),
+                                    new RAMJobStore());
             scheduler = factory.getScheduler(config.getSchedulerName());
             scheduler.setJobFactory(new VertxJobFactory(vertx, sharedKey, config));
             scheduler.start();

@@ -26,8 +26,8 @@ public final class EventJobModel extends AbstractJobModel {
     private final DeliveryEvent process;
     private final DeliveryEvent callback;
 
-    private EventJobModel(JobKey key, DeliveryEvent process, DeliveryEvent callback) {
-        super(key, JobType.EVENT_JOB);
+    private EventJobModel(JobKey key, DeliveryEvent process, DeliveryEvent callback, boolean forwardIfFailure) {
+        super(key, JobType.EVENT_JOB, forwardIfFailure);
         this.process = process;
         this.callback = callback;
     }
@@ -49,7 +49,7 @@ public final class EventJobModel extends AbstractJobModel {
                 throw new NubeException(ErrorCode.INVALID_ARGUMENT,
                                         "Callback Pattern doesn't support " + EventPattern.REQUEST_RESPONSE);
             }
-            return new EventJobModel(key(), process, callback);
+            return new EventJobModel(key(), process, callback, isForwardIfFailure());
         }
 
     }

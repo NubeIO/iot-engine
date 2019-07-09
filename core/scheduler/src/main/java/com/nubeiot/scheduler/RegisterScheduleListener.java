@@ -49,6 +49,7 @@ final class RegisterScheduleListener implements EventListener {
             final JobDetail jobDetail = jobModel.toJobDetail();
             final Trigger trigger = triggerModel.toTrigger();
             LOGGER.info("Scheduler register | Job: {} | Trigger: {}", jobModel.toString(), triggerModel.toString());
+            LOGGER.info("Scheduler register | Job: {} | Trigger: {}", jobModel.toJson(), triggerModel.toJson());
             Date firstFire = scheduler.scheduleJob(jobDetail, trigger);
             return new JsonObject().put("trigger", keyToJson(trigger.getKey()))
                                    .put("job", keyToJson(jobDetail.getKey()))

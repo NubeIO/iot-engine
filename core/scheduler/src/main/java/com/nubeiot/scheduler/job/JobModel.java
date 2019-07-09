@@ -37,6 +37,9 @@ public interface JobModel<T extends VertxJob> extends JsonData {
 
     Class<T> implementation();
 
+    @JsonProperty(value = "forwardIfFailure")
+    boolean forwardIfFailure();
+
     String toString();
 
     default JobDetail toJobDetail() {
@@ -56,13 +59,19 @@ public interface JobModel<T extends VertxJob> extends JsonData {
         @Getter
         private final JobKey key;
         private final JobType type;
+        private final boolean forwardIfFailure;
 
         @Override
         public final JobType type() { return type; }
 
+        @Override
+        public boolean forwardIfFailure() { return forwardIfFailure; }
+
         @SuppressWarnings("unchecked")
         public static abstract class AbstractJobModelBuilder<T extends JobModel, B extends AbstractJobModelBuilder> {
 
+            @Getter
+            boolean forwardIfFailure = true;
             String name;
             String group;
 
@@ -73,6 +82,11 @@ public interface JobModel<T extends VertxJob> extends JsonData {
 
             public B name(String name) {
                 this.name = name;
+                return (B) this;
+            }
+
+            public B forwardIfFailure(boolean forwardIfFailure) {
+                this.forwardIfFailure = forwardIfFailure;
                 return (B) this;
             }
 

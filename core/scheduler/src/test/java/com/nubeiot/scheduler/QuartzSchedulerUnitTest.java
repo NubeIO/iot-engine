@@ -31,9 +31,11 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.scheduler.MockEventScheduler.FailureProcessEventSchedulerListener;
 import com.nubeiot.scheduler.MockEventScheduler.MockJobModel;
 import com.nubeiot.scheduler.MockEventScheduler.MockProcessEventSchedulerListener;
 import com.nubeiot.scheduler.job.EventJobModel;
@@ -129,24 +131,39 @@ public class QuartzSchedulerUnitTest {
     }
 
     @Test
-    public void test_add_multi_job_to_one_trigger_should_success(TestContext context) throws InterruptedException {
+    public void test_add_same_trigger_should_success(TestContext context) throws InterruptedException {
         final Async async = context.async(2);
         controller.register(MockEventScheduler.PROCESS_EVENT, new MockProcessEventSchedulerListener());
         PeriodicTriggerModel periodicTrigger = PeriodicTriggerModel.builder()
-                                                                   .name("tr2")
+                                                                   .name("tr3")
                                                                    .intervalInSeconds(100)
                                                                    .build();
-        DeliveryEvent event1 = initRegisterEvent(MockJobModel.create("abc"), periodicTrigger);
-        DeliveryEvent event2 = initRegisterEvent(MockJobModel.create("xxx"), periodicTrigger);
+        DeliveryEvent event1 = initRegisterEvent(MockJobModel.create("j1"), periodicTrigger);
+        DeliveryEvent event2 = initRegisterEvent(MockJobModel.create("j2"), periodicTrigger);
         CountDownLatch latch = new CountDownLatch(1);
         controller.request(event1, e -> {
             latch.countDown();
-            EventbusHelper.replyAsserter(context, async, registerResponse("tr2", "abc"), SKIP_LOCAL_DATE, SKIP_UTC_DATE)
+            EventbusHelper.replyAsserter(context, async, registerResponse("tr3", "j1"), SKIP_LOCAL_DATE, SKIP_UTC_DATE)
                           .handle(e);
         });
-        latch.await(2, TimeUnit.SECONDS);
+        latch.await(1, TimeUnit.SECONDS);
         controller.request(event2,
-                           EventbusHelper.replyAsserter(context, registerAsserter(context, async, "tr2", "xxx")));
+                           EventbusHelper.replyAsserter(context, registerAsserter(context, async, "tr3", "j2")));
+    }
+
+    @Test
+    public void test_handler_job_failure_should_success(TestContext context) {
+        final Async async = context.async(2);
+        final EventModel processEvent = EventModel.clone(MockEventScheduler.PROCESS_EVENT, "event.job.test.failure");
+        controller.register(processEvent, new FailureProcessEventSchedulerListener());
+        PeriodicTriggerModel periodicTrigger = PeriodicTriggerModel.builder().name("tr2").intervalInSeconds(5).build();
+        DeliveryEvent event1 = initRegisterEvent(MockJobModel.create("abc", processEvent), periodicTrigger);
+        controller.request(event1, e -> EventbusHelper.replyAsserter(context, async, registerResponse("tr2", "abc"),
+                                                                     SKIP_LOCAL_DATE, SKIP_UTC_DATE).handle(e));
+        final JsonObject failedResp = new JsonObject(
+            "{\"code\":\"UNKNOWN_ERROR\",\"message\":\"UNKNOWN_ERROR | Cause: Failed\"}");
+        EventbusHelper.assertReceivedData(vertx, async, config.getMonitorAddress(),
+                                          JsonHelper.asserter(context, async, failedResp));
     }
 
     @Test

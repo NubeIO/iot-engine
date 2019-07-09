@@ -48,6 +48,21 @@ public class MockEventScheduler {
     }
 
 
+    public static class FailureProcessEventSchedulerListener implements EventListener {
+
+        @Override
+        public @NonNull Collection<EventAction> getAvailableEvents() {
+            return PROCESS_EVENT.getEvents();
+        }
+
+        @EventContractor(action = EventAction.CREATE)
+        public JsonObject increaseNumber() {
+            throw new IllegalArgumentException("Failed");
+        }
+
+    }
+
+
     public static class MockJobModel {
 
         public static EventJobModel create(String name) {
@@ -55,6 +70,15 @@ public class MockEventScheduler {
                                 .name(name)
                                 .process(DeliveryEvent.from(PROCESS_EVENT, EventAction.CREATE))
                                 .callback(DeliveryEvent.from(CALLBACK_EVENT, EventAction.PUBLISH))
+                                .build();
+        }
+
+        public static EventJobModel create(String name, @NonNull EventModel processEvent) {
+            return EventJobModel.builder()
+                                .name(name)
+                                .process(DeliveryEvent.from(processEvent, EventAction.CREATE))
+                                .callback(DeliveryEvent.from(CALLBACK_EVENT, EventAction.PUBLISH))
+                                .forwardIfFailure(false)
                                 .build();
         }
 
