@@ -1,5 +1,6 @@
 package com.nubeiot.edge.core;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,10 @@ import com.nubeiot.auth.BasicCredential;
 import com.nubeiot.auth.Credential;
 import com.nubeiot.auth.Credential.CredentialType;
 import com.nubeiot.core.IConfig;
+import com.nubeiot.core.IConfigTest;
+import com.nubeiot.core.NubeConfig.SecretConfig;
 import com.nubeiot.core.TestHelper.OSHelper;
+import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
 import com.nubeiot.edge.core.loader.ModuleType;
@@ -79,6 +83,26 @@ public class InstallerConfigTest {
         final RequestedServiceData serviceData = installerConfig.getBuiltinApps().get(0);
         Assert.assertEquals("com.nubeiot.edge.module", serviceData.getMetadata().getString("group_id"));
         Assert.assertNotNull(serviceData.getAppConfig());
+    }
+
+    private static final URL RESOURCE = IConfigTest.class.getClassLoader().getResource("installer-cfg.json");
+
+    @Test
+    public void test_recompute_reference_credentials() {
+        JsonObject input = new JsonObject(FileUtils.readFileToString(RESOURCE.toString()));
+        InstallerConfig installerConfig = IConfig.from(input, InstallerConfig.class);
+        SecretConfig secretConfig = new SecretConfig();
+        secretConfig.put("@user", "abc");
+        secretConfig.put("@password", "xx");
+
+        InstallerConfig output = Credential.recomputeReferenceCredentials(installerConfig, secretConfig);
+        System.out.println(output.toJson());
+
+        Map<ModuleType, List<RemoteUrl>> urls = output.getRepoConfig().getRemoteConfig().getUrls();
+        List<RemoteUrl> remoteUrls = urls.get(ModuleType.JAVA);
+        Credential credential = remoteUrls.get(0).getCredential();
+        Assert.assertEquals(CredentialType.BASIC_SECRET, credential.getType());
+        Assert.assertEquals("http://abc:xx@test.com", credential.computeUrl("http://test.com"));
     }
 
 }

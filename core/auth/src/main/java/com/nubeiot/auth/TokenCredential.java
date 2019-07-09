@@ -10,13 +10,17 @@ import lombok.Getter;
 public class TokenCredential extends Credential {
 
     @Getter
+    private final String user;
+
+    @Getter
     private final String token;
 
     @JsonCreator
     public TokenCredential(@JsonProperty(value = "type", required = true) CredentialType type,
                            @JsonProperty(value = "user", required = false) String user,
                            @JsonProperty(value = "token", required = true) String token) {
-        super(type, user);
+        super(type);
+        this.user = user;
         this.token = token;
     }
 
@@ -37,7 +41,7 @@ public class TokenCredential extends Credential {
 
     @Override
     public String toString() {
-        return super.toString() + "::Token: ******************************";
+        return super.toString() + " :: User: " + user + " :: Token: ******************************";
     }
 
 }

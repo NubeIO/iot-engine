@@ -240,7 +240,6 @@ public final class NubeConfig implements IConfig {
             String value = key;
             if (key.startsWith("@secret.")) {
                 key = key.replaceAll("^@secret.", "@");
-                value = "";
             }
             value = Strings.getFirstNotNull(this.get(key), value);
             return new SecretProperty(key, value);

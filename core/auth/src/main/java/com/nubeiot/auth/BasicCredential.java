@@ -11,13 +11,17 @@ import lombok.Getter;
 public class BasicCredential extends Credential {
 
     @Getter
+    private final String user;
+
+    @Getter
     private final String password;
 
     @JsonCreator
     public BasicCredential(@JsonProperty(value = "type", required = true) CredentialType type,
                            @JsonProperty(value = "user", required = true) String user,
                            @JsonProperty(value = "password", required = true) String password) {
-        super(type, user);
+        super(type);
+        this.user = user;
         this.password = password;
     }
 
@@ -40,7 +44,7 @@ public class BasicCredential extends Credential {
 
     @Override
     public String toString() {
-        return super.toString() + "::Password:*****";
+        return super.toString() + " :: User: " + user + " :: Password: *****";
     }
 
 }

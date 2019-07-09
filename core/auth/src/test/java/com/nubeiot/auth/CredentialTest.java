@@ -1,14 +1,22 @@
 package com.nubeiot.auth;
 
+import java.net.URL;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.auth.Credential.CredentialType;
+import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.SecretProperty;
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.utils.FileUtils;
 
 public class CredentialTest {
+
+    private static final URL RESOURCE = CredentialTest.class.getClassLoader().getResource("nube-cfg.json");
 
     @Test
     public void test_basic_credential() {
@@ -16,10 +24,10 @@ public class CredentialTest {
         jsonObject.put("type", "BASIC");
         jsonObject.put("user", "xx");
         jsonObject.put("password", "abc");
-        Credential credential = JsonData.convert(jsonObject, BasicCredential.class);
+        BasicCredential credential = JsonData.convert(jsonObject, BasicCredential.class);
         Assert.assertEquals(Credential.CredentialType.BASIC, credential.getType());
         Assert.assertEquals("xx", credential.getUser());
-        Assert.assertEquals("abc", ((BasicCredential) credential).getPassword());
+        Assert.assertEquals("abc", credential.getPassword());
     }
 
     @Test
@@ -81,6 +89,28 @@ public class CredentialTest {
         Assert.assertEquals("http://xx:abc@abc.xyz", credential.computeUrl("http://abc.xyz"));
         Assert.assertEquals("ws://xx:abc@abc.xyz", credential.computeUrl("ws://abc.xyz"));
         Assert.assertEquals("wss://xx:abc@abc.xyz", credential.computeUrl("wss://abc.xyz"));
+    }
+
+    @Test
+    public void test_basic_secret_credential() {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.put("type", "BASIC_SECRET");
+        jsonObject.put("user", new SecretProperty("@secret.user", "xx").toJson());
+        jsonObject.put("password", new SecretProperty("@secret.password", "abc").toJson());
+        BasicSecretCredential credential = JsonData.convert(jsonObject, BasicSecretCredential.class);
+        Assert.assertEquals(CredentialType.BASIC_SECRET, credential.getType());
+        Assert.assertEquals("xx", credential.getUser().getValue());
+        Assert.assertEquals("abc", credential.getPassword().getValue());
+        Assert.assertEquals("@secret.user", credential.getUser().getRef());
+        Assert.assertEquals("@secret.password", credential.getPassword().getRef());
+    }
+
+    @Test
+    public void test_recompute_reference_credential() {
+        JsonObject input = new JsonObject(FileUtils.readFileToString(RESOURCE.toString()));
+        NubeConfig nubeConfig = IConfig.from(input, NubeConfig.class);
+        JsonObject output = Credential.recomputeReferenceCredentials(nubeConfig, nubeConfig.getSecretConfig()).toJson();
+        Assert.assertTrue(output.encode().contains("BASIC_SECRET"));
     }
 
 }
