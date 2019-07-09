@@ -41,12 +41,18 @@ public class MockApiDefinition {
 
         @Override
         protected void initRoute() {
-            EventModel model = EventModel.builder()
-                                         .address("http.server.test")
-                                         .addEvents(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE,
+            EventModel model1 = EventModel.builder()
+                                          .address("http.server.test")
+                                          .addEvents(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE,
                                                     EventAction.UPDATE, EventAction.PATCH)
-                                         .build();
-            this.addRouter(model, "/test/events", "/:event_id");
+                                          .build();
+            EventModel model2 = EventModel.builder()
+                                          .address("http.server.test2")
+                                          .addEvents(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE,
+                                                     EventAction.UPDATE, EventAction.PATCH)
+                                          .build();
+            this.addRouter(model1, "/test/events", "/:event_id");
+            this.addRouter(model2, "/test/abouts", "/:about_id");
         }
 
     }
