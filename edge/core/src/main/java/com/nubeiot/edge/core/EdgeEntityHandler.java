@@ -5,13 +5,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -24,8 +21,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.maven.MavenVerticleFactory;
-import io.vertx.maven.ResolverOptions;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
@@ -46,12 +41,7 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
-import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
-import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
-import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.Tables;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.daos.TblRemoveHistoryDao;
@@ -84,13 +74,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     @Override
-    public void init() {
-        InstallerConfig installerCfg = IConfig.from(this.sharedDataFunc.apply(EdgeVerticle.SHARED_INSTALLER_CFG),
-                                                    InstallerConfig.class);
-        setupServiceRepository(installerCfg.getRepoConfig());
-    }
-
-    @Override
     public boolean isNew() {
         return isNew(com.nubeiot.edge.core.model.tables.TblModule.TBL_MODULE);
     }
@@ -101,30 +84,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     protected abstract EventModel deploymentEvent();
-
-    protected void setupServiceRepository(RepositoryConfig repositoryCfg) {
-        logger.info("Setting up service local and remote repository");
-        RemoteRepositoryConfig remoteConfig = repositoryCfg.getRemoteConfig();
-        logger.info("URLs: " + remoteConfig.getUrls());
-        remoteConfig.getUrls()
-                    .entrySet()
-                    .stream()
-                    .parallel().forEach(entry -> handleVerticleFactory(repositoryCfg.getLocal(), entry));
-    }
-
-    private void handleVerticleFactory(String local, Entry<ModuleType, List<RemoteUrl>> entry) {
-        final ModuleType type = entry.getKey();
-        if (ModuleType.JAVA == type) {
-            List<RemoteUrl> remoteUrls = entry.getValue();
-            String javaLocal = FileUtils.createFolder(local, type.name().toLowerCase(Locale.ENGLISH));
-            logger.info("{} local repositories: {}", type, javaLocal);
-            logger.info("{} remote repositories: {}", type, remoteUrls);
-            ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
-                remoteUrls.stream().map(RemoteUrl::computeUrl).collect(Collectors.toList()))
-                                                            .setLocalRepository(javaLocal);
-            vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
-        }
-    }
 
     protected Single<JsonObject> startupModules() {
         return this.getModulesWhenBootstrap()

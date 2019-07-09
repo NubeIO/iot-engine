@@ -3,7 +3,7 @@
   "repository": {
     "remote": {
       "urls": {
-        "java": [
+        "JAVA": [
           {
             "credential": {
               "type": "BASIC",
