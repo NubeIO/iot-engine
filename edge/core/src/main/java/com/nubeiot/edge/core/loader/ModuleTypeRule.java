@@ -12,9 +12,10 @@ import java.util.function.Predicate;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
 
+import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.NubeConfig.SecretConfig;
+import com.nubeiot.core.NubeConfig.AppConfig.AppSecretConfig;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
@@ -32,10 +33,10 @@ public final class ModuleTypeRule implements Shareable {
         rules = new HashMap<>();
     }
 
-    public ITblModule parse(@NonNull Path dataDir, @NonNull JsonObject metadata, AppConfig appConfig,
-                            SecretConfig secretConfig) {
+    public ITblModule parse(@NonNull Path dataDir, @NonNull JsonObject metadata, AppConfig appConfig) {
         ITblModule tblModule = parse(metadata);
         tblModule.setAppConfig(appConfig.toJson());
+        AppSecretConfig secretConfig = IConfig.getSecretConfig(appConfig.toJson(), AppSecretConfig.class);
         tblModule.setSecretConfig(secretConfig.toJson());
         tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
         return tblModule;
@@ -48,9 +49,9 @@ public final class ModuleTypeRule implements Shareable {
         return new TblModule().fromJson(module);
     }
 
-    public ITblModule parse(@NonNull Path dataDir, @NonNull ITblModule tblModule, AppConfig appConfig,
-                            SecretConfig secretConfig) {
+    public ITblModule parse(@NonNull Path dataDir, @NonNull ITblModule tblModule, AppConfig appConfig) {
         tblModule.setAppConfig(appConfig.toJson());
+        AppSecretConfig secretConfig = IConfig.getSecretConfig(appConfig.toJson(), AppSecretConfig.class);
         tblModule.setSecretConfig(secretConfig.toJson());
         tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
         return tblModule;

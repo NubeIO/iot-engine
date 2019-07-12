@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nubeiot.core.NubeConfig.SecretConfig;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
@@ -156,6 +155,13 @@ public interface IConfig extends JsonData {
         }
 
         return config;
+    }
+
+    static <T extends SecretConfig> T getSecretConfig(JsonObject jObject, Class<T> clazz) {
+        if (jObject.getJsonObject(SecretConfig.NAME) == null) {
+            return ReflectionClass.createObject(clazz);
+        }
+        return IConfig.from(jObject, clazz);
     }
 
     @Override

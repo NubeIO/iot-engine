@@ -1,7 +1,5 @@
 package com.nubeiot.auth;
 
-import java.net.URL;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -10,13 +8,12 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.auth.Credential.CredentialType;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.NubeConfig.AppConfig.AppSecretConfig;
 import com.nubeiot.core.SecretProperty;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.utils.FileUtils;
+import com.nubeiot.core.utils.Configs;
 
 public class CredentialTest {
-
-    private static final URL RESOURCE = CredentialTest.class.getClassLoader().getResource("nube-cfg.json");
 
     @Test
     public void test_basic_credential() {
@@ -107,9 +104,9 @@ public class CredentialTest {
 
     @Test
     public void test_recompute_reference_credential() {
-        JsonObject input = new JsonObject(FileUtils.readFileToString(RESOURCE.toString()));
-        NubeConfig nubeConfig = IConfig.from(input, NubeConfig.class);
-        JsonObject output = Credential.recomputeReferenceCredentials(nubeConfig, nubeConfig.getSecretConfig()).toJson();
+        NubeConfig nubeConfig = IConfig.from(Configs.loadJsonConfig("nube-cfg.json"), NubeConfig.class);
+        AppSecretConfig secretConfig = IConfig.from(nubeConfig.getAppConfig(), AppSecretConfig.class);
+        JsonObject output = Credential.recomputeReferenceCredentials(nubeConfig, secretConfig).toJson();
         Assert.assertTrue(output.encode().contains("BASIC_SECRET"));
     }
 

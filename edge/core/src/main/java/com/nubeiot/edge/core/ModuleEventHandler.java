@@ -109,9 +109,7 @@ public final class ModuleEventHandler implements EventHandler {
         if (Strings.isNotBlank(serviceId)) {
             serviceData.getMetadata().put("service_id", serviceId);
         }
-        return verticle.getModuleRule()
-                       .parse(getDataDir(), serviceData.getMetadata(), serviceData.getAppConfig(),
-                              serviceData.getSecretConfig());
+        return verticle.getModuleRule().parse(getDataDir(), serviceData.getMetadata(), serviceData.getAppConfig());
     }
 
     private Path getDataDir() {

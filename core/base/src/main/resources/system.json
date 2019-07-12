@@ -48,7 +48,8 @@
       "trustAll": true,
       "useAlpn": false,
       "usePooledBuffers": false
-    }
+    },
+    "__secret__": {}
   },
   "__deploy__": {
     "ha": false,

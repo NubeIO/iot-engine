@@ -11,6 +11,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.NubeConfig.AppConfig.AppSecretConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.exceptions.NubeException;
@@ -41,8 +42,8 @@ public class NubeConfigTest {
                                 "\"ssl\":false,\"tcpCork\":false,\"tcpFastOpen\":false,\"tcpKeepAlive\":false," +
                                 "\"tcpNoDelay\":true,\"tcpQuickAck\":false,\"trafficClass\":-1,\"trustAll\":true," +
                                 "\"useAlpn\":false,\"usePooledBuffers\":false,\"__delivery__\":{\"timeout\":30000," +
-                                "\"localOnly\":false}}\n",
-                                from.getSystemConfig().getEventBusConfig().toJson().encode(), JSONCompareMode.STRICT);
+                                "\"localOnly\":false}}\n", from.getSystemConfig().getEventBusConfig().toJson().encode(),
+                                JSONCompareMode.STRICT);
         Assert.assertNotNull(from.getDeployConfig());
         JSONAssert.assertEquals("{\"ha\":false,\"instances\":1,\"maxWorkerExecuteTime\":60000000000," +
                                 "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\",\"multiThreaded\":false," +
@@ -266,6 +267,13 @@ public class NubeConfigTest {
         System.out.println("===========================================");
         System.out.println(merge1.toJson().encodePrettily());
         JSONAssert.assertEquals(mergeJson.encode(), merge1.toJson().encode(), JSONCompareMode.STRICT);
+    }
+
+    @Test
+    public void test_secret_config_parse() {
+        NubeConfig nubeConfig = IConfig.from(Configs.loadJsonConfig("nube.json"), NubeConfig.class);
+        Assert.assertNotEquals("{}", nubeConfig.getSystemConfig().getSecretConfig().toJson().encode());
+        Assert.assertNotEquals("{}", IConfig.from(nubeConfig.getAppConfig(), AppSecretConfig.class).toJson());
     }
 
 }

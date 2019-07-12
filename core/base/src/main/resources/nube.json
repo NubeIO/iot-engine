@@ -2,8 +2,8 @@
   "dataDir": "/data",
   "__system__": {
     "__secret__": {
-      "@user": "admin",
-      "@password": "admin123"
+      "@user": "user",
+      "@password": "xx"
     },
     "__eventBus__": {
       "ssl": true,
@@ -85,7 +85,7 @@
             "version": "1.0.0-SNAPSHOT",
             "service_name": "bios-installer"
           },
-          "__app__": {
+          "appConfig": {
             "__sql__": {
               "dialect": "H2",
               "__hikari__": {
@@ -131,11 +131,11 @@
                   }
                 }
               }
-            },
-            "__secret__": {
-              "@user": "admin",
-              "@password": "admin123"
             }
+          },
+          "secretConfig": {
+            "@user": "admin",
+            "@password": "admin123"
           }
         },
         {

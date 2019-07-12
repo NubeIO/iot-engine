@@ -35,8 +35,7 @@ public final class ModuleLoader implements EventHandler {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
         logger.info("Vertx install module {}...", preResult.getServiceFQN());
         DeploymentOptions options = new DeploymentOptions().setConfig(
-            constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig(),
-                                preResult.getSecretConfig()).toJson());
+            constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig()).toJson());
         return vertx.rxDeployVerticle(preResult.getServiceFQN(), options).doOnError(throwable -> {
             throw new EngineException(throwable);
         }).map(id -> new JsonObject().put("deploy_id", id));

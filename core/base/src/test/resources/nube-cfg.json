@@ -40,10 +40,10 @@
           }
         }
       }
+    },
+    "__secret__": {
+      "@user": "admin",
+      "@password": "admin123"
     }
-  },
-  "__secret__": {
-    "@user": "admin",
-    "@password": "admin123"
   }
 }

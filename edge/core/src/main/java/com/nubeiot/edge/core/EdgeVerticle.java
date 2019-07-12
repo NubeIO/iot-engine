@@ -11,6 +11,7 @@ import io.vertx.maven.ResolverOptions;
 
 import com.nubeiot.auth.Credential;
 import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig.AppConfig.AppSecretConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
@@ -46,8 +47,10 @@ public abstract class EdgeVerticle extends ContainerVerticle {
         this.moduleRule = this.getModuleRuleProvider().get();
         this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass()), this::handler);
 
+        AppSecretConfig appSecretConfig = IConfig.getSecretConfig(nubeConfig.getAppConfig().toJson(),
+                                                                  AppSecretConfig.class);
         InstallerConfig installerCfg = Credential.recomputeReferenceCredentials(
-            IConfig.from(nubeConfig.getAppConfig(), InstallerConfig.class), nubeConfig.getSecretConfig());
+            IConfig.from(nubeConfig.getAppConfig(), InstallerConfig.class), appSecretConfig);
         setupServiceRepository(installerCfg.getRepoConfig());
     }
 

@@ -25,7 +25,7 @@ import io.vertx.core.logging.LoggerFactory;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.NubeConfig.SecretConfig;
+import com.nubeiot.core.NubeConfig.AppConfig.AppSecretConfig;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
@@ -109,7 +109,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                      .deployId(result.getDeployId())
                                                      .appConfig(result.getAppConfig().toJson())
                                                      .systemConfig(result.getSystemConfig().toJson())
-                                                     .secretConfig(result.getSecretConfig().toJson())
                                                      .dataDir((String) this.getSharedDataFunc()
                                                                            .apply(SharedDataDelegate.SHARED_DATADIR))
                                                      .message("Work in progress")
@@ -279,9 +278,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                     .generateFQN(module.getServiceId(), module.getVersion(),
                                                                  module.getServiceName()))
                                   .deployId(module.getDeployId())
-                                  .appConfig(module.getAppConfig())
+                                  .appConfig(module.getAppConfig().put(AppSecretConfig.NAME, module.getSecretConfig()))
                                   .systemConfig(module.getSystemConfig())
-                                  .secretConfig(module.getSecretConfig())
                                   .dataDir((String) this.getSharedDataFunc().apply(SharedDataDelegate.SHARED_DATADIR))
                                   .build();
     }
@@ -373,7 +371,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             IConfig.merge(old.getSystemConfig(), newOne.getSystemConfig(), isUpdated, NubeConfig.class).toJson());
         old.setAppConfig(IConfig.merge(old.getAppConfig(), newOne.getAppConfig(), isUpdated, AppConfig.class).toJson());
         old.setSecretConfig(
-            IConfig.merge(old.getSecretConfig(), newOne.getSecretConfig(), isUpdated, SecretConfig.class).toJson());
+            IConfig.merge(old.getSecretConfig(), newOne.getSecretConfig(), isUpdated, AppSecretConfig.class).toJson());
         return old;
     }
 

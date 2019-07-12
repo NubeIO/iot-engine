@@ -155,9 +155,7 @@ public abstract class BaseEdgeVerticleTest {
             if (tblModule.getState() != State.PENDING) {
                 System.out.println("Ready. Testing module");
                 context.assertEquals(tblModule.getState(), expectedModuleState);
-                JsonObject actualConfig = IConfig.from(tblModule.getAppConfig(), NubeConfig.class)
-                                                 .getAppConfig()
-                                                 .toJson();
+                JsonObject actualConfig = IConfig.from(tblModule.getAppConfig(), AppConfig.class).toJson();
                 context.assertEquals(actualConfig.toString(), expectedConfig);
                 TestHelper.testComplete(async);
             }

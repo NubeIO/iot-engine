@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.NubeConfig.SecretConfig;
 import com.nubeiot.core.dto.IRequestData;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
@@ -49,20 +48,11 @@ public class PreDeploymentResult implements JsonData, IRequestData {
     private final String deployId;
     private final AppConfig appConfig;
     private final NubeConfig systemConfig;
-    private final SecretConfig secretConfig;
     private final String message;
     private final Status status;
     @Setter
     @Default
     private boolean silent = false;
-
-    @Override
-    public JsonObject toJson() {
-        JsonObject output = toJson(mapper());
-        output.remove("secret_config");
-        return output;
-    }
-
 
     @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
     @JsonPOJOBuilder(withPrefix = "")
@@ -70,7 +60,6 @@ public class PreDeploymentResult implements JsonData, IRequestData {
 
         private JsonObject appConfig;
         private JsonObject systemConfig;
-        private JsonObject secretConfig;
         private Path dataDir = FileUtils.DEFAULT_DATADIR;
 
         @JsonProperty("app_config")
@@ -93,16 +82,6 @@ public class PreDeploymentResult implements JsonData, IRequestData {
             return this;
         }
 
-        @JsonProperty("secret_config")
-        public Builder secretConfig(Map<String, Object> secretConfig) {
-            return this.secretConfig(JsonObject.mapFrom(secretConfig));
-        }
-
-        public Builder secretConfig(JsonObject secretConfig) {
-            this.secretConfig = JsonObject.mapFrom(secretConfig);
-            return this;
-        }
-
         public Builder dataDir(String dataDir) {
             this.dataDir = Strings.isBlank(dataDir) ? this.dataDir : FileUtils.toPath(dataDir);
             return this;
@@ -111,16 +90,13 @@ public class PreDeploymentResult implements JsonData, IRequestData {
         public PreDeploymentResult build() {
             AppConfig appConfig = IConfig.parseConfig(this.appConfig, AppConfig.class,
                                                       () -> IConfig.from(new JsonObject(), AppConfig.class));
-            SecretConfig secretConfig = IConfig.parseConfig(this.secretConfig, SecretConfig.class,
-                                                            () -> IConfig.from(new JsonObject(), SecretConfig.class));
             NubeConfig systemConfig = IConfig.parseConfig(this.systemConfig, NubeConfig.class,
                                                           () -> NubeConfig.blank(this.systemConfig));
             systemConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(serviceId)));
 
             return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
                                            Objects.isNull(targetState) ? State.NONE : targetState, serviceId,
-                                           serviceFQN, deployId, appConfig, systemConfig, secretConfig, message, status,
-                                           silent);
+                                           serviceFQN, deployId, appConfig, systemConfig, message, status, silent);
         }
 
     }

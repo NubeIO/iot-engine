@@ -1,6 +1,5 @@
 package com.nubeiot.edge.core;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -13,10 +12,9 @@ import com.nubeiot.auth.BasicCredential;
 import com.nubeiot.auth.Credential;
 import com.nubeiot.auth.Credential.CredentialType;
 import com.nubeiot.core.IConfig;
-import com.nubeiot.core.IConfigTest;
-import com.nubeiot.core.NubeConfig.SecretConfig;
+import com.nubeiot.core.NubeConfig.AppConfig.AppSecretConfig;
 import com.nubeiot.core.TestHelper.OSHelper;
-import com.nubeiot.core.utils.FileUtils;
+import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
 import com.nubeiot.edge.core.loader.ModuleType;
@@ -85,13 +83,12 @@ public class InstallerConfigTest {
         Assert.assertNotNull(serviceData.getAppConfig());
     }
 
-    private static final URL RESOURCE = IConfigTest.class.getClassLoader().getResource("installer-cfg.json");
-
     @Test
     public void test_recompute_reference_credentials() {
-        JsonObject input = new JsonObject(FileUtils.readFileToString(RESOURCE.toString()));
-        InstallerConfig installerConfig = IConfig.from(input, InstallerConfig.class);
-        SecretConfig secretConfig = new SecretConfig();
+
+        InstallerConfig installerConfig = IConfig.from(Configs.loadJsonConfig("installer-cfg.json"),
+                                                       InstallerConfig.class);
+        AppSecretConfig secretConfig = new AppSecretConfig();
         secretConfig.put("@user", "abc");
         secretConfig.put("@password", "xx");
 

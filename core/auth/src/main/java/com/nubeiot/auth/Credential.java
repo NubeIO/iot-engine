@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig.SecretConfig;
+import com.nubeiot.core.SecretConfig;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -9,6 +9,7 @@ import java.util.List;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.SecretConfig;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
@@ -38,14 +39,13 @@ public class SecretEventHandler implements EventHandler {
     public Single<JsonObject> update(RequestData data) {
         JsonObject body = data.body();
         String serviceId = body.getString("service_id");
-        body.remove("service_id");
-        RequestedServiceData requestedServiceData = JsonData.from(body, RequestedServiceData.class);
+        JsonObject secretConfig = body.getJsonObject(SecretConfig.NAME);
         return this.verticle.getEntityHandler()
                             .findModuleById(serviceId)
                             .map(o -> o.orElseThrow(
                                 () -> new NotFoundException(String.format("Not found module_id '%s'", serviceId))))
                             .flatMap(module -> {
-                                module.setSecretConfig(requestedServiceData.getSecretConfig().toJson());
+                                module.setSecretConfig(secretConfig);
                                 return this.verticle.getEntityHandler()
                                                     .processDeploymentTransaction(module, EventAction.UPDATE);
                             });
@@ -55,17 +55,14 @@ public class SecretEventHandler implements EventHandler {
     public Single<JsonObject> updatePartly(RequestData data) {
         JsonObject body = data.body();
         String serviceId = body.getString("service_id");
-        body.remove("service_id");
-        RequestedServiceData requestedServiceData = JsonData.from(body, RequestedServiceData.class);
+        JsonObject secretConfig = body.getJsonObject(SecretConfig.NAME);
         return this.verticle.getEntityHandler()
                             .findModuleById(serviceId)
                             .map(o -> o.orElseThrow(
                                 () -> new NotFoundException(String.format("Not found module_id '%s'", serviceId))))
                             .flatMap(module -> {
-                                JsonObject secretConfig = module.getSecretConfig()
-                                                                .mergeIn(
-                                                                    requestedServiceData.getSecretConfig().toJson());
-                                module.setSecretConfig(secretConfig);
+                                JsonObject finalSecretConfig = module.getSecretConfig().mergeIn(secretConfig);
+                                module.setSecretConfig(finalSecretConfig);
                                 return this.verticle.getEntityHandler()
                                                     .processDeploymentTransaction(module, EventAction.PATCH);
                             });

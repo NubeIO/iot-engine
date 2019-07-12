@@ -32,10 +32,8 @@ public class PreDeploymentResultTest {
                                                            .systemConfig(new JsonObject())
                                                            .appConfig(JsonObject.mapFrom(
                                                                Collections.singletonMap("testAbc", "ab")))
-                                                           .secretConfig(new JsonObject())
                                                            .build();
-        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig(),
-                                                 preResult.getSecretConfig());
+        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
         JsonObject preResultJson = preResult.toJson();
         JsonData.removeKeys(preResultJson, "app_config", "system_config");
         JSONAssert.assertEquals(
@@ -62,10 +60,8 @@ public class PreDeploymentResultTest {
                                                            .serviceFQN("serviceFQN")
                                                            .systemConfig(new JsonObject())
                                                            .appConfig(new JsonObject())
-                                                           .secretConfig(new JsonObject())
                                                            .build();
-        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig(),
-                                                 preResult.getSecretConfig());
+        NubeConfig nubeCfg = constructNubeConfig(preResult.getSystemConfig(), preResult.getAppConfig());
         JsonObject preResultJson = preResult.toJson();
         JsonData.removeKeys(preResultJson, "app_config", "system_config");
         System.out.println(nubeCfg.toJson());
@@ -93,7 +89,6 @@ public class PreDeploymentResultTest {
                                                                      .systemConfig(new JsonObject())
                                                                      .appConfig(JsonObject.mapFrom(
                                                                          Collections.singletonMap("testAbc", "ab")))
-                                                                     .secretConfig(new JsonObject())
                                                                      .build();
         PreDeploymentResult preResult = JsonData.from(preDeploymentResult.toRequestData().body(),
                                                       PreDeploymentResult.class);

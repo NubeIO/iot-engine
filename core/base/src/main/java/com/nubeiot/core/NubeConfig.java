@@ -15,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,9 +37,7 @@ public final class NubeConfig implements IConfig {
     @JsonProperty(value = DeployConfig.NAME)
     private DeployConfig deployConfig = new DeployConfig();
     @JsonProperty(value = AppConfig.NAME)
-    private AppConfig appConfig = new AppConfig();
-    @JsonProperty(value = SecretConfig.NAME)
-    private SecretConfig secretConfig = new SecretConfig();
+    private AppConfig appConfig;
 
     /**
      * Create {@link NubeConfig} with {@link AppConfig}, default {@link DeployConfig} and without {@link SystemConfig}
@@ -53,11 +50,11 @@ public final class NubeConfig implements IConfig {
     }
 
     public static NubeConfig blank(@NonNull Path dataDir, @NonNull JsonObject appConfig) {
-        return new NubeConfig(dataDir, null, new DeployConfig(), IConfig.from(appConfig, AppConfig.class), null);
+        return new NubeConfig(dataDir, null, new DeployConfig(), IConfig.from(appConfig, AppConfig.class));
     }
 
     public static NubeConfig blank(@NonNull Path dataDir) {
-        return new NubeConfig(dataDir, null, new DeployConfig(), null, null);
+        return new NubeConfig(dataDir, null, new DeployConfig(), null);
     }
 
     /**
@@ -69,12 +66,9 @@ public final class NubeConfig implements IConfig {
         return NubeConfig.blank(new JsonObject());
     }
 
-    public static NubeConfig constructNubeConfig(NubeConfig nubeConfig, AppConfig appConfig,
-                                                 SecretConfig secretConfig) {
-        return IConfig.from(nubeConfig.toJson()
-                                      .mergeIn(new JsonObject().put(AppConfig.NAME, appConfig.toJson()))
-                                      .mergeIn(new JsonObject().put(SecretConfig.NAME, secretConfig.toJson())),
-                            NubeConfig.class);
+    public static NubeConfig constructNubeConfig(NubeConfig nubeConfig, AppConfig appConfig) {
+        JsonObject finalNubeConfig = nubeConfig.toJson().mergeIn(new JsonObject().put(AppConfig.NAME, appConfig));
+        return IConfig.from(finalNubeConfig, NubeConfig.class);
     }
 
     @Override
@@ -101,6 +95,8 @@ public final class NubeConfig implements IConfig {
         private ClusterConfig clusterConfig = new ClusterConfig();
         @JsonProperty(value = EventBusConfig.NAME)
         private EventBusConfig eventBusConfig = new EventBusConfig();
+        @JsonProperty(value = SystemSecretConfig.NAME)
+        private SystemSecretConfig secretConfig = new SystemSecretConfig();
 
         @Override
         public String name() { return NAME; }
@@ -197,6 +193,16 @@ public final class NubeConfig implements IConfig {
 
         }
 
+
+        public static final class SystemSecretConfig extends SecretConfig {
+
+            @Override
+            public Class<? extends IConfig> parent() {
+                return SystemConfig.class;
+            }
+
+        }
+
     }
 
 
@@ -223,27 +229,21 @@ public final class NubeConfig implements IConfig {
         @Override
         public Class<? extends IConfig> parent() { return NubeConfig.class; }
 
-    }
+        public static final class AppSecretConfig extends SecretConfig {
 
-
-    public static final class SecretConfig extends HashMap<String, String> implements IConfig {
-
-        public static final String NAME = "__secret__";
-
-        @Override
-        public String name() { return NAME; }
-
-        @Override
-        public Class<? extends IConfig> parent() { return NubeConfig.class; }
-
-        public SecretProperty decode(String key) {
-            String value = key;
-            if (key.startsWith("@secret.")) {
-                key = key.replaceAll("^@secret.", "@");
+            @Override
+            public Class<? extends IConfig> parent() {
+                return AppConfig.class;
             }
-            value = Strings.getFirstNotNull(this.get(key), value);
-            return new SecretProperty(key, value);
+
         }
+
+        //        @Override
+        //        public JsonObject toJson() {
+        //            JsonObject output = toJson(mapper());
+        //            output.remove(AppSecretConfig.NAME);
+        //            return output;
+        //        }
 
     }
 
