@@ -413,7 +413,7 @@ public class ConfigProcessorTest {
         result.ifPresent(finalResult -> {
             JsonObject output = finalResult.getSystemConfig().getSecretConfig().toJson();
             System.out.println(output);
-            Assert.assertNotEquals("{}", output.encode());
+            Assert.assertFalse(output.isEmpty());
             Assert.assertEquals("test_user", output.getString("@user"));
             Assert.assertEquals("test", output.getString("@test"));
         });
@@ -428,7 +428,7 @@ public class ConfigProcessorTest {
         result.orElseThrow(() -> new NotFoundException("Not found"));
         result.ifPresent(finalResult -> {
             JsonObject output = IConfig.from(finalResult.getAppConfig().toJson(), AppSecretConfig.class).toJson();
-            Assert.assertNotEquals("{}", output.encode());
+            Assert.assertFalse(output.isEmpty());
             Assert.assertEquals("test_user", output.getString("@user"));
             Assert.assertEquals("test", output.getString("@test"));
         });

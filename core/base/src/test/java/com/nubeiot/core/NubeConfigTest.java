@@ -59,7 +59,7 @@ public class NubeConfigTest {
         System.out.println(from.toJson().encodePrettily());
         Assert.assertNotNull(from.getDataDir());
         Assert.assertNull(from.getSystemConfig());
-        Assert.assertNotNull(from.getAppConfig());
+        Assert.assertNull(from.getAppConfig());
         Assert.assertNotNull(from.getDeployConfig());
     }
 
@@ -272,8 +272,8 @@ public class NubeConfigTest {
     @Test
     public void test_secret_config_parse() {
         NubeConfig nubeConfig = IConfig.from(Configs.loadJsonConfig("nube.json"), NubeConfig.class);
-        Assert.assertNotEquals("{}", nubeConfig.getSystemConfig().getSecretConfig().toJson().encode());
-        Assert.assertNotEquals("{}", IConfig.from(nubeConfig.getAppConfig(), AppSecretConfig.class).toJson());
+        Assert.assertFalse(nubeConfig.getSystemConfig().getSecretConfig().toJson().isEmpty());
+        Assert.assertFalse(IConfig.from(nubeConfig.getAppConfig(), AppSecretConfig.class).toJson().isEmpty());
     }
 
 }
