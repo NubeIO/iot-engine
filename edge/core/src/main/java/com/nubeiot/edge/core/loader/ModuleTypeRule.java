@@ -35,11 +35,7 @@ public final class ModuleTypeRule implements Shareable {
 
     public ITblModule parse(@NonNull Path dataDir, @NonNull JsonObject metadata, AppConfig appConfig) {
         ITblModule tblModule = parse(metadata);
-        tblModule.setAppConfig(appConfig.toJson());
-        AppSecretConfig secretConfig = IConfig.getSecretConfig(appConfig.toJson(), AppSecretConfig.class);
-        tblModule.setSecretConfig(secretConfig.toJson());
-        tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
-        return tblModule;
+        return parse(dataDir, tblModule, appConfig);
     }
 
     public ITblModule parse(JsonObject metadata) {
@@ -50,7 +46,9 @@ public final class ModuleTypeRule implements Shareable {
     }
 
     public ITblModule parse(@NonNull Path dataDir, @NonNull ITblModule tblModule, AppConfig appConfig) {
-        tblModule.setAppConfig(appConfig.toJson());
+        JsonObject outputAppConfig = appConfig.toJson().copy();
+        outputAppConfig.remove(AppSecretConfig.NAME);
+        tblModule.setAppConfig(outputAppConfig);
         AppSecretConfig secretConfig = IConfig.getSecretConfig(appConfig.toJson(), AppSecretConfig.class);
         tblModule.setSecretConfig(secretConfig.toJson());
         tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));

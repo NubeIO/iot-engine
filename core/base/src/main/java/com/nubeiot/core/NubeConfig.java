@@ -238,13 +238,6 @@ public final class NubeConfig implements IConfig {
 
         }
 
-        //        @Override
-        //        public JsonObject toJson() {
-        //            JsonObject output = toJson(mapper());
-        //            output.remove(AppSecretConfig.NAME);
-        //            return output;
-        //        }
-
     }
 
 }

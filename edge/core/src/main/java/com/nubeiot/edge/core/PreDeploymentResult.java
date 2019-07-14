@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.SecretConfig;
 import com.nubeiot.core.dto.IRequestData;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
@@ -53,6 +54,13 @@ public class PreDeploymentResult implements JsonData, IRequestData {
     @Setter
     @Default
     private boolean silent = false;
+
+    @Override
+    public JsonObject toJson() {
+        JsonObject output = toJson(mapper());
+        output.getJsonObject("app_config").remove(SecretConfig.NAME);
+        return output;
+    }
 
     @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
     @JsonPOJOBuilder(withPrefix = "")
