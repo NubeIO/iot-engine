@@ -1,39 +1,25 @@
 package com.nubeiot.iotdata.dto;
 
-import java.util.Locale;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.EnumType;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-
-@EqualsAndHashCode
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class HistorySettingType implements EnumType {
+public final class HistorySettingType extends AbstractEnumType {
 
     public static final HistorySettingType COV = new HistorySettingType("COV");
-    public static final HistorySettingType PERIOD = new HistorySettingType("PERIOD");
+    public static final HistorySettingType PERIOD = new HistorySettingType("PERIOD", "PERIODIC");
 
-    private final String type;
+    private HistorySettingType(String type) { super(type); }
+
+    private HistorySettingType(String type, String... aliases) {
+        super(type, aliases);
+    }
 
     public static HistorySettingType def() { return PERIOD; }
 
     @JsonCreator
     public static HistorySettingType factory(String type) {
-        String t = Strings.optimizeMultipleSpace(type).toUpperCase(Locale.ENGLISH);
-        if (COV.type.equals(t)) {
-            return COV;
-        }
-        if (PERIOD.type.equals(t) || "PERIODIC".equals(t)) {
-            return PERIOD;
-        }
-        return new HistorySettingType(t);
+        return EnumType.factory(type, HistorySettingType.class, def());
     }
-
-    @Override
-    public String type() { return type; }
 
 }

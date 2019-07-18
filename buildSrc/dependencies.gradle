@@ -8,11 +8,11 @@ def versions = [
         logback: "1.2.3"
     ],
     database: [
-        jooq     : "3.11.8",
-        jooqVertx: "4.0.0",
+        jooq     : "3.11.11",
+        jooqVertx: "4.1.0",
         hikari   : "3.2.0",
         jpa      : "2.2",
-        h2       : "1.4.197",
+        h2       : "1.4.199",
         pgsql    : "42.2.5",
     ],
     plugin  : [

@@ -1,23 +1,11 @@
 package com.nubeiot.iotdata.converter;
 
-import java.util.Objects;
-
-import org.jooq.Converter;
-
 import com.nubeiot.iotdata.dto.PointKind;
 
-public final class PointKindConverter implements Converter<String, PointKind> {
+public final class PointKindConverter extends AbstractEnumConverter<PointKind> {
 
     @Override
-    public PointKind from(String databaseObject) { return PointKind.factory(databaseObject); }
-
-    @Override
-    public String to(PointKind userObject) {
-        return Objects.isNull(userObject) ? PointKind.def().type() : userObject.type();
-    }
-
-    @Override
-    public Class<String> fromType() { return String.class; }
+    protected PointKind def() { return PointKind.def(); }
 
     @Override
     public Class<PointKind> toType() { return PointKind.class; }

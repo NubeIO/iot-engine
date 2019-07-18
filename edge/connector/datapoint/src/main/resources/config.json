@@ -20,7 +20,6 @@
     },
     "__scheduler__": {
       "__schedule_worker__": {
-        "poolName": "worker-pool-scheduler-abc",
         "poolSize": 2,
         "maxExecuteTime": 60,
         "maxExecuteTimeUnit": "SECONDS"
