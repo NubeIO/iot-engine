@@ -1,10 +1,9 @@
 package com.nubeiot.iotdata.unit;
 
-import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,23 +16,18 @@ import lombok.NonNull;
 public interface DataType extends EnumType {
 
     DataType NUMBER = new NumberDataType();
-    DataType PERCENTAGE = new PercentageDataType();
-    DataType VOLTAGE = new VoltageDataType();
-    DataType CELSIUS = new CelsiusDataType();
+    DataType PERCENTAGE = new NumberDataType("percentage", "%");
+    DataType VOLTAGE = new NumberDataType("voltage", "V");
+    DataType CELSIUS = new NumberDataType("celsius", "U+2103");
     DataType BOOLEAN = new BooleanDataType();
-    DataType DBM = new DBMDataType();
-    DataType HPA = new HPADataType();
-    DataType LUX = new LuxDataType();
-    DataType KWH = new KWHDataType();
+    DataType DBM = new NumberDataType("dBm", "dBm");
+    DataType HPA = new NumberDataType("hPa", "hPa");
+    DataType LUX = new NumberDataType("lux", "lx");
+    DataType KWH = new NumberDataType("kWh", "kWh");
     String SEP = "::";
 
     @NonNull
     static DataType def() { return NUMBER; }
-
-    @NonNull
-    static Predicate<Field> filter(String t) {
-        return f -> ReflectionField.getConstant(DataType.class, f, def()).type().equalsIgnoreCase(t);
-    }
 
     @NonNull
     @JsonCreator
@@ -47,9 +41,10 @@ public interface DataType extends EnumType {
 
     @NonNull
     static DataType factory(String type, String unit) {
-        return ReflectionField.streamConstants(DataType.class, DataType.class, filter(Strings.requireNotBlank(type)))
-                              .findFirst()
-                              .orElse(new NumberDataType(type, unit));
+        return ReflectionField.streamConstants(DataType.class, DataType.class, null)
+                              .filter(t -> t.type().equalsIgnoreCase(type))
+                              .findAny()
+                              .orElseGet(() -> new NumberDataType(type, unit));
     }
 
     @NonNull
@@ -70,15 +65,10 @@ public interface DataType extends EnumType {
         return 0d;
     }
 
-    @NonNull
-    default String display(Double value) {
-        return Objects.isNull(value) ? "" : value.toString();
-    }
+    @NonNull String display(Double value);
 
     @JsonIgnore
-    default Map<Double, List<String>> possibleValue() {
-        return null;
-    }
+    default Map<Double, List<String>> possibleValue() { return null; }
 
     /**
      * Presents persist value
@@ -89,5 +79,7 @@ public interface DataType extends EnumType {
     default String value() {
         return this.type() + (Strings.isBlank(this.unit()) ? "" : SEP + this.unit());
     }
+
+    default Collection<String> aliases() { return null; }
 
 }

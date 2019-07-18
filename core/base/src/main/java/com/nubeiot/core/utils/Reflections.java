@@ -422,7 +422,7 @@ public final class Reflections {
 
         public static <T> Silencer<T> createObject(Class<T> clazz, @NonNull Map<Class, Object> inputs,
                                                    Silencer<T> silencer) {
-            if (!(inputs instanceof LinkedHashMap)) {
+            if (inputs.size() > 1 && !(inputs instanceof LinkedHashMap)) {
                 throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
             }
             try {

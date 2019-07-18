@@ -1,6 +1,6 @@
 package com.nubeiot.buildscript.jooq
 
-
+import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Function
 
 import com.nubeiot.buildscript.Strings
@@ -20,6 +20,7 @@ class CacheDataType {
     private final Map<String, Function<String, String>> converters = new HashMap<>()
     private final Map<String, Function<String, String>> parsers = new HashMap<>()
     private final Map<String, String> defaultValues = new HashMap<>()
+    private final Map<String, String> renameFields = new ConcurrentHashMap<>()
 
     Set<JsonDataType> getDataTypes() { return dataTypes }
 
@@ -33,6 +34,12 @@ class CacheDataType {
 
     String getDefaultValue(String className) {
         return defaultValues.getOrDefault(className, "null")
+    }
+
+    String fieldName(String fieldName) {
+        String[] out = [fieldName]
+        renameFields.each { out[0] = out[0].replaceAll(it.key, it.value) }
+        return out[0]
     }
 
     CacheDataType addEnumClasses(Set<String> enums) {
@@ -58,15 +65,25 @@ class CacheDataType {
         return this
     }
 
+    CacheDataType addRenameFields(Map<String, String> renames) {
+        renames.findAll { !Strings.isBlank(it.key) && Objects.nonNull(it.value) }.each {
+            renameFields.put(Strings.toRegexIgnoreCase(it.key), it.value)
+        }
+        return this
+    }
+
     def addDataType(String customClass, String convertCommand, String parseCommand, String defaultValue = "null") {
         String className = Strings.requireNotBlank(customClass, "Class cannot be blank")
-        converters.put(className, Objects.isNull(convertCommand) ? Function.identity() : toFunc(convertCommand))
-        parsers.put(className, Objects.isNull(parseCommand) ? Function.identity() : toFunc(parseCommand))
+        converters.put(className, toFunc(convertCommand))
+        parsers.put(className, toFunc(parseCommand))
         defaultValues.put(className, Strings.isBlank(defaultValue) ? "null" : defaultValue)
     }
 
     private static Function<String, String> toFunc(String command) {
-        return { s -> String.format(Strings.requireNotBlank(command, "Command cannot be blank"), s) }
+        if (Strings.isBlank(command)) {
+            return Function.identity()
+        }
+        return { s -> String.format(command, s) }
     }
 
 }

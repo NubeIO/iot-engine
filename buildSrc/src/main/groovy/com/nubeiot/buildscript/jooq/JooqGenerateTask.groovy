@@ -37,6 +37,9 @@ class JooqGenerateTask extends DefaultTask {
     public Set<JsonDataType> javaTypes = []
 
     @Input
+    public Map<String, String> renameFields = [:]
+
+    @Input
     public String ddlDir = "src/main/resources/ddl"
     @Input
     public String targetDir = project.genProps.javaSrcDir
@@ -46,7 +49,9 @@ class JooqGenerateTask extends DefaultTask {
         def ddl = project.projectDir.toPath().resolve(ddlDir).toString()
         def input = ddl.endsWith(".sql") ? ddl : ddl + "/*.sql"
         def output = project.projectDir.toPath().resolve(targetDir).toString()
-        CacheDataType.instance().addEnumClasses(enumTypes).addDataType(javaTypes)
+        CacheDataType.instance()
+                     .addEnumClasses(enumTypes).addDataType(javaTypes)
+                     .addRenameFields(["_JSON(_ARRAY)?|_ARRAY\$": ""] << renameFields)
         enumTypes.each { s ->
             def expression = s.substring(s.lastIndexOf(".") + 1)
             if (expression == "EventAction") {

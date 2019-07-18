@@ -1,45 +1,24 @@
 package com.nubeiot.iotdata.dto;
 
-import java.util.Locale;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.EnumType;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-
-@EqualsAndHashCode
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class PointKind implements EnumType {
+public final class PointKind extends AbstractEnumType {
 
     public static final PointKind INPUT = new PointKind("INPUT");
     public static final PointKind OUTPUT = new PointKind("OUTPUT");
     public static final PointKind UNKNOWN = new PointKind("UNKNOWN");
 
-    private final String type;
+    private PointKind(String type) {
+        super(type);
+    }
 
     public static PointKind def() { return UNKNOWN; }
 
     @JsonCreator
     public static PointKind factory(String name) {
-        String n = Strings.optimizeMultipleSpace(name).toUpperCase(Locale.ENGLISH);
-        if (UNKNOWN.type.equals(n)) {
-            return UNKNOWN;
-        }
-        if (INPUT.type.equals(n)) {
-            return INPUT;
-        }
-        if (OUTPUT.type.equals(n)) {
-            return OUTPUT;
-        }
-        return new PointKind(n);
-    }
-
-    @Override
-    public String type() {
-        return type;
+        return EnumType.factory(name, PointKind.class, def());
     }
 
 }

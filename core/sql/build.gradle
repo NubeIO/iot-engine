@@ -32,6 +32,12 @@ ext {
                        converter: "com.nubeiot.core.sql.converter.DurationConverter"),
         new ForcedType(types: DB.TYPES.varchar, userType: "java.time.Period", expression: DB.COL_REGEX.period,
                        converter: "com.nubeiot.core.sql.converter.PeriodConverter"),
+        new ForcedType(types: DB.TYPES.varchar, userType: "com.nubeiot.core.sql.type.TimeAudit",
+                       expression: DB.COL_REGEX.timeAudit,
+                       converter: "com.nubeiot.core.sql.converter.TimeAuditConverter"),
+        new ForcedType(types: DB.TYPES.varchar, userType: "com.nubeiot.core.sql.type.Label",
+                       expression: DB.COL_REGEX.label,
+                       converter: "com.nubeiot.core.sql.converter.LabelConverter"),
     ]
     javaTypes = [
         new JsonDataType(className: Instant.class.getName(), converter: "%s.toString()",
@@ -52,7 +58,13 @@ ext {
                          parser: "java.util.UUID.fromString((String)%s)"),
         new JsonDataType(className: JsonArray.class.getName(),
                          converter: "%s",
-                         parser: "(io.vertx.core.json.JsonArray)%s")
+                         parser: "(io.vertx.core.json.JsonArray)%s"),
+        new JsonDataType(className: "com.nubeiot.core.sql.type.TimeAudit",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.core.sql.type.TimeAudit.class)"),
+        new JsonDataType(className: "com.nubeiot.core.sql.type.Label",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.core.sql.type.Label.class)")
     ]
 }
 
@@ -70,7 +82,7 @@ dependencies {
     testCompile project(":core:base").sourceSets.test.output
     testCompile project.deps.database.h2
     testCompile project.deps.database.pgsql
-    testCompile "com.opentable.components:otj-pg-embedded:0.13.0"
+    testCompile "com.opentable.components:otj-pg-embedded:0.13.1"
 }
 
 task jooqGen1(type: JooqGenerateTask) {

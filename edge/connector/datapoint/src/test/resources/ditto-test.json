@@ -1,0 +1,1169 @@
+{
+  "thing": {
+    "thingId": "com.nubeio:d823dc1c-2bdb-4df9-8c2a-425cebb3ae87",
+    "policyId": "com.nubeio:d823dc1c-2bdb-4df9-8c2a-425cebb3ae87",
+    "attributes": {
+      "client": "client",
+      "country": "country",
+      "state": "state",
+      "region": "region",
+      "site": "site"
+    },
+    "features": {
+      "alerts": {
+        "properties": {}
+      },
+      "commands": {
+        "properties": {}
+      },
+      "histories": {
+        "properties": {
+          "UI1": {
+            "name": "UI1",
+            "data": [
+              {
+                "ts": 1562741100000,
+                "val": 0
+              },
+              {
+                "ts": 1562742000000,
+                "val": 0
+              },
+              {
+                "ts": 1562742900000,
+                "val": 0
+              },
+              {
+                "ts": 1562743800000,
+                "val": 0
+              }
+            ]
+          },
+          "UI2": {
+            "name": "UI2",
+            "data": [
+              {
+                "ts": 1562741100000,
+                "val": 0
+              },
+              {
+                "ts": 1562742000000,
+                "val": 0
+              },
+              {
+                "ts": 1562742900000,
+                "val": 0
+              },
+              {
+                "ts": 1562743800000,
+                "val": 0
+              }
+            ]
+          },
+          "UI3": {
+            "name": "UI3",
+            "data": [
+              {
+                "ts": 1562741100000,
+                "val": 0
+              },
+              {
+                "ts": 1562742000000,
+                "val": 0
+              },
+              {
+                "ts": 1562742900000,
+                "val": 0
+              },
+              {
+                "ts": 1562743800000,
+                "val": 0
+              }
+            ]
+          },
+          "UI4": {
+            "name": "UI4",
+            "data": [
+              {
+                "ts": 1562741100000,
+                "val": 0
+              },
+              {
+                "ts": 1562742000000,
+                "val": 0
+              },
+              {
+                "ts": 1562742900000,
+                "val": 0
+              },
+              {
+                "ts": 1562743800000,
+                "val": 0
+              }
+            ]
+          },
+          "UI5": {
+            "name": "UI5",
+            "data": [
+              {
+                "ts": 1562741100000,
+                "val": 0
+              },
+              {
+                "ts": 1562742000000,
+                "val": 0
+              },
+              {
+                "ts": 1562742900000,
+                "val": 0
+              },
+              {
+                "ts": 1562743800000,
+                "val": 0
+              }
+            ]
+          },
+          "UI6": {
+            "name": "UI6",
+            "data": [
+              {
+                "ts": 1562741100000,
+                "val": 0
+              },
+              {
+                "ts": 1562742000000,
+                "val": 0
+              },
+              {
+                "ts": 1562742900000,
+                "val": 0
+              },
+              {
+                "ts": 1562743800000,
+                "val": 0
+              }
+            ]
+          },
+          "UI7": {
+            "name": "UI7",
+            "data": [
+              {
+                "ts": 1562741100000,
+                "val": 0
+              },
+              {
+                "ts": 1562742000000,
+                "val": 0
+              },
+              {
+                "ts": 1562742900000,
+                "val": 0
+              },
+              {
+                "ts": 1562743800000,
+                "val": 0
+              }
+            ]
+          },
+          "UO1": {
+            "name": "UO1",
+            "data": [
+              {
+                "ts": 1562740768270,
+                "val": 0
+              }
+            ]
+          },
+          "UO2": {
+            "name": "UO2",
+            "data": [
+              {
+                "ts": 1562740768271,
+                "val": 0
+              }
+            ]
+          },
+          "UO3": {
+            "name": "UO3",
+            "data": [
+              {
+                "ts": 1562740768271,
+                "val": 0
+              }
+            ]
+          },
+          "UO4": {
+            "name": "UO4",
+            "data": [
+              {
+                "ts": 1562740768271,
+                "val": 0
+              }
+            ]
+          },
+          "UO5": {
+            "name": "UO5",
+            "data": [
+              {
+                "ts": 1562740768271,
+                "val": 0
+              }
+            ]
+          },
+          "UO6": {
+            "name": "UO6",
+            "data": [
+              {
+                "ts": 1562740768272,
+                "val": 0
+              }
+            ]
+          },
+          "UO7": {
+            "name": "UO7",
+            "data": [
+              {
+                "ts": 1562740768272,
+                "val": 0
+              }
+            ]
+          },
+          "DI1": {
+            "name": "DI1",
+            "data": [
+              {
+                "ts": 1562740768268,
+                "val": 1
+              }
+            ]
+          },
+          "DI2": {
+            "name": "DI2",
+            "data": [
+              {
+                "ts": 1562740768269,
+                "val": 1
+              }
+            ]
+          },
+          "DI3": {
+            "name": "DI3",
+            "data": [
+              {
+                "ts": 1562740768269,
+                "val": 1
+              }
+            ]
+          },
+          "DI4": {
+            "name": "DI4",
+            "data": [
+              {
+                "ts": 1562740768269,
+                "val": 1
+              }
+            ]
+          },
+          "DI5": {
+            "name": "DI5",
+            "data": [
+              {
+                "ts": 1562740768269,
+                "val": 1
+              }
+            ]
+          },
+          "DI6": {
+            "name": "DI6",
+            "data": [
+              {
+                "ts": 1562740768269,
+                "val": 1
+              }
+            ]
+          },
+          "DI7": {
+            "name": "DI7",
+            "data": [
+              {
+                "ts": 1562740768270,
+                "val": 1
+              }
+            ]
+          },
+          "DO1": {
+            "name": "DO1",
+            "data": [
+              {
+                "ts": 1562740768272,
+                "val": 0
+              }
+            ]
+          },
+          "DO2": {
+            "name": "DO2",
+            "data": [
+              {
+                "ts": 1562740768273,
+                "val": 0
+              }
+            ]
+          },
+          "DO3": {
+            "name": "DO3",
+            "data": [
+              {
+                "ts": 1562740768273,
+                "val": 0
+              }
+            ]
+          },
+          "DO4": {
+            "name": "DO4",
+            "data": [
+              {
+                "ts": 1562740768273,
+                "val": 0
+              }
+            ]
+          },
+          "DO5": {
+            "name": "DO5",
+            "data": [
+              {
+                "ts": 1562740768273,
+                "val": 0
+              }
+            ]
+          },
+          "R1": {
+            "name": "R1",
+            "data": []
+          },
+          "R2": {
+            "name": "R2",
+            "data": [
+              {
+                "ts": 1562740768274,
+                "val": 0
+              }
+            ]
+          }
+        }
+      },
+      "points": {
+        "properties": {
+          "UI1": {
+            "name": "UI1",
+            "type": "0-10dc",
+            "scale": "0:10",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "periodic",
+              "schedule": "0 */15 * * * *",
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UI2": {
+            "name": "UI2",
+            "type": "0-10dc",
+            "scale": "0:10",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "periodic",
+              "schedule": "0 */15 * * * *",
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UI3": {
+            "name": "UI3",
+            "type": "0-10dc",
+            "scale": "0:10",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "periodic",
+              "schedule": "0 */15 * * * *",
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UI4": {
+            "name": "UI4",
+            "type": "0-10dc",
+            "scale": "0:10",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "periodic",
+              "schedule": "0 */15 * * * *",
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UI5": {
+            "name": "UI5",
+            "type": "0-10dc",
+            "scale": "0:10",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "periodic",
+              "schedule": "0 */15 * * * *",
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UI6": {
+            "name": "UI6",
+            "type": "0-10dc",
+            "scale": "0:10",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "periodic",
+              "schedule": "0 */15 * * * *",
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UI7": {
+            "name": "UI7",
+            "type": "0-10dc",
+            "scale": "0:10",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "periodic",
+              "schedule": "0 */15 * * * *",
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "DI1": {
+            "name": "DI1",
+            "value": 1,
+            "pinValue": 1,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DI2": {
+            "name": "DI2",
+            "value": 1,
+            "pinValue": 1,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DI3": {
+            "name": "DI3",
+            "value": 1,
+            "pinValue": 1,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DI4": {
+            "name": "DI4",
+            "value": 1,
+            "pinValue": 1,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DI5": {
+            "name": "DI5",
+            "value": 1,
+            "pinValue": 1,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DI6": {
+            "name": "DI6",
+            "value": 1,
+            "pinValue": 1,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DI7": {
+            "name": "DI7",
+            "value": 1,
+            "pinValue": 1,
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "UO1": {
+            "name": "UO1",
+            "type": "0-10dc",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UO2": {
+            "name": "UO2",
+            "type": "0-10dc",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UO3": {
+            "name": "UO3",
+            "type": "0-10dc",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UO4": {
+            "name": "UO4",
+            "type": "0-10dc",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UO5": {
+            "name": "UO5",
+            "type": "0-10dc",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UO6": {
+            "name": "UO6",
+            "type": "0-10dc",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "UO7": {
+            "name": "UO7",
+            "type": "0-10dc",
+            "precision": 3,
+            "offset": 0,
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Number",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false,
+              "tolerance": 0.1
+            }
+          },
+          "DO1": {
+            "name": "DO1",
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DO2": {
+            "name": "DO2",
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DO3": {
+            "name": "DO3",
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DO4": {
+            "name": "DO4",
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "DO5": {
+            "name": "DO5",
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "R1": {
+            "name": "R1",
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          },
+          "R2": {
+            "name": "R2",
+            "value": 0,
+            "pinValue": 0,
+            "priority": "null",
+            "priorityArray": {
+              "1": "null",
+              "2": "null",
+              "3": "null",
+              "4": "null",
+              "5": "null",
+              "6": "null",
+              "7": "null",
+              "8": "null",
+              "9": "null",
+              "10": "null",
+              "11": "null",
+              "12": "null",
+              "13": "null",
+              "14": "null",
+              "15": "null",
+              "16": "null"
+            },
+            "kind": "Bool",
+            "unit": "null",
+            "tags": [],
+            "historySettings": {
+              "type": "cov",
+              "tolerance": 0,
+              "size": 672
+            },
+            "ditto": {
+              "enable": false
+            }
+          }
+        }
+      },
+      "schedules": {
+        "properties": {
+          "weekly": {},
+          "events": {}
+        }
+      },
+      "settings": {
+        "properties": {
+          "edgeLoop": 200,
+          "dittoEnable": false,
+          "dittoHost": null,
+          "dittoHttpBasic": null
+        }
+      },
+      "users": {
+        "properties": {
+          "admin": {
+            "role": "admin",
+            "password": "$2a$10$CjWz90teDBe7rkjcyyeSE.aLiiASSwR4WLPsvykcOvP/ConGJhfEe"
+          }
+        }
+      },
+      "notes": {
+        "properties": {
+          "list": []
+        }
+      },
+      "sensorList": {
+        "properties": {
+          "list": []
+        }
+      }
+    }
+  }
+}

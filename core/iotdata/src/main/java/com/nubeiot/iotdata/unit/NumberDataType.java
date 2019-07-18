@@ -1,5 +1,7 @@
 package com.nubeiot.iotdata.unit;
 
+import com.nubeiot.core.utils.Strings;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +23,11 @@ public class NumberDataType implements DataType {
     public final String unit() { return unit; }
 
     @Override
-    public String display(Double value) { return null; }
+    public String display(Double value) {
+        if (Strings.isBlank(unit)) {
+            return String.valueOf(value);
+        }
+        return value + " " + unit;
+    }
 
 }
