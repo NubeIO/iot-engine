@@ -41,15 +41,15 @@ public class NetworkIPEventHandler implements EventHandler {
         boolean isInvalid = false;
         List<String> messages = new ArrayList<>();
 
-        if (!Networks.validIP(ipAddress)) {
+        if (Strings.isBlank(ipAddress) && !Networks.validIP(ipAddress)) {
             isInvalid = true;
             messages.add("IP Address");
         }
-        if (!Networks.validIP(subnetMask)) {
+        if (Strings.isBlank(subnetMask) && !Networks.validIP(subnetMask)) {
             isInvalid = true;
             messages.add("Subnet Mask");
         }
-        if (!Networks.validIP(gateway)) {
+        if (Strings.isBlank(gateway) && !Networks.validIP(gateway)) {
             isInvalid = true;
             messages.add("Gateway");
         }
@@ -58,50 +58,42 @@ public class NetworkIPEventHandler implements EventHandler {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid " + String.join(", ", messages));
         }
 
-        if (OS.isUnix()) {
-            String getIp = Command.execute("connmanctl services");
-            logger.debug("connmanctl services result:" + getIp);
-            // Value will be like: '*AO Wired                ethernet_56000078bbb3_cable'
-            if (Strings.isNotBlank(getIp)) {
-                getIp = getIp.replaceAll(REGEX_WHITE_SPACE, "");
-                getIp = getIp.substring(8); // remove *AO Wired
-                String setIP = String.format(
-                    "sudo connmanctl config %s --ipv4 manual %s %s %s --nameservers 8.8.8.8 8.8.4.4", getIp, ipAddress,
-                    subnetMask, gateway);
-                String newIP = Command.execute(setIP);
-                logger.info("Set IP: {}", setIP);
-                logger.info("New IP: {}", newIP);
-            } else {
-                throw new NotFoundException("connmanctl service is not found");
-            }
-        } else {
-            throw new NotFoundException("Incorrect OS this only works on for conmanctl");
-        }
-        return Single.just(
-            new JsonObject().put("success", true).put("message", "Updating IP Address to: " + ipAddress));
+        String service = getService();
+        String setIP = String.format("connmanctl config %s --ipv4 manual %s %s %s --nameservers 8.8.8.8 8.8.4.4",
+                                     service, ipAddress, subnetMask, gateway);
+        String newIP = Command.execute(setIP);
+        logger.info("Set IP: {}", setIP);
+        logger.info("New IP: {}", newIP);
+        return Single.just(new JsonObject().put("success", true).put("message", "Updated IP Address: " + ipAddress));
     }
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData data) {
+        String service = getService();
+        String setIP = String.format("connmanctl config %s --ipv4 dhcp", service);
+        String newIP = Command.execute(setIP);
+        logger.info("Set IP: {}", setIP);
+        logger.info("New IP: {}", newIP);
+        return Single.just(new JsonObject());
+    }
+
+    private String getService() {
         if (OS.isUnix()) {
-            String getIp = Command.execute("connmanctl services");
-            logger.debug("connmanctl services result:" + getIp);
+            String service = Command.execute("connmanctl services");
+            logger.debug("connmanctl services result:" + service);
             // Value will be like: '*AO Wired                ethernet_56000078bbb3_cable'
-            if (getIp != null) {
-                getIp = getIp.replaceAll(REGEX_WHITE_SPACE, "");
-                getIp = getIp.substring(8); // remove *AO Wired
-                logger.debug("IP:" + getIp);
-                String setIP = String.format("sudo connmanctl config %s --ipv4 dhcp", getIp);
-                String newIP = Command.execute(setIP);
-                logger.info("Set IP: {}", setIP);
-                logger.info("New IP: {}", newIP);
-            } else {
+            if (service == null) {
                 throw new NotFoundException("connmanctl service is not found");
+            } else if (service.equals("")) {
+                throw new NotFoundException("Ethernet cable may not be plugged-in...");
             }
+            service = service.replaceAll(REGEX_WHITE_SPACE, "");
+            service = service.substring(8); // remove *AO Wired
+            logger.debug("Service: " + service);
+            return service;
         } else {
             throw new NotFoundException("Incorrect OS this only works on for conmanctl");
         }
-        return Single.just(new JsonObject());
     }
 
     @Override
