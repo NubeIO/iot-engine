@@ -1,13 +1,13 @@
 package com.nubeiot.edge.connector.datapoint.model;
 
 import com.nubeiot.edge.connector.datapoint.model.IDittoModel.AbstractDittoModel;
-import com.nubeiot.iotdata.model.tables.interfaces.IMeasureUnit;
+import com.nubeiot.iotdata.model.tables.interfaces.IPointTag;
 
 import lombok.NonNull;
 
-public final class DittoMeasureUnit extends AbstractDittoModel<IMeasureUnit> {
+public final class DittoPointTag extends AbstractDittoModel<IPointTag> {
 
-    public DittoMeasureUnit(@NonNull IMeasureUnit data) {
+    public DittoPointTag(@NonNull IPointTag data) {
         super(data);
     }
 

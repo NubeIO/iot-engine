@@ -1,16 +1,18 @@
 package com.nubeiot.edge.connector.datapoint.model;
 
+import com.nubeiot.edge.connector.datapoint.model.IDittoModel.AbstractDittoModel;
 import com.nubeiot.iotdata.model.tables.interfaces.IRealtimeSetting;
 
-public class DittoRealtimeSetting implements IDittoModel<IRealtimeSetting> {
+import lombok.NonNull;
 
-    @Override
-    public String jqExpr() {
-        return null;
+public final class DittoRealtimeSetting extends AbstractDittoModel<IRealtimeSetting> {
+
+    public DittoRealtimeSetting(@NonNull IRealtimeSetting data) {
+        super(data);
     }
 
     @Override
-    public IRealtimeSetting get() {
+    public String endpoint(String thingId) {
         return null;
     }
 

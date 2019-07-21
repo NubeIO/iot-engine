@@ -1,17 +1,23 @@
 package com.nubeiot.edge.connector.datapoint.model;
 
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.connector.datapoint.model.IDittoModel.AbstractDittoModel;
 import com.nubeiot.iotdata.model.tables.interfaces.IPointHistoryData;
 
-public final class DittoHistoryData implements IDittoModel<IPointHistoryData> {
+import lombok.NonNull;
 
-    @Override
-    public String jqExpr() {
-        return null;
+public final class DittoHistoryData extends AbstractDittoModel<IPointHistoryData> {
+
+    private final String pointCode;
+
+    public DittoHistoryData(String pointCode, @NonNull IPointHistoryData data) {
+        super(data);
+        this.pointCode = Strings.requireNotBlank(pointCode);
     }
 
     @Override
-    public IPointHistoryData get() {
-        return null;
+    public String endpoint(String thingId) {
+        return "/things/" + thingId + "/features/histories/properties/" + pointCode;
     }
 
 }

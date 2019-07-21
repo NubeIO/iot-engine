@@ -5,22 +5,23 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.connector.datapoint.model.IDittoModel.AbstractDittoModel;
 import com.nubeiot.iotdata.model.tables.interfaces.IHistorySetting;
 import com.nubeiot.iotdata.model.tables.pojos.HistorySetting;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 @Getter
-@RequiredArgsConstructor
-public final class DittoHistorySetting implements IDittoModel<IHistorySetting> {
+@ToString
+public final class DittoHistorySetting extends AbstractDittoModel<IHistorySetting> {
 
     private final String pointCode;
-    private final IHistorySetting setting;
 
-    DittoHistorySetting() {
-        pointCode = null;
-        setting = null;
+    public DittoHistorySetting(String pointCode, IHistorySetting setting) {
+        super(setting);
+        this.pointCode = Strings.requireNotBlank(pointCode);
     }
 
     @JsonCreator
@@ -30,13 +31,8 @@ public final class DittoHistorySetting implements IDittoModel<IHistorySetting> {
     }
 
     @Override
-    public String jqExpr() {
-        return POINT_JQ_EXPR + " | to_entries | map({code: .key, historySettings: .value.historySettings})";
-    }
-
-    @Override
-    public IHistorySetting get() {
-        return setting;
+    public String endpoint(String thingId) {
+        return "/things/" + thingId + "/features/points/properties/" + pointCode + "/historySettings";
     }
 
 }
