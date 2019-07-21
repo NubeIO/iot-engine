@@ -3,19 +3,45 @@ package com.nubeiot.edge.connector.datapoint.model;
 import java.util.function.Supplier;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nubeiot.core.dto.JsonData;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-public interface IDittoModel<V extends VertxPojo> extends Supplier<V> {
+/**
+ * Migrate/convert data between {@code Ditto/LowDB} and {@code Postgres/H2}
+ *
+ * @param <V> Pojo class that represents for data entity
+ */
+public interface IDittoModel<V extends VertxPojo> extends JsonData, Supplier<V> {
 
-    String POINT_JQ_EXPR = ".thing.features.points.properties";
+    /**
+     * Ditto endpoint
+     *
+     * @param thingId Thing Id
+     * @return Ditto URL endpoint
+     */
+    String endpoint(String thingId);
 
-    static <D extends IDittoModel> D mock(@NonNull Class<D> clazz) {
-        return ReflectionClass.createObject(clazz);
+    @RequiredArgsConstructor
+    abstract class AbstractDittoModel<V extends VertxPojo> implements IDittoModel<V> {
+
+        @NonNull
+        private final V data;
+
+        @Override
+        public final V get() {
+            return data;
+        }
+
+        @Override
+        public JsonObject toJson() {
+            return null;
+        }
+
     }
-
-    String jqExpr();
 
 }

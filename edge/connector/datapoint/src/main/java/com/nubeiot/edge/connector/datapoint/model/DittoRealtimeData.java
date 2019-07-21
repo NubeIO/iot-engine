@@ -1,21 +1,18 @@
 package com.nubeiot.edge.connector.datapoint.model;
 
+import com.nubeiot.edge.connector.datapoint.model.IDittoModel.AbstractDittoModel;
 import com.nubeiot.iotdata.model.tables.interfaces.IPointRealtimeData;
 
-import lombok.RequiredArgsConstructor;
+import lombok.NonNull;
 
-@RequiredArgsConstructor
-public final class DittoRealtimeData implements IDittoModel<IPointRealtimeData> {
+public final class DittoRealtimeData extends AbstractDittoModel<IPointRealtimeData> {
 
-    private final IPointRealtimeData realtimeData;
-
-    @Override
-    public String jqExpr() {
-        return null;
+    public DittoRealtimeData(@NonNull IPointRealtimeData data) {
+        super(data);
     }
 
     @Override
-    public IPointRealtimeData get() {
+    public String endpoint(String thingId) {
         return null;
     }
 
