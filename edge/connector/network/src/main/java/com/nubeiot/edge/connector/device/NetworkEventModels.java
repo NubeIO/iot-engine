@@ -13,8 +13,7 @@ class NetworkEventModels {
     static final EventModel NETWORK_IP = EventModel.builder()
                                                    .address("nubeiot.edge.connector.network.ip")
                                                    .pattern(EventPattern.REQUEST_RESPONSE)
-                                                   .local(true)
-                                                   .addEvents(EventAction.CREATE, EventAction.REMOVE)
+                                                   .local(true).addEvents(EventAction.UPDATE, EventAction.REMOVE)
                                                    .build();
 
 }

@@ -30,8 +30,8 @@ public class NetworkIPEventHandler implements EventHandler {
     private static final String REGEX_WHITE_SPACE = "\\s";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @EventContractor(action = EventAction.CREATE, returnType = Single.class)
-    public Single<JsonObject> post(RequestData data) {
+    @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
+    public Single<JsonObject> update(RequestData data) {
         JsonObject address = data.body();
 
         String ipAddress = address.getString("ip_address");

@@ -40,7 +40,7 @@ public class NetworkVerticle extends ContainerVerticle {
     private ActionMethodMapping networkIpActionMethodMapping() {
         return () -> new HashMap<EventAction, HttpMethod>() {
             {
-                put(EventAction.CREATE, HttpMethod.POST);
+                put(EventAction.UPDATE, HttpMethod.PUT);
                 put(EventAction.REMOVE, HttpMethod.DELETE);
             }
         };
