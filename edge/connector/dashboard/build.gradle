@@ -1,0 +1,7 @@
+dependencies {
+    compile project(':core:base')
+    compile project(':core:micro')
+    compile project(':core:httpserver')
+    // TODO: Remove once done direct testing
+    compile project(':core:cluster:hazelcast')
+}
