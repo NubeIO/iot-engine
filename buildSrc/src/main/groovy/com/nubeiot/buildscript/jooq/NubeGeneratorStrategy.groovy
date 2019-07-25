@@ -1,6 +1,7 @@
 package com.nubeiot.buildscript.jooq
 
 import org.jooq.meta.Definition
+import org.jooq.meta.TableDefinition
 import org.jooq.meta.TypedElementDefinition
 import org.jooq.tools.StringUtils
 
@@ -8,6 +9,20 @@ import io.github.jklingsporn.vertx.jooq.generate.VertxGeneratorStrategy
 import com.nubeiot.buildscript.Strings
 
 class NubeGeneratorStrategy extends VertxGeneratorStrategy {
+
+
+    @Override
+    List<String> getJavaClassImplements(Definition definition, Mode mode) {
+        List<String> javaClassImplements = super.getJavaClassImplements(definition, mode)
+        if (mode == Mode.INTERFACE || mode == Mode.POJO || mode == Mode.RECORD) {
+            TableDefinition table = definition.database.getTable(definition.schema, definition.getName())
+            if (table.columns.find({ it.name.matches(DB.COL_REGEX.timeAudit) })) {
+                javaClassImplements.add("com.nubeiot.core.sql.HasTimeAudit");
+            }
+        }
+        return javaClassImplements;
+    }
+
 
     @Override
     String getJavaIdentifier(Definition definition) {

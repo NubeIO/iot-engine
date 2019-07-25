@@ -31,7 +31,7 @@ public abstract class EntityHandler {
     public EntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         this.jooqConfig = jooqConfig;
         this.vertx = vertx;
-        queryExecutor = new JDBCRXGenericQueryExecutor(jooqConfig, getVertx());
+        this.queryExecutor = new JDBCRXGenericQueryExecutor(jooqConfig, getVertx());
     }
 
     public io.vertx.reactivex.core.Vertx getVertx() {

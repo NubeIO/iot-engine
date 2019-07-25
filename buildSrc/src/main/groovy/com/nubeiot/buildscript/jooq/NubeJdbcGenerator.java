@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import org.jooq.codegen.JavaWriter;
+import org.jooq.meta.TableDefinition;
 import org.jooq.meta.TypedElementDefinition;
 
 import io.github.jklingsporn.vertx.jooq.generate.builder.DIStep;
@@ -53,6 +54,15 @@ public class NubeJdbcGenerator extends DelegatingVertxGenerator {
         String parser = f.apply(String.format("json.getValue(\"%s\")", javaMemberName));
         out.tab(2).println("%s(json.getValue(\"%s\")==null?%s:%s);", setter, javaMemberName, defVal, parser);
         return true;
+    }
+
+    @Override
+    protected void generateTableClassFooter(TableDefinition table, JavaWriter out) {
+        out.println();
+         \\ \
+
+        out.tab(1).println("public final Map<String, String> FIELD_MAPS = new HashMap<>();");
+        //        super.generateTableClassFooter(table, out);
     }
 
 }
