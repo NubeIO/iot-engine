@@ -21,11 +21,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JsonPojo<T extends VertxPojo> implements JsonData {
 
+    private static final ObjectMapper MAPPER = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
     @Getter
     @JsonIgnore
     private final T pojo;
     @Getter
-    private ObjectMapper mapper = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
+    private ObjectMapper mapper = MAPPER;
 
     public static <T extends VertxPojo> JsonPojo<T> from(@NonNull T pojo) {
         return new JsonPojo<>(pojo);

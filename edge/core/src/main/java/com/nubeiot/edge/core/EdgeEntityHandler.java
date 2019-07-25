@@ -230,11 +230,11 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return queryExecutor.executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
     }
 
-    public Single<Optional<TblModule>> findModuleById(String serviceId) {
+    Single<Optional<TblModule>> findModuleById(String serviceId) {
         return moduleDao.findOneById(serviceId);
     }
 
-    public Single<Optional<JsonObject>> findTransactionById(String transactionId) {
+    Single<Optional<JsonObject>> findTransactionById(String transactionId) {
         return transDao.findOneById(transactionId)
                        .flatMap(optional -> optional.isPresent()
                                             ? Single.just(Optional.of(optional.get().toJson()))

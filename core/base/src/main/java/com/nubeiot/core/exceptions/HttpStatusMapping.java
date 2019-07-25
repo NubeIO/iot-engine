@@ -2,6 +2,7 @@ package com.nubeiot.core.exceptions;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,9 +27,9 @@ public final class HttpStatusMapping {
     private static final Map<ErrorCode, Map<HttpMethod, HttpResponseStatus>> STATUS_METHOD_ERROR = initMethod();
 
     private static Map<ErrorCode, Map<HttpMethod, HttpResponseStatus>> initMethod() {
-        Map<ErrorCode, Map<HttpMethod, HttpResponseStatus>> map = new HashMap<>();
+        Map<ErrorCode, Map<HttpMethod, HttpResponseStatus>> map = new EnumMap<>(ErrorCode.class);
 
-        Map<HttpMethod, HttpResponseStatus> notFound = new HashMap<>();
+        Map<HttpMethod, HttpResponseStatus> notFound = new EnumMap<>(HttpMethod.class);
         Arrays.stream(HttpMethod.values()).forEach(method -> notFound.put(method, HttpResponseStatus.GONE));
         notFound.put(HttpMethod.GET, HttpResponseStatus.NOT_FOUND);
         map.put(ErrorCode.NOT_FOUND, notFound);
@@ -37,7 +38,7 @@ public final class HttpStatusMapping {
     }
 
     private static Map<ErrorCode, HttpResponseStatus> init() {
-        Map<ErrorCode, HttpResponseStatus> map = new HashMap<>();
+        Map<ErrorCode, HttpResponseStatus> map = new EnumMap<>(ErrorCode.class);
         map.put(ErrorCode.INVALID_ARGUMENT, HttpResponseStatus.BAD_REQUEST);
         map.put(ErrorCode.HTTP_ERROR, HttpResponseStatus.BAD_REQUEST);
 

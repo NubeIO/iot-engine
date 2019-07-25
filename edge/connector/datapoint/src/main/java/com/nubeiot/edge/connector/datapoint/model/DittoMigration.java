@@ -70,7 +70,6 @@ public final class DittoMigration {
         try {
             JsonQuery qq = JsonQuery.compile(jqExpr);
             List<JsonNode> apply = qq.apply(rootScope, inn);
-            System.out.println(apply.get(0));
             if (apply.isEmpty() || Objects.isNull(apply.get(0))) {
                 throw new NotFoundException("Not found");
             }
