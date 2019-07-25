@@ -27,7 +27,11 @@
     },
     "__http__": {
       "port": 8000,
-      "publicScheme": "HTTP"
+      "publicScheme": "HTTP",
+      "__static__": {
+        "enabled": true,
+        "webPath": ""
+      }
     }
   }
 }
