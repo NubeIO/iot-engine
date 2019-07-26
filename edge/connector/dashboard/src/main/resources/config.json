@@ -32,6 +32,18 @@
         "enabled": true,
         "webPath": ""
       }
-    }
+    },
+    "__sql__": {
+      "dialect": "H2",
+      "__hikari__": {
+        "jdbcUrl": "jdbc:h2:file:./edge-dashboard",
+        "minimumIdle": 1,
+        "maximumPoolSize": 2,
+        "connectionTimeout": 30000,
+        "idleTimeout": 180000,
+        "maxLifetime": 300000
+      }
+    },
+    "__edge_dashboard_connection__": {}
   }
 }
