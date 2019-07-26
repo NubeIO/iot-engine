@@ -44,17 +44,24 @@ final class AnnotationHandler<T extends EventListener> {
     AnnotationHandler(T eventHandler) {
         this.eventHandler = eventHandler;
         this.func = SerializerFunction.builder()
-                                      .mapper(eventHandler.mapper())
-                                      .backupKey(eventHandler.fallback()).lenient(true)
+                                      .mapper(eventHandler.mapper()).backupKey(eventHandler.fallback()).lenient(true)
                                       .build();
     }
 
     static MethodInfo getMethodByAnnotation(@NonNull Class<?> clazz, @NonNull EventAction action) {
-        List<Method> methods = ReflectionMethod.find(clazz, filterMethod(action));
-        if (methods.size() != 1) {
+        if (ReflectionClass.isVertxOrSystemClass(clazz.getName())) {
             throw new ImplementationError(ErrorCode.EVENT_ERROR,
-                                          Strings.format("Error when implementing @EventContractor in class {0}",
-                                                         clazz.getName()));
+                                          Strings.format("Missing implementation for action {0}", action));
+        }
+        List<Method> methods = ReflectionMethod.find(clazz, filterMethod(action));
+        if (methods.size() == 0) {
+            logger.debug("Try to lookup super class...");
+            return getMethodByAnnotation(clazz.getSuperclass(), action);
+        }
+        if (methods.size() > 1) {
+            throw new ImplementationError(ErrorCode.EVENT_ERROR,
+                                          Strings.format("More than one methods is marked with action {0} in class {1}",
+                                                         action, clazz.getName()));
         }
         return to(methods.get(0));
     }

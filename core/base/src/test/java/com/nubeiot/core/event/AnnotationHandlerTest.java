@@ -17,6 +17,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.MockEventListener.MockChildEventListener;
 import com.nubeiot.core.event.MockEventListener.MockEventUnsupportedListener;
 import com.nubeiot.core.event.MockEventListener.MockEventWithDiffParam;
 import com.nubeiot.core.event.MockEventListener.MockParam;
@@ -32,6 +33,8 @@ public class AnnotationHandlerTest {
 
     private static Supplier<AnnotationHandler<MockEventListener>> MH = () -> new AnnotationHandler<>(
         new MockEventListener());
+    private static Supplier<AnnotationHandler<MockChildEventListener>> MCH = () -> new AnnotationHandler<>(
+        new MockChildEventListener());
     private static Supplier<AnnotationHandler<MockEventUnsupportedListener>> MEH = () -> new AnnotationHandler<>(
         new MockEventUnsupportedListener());
     private static Supplier<AnnotationHandler<MockEventWithDiffParam>> MPH = () -> new AnnotationHandler<>(
@@ -41,6 +44,25 @@ public class AnnotationHandlerTest {
     public static void beforeClass() {
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
         ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.TRACE);
+    }
+
+    @Test
+    public void test_get_super_method() {
+        Method method = AnnotationHandler.getMethodByAnnotation(MockChildEventListener.class, EventAction.CREATE)
+                                         .getMethod();
+        Assert.assertNotNull(method);
+        Assert.assertEquals("customOutputObject", method.getName());
+        Single<JsonObject> r = MH.get().execute(createMsgRequestData(EventAction.CREATE));
+        Assert.assertNotNull(r);
+        Assert.assertEquals("install", r.blockingGet().getString("key"));
+    }
+
+    @Test(expected = StateException.class)
+    public void test_get_super_method_but_cannot_execute() {
+        Method method = AnnotationHandler.getMethodByAnnotation(MockChildEventListener.class, EventAction.UPDATE)
+                                         .getMethod();
+        Assert.assertNotNull(method);
+        MCH.get().execute(EventMessage.initial(EventAction.UPDATE));
     }
 
     @Test

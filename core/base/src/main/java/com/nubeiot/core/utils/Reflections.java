@@ -316,6 +316,12 @@ public final class Reflections {
             return superClass.isAssignableFrom(childClass);
         }
 
+        public static boolean isVertxOrSystemClass(String clazzName) {
+            return clazzName.startsWith("java.") || clazzName.startsWith("javax.") || clazzName.startsWith("sun.*") ||
+                   clazzName.startsWith("com.sun.") || clazzName.startsWith("io.vertx.core") ||
+                   clazzName.startsWith("io.netty.") || clazzName.startsWith("com.fasterxml.jackson");
+        }
+
         public static boolean isJavaLangObject(Class<?> clazz) {
             return clazz.isPrimitive() || clazz.isEnum() || "java.lang".equals(clazz.getPackage().getName());
         }
