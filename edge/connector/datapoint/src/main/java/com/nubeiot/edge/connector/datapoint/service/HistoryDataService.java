@@ -1,7 +1,5 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ModelService.BigSerialKeyModel;
 import com.nubeiot.iotdata.model.Tables;
@@ -20,11 +18,6 @@ public final class HistoryDataService
     }
 
     @Override
-    protected PointHistoryData parse(@NonNull JsonObject request) throws IllegalArgumentException {
-        return new PointHistoryData(request);
-    }
-
-    @Override
     protected @NonNull String listKey() {
         return "histories";
     }
@@ -32,6 +25,11 @@ public final class HistoryDataService
     @Override
     public String endpoint() {
         return null;
+    }
+
+    @Override
+    public @NonNull Class<PointHistoryData> model() {
+        return PointHistoryData.class;
     }
 
     @Override

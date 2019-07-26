@@ -2,8 +2,6 @@ package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.UUID;
 
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
@@ -22,13 +20,13 @@ public final class ScheduleSettingService
     }
 
     @Override
-    protected ScheduleSetting parse(@NonNull JsonObject request) throws IllegalArgumentException {
-        return new ScheduleSetting(request);
+    protected @NonNull String listKey() {
+        return "schedules";
     }
 
     @Override
-    protected @NonNull String listKey() {
-        return "schedules";
+    public @NonNull Class<ScheduleSetting> model() {
+        return ScheduleSetting.class;
     }
 
     @Override

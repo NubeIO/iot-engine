@@ -2,8 +2,6 @@ package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.UUID;
 
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
@@ -21,13 +19,13 @@ public final class TransducerService extends AbstractDittoService<UUID, Transduc
     }
 
     @Override
-    protected Transducers parse(@NonNull JsonObject request) throws IllegalArgumentException {
-        return new Transducers(request);
+    protected @NonNull String listKey() {
+        return "transducers";
     }
 
     @Override
-    protected @NonNull String listKey() {
-        return "transducers";
+    public @NonNull Class<Transducers> model() {
+        return Transducers.class;
     }
 
     @Override

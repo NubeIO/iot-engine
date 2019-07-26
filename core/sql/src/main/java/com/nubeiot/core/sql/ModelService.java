@@ -8,9 +8,11 @@ import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 
@@ -23,18 +25,22 @@ public interface ModelService<K, M extends VertxPojo, R extends UpdatableRecord<
                              EventAction.GET_ONE, EventAction.GET_LIST);
     }
 
+    @NonNull Class<M> model();
+
     @NonNull D getDao();
 
     @NonNull JsonTable<R> table();
 
     /**
-     * Defines primary key name in json to lookup in {@code get/update/patch/delete} resource
+     * Parse given data from external service to {@code pojo} object
      *
-     * @return primary key name
+     * @param request Given request data
+     * @return {@code pojo} object resource
+     * @throws IllegalArgumentException if cannot parse
      */
-    @NonNull
-    default String primaryKeyName() {
-        return "id";
+    @SuppressWarnings("unchecked")
+    default @NonNull M parse(@NonNull JsonObject request) throws IllegalArgumentException {
+        return (M) ReflectionClass.createObject(model()).fromJson(request);
     }
 
     /**

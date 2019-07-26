@@ -1,7 +1,5 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ModelService.SerialKeyModel;
 import com.nubeiot.iotdata.model.Tables;
@@ -19,13 +17,13 @@ public final class ThingService extends AbstractDittoService<Integer, Thing, Thi
     }
 
     @Override
-    protected Thing parse(@NonNull JsonObject request) throws IllegalArgumentException {
-        return new Thing(request);
+    protected @NonNull String listKey() {
+        return "things";
     }
 
     @Override
-    protected @NonNull String listKey() {
-        return "things";
+    public @NonNull Class<Thing> model() {
+        return Thing.class;
     }
 
     @Override

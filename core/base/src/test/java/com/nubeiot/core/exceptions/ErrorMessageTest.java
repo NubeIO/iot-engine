@@ -9,6 +9,8 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import io.reactivex.exceptions.CompositeException;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+
 public class ErrorMessageTest {
 
     @Test(expected = NullPointerException.class)
@@ -19,52 +21,51 @@ public class ErrorMessageTest {
     @Test
     public void test_composite_exception() {
         final ErrorMessage message = ErrorMessage.parse(
-                new CompositeException(new RuntimeException("1"), new RuntimeException("2")));
-        Assert.assertEquals(NubeException.ErrorCode.UNKNOWN_ERROR, message.getCode());
+            new CompositeException(new RuntimeException("1"), new RuntimeException("2")));
+        Assert.assertEquals(ErrorCode.UNKNOWN_ERROR, message.getCode());
         Assert.assertEquals("UNKNOWN_ERROR | Cause: 2", message.getMessage());
     }
 
     @Test
     public void test_composite_exception_include_nube_exception_not_last() {
         final ErrorMessage message = ErrorMessage.parse(
-                new CompositeException(new NotFoundException("xxx"), new IllegalArgumentException("abc")));
-        Assert.assertEquals(NubeException.ErrorCode.UNKNOWN_ERROR, message.getCode());
+            new CompositeException(new NotFoundException("xxx"), new IllegalStateException("abc")));
+        Assert.assertEquals(ErrorCode.UNKNOWN_ERROR, message.getCode());
         Assert.assertEquals("UNKNOWN_ERROR | Cause: abc", message.getMessage());
     }
 
     @Test
     public void test_composite_exception_include_nube_exception_at_last() {
         final ErrorMessage message = ErrorMessage.parse(
-                new CompositeException(new RuntimeException("1"), new NotFoundException("xxx")));
-        Assert.assertEquals(NubeException.ErrorCode.NOT_FOUND, message.getCode());
+            new CompositeException(new RuntimeException("1"), new NotFoundException("xxx")));
+        Assert.assertEquals(ErrorCode.NOT_FOUND, message.getCode());
         Assert.assertEquals("xxx", message.getMessage());
     }
 
     @Test
     public void test_nube_exception() {
-        final ErrorMessage message = ErrorMessage.parse(
-                new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "invalid"));
-        Assert.assertEquals(NubeException.ErrorCode.INVALID_ARGUMENT, message.getCode());
+        final ErrorMessage message = ErrorMessage.parse(new NubeException(ErrorCode.INVALID_ARGUMENT, "invalid"));
+        Assert.assertEquals(ErrorCode.INVALID_ARGUMENT, message.getCode());
         Assert.assertEquals("invalid", message.getMessage());
     }
 
     @Test
     public void test_unexpected_exception_with_message() {
         final ErrorMessage message = ErrorMessage.parse(new RuntimeException("hey"));
-        Assert.assertEquals(NubeException.ErrorCode.UNKNOWN_ERROR, message.getCode());
+        Assert.assertEquals(ErrorCode.UNKNOWN_ERROR, message.getCode());
         Assert.assertEquals("UNKNOWN_ERROR | Cause: hey", message.getMessage());
     }
 
     @Test
     public void test_unexpected_exception_with_no_message() {
         final ErrorMessage message = ErrorMessage.parse(new RuntimeException());
-        Assert.assertEquals(NubeException.ErrorCode.UNKNOWN_ERROR, message.getCode());
+        Assert.assertEquals(ErrorCode.UNKNOWN_ERROR, message.getCode());
         Assert.assertEquals("UNKNOWN_ERROR", message.getMessage());
     }
 
     @Test
     public void test_serialize_to_json() throws JSONException {
-        ErrorMessage msg = ErrorMessage.parse(new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "invalid"));
+        ErrorMessage msg = ErrorMessage.parse(new NubeException(ErrorCode.INVALID_ARGUMENT, "invalid"));
         Assert.assertNotNull(msg.getThrowable());
         JsonObject jsonMsg = msg.toJson();
         JSONAssert.assertEquals("{\"code\":\"INVALID_ARGUMENT\",\"message\":\"invalid\"}", jsonMsg.encode(),
@@ -72,7 +73,7 @@ public class ErrorMessageTest {
         ErrorMessage deserialize = jsonMsg.mapTo(ErrorMessage.class);
         Assert.assertNull(deserialize.getThrowable());
         Assert.assertEquals("invalid", deserialize.getMessage());
-        Assert.assertEquals(NubeException.ErrorCode.INVALID_ARGUMENT, deserialize.getCode());
+        Assert.assertEquals(ErrorCode.INVALID_ARGUMENT, deserialize.getCode());
     }
 
 }
