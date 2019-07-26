@@ -1,11 +1,13 @@
 package com.nubeiot.core.sql;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+
 import com.nubeiot.core.sql.type.TimeAudit;
 
-public interface HasTimeAudit {
-
-    <T extends HasTimeAudit> T setTimeAudit(TimeAudit value);
+public interface HasTimeAudit extends VertxPojo {
 
     TimeAudit getTimeAudit();
+
+    <T extends HasTimeAudit> T setTimeAudit(TimeAudit value);
 
 }

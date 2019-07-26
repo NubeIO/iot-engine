@@ -10,23 +10,26 @@ import com.nubeiot.buildscript.Strings
 
 class NubeGeneratorStrategy extends VertxGeneratorStrategy {
 
-
     @Override
     List<String> getJavaClassImplements(Definition definition, Mode mode) {
         List<String> javaClassImplements = super.getJavaClassImplements(definition, mode)
         if (mode == Mode.INTERFACE || mode == Mode.POJO || mode == Mode.RECORD) {
-            TableDefinition table = definition.database.getTable(definition.schema, definition.getName())
+            TableDefinition table = definition.database.getTable(definition.schema, definition.name)
             if (table.columns.find({ it.name.matches(DB.COL_REGEX.timeAudit) })) {
-                javaClassImplements.add("com.nubeiot.core.sql.HasTimeAudit");
+                javaClassImplements.add("com.nubeiot.core.sql.HasTimeAudit")
             }
         }
-        return javaClassImplements;
+        if (mode == Mode.DEFAULT && definition instanceof TableDefinition) {
+            //TODO very hacky to add RECORD
+            String recordClass = StringUtils.toCamelCase(definition.name) + "Record"
+            javaClassImplements.add("com.nubeiot.core.sql.JsonTable<" + recordClass + ">")
+        }
+        return javaClassImplements
     }
-
 
     @Override
     String getJavaIdentifier(Definition definition) {
-        return CacheDataType.instance().fieldName(definition.getOutputName())
+        return Strings.toSnakeCase(CacheDataType.instance().fieldName(definition.getOutputName()))
     }
 
     String getJsonKeyName(TypedElementDefinition column) {
@@ -35,7 +38,7 @@ class NubeGeneratorStrategy extends VertxGeneratorStrategy {
 
     @Override
     String getJavaMemberName(Definition definition, Mode mode) {
-        return StringUtils.toCamelCaseLC(CacheDataType.instance().fieldName(definition.getOutputName()))
+        return StringUtils.toCamelCase(CacheDataType.instance().fieldName(definition.getOutputName()))
     }
 
     @Override

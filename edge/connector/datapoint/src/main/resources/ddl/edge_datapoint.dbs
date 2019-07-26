@@ -24,19 +24,25 @@ point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` a
 			</index>
 		</table>
 		<table name="DEVICE_EQUIP" >
+			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_D47CC1B0_9F08_4F75_8D91_5ED52428D198)</defo>
+			</column>
 			<column name="DEVICE" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="EQUIP" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="NETWORK" type="varchar" length="63" decimal="0" jt="12" />
 			<column name="NETWORK_LABEL" type="varchar" length="1000" decimal="0" jt="12" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<index name="IDX_DEVICE_EQUIPMENT" unique="PRIMARY_KEY" >
+			<index name="CONSTRAINT_9" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_DEVICE_EQUIP_INDEX_9" unique="UNIQUE" >
 				<column name="DEVICE" />
 				<column name="EQUIP" />
 			</index>
-			<index name="FK_DEVICE_EQUIPMENT_DEVICE_INDEX_9" unique="NORMAL" >
+			<index name="IDX_FK_DEVICE_EQUIPMENT_DEVICE" unique="NORMAL" >
 				<column name="DEVICE" />
 			</index>
-			<index name="FK_DEVICE_EQUIP_EQUIP_INDEX_9" unique="NORMAL" >
+			<index name="IDX_FK_DEVICE_EQUIP_EQUIP" unique="NORMAL" >
 				<column name="EQUIP" />
 			</index>
 			<fk name="FK_DEVICE_EQUIPMENT_DEVICE" to_schema="PUBLIC" to_table="DEVICE" delete_action="restrict" update_action="cascade" >
@@ -152,14 +158,14 @@ point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` a
 				<column name="DEVICE" />
 				<column name="NETWORK" />
 			</index>
-			<index name="FK_POINT_MEASURE_UNIT_INDEX_4" unique="NORMAL" >
-				<column name="MEASURE_UNIT" />
-			</index>
-			<index name="FK_POINT_TRANSDUCER_INDEX_4" unique="NORMAL" >
-				<column name="TRANSDUCER" />
-			</index>
 			<index name="IDX_FK_POINT_DEVICE" unique="NORMAL" >
 				<column name="DEVICE" />
+			</index>
+			<index name="IDX_FK_POINT_MEASURE_UNIT" unique="NORMAL" >
+				<column name="MEASURE_UNIT" />
+			</index>
+			<index name="IDX_FK_POINT_TRANSDUCER" unique="NORMAL" >
+				<column name="TRANSDUCER" />
 			</index>
 			<fk name="FK_POINT_DEVICE" to_schema="PUBLIC" to_table="DEVICE" delete_action="restrict" update_action="cascade" >
 				<fk_column name="DEVICE" pk="ID" />
@@ -172,6 +178,9 @@ point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` a
 			</fk>
 		</table>
 		<table name="POINT_HISTORY_DATA" >
+			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_2D82ED91_00CB_4FCD_B273_470B9F82425F)</defo>
+			</column>
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="TIME" type="timestamp" length="26" decimal="6" jt="93" mandatory="y" />
 			<column name="VALUE" type="double" length="17" decimal="0" jt="8" />
@@ -180,6 +189,9 @@ point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` a
 			</column>
 			<column name="SYNC_TIME" type="timestamp" length="26" decimal="6" jt="93" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<index name="CONSTRAINT_B" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
 			<index name="IDX_UQ_POINT_HISTORY_DATA_INDEX_B" unique="UNIQUE" >
 				<column name="POINT" />
 				<column name="TIME" />
@@ -195,6 +207,9 @@ point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` a
 			</fk>
 		</table>
 		<table name="POINT_REALTIME_DATA" >
+			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_0F04D6ED_1431_4B3B_BB82_757FF461543B)</defo>
+			</column>
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="TIME" type="timestamp" length="26" decimal="6" jt="93" mandatory="y" />
 			<column name="VALUE_JSON" type="clob" length="2147483647" decimal="0" jt="2005" />
@@ -203,6 +218,9 @@ point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` a
 			</column>
 			<column name="SYNC_TIME" type="timestamp" length="26" decimal="6" jt="93" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<index name="CONSTRAINT_6" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
 			<index name="IDX_UQ_POINT_REALTIME_DATA_INDEX_6" unique="UNIQUE" >
 				<column name="POINT" />
 				<column name="TIME" />
@@ -218,11 +236,17 @@ point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` a
 			</fk>
 		</table>
 		<table name="POINT_TAG" >
+			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_FD7D9C75_C5DD_4444_9BF4_1247F857EDFC)</defo>
+			</column>
 			<column name="TAG_NAME" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="TAG_VALUE" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<index name="PK_POINT_TAG" unique="PRIMARY_KEY" >
+			<index name="CONSTRAINT_3" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_POINT_TAG_INDEX_3" unique="UNIQUE" >
 				<column name="TAG_NAME" />
 				<column name="POINT" />
 			</index>
@@ -288,6 +312,53 @@ point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` a
 				<fk_column name="POINT" pk="ID" />
 			</fk>
 		</table>
+		<table name="THING" >
+			<comment><![CDATA[Real Thing that represents from Equipment and Transducer]]></comment>
+			<column name="ID" type="integer" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_6CF93463_E2D0_4464_B042_2888B12BF90C)</defo>
+			</column>
+			<column name="EQUIP" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="TRANSDUCER" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="PRODUCT_CODE" type="varchar" length="127" decimal="0" jt="12" >
+				<comment><![CDATA[Manufacturer product transducer code depends on equipment]]></comment>
+			</column>
+			<column name="PRODUCT_LABEL" type="varchar" length="1000" decimal="0" jt="12" >
+				<comment><![CDATA[Manufacturer transducer label depends on equipment]]></comment>
+			</column>
+			<column name="MEASURE_UNIT" type="uuid" length="2147483647" decimal="0" jt="-2" >
+				<comment><![CDATA[Standard manufacturer transducer measure unit]]></comment>
+			</column>
+			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<index name="CONSTRAINT_4" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_EQUIP_THING_CODE_INDEX_4" unique="UNIQUE" >
+				<column name="EQUIP" />
+				<column name="PRODUCT_CODE" />
+			</index>
+			<index name="IDX_UQ_THING_INDEX_4" unique="UNIQUE" >
+				<column name="EQUIP" />
+				<column name="TRANSDUCER" />
+			</index>
+			<index name="IDX_FK_THING_EQUIP" unique="NORMAL" >
+				<column name="EQUIP" />
+			</index>
+			<index name="IDX_FK_THING_MEASURE" unique="NORMAL" >
+				<column name="MEASURE_UNIT" />
+			</index>
+			<index name="IDX_FK_THING_TRANSDUCER" unique="NORMAL" >
+				<column name="TRANSDUCER" />
+			</index>
+			<fk name="FK_THING_EQUIP" to_schema="PUBLIC" to_table="EQUIPMENT" delete_action="restrict" update_action="cascade" >
+				<fk_column name="EQUIP" pk="ID" />
+			</fk>
+			<fk name="FK_THING_MEASURE" to_schema="PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
+				<fk_column name="MEASURE_UNIT" pk="ID" />
+			</fk>
+			<fk name="FK_THING_TRANSDUCER" to_schema="PUBLIC" to_table="TRANSDUCERS" delete_action="restrict" update_action="cascade" >
+				<fk_column name="TRANSDUCER" pk="ID" />
+			</fk>
+		</table>
 		<table name="TRANSDUCERS" >
 			<comment><![CDATA[Represents for a set of actual transducers that plugged in device point. Mean that one or many transducers from one or many equipment, no duplicate and must be same type and category.
 It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kinds or ACTUATOR kinds]]></comment>
@@ -313,72 +384,37 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 				<column name="TRANSDUCER_CATEGORY" />
 			</index>
 		</table>
-		<table name="TRANSDUCER_EQUIP" >
-			<comment><![CDATA[Details a set of transducer by equipment]]></comment>
-			<column name="EQUIP" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
-			<column name="TRANSDUCER" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
-			<column name="TRANSDUCER_CODE" type="varchar" length="127" decimal="0" jt="12" >
-				<comment><![CDATA[Manufacturer product transducer code depends on equipment]]></comment>
-			</column>
-			<column name="TRANSDUCER_LABEL" type="varchar" length="1000" decimal="0" jt="12" >
-				<comment><![CDATA[Manufacturer transducer label depends on equipment]]></comment>
-			</column>
-			<column name="MEASURE_UNIT" type="uuid" length="2147483647" decimal="0" jt="-2" >
-				<comment><![CDATA[Standard manufacturer transducer measure unit]]></comment>
-			</column>
-			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<index name="PK_TRANSDUCER_EQUIPMENT" unique="PRIMARY_KEY" >
-				<column name="EQUIP" />
-				<column name="TRANSDUCER" />
-			</index>
-			<index name="IDX_UQ_TRANSDUCER_EQUIP_INDEX_5" unique="UNIQUE" >
-				<column name="EQUIP" />
-				<column name="TRANSDUCER_CODE" />
-			</index>
-			<index name="FK_TRANSDUCER_EQUIP_EQUIP_INDEX_5" unique="NORMAL" >
-				<column name="EQUIP" />
-			</index>
-			<index name="FK_TRANSDUCER_EQUIP_MEASURE_INDEX_5" unique="NORMAL" >
-				<column name="MEASURE_UNIT" />
-			</index>
-			<index name="FK_TRANSDUCER_EQUIP_TRANSDUCER_INDEX_5" unique="NORMAL" >
-				<column name="TRANSDUCER" />
-			</index>
-			<fk name="FK_TRANSDUCER_EQUIP_EQUIP" to_schema="PUBLIC" to_table="EQUIPMENT" delete_action="restrict" update_action="cascade" >
-				<fk_column name="EQUIP" pk="ID" />
-			</fk>
-			<fk name="FK_TRANSDUCER_EQUIP_MEASURE" to_schema="PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
-				<fk_column name="MEASURE_UNIT" pk="ID" />
-			</fk>
-			<fk name="FK_TRANSDUCER_EQUIP_TRANSDUCER" to_schema="PUBLIC" to_table="TRANSDUCERS" delete_action="restrict" update_action="cascade" >
-				<fk_column name="TRANSDUCER" pk="ID" />
-			</fk>
-		</table>
+		<sequence name="SYSTEM_SEQUENCE_0F04D6ED_1431_4B3B_BB82_757FF461543B" start="1" />
+		<sequence name="SYSTEM_SEQUENCE_2D82ED91_00CB_4FCD_B273_470B9F82425F" start="1" />
+		<sequence name="SYSTEM_SEQUENCE_6CF93463_E2D0_4464_B042_2888B12BF90C" start="1" />
+		<sequence name="SYSTEM_SEQUENCE_B66E9011_41BD_40EC_9574_A368A19C6F12" start="1" />
+		<sequence name="SYSTEM_SEQUENCE_D47CC1B0_9F08_4F75_8D91_5ED52428D198" start="1" />
+		<sequence name="SYSTEM_SEQUENCE_FD7D9C75_C5DD_4444_9BF4_1247F857EDFC" start="1" />
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="-1" instance="C:/projects/nubeio/database-designs/edge/edge_schema_v1.h2" />
 	<layout name="Group Layout" id="Layout_40762a9" show_column_type="y" show_relation="columns" >
 		<comment><![CDATA[Edge Datapoint]]></comment>
-		<entity schema="PUBLIC" name="DEVICE" color="C7F4BE" x="1680" y="336" />
-		<entity schema="PUBLIC" name="DEVICE_EQUIP" color="C7F4BE" x="2016" y="336" />
+		<entity schema="PUBLIC" name="DEVICE" color="C7F4BE" x="1680" y="320" />
+		<entity schema="PUBLIC" name="DEVICE_EQUIP" color="C7F4BE" x="2016" y="320" />
 		<entity schema="PUBLIC" name="EQUIPMENT" color="C7F4BE" x="1344" y="576" />
 		<entity schema="PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="688" y="384" />
-		<entity schema="PUBLIC" name="MEASURE_UNIT" color="C7F4BE" x="1024" y="80" />
+		<entity schema="PUBLIC" name="MEASURE_UNIT" color="C7F4BE" x="1024" y="320" />
 		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="352" y="384" />
-		<entity schema="PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="80" y="576" />
-		<entity schema="PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="144" />
+		<entity schema="PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="80" y="560" />
+		<entity schema="PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="128" />
 		<entity schema="PUBLIC" name="POINT_TAG" color="BED3F4" x="688" y="816" />
 		<entity schema="PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="320" y="816" />
 		<entity schema="PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="352" y="176" />
 		<entity schema="PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="688" y="80" />
-		<entity schema="PUBLIC" name="TRANSDUCERS" color="C7F4BE" x="1024" y="336" />
-		<entity schema="PUBLIC" name="TRANSDUCER_EQUIP" color="C7F4BE" x="1360" y="336" />
-		<group name="TRANSDUCER_EQUIP" color="EEF7EC" >
-			<entity schema="PUBLIC" name="TRANSDUCER_EQUIP" />
+		<entity schema="PUBLIC" name="THING" color="C7F4BE" x="1360" y="320" />
+		<entity schema="PUBLIC" name="TRANSDUCERS" color="C7F4BE" x="1024" y="80" />
+		<group name="THING" color="EEF7EC" >
+			<entity schema="PUBLIC" name="THING" />
 			<entity schema="PUBLIC" name="DEVICE" />
 			<entity schema="PUBLIC" name="DEVICE_EQUIP" />
 			<entity schema="PUBLIC" name="EQUIPMENT" />
-			<entity schema="PUBLIC" name="TRANSDUCERS" />
 			<entity schema="PUBLIC" name="MEASURE_UNIT" />
+			<entity schema="PUBLIC" name="TRANSDUCERS" />
 		</group>
 		<group name="POINT" color="ECF0F7" >
 			<entity schema="PUBLIC" name="POINT" />
@@ -641,8 +677,7 @@ ALTER TABLE TRANSDUCER_EQUIP ADD CONSTRAINT FK_TRANSDUCER_EQUIP_EQUIP FOREIGN KE
 
 ALTER TABLE TRANSDUCER_EQUIP ADD CONSTRAINT FK_TRANSDUCER_EQUIP_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES TRANSDUCERS( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE TRANSDUCER_EQUIP ADD CONSTRAINT FK_TRANSDUCER_EQUIP_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
-]]></string>
+ALTER TABLE TRANSDUCER_EQUIP ADD CONSTRAINT FK_TRANSDUCER_EQUIP_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;]]></string>
 		</script>
 		<script name="SCHEDULE" id="Editor_1a80021" language="SQL" >
 			<string><![CDATA[CREATE SCHEMA IF NOT EXISTS PUBLIC;
@@ -890,355 +925,280 @@ ALTER TABLE TRANSDUCER_EQUIP ADD CONSTRAINT FK_TRANSDUCER_EQUIP_TRANSDUCER FOREI
 
 ALTER TABLE TRANSDUCER_EQUIP ADD CONSTRAINT FK_TRANSDUCER_EQUIP_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;]]></string>
 		</script>
-		<script name="TAG" id="Editor_240898c" language="SQL" >
-			<string><![CDATA[DROP TABLE PUBLIC.TAG;]]></string>
-		</script>
-	</layout>
-	<layout name="Parsed Script Layout" id="Layout_88393e" show_relation="columns" >
-		<script name="01_edge_datapoint.sql" id="Editor_4d58712" language="SQL" >
+		<script name="SQL_Editor" id="Editor_4e5c1e2" language="SQL" >
 			<string><![CDATA[CREATE SCHEMA IF NOT EXISTS PUBLIC;
 
-CREATE TABLE IF NOT EXISTS  PUBLIC.POINT_UNIT (
-	TYPE                 VARCHAR(15)   NOT NULL,
-	UNIT                 VARCHAR(15)   ,
-	CATEGORY             VARCHAR(31)   NOT NULL,
-	POSSIBLE_VALUES_JSON CLOB(2147483647)   ,
-	CONSTRAINT PK_POINT_UNIT_TYPE PRIMARY KEY ( TYPE )
- );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.SENSOR (
-	NAME                 VARCHAR(63)   NOT NULL,
-	LABEL                VARCHAR(127)   ,
-	CONSTRAINT PK_SENSOR_NAME PRIMARY KEY ( NAME )
- );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.CLIENT (
-	ID                 UUID   NOT NULL,
-	NAME               VARCHAR(255)   ,
-	CONSTRAINT CLIENT_PK PRIMARY KEY ( ID )
- );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.TAG (
-	NAME               VARCHAR(63)   NOT NULL,
-	LABEL              VARCHAR(63)   ,
-	CONSTRAINT TAG_PK PRIMARY KEY ( NAME )
- );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.BUILDING (
-	ID                 UUID   NOT NULL,
-	NAME               VARCHAR(255)   ,
-	CLIENT             UUID   ,
-	CONSTRAINT BUILDING_PK PRIMARY KEY ( ID )
- );
-
-CREATE INDEX BUILDING_CLIENT_FK_INDEX_A ON PUBLIC.BUILDING ( CLIENT );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.DEVICE (
-	ID                 UUID   NOT NULL,
-	NAME               VARCHAR(255)   ,
-	BUILDING           UUID   ,
-	CONSTRAINT DEVICE_PK PRIMARY KEY ( ID )
- );
-
-CREATE INDEX DEVICE_BUILDING_FK_INDEX_B ON PUBLIC.DEVICE ( BUILDING );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.POINT (
-	ID                 UUID   NOT NULL,
-	NAME               VARCHAR(63)   NOT NULL,
-	LABEL              VARCHAR(127)   ,
-	POINT_CATEGORY       VARCHAR(31)  DEFAULT 'UNKNOWN' NOT NULL,
-	POINT_KIND           VARCHAR(15)  DEFAULT 'UNKNOWN' NOT NULL,
-	POINT_TYPE           VARCHAR(31)  DEFAULT 'UNKNOWN' NOT NULL,
-	POINT_UNIT           VARCHAR(15)  NOT NULL,
-	MIN_SCALE          SMALLINT  DEFAULT 0 NOT NULL,
-	MAX_SCALE          SMALLINT  DEFAULT 10 NOT NULL,
-	PRECISION          SMALLINT  DEFAULT 3 NOT NULL,
-	"OFFSET"           SMALLINT  DEFAULT 0 NOT NULL,
-	VERSION            VARCHAR(31)   ,
-	NETWORK            VARCHAR(127)   ,
-	METADATA_JSON        CLOB(2147483647)   ,
-	DEVICE             UUID   ,
-	CREATED_AT         TIMESTAMP  DEFAULT CURRENT_TIMESTAMP() NOT NULL,
-	MODIFIED_AT        TIMESTAMP  DEFAULT 1 NOT NULL,
-	CONSTRAINT POINT_PK PRIMARY KEY ( ID ),
-	CONSTRAINT POINT_NAME_UQ_INDEX_6 UNIQUE ( NAME, NETWORK, DEVICE )
- );
-
-CREATE INDEX POINT_DEVICE_FK_INDEX_6 ON PUBLIC.POINT ( DEVICE );
-
-CREATE INDEX FK_POINT_UNIT_INDEX_6 ON PUBLIC.POINT ( POINT_UNIT );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.POINT_HISTORY_DATA (
-	POINT              UUID   ,
-	TIME               TIMESTAMP   NOT NULL,
-	SYNC               BOOLEAN  DEFAULT FALSE NOT NULL,
-	VALUE              DOUBLE   ,
-	CONSTRAINT POINT_HISTORY_TS_INDEX_8 UNIQUE ( POINT, TIME )
- );
-
-CREATE INDEX HISTORY_DATA_POINT_FK_INDEX_8 ON PUBLIC.POINT_HISTORY_DATA ( POINT );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.POINT_TAG (
-	TAG                VARCHAR(63)   NOT NULL,
-	POINT              UUID   NOT NULL,
-	CONSTRAINT POINT_TAG_PK PRIMARY KEY ( TAG, POINT )
- );
-
-CREATE INDEX POINT_TAG_FK_INDEX_5 ON PUBLIC.POINT_TAG ( TAG );
-
-CREATE INDEX TAG_POINT_FK_INDEX_5 ON PUBLIC.POINT_TAG ( POINT );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.POINT_VALUE_DATA (
-	POINT              UUID   NOT NULL,
-	VALUE              DOUBLE   ,
-	PRIORITY           SMALLINT   NOT NULL,
-	PRIORITY_VALUES_JSON CLOB(2147483647)   ,
-	MODIFIED_AT        TIMESTAMP  DEFAULT CURRENT_TIMESTAMP() ,
-	CONSTRAINT POINT_VALUE_DATA_PK PRIMARY KEY ( POINT )
- );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.POINT_REALTIME_DATA (
-	POINT                UUID   NOT NULL,
-	TIME                 TIMESTAMP  DEFAULT CURRENT_TIMESTAMP() NOT NULL,
-	SYNC                 BOOLEAN  DEFAULT FALSE NOT NULL,
-	VALUE_JSON           CLOB(2147483647)   ,
-	CONSTRAINT IDX_POINT_REALTIME_DATA UNIQUE ( POINT, TIME )
- );
-
-CREATE INDEX FK_POINT_REALTIME_DATA_POINT_INDEX_6 ON PUBLIC.POINT_REALTIME_DATA ( POINT );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.REALTIME_SETTING (
-	POINT                UUID   NOT NULL,
-	ENABLED              BOOLEAN  DEFAULT FALSE NOT NULL,
-	TOLERANCE            DOUBLE   ,
-	CONSTRAINT IDX_REALTIME_SETTING PRIMARY KEY ( POINT )
- );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.SCHEDULE (
-	ID                   UUID   NOT NULL,
-	POINT                UUID   NOT NULL,
-	RECURRING            BOOLEAN  DEFAULT TRUE NOT NULL,
-	NAME                 VARCHAR(63)   NOT NULL,
-	COLOR                VARCHAR(15)  DEFAULT '#FFFFFF' NOT NULL,
-	START_TIME           TIMESTAMP   NOT NULL,
-	END_TIME             TIMESTAMP   NOT NULL,
-	VALUE                DOUBLE   NOT NULL,
-	WEEKDAYS             ARRAY   ,
-	CONSTRAINT IDX_SCHEDULE PRIMARY KEY ( ID )
- );
-
-CREATE INDEX FK_SCHEDULE_POINT_INDEX_5 ON PUBLIC.SCHEDULE ( POINT );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.SENSOR_POINT (
-	POINT                UUID   NOT NULL,
-	SENSOR               VARCHAR(63)   NOT NULL,
-	CONSTRAINT IDX_SENSOR_POINT PRIMARY KEY ( POINT, SENSOR )
- );
-
-CREATE INDEX FK_POINT_SENSOR_INDEX_6 ON PUBLIC.SENSOR_POINT ( POINT );
-
-CREATE INDEX FK_SENSOR_POINT_INDEX_6 ON PUBLIC.SENSOR_POINT ( SENSOR );
-
-CREATE TABLE IF NOT EXISTS  PUBLIC.HISTORY_SETTING (
-	POINT              UUID   NOT NULL,
-	HISTORY_SETTING_TYPE VARCHAR(15)   ,
-	SCHEDULE           VARCHAR(127)   ,
-	TOLERANCE          DOUBLE   ,
-	SIZE               INTEGER   ,
-	CONSTRAINT HISTORY_SETTING_PK PRIMARY KEY ( POINT )
- );
-
-ALTER TABLE PUBLIC.POINT_REALTIME_DATA ADD CONSTRAINT FK_POINT_REALTIME_DATA_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE RESTRICT ON UPDATE NO ACTION;
-
-ALTER TABLE PUBLIC.REALTIME_SETTING ADD CONSTRAINT FK_REALTIME_SETTING_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE NO ACTION;
-
-ALTER TABLE PUBLIC.SCHEDULE ADD CONSTRAINT FK_SCHEDULE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE NO ACTION;
-
-ALTER TABLE PUBLIC.SENSOR_POINT ADD CONSTRAINT FK_SENSOR_POINT FOREIGN KEY ( SENSOR ) REFERENCES PUBLIC.SENSOR( NAME ) ON DELETE CASCADE ON UPDATE NO ACTION;
-
-ALTER TABLE PUBLIC.SENSOR_POINT ADD CONSTRAINT FK_POINT_SENSOR FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE NO ACTION;
-
-ALTER TABLE PUBLIC.BUILDING ADD CONSTRAINT BUILDING_CLIENT_FK FOREIGN KEY ( CLIENT ) REFERENCES PUBLIC.CLIENT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
-
-ALTER TABLE PUBLIC.DEVICE ADD CONSTRAINT DEVICE_BUILDING_FK FOREIGN KEY ( BUILDING ) REFERENCES PUBLIC.BUILDING( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
-
-ALTER TABLE PUBLIC.HISTORY_SETTING ADD CONSTRAINT HISTORY_SETTING_POINT_FK FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE PUBLIC.POINT ADD CONSTRAINT POINT_DEVICE_FK FOREIGN KEY ( DEVICE ) REFERENCES PUBLIC.DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
-
-ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_UNIT FOREIGN KEY ( POINT_UNIT ) REFERENCES PUBLIC.POINT_UNIT( TYPE ) ON DELETE RESTRICT ON UPDATE NO ACTION;
-
-ALTER TABLE PUBLIC.POINT_HISTORY_DATA ADD CONSTRAINT HISTORY_DATA_POINT_FK FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE PUBLIC.POINT_TAG ADD CONSTRAINT TAG_POINT_FK FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE PUBLIC.POINT_TAG ADD CONSTRAINT POINT_TAG_FK FOREIGN KEY ( TAG ) REFERENCES PUBLIC.TAG( NAME ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT VALUE_POINT_FK FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;]]></string>
-		</script>
-		<script name="SQL_Editor" id="Editor_f355f6" language="SQL" >
-			<string><![CDATA[CREATE SCHEMA IF NOT EXISTS PUBLIC;
-
- CREATE TABLE IF NOT EXISTS MEASURE_UNIT ( 
-	ID                   UUID DEFAULT RANDOM_UUID() NOT NULL ,
-	"TYPE"               VARCHAR(15)  NOT NULL ,
-	MEASURE_CATEGORY     VARCHAR(31) DEFAULT 'ALL' NOT NULL ,
-	SYMBOL               VARCHAR(15)   ,
-	LABEL                VARCHAR(1000)   ,
-	POSSIBLE_VALUES_JSON VARCHAR(500)   ,
-	TIME_AUDIT           VARCHAR(500)   ,
-	CONSTRAINT IDX_UQ_MEASURE_UNIT UNIQUE ( "TYPE", MEASURE_CATEGORY ) ,
-	CONSTRAINT PK_MEASURE_UNIT PRIMARY KEY ( ID )
- );
-
-CREATE TABLE IF NOT EXISTS DEVICE ( 
-	ID                   UUID DEFAULT RANDOM_UUID() NOT NULL ,
-	CODE                 VARCHAR(63)  NOT NULL ,
-	STATIC_INFO_JSON	 TEXT   ,
-	METADATA_JSON        TEXT   ,
-	TIME_AUDIT           VARCHAR(500)   ,
+CREATE TABLE IF NOT EXISTS DEVICE (
+	ID                   uuid(2147483647)   NOT NULL,
+	CODE                 varchar(63)   NOT NULL,
+	CUSTOMER_CODE        varchar(31)   NOT NULL,
+	SITE_CODE            varchar(63)   NOT NULL,
+	POLICY_ID            varchar(127)   NOT NULL,
+    DATA_VERSION         varchar(15)  DEFAULT '0.0.1' NOT NULL,
+	METADATA_JSON        clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_DEVICE_ID PRIMARY KEY ( ID )
  );
 
 COMMENT ON COLUMN DEVICE.CODE IS 'Device Code';
-
-COMMENT ON COLUMN DEVICE.STATIC_INFO_JSON IS 'Static information';
-
+COMMENT ON COLUMN DEVICE.DATA_VERSION IS 'Legacy version: startswith 0.0.x. 0.0.1: default lowdb - 0.0.2: migrate
+point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` and `schedule`';
 COMMENT ON COLUMN DEVICE.METADATA_JSON IS 'Extra information';
 
-CREATE TABLE IF NOT EXISTS POINT ( 
-	ID                   UUID DEFAULT RANDOM_UUID() NOT NULL ,
-	CODE                 VARCHAR(63)  NOT NULL ,
-	DEVICE               UUID  NOT NULL ,
-	TRANSDUCER           UUID   ,
-	NETWORK              VARCHAR(63)   ,
-	LABEL                VARCHAR(1000)   ,
-	ENABLED              BOOLEAN DEFAULT TRUE NOT NULL ,
-	POINT_CATEGORY       VARCHAR(31) DEFAULT 'UNKNOWN' NOT NULL ,
-	POINT_KIND           VARCHAR(15) DEFAULT 'UNKNOWN' NOT NULL ,
-	POINT_TYPE           VARCHAR(31) DEFAULT 'UNKNOWN' NOT NULL ,
-	MEASURE_UNIT         UUID  NOT NULL ,
-	MIN_SCALE            SMALLINT DEFAULT 0 NOT NULL ,
-	MAX_SCALE            SMALLINT DEFAULT 10 NOT NULL ,
-	"PRECISION"          SMALLINT DEFAULT 3 NOT NULL ,
-	OFFSET_VAL           SMALLINT DEFAULT 0 NOT NULL ,
-	"VERSION"            VARCHAR(31)   ,
-	METADATA_JSON        TEXT   ,
-	TIME_AUDIT           VARCHAR(500)   ,
-	CONSTRAINT PK_POINT PRIMARY KEY ( ID ),
-	CONSTRAINT IDX_UQ_POINT UNIQUE ( CODE, DEVICE ) 
+CREATE TABLE IF NOT EXISTS EQUIPMENT (
+	ID                   uuid(2147483647)   NOT NULL,
+	CODE                 varchar(63)   NOT NULL,
+	LABEL                varchar(1000)   ,
+	EQUIP_TYPE           varchar(63)   NOT NULL,
+	MANUFACTURER         varchar(500)   ,
+	METADATA_JSON        clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_EQUIPMENT PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_EQUIPMENT UNIQUE ( CODE, EQUIP_TYPE )
  );
 
-CREATE INDEX IDX_POINT_DEVICE_FK ON point ( DEVICE );
+COMMENT ON TABLE EQUIPMENT IS 'Equipment';
+COMMENT ON COLUMN EQUIPMENT.CODE IS 'Equipment code from manufacturer';
+COMMENT ON COLUMN EQUIPMENT.EQUIP_TYPE IS 'For example: HVAC | Fire Detection | Lightning | Water';
+COMMENT ON COLUMN EQUIPMENT.MANUFACTURER IS 'Manufacturing company';
+COMMENT ON COLUMN EQUIPMENT.METADATA_JSON IS 'Extra information';
+
+CREATE TABLE IF NOT EXISTS MEASURE_UNIT (
+	ID                   uuid(2147483647)   NOT NULL,
+	MEASURE_TYPE         varchar(15)   NOT NULL,
+	MEASURE_CATEGORY     varchar(31)  DEFAULT 'ALL' NOT NULL,
+	SYMBOL               varchar(15)   ,
+	LABEL                varchar(1000)   ,
+	POSSIBLE_VALUES_JSON varchar(500)   ,
+	TIME_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_MEASURE_UNIT PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_MEASURE_UNIT UNIQUE ( MEASURE_TYPE, MEASURE_CATEGORY )
+ );
+
+CREATE TABLE IF NOT EXISTS TRANSDUCERS (
+	ID                   uuid(2147483647)   NOT NULL,
+	CODE                 varchar(63)   NOT NULL,
+	TRANSDUCER_TYPE      varchar(15)  DEFAULT 'SENSOR' NOT NULL,
+	TRANSDUCER_CATEGORY  varchar(31)   NOT NULL,
+	LABEL                varchar(1000)   ,
+	TIME_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_TRANSDUCER PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_TRANSDUCER UNIQUE ( CODE, TRANSDUCER_TYPE, TRANSDUCER_CATEGORY )
+ );
+
+COMMENT ON TABLE TRANSDUCERS IS 'Represents for a set of actual transducers that plugged in device point. Mean that one or many transducers from one or many equipment, no duplicate and must be same type and category.\nIt can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kinds or ACTUATOR kinds';
+COMMENT ON COLUMN TRANSDUCERS.CODE IS 'User define code. Default it will be';
+COMMENT ON COLUMN TRANSDUCERS.TRANSDUCER_TYPE IS 'SENSOR | ACTUATOR';
+COMMENT ON COLUMN TRANSDUCERS.TRANSDUCER_CATEGORY IS 'Transducer Category. It can be `TEMP`, `HUMIDITY`, `MOTION`, `VELOCITY`, etc';
+
+CREATE TABLE IF NOT EXISTS DEVICE_EQUIP (
+	ID                   bigint GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	DEVICE               uuid(2147483647)   NOT NULL,
+	EQUIP                uuid(2147483647)   NOT NULL,
+	NETWORK              varchar(63)   ,
+	NETWORK_LABEL        varchar(1000)   ,
+	TIME_AUDIT           varchar(500)   ,
+	CONSTRAINT IDX_UQ_DEVICE_EQUIP UNIQUE ( DEVICE, EQUIP ) ,
+	CONSTRAINT PK_DEVICE_EQUIP PRIMARY KEY ( ID )
+ );
+
+CREATE INDEX IDX_FK_DEVICE_EQUIPMENT_DEVICE ON DEVICE_EQUIP ( DEVICE );
+
+CREATE INDEX IDX_FK_DEVICE_EQUIP_EQUIP ON DEVICE_EQUIP ( EQUIP );
+
+CREATE TABLE THING (
+	ID                   integer GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	EQUIP                uuid(2147483647)   NOT NULL,
+	TRANSDUCER           uuid(2147483647)   NOT NULL,
+	PRODUCT_CODE         varchar(127)   ,
+	PRODUCT_LABEL        varchar(1000)   ,
+	MEASURE_UNIT         uuid(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	CONSTRAINT IDX_UQ_EQUIP_THING_CODE UNIQUE ( EQUIP, PRODUCT_CODE ) ,
+	CONSTRAINT IDX_UQ_THING UNIQUE ( EQUIP, TRANSDUCER ) ,
+	CONSTRAINT PK_THING PRIMARY KEY ( ID )
+ );
+
+CREATE INDEX IDX_FK_THING_EQUIP ON THING ( EQUIP );
+
+CREATE INDEX IDX_FK_THING_MEASURE ON THING ( MEASURE_UNIT );
+
+CREATE INDEX IDX_FK_THING_TRANSDUCER ON THING ( TRANSDUCER );
+
+COMMENT ON TABLE THING IS 'Real Thing that represents from Equipment and Transducer';
+COMMENT ON COLUMN THING.PRODUCT_CODE IS 'Manufacturer product transducer code depends on equipment';
+COMMENT ON COLUMN THING.PRODUCT_LABEL IS 'Manufacturer transducer label depends on equipment';
+COMMENT ON COLUMN THING.MEASURE_UNIT IS 'Standard manufacturer transducer measure unit';
+
+CREATE TABLE IF NOT EXISTS POINT ( 
+	ID                   uuid(2147483647)   NOT NULL,
+	CODE                 varchar(63)   NOT NULL,
+	DEVICE               uuid(2147483647)   NOT NULL,
+	TRANSDUCER           uuid(2147483647)   ,
+	NETWORK              varchar(63)   ,
+	LABEL                varchar(1000)   ,
+	ENABLED              boolean  DEFAULT TRUE NOT NULL,
+	POINT_CATEGORY       varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
+	POINT_KIND           varchar(15)  DEFAULT 'UNKNOWN' NOT NULL,
+	POINT_TYPE           varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
+	MEASURE_UNIT         uuid(2147483647)   NOT NULL,
+	MIN_SCALE            smallint  DEFAULT 0 NOT NULL,
+	MAX_SCALE            smallint  DEFAULT 10 NOT NULL,
+	PRECISION            smallint  DEFAULT 3 NOT NULL,
+	OFFSET_VAL           smallint  DEFAULT 0 NOT NULL,
+	VERSION              varchar(31)   ,
+	METADATA_JSON        clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_POINT PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_POINT UNIQUE ( CODE, DEVICE, NETWORK )
+ );
+
+CREATE INDEX IDX_FK_POINT_MEASURE_UNIT ON POINT ( MEASURE_UNIT );
+
+CREATE INDEX IDX_FK_POINT_TRANSDUCER ON POINT ( TRANSDUCER );
+
+CREATE INDEX IDX_FK_POINT_DEVICE ON POINT ( DEVICE );
 
 COMMENT ON TABLE POINT IS 'Represents for:\n- Edge device pin if category is GPIO\n- Virtual point if category is not GPIO';
-
 COMMENT ON COLUMN POINT.POINT_CATEGORY IS 'One of BACNET | GPIO | MODBUS | UNKNOWN';
-
 COMMENT ON COLUMN POINT.POINT_KIND IS 'INPUT|OUTPUT|UNKNOWN';
-
 COMMENT ON COLUMN POINT.POINT_TYPE IS 'ANALOG | DIGITAL | DC_10 | DC_12 | MA_20 | THERMISTOR_10K';
 
-CREATE TABLE IF NOT EXISTS POINT_HISTORY_DATA ( 
-	POINT                UUID  NOT NULL ,
-	"TIME"               TIMESTAMP WITH TIME ZONE  NOT NULL ,
-	"VALUE"              FLOAT8   ,
-	SYNC_TO_CLOUD        BOOLEAN DEFAULT FALSE NOT NULL ,
-	SYNC_TIME            TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL ,
-	TIME_AUDIT           VARCHAR(500)   ,
-	CONSTRAINT IDX_UQ_POINT_HISTORY_DATA UNIQUE ( POINT, "TIME" ) 
+CREATE TABLE IF NOT EXISTS POINT_HISTORY_DATA (
+	ID                   bigint GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	POINT                uuid(2147483647)   NOT NULL,
+	TIME                 timestamp   NOT NULL,
+	VALUE                double   ,
+	SYNC_TO_CLOUD        boolean  DEFAULT FALSE NOT NULL,
+	SYNC_TIME            timestamp   ,
+	TIME_AUDIT           varchar(500)   ,
+	CONSTRAINT IDX_UQ_POINT_HISTORY_DATA UNIQUE ( POINT, TIME ) ,
+	CONSTRAINT PK_POINT_HISTORY_DATA PRIMARY KEY ( ID )
  );
 
-CREATE INDEX IDX_HISTORY_DATA_POINT_FK ON POINT_HISTORY_DATA ( POINT );
+CREATE INDEX IDX_FK_HISTORY_DATA_POINT ON POINT_HISTORY_DATA ( POINT );
 
-CREATE INDEX IDX_POINT_HISTORY_DATA_TIME ON POINT_HISTORY_DATA ( "TIME" );
+CREATE INDEX IDX_POINT_HISTORY_DATA_TIME ON POINT_HISTORY_DATA ( TIME );
 
 CREATE TABLE IF NOT EXISTS POINT_REALTIME_DATA ( 
-	POINT                UUID  NOT NULL ,
-	"TIME"               TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL ,
-	VALUE_JSON           TEXT   ,
-	SYNC_TO_CLOUD        BOOLEAN DEFAULT FALSE NOT NULL ,
-	SYNC_TIME            TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL ,
-	TIME_AUDIT           VARCHAR(500)   ,
-	CONSTRAINT IDX_UQ_POINT_REALTIME_DATA UNIQUE ( POINT, "TIME" ) 
+	ID                   bigint GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	POINT                uuid(2147483647)   NOT NULL,
+	TIME                 timestamp   NOT NULL,
+	VALUE_JSON           clob(2147483647)   ,
+	SYNC_TO_CLOUD        boolean  DEFAULT FALSE NOT NULL,
+	SYNC_TIME            timestamp   ,
+	TIME_AUDIT           varchar(500)   ,
+	CONSTRAINT IDX_UQ_POINT_REALTIME_DATA UNIQUE ( POINT, TIME ) ,
+	CONSTRAINT PK_POINT_REALTIME_DATA PRIMARY KEY ( ID )
  );
 
 CREATE INDEX IDX_FK_POINT_REALTIME_DATA_POINT ON POINT_REALTIME_DATA ( POINT );
 
-CREATE INDEX IDX_POINT_REALTIME_DATA_TIME ON POINT_REALTIME_DATA ( "TIME" );
+CREATE INDEX IDX_POINT_REALTIME_DATA_TIME ON POINT_REALTIME_DATA ( TIME );
 
 CREATE TABLE IF NOT EXISTS POINT_TAG ( 
-	POINT                UUID  NOT NULL ,
-	TAG_NAME             VARCHAR(63)  NOT NULL ,
-	TAG_VALUE            VARCHAR(255)  NOT NULL ,
-	TIME_AUDIT           VARCHAR(500)   ,
-	CONSTRAINT PK_POINT_TAG PRIMARY KEY ( TAG_NAME, POINT )
+	ID                   bigint GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	TAG_NAME             varchar(63)   NOT NULL,
+	POINT                uuid(2147483647)   NOT NULL,
+	TAG_VALUE            varchar(255)   NOT NULL,
+	TIME_AUDIT           varchar(500)   ,
+	CONSTRAINT IDX_UQ_POINT_TAG UNIQUE ( TAG_NAME, POINT ) ,
+	CONSTRAINT PK_POINT_TAG PRIMARY KEY ( ID )
  );
 
-CREATE INDEX IDX_TAG_POINT_FK ON POINT_TAG ( POINT );
+CREATE INDEX IDX_FK_TAG_POINT ON POINT_TAG ( POINT );
 
 CREATE INDEX IDX_TAG_BY_POINT ON POINT_TAG ( TAG_NAME );
 
 CREATE TABLE IF NOT EXISTS POINT_VALUE_DATA ( 
-	POINT                UUID  NOT NULL ,
-	"VALUE"              FLOAT8   ,
-	PRIORITY             SMALLINT  NOT NULL ,
-	PRIORITY_VALUES_JSON TEXT   ,
-	TIME_AUDIT           VARCHAR(500)   ,
+	POINT                uuid(2147483647)   NOT NULL,
+	VALUE                double   ,
+	PRIORITY             smallint   NOT NULL,
+	PRIORITY_VALUES_JSON clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_POINT_VALUE_DATA PRIMARY KEY ( POINT )
  );
 
 CREATE TABLE IF NOT EXISTS REALTIME_SETTING ( 
-	POINT                UUID  NOT NULL ,
-	ENABLED              BOOL DEFAULT FALSE NOT NULL ,
-	TOLERANCE            FLOAT8   ,
-	TIME_AUDIT           VARCHAR(500)   ,
+	POINT                uuid(2147483647)   NOT NULL,
+	ENABLED              boolean  DEFAULT FALSE NOT NULL,
+	TOLERANCE            double   ,
+	TIME_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_REALTIME_SETTING PRIMARY KEY ( POINT )
  );
 
 CREATE TABLE IF NOT EXISTS SCHEDULE_SETTING ( 
-	ID                   UUID DEFAULT RANDOM_UUID() NOT NULL ,
-	POINT                UUID  NOT NULL ,
-	RECURRING            BOOL DEFAULT TRUE NOT NULL ,
-	NAME                 VARCHAR(63)  NOT NULL ,
-	COLOR                VARCHAR(15) DEFAULT '#FFFFFF' NOT NULL ,
-	START_TIME           TIMESTAMP WITH TIME ZONE  NOT NULL ,
-	END_TIME             TIMESTAMP WITH TIME ZONE  NOT NULL ,
-	"VALUE"              FLOAT8  NOT NULL ,
-	WEEKDAYS             ARRAY   ,
-	TIME_AUDIT           VARCHAR(500)   ,
+	ID                   uuid(2147483647)   NOT NULL,
+	POINT                uuid(2147483647)   NOT NULL,
+	RECURRING            boolean  DEFAULT TRUE NOT NULL,
+	NAME                 varchar(63)   NOT NULL,
+	COLOR                varchar(15)  DEFAULT '#FFFFFF' NOT NULL,
+	START_TIME           timestamp   NOT NULL,
+	END_TIME             timestamp   NOT NULL,
+	VALUE                double   NOT NULL,
+	WEEKDAYS             array   ,
+	TIME_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_SCHEDULE_SETTING PRIMARY KEY ( ID )
  );
 
 CREATE INDEX IDX_FK_SCHEDULE_POINT ON SCHEDULE_SETTING ( POINT );
 
 CREATE TABLE IF NOT EXISTS HISTORY_SETTING ( 
-	POINT                UUID  NOT NULL ,
-	HISTORY_SETTING_TYPE VARCHAR(15)   ,
-	SCHEDULE             VARCHAR(127)   ,
-	TOLERANCE            FLOAT8   ,
-	"SIZE"               INTEGER   ,
-	TIME_AUDIT           VARCHAR(500)   ,
+	POINT                uuid(2147483647)   NOT NULL,
+	HISTORY_SETTING_TYPE varchar(15)   ,
+	SCHEDULE             varchar(127)   ,
+	TOLERANCE            double   ,
+	SIZE                 integer   ,
+	TIME_AUDIT           varchar(500)   ,
     CONSTRAINT PK_HISTORY_SETTING PRIMARY KEY ( POINT )
 );
 
+-- ALTER FK
+ALTER TABLE DEVICE_EQUIP ADD CONSTRAINT FK_DEVICE_EQUIPMENT_DEVICE FOREIGN KEY ( DEVICE ) REFERENCES DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE DEVICE_EQUIP ADD CONSTRAINT FK_DEVICE_EQUIP_EQUIP FOREIGN KEY ( EQUIP ) REFERENCES EQUIPMENT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE HISTORY_SETTING ADD CONSTRAINT FK_HISTORY_SETTING_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON
+DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE POINT ADD CONSTRAINT FK_POINT_DEVICE FOREIGN KEY ( DEVICE ) REFERENCES DEVICE( ID ) ON DELETE RESTRICT ON
+UPDATE CASCADE;
+
+ALTER TABLE POINT ADD CONSTRAINT FK_POINT_MEASURE_UNIT FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE POINT ADD CONSTRAINT FK_POINT_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES TRANSDUCERS( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE POINT_HISTORY_DATA ADD CONSTRAINT FK_HISTORY_DATA_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON
+DELETE CASCADE ON UPDATE CASCADE;
+
 ALTER TABLE POINT_REALTIME_DATA ADD CONSTRAINT FK_POINT_REALTIME_DATA_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE POINT_TAG ADD CONSTRAINT FK_TAG_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON
+UPDATE CASCADE;
+
+ALTER TABLE POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE
+CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE REALTIME_SETTING ADD CONSTRAINT FK_REALTIME_SETTING_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE SCHEDULE_SETTING ADD CONSTRAINT FK_SCHEDULE_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE HISTORY_SETTING ADD CONSTRAINT HISTORY_SETTING_POINT_FK FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE THING ADD CONSTRAINT FK_THING_EQUIP FOREIGN KEY ( EQUIP ) REFERENCES EQUIPMENT( ID ) ON DELETE RESTRICT ON
+UPDATE CASCADE;
 
-ALTER TABLE POINT ADD CONSTRAINT POINT_DEVICE_FK FOREIGN KEY ( DEVICE ) REFERENCES DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( ID ) ON DELETE
+RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE POINT ADD CONSTRAINT FK_POINT_MEASURE_UNIT FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( id ) ON DELETE RESTRICT ON UPDATE CASCADE;
-
-ALTER TABLE POINT_HISTORY_DATA ADD CONSTRAINT HISTORY_DATA_POINT_FK FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE POINT_TAG ADD CONSTRAINT TAG_POINT_FK FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE POINT_VALUE_DATA ADD CONSTRAINT VALUE_POINT_FK FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;]]></string>
+ALTER TABLE THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES TRANSDUCERS( ID ) ON DELETE
+RESTRICT ON UPDATE CASCADE;
+]]></string>
+		</script>
+		<script name="SQL_Editor_001" id="Editor_876044" language="SQL" >
+			<string><![CDATA[ALTER INDEX IDX_UQ_POINT_HISTORY_DATA_INDEX_B RENAME TO IDX_UQ_POINT_HISTORY_DATA;
+ALTER TABLE PUBLIC.POINT_HISTORY_DATA ADD CONSTRAINT PK_POINT_HISTORY_DATA_ID PRIMARY KEY ( ID ) ;]]></string>
+		</script>
+		<script name="TAG" id="Editor_240898c" language="SQL" >
+			<string><![CDATA[DROP TABLE PUBLIC.TAG;]]></string>
 		</script>
 	</layout>
 </project>

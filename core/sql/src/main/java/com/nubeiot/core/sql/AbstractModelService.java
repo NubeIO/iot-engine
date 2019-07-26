@@ -1,78 +1,113 @@
 package com.nubeiot.core.sql;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.ResultQuery;
 import org.jooq.SelectConditionStep;
-import org.jooq.Table;
 import org.jooq.UpdatableRecord;
 import org.jooq.impl.DSL;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
+import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.DataTransferObject.Headers;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventContractor.Param;
-import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.sql.type.TimeAudit;
 import com.nubeiot.core.utils.Strings;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+@RequiredArgsConstructor
 public abstract class AbstractModelService<K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>>
-    implements EventListener {
+    implements ModelService<K, M, R, D> {
 
-    @Getter(value = AccessLevel.PROTECTED)
+    @Getter
     private final D dao;
 
-    @Override
-    public @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.CREATE, EventAction.UPDATE, EventAction.PATCH, EventAction.REMOVE,
-                             EventAction.GET_ONE, EventAction.GET_LIST);
-    }
+    /**
+     * Parse given data from external service to {@code pojo} object
+     *
+     * @param request Given request data
+     * @return {@code pojo} object resource
+     * @throws IllegalArgumentException if cannot parse
+     */
+    protected abstract M parse(@NonNull JsonObject request) throws IllegalArgumentException;
 
-    protected abstract M parse(@NonNull JsonObject object);
+    /**
+     * Defines enabling {@code time audit} in {@code application layer} instead of {@code database layer} by {@code DB
+     * trigger}. It is helpful to add time audit in {@code create/update/patch} resource.
+     *
+     * @return {@code true} if enable time audit in application layer
+     * @see TimeAudit
+     */
+    protected abstract boolean enableTimeAudit();
 
-    @NonNull
-    protected abstract Table<R> table();
-
-    protected abstract K id(String requestKey) throws IllegalArgumentException;
-
-    protected abstract boolean hasTimeAudit();
-
+    /**
+     * Defines key name in data when get list data
+     *
+     * @return key name
+     * @see #list(RequestData)
+     */
     @NonNull
     protected abstract String listKey();
 
-    protected M validateOnCreate(M pojo) throws IllegalArgumentException {
-        return pojo;
-    }
-
-    protected M validateOnUpdate(M pojo) throws IllegalArgumentException {
-        return pojo;
-    }
-
-    protected M validateOnPatch(M pojo) throws IllegalArgumentException {
-        return pojo;
-    }
-
+    /**
+     * Validate when creating new resource. Any {@code override} method for custom validation by each object should be
+     * ended by recall {@code super} to implement {@code time audit}
+     *
+     * @param pojo    given request resource object
+     * @param headers request header. It is useful to audit
+     * @return instance for fluent API
+     * @throws IllegalArgumentException if any invalid parameter
+     */
     @NonNull
-    protected String idKey() {
-        return "id";
+    protected M validateOnCreate(@NonNull M pojo, @NonNull JsonObject headers) throws IllegalArgumentException {
+        if (pojo instanceof HasTimeAudit && enableTimeAudit()) {
+            ((HasTimeAudit) pojo).setTimeAudit(TimeAudit.created(headers.getString(Headers.X_REQUEST_USER)));
+        }
+        return pojo;
+    }
+
+    /**
+     * Validate when updating resource. Any {@code override} method for custom validation by each object should be ended
+     * by recall {@code super} to implement {@code time audit}
+     *
+     * @param dbData  existing resource object from database
+     * @param pojo    given request resource object
+     * @param headers request header. It is useful to audit
+     * @return instance for fluent API
+     * @throws IllegalArgumentException if any invalid parameter
+     */
+    @NonNull
+    protected M validateOnUpdate(@NonNull M dbData, @NonNull M pojo, @NonNull JsonObject headers)
+        throws IllegalArgumentException {
+        return addModifiedAudit(dbData, pojo, headers);
+    }
+
+    /**
+     * Validate when patching resource. Any {@code override} method for custom validation by each object should be ended
+     * by recall {@code super} to implement {@code time audit}
+     *
+     * @param dbData  existing resource object from database
+     * @param pojo    given request resource object
+     * @param headers request header. It is useful to audit
+     * @return instance for fluent API
+     * @throws IllegalArgumentException if any invalid parameter
+     */
+    @NonNull
+    protected M validateOnPatch(@NonNull M dbData, @NonNull M pojo, @NonNull JsonObject headers)
+        throws IllegalArgumentException {
+        return addModifiedAudit(dbData, pojo, headers);
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
@@ -87,27 +122,23 @@ public abstract class AbstractModelService<K, M extends VertxPojo, R extends Upd
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> get(RequestData requestData) {
-        final K id = id(requestData.body().getString(idKey()));
-        return dao.findOneById(id)
-                  .map(o -> o.orElseThrow(() -> new NotFoundException(Strings.format("Not found id '{0}'", id))))
-                  .map(VertxPojo::toJson);
+        return lookupById(requestData.body().getString(primaryKeyName())).map(VertxPojo::toJson);
     }
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
-    public Single<JsonObject> create(@Param("data") M pojo) {
-        return dao.insertReturningPrimary(validateOnCreate(pojo)).map(k -> new JsonObject().put(idKey(), k.toString()));
+    public Single<JsonObject> create(RequestData requestData) {
+        return dao.insertReturningPrimary(validateOnCreate(parse(requestData.body()), requestData.headers()))
+                  .map(k -> new JsonObject().put(primaryKeyName(), k.toString()));
     }
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData requestData) {
-        return dao.update(validateOnUpdate(parse(requestData.body())))
-                  .map(k -> new JsonObject().put(idKey(), k.toString()));
+        return update(requestData, this::validateOnUpdate);
     }
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData requestData) {
-        return dao.update(validateOnPatch(parse(requestData.body())))
-                  .map(k -> new JsonObject().put(idKey(), k.toString()));
+        return update(requestData, this::validateOnPatch);
     }
 
     private ResultQuery<R> filter(JsonObject filter, Pagination pagination, DSLContext context) {
@@ -116,13 +147,36 @@ public abstract class AbstractModelService<K, M extends VertxPojo, R extends Upd
                                   .offset((pagination.getPage() - 1) * pagination.getPerPage());
     }
 
+    @SuppressWarnings("unchecked")
     protected SelectConditionStep<R> filter(JsonObject filter, SelectConditionStep<R> sql) {
-        Set<String> fieldNames = Arrays.stream(table().fields()).map(Field::getName).collect(Collectors.toSet());
         filter.stream()
-              .parallel()
-              .filter(entry -> fieldNames.contains(entry.getKey()))
-              .forEach(entry -> sql.and(((Field) table().field(entry.getKey())).eq(entry.getValue())));
+              .filter(f -> table().jsonFields().containsKey(f.getKey()))
+              .forEach(f -> sql.and(((Field) table().field(table().jsonFields().get(f.getKey()))).eq(f.getValue())));
         return sql;
+    }
+
+    private Single<M> lookupById(String requestPK) {
+        final K id = parsePK(requestPK);
+        return dao.findOneById(id)
+                  .map(o -> o.orElseThrow(() -> new NotFoundException(
+                      Strings.format("Not found resource with {0}='{1}'", primaryKeyName(), id))));
+    }
+
+    private Single<JsonObject> update(RequestData requestData, Function3<M, M, JsonObject, M> validate) {
+        M req = parse(requestData.body());
+        JsonObject headers = requestData.headers();
+        return lookupById(requestData.body().getString(primaryKeyName())).map(db -> validate.apply(db, req, headers))
+                                                                         .flatMap(dao::update)
+                                                                         .map(i -> i > 0)
+                                                                         .map(r -> new JsonObject().put("success", r));
+    }
+
+    private M addModifiedAudit(M dbData, @NonNull M pojo, JsonObject headers) {
+        if (pojo instanceof HasTimeAudit && enableTimeAudit()) {
+            ((HasTimeAudit) pojo).setTimeAudit(
+                TimeAudit.modified(((HasTimeAudit) dbData).getTimeAudit(), headers.getString(Headers.X_REQUEST_USER)));
+        }
+        return pojo;
     }
 
 }

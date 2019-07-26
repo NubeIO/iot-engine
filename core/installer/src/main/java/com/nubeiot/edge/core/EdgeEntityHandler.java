@@ -169,7 +169,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply);
     }
 
-    public Single<List<TblModule>> getModulesWhenBootstrap() {
+    private Single<List<TblModule>> getModulesWhenBootstrap() {
         Single<List<TblModule>> enabledModules = moduleDao.findManyByState(Collections.singletonList(State.ENABLED));
         Single<List<TblModule>> pendingModules = this.getPendingModules();
         return Single.zip(enabledModules, pendingModules, (flattenEnabledModules, flattenPendingModules) -> {
