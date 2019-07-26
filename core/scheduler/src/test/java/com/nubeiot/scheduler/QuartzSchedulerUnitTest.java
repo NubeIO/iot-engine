@@ -160,8 +160,7 @@ public class QuartzSchedulerUnitTest {
         DeliveryEvent event1 = initRegisterEvent(MockJobModel.create("abc", processEvent), periodicTrigger);
         controller.request(event1, e -> EventbusHelper.replyAsserter(context, async, registerResponse("tr2", "abc"),
                                                                      SKIP_LOCAL_DATE, SKIP_UTC_DATE).handle(e));
-        final JsonObject failedResp = new JsonObject(
-            "{\"code\":\"UNKNOWN_ERROR\",\"message\":\"UNKNOWN_ERROR | Cause: Failed\"}");
+        final JsonObject failedResp = new JsonObject("{\"code\":\"INVALID_ARGUMENT\",\"message\":\"Failed\"}");
         EventbusHelper.assertReceivedData(vertx, async, config.getMonitorAddress(),
                                           JsonHelper.asserter(context, async, failedResp));
     }

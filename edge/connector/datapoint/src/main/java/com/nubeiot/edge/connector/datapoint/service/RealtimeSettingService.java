@@ -2,8 +2,6 @@ package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.UUID;
 
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
@@ -22,23 +20,28 @@ public final class RealtimeSettingService
     }
 
     @Override
-    public @NonNull JsonTable<RealtimeSettingRecord> table() {
-        return Tables.REALTIME_SETTING;
-    }
-
-    @Override
-    protected RealtimeSetting parse(@NonNull JsonObject request) throws IllegalArgumentException {
-        return new RealtimeSetting(request);
-    }
-
-    @Override
     protected @NonNull String listKey() {
         return "realtime_settings";
     }
 
     @Override
-    public String endpoint() {
+    protected @NonNull String primaryKeyName() {
         return "point";
+    }
+
+    @Override
+    public @NonNull Class<RealtimeSetting> model() {
+        return RealtimeSetting.class;
+    }
+
+    @Override
+    public @NonNull JsonTable<RealtimeSettingRecord> table() {
+        return Tables.REALTIME_SETTING;
+    }
+
+    @Override
+    public String endpoint() {
+        return "/point";
     }
 
 }

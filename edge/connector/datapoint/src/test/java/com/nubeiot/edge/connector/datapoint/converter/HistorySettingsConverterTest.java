@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Reflections;
 import com.nubeiot.edge.connector.datapoint.model.DittoHistorySetting;
-import com.nubeiot.edge.connector.datapoint.model.DittoMigration;
 
 import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.Scope;
@@ -40,7 +39,7 @@ public class HistorySettingsConverterTest {
 
     @Test
     public void test1() {
-        new DittoMigration().migrate(Reflections.contextClassLoader().getResourceAsStream("ditto-test.json"));
+        //        new DittoMigration().migrate(Reflections.contextClassLoader().getResourceAsStream("ditto-test.json"));
     }
 
 }

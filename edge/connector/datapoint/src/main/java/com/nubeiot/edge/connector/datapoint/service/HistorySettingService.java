@@ -2,8 +2,6 @@ package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.UUID;
 
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
@@ -22,13 +20,8 @@ public final class HistorySettingService
     }
 
     @Override
-    public String endpoint() {
-        return "/point/<point_code>/settings/history";
-    }
-
-    @Override
-    public @NonNull JsonTable<HistorySettingRecord> table() {
-        return Tables.HISTORY_SETTING;
+    protected @NonNull String listKey() {
+        return "history_settings";
     }
 
     @Override
@@ -37,13 +30,18 @@ public final class HistorySettingService
     }
 
     @Override
-    protected HistorySetting parse(JsonObject request) {
-        return new HistorySetting(request);
+    public String endpoint() {
+        return "/point/<point_code>/settings/history";
     }
 
     @Override
-    protected @NonNull String listKey() {
-        return "history_settings";
+    public @NonNull Class<HistorySetting> model() {
+        return HistorySetting.class;
+    }
+
+    @Override
+    public @NonNull JsonTable<HistorySettingRecord> table() {
+        return Tables.HISTORY_SETTING;
     }
 
 }

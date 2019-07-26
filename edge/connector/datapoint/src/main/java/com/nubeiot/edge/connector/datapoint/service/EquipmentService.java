@@ -21,6 +21,16 @@ public final class EquipmentService extends AbstractDittoService<UUID, Equipment
     }
 
     @Override
+    protected @NonNull String listKey() {
+        return "equipments";
+    }
+
+    @Override
+    public @NonNull Class<Equipment> model() {
+        return Equipment.class;
+    }
+
+    @Override
     public @NonNull JsonTable<EquipmentRecord> table() {
         return Tables.EQUIPMENT;
     }
@@ -28,11 +38,6 @@ public final class EquipmentService extends AbstractDittoService<UUID, Equipment
     @Override
     public Equipment parse(@NonNull JsonObject request) throws IllegalArgumentException {
         return new Equipment(request);
-    }
-
-    @Override
-    protected @NonNull String listKey() {
-        return "equipments";
     }
 
     @Override

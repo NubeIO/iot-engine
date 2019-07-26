@@ -2,8 +2,6 @@ package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.UUID;
 
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
@@ -19,23 +17,23 @@ public final class DeviceService extends AbstractDittoService<UUID, Device, Devi
     public DeviceService(DeviceDao dao) { super(dao); }
 
     @Override
+    protected @NonNull String listKey() {
+        return "devices";
+    }
+
+    @Override
     public String endpoint() {
         return "/device";
     }
 
     @Override
+    public @NonNull Class<Device> model() {
+        return Device.class;
+    }
+
+    @Override
     public @NonNull JsonTable<DeviceRecord> table() {
         return Tables.DEVICE;
-    }
-
-    @Override
-    protected Device parse(JsonObject request) {
-        return new Device(request);
-    }
-
-    @Override
-    protected @NonNull String listKey() {
-        return "devices";
     }
 
 }

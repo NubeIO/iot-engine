@@ -2,8 +2,6 @@ package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.UUID;
 
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
@@ -21,18 +19,18 @@ public final class MeasureUnitService extends AbstractDittoService<UUID, Measure
     }
 
     @Override
-    public @NonNull JsonTable<MeasureUnitRecord> table() {
-        return Tables.MEASURE_UNIT;
-    }
-
-    @Override
-    protected MeasureUnit parse(@NonNull JsonObject request) throws IllegalArgumentException {
-        return new MeasureUnit(request);
-    }
-
-    @Override
     protected @NonNull String listKey() {
         return "units";
+    }
+
+    @Override
+    public @NonNull Class<MeasureUnit> model() {
+        return MeasureUnit.class;
+    }
+
+    @Override
+    public @NonNull JsonTable<MeasureUnitRecord> table() {
+        return Tables.MEASURE_UNIT;
     }
 
     @Override

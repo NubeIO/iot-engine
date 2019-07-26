@@ -22,8 +22,18 @@ public final class PointService extends AbstractDittoService<UUID, Point, PointR
     }
 
     @Override
+    protected @NonNull String listKey() {
+        return "points";
+    }
+
+    @Override
     public String endpoint() {
         return "/point";
+    }
+
+    @Override
+    public @NonNull Class<Point> model() {
+        return Point.class;
     }
 
     @Override
@@ -32,13 +42,8 @@ public final class PointService extends AbstractDittoService<UUID, Point, PointR
     }
 
     @Override
-    protected Point parse(JsonObject request) {
+    public Point parse(JsonObject request) {
         return new Point(request);
-    }
-
-    @Override
-    protected @NonNull String listKey() {
-        return "points";
     }
 
     @Override

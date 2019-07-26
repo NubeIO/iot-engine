@@ -80,7 +80,6 @@ public final class DittoMigration {
                                                                      .constructCollectionType(List.class, clazz));
                 System.out.println(data);
             } else if (node.isObject()) {
-                System.out.println(node.isPojo());
                 IDittoModel<VertxPojo> data = JsonData.MAPPER.readValue(JsonData.MAPPER.treeAsTokens(node), clazz);
                 System.out.println(data.get().toJson());
             } else {
@@ -88,9 +87,9 @@ public final class DittoMigration {
             }
             System.out.println("------------------------");
         } catch (JsonQueryException e) {
-            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Cannot parse ", e);
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Cannot parse", e);
         } catch (IOException e) {
-            throw new NubeException(ErrorCode.UNKNOWN_ERROR, "Cannot parse ", e);
+            throw new NubeException(ErrorCode.UNKNOWN_ERROR, "Cannot parse", e);
         }
     }
 

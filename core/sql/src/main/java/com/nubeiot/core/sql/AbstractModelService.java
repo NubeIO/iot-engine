@@ -35,15 +35,6 @@ public abstract class AbstractModelService<K, M extends VertxPojo, R extends Upd
     private final D dao;
 
     /**
-     * Parse given data from external service to {@code pojo} object
-     *
-     * @param request Given request data
-     * @return {@code pojo} object resource
-     * @throws IllegalArgumentException if cannot parse
-     */
-    protected abstract M parse(@NonNull JsonObject request) throws IllegalArgumentException;
-
-    /**
      * Defines enabling {@code time audit} in {@code application layer} instead of {@code database layer} by {@code DB
      * trigger}. It is helpful to add time audit in {@code create/update/patch} resource.
      *
@@ -53,13 +44,23 @@ public abstract class AbstractModelService<K, M extends VertxPojo, R extends Upd
     protected abstract boolean enableTimeAudit();
 
     /**
-     * Defines key name in data when get list data
+     * Defines key name in respond data in {@code list} resource
      *
      * @return key name
      * @see #list(RequestData)
      */
     @NonNull
     protected abstract String listKey();
+
+    /**
+     * Defines primary key name in json to lookup in {@code get/update/patch/delete} resource
+     *
+     * @return primary key name
+     */
+    @NonNull
+    protected String primaryKeyName() {
+        return "id";
+    }
 
     /**
      * Validate when creating new resource. Any {@code override} method for custom validation by each object should be
