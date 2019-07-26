@@ -17,11 +17,17 @@ import com.nubeiot.core.utils.mock.MockParent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 public class MockEventListener implements EventListener {
 
+    @EventContractor(action = EventAction.GET_ONE)
+    public static JsonObject staticForFun(RequestData data) {
+        return new JsonObject().put("key", "Static method with contractor");
+    }
+
     @Override
-    public @lombok.NonNull Collection<EventAction> getAvailableEvents() {
+    public @NonNull Collection<EventAction> getAvailableEvents() {
         return Arrays.asList(EventAction.values());
     }
 
@@ -54,11 +60,6 @@ public class MockEventListener implements EventListener {
         return new JsonObject().put("key", "Public method without contractor");
     }
 
-    @EventContractor(action = EventAction.GET_ONE)
-    public static JsonObject staticForFun(RequestData data) {
-        return new JsonObject().put("key", "Static method with contractor");
-    }
-
     @EventContractor(action = EventAction.PATCH, returnType = void.class)
     public void publicNotValidOutput(RequestData data) {
         new JsonObject().put("key", "Public method with not valid output");
@@ -82,8 +83,18 @@ public class MockEventListener implements EventListener {
     public static class MockEventUnsupportedListener implements EventListener {
 
         @Override
-        public @lombok.NonNull Collection<EventAction> getAvailableEvents() {
+        public @NonNull Collection<EventAction> getAvailableEvents() {
             return new ArrayList<>();
+        }
+
+    }
+
+
+    public static class MockChildEventListener extends MockEventListener {
+
+        @Override
+        public @NonNull Collection<EventAction> getAvailableEvents() {
+            return Collections.singletonList(EventAction.CREATE);
         }
 
     }
@@ -92,7 +103,7 @@ public class MockEventListener implements EventListener {
     public static class MockEventWithDiffParam implements EventListener {
 
         @Override
-        public @lombok.NonNull Collection<EventAction> getAvailableEvents() {
+        public @NonNull Collection<EventAction> getAvailableEvents() {
             return Arrays.asList(EventAction.values());
         }
 
@@ -146,6 +157,7 @@ public class MockEventListener implements EventListener {
 
         @EventContractor(action = EventAction.UNKNOWN)
         public JsonObject refParam(@Param("metadata") JsonObject data) { return data; }
+
     }
 
 
