@@ -1,12 +1,12 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
+import java.util.List;
 import java.util.UUID;
-
-import org.jooq.Table;
 
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.sql.AbstractModelService;
+import com.nubeiot.core.sql.JsonTable;
+import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
 import com.nubeiot.iotdata.model.tables.daos.PointDao;
 import com.nubeiot.iotdata.model.tables.pojos.Point;
@@ -14,8 +14,8 @@ import com.nubeiot.iotdata.model.tables.records.PointRecord;
 
 import lombok.NonNull;
 
-public final class PointService extends AbstractModelService<UUID, Point, PointRecord, PointDao>
-    implements DittoService {
+public final class PointService extends AbstractDittoService<UUID, Point, PointRecord, PointDao>
+    implements CompositeDittoService, UUIDKeyModel<Point, PointRecord, PointDao> {
 
     public PointService(PointDao dao) {
         super(dao);
@@ -27,22 +27,14 @@ public final class PointService extends AbstractModelService<UUID, Point, PointR
     }
 
     @Override
-    protected Point parse(JsonObject object) {
-        return new Point(object);
-    }
-
-    @Override
-    protected @NonNull Table<PointRecord> table() {
+    public @NonNull JsonTable<PointRecord> table() {
         return Tables.POINT;
     }
 
     @Override
-    protected UUID id(String requestKey) throws IllegalArgumentException {
-        return UUID.fromString(requestKey);
+    protected Point parse(JsonObject request) {
+        return new Point(request);
     }
-
-    @Override
-    public boolean hasTimeAudit() { return true; }
 
     @Override
     protected @NonNull String listKey() {
@@ -50,18 +42,8 @@ public final class PointService extends AbstractModelService<UUID, Point, PointR
     }
 
     @Override
-    protected Point validateOnCreate(Point pojo) throws IllegalArgumentException {
-        return pojo;
-    }
-
-    @Override
-    protected Point validateOnUpdate(Point pojo) throws IllegalArgumentException {
-        return pojo;
-    }
-
-    @Override
-    protected Point validateOnPatch(Point pojo) throws IllegalArgumentException {
-        return pojo;
+    public List<DittoService> children() {
+        return null;
     }
 
 }
