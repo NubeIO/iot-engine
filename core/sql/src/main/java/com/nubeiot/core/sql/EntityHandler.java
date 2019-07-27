@@ -1,17 +1,23 @@
 package com.nubeiot.core.sql;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.jooq.Configuration;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
+import org.jooq.UpdatableRecord;
 
+import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -32,6 +38,14 @@ public abstract class EntityHandler {
         this.jooqConfig = jooqConfig;
         this.vertx = vertx;
         this.queryExecutor = new JDBCRXGenericQueryExecutor(jooqConfig, getVertx());
+    }
+
+    public <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D getDao(
+        Class<D> daoClass) {
+        Map<Class, Object> input = new LinkedHashMap<>();
+        input.put(Configuration.class, getJooqConfig());
+        input.put(io.vertx.reactivex.core.Vertx.class, getVertx());
+        return ReflectionClass.createObject(daoClass, input);
     }
 
     public io.vertx.reactivex.core.Vertx getVertx() {

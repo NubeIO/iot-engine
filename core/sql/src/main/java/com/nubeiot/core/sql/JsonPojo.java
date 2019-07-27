@@ -17,6 +17,11 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Wrapper Pojo with exclude {@code null} value.
+ *
+ * @param <T> {@link VertxPojo}
+ */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JsonPojo<T extends VertxPojo> implements JsonData {
@@ -34,6 +39,10 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
 
     public static <T extends VertxPojo> JsonPojo<T> from(@NonNull T pojo, @NonNull ObjectMapper mapper) {
         return new JsonPojo<>(pojo, mapper);
+    }
+
+    public static <T extends VertxPojo> JsonObject merge(@NonNull T from, @NonNull T to) {
+        return new JsonPojo<>(from).toJson().mergeIn(new JsonPojo<>(to).toJson(), true);
     }
 
     @SuppressWarnings("unchecked")

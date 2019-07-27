@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
-import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;

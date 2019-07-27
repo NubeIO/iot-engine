@@ -56,23 +56,14 @@ public class PostgresErrorTest extends BaseSqlTest {
         super.before(context);
         this.entityHandler = startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
         this.dsl = entityHandler.getJooqConfig().dsl();
-
-        Single<Integer> insert1 = this.entityHandler.getSample01Dao()
-                                                    .insert(new TblSample_01().setId(3)
-                                                                              .setFDate_1(LocalDate.of(2019, 2, 17))
-                                                                              .setFTimestamp(
-                                                                                  LocalDateTime.of(2019, 2, 17, 23, 59,
-                                                                                                   59))
-                                                                              .setFTimestampz(
-                                                                                  LocalDateTime.of(2019, 2, 17, 23, 59,
-                                                                                                   59))
-                                                                              .setFTime(LocalTime.of(23, 59, 59))
-                                                                              .setFDuration(Duration.ofHours(50)
-                                                                                                    .plusMinutes(30)
-                                                                                                    .plusSeconds(20))
-                                                                              .setFPeriod(Period.ofYears(2)
-                                                                                                .plusMonths(3)
-                                                                                                .plusDays(33)));
+        TblSample_01 pojo = new TblSample_01().setId(3)
+                                              .setFDate_1(LocalDate.of(2019, 2, 17))
+                                              .setFTimestamp(LocalDateTime.of(2019, 2, 17, 23, 59, 59))
+                                              .setFTimestampz(LocalDateTime.of(2019, 2, 17, 23, 59, 59))
+                                              .setFTime(LocalTime.of(23, 59, 59))
+                                              .setFDuration(Duration.ofHours(50).plusMinutes(30).plusSeconds(20))
+                                              .setFPeriod(Period.ofYears(2).plusMonths(3).plusDays(33));
+        Single<Integer> insert1 = this.entityHandler.getSample01Dao().insert(pojo);
 
         Async async = context.async();
         insert1.subscribe(result -> {
@@ -104,22 +95,20 @@ public class PostgresErrorTest extends BaseSqlTest {
     @Test
     public void test_insert_error(TestContext context) {
         Async async = context.async();
-        this.entityHandler.getSample01Dao()
-                          .insert(new TblSample_01().setId(3)
-                                                    .setFDate_1(LocalDate.of(2019, 2, 17))
-                                                    .setFTimestamp(LocalDateTime.of(2019, 2, 17, 00, 00, 01))
-                                                    .setFTimestampz(LocalDateTime.of(2019, 2, 17, 00, 00, 01))
-                                                    .setFTime(LocalTime.of(00, 00, 01))
-                                                    .setFDuration(Duration.ofHours(50).plusMinutes(30).plusSeconds(20))
-                                                    .setFPeriod(Period.ofYears(2).plusMonths(3).plusDays(33)))
-                          .subscribe(result -> {
-                          }, error -> {
-                              System.out.println(error.getMessage());
-                              context.assertTrue(
-                                  error.getMessage().contains(SQLStateClass.C23_INTEGRITY_CONSTRAINT_VIOLATION.name()));
-                              context.assertTrue(error instanceof DatabaseException);
-                              TestHelper.testComplete(async);
-                          });
+        TblSample_01 pojo = new TblSample_01().setId(3)
+                                              .setFDate_1(LocalDate.of(2019, 2, 17))
+                                              .setFTimestamp(LocalDateTime.of(2019, 2, 17, 0, 0, 1))
+                                              .setFTimestampz(LocalDateTime.of(2019, 2, 17, 0, 0, 1))
+                                              .setFTime(LocalTime.of(0, 0, 01))
+                                              .setFDuration(Duration.ofHours(50).plusMinutes(30).plusSeconds(20))
+                                              .setFPeriod(Period.ofYears(2).plusMonths(3).plusDays(33));
+        this.entityHandler.getSample01Dao().insert(pojo).subscribe(result -> {
+        }, error -> {
+            System.out.println(error.getMessage());
+            context.assertTrue(error.getMessage().contains(SQLStateClass.C23_INTEGRITY_CONSTRAINT_VIOLATION.name()));
+            context.assertTrue(error instanceof DatabaseException);
+            TestHelper.testComplete(async);
+        });
         async.awaitSuccess();
     }
 

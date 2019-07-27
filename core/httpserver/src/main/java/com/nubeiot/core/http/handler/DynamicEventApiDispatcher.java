@@ -13,7 +13,8 @@ import com.nubeiot.core.http.handler.DynamicContextDispatcher.AbstractDynamicCon
 import com.nubeiot.core.http.rest.DynamicEventRestApi;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 
-public class DynamicEventApiDispatcher<T extends DynamicEventRestApi> extends AbstractDynamicContextDispatcher<T> {
+public final class DynamicEventApiDispatcher<T extends DynamicEventRestApi>
+    extends AbstractDynamicContextDispatcher<T> {
 
     public DynamicEventApiDispatcher(T api, String gatewayPath, ServiceDiscoveryController dispatcher) {
         super(api, gatewayPath, dispatcher);
