@@ -5,8 +5,9 @@ import java.util.UUID;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
-import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
 import com.nubeiot.iotdata.model.tables.daos.PointDao;
 import com.nubeiot.iotdata.model.tables.pojos.Point;
@@ -15,10 +16,10 @@ import com.nubeiot.iotdata.model.tables.records.PointRecord;
 import lombok.NonNull;
 
 public final class PointService extends AbstractDittoService<UUID, Point, PointRecord, PointDao>
-    implements CompositeDittoService, UUIDKeyModel<Point, PointRecord, PointDao> {
+    implements CompositeDittoService, UUIDKeyEntity<Point, PointRecord, PointDao> {
 
-    public PointService(PointDao dao) {
-        super(dao);
+    public PointService(@NonNull EntityHandler entityHandler) {
+        super(entityHandler);
     }
 
     @Override
@@ -32,8 +33,13 @@ public final class PointService extends AbstractDittoService<UUID, Point, PointR
     }
 
     @Override
-    public @NonNull Class<Point> model() {
+    public @NonNull Class<Point> modelClass() {
         return Point.class;
+    }
+
+    @Override
+    public @NonNull Class<PointDao> daoClass() {
+        return null;
     }
 
     @Override

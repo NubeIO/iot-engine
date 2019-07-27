@@ -17,6 +17,8 @@ import io.vertx.ext.unit.TestContext;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
+import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.sql.mock.manyschema.mock0.tables.TblSample_00;
 import com.nubeiot.core.sql.mock.manyschema.mock1.tables.TblSample_01;
 import com.nubeiot.core.utils.Configs;
@@ -30,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 abstract class BaseSqlTest {
 
+    private final String sharedKey = getClass().getName();
     private Vertx vertx;
     private DeploymentOptions options;
     private String deployId;
@@ -56,6 +59,10 @@ abstract class BaseSqlTest {
         vertx.close(context.asyncAssertSuccess());
     }
 
+    protected EventController controller() {
+        return SharedDataDelegate.getEventController(vertx, sharedKey);
+    }
+
     void stopSQL(TestContext context) {
         System.out.println("Stop deployId: " + deployId);
         if (Objects.nonNull(deployId)) {
@@ -64,12 +71,11 @@ abstract class BaseSqlTest {
     }
 
     <T extends EntityHandler> T startSQL(TestContext context, Catalog catalog, Class<T> handlerClass) {
-        final String key = getClass().getName();
-        SQLWrapper<T> verticle = VertxHelper.deploy(vertx, context, options,
-                                                    new SQLWrapper<>(catalog, handlerClass).registerSharedKey(key),
-                                                    TestHelper.TEST_TIMEOUT_SEC * 2);
-        deployId = verticle.deploymentID();
-        return verticle.getContext().getEntityHandler();
+        SQLWrapper<T> v = VertxHelper.deploy(vertx, context, options,
+                                             new SQLWrapper<>(catalog, handlerClass).registerSharedKey(sharedKey),
+                                             TestHelper.TEST_TIMEOUT_SEC * 2);
+        deployId = v.deploymentID();
+        return v.getContext().getEntityHandler();
     }
 
     <T extends EntityHandler> void startSQLFailed(TestContext context, Catalog catalog, Class<T> handlerClass,

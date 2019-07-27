@@ -4,8 +4,9 @@ import java.util.UUID;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
-import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
 import com.nubeiot.iotdata.model.tables.daos.EquipmentDao;
 import com.nubeiot.iotdata.model.tables.pojos.Equipment;
@@ -14,10 +15,10 @@ import com.nubeiot.iotdata.model.tables.records.EquipmentRecord;
 import lombok.NonNull;
 
 public final class EquipmentService extends AbstractDittoService<UUID, Equipment, EquipmentRecord, EquipmentDao>
-    implements UUIDKeyModel<Equipment, EquipmentRecord, EquipmentDao> {
+    implements UUIDKeyEntity<Equipment, EquipmentRecord, EquipmentDao> {
 
-    public EquipmentService(EquipmentDao dao) {
-        super(dao);
+    public EquipmentService(@NonNull EntityHandler entityHandler) {
+        super(entityHandler);
     }
 
     @Override
@@ -26,8 +27,13 @@ public final class EquipmentService extends AbstractDittoService<UUID, Equipment
     }
 
     @Override
-    public @NonNull Class<Equipment> model() {
+    public @NonNull Class<Equipment> modelClass() {
         return Equipment.class;
+    }
+
+    @Override
+    public @NonNull Class<EquipmentDao> daoClass() {
+        return EquipmentDao.class;
     }
 
     @Override

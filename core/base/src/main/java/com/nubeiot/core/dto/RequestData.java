@@ -12,6 +12,7 @@ import com.nubeiot.core.event.EventMessage;
 import lombok.Getter;
 import lombok.NonNull;
 
+//TODO Not yet supported `sort`
 @Getter
 public final class RequestData extends AbstractDTO {
 
@@ -21,8 +22,7 @@ public final class RequestData extends AbstractDTO {
     private Pagination pagination;
 
     @JsonCreator
-    RequestData(@JsonProperty(value = "headers") JsonObject headers, @JsonProperty(value = "body") JsonObject body,
-                @JsonProperty(value = "filter") JsonObject filter,
+    RequestData(@JsonProperty(value = "headers") JsonObject headers, @JsonProperty(value = "body") JsonObject body, @JsonProperty(value = "filter") JsonObject filter,
                 @JsonProperty(value = "pagination") Pagination pagination) {
         super(headers, body);
         this.filter = Objects.nonNull(filter) ? filter : new JsonObject();

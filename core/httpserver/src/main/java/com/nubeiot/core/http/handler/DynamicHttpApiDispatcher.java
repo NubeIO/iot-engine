@@ -10,7 +10,7 @@ import com.nubeiot.core.http.handler.DynamicContextDispatcher.AbstractDynamicCon
 import com.nubeiot.core.http.rest.DynamicHttpRestApi;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 
-public class DynamicHttpApiDispatcher<T extends DynamicHttpRestApi> extends AbstractDynamicContextDispatcher<T> {
+public final class DynamicHttpApiDispatcher<T extends DynamicHttpRestApi> extends AbstractDynamicContextDispatcher<T> {
 
     public DynamicHttpApiDispatcher(T api, String gatewayPath, ServiceDiscoveryController dispatcher) {
         super(api, gatewayPath, dispatcher);

@@ -2,8 +2,9 @@ package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.UUID;
 
+import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
-import com.nubeiot.core.sql.ModelService.UUIDKeyModel;
 import com.nubeiot.iotdata.model.Tables;
 import com.nubeiot.iotdata.model.tables.daos.HistorySettingDao;
 import com.nubeiot.iotdata.model.tables.pojos.HistorySetting;
@@ -13,10 +14,10 @@ import lombok.NonNull;
 
 public final class HistorySettingService
     extends AbstractDittoService<UUID, HistorySetting, HistorySettingRecord, HistorySettingDao>
-    implements UUIDKeyModel<HistorySetting, HistorySettingRecord, HistorySettingDao> {
+    implements UUIDKeyEntity<HistorySetting, HistorySettingRecord, HistorySettingDao> {
 
-    public HistorySettingService(HistorySettingDao dao) {
-        super(dao);
+    public HistorySettingService(@NonNull EntityHandler entityHandler) {
+        super(entityHandler);
     }
 
     @Override
@@ -35,8 +36,13 @@ public final class HistorySettingService
     }
 
     @Override
-    public @NonNull Class<HistorySetting> model() {
+    public @NonNull Class<HistorySetting> modelClass() {
         return HistorySetting.class;
+    }
+
+    @Override
+    public @NonNull Class<HistorySettingDao> daoClass() {
+        return HistorySettingDao.class;
     }
 
     @Override

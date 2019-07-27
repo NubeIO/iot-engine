@@ -205,6 +205,7 @@ public interface TestHelper {
                 JSONAssert.assertEquals(expected.encode(), actual.encode(), JSONCompareMode.STRICT);
             } catch (JSONException | AssertionError e) {
                 System.out.println("Actual: " + actual.encode());
+                System.out.println("Expected: " + expected.encode());
                 context.fail(e);
             } finally {
                 testComplete(async);
@@ -217,6 +218,7 @@ public interface TestHelper {
                 JSONAssert.assertEquals(expected.encode(), actual.encode(), comparator(customizations));
             } catch (JSONException | AssertionError e) {
                 System.out.println("Actual: " + actual.encode());
+                System.out.println("Expected: " + expected.encode());
                 context.fail(e);
             } finally {
                 testComplete(async);

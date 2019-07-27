@@ -6,7 +6,9 @@ import org.jooq.Record;
 import org.jooq.Table;
 
 /**
- * {@inheritDoc} This keeps information about json fields that map with database column
+ * This keeps information about json fields that map with database column
+ *
+ * @see Table
  */
 public interface JsonTable<R extends Record> extends Table<R> {
 
