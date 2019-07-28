@@ -2,7 +2,6 @@ import com.nubeiot.buildscript.jooq.JooqGenerateTask
 
 dependencies {
     compile project(':core:base')
-    compile project(':core:micro')
     compile project(':core:httpserver')
     compile project(':core:sql')
     compile project.deps.database.h2

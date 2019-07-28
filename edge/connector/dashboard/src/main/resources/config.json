@@ -11,23 +11,13 @@
     }
   },
   "__app__": {
-    "__micro__": {
-      "__gateway__": {
-        "enabled": false
-      },
-      "__serviceDiscovery__": {
-        "enabled": false
-      },
-      "__localServiceDiscovery__": {
-        "enabled": true
-      },
-      "__circuitBreaker__": {
-        "enabled": false
-      }
-    },
     "__http__": {
       "port": 8000,
       "publicScheme": "HTTP",
+      "__rest__": {
+        "enabled": true,
+        "rootApi": "/api"
+      },
       "__static__": {
         "enabled": true,
         "webPath": ""

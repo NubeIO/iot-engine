@@ -11,7 +11,7 @@ public class EdgeDashboardEventModel {
                                                                       "nubeiot.edge.connector.dashboard.connection")
                                                                   .pattern(EventPattern.REQUEST_RESPONSE)
                                                                   .local(true)
-                                                                  .addEvents(EventAction.GET_ONE, EventAction.PATCH)
+                                                                  .addEvents(EventAction.GET_LIST, EventAction.PATCH)
                                                                   .build();
 
 }

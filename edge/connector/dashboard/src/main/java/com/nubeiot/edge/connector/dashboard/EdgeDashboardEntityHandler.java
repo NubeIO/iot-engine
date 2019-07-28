@@ -3,6 +3,7 @@ package com.nubeiot.edge.connector.dashboard;
 import static com.nubeiot.edge.connector.dashboard.model.tables.TblDashboardConnection.TBL_DASHBOARD_CONNECTION;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.jooq.Configuration;
@@ -51,8 +52,12 @@ public class EdgeDashboardEntityHandler extends EntityHandler {
         return Single.just(EventMessage.success(EventAction.MIGRATE, new JsonObject()));
     }
 
-    Single<Optional<TblDashboardConnection>> findDashboardConnectionRecord() {
-        return connectionDao.findOneById((byte) 1);
+    Single<List<TblDashboardConnection>> findDashboardConnectionRecords() {
+        return connectionDao.findAll();
+    }
+
+    Single<Optional<TblDashboardConnection>> findDashboardConnectionRecord(String value) {
+        return connectionDao.findOneById(Byte.parseByte(value));
     }
 
     Single<Integer> updateRecord(JsonObject record) {

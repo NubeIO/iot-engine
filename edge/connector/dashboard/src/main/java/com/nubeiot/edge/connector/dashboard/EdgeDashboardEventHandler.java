@@ -23,20 +23,26 @@ public class EdgeDashboardEventHandler implements EventHandler {
     @Setter
     EdgeDashboardEntityHandler entityHandler;
 
-    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
+    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> get(RequestData data) {
-        return entityHandler.findDashboardConnectionRecord()
-                            .map(r -> r.orElseThrow(() -> new NotFoundException("No record found")))
-                            .map(ITblDashboardConnection::toJson);
+        return entityHandler.findDashboardConnectionRecords()
+                            .flattenAsObservable(r -> r)
+                            .flatMapSingle(r -> Single.just(r.toJson()))
+                            .toList()
+                            .map(r -> new JsonObject().put("records", r));
     }
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData data) {
-        return entityHandler.findDashboardConnectionRecord()
-                            .map(r -> r.orElseThrow(() -> new NotFoundException("No record found to Patch")))
+        JsonObject body = data.body();
+        return entityHandler.findDashboardConnectionRecord(body.getString("id"))
+                            .map(r -> r.orElseThrow(() -> new NotFoundException("No record with given 'id' to Patch")))
                             .map(r -> r.setModifiedAt(DateTimes.nowUTC()))
                             .map(ITblDashboardConnection::toJson)
-                            .map(r -> r.mergeIn(data.body()))
+                            .map(r -> {
+                                body.remove("id");
+                                return r.mergeIn(data.body());
+                            })
                             .flatMap(r -> entityHandler.updateRecord(r).map(v -> r));
     }
 
