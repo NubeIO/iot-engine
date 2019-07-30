@@ -65,8 +65,6 @@ public class PostgreSqlRestController implements RestApi {
         if (query == null) {
             // Return query not specified error
             future.complete(new ResponseData().setStatus(HttpResponseStatus.BAD_REQUEST));
-        } else if (!query.toUpperCase().trim().startsWith("SELECT")) {
-            future.complete(new ResponseData().setStatus(HttpResponseStatus.UNAUTHORIZED));
         } else {
             JsonObject settings = new JsonObject(
                 Strings.getFirstNotNull(ctx.request().headers().get("Settings"), "{}"));
