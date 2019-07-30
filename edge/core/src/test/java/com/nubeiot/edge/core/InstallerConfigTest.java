@@ -12,7 +12,9 @@ import com.nubeiot.auth.BasicCredential;
 import com.nubeiot.auth.Credential;
 import com.nubeiot.auth.Credential.CredentialType;
 import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig.AppConfig.AppSecretConfig;
 import com.nubeiot.core.TestHelper.OSHelper;
+import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
 import com.nubeiot.edge.core.loader.ModuleType;
@@ -79,6 +81,25 @@ public class InstallerConfigTest {
         final RequestedServiceData serviceData = installerConfig.getBuiltinApps().get(0);
         Assert.assertEquals("com.nubeiot.edge.module", serviceData.getMetadata().getString("group_id"));
         Assert.assertNotNull(serviceData.getAppConfig());
+    }
+
+    @Test
+    public void test_recompute_reference_credentials() {
+
+        InstallerConfig installerConfig = IConfig.from(Configs.loadJsonConfig("installer-cfg.json"),
+                                                       InstallerConfig.class);
+        AppSecretConfig secretConfig = new AppSecretConfig();
+        secretConfig.put("@user", "abc");
+        secretConfig.put("@password", "xx");
+
+        InstallerConfig output = Credential.recomputeReferenceCredentials(installerConfig, secretConfig);
+        System.out.println(output.toJson());
+
+        Map<ModuleType, List<RemoteUrl>> urls = output.getRepoConfig().getRemoteConfig().getUrls();
+        List<RemoteUrl> remoteUrls = urls.get(ModuleType.JAVA);
+        Credential credential = remoteUrls.get(0).getCredential();
+        Assert.assertEquals(CredentialType.BASIC_SECRET, credential.getType());
+        Assert.assertEquals("http://abc:xx@test.com", credential.computeUrl("http://test.com"));
     }
 
 }

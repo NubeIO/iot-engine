@@ -37,7 +37,7 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
                                                   .setState(State.ENABLED)
                                                   .setVersion(VERSION)
                                                   .setAppConfig(APP_CONFIG)
-                                                  .setSystemConfig(APP_SYSTEM_CONFIG)
+                                                  .setSystemConfig(APP_SYSTEM_CONFIG).setSecretConfig(new JsonObject())
                                                   .setModifiedAt(DateTimes.nowUTC()));
     }
 
@@ -112,20 +112,6 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
         executeThenAssert(EventAction.UPDATE, context, body, (response, async) -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
             context.assertEquals(response.getJsonObject("error").getString("message"), "State is required!");
-            TestHelper.testComplete(async);
-        });
-    }
-
-    @Test
-    public void test_update_missing_app_config_should_failed(TestContext context) {
-        JsonObject metadata = new JsonObject().put("version", VERSION)
-                                              .put("state", State.ENABLED)
-                                              .put("service_name", SERVICE_NAME);
-        JsonObject body = new JsonObject().put("service_id", MODULE_ID).put("metadata", metadata);
-
-        executeThenAssert(EventAction.UPDATE, context, body, (response, async) -> {
-            context.assertEquals(response.getString("status"), Status.FAILED.name());
-            context.assertEquals(response.getJsonObject("error").getString("message"), "App config is required!");
             TestHelper.testComplete(async);
         });
     }

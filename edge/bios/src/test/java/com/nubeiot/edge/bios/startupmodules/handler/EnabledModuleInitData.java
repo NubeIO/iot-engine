@@ -27,7 +27,8 @@ public class EnabledModuleInitData extends MockInitDataEntityHandler {
                                                   .setCreatedAt(DateTimes.nowUTC())
                                                   .setModifiedAt(DateTimes.nowUTC())
                                                   .setSystemConfig(new JsonObject())
-                                                  .setAppConfig(new JsonObject()));
+                                                  .setAppConfig(new JsonObject())
+                                                  .setSecretConfig(new JsonObject()));
     }
 
 }

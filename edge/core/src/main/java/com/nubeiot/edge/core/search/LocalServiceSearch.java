@@ -14,12 +14,12 @@ import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 
 import io.reactivex.Single;
-import io.reactivex.SingleSource;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
@@ -50,24 +50,11 @@ public final class LocalServiceSearch implements IServiceSearch {
         return this.entityHandler.getQueryExecutor()
                                  .executeAny(context -> filter(validateFilter(requestData.getFilter()),
                                                                requestData.getPagination(), context))
-                                 .flattenAsObservable(records -> records)
-                                 .flatMapSingle(this::removeCredentialsInAppConfig)
-                                 .collect(JsonArray::new, JsonArray::add)
                                  .flattenAsObservable(results -> results)
-                                 .flatMapSingle(record -> removeSystemConfig((JsonObject) record))
+                                 .flatMapSingle(record -> Single.just(
+                                     JsonData.removeKeys(record.toJson(), "system_config", "secret_config")))
                                  .collect(JsonArray::new, JsonArray::add)
                                  .map(results -> new JsonObject().put("services", results));
-    }
-
-    public SingleSource<? extends JsonObject> removeCredentialsInAppConfig(TblModuleRecord record) {
-        record.setAppConfig(this.entityHandler.getSecureAppConfig(record.getServiceId(), record.getAppConfig()));
-        return Single.just(record.toJson());
-    }
-
-    private SingleSource<? extends JsonObject> removeSystemConfig(JsonObject record) {
-        // TODO: replace with POJO constant later
-        record.remove("system_config");
-        return Single.just(record);
     }
 
     JsonObject validateFilter(JsonObject filter) {

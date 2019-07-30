@@ -17,9 +17,11 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.SecretConfig;
 import com.nubeiot.core.dto.IRequestData;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
+import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
@@ -47,10 +49,18 @@ public class PreDeploymentResult implements JsonData, IRequestData {
     private final String deployId;
     private final AppConfig appConfig;
     private final NubeConfig systemConfig;
+    private final String message;
+    private final Status status;
     @Setter
     @Default
     private boolean silent = false;
 
+    @Override
+    public JsonObject toJson() {
+        JsonObject output = toJson(mapper());
+        output.getJsonObject("app_config").remove(SecretConfig.NAME);
+        return output;
+    }
 
     @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
     @JsonPOJOBuilder(withPrefix = "")
@@ -88,14 +98,13 @@ public class PreDeploymentResult implements JsonData, IRequestData {
         public PreDeploymentResult build() {
             AppConfig appConfig = IConfig.parseConfig(this.appConfig, AppConfig.class,
                                                       () -> IConfig.from(new JsonObject(), AppConfig.class));
-
             NubeConfig systemConfig = IConfig.parseConfig(this.systemConfig, NubeConfig.class,
                                                           () -> NubeConfig.blank(this.systemConfig));
             systemConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(serviceId)));
 
             return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
                                            Objects.isNull(targetState) ? State.NONE : targetState, serviceId,
-                                           serviceFQN, deployId, appConfig, systemConfig, silent);
+                                           serviceFQN, deployId, appConfig, systemConfig, message, status, silent);
         }
 
     }

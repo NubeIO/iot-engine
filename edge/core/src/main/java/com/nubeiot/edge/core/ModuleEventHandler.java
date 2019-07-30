@@ -5,7 +5,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -21,7 +20,6 @@ import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.loader.InvalidModuleType;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.search.LocalServiceSearch;
@@ -56,15 +54,10 @@ public final class ModuleEventHandler implements EventHandler {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
         return this.verticle.getEntityHandler()
-                            .findModuleById(serviceId).map(o -> o.map(this::removeCredentialsInAppConfig))
+                            .findModuleById(serviceId)
+                            .map(o -> o.map(r -> JsonData.removeKeys(r.toJson(), "secret_config")))
                             .map(o -> o.orElseThrow(
                                 () -> new NotFoundException(String.format("Not found service id '%s'", serviceId))));
-    }
-
-    private JsonObject removeCredentialsInAppConfig(TblModule record) {
-        record.setAppConfig(
-            this.verticle.getEntityHandler().getSecureAppConfig(record.getServiceId(), record.getAppConfig()));
-        return record.toJson();
     }
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
@@ -78,7 +71,6 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData data) {
-        verifyRequestData(data.body());
         ITblModule module = createTblModule(data.body());
 
         if (Strings.isBlank(module.getServiceName()) && Strings.isBlank(module.getServiceId())) {
@@ -98,7 +90,6 @@ public final class ModuleEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData data) {
-        verifyRequestData(data.body());
         ITblModule module = createTblModule(data.body());
         if (Strings.isBlank(module.getServiceName())) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Missing service_name");
@@ -107,13 +98,6 @@ public final class ModuleEventHandler implements EventHandler {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Missing version");
         }
         return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.CREATE);
-    }
-
-    private void verifyRequestData(JsonObject body) {
-        JsonObject appConfig = body.getJsonObject("appConfig");
-        if (Objects.isNull(appConfig) || appConfig.isEmpty()) {
-            throw new InvalidModuleType("App config is required!");
-        }
     }
 
     private ITblModule createTblModule(JsonObject body) {

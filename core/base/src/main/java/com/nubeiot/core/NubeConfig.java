@@ -37,7 +37,7 @@ public final class NubeConfig implements IConfig {
     @JsonProperty(value = DeployConfig.NAME)
     private DeployConfig deployConfig = new DeployConfig();
     @JsonProperty(value = AppConfig.NAME)
-    private AppConfig appConfig = new AppConfig();
+    private AppConfig appConfig;
 
     /**
      * Create {@link NubeConfig} with {@link AppConfig}, default {@link DeployConfig} and without {@link SystemConfig}
@@ -67,8 +67,8 @@ public final class NubeConfig implements IConfig {
     }
 
     public static NubeConfig constructNubeConfig(NubeConfig nubeConfig, AppConfig appConfig) {
-        return IConfig.from(nubeConfig.toJson().mergeIn(new JsonObject().put(AppConfig.NAME, appConfig.toJson())),
-                            NubeConfig.class);
+        JsonObject finalNubeConfig = nubeConfig.toJson().mergeIn(new JsonObject().put(AppConfig.NAME, appConfig));
+        return IConfig.from(finalNubeConfig, NubeConfig.class);
     }
 
     @Override
@@ -95,6 +95,8 @@ public final class NubeConfig implements IConfig {
         private ClusterConfig clusterConfig = new ClusterConfig();
         @JsonProperty(value = EventBusConfig.NAME)
         private EventBusConfig eventBusConfig = new EventBusConfig();
+        @JsonProperty(value = SystemSecretConfig.NAME)
+        private SystemSecretConfig secretConfig = new SystemSecretConfig();
 
         @Override
         public String name() { return NAME; }
@@ -191,6 +193,16 @@ public final class NubeConfig implements IConfig {
 
         }
 
+
+        public static final class SystemSecretConfig extends SecretConfig {
+
+            @Override
+            public Class<? extends IConfig> parent() {
+                return SystemConfig.class;
+            }
+
+        }
+
     }
 
 
@@ -216,6 +228,15 @@ public final class NubeConfig implements IConfig {
 
         @Override
         public Class<? extends IConfig> parent() { return NubeConfig.class; }
+
+        public static final class AppSecretConfig extends SecretConfig {
+
+            @Override
+            public Class<? extends IConfig> parent() {
+                return AppConfig.class;
+            }
+
+        }
 
     }
 

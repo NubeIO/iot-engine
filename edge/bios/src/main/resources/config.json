@@ -17,7 +17,7 @@
         "local": "",
         "remote": {
           "urls": {
-            "java": [
+            "JAVA": [
               {
                 "url": "http://127.0.0.1:8081/repository/maven-releases/"
               },
@@ -39,7 +39,7 @@
             "version": "1.0.0-SNAPSHOT",
             "service_name": "bios-installer"
           },
-          "appConfig": {
+          "__app__": {
             "__sql__": {
               "dialect": "H2",
               "__hikari__": {

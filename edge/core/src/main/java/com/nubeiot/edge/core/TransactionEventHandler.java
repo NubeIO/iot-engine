@@ -7,6 +7,7 @@ import java.util.List;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
@@ -44,15 +45,7 @@ public final class TransactionEventHandler implements EventHandler {
                             .findTransactionById(transaction.getTransactionId())
                             .map(o -> o.orElseThrow(() -> new NotFoundException(
                                 Strings.format("Not found transaction id '{0}'", transaction.getTransactionId()))))
-                            .map(trans -> removePrevSystemConfig(trans, systemCfg));
-    }
-
-    private JsonObject removePrevSystemConfig(JsonObject transaction, boolean systemCfg) {
-        if (!systemCfg) {
-            // TODO: replace with POJO constant later
-            transaction.remove("prev_system_config");
-        }
-        return transaction;
+                            .map(trans -> systemCfg ? trans : JsonData.removeKeys(trans, "prev_system_config"));
     }
 
 }

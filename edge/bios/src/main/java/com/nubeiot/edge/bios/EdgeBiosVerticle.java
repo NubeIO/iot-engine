@@ -6,6 +6,7 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.ModuleEventHandler;
+import com.nubeiot.edge.core.SecretEventHandler;
 import com.nubeiot.edge.core.TransactionEventHandler;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
@@ -38,6 +39,7 @@ public class EdgeBiosVerticle extends EdgeVerticle {
         controller.register(EdgeInstallerEventBus.BIOS_TRANSACTION,
                             new TransactionEventHandler(this, EdgeInstallerEventBus.BIOS_TRANSACTION));
         controller.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, new ModuleLoader(vertx));
+        controller.register(EdgeInstallerEventBus.BIOS_SECRET, new SecretEventHandler(this));
     }
 
 }

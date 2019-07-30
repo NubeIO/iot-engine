@@ -106,6 +106,19 @@ public class RestEventServerTest extends HttpServerTestBase {
     }
 
     @Test
+    public void test_api_eventbus_success_data_list_other(TestContext context) {
+        try {
+            MockEventBusSuccessHandler.create(this.vertx.eventBus(), "http.server.test2").start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String path = "/api/test/abouts";
+        JsonObject expected = new JsonObject().put("data", Arrays.asList("1", "2", "3"));
+        startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
+        assertRestByClient(context, HttpMethod.GET, path, 200, expected);
+    }
+
+    @Test
     public void test_api_eventbus_success_data_other(TestContext context) {
         try {
             MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();

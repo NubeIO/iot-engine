@@ -33,7 +33,8 @@ public class PendingModuleWithUpdateActionInitData extends MockInitDataEntityHan
                            .setCreatedAt(DateTimes.nowUTC())
                            .setModifiedAt(DateTimes.nowUTC())
                            .setSystemConfig(new JsonObject())
-                           .setAppConfig(new JsonObject()));
+                           .setAppConfig(new JsonObject())
+                           .setSecretConfig(new JsonObject()));
 
         Single<Integer> insertTransaction03 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())

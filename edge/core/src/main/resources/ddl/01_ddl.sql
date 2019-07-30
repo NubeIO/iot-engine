@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS tbl_module (
 	modified_at                     TIMESTAMP NOT NULL DEFAULT 1,
 	deploy_id                       varchar(255),
 	app_config_json                 text,
+	secret_config_json              text,
 	system_config_json              text,
 	deploy_location                 varchar(500),
 	CONSTRAINT Pk_tbl_module PRIMARY KEY ( service_id ),

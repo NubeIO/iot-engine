@@ -5,13 +5,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -24,14 +21,13 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.maven.MavenVerticleFactory;
-import io.vertx.maven.ResolverOptions;
 
-import com.nubeiot.auth.Credential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.NubeConfig.AppConfig.AppSecretConfig;
 import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
@@ -45,12 +41,7 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
-import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
-import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
-import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.Tables;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.daos.TblRemoveHistoryDao;
@@ -94,30 +85,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     protected abstract EventModel deploymentEvent();
 
-    protected void setupServiceRepository(RepositoryConfig repositoryCfg) {
-        logger.info("Setting up service local and remote repository");
-        RemoteRepositoryConfig remoteConfig = repositoryCfg.getRemoteConfig();
-        logger.info("URLs" + remoteConfig.getUrls());
-        remoteConfig.getUrls()
-                    .entrySet()
-                    .stream()
-                    .parallel()
-                    .forEach(entry -> handleVerticleFactory(repositoryCfg.getLocal(), entry));
-    }
-
-    private void handleVerticleFactory(String local, Entry<ModuleType, List<RemoteUrl>> entry) {
-        final ModuleType type = entry.getKey();
-        if (ModuleType.JAVA == type) {
-            List<RemoteUrl> remoteUrls = entry.getValue();
-            String javaLocal = FileUtils.createFolder(local, type.name().toLowerCase(Locale.ENGLISH));
-            logger.info("{} local repositories: {}", type, javaLocal);
-            logger.info("{} remote repositories: {}", type, remoteUrls);
-            ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
-                remoteUrls.stream().map(RemoteUrl::getUrl).collect(Collectors.toList())).setLocalRepository(javaLocal);
-            vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
-        }
-    }
-
     protected Single<JsonObject> startupModules() {
         return this.getModulesWhenBootstrap()
                    .flattenAsObservable(tblModules -> tblModules)
@@ -127,26 +94,27 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
-        logger.info("{} module with data {}", action, module.toJson().encode());
-        return this.handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
-            JsonObject appConfig = this.getSecureAppConfig(result.getServiceId(), result.getAppConfig().toJson());
-            PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
-                                                                         .transactionId(result.getTransactionId())
-                                                                         .action(result.getAction())
-                                                                         .prevState(result.getPrevState())
-                                                                         .targetState(result.getTargetState())
-                                                                         .serviceId(result.getServiceId())
-                                                                         .serviceFQN(result.getServiceFQN())
-                                                                         .deployId(result.getDeployId())
-                                                                         .appConfig(appConfig)
-                                                                         .systemConfig(
-                                                                             result.getSystemConfig().toJson())
-                                                                         .dataDir((String) this.getSharedDataFunc()
-                                                                                               .apply(
-                                                                                                   SharedDataDelegate.SHARED_DATADIR))
-                                                                         .build();
-            return preDeploymentResult.toJson().put("message", "Work in progress").put("status", Status.WIP);
-        });
+        JsonObject moduleJson = module.toJson().copy();
+        moduleJson.remove("secret_config");
+        logger.info("{} module with data {}", action, moduleJson.encode());
+        return this.handlePreDeployment(module, action)
+                   .doAfterSuccess(this::deployModule)
+                   .map(result -> PreDeploymentResult.builder()
+                                                     .transactionId(result.getTransactionId())
+                                                     .action(result.getAction())
+                                                     .prevState(result.getPrevState())
+                                                     .targetState(result.getTargetState())
+                                                     .serviceId(result.getServiceId())
+                                                     .serviceFQN(result.getServiceFQN())
+                                                     .deployId(result.getDeployId())
+                                                     .appConfig(result.getAppConfig().toJson())
+                                                     .systemConfig(result.getSystemConfig().toJson())
+                                                     .dataDir((String) this.getSharedDataFunc()
+                                                                           .apply(SharedDataDelegate.SHARED_DATADIR))
+                                                     .message("Work in progress")
+                                                     .status(Status.WIP)
+                                                     .build()
+                                                     .toJson());
     }
 
     private void deployModule(PreDeploymentResult preDeployResult) {
@@ -310,7 +278,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                     .generateFQN(module.getServiceId(), module.getVersion(),
                                                                  module.getServiceName()))
                                   .deployId(module.getDeployId())
-                                  .appConfig(module.getAppConfig())
+                                  .appConfig(module.getAppConfig().put(AppSecretConfig.NAME, module.getSecretConfig()))
                                   .systemConfig(module.getSystemConfig())
                                   .dataDir((String) this.getSharedDataFunc().apply(SharedDataDelegate.SHARED_DATADIR))
                                   .build();
@@ -366,9 +334,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         final LocalDateTime now = DateTimes.nowUTC();
         final String transactionId = UUID.randomUUID().toString();
         JsonObject metadata = module.toJson();
-        // TODO: replace with POJO constant later
-        metadata.remove("system_config");
-        metadata.remove("app_config");
+        JsonData.removeKeys(metadata, "system_config", "app_config");
         final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)
                                                                .setModuleId(moduleId)
                                                                .setStatus(Status.WIP)
@@ -404,6 +370,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         old.setSystemConfig(
             IConfig.merge(old.getSystemConfig(), newOne.getSystemConfig(), isUpdated, NubeConfig.class).toJson());
         old.setAppConfig(IConfig.merge(old.getAppConfig(), newOne.getAppConfig(), isUpdated, AppConfig.class).toJson());
+        old.setSecretConfig(
+            IConfig.merge(old.getSecretConfig(), newOne.getSecretConfig(), isUpdated, AppSecretConfig.class).toJson());
         return old;
     }
 
@@ -479,47 +447,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<Optional<JsonObject>> findHistoryTransactionById(String transactionId) {
         return historyDao.findOneById(transactionId).map(optional -> optional.map(ITblRemoveHistory::toJson));
-    }
-
-    public JsonObject getSecureAppConfig(String serviceId, JsonObject appConfigJson) {
-        if ("com.nubeiot.edge.module:installer".equals(serviceId)) {
-            logger.info("Removing nexus password from result");
-            AppConfig appConfig = IConfig.from(appConfigJson, AppConfig.class);
-            Object installerObject = appConfig.get(InstallerConfig.NAME);
-            if (Objects.isNull(installerObject)) {
-                logger.debug("Installer config is not available");
-                return appConfigJson;
-            }
-            InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
-            installerConfig.getRepoConfig().getRemoteConfig().getUrls().values().forEach(remoteUrl -> {
-                remoteUrl.forEach(url -> {
-                    Credential credential = url.getCredential();
-                    if (Objects.isNull(credential)) {
-                        return;
-                    }
-                    url.setCredential(new Credential(credential.getType(), credential.getUser()) {
-                        @Override
-                        public String computeUrl(String defaultUrl) {
-                            return null;
-                        }
-
-                        @Override
-                        protected String computeUrlCredential() {
-                            return null;
-                        }
-
-                        @Override
-                        public String computeHeader() {
-                            return null;
-                        }
-                    });
-                });
-            });
-            appConfig.put(InstallerConfig.NAME, installerConfig);
-            logger.debug("Installer config {}", installerConfig.toJson().toString());
-            return appConfig.toJson();
-        }
-        return appConfigJson;
     }
 
 }

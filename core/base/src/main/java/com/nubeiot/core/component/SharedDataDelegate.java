@@ -26,6 +26,7 @@ public interface SharedDataDelegate {
      */
     String SHARED_EVENTBUS = "EVENTBUS_CONTROLLER";
     String SHARED_DATADIR = "DATADIR";
+    String SHARED_SECRET = "SECRET";
 
     @SuppressWarnings("unchecked")
     static <D> D getSharedDataValue(Function<String, Object> sharedDataFunc, String dataKey) {

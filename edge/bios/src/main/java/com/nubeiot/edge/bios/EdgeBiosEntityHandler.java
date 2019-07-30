@@ -50,8 +50,6 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
         InstallerConfig installerCfg = IConfig.from(this.sharedDataFunc.apply(EdgeBiosVerticle.SHARED_INSTALLER_CFG),
                                                     InstallerConfig.class);
         Path dataDir = FileUtils.toPath((String) this.sharedDataFunc.apply(SharedDataDelegate.SHARED_DATADIR));
-        logger.debug("Shared app configuration: {}", installerCfg);
-        setupServiceRepository(installerCfg.getRepoConfig());
         return this.isFreshInstall()
                    .flatMap(f -> startup(dataDir, installerCfg, f).map(r -> EventMessage.success(action, r)));
     }

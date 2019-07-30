@@ -26,7 +26,7 @@ public class RequestedServiceData implements JsonData {
 
     @JsonCreator
     public RequestedServiceData(@JsonProperty(value = "metadata") Map<String, Object> metadata,
-                                @JsonProperty(value = "appConfig") AppConfig appConfig) {
+                                @JsonProperty(value = AppConfig.NAME) AppConfig appConfig) {
         this.metadata = Objects.isNull(metadata) ? new JsonObject() : new JsonObject(metadata);
         this.appConfig = Objects.isNull(appConfig) ? new AppConfig() : appConfig;
     }

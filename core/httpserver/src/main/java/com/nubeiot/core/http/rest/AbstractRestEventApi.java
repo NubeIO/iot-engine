@@ -2,7 +2,6 @@ package com.nubeiot.core.http.rest;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -22,8 +21,7 @@ import lombok.NonNull;
 public abstract class AbstractRestEventApi implements RestEventApi {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final SortedMap<String, RestEventApiMetadata> restMetadata = new TreeMap<>(
-        Comparator.comparingInt(String::length));
+    private final SortedMap<String, RestEventApiMetadata> restMetadata = new TreeMap<>();
     private final ActionMethodMapping mapping;
 
     protected AbstractRestEventApi() {

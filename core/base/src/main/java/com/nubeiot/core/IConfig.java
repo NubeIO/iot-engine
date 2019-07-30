@@ -3,9 +3,11 @@ package com.nubeiot.core;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,7 +29,9 @@ import lombok.RequiredArgsConstructor;
 public interface IConfig extends JsonData {
 
     ObjectMapper MAPPER = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
-    ObjectMapper MAPPER_IGNORE_UNKNOWN_PROPERTY = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    ObjectMapper MAPPER_IGNORE_UNKNOWN_PROPERTY = MAPPER.copy()
+                                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+                                                                   false);
 
     static <T extends IConfig> T fromClasspath(String jsonFile, Class<T> clazz) {
         return IConfig.from(Configs.loadJsonConfig(jsonFile), clazz);
@@ -121,6 +125,43 @@ public interface IConfig extends JsonData {
 
     default <T extends IConfig> JsonObject mergeToJson(@NonNull T to) {
         return this.toJson().mergeIn(to.toJson(), true);
+    }
+
+    @SuppressWarnings("unchecked")
+    static <C extends IConfig> C recomputeReferences(C config, SecretConfig secretConfig) {
+        return IConfig.from(recomputeReferences(config.toJson(), (jObject, key, value) -> {
+            jObject.put(key, secretConfig.decode(value).getValue());
+        }), (Class<C>) config.getClass());
+    }
+
+    static Object recomputeReferences(Object config, TriConsumer<JsonObject, String, String> consumer) {
+        if (config instanceof JsonObject) {
+            JsonObject jObject = (JsonObject) config;
+            Set<String> keys = jObject.fieldNames();
+
+            for (String key : keys) {
+                Object value = jObject.getValue(key);
+                if (value instanceof JsonObject || value instanceof JsonArray) {
+                    recomputeReferences(value, consumer);
+                } else if (value instanceof String) {
+                    consumer.accept(jObject, key, (String) value);
+                }
+            }
+        } else if (config instanceof JsonArray) {
+            JsonArray jArray = (JsonArray) config;
+            for (Object obj : jArray) {
+                recomputeReferences(obj, consumer);
+            }
+        }
+
+        return config;
+    }
+
+    static <T extends SecretConfig> T getSecretConfig(JsonObject jObject, Class<T> clazz) {
+        if (jObject.getJsonObject(SecretConfig.NAME) == null) {
+            return ReflectionClass.createObject(clazz);
+        }
+        return IConfig.from(jObject, clazz);
     }
 
     @Override

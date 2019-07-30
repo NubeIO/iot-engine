@@ -12,8 +12,10 @@ import java.util.function.Predicate;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
 
+import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
+import com.nubeiot.core.NubeConfig.AppConfig.AppSecretConfig;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
@@ -33,9 +35,7 @@ public final class ModuleTypeRule implements Shareable {
 
     public ITblModule parse(@NonNull Path dataDir, @NonNull JsonObject metadata, AppConfig appConfig) {
         ITblModule tblModule = parse(metadata);
-        tblModule = tblModule.setAppConfig(appConfig.toJson());
-        tblModule = tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
-        return tblModule;
+        return parse(dataDir, tblModule, appConfig);
     }
 
     public ITblModule parse(JsonObject metadata) {
@@ -46,8 +46,12 @@ public final class ModuleTypeRule implements Shareable {
     }
 
     public ITblModule parse(@NonNull Path dataDir, @NonNull ITblModule tblModule, AppConfig appConfig) {
-        tblModule = tblModule.setAppConfig(appConfig.toJson());
-        tblModule = tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
+        JsonObject outputAppConfig = appConfig.toJson().copy();
+        outputAppConfig.remove(AppSecretConfig.NAME);
+        tblModule.setAppConfig(outputAppConfig);
+        AppSecretConfig secretConfig = IConfig.getSecretConfig(appConfig.toJson(), AppSecretConfig.class);
+        tblModule.setSecretConfig(secretConfig.toJson());
+        tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
         return tblModule;
     }
 

@@ -118,6 +118,21 @@ public interface JsonData {
         }
     }
 
+    static JsonObject removeKeys(JsonObject input, String... keys) {
+        for (String key : keys) {
+            input.remove(key);
+        }
+        return input;
+    }
+
+    static JsonObject keepKeys(JsonObject input, String... keys) {
+        JsonObject output = new JsonObject();
+        for (String key : keys) {
+            output.put(key, input.getValue(key));
+        }
+        return output;
+    }
+
     default JsonObject toJson() {
         return toJson(mapper());
     }
