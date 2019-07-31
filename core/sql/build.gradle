@@ -38,6 +38,9 @@ ext {
         new ForcedType(types: DB.TYPES.varchar, userType: "com.nubeiot.core.sql.type.Label",
                        expression: DB.COL_REGEX.label,
                        converter: "com.nubeiot.core.sql.converter.LabelConverter"),
+        new ForcedType(types: DB.TYPES.varchar, userType: "com.nubeiot.core.sql.type.SyncAudit",
+                       expression: DB.COL_REGEX.syncAudit,
+                       converter: "com.nubeiot.core.sql.converter.SyncAuditConverter"),
     ]
     javaTypes = [
         new JsonDataType(className: Instant.class.getName(), converter: "%s.toString()",
@@ -64,7 +67,10 @@ ext {
                          parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.core.sql.type.TimeAudit.class)"),
         new JsonDataType(className: "com.nubeiot.core.sql.type.Label",
                          converter: "%s.toJson()",
-                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.core.sql.type.Label.class)")
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.core.sql.type.Label.class)"),
+        new JsonDataType(className: "com.nubeiot.core.sql.type.SyncAudit",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.core.sql.type.SyncAudit.class)")
     ]
 }
 

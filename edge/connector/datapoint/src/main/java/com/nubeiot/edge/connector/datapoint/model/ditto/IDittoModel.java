@@ -1,11 +1,10 @@
-package com.nubeiot.edge.connector.datapoint.model;
+package com.nubeiot.edge.connector.datapoint.model.ditto;
 
 import java.util.function.Supplier;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
 
 import lombok.NonNull;

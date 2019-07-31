@@ -29,6 +29,7 @@ import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
 
 import com.nubeiot.auth.Credential;
+import com.nubeiot.auth.ExternalServer;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
@@ -48,7 +49,6 @@ import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.InstallerConfig.RemoteUrl;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
 import com.nubeiot.edge.core.loader.ModuleType;
@@ -112,15 +112,16 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return transDao.get();
     }
 
-    private void handleVerticleFactory(String local, Entry<ModuleType, List<RemoteUrl>> entry) {
+    private void handleVerticleFactory(String local, Entry<ModuleType, List<ExternalServer>> entry) {
         final ModuleType type = entry.getKey();
         if (ModuleType.JAVA == type) {
-            List<RemoteUrl> remoteUrls = entry.getValue();
+            List<ExternalServer> externalServers = entry.getValue();
             String javaLocal = FileUtils.createFolder(local, type.name().toLowerCase(Locale.ENGLISH));
             logger.info("{} local repositories: {}", type, javaLocal);
-            logger.info("{} remote repositories: {}", type, remoteUrls);
+            logger.info("{} remote repositories: {}", type, externalServers);
             ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
-                remoteUrls.stream().map(RemoteUrl::getUrl).collect(Collectors.toList())).setLocalRepository(javaLocal);
+                externalServers.stream().map(ExternalServer::getUrl).collect(Collectors.toList()))
+                                                            .setLocalRepository(javaLocal);
             vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
     }
@@ -190,7 +191,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     private Single<List<TblModule>> getPendingModules() {
-        return moduleDao.get().findManyByState(Collections.singletonList(State.PENDING))
+        return moduleDao.get()
+                        .findManyByState(Collections.singletonList(State.PENDING))
                         .flattenAsObservable(pendingModules -> pendingModules)
                         .flatMapSingle(module -> queryExecutor.executeAny(context -> getTransactions(module, context)))
                         .collect(ArrayList::new,
@@ -243,14 +245,16 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     Single<Optional<JsonObject>> findTransactionById(String transactionId) {
-        return transDao.get().findOneById(transactionId)
+        return transDao.get()
+                       .findOneById(transactionId)
                        .flatMap(optional -> optional.isPresent()
                                             ? Single.just(Optional.of(optional.get().toJson()))
                                             : this.findHistoryTransactionById(transactionId));
     }
 
     public Single<List<TblTransaction>> findTransactionByModuleId(String moduleId) {
-        return transDao.get().queryExecutor()
+        return transDao.get()
+                       .queryExecutor()
                        .findMany(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
                                                          .where(
                                                              DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
@@ -258,7 +262,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     public Single<Optional<JsonObject>> findOneTransactionByModuleId(String moduleId) {
-        return transDao.get().queryExecutor()
+        return transDao.get()
+                       .queryExecutor()
                        .findOne(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
                                                         .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
                                                         .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc())
@@ -326,7 +331,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<Optional<ITblModule>> validateModuleState(ITblModule tblModule, EventAction eventAction) {
         logger.info("Validate {}::::{} ...", tblModule.getServiceId(), eventAction);
-        return moduleDao.get().findOneById(tblModule.getServiceId())
+        return moduleDao.get()
+                        .findOneById(tblModule.getServiceId())
                         .map(o -> validateModuleState(o.orElse(null), eventAction, tblModule.getState()));
     }
 
@@ -394,14 +400,16 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private Single<ITblModule> markModuleInsert(ITblModule module) {
         logger.debug("Mark service {} to create...", module.getServiceId());
         LocalDateTime now = DateTimes.nowUTC();
-        return moduleDao.get().insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
+        return moduleDao.get()
+                        .insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
                         .map(i -> module);
     }
 
     private Single<ITblModule> markModuleModify(ITblModule module, ITblModule oldOne, boolean isUpdated) {
         logger.debug("Mark service {} to modify...", module.getServiceId());
         ITblModule into = this.updateModule(oldOne, module, isUpdated);
-        return moduleDao.get().update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
+        return moduleDao.get()
+                        .update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
                         .map(ignore -> oldOne);
     }
 
@@ -430,7 +438,8 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {
         logger.debug("Mark service {} to delete...", module.getServiceId());
-        return moduleDao.get().update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
+        return moduleDao.get()
+                        .update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
                         .map(ignore -> module);
     }
 

@@ -18,6 +18,9 @@ class NubeGeneratorStrategy extends VertxGeneratorStrategy {
             if (table.columns.find({ it.name.matches(DB.COL_REGEX.timeAudit) })) {
                 javaClassImplements.add("com.nubeiot.core.sql.HasTimeAudit")
             }
+            if (table.columns.find({ it.name.matches(DB.COL_REGEX.syncAudit) })) {
+                javaClassImplements.add("com.nubeiot.core.sql.HasSyncAudit")
+            }
         }
         if (mode == Mode.DEFAULT && definition instanceof TableDefinition) {
             //TODO very hacky to add RECORD

@@ -13,6 +13,8 @@ import com.nubeiot.core.exceptions.ErrorMessage;
 
 import lombok.NonNull;
 
+//TODO: Rename to EventbusClient
+//TODO: Rename `response` -> `publish`
 public interface EventController extends Shareable {
 
     Logger LOGGER = LoggerFactory.getLogger(EventController.class);

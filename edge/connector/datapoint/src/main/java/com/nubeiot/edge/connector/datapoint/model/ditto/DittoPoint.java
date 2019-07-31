@@ -1,11 +1,10 @@
-package com.nubeiot.edge.connector.datapoint.model;
+package com.nubeiot.edge.connector.datapoint.model.ditto;
 
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.edge.connector.datapoint.model.IDittoModel.AbstractDittoModel;
+import com.nubeiot.edge.connector.datapoint.model.ditto.IDittoModel.AbstractDittoModel;
 import com.nubeiot.iotdata.model.tables.interfaces.IPoint;
 import com.nubeiot.iotdata.model.tables.pojos.Point;
 

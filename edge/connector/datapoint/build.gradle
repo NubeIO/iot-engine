@@ -14,6 +14,8 @@ dependencies {
     compile project.deps.database.h2
     compile project(":core:scheduler")
     compile project(":core:micro")
+    compile project(":core:httpclient")
+    compile project(":core:auth")
     compile 'net.thisptr:jackson-jq:0.0.10'
 }
 

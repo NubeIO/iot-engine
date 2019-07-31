@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.jooq.DSLContext;
@@ -22,10 +21,12 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.DataTransferObject.Headers;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.sql.type.TimeAudit;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
@@ -51,6 +52,16 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
      * @see TimeAudit
      */
     protected abstract boolean enableTimeAudit();
+
+    /**
+     * Enable {@code CUD} response includes full resource instead of simple resource with only response status and
+     * {@code primary key} of resource.
+     * <p>
+     * In default mode, the full resource is customized by {@link #customizeItem(VertxPojo)}
+     *
+     * @return {@code true} if enable full resource in response
+     */
+    protected abstract boolean enableFullResourceInCUDResponse();
 
     /**
      * Defines key name in respond data in {@code list} resource
@@ -105,7 +116,7 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData requestData) {
         return get().insertReturningPrimary(validateOnCreate(parse(requestData.body()), requestData.headers()))
-                    .map(k -> new JsonObject().put(primaryKeyName(), k.toString()));
+                    .flatMap(k -> cudResponse(EventAction.CREATE, k));
     }
 
     /**
@@ -117,7 +128,7 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
      */
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData requestData) {
-        return update(requestData, this::validateOnUpdate);
+        return update(requestData, EventAction.UPDATE, this::validateOnUpdate);
     }
 
     /**
@@ -129,7 +140,7 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
      */
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData requestData) {
-        return update(requestData, this::validateOnPatch);
+        return update(requestData, EventAction.PATCH, this::validateOnPatch);
     }
 
     /**
@@ -142,10 +153,11 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData requestData) {
         final K pk = parsePK(requestData);
-        return get().deleteById(pk)
-                    .map(i -> Optional.ofNullable(i > 0 ? true : null))
-                    .map(r -> new JsonObject().put("success", r.orElseThrow(() -> new NotFoundException(
-                        Strings.format("Not found resource with {0}={1}", primaryKeyName(), pk)))));
+        return lookupById(pk).flatMap(m -> get().deleteById(pk)
+                                                .filter(r -> r > 0)
+                                                .switchIfEmpty(Single.error(notFound(pk)))
+                                                .flatMap(r -> enableFullResourceInCUDResponse() ? cudResponse(
+                                                    EventAction.REMOVE, m) : cudResponse(EventAction.REMOVE, pk)));
     }
 
     /**
@@ -170,7 +182,8 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
     }
 
     /**
-     * Do any transform or convert resource item in {@link #get(RequestData)}
+     * Do any transform or convert resource item in {@link #get(RequestData)} or in {@code CUD response} if {@link
+     * #enableFullResourceInCUDResponse()} is {@code true}
      *
      * @param pojo item
      * @return transformer item
@@ -277,23 +290,47 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
         return sql.limit(pagination.getPerPage()).offset((pagination.getPage() - 1) * pagination.getPerPage());
     }
 
+    /**
+     * Construct {@code CUD Response} that includes full resource
+     *
+     * @param action Event action
+     * @param pojo   Pojo data
+     * @return response
+     */
+    protected Single<JsonObject> cudResponse(EventAction action, M pojo) {
+        return Single.just(
+            new JsonObject().put("resource", customizeItem(pojo)).put("action", action).put("status", Status.SUCCESS));
+    }
+
+    private Single<JsonObject> cudResponse(EventAction action, K k) {
+        return enableFullResourceInCUDResponse()
+               ? lookupById(k).flatMap(r -> cudResponse(action, r))
+               : Single.just(new JsonObject().put(primaryKeyName(),
+                                                  ReflectionClass.isJavaLangObject(k.getClass()) ? k : k.toString()));
+    }
+
+    private NotFoundException notFound(K pk) {
+        return new NotFoundException(Strings.format("Not found resource with {0}={1}", primaryKeyName(), pk));
+    }
+
     private K parsePK(RequestData requestData) {
         return parsePK(requestData.body().getValue(primaryKeyName()).toString());
     }
 
     private Single<M> lookupById(@NonNull K pk) {
-        return get().findOneById(pk)
-                    .map(o -> o.orElseThrow(() -> new NotFoundException(
-                        Strings.format("Not found resource with {0}={1}", primaryKeyName(), pk))));
+        return get().findOneById(pk).map(o -> o.orElseThrow(() -> notFound(pk)));
     }
 
-    private Single<JsonObject> update(RequestData requestData, Function3<M, M, JsonObject, M> validate) {
+    private Single<JsonObject> update(RequestData requestData, EventAction action,
+                                      Function3<M, M, JsonObject, M> validate) {
         M req = parse(requestData.body());
         JsonObject headers = requestData.headers();
-        return lookupById(parsePK(requestData)).map(db -> validate.apply(db, req, headers))
-                                               .flatMap(get()::update)
-                                               .map(i -> i > 0)
-                                               .map(r -> new JsonObject().put("success", r));
+        final K pk = parsePK(requestData);
+        return lookupById(pk).map(db -> validate.apply(db, req, headers))
+                             .flatMap(get()::update)
+                             .filter(i -> i > 0)
+                             .switchIfEmpty(Single.error(notFound(pk)))
+                             .flatMap(i -> cudResponse(action, pk));
     }
 
     private M addModifiedAudit(M dbData, @NonNull M pojo, JsonObject headers) {

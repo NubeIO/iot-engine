@@ -39,7 +39,7 @@ public final class SqlContext<T extends EntityHandler> extends UnitContext {
         return entityHandler;
     }
 
-    private class CreationHandler<E extends EntityHandler> extends Silencer<E> {
+    private static class CreationHandler<E extends EntityHandler> extends Silencer<E> {
 
         @Override
         public void accept(E obj, HiddenException e) {

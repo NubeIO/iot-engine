@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS DEVICE (
     DATA_VERSION         varchar(15)  DEFAULT '0.0.1' NOT NULL,
 	METADATA_JSON        clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_DEVICE_ID PRIMARY KEY ( ID )
  );
 
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS EQUIPMENT (
 	MANUFACTURER         varchar(500)   ,
 	METADATA_JSON        clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_EQUIPMENT PRIMARY KEY ( ID ),
 	CONSTRAINT IDX_UQ_EQUIPMENT UNIQUE ( CODE, EQUIP_TYPE )
  );
@@ -43,6 +45,7 @@ CREATE TABLE IF NOT EXISTS MEASURE_UNIT (
 	LABEL                varchar(1000)   ,
 	POSSIBLE_VALUES_JSON varchar(500)   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_MEASURE_UNIT PRIMARY KEY ( ID ),
 	CONSTRAINT IDX_UQ_MEASURE_UNIT UNIQUE ( MEASURE_TYPE, MEASURE_CATEGORY )
  );
@@ -54,6 +57,7 @@ CREATE TABLE IF NOT EXISTS TRANSDUCERS (
 	TRANSDUCER_CATEGORY  varchar(31)   NOT NULL,
 	LABEL                varchar(1000)   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_TRANSDUCER PRIMARY KEY ( ID ),
 	CONSTRAINT IDX_UQ_TRANSDUCER UNIQUE ( CODE, TRANSDUCER_TYPE, TRANSDUCER_CATEGORY )
  );
@@ -70,6 +74,7 @@ CREATE TABLE IF NOT EXISTS DEVICE_EQUIP (
 	NETWORK              varchar(63)   ,
 	NETWORK_LABEL        varchar(1000)   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT IDX_UQ_DEVICE_EQUIP UNIQUE ( DEVICE, EQUIP ) ,
 	CONSTRAINT PK_DEVICE_EQUIP PRIMARY KEY ( ID )
  );
@@ -86,6 +91,7 @@ CREATE TABLE THING (
 	PRODUCT_LABEL        varchar(1000)   ,
 	MEASURE_UNIT         uuid   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT IDX_UQ_EQUIP_THING_CODE UNIQUE ( EQUIP, PRODUCT_CODE ) ,
 	CONSTRAINT IDX_UQ_THING UNIQUE ( EQUIP, TRANSDUCER ) ,
 	CONSTRAINT PK_THING PRIMARY KEY ( ID )
@@ -121,6 +127,7 @@ CREATE TABLE IF NOT EXISTS POINT (
 	VERSION              varchar(31)   ,
 	METADATA_JSON        clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_POINT PRIMARY KEY ( ID ),
 	CONSTRAINT IDX_UQ_POINT UNIQUE ( CODE, DEVICE, NETWORK )
  );
@@ -141,9 +148,8 @@ CREATE TABLE IF NOT EXISTS POINT_HISTORY_DATA (
 	POINT                uuid   NOT NULL,
 	TIME                 timestamp   NOT NULL,
 	VALUE                double   ,
-	SYNC_TO_CLOUD        boolean  DEFAULT FALSE NOT NULL,
-	SYNC_TIME            timestamp   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT IDX_UQ_POINT_HISTORY_DATA UNIQUE ( POINT, TIME ) ,
 	CONSTRAINT PK_POINT_HISTORY_DATA PRIMARY KEY ( ID )
  );
@@ -157,9 +163,8 @@ CREATE TABLE IF NOT EXISTS POINT_REALTIME_DATA (
 	POINT                uuid   NOT NULL,
 	TIME                 timestamp   NOT NULL,
 	VALUE_JSON           clob(2147483647)   ,
-	SYNC_TO_CLOUD        boolean  DEFAULT FALSE NOT NULL,
-	SYNC_TIME            timestamp   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT IDX_UQ_POINT_REALTIME_DATA UNIQUE ( POINT, TIME ) ,
 	CONSTRAINT PK_POINT_REALTIME_DATA PRIMARY KEY ( ID )
  );
@@ -174,6 +179,7 @@ CREATE TABLE IF NOT EXISTS POINT_TAG (
 	POINT                uuid   NOT NULL,
 	TAG_VALUE            varchar(255)   NOT NULL,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT IDX_UQ_POINT_TAG UNIQUE ( TAG_NAME, POINT ) ,
 	CONSTRAINT PK_POINT_TAG PRIMARY KEY ( ID )
  );
@@ -188,6 +194,7 @@ CREATE TABLE IF NOT EXISTS POINT_VALUE_DATA (
 	PRIORITY             smallint   NOT NULL,
 	PRIORITY_VALUES_JSON clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_POINT_VALUE_DATA PRIMARY KEY ( POINT )
  );
 
@@ -196,6 +203,7 @@ CREATE TABLE IF NOT EXISTS REALTIME_SETTING (
 	ENABLED              boolean  DEFAULT FALSE NOT NULL,
 	TOLERANCE            double   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_REALTIME_SETTING PRIMARY KEY ( POINT )
  );
 
@@ -210,6 +218,7 @@ CREATE TABLE IF NOT EXISTS SCHEDULE_SETTING (
 	VALUE                double   NOT NULL,
 	WEEKDAYS             array   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_SCHEDULE_SETTING PRIMARY KEY ( ID )
  );
 
@@ -222,6 +231,7 @@ CREATE TABLE IF NOT EXISTS HISTORY_SETTING (
 	TOLERANCE            double   ,
 	SIZE                 integer   ,
 	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
     CONSTRAINT PK_HISTORY_SETTING PRIMARY KEY ( POINT )
 );
 

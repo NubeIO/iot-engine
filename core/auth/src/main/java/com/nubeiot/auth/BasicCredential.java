@@ -1,6 +1,6 @@
 package com.nubeiot.auth;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -33,9 +33,8 @@ public class BasicCredential extends Credential {
 
     @Override
     public String computeHeader() {
-        return "Basic " + Base64.getEncoder()
-                                .encodeToString(
-                                    (this.getUser() + ":" + this.getPassword()).getBytes(Charset.forName("UTF-8")));
+        final byte[] combine = (this.getUser() + ":" + this.getPassword()).getBytes(StandardCharsets.UTF_8);
+        return "Basic " + Base64.getEncoder().encodeToString(combine);
     }
 
     @Override
