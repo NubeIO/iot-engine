@@ -1,8 +1,23 @@
 {
   "__app__": {
     "__datapoint__": {
-      "lowDb": true,
-      "lowDbPath": ""
+      "lowDb_migration": {
+        "enabled": false,
+        "path": ""
+      },
+      "policy": {
+        "history": {
+          "schedule": ""
+        }
+      },
+      "sync_server": {
+        "credential": {
+          "type": "BASIC",
+          "user": "admin",
+          "password": "admin"
+        },
+        "url": "http://ditto:8080/api/2"
+      }
     },
     "__micro__": {
       "__gateway__": {

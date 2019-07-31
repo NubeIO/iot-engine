@@ -4,9 +4,11 @@ import java.util.UUID;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
+import com.nubeiot.core.workflow.ConsumerService;
 import com.nubeiot.iotdata.model.Tables;
 import com.nubeiot.iotdata.model.tables.daos.EquipmentDao;
 import com.nubeiot.iotdata.model.tables.pojos.Equipment;
@@ -14,11 +16,11 @@ import com.nubeiot.iotdata.model.tables.records.EquipmentRecord;
 
 import lombok.NonNull;
 
-public final class EquipmentService extends AbstractDittoService<UUID, Equipment, EquipmentRecord, EquipmentDao>
+public final class EquipmentService extends DataPointService<UUID, Equipment, EquipmentRecord, EquipmentDao>
     implements UUIDKeyEntity<Equipment, EquipmentRecord, EquipmentDao> {
 
-    public EquipmentService(@NonNull EntityHandler entityHandler) {
-        super(entityHandler);
+    public EquipmentService(@NonNull EntityHandler entityHandler, @NonNull HttpClientDelegate client) {
+        super(entityHandler, client);
     }
 
     @Override

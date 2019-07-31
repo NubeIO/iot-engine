@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.datapoint.model;
+package com.nubeiot.edge.connector.datapoint.model.ditto;
 
 import java.io.File;
 import java.io.FileInputStream;

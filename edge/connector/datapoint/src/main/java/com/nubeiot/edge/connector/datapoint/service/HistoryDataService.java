@@ -1,5 +1,6 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
+import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.BigSerialKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
@@ -11,11 +12,11 @@ import com.nubeiot.iotdata.model.tables.records.PointHistoryDataRecord;
 import lombok.NonNull;
 
 public final class HistoryDataService
-    extends AbstractDittoService<Long, PointHistoryData, PointHistoryDataRecord, PointHistoryDataDao>
+    extends DataPointService<Long, PointHistoryData, PointHistoryDataRecord, PointHistoryDataDao>
     implements BigSerialKeyEntity<PointHistoryData, PointHistoryDataRecord, PointHistoryDataDao> {
 
-    public HistoryDataService(@NonNull EntityHandler entityHandler) {
-        super(entityHandler);
+    public HistoryDataService(@NonNull EntityHandler entityHandler, @NonNull HttpClientDelegate client) {
+        super(entityHandler, client);
     }
 
     @Override

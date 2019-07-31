@@ -19,6 +19,7 @@ import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
@@ -133,8 +134,7 @@ public class WebsocketClientDelegateTest {
 
         @EventContractor(action = EventAction.UNKNOWN, returnType = int.class)
         public int send(JsonObject data) {
-            context.assertEquals(expected, data);
-            TestHelper.testComplete(async);
+            JsonHelper.assertJson(context, async, expected, data);
             return 1;
         }
 

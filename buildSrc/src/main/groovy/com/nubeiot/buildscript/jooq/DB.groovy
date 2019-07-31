@@ -19,5 +19,6 @@ class DB {
         duration : Strings.toRegexIgnoreCase(".+(_DURATION)\$"),
         timeAudit: Strings.toRegexIgnoreCase("TIME_AUDIT"),
         label    : Strings.toRegexIgnoreCase("LABEL"),
+        syncAudit: Strings.toRegexIgnoreCase("SYNC_AUDIT"),
     ]
 }

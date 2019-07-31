@@ -10,7 +10,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Reflections;
-import com.nubeiot.edge.connector.datapoint.model.DittoHistorySetting;
+import com.nubeiot.edge.connector.datapoint.model.ditto.DittoHistorySetting;
 
 import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.Scope;

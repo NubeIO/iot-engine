@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class HttpServerContext extends UnitContext {
+public final class HttpServerContext extends UnitContext {
 
     private ServerInfo serverInfo;
 

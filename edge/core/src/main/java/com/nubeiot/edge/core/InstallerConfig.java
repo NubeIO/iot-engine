@@ -6,13 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.auth.Credential;
+import com.nubeiot.auth.ExternalServer;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.utils.FileUtils;
@@ -20,9 +20,7 @@ import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.loader.ModuleType;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Getter
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
@@ -82,10 +80,9 @@ public final class InstallerConfig implements IConfig {
         public static final class RemoteRepositoryConfig implements IConfig {
 
             static final String NAME = "remote";
-
+            private final Map<ModuleType, List<ExternalServer>> urls = new HashMap<>();
             @Setter
             private Credential credential;
-            private final Map<ModuleType, List<RemoteUrl>> urls = new HashMap<>();
 
             @Override
             public String name() {
@@ -97,35 +94,13 @@ public final class InstallerConfig implements IConfig {
                 return RepositoryConfig.class;
             }
 
-            RemoteRepositoryConfig addUrl(ModuleType moduleType, RemoteUrl remoteUrl) {
-                this.urls.computeIfAbsent(moduleType, t -> new ArrayList<>()).add(remoteUrl);
+            RemoteRepositoryConfig addUrl(ModuleType moduleType, ExternalServer externalServer) {
+                this.urls.computeIfAbsent(moduleType, t -> new ArrayList<>()).add(externalServer);
                 return this;
             }
 
         }
 
-    }
-
-
-    @Getter
-    @RequiredArgsConstructor
-    @ToString
-    public static class RemoteUrl {
-
-        @Setter
-        private Credential credential;
-        private final String url;
-
-        @JsonCreator
-        public RemoteUrl(@JsonProperty(value = "credential") Credential credential,
-                         @JsonProperty(value = "url", required = true) String url) {
-            this.credential = credential;
-            this.url = Strings.requireNotBlank(url);
-        }
-
-        public String computeUrl(){
-            return this.credential.computeUrl(this.url);
-        }
     }
 
 }

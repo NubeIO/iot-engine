@@ -107,7 +107,9 @@ public class EntityServiceTest extends BaseSqlTest {
 
     @Test
     public void test_create_one(TestContext context) {
-        JsonObject expected = new JsonObject("{\"id\":\"3\"}");
+        JsonObject expected = new JsonObject("{\"resource\":{\"id\":3,\"first_name\":\"ab\",\"last_name\":\"xyz\"," +
+                                             "\"date_of_birth\":\"2019-07-30\",\"distinguished\":null}," +
+                                             "\"action\":\"CREATE\",\"status\":\"SUCCESS\"}");
         RequestData reqData = RequestData.builder()
                                          .body(new Author().setFirstName("ab")
                                                            .setLastName("xyz")
@@ -126,7 +128,9 @@ public class EntityServiceTest extends BaseSqlTest {
 
     @Test
     public void test_update_one(TestContext context) throws InterruptedException {
-        JsonObject expected = new JsonObject("{\"success\":true}");
+        JsonObject expected = new JsonObject("{\"resource\":{\"id\":1,\"first_name\":\"ab\",\"last_name\":\"xyz\"," +
+                                             "\"date_of_birth\":\"1980-03-07\",\"distinguished\":null}," +
+                                             "\"action\":\"UPDATE\",\"status\":\"SUCCESS\"}");
         RequestData reqData = RequestData.builder()
                                          .body(new Author().setId(1)
                                                            .setFirstName("ab")
@@ -145,7 +149,9 @@ public class EntityServiceTest extends BaseSqlTest {
 
     @Test
     public void test_patch_one(TestContext context) throws InterruptedException {
-        JsonObject expected = new JsonObject("{\"success\":true}");
+        JsonObject expected = new JsonObject("{\"resource\":{\"id\":1,\"first_name\":\"ab\",\"last_name\":\"Orwell\"," +
+                                             "\"date_of_birth\":\"1903-06-26\",\"distinguished\":true}," +
+                                             "\"action\":\"PATCH\",\"status\":\"SUCCESS\"}");
         RequestData reqData = RequestData.builder().body(new Author().setId(1).setFirstName("ab").toJson()).build();
         CountDownLatch latch = new CountDownLatch(1);
         asserter(context, true, expected, authorAddress, EventAction.PATCH, reqData, latch);
@@ -158,7 +164,7 @@ public class EntityServiceTest extends BaseSqlTest {
 
     @Test
     public void test_delete_one(TestContext context) {
-        JsonObject expected = new JsonObject("{\"success\":true}");
+        JsonObject expected = new JsonObject("{\"id\":1}");
         RequestData reqData = RequestData.builder().body(new JsonObject().put("id", "1")).build();
         asserter(context, true, expected, bookAddress, EventAction.REMOVE, reqData);
     }
@@ -198,6 +204,11 @@ public class EntityServiceTest extends BaseSqlTest {
         @Override
         protected boolean enableTimeAudit() {
             return false;
+        }
+
+        @Override
+        protected boolean enableFullResourceInCUDResponse() {
+            return true;
         }
 
         @Override
@@ -242,6 +253,11 @@ public class EntityServiceTest extends BaseSqlTest {
 
         @Override
         protected boolean enableTimeAudit() {
+            return false;
+        }
+
+        @Override
+        protected boolean enableFullResourceInCUDResponse() {
             return false;
         }
 

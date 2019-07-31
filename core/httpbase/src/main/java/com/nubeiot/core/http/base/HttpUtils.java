@@ -37,7 +37,7 @@ public final class HttpUtils {
                       HttpMethod.HEAD, HttpMethod.OPTIONS)));
 
     private static boolean isPretty(HttpServerRequest request) {
-        return Boolean.valueOf(request.getParam("pretty"));
+        return Boolean.parseBoolean(request.getParam("pretty"));
     }
 
     @SuppressWarnings("unchecked")
