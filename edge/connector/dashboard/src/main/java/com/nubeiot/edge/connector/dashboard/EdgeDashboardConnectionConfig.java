@@ -17,8 +17,8 @@ public class EdgeDashboardConnectionConfig implements IConfig {
     private String gateway_schema = "http";
     private String gateway_host = "localhost";
     private int gateway_port = 8080;
-    private String gateway_api_root = "/api";
-    private String edge_api_root = "/edge-api";
+    private String gateway_root_api = "/api";
+    private String edge_root_api = "/edge-api";
 
     @Override
     public String name() {
