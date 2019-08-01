@@ -42,13 +42,13 @@ public class RemoteDeviceEventHandlerTest {
     @Test
     public void getRemoteDeviceExtendedInfo() throws Exception {
         when(bacnetInstance.getRemoteDeviceExtendedInfo(any(Integer.class))).thenReturn(Single.just(new JsonObject()));
-        eventHandler.getRemoteDeviceExtendedInfo("testNet", 11).test().assertNoErrors().assertComplete();
+        eventHandler.getRemoteDeviceExtendedInfo("testNet", "11").test().assertNoErrors().assertComplete();
     }
 
     @Test
     public void noNetworkTest() throws Exception {
         eventHandler.getCachedRemoteDevices("testNetFalse").test().assertError(BACnetException.class);
-        eventHandler.getRemoteDeviceExtendedInfo("testNetFalse", 11).test().assertError(BACnetException.class);
+        eventHandler.getRemoteDeviceExtendedInfo("testNetFalse", "11").test().assertError(BACnetException.class);
     }
 
 }

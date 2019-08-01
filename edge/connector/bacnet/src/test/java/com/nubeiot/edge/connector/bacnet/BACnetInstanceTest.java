@@ -11,9 +11,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.Vertx;
 
@@ -29,6 +31,7 @@ import com.serotonin.bacnet4j.transport.DefaultTransport;
 import com.serotonin.bacnet4j.type.constructed.Address;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
+import com.serotonin.bacnet4j.util.RemoteDeviceDiscoverer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BACnetInstanceTest {
@@ -37,10 +40,11 @@ public class BACnetInstanceTest {
     private DefaultTransport transport;
     private BACnetInstance bacnetInstance;
     private JsonObject points;
+    private Vertx vertx;
 
     @Before
     public void beforeEach() throws Exception {
-        Vertx vertx = Mockito.mock(Vertx.class);
+        vertx = Mockito.mock(Vertx.class);
         transport = Mockito.mock(DefaultTransport.class);
         localDevice = new LocalDevice(1234, transport);
         bacnetInstance = BACnetInstance.createBACnet(localDevice, vertx);
@@ -67,6 +71,17 @@ public class BACnetInstanceTest {
                 Assert.fail(e.getMessage());
             }
         });
+    }
+
+    @Test
+    public void discoveryTest() throws Exception {
+        LocalDevice ld = Mockito.mock(LocalDevice.class);
+        BACnetInstance inst = BACnetInstance.createBACnet(ld, vertx);
+        Mockito.when(ld.startRemoteDeviceDiscovery()).thenReturn(Mockito.mock(RemoteDeviceDiscoverer.class));
+        inst.startRemoteDiscover();
+        Mockito.verify(ld).clearRemoteDevices();
+        Mockito.verify(ld).startRemoteDeviceDiscovery();
+        Mockito.verify(vertx).setTimer(Mockito.anyLong(), Mockito.any(Handler.class));
     }
 
     @Test

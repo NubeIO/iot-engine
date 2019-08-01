@@ -4,10 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import io.vertx.core.json.JsonObject;
-
-import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint.Kind;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
@@ -22,6 +19,7 @@ import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
+import com.serotonin.bacnet4j.util.PropertyValues;
 
 public class BACnetDataConversions {
 
@@ -88,6 +86,16 @@ public class BACnetDataConversions {
 //        }
 //        return req;
 //    }
+
+    public static JsonObject readMultipleToJson(PropertyValues values){
+        JsonObject json = new JsonObject();
+        values.forEach(objectPropertyReference -> {
+            try {
+                json.put(pointFormatBACnet(objectPropertyReference.getObjectIdentifier()), encodableToPrimitive(values.get(objectPropertyReference)));
+            }catch (Exception e){}
+        });
+        return json;
+    }
 
     public static Object encodableToPrimitive(Encodable val) {
         if (val instanceof Real) {

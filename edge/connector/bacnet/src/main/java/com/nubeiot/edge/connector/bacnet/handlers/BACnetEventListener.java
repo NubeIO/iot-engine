@@ -146,7 +146,7 @@ public class BACnetEventListener extends DeviceEventAdapter {
 
             //TODO: write point framework problem...
             // the framework will write to the BACnetObject straight after this method and if not connected to the
-            // edge-api, the http is too fast to allow a revert unless called with setTime / executeBlocking or
+            // edge-api, the http is too fast to allow a revert unless called with setTimer / executeBlocking or
             // something like that
 
             localController.executeHttpService(r -> r.getName().equals("edge-api"), "/edge-api/points", HttpMethod.GET,

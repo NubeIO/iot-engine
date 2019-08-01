@@ -9,8 +9,10 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
@@ -51,6 +53,23 @@ public class MultipleNetworkEventHandler implements EventListener {
         } catch (NullPointerException e) {
             return Single.error(new BACnetException("No network found", e));
         }
+    }
+
+    @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
+    public Single<String> startDiscovery(RequestData requestData) throws Exception {
+
+        if(requestData.body().getString("timeout") != null){
+            long timeout = Long.parseLong(requestData.body().getString("timeout"));
+            if (timeout > 0 && timeout < 200) {
+                throw new BACnetException("Timout too short. must be >= 200");
+            }
+            bacnetInstances.forEach((network, instance) -> instance.startRemoteDiscover(timeout));
+        }
+        else{
+            bacnetInstances.forEach((network, instance) -> instance.startRemoteDiscover());
+        }
+        //TODO: Allow to return devices in future fix
+        return Single.just("Starting remote discovery");
     }
 
 }
