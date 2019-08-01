@@ -31,7 +31,7 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class HttpUtils {
 
-    public static final String DEFAULT_CONTENT_TYPE = "application/json;charset=utf-8";
+    public static final String DEFAULT_CONTENT_TYPE = "application/json";
     public static final Set<HttpMethod> DEFAULT_CORS_HTTP_METHOD = Collections.unmodifiableSet(new HashSet<>(
         Arrays.asList(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH, HttpMethod.DELETE,
                       HttpMethod.HEAD, HttpMethod.OPTIONS)));
