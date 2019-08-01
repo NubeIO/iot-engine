@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -12,6 +13,7 @@ import org.mockito.Mockito;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 
 public class MultipleNetworkEventHandlerTest {
@@ -39,4 +41,18 @@ public class MultipleNetworkEventHandlerTest {
         eventHandler.getCachedRemoteDevices().test().assertNoErrors().assertComplete().assertValue(expected);
     }
 
+    @Test
+    public void startDiscoveryTest() throws Exception {
+        BACnetInstance inst1 = Mockito.mock(BACnetInstance.class);
+        bacnetInstances.put("net1", inst1);
+
+        RequestData requestData = RequestData.builder().build();
+        requestData.getFilter().put("timeout","1000");
+        eventHandler.startDiscovery(requestData);
+        Mockito.verify(inst1).startRemoteDiscover(Mockito.anyLong());
+        requestData = RequestData.builder().build();
+        requestData.getFilter().put("timeout","0");
+        eventHandler.startDiscovery(requestData);
+        Mockito.verify(inst1).startRemoteDiscover();
+    }
 }

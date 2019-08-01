@@ -6,6 +6,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.vertx.core.json.JsonObject;
+
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
@@ -13,11 +15,13 @@ import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
+import com.serotonin.bacnet4j.type.primitive.Boolean;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
+import com.serotonin.bacnet4j.util.PropertyValues;
 
 //import com.nubeiot.core.utils.FileUtilsTest;
 
@@ -145,5 +149,16 @@ public class BACnetDataConversionsTest {
     @Test(expected = BACnetException.class)
     public void primitiveToReal_InvalidNull() throws Exception {
         assertEquals(new Real(1.2f), BACnetDataConversions.primitiveToReal(null));
+    }
+
+    @Test
+    public void readMultipleToJson_Test() throws Exception {
+        PropertyValues values = new PropertyValues();
+        Assert.assertEquals(new JsonObject(), BACnetDataConversions.readMultipleToJson(values));
+        values.add(new ObjectIdentifier(ObjectType.analogValue, 1), PropertyIdentifier.presentValue, new UnsignedInteger(0), new Real(0));
+        values.add(new ObjectIdentifier(ObjectType.binaryValue, 1), PropertyIdentifier.presentValue, new UnsignedInteger(0), BinaryPV.active);
+
+        JsonObject expected = new JsonObject().put("analog-value:1", 0.0).put("binary-value:1", 1);
+        Assert.assertEquals(expected, BACnetDataConversions.readMultipleToJson(values));
     }
 }

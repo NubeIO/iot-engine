@@ -35,22 +35,26 @@ public class RemotePointsInfoEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getRemoteDevicePoints(@Param("network") String network,
-                                                    @Param("deviceId") int instanceNumber) {
+                                                    @Param("deviceId") String instanceNumber) {
         try {
-            return bacnetInstances.get(network).getRemoteDeviceObjectList(instanceNumber);
+            return bacnetInstances.get(network).getRemoteDeviceObjectList(Integer.parseInt(instanceNumber));
         } catch (NullPointerException e) {
             return Single.error(new BACnetException("No network found", e));
+        } catch (ClassCastException e) {
+            return Single.error(e);
         }
     }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getRemoteDevicePointExtended(@Param("network") String network,
-                                                           @Param("deviceId") int instanceNumber,
+                                                           @Param("deviceId") String instanceNumber,
                                                            @Param("objectId") String objectId) {
         try {
-            return bacnetInstances.get(network).getRemoteObjectProperties(instanceNumber, objectId);
+            return bacnetInstances.get(network).getRemoteObjectProperties(Integer.parseInt(instanceNumber), objectId);
         } catch (NullPointerException e) {
             return Single.error(new BACnetException("No network found", e));
+        } catch (ClassCastException e) {
+            return Single.error(e);
         }
     }
 

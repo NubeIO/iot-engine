@@ -17,9 +17,9 @@ import com.serotonin.bacnet4j.exception.BACnetException;
 public class RemotePointsInfoEventHandlerTest {
 
     String n = "testNet";
-    int id = 1234;
+    String id = "1234";
     String p = "analogInput:1";
-    int pr = 16;
+    String pr = "16";
 
     @Mock
     BACnetInstance bacnetInstance;
