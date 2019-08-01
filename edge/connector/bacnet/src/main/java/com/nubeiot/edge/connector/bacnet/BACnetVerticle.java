@@ -34,6 +34,7 @@ public class BACnetVerticle extends ContainerVerticle {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected final Map<String, BACnetInstance> bacnetInstances = new HashMap<>();
     protected MicroContext microContext;
+    protected boolean allowSlave;
 
     @Override
     public void start() {
@@ -42,6 +43,8 @@ public class BACnetVerticle extends ContainerVerticle {
         JsonObject configJson = this.nubeConfig.getAppConfig().toJson();
         BACnetConfig bacnetConfig = IConfig.from(configJson, BACnetConfig.class);
         logger.info("BACNet configuration: {}", configJson);
+
+        allowSlave = bacnetConfig.isAllowSlave();
 
         if (bacnetConfig.getIpConfigs().isEmpty() && bacnetConfig.getMstpConfigs().isEmpty()) {
             throw new NubeException("No network information provided");
@@ -53,7 +56,9 @@ public class BACnetVerticle extends ContainerVerticle {
             startBACnet(bacnetConfig, localController);
             registerEventbus(new EventController(vertx));
             publishServices(localController);
-            initLocalPoints(bacnetConfig.getLocalPointsApiAddress(), localController);
+            if (allowSlave) {
+                initLocalPoints(bacnetConfig.getLocalPointsApiAddress(), localController);
+            }
         });
     }
 
@@ -62,7 +67,9 @@ public class BACnetVerticle extends ContainerVerticle {
         if (bacnetInstances.isEmpty()) {
             return; //Prevents super.start() from registering before BACnetInstance is started
         }
-        controller.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
+        if (allowSlave) {
+            controller.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
+        }
         controller.register(BACnetEventModels.NETWORKS_ALL, new MultipleNetworkEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.DEVICES, new RemoteDeviceEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.POINTS_INFO, new RemotePointsInfoEventHandler(bacnetInstances));
@@ -108,31 +115,33 @@ public class BACnetVerticle extends ContainerVerticle {
                                                   public Map<EventAction, HttpMethod> get() {
                                                       Map<EventAction, HttpMethod> map = new HashMap<>();
                                                       map.put(EventAction.GET_LIST, HttpMethod.GET);
+                                                      map.put(EventAction.UPDATE, HttpMethod.PUT);
                                                       return map;
                                                   }
-                                              }, false)).subscribe();
+                                              }, true)).subscribe();
 
         localController.addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),
                                               EventMethodDefinition.createDefault("/bacnet/remote/:network/device",
                                                                                   "/bacnet/remote/:network/device" +
-                                                                                  "/:deviceID", false)).subscribe();
+                                                                                  "/:deviceId", false)).subscribe();
 
         localController.addEventMessageRecord("bacnet-points-info-service", BACnetEventModels.POINTS_INFO.getAddress(),
                                               EventMethodDefinition.createDefault(
-                                                  "/bacnet/remote/:network/device/:deviceID/points-info",
-                                                  "/bacnet/remote/:network/device/:deviceID/points-info/:objectID",
+                                                  "/bacnet/remote/:network/device/:deviceId/points-info",
+                                                  "/bacnet/remote/:network/device/:deviceId/points-info/:objectId",
                                                   false)).subscribe();
 
         localController.addEventMessageRecord("bacnet-point-service", BACnetEventModels.POINT.getAddress(),
                                               EventMethodDefinition.createDefault(
-                                                  "/bacnet/remote/:network/device/:deviceID/point",
-                                                  "/bacnet/remote/:network/device/:deviceID/point/:objectID", false))
+                                                  "/bacnet/remote/:network/device/:deviceId/point",
+                                                  "/bacnet/remote/:network/device/:deviceId/point/:objectId", true))
                        .subscribe();
     }
 
     protected void initLocalPoints(String localPointsAddress, ServiceDiscoveryController localController) {
         logger.info("Requesting local points from address {}", localPointsAddress);
 
+        //TODO: need auth for bs-api??
         localController.executeHttpService(r -> r.getName().equals("edge-api"), "/edge-api/points", HttpMethod.GET,
                                            RequestData.builder().build())
                        .subscribe(responseData -> initLocalPoints(responseData.body()),

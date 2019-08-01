@@ -45,11 +45,14 @@ public class RemoteDeviceEventHandler implements EventHandler {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getRemoteDeviceExtendedInfo(@Param("network") String network,
-                                                          @Param("deviceId") int instanceNumber) {
+                                                          @Param("deviceId") String instanceNumber) {
+
         try {
-            return bacnetInstances.get(network).getRemoteDeviceExtendedInfo(instanceNumber);
+            return bacnetInstances.get(network).getRemoteDeviceExtendedInfo(Integer.parseInt(instanceNumber));
         } catch (NullPointerException e) {
             return Single.error(new BACnetException("No network found", e));
+        } catch (ClassCastException e) {
+            return Single.error(e);
         }
     }
 

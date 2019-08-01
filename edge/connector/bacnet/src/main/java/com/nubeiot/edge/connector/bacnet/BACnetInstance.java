@@ -46,6 +46,7 @@ import com.serotonin.bacnet4j.type.error.ErrorClassAndCode;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.util.DiscoveryUtils;
+import com.serotonin.bacnet4j.util.PropertyValues;
 import com.serotonin.bacnet4j.util.RemoteDeviceDiscoverer;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
@@ -70,7 +71,7 @@ public class BACnetInstance {
     private BACnetConfig config;
     private RemoteDeviceDiscoverer deviceDiscoverer;
     //only mapping virtual points as other points can be calculated to get ObjectIdentifier so this savs memory
-    //TODO: look intomoving this higher up to save memory. need to check if each instance creates the exact same point
+    //TODO: look into moving this higher up to save memory. need to check if each instance creates the exact same point
     // and instance number every time across all BACnetInstances
     private Map<String, ObjectIdentifier> virtualPointsMap;
 
@@ -96,11 +97,14 @@ public class BACnetInstance {
         localDevice.writePropertyInternal(PropertyIdentifier.objectName, new CharacterString(config.getDeviceName()));
         try {
             localDevice.initialize();
-            localDevice.getEventHandler()
-                       .addListener(new BACnetEventListener(config, this, localDevice, eventController, localController,
-                                                            bacnetInstances, vertx));
-            deviceDiscoverer = localDevice.startRemoteDeviceDiscovery();
-            //TODO: should this be stopped? does it stop handling IAM req if stopped?
+            if (config.isAllowSlave()) {
+                localDevice.getEventHandler()
+                           .addListener(
+                               new BACnetEventListener(config, this, localDevice, eventController, localController,
+                                                       bacnetInstances, vertx));
+            }
+
+            startRemoteDiscover();
             if (!localDevice.isInitialized()) {
                 throw new NubeException(new BACnetServiceException(ErrorClass.device, ErrorCode.internalError));
             }
@@ -128,6 +132,21 @@ public class BACnetInstance {
         localDevice.clearRemoteDevices();
         deviceDiscoverer.stop();
         localDevice.terminate();
+    }
+
+    public void startRemoteDiscover() {
+        startRemoteDiscover(config.getDiscoveryTimeout());
+    }
+
+    public void startRemoteDiscover(long timeout) {
+        if (deviceDiscoverer != null) {
+            deviceDiscoverer.stop();
+        }
+        localDevice.clearRemoteDevices();
+        deviceDiscoverer = localDevice.startRemoteDeviceDiscovery();
+        vertx.setTimer(timeout, s -> {
+            deviceDiscoverer.stop();
+        });
     }
 
     public void initialiseLocalObjectsFromJson(JsonObject json) {
@@ -326,6 +345,29 @@ public class BACnetInstance {
         return callAsyncBlocking(() -> {
             Encodable val = getPropery(remoteDevice, oid, PropertyIdentifier.presentValue);
             return new JsonObject().put("value", BACnetDataConversions.encodableToPrimitive(val));
+        });
+    }
+
+    public Single<JsonObject> readMultipleRemoteObjectvalue(int instanceNumber, List<String> oids) {
+        RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
+        if (remoteDevice == null) {
+            return Single.error(new BACnetRuntimeException("Remote device not found"));
+        }
+        try {
+            ArrayList<ObjectIdentifier> list = new ArrayList<>();
+            for (String s : oids) {
+                list.add(BACnetDataConversions.getObjectIdentifier(s));
+            }
+            return readMultipleRemoteObjectvalue(remoteDevice, list);
+        } catch (BACnetRuntimeException e) {
+            return Single.error(e);
+        }
+    }
+
+    public Single<JsonObject> readMultipleRemoteObjectvalue(RemoteDevice remoteDevice, List<ObjectIdentifier> oids) {
+        return callAsyncBlocking(() -> {
+            PropertyValues values = RequestUtils.readOidPresentValues(localDevice, remoteDevice, oids, null);
+            return new JsonObject().put("deviceId", remoteDevice.getInstanceNumber()).put("points", BACnetDataConversions.readMultipleToJson(values));
         });
     }
 
