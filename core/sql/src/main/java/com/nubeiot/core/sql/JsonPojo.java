@@ -2,6 +2,7 @@ package com.nubeiot.core.sql;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
@@ -50,8 +51,25 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
     public JsonObject toJson() {
         JsonObject json = this.pojo.toJson();
         try {
-            Map map = mapper.readValue(this.mapper.writeValueAsBytes(json.getMap()), Map.class);
-            return new JsonObject(map);
+            return new JsonObject(mapper.readValue(this.mapper.writeValueAsBytes(json.getMap()), Map.class));
+        } catch (IOException e) {
+            return json;
+        }
+    }
+
+    @Override
+    public JsonObject toJson(Set<String> ignoreFields) {
+        return toJson(this.mapper, ignoreFields);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public JsonObject toJson(ObjectMapper mapper, Set<String> ignoreFields) {
+        JsonObject json = this.pojo.toJson();
+        try {
+            return new JsonObject(mapper.readValue(mapper.addMixIn(Object.class, PropertyFilterMixIn.class)
+                                                         .writer(JsonData.ignoreFields(ignoreFields))
+                                                         .writeValueAsBytes(json.getMap()), Map.class));
         } catch (IOException e) {
             return json;
         }

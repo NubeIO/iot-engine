@@ -2,6 +2,8 @@ package com.nubeiot.core.sql;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -10,10 +12,14 @@ import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
+import com.nubeiot.core.sql.type.TimeAudit;
+import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
@@ -40,8 +46,26 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
      */
     @NonNull
     default Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.CREATE, EventAction.UPDATE, EventAction.PATCH, EventAction.REMOVE, EventAction.GET_ONE, EventAction.GET_LIST);
+        return Arrays.asList(EventAction.CREATE, EventAction.UPDATE, EventAction.PATCH, EventAction.REMOVE,
+                             EventAction.GET_ONE, EventAction.GET_LIST);
     }
+
+    /**
+     * Defines enabling {@code time audit} in {@code application layer} instead of {@code database layer} by {@code DB
+     * trigger}. It is helpful to add time audit in {@code create/update/patch} resource.
+     *
+     * @return {@code true} if enable time audit in application layer
+     * @see TimeAudit
+     */
+    boolean enableTimeAudit();
+
+    /**
+     * Enable {@code CUD} response includes full resource instead of simple resource with only response status and
+     * {@code primary key} of resource.
+     *
+     * @return {@code true} if enable full resource in response
+     */
+    boolean enableFullResourceInCUDResponse();
 
     /**
      * Pojo model class
@@ -67,6 +91,60 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
     @NonNull JsonTable<R> table();
 
     /**
+     * Defines listener for listing Resource
+     *
+     * @param requestData Request data
+     * @return Json object includes list data
+     * @see EventAction#GET_LIST
+     */
+    Single<JsonObject> list(RequestData requestData);
+
+    /**
+     * Defines listener for get one item by key
+     *
+     * @param requestData Request data
+     * @return Json object represents resource data
+     * @see EventAction#GET_ONE
+     */
+    Single<JsonObject> get(RequestData requestData);
+
+    /**
+     * Defines listener for updating existing resource by primary key
+     *
+     * @param requestData Request data
+     * @return json object that includes status message
+     * @see EventAction#UPDATE
+     */
+    Single<JsonObject> create(RequestData requestData);
+
+    /**
+     * Defines listener for updating existing resource by primary key
+     *
+     * @param requestData Request data
+     * @return json object that includes status message
+     * @see EventAction#UPDATE
+     */
+    Single<JsonObject> update(RequestData requestData);
+
+    /**
+     * Defines listener for patching existing resource by primary key
+     *
+     * @param requestData Request data
+     * @return json object that includes status message
+     * @see EventAction#PATCH
+     */
+    Single<JsonObject> patch(RequestData requestData);
+
+    /**
+     * Defines listener for deleting existing resource by primary key
+     *
+     * @param requestData Request data
+     * @return json object that includes status message
+     * @see EventAction#REMOVE
+     */
+    Single<JsonObject> delete(RequestData requestData);
+
+    /**
      * Parse given data from external service to {@code pojo} object
      *
      * @param request Given request data
@@ -74,8 +152,41 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
      * @throws IllegalArgumentException if cannot parse
      */
     @SuppressWarnings("unchecked")
-    default @NonNull M parse(@NonNull JsonObject request) throws IllegalArgumentException {
+    @NonNull
+    default M parse(@NonNull JsonObject request) throws IllegalArgumentException {
         return (M) ReflectionClass.createObject(modelClass()).fromJson(request);
+    }
+
+    /**
+     * Defines request key name to lookup in doing {@code get/update/patch/delete} resource
+     *
+     * @return primary key name. Default is {@code <model_name>_<json_key_name>}
+     * @apiNote It is not represents for actual primary key column in database table
+     * @see #parsePrimaryKey(RequestData)
+     * @see #modelClass()
+     */
+    @NonNull
+    default String primaryKeyName() {
+        return modelClass().getSimpleName().toLowerCase(Locale.ENGLISH) + "_" + jsonKeyName();
+    }
+
+    @NonNull
+    default String jsonKeyName() {
+        return "id";
+    }
+
+    /**
+     * Extract primary key from request then parse to primary key with proper data type
+     *
+     * @param requestData Request data
+     * @return Actual primary key
+     * @throws IllegalArgumentException if data key is not valid or missing
+     */
+    @NonNull
+    default K parsePrimaryKey(@NonNull RequestData requestData) throws IllegalArgumentException {
+        return Optional.ofNullable(requestData.body().getValue(primaryKeyName()))
+                       .map(k -> parsePrimaryKey(k.toString()))
+                       .orElseThrow(() -> new IllegalArgumentException("Missing key " + primaryKeyName()));
     }
 
     /**
@@ -83,9 +194,9 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
      *
      * @param dataKey Request data key
      * @return Actual primary key
-     * @throws IllegalArgumentException if data key is not valid
+     * @throws IllegalArgumentException if data key is not valid or missing
      */
-    K parsePK(String dataKey) throws IllegalArgumentException;
+    @NonNull K parsePrimaryKey(@NonNull String dataKey) throws IllegalArgumentException;
 
     /**
      * Represents entity primary key is in {@code UUID} data type
@@ -95,8 +206,8 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
     interface UUIDKeyEntity<M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, UUID>>
         extends EntityService<UUID, M, R, D> {
 
-        default UUID parsePK(String dataKey) throws IllegalArgumentException {
-            return UUID.fromString(dataKey);
+        default UUID parsePrimaryKey(String dataKey) throws IllegalArgumentException {
+            return Functions.toUUID().apply(dataKey);
         }
 
     }
@@ -110,8 +221,8 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
     interface SerialKeyEntity<M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, Integer>>
         extends EntityService<Integer, M, R, D> {
 
-        default Integer parsePK(String dataKey) throws IllegalArgumentException {
-            return Integer.parseInt(dataKey);
+        default Integer parsePrimaryKey(String dataKey) throws IllegalArgumentException {
+            return Functions.toInt().apply(dataKey);
         }
 
     }
@@ -125,8 +236,23 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
     interface BigSerialKeyEntity<M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, Long>>
         extends EntityService<Long, M, R, D> {
 
-        default Long parsePK(String dataKey) throws IllegalArgumentException {
-            return Long.parseLong(dataKey);
+        default Long parsePrimaryKey(String dataKey) throws IllegalArgumentException {
+            return Functions.toLong().apply(dataKey);
+        }
+
+    }
+
+
+    /**
+     * Represents entity primary key is in {@code String} data type
+     *
+     * @see EntityService
+     */
+    interface StringKeyEntity<M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, String>>
+        extends EntityService<String, M, R, D> {
+
+        default String parsePrimaryKey(String dataKey) throws IllegalArgumentException {
+            return dataKey;
         }
 
     }

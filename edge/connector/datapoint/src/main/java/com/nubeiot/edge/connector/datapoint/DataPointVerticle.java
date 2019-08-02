@@ -22,7 +22,7 @@ import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.connector.datapoint.service.DeviceService;
 import com.nubeiot.edge.connector.datapoint.service.EquipmentService;
-import com.nubeiot.edge.connector.datapoint.service.EventHttpService;
+import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.edge.connector.datapoint.service.HistoryDataService;
 import com.nubeiot.edge.connector.datapoint.service.HistorySettingService;
 import com.nubeiot.edge.connector.datapoint.service.PointService;
