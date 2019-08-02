@@ -8,7 +8,6 @@ import java.time.Period;
 import java.time.ZoneOffset;
 import java.util.TimeZone;
 
-import org.jooq.DSLContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -31,7 +30,6 @@ import lombok.NonNull;
 @RunWith(VertxUnitRunner.class)
 public class H2ConverterUpdateTest extends BaseSqlTest {
 
-    private DSLContext dsl;
     private MockManyEntityHandler entityHandler;
 
     @Rule
@@ -47,7 +45,6 @@ public class H2ConverterUpdateTest extends BaseSqlTest {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
         super.before(context);
         this.entityHandler = startSQL(context, ManySchema.CATALOG, MockManyInsertData.class);
-        this.dsl = entityHandler.getJooqConfig().dsl();
         //id = 1, f_date_1 = 2019-02-17
         //f_timestamp = 2019-02-17 23:59:59, f_timestampz = 2019-02-17 23:59:59
         //f_duration = PT50H30M20S, id = P2Y3M4W5D
@@ -76,11 +73,11 @@ public class H2ConverterUpdateTest extends BaseSqlTest {
                                                                               .setFDate_1(LocalDate.of(2019, 2, 17))
                                                                               .setFTimestamp(
                                                                                   LocalDateTime.of(2019, 2, 17, 00, 00,
-                                                                                                   01))
+                                                                                                   1))
                                                                               .setFTimestampz(
                                                                                   LocalDateTime.of(2019, 2, 17, 00, 00,
-                                                                                                   01))
-                                                                              .setFTime(LocalTime.of(00, 00, 01))
+                                                                                                   1))
+                                                                              .setFTime(LocalTime.of(0, 0, 1))
                                                                               .setFDuration(Duration.ofHours(50)
                                                                                                     .plusMinutes(30)
                                                                                                     .plusSeconds(20))
@@ -143,13 +140,14 @@ public class H2ConverterUpdateTest extends BaseSqlTest {
         Async async = context.async(2);
         this.entityHandler.getSample01Dao()
                           .findOneById(1)
-                          .subscribe(result -> this.assertValue(context, async, result.orElse(null), "fTime",
-                                                                LocalTime.of(23, 59, 59), LocalTime.class));
+                          .subscribe(result -> assertValue(context, async, result.orElse(null), "fTime",
+                                                           LocalTime.of(23, 59, 59), LocalTime.class));
 
         this.entityHandler.getSample01Dao()
                           .findOneById(2)
-                          .subscribe(result -> this.assertValue(context, async, result.orElse(null), "fTime",
-                                                                LocalTime.of(0, 0, 1), LocalTime.class));
+                          .subscribe(
+                              result -> assertValue(context, async, result.orElse(null), "fTime", LocalTime.of(0, 0, 1),
+                                                    LocalTime.class));
         async.awaitSuccess();
     }
 

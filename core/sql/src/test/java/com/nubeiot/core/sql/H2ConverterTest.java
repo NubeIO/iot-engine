@@ -30,7 +30,6 @@ import lombok.NonNull;
 @RunWith(VertxUnitRunner.class)
 public class H2ConverterTest extends BaseSqlTest {
 
-    private DSLContext dsl;
     private MockManyEntityHandler entityHandler;
 
     @Rule
@@ -46,11 +45,11 @@ public class H2ConverterTest extends BaseSqlTest {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
         super.before(context);
         this.entityHandler = startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
-        this.dsl = entityHandler.getJooqConfig().dsl();
+        final DSLContext dsl = entityHandler.getJooqConfig().dsl();
         //id = 1, f_date_1 = 2019-02-17
         //f_timestamp = 2019-02-17 23:59:59, f_timestampz = 2019-02-17 23:59:59
         //f_duration = PT50H30M20S, id = P2Y3M4W5D
-        this.dsl.execute(
+        dsl.execute(
             "INSERT INTO tbl_sample_01 (id, f_date_1, f_timestamp, f_timestampz, f_time, f_duration, " + "f_period) " +
             "VALUES (1, PARSEDATETIME('2019-02-17', 'yyyy-MM-dd'), PARSEDATETIME('2019-02-17" +
             " 23:59:59', 'yyyy-MM-dd HH:mm:ss'), PARSEDATETIME('2019-02-17 23:59:59', 'yyyy-MM-dd " +
@@ -59,10 +58,10 @@ public class H2ConverterTest extends BaseSqlTest {
         //id = 2, f_date_1 = 2019-02-17
         //f_timestamp = 2019-02-17 00:00:01, f_timestampz = 2019-02-17 00:00:01
         //f_duration = PT50H30M20S, id = P2Y3M4W5D
-        this.dsl.execute("INSERT INTO tbl_sample_01 (id, f_date_1, f_timestamp, f_timestampz, f_time, f_duration, " +
-                         "f_period) VALUES (2, PARSEDATETIME('2019-02-17', 'yyyy-MM-dd'), PARSEDATETIME('2019-02-17" +
-                         " 00:00:01', 'yyyy-MM-dd HH:mm:ss'), PARSEDATETIME('2019-02-17 00:00:01', 'yyyy-MM-dd " +
-                         "HH:mm:ss'), PARSEDATETIME('00:00:01', 'HH:mm:ss'), 'PT50H30M20S', 'P2Y3M4W5D');");
+        dsl.execute("INSERT INTO tbl_sample_01 (id, f_date_1, f_timestamp, f_timestampz, f_time, f_duration, " +
+                    "f_period) VALUES (2, PARSEDATETIME('2019-02-17', 'yyyy-MM-dd'), PARSEDATETIME('2019-02-17" +
+                    " 00:00:01', 'yyyy-MM-dd HH:mm:ss'), PARSEDATETIME('2019-02-17 00:00:01', 'yyyy-MM-dd " +
+                    "HH:mm:ss'), PARSEDATETIME('00:00:01', 'HH:mm:ss'), 'PT50H30M20S', 'P2Y3M4W5D');");
         this.entityHandler.getSample01Dao()
                           .insert(new TblSample_01().setFBool(false)
                                                     .setFStr("hola")

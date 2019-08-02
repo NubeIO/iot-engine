@@ -3,8 +3,10 @@ package com.nubeiot.core.utils;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -43,6 +45,18 @@ public final class Functions {
     @SafeVarargs
     public static <T> Predicate<T> or(Predicate<T>... predicates) {
         return Arrays.stream(predicates).reduce(Predicate::or).orElse(x -> false);
+    }
+
+    public static Function<String, Integer> toInt() {
+        return Integer::valueOf;
+    }
+
+    public static Function<String, Long> toLong() {
+        return Long::parseLong;
+    }
+
+    public static Function<String, UUID> toUUID() {
+        return UUID::fromString;
     }
 
     public static class Silencer<T> implements BiConsumer<T, HiddenException>, Supplier<T> {

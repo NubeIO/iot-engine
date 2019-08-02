@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import io.vertx.core.buffer.Buffer;
@@ -16,9 +17,13 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
@@ -35,6 +40,7 @@ public interface JsonData extends Serializable {
     ObjectMapper LENIENT_MAPPER = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     String SUCCESS_KEY = "data";
     String ERROR_KEY = "error";
+    String FILTER_PROP_BY_NAME = "filter_by_name";
 
     static <T> T convert(@NonNull JsonObject jsonObject, @NonNull Class<T> clazz) {
         return convert(jsonObject, clazz, MAPPER);
@@ -150,12 +156,33 @@ public interface JsonData extends Serializable {
         return toJson(mapper());
     }
 
+    default JsonObject toJson(@NonNull Set<String> ignoreFields) {
+        return toJson(mapper(), ignoreFields);
+    }
+
     @SuppressWarnings("unchecked")
-    default JsonObject toJson(ObjectMapper mapper) {
+    default JsonObject toJson(@NonNull ObjectMapper mapper) {
         return new JsonObject((Map<String, Object>) mapper.convertValue(this, Map.class));
     }
 
+    @SuppressWarnings("unchecked")
+    default JsonObject toJson(@NonNull ObjectMapper mapper, @NonNull Set<String> ignoreFields) {
+        return new JsonObject((Map<String, Object>) mapper.copy()
+                                                          .addMixIn(Object.class, PropertyFilterMixIn.class)
+                                                          .setFilterProvider(ignoreFields(ignoreFields))
+                                                          .convertValue(this, Map.class));
+    }
+
     default ObjectMapper mapper() { return MAPPER; }
+
+    static FilterProvider ignoreFields(Set<String> ignoreFields) {
+        return new SimpleFilterProvider().addFilter(FILTER_PROP_BY_NAME,
+                                                    SimpleBeanPropertyFilter.serializeAllExcept(ignoreFields));
+    }
+
+    @JsonFilter(FILTER_PROP_BY_NAME)
+    class PropertyFilterMixIn {}
+
 
     @NoArgsConstructor
     class DefaultJsonData extends HashMap<String, Object> implements JsonData {

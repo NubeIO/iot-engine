@@ -1,6 +1,7 @@
 package com.nubeiot.core.sql;
 
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 import org.jooq.Catalog;
 import org.jooq.Record;
@@ -11,14 +12,21 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.sql.mock.manyschema.mock0.tables.TblSample_00;
 import com.nubeiot.core.sql.mock.manyschema.mock1.tables.TblSample_01;
 import com.nubeiot.core.utils.Configs;
@@ -93,9 +101,9 @@ abstract class BaseSqlTest {
         }
     }
 
-    void assertValue(TestContext context, Async async,
-                     com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01 tblSample_01,
-                     String assertFieldName, Object expect, Class expectedClass) {
+    static void assertValue(TestContext context, Async async,
+                            com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01 tblSample_01,
+                            String assertFieldName, Object expect, Class expectedClass) {
         try {
             context.assertNotNull(tblSample_01);
             final Class<com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01> clazz
@@ -108,6 +116,25 @@ abstract class BaseSqlTest {
         } finally {
             TestHelper.testComplete(async);
         }
+    }
+
+    void asserter(TestContext context, boolean isSuccess, JsonObject expected, String address, EventAction action,
+                  RequestData reqData) {
+        asserter(context, isSuccess, expected, address, action, reqData, new CountDownLatch(1));
+    }
+
+    void asserter(TestContext context, boolean isSuccess, JsonObject expected, String address, EventAction action,
+                  RequestData reqData, CountDownLatch latch) {
+        final Async async = context.async();
+        controller().request(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(action, reqData),
+                             ReplyEventHandler.builder().action(action).success(msg -> {
+                                 System.out.println(msg.toJson().encode());
+                                 context.assertEquals(isSuccess, msg.isSuccess());
+                                 JsonHelper.assertJson(context, async, expected, isSuccess
+                                                                                 ? Objects.requireNonNull(msg.getData())
+                                                                                 : msg.getError().toJson());
+                                 latch.countDown();
+                             }).build());
     }
 
     static class OneSchema {
