@@ -1,6 +1,7 @@
 package com.nubeiot.core.sql.converter;
 
 import java.time.Duration;
+import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,7 +33,7 @@ public class DurationConverterTest {
 
         //2 days, 10 hours, 20 minutes
         Duration from = this.converter.from("P2DT10H20M");
-        Assert.assertEquals(from.toMillis(), (2 * 24 * 60 + 10 * 60 + 20) * 60 * 1000L);
+        Assert.assertEquals(Objects.requireNonNull(from).toMillis(), (2 * 24 * 60 + 10 * 60 + 20) * 60 * 1000L);
     }
 
     @Test

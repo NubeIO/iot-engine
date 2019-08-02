@@ -6,6 +6,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,11 +14,18 @@ import org.junit.Test;
 public class TimestampZConverterTest {
 
     private TimestampZConverter converter;
+    private TimeZone zoneDef;
 
     @Before
     public void before() {
+        zoneDef = TimeZone.getDefault();
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
         this.converter = new TimestampZConverter();
+    }
+
+    @After
+    public void after() {
+        TimeZone.setDefault(zoneDef);
     }
 
     @Test
