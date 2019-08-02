@@ -1,6 +1,7 @@
 package com.nubeiot.core.sql.converter;
 
 import java.time.Period;
+import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,7 +30,7 @@ public class PeriodConverterTest {
 
     @Test
     public void test_from_years_months_days() {
-        Period period = this.converter.from("P2Y3M4W5D");
+        Period period = Objects.requireNonNull(this.converter.from("P2Y3M4W5D"));
         Assert.assertEquals(period.getYears(), 2);
         Assert.assertEquals(period.getMonths(), 3);
         Assert.assertEquals(period.getDays(), 33);

@@ -254,7 +254,11 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
     @NonNull
     protected M validateOnPatch(@NonNull M dbData, @NonNull M pojo, @NonNull JsonObject headers)
         throws IllegalArgumentException {
-        return addModifiedAudit(dbData, parse(JsonPojo.merge(dbData, pojo)), headers);
+        final @NonNull M parse = parse(JsonPojo.merge(dbData, pojo));
+        if (logger.isTraceEnabled()) {
+            logger.trace("After merge: {}", parse.toJson().encode());
+        }
+        return addModifiedAudit(dbData, parse, headers);
     }
 
     /**

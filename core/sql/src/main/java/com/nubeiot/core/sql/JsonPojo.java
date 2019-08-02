@@ -6,6 +6,8 @@ import java.util.Set;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -27,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JsonPojo<T extends VertxPojo> implements JsonData {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonPojo.class);
     private static final ObjectMapper MAPPER = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
     @Getter
     @JsonIgnore
@@ -43,7 +46,7 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
     }
 
     public static <T extends VertxPojo> JsonObject merge(@NonNull T from, @NonNull T to) {
-        return new JsonPojo<>(from).toJson().mergeIn(new JsonPojo<>(to).toJson(), true);
+        return from.toJson().mergeIn(new JsonPojo<>(to).toJson(), true);
     }
 
     @SuppressWarnings("unchecked")
@@ -51,15 +54,16 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
     public JsonObject toJson() {
         JsonObject json = this.pojo.toJson();
         try {
-            return new JsonObject(mapper.readValue(this.mapper.writeValueAsBytes(json.getMap()), Map.class));
+            return new JsonObject(mapper.readValue(mapper.writeValueAsBytes(json.getMap()), Map.class));
         } catch (IOException e) {
+            LOGGER.warn("Cannot reparse pojo {}", e, pojo.getClass());
             return json;
         }
     }
 
     @Override
     public JsonObject toJson(Set<String> ignoreFields) {
-        return toJson(this.mapper, ignoreFields);
+        return toJson(mapper.copy(), ignoreFields);
     }
 
     @SuppressWarnings("unchecked")
@@ -71,6 +75,7 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
                                                          .writer(JsonData.ignoreFields(ignoreFields))
                                                          .writeValueAsBytes(json.getMap()), Map.class));
         } catch (IOException e) {
+            LOGGER.warn("Cannot reparse pojo {}", e, pojo.getClass());
             return json;
         }
     }
