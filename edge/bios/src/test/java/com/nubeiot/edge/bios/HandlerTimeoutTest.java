@@ -45,7 +45,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                                                   .setVersion(VERSION)
                                                   .setAppConfig(APP_CONFIG)
                                                   .setSystemConfig(APP_SYSTEM_CONFIG)
-                                                  .setModifiedAt(DateTimes.nowUTC()));
+                                                  .setModifiedAt(DateTimes.now()));
     }
 
     @Override

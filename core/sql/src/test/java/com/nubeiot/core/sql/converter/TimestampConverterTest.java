@@ -2,13 +2,11 @@ package com.nubeiot.core.sql.converter;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,19 +14,19 @@ import org.junit.Test;
 public class TimestampConverterTest {
 
     private TimestampConverter converter;
-    private TimeZone zoneDef;
+    //    private TimeZone zoneDef;
 
     @Before
     public void before() {
-        zoneDef = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
+        //        zoneDef = TimeZone.getDefault();
+        //        TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
         this.converter = new TimestampConverter();
     }
-
-    @After
-    public void after() {
-        TimeZone.setDefault(zoneDef);
-    }
+    //
+    //    @After
+    //    public void after() {
+    //        TimeZone.setDefault(zoneDef);
+    //    }
 
     @Test
     public void test_from_null() {
@@ -38,12 +36,12 @@ public class TimestampConverterTest {
     @Test
     public void test_from_timezone() {
         Timestamp timestamp = Timestamp.valueOf("2018-12-03 05:15:30");
-        LocalDateTime localDateTime = this.converter.from(timestamp);
+        OffsetDateTime localDateTime = this.converter.from(timestamp);
 
         Instant instant = Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2018-12-03T05:15:30+00:00"));
-        LocalDateTime dateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+        OffsetDateTime expected = OffsetDateTime.ofInstant(instant, ZoneOffset.UTC);
 
-        Assert.assertEquals(dateTime, localDateTime);
+        Assert.assertEquals(expected, localDateTime);
     }
 
     @Test
@@ -54,11 +52,11 @@ public class TimestampConverterTest {
     @Test
     public void test_to_timezone() {
         Instant instant = Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2018-12-03T05:15:30+00:00"));
-        LocalDateTime dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        OffsetDateTime dateTime = OffsetDateTime.ofInstant(instant, TimeZone.getTimeZone(ZoneOffset.UTC).toZoneId());
         Timestamp localTimestamp = this.converter.to(dateTime);
 
-        Timestamp timestamp = Timestamp.valueOf("2018-12-03 05:15:30");
-        Assert.assertEquals(timestamp, localTimestamp);
+        Timestamp expected = Timestamp.valueOf("2018-12-03 05:15:30");
+        Assert.assertEquals(expected, localTimestamp);
     }
 
     @Test
@@ -68,7 +66,7 @@ public class TimestampConverterTest {
 
     @Test
     public void test_to_class() {
-        Assert.assertEquals(this.converter.toType(), LocalDateTime.class);
+        Assert.assertEquals(this.converter.toType(), OffsetDateTime.class);
     }
 
 }

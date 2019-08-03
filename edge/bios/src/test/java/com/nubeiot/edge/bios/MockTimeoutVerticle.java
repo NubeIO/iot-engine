@@ -1,7 +1,5 @@
 package com.nubeiot.edge.bios;
 
-import java.util.Arrays;
-
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
@@ -14,8 +12,7 @@ public class MockTimeoutVerticle extends EdgeBiosVerticle {
     public static EventModel MOCK_TIME_OUT_INSTALLER = EventModel.builder()
                                                                  .address("mockup.nubeiot.edge.bios.timeout")
                                                                  .pattern(EventPattern.REQUEST_RESPONSE)
-                                                                 .events(Arrays.asList(EventAction.PATCH,
-                                                                                       EventAction.CREATE))
+                                                                 .addEvents(EventAction.PATCH, EventAction.CREATE)
                                                                  .build();
 
     @Override

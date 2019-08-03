@@ -2,7 +2,6 @@ package com.nubeiot.core.sql.converter;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
@@ -18,14 +17,14 @@ public class TimestampZConverterTest {
 
     @Before
     public void before() {
-        zoneDef = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
+        //        zoneDef = TimeZone.getDefault();
+        //        TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
         this.converter = new TimestampZConverter();
     }
 
     @After
     public void after() {
-        TimeZone.setDefault(zoneDef);
+        //        TimeZone.setDefault(zoneDef);
     }
 
     @Test
@@ -37,11 +36,11 @@ public class TimestampZConverterTest {
     public void test_from_timezone() {
         //Timestamp always has no timezone
         Timestamp timestamp = Timestamp.valueOf("2018-12-03 05:15:30");
-        Instant convertedInstant = this.converter.from(timestamp);
+        Instant instant = this.converter.from(timestamp);
 
-        Instant instant = Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2018-12-03T05:15:30+00:00"));
+        Instant expected = Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2018-12-03T05:15:30+00:00"));
 
-        Assert.assertEquals(instant, convertedInstant);
+        Assert.assertEquals(expected, instant);
     }
 
     @Test

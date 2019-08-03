@@ -1,6 +1,7 @@
 package com.nubeiot.edge.bios.startupmodules.handler;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import org.jooq.Configuration;
@@ -31,8 +32,8 @@ public class PendingModuleWithTwoTransactionsInitData extends MockInitDataEntity
                            .setServiceType(ModuleType.JAVA)
                            .setVersion("1.0.0")
                            .setState(State.PENDING)
-                           .setCreatedAt(DateTimes.nowUTC())
-                           .setModifiedAt(DateTimes.nowUTC())
+                           .setCreatedAt(DateTimes.now())
+                           .setModifiedAt(DateTimes.now())
                            .setSystemConfig(new JsonObject())
                            .setAppConfig(new JsonObject()));
         Single<Integer> insertTransaction08_1 = tblTransactionDao.insert(
@@ -40,19 +41,21 @@ public class PendingModuleWithTwoTransactionsInitData extends MockInitDataEntity
                                 .setModuleId("pending_module_with_two_transactions")
                                 .setStatus(Status.WIP)
                                 .setEvent(EventAction.PATCH)
-                                .setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 25)).setPrevMetadata(new JsonObject(
+                                .setModifiedAt(OffsetDateTime.of(2019, 5, 3, 12, 20, 25, 0, ZoneOffset.UTC))
+                                .setPrevMetadata(new JsonObject(
                                     "{\"service_id" + "\":\"pending_module_with_two_transactions\"," +
                                     "\"service_name" + "\":\"service5" + "\",\"service_type\":\"JAVA\"," +
                                     "\"version\":\"1.0.0\"," + "\"published_by\":null," + "\"state\":\"DISABLED\"," +
-                                    "\"created_at\":\"2019-05-02T09:15:37" +
-                                    ".230\",\"modified_at\":\"2019-05-02T09:15" + ":37.230\",\"deploy_id\":null," +
-                                    "\"deploy_config\":{}," + "\"deploy_location\":null}\t ")));
+                                    "\"created_at\":\"2019-05-02T09:15:37.230Z\"," +
+                                    "\"modified_at\":\"2019-05-02T09:15:37.230Z\",\"deploy_id\":null," +
+                                    "\"deploy_config\":{},\"deploy_location\":null}\t ")));
 
         Single<Integer> insertTransaction08_2 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending_module_with_two_transactions")
                                 .setStatus(Status.WIP)
-                                .setEvent(EventAction.CREATE).setModifiedAt(LocalDateTime.of(2019, 5, 3, 12, 20, 30)));
+                                .setEvent(EventAction.CREATE)
+                                .setModifiedAt(OffsetDateTime.of(2019, 5, 3, 12, 20, 30, 0, ZoneOffset.UTC)));
         return Single.zip(insert08, insertTransaction08_1, insertTransaction08_2, (r1, r2, r3) -> r1 + r2 + r3);
     }
 

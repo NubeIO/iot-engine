@@ -2,11 +2,8 @@ package com.nubeiot.core.sql.converter;
 
 import java.sql.Time;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.TimeZone;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,18 +11,10 @@ import org.junit.Test;
 public class TimeConverterTest {
 
     private TimeConverter converter;
-    private TimeZone zoneDef;
 
     @Before
     public void before() {
-        zoneDef = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
         this.converter = new TimeConverter();
-    }
-
-    @After
-    public void after() {
-        TimeZone.setDefault(zoneDef);
     }
 
     @Test
@@ -56,8 +45,7 @@ public class TimeConverterTest {
     public void test_to_local_time() {
         LocalTime localTime = LocalTime.of(8, 18, 26);
         Time convertedTime = this.converter.to(localTime);
-        Assert.assertEquals(convertedTime.getTime(), 29906000);// millisecond of 01/01/1970 08:18:26 UTC
-        Assert.assertEquals(convertedTime, Time.valueOf("08:18:26"));
+        Assert.assertEquals(Time.valueOf("08:18:26"), convertedTime);
     }
 
     @Test

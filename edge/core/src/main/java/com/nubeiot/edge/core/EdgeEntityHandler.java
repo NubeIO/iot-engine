@@ -1,6 +1,6 @@
 package com.nubeiot.edge.core;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -378,7 +378,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             logger.debug("Create new transaction for {}::::{}...", moduleId, action);
             logger.debug("Previous module state: {}", module.toJson());
         }
-        final LocalDateTime now = DateTimes.nowUTC();
+        final OffsetDateTime now = DateTimes.now();
         final String transactionId = UUID.randomUUID().toString();
         JsonObject metadata = module.toJson();
         // TODO: replace with POJO constant later
@@ -399,7 +399,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<ITblModule> markModuleInsert(ITblModule module) {
         logger.debug("Mark service {} to create...", module.getServiceId());
-        LocalDateTime now = DateTimes.nowUTC();
+        OffsetDateTime now = DateTimes.now();
         return moduleDao.get()
                         .insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
                         .map(i -> module);
@@ -408,8 +408,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private Single<ITblModule> markModuleModify(ITblModule module, ITblModule oldOne, boolean isUpdated) {
         logger.debug("Mark service {} to modify...", module.getServiceId());
         ITblModule into = this.updateModule(oldOne, module, isUpdated);
-        return moduleDao.get()
-                        .update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
+        return moduleDao.get().update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.now()))
                         .map(ignore -> oldOne);
     }
 
@@ -438,8 +437,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {
         logger.debug("Mark service {} to delete...", module.getServiceId());
-        return moduleDao.get()
-                        .update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.nowUTC()))
+        return moduleDao.get().update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.now()))
                         .map(ignore -> module);
     }
 
@@ -460,7 +458,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private int updateModuleState(DSLContext context, String serviceId, State state, Map<?, ?> values) {
         return context.update(Tables.TBL_MODULE)
                       .set(Tables.TBL_MODULE.STATE, state)
-                      .set(Tables.TBL_MODULE.MODIFIED_AT, DateTimes.nowUTC())
+                      .set(Tables.TBL_MODULE.MODIFIED_AT, DateTimes.now())
                       .set(Objects.isNull(values) ? new HashMap<>() : values)
                       .where(Tables.TBL_MODULE.SERVICE_ID.eq(serviceId))
                       .execute();
@@ -469,7 +467,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private int updateTransStatus(DSLContext context, String transId, Status status, Map<?, ?> values) {
         return context.update(Tables.TBL_TRANSACTION)
                       .set(Tables.TBL_TRANSACTION.STATUS, status)
-                      .set(Tables.TBL_TRANSACTION.MODIFIED_AT, DateTimes.nowUTC())
+                      .set(Tables.TBL_TRANSACTION.MODIFIED_AT, DateTimes.now())
                       .set(Objects.isNull(values) ? new HashMap<>() : values)
                       .where(Tables.TBL_TRANSACTION.TRANSACTION_ID.eq(transId))
                       .execute();
@@ -484,10 +482,10 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     private ITblRemoveHistory convertToHistory(ITblTransaction transaction) {
         ITblRemoveHistory history = new TblRemoveHistory().fromJson(transaction.toJson());
         if (Objects.isNull(history.getIssuedAt())) {
-            history.setIssuedAt(DateTimes.nowUTC());
+            history.setIssuedAt(DateTimes.now());
         }
         if (Objects.isNull(history.getModifiedAt())) {
-            history.setIssuedAt(DateTimes.nowUTC());
+            history.setIssuedAt(DateTimes.now());
         }
         if (Objects.isNull(history.getRetry())) {
             history.setRetry(0);

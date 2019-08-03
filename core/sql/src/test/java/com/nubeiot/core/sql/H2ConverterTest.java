@@ -84,12 +84,12 @@ public class H2ConverterTest extends BaseSqlTest {
         this.entityHandler.getSample01Dao()
                           .findOneById(1)
                           .subscribe(result -> assertValue(context, async, result.orElse(null), "fDate_1",
-                                                           LocalDate.of(2019, 2, 17), LocalDate.class));
+                                                           LocalDate.of(2019, 2, 17)));
 
         this.entityHandler.getSample01Dao()
                           .findOneById(2)
                           .subscribe(result -> assertValue(context, async, result.orElse(null), "fDate_1",
-                                                           LocalDate.of(2019, 2, 17), LocalDate.class));
+                                                           LocalDate.of(2019, 2, 17)));
         async.awaitSuccess();
     }
 
@@ -99,14 +99,12 @@ public class H2ConverterTest extends BaseSqlTest {
         this.entityHandler.getSample01Dao()
                           .findOneById(1)
                           .subscribe(result -> assertValue(context, async, result.orElse(null), "fTimestamp",
-                                                           LocalDateTime.of(2019, 2, 17, 23, 59, 59),
-                                                           LocalDateTime.class));
+                                                           LocalDateTime.of(2019, 2, 17, 23, 59, 59)));
 
         this.entityHandler.getSample01Dao()
                           .findOneById(2)
                           .subscribe(result -> assertValue(context, async, result.orElse(null), "fTimestamp",
-                                                           LocalDateTime.of(2019, 2, 17, 0, 0, 1),
-                                                           LocalDateTime.class));
+                                                           LocalDateTime.of(2019, 2, 17, 0, 0, 1)));
         async.awaitSuccess();
     }
 
@@ -115,13 +113,13 @@ public class H2ConverterTest extends BaseSqlTest {
         Async async = context.async(2);
         this.entityHandler.getSample01Dao()
                           .findOneById(1)
-                          .subscribe(result -> this.assertValue(context, async, result.orElse(null), "fTime",
-                                                                LocalTime.of(23, 59, 59), LocalTime.class));
+                          .subscribe(result -> assertValue(context, async, result.orElse(null), "fTime",
+                                                           LocalTime.of(23, 59, 59)));
 
         this.entityHandler.getSample01Dao()
                           .findOneById(2)
-                          .subscribe(result -> this.assertValue(context, async, result.orElse(null), "fTime",
-                                                                LocalTime.of(0, 0, 1), LocalTime.class));
+                          .subscribe(result -> assertValue(context, async, result.orElse(null), "fTime",
+                                                           LocalTime.of(0, 0, 1)));
         async.awaitSuccess();
     }
 
@@ -132,8 +130,7 @@ public class H2ConverterTest extends BaseSqlTest {
         this.entityHandler.getSample01Dao()
                           .findOneById(1)
                           .subscribe(result -> assertValue(context, async, result.orElse(null), "fDuration",
-                                                           Duration.ofHours(50).plusMinutes(30).plusSeconds(20),
-                                                           Duration.class));
+                                                           Duration.ofHours(50).plusMinutes(30).plusSeconds(20)));
         async.awaitSuccess();
     }
 
@@ -144,7 +141,7 @@ public class H2ConverterTest extends BaseSqlTest {
         this.entityHandler.getSample01Dao()
                           .findOneById(1)
                           .subscribe(result -> assertValue(context, async, result.orElse(null), "fPeriod",
-                                                           Period.ofYears(2).plusMonths(3).plusDays(33), Period.class));
+                                                           Period.ofYears(2).plusMonths(3).plusDays(33)));
         async.awaitSuccess();
     }
 

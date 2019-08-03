@@ -103,12 +103,12 @@ public final class LocalServiceSearch implements IServiceSearch {
               });
         final Instant from = filter.getInstant("from");
         if (Objects.nonNull(from)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(DateTimes.fromUTC(from)));
+            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(DateTimes.from(from)));
         }
 
         final Instant to = filter.getInstant("to");
         if (Objects.nonNull(to)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(DateTimes.fromUTC(to)));
+            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(DateTimes.from(to)));
         }
 
         return sql.limit(pagination.getPerPage())

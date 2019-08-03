@@ -1,7 +1,5 @@
 package com.nubeiot.edge.bios.startupmodules;
 
-import java.util.Objects;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -16,10 +14,8 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.edge.bios.BaseEdgeVerticleTest;
 import com.nubeiot.edge.bios.startupmodules.handler.InvalidModulesInitData;
-import com.nubeiot.edge.bios.startupmodules.handler.MockInitDataEntityHandler;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
-import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 
 @RunWith(VertxUnitRunner.class)
 public class GettingInvalidModulesTest extends BaseEdgeVerticleTest {
@@ -91,8 +87,6 @@ public class GettingInvalidModulesTest extends BaseEdgeVerticleTest {
         async1.awaitSuccess();
     }
 
-
-
     @Test
     public void test_module_with_2_transactions_invalid(TestContext context) {
         Async async1 = context.async(1);
@@ -123,7 +117,5 @@ public class GettingInvalidModulesTest extends BaseEdgeVerticleTest {
         });
         async1.awaitSuccess();
     }
-
-
 
 }

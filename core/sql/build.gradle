@@ -20,17 +20,17 @@ ext {
         "com.nubeiot.core.exceptions.NubeException.ErrorCode", "com.nubeiot.core.cluster.ClusterType"
     ]
     dbTypes = [
-        new ForcedType(types: DB.TYPES.timestamp, userType: "java.time.LocalDateTime",
+        new ForcedType(types: DB.TYPES.timestamp, userType: OffsetDateTime.class.name,
                        converter: "com.nubeiot.core.sql.converter.TimestampConverter"),
-        new ForcedType(types: DB.TYPES.timestampz, userType: "java.time.Instant",
+        new ForcedType(types: DB.TYPES.timestampz, userType: Instant.class.name,
                        converter: "com.nubeiot.core.sql.converter.TimestampZConverter"),
-        new ForcedType(types: DB.TYPES.date, userType: "java.time.LocalDate",
+        new ForcedType(types: DB.TYPES.date, userType: LocalDate.class.name,
                        converter: "com.nubeiot.core.sql.converter.DateConverter"),
-        new ForcedType(types: DB.TYPES.time, userType: "java.time.LocalTime",
+        new ForcedType(types: DB.TYPES.time, userType: LocalTime.class.name,
                        converter: "com.nubeiot.core.sql.converter.TimeConverter"),
-        new ForcedType(types: DB.TYPES.varchar, userType: "java.time.Duration", expression: DB.COL_REGEX.duration,
+        new ForcedType(types: DB.TYPES.varchar, userType: Duration.class.name, expression: DB.COL_REGEX.duration,
                        converter: "com.nubeiot.core.sql.converter.DurationConverter"),
-        new ForcedType(types: DB.TYPES.varchar, userType: "java.time.Period", expression: DB.COL_REGEX.period,
+        new ForcedType(types: DB.TYPES.varchar, userType: Period.class.name, expression: DB.COL_REGEX.period,
                        converter: "com.nubeiot.core.sql.converter.PeriodConverter"),
         new ForcedType(types: DB.TYPES.varchar, userType: "com.nubeiot.core.sql.type.TimeAudit",
                        expression: DB.COL_REGEX.timeAudit,
