@@ -1,12 +1,9 @@
 package com.nubeiot.core.sql;
 
 import java.time.LocalDate;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,33 +15,13 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.sql.MockEntityService.AuthorService;
-import com.nubeiot.core.sql.MockEntityService.BookService;
 import com.nubeiot.core.sql.mock.oneschema.tables.pojos.Author;
 
-import lombok.NonNull;
-
 @RunWith(VertxUnitRunner.class)
-public class EntityServiceTest extends BaseSqlTest {
-
-    static final String AUTHOR_ADDRESS = "com.nubeiot.core.sql.author";
-    static final String BOOK_ADDRESS = "com.nubeiot.core.sql.book";
+public class EntityServiceTest extends BaseSqlServiceTest {
 
     @BeforeClass
     public static void beforeSuite() { BaseSqlTest.beforeSuite(); }
-
-    @Before
-    public void before(TestContext context) {
-        super.before(context);
-        MockOneEntityHandler entityHandler = startSQL(context, OneSchema.CATALOG, MockOneEntityHandler.class);
-        controller().register(AUTHOR_ADDRESS, new AuthorService(entityHandler));
-        controller().register(BOOK_ADDRESS, new BookService(entityHandler));
-    }
-
-    @NonNull String getJdbcUrl() { return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString(); }
-
-    @After
-    public void after(TestContext context) { super.after(context); }
 
     @Test
     public void test_get_list_without_filter(TestContext context) {
@@ -111,7 +88,7 @@ public class EntityServiceTest extends BaseSqlTest {
     @Test
     public void test_update_one(TestContext context) throws InterruptedException {
         JsonObject expected = new JsonObject("{\"resource\":{\"id\":1,\"first_name\":\"ab\",\"last_name\":\"xyz\"," +
-                                             "\"date_of_birth\":\"1980-03-07\",\"distinguished\":null}," +
+                                             "\"date_of_birth\":\"1980-03-08\",\"distinguished\":null}," +
                                              "\"action\":\"UPDATE\",\"status\":\"SUCCESS\"}");
         RequestData reqData = RequestData.builder()
                                          .body(new Author().setFirstName("ab")
@@ -123,7 +100,7 @@ public class EntityServiceTest extends BaseSqlTest {
         CountDownLatch latch = new CountDownLatch(1);
         asserter(context, true, expected, AUTHOR_ADDRESS, EventAction.UPDATE, reqData, latch);
         expected = new JsonObject(
-            "{\"id\":1,\"first_name\":\"ab\",\"last_name\":\"xyz\",\"date_of_birth\":\"1980-03-07\"}");
+            "{\"id\":1,\"first_name\":\"ab\",\"last_name\":\"xyz\",\"date_of_birth\":\"1980-03-08\"}");
         reqData = RequestData.builder().body(new JsonObject().put("author_id", "1")).build();
         latch.await(TestHelper.TEST_TIMEOUT_SEC / 3, TimeUnit.SECONDS);
         asserter(context, true, expected, AUTHOR_ADDRESS, EventAction.GET_ONE, reqData);

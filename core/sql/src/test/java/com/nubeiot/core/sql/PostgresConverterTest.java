@@ -3,13 +3,11 @@ package com.nubeiot.core.sql;
 import java.util.function.Function;
 
 import org.jooq.SQLDialect;
-import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 import io.reactivex.Single;
-import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.sql.MockManyEntityHandler.MockManyNoData;
@@ -21,7 +19,7 @@ import com.opentable.db.postgres.junit.SingleInstancePostgresRule;
 import lombok.NonNull;
 
 @RunWith(VertxUnitRunner.class)
-public class PostgresConverterTest extends BaseSqlConverterTest {
+public class PostgresConverterTest extends BaseSqlDaoConverterTest {
 
     @Rule
     public SingleInstancePostgresRule pg = EmbeddedPostgresRules.singleInstance().customize(this::pgBuilder);
@@ -33,11 +31,6 @@ public class PostgresConverterTest extends BaseSqlConverterTest {
     @BeforeClass
     public static void beforeSuite() {
         BaseSqlTest.beforeSuite();
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
     }
 
     @Override

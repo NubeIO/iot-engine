@@ -6,7 +6,6 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.ZoneOffset;
-import java.util.TimeZone;
 
 import org.jooq.SQLDialect;
 import org.jooq.exception.SQLStateClass;
@@ -50,7 +49,6 @@ public class PostgresErrorTest extends BaseSqlTest {
 
     @Before
     public void before(TestContext context) {
-        TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
         super.before(context);
         this.entityHandler = startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
         TblSample_01 pojo = new TblSample_01().setId(3)

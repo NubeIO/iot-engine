@@ -81,10 +81,10 @@ public class MockOneEntityHandler extends EntityHandler {
     }
 
     private List<Book> book() {
-        Book book = new Book(1, 1, "1984", OffsetDateTime.of(1948, 1, 1, 1, 1, 0, 0, ZoneOffset.UTC), 1);
-        Book book1 = new Book(2, 1, "Animal Farm", OffsetDateTime.of(1945, 1, 1, 1, 1, 0, 0, ZoneOffset.UTC), 1);
-        Book book2 = new Book(3, 2, "O Alquimista", OffsetDateTime.of(1988, 1, 1, 1, 1, 0, 0, ZoneOffset.UTC), 4);
-        Book book3 = new Book(4, 2, "Brida", OffsetDateTime.of(1990, 1, 1, 1, 1, 0, 0, ZoneOffset.UTC), 2);
+        Book book = new Book(1, 1, "1984", OffsetDateTime.of(1947, 12, 31, 17, 1, 0, 0, ZoneOffset.UTC), 1);
+        Book book1 = new Book(2, 1, "Animal Farm", OffsetDateTime.of(1944, 12, 31, 17, 1, 0, 0, ZoneOffset.UTC), 1);
+        Book book2 = new Book(3, 2, "O Alquimista", OffsetDateTime.of(1987, 12, 31, 18, 1, 0, 0, ZoneOffset.UTC), 4);
+        Book book3 = new Book(4, 2, "Brida", OffsetDateTime.of(1989, 12, 31, 18, 1, 0, 0, ZoneOffset.UTC), 2);
         return Arrays.asList(book, book1, book2, book3);
     }
 
