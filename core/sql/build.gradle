@@ -21,7 +21,7 @@ ext {
     ]
     dbTypes = [
         new ForcedType(types: DB.TYPES.timestamp, userType: OffsetDateTime.class.name,
-                       converter: "com.nubeiot.core.sql.converter.TimestampConverter"),
+                       converter: "com.nubeiot.core.sql.converter.TimestampOffsetConverter"),
         new ForcedType(types: DB.TYPES.timestampz, userType: Instant.class.name,
                        converter: "com.nubeiot.core.sql.converter.TimestampZConverter"),
         new ForcedType(types: DB.TYPES.date, userType: LocalDate.class.name,
