@@ -16,7 +16,7 @@ import com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01;
 import lombok.NonNull;
 
 @RunWith(VertxUnitRunner.class)
-public class H2ConverterInsertTest extends BaseSqlConverterTest {
+public class H2ConverterInsertTest extends BaseSqlDaoConverterTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();

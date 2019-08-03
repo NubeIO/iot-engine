@@ -1,12 +1,5 @@
 package com.nubeiot.core.sql;
 
-import static com.nubeiot.core.sql.EntityServiceTest.AUTHOR_ADDRESS;
-import static com.nubeiot.core.sql.EntityServiceTest.BOOK_ADDRESS;
-
-import java.util.UUID;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,31 +10,12 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.sql.MockEntityService.AuthorService;
-import com.nubeiot.core.sql.MockEntityService.BookService;
-
-import lombok.NonNull;
 
 @RunWith(VertxUnitRunner.class)
-public class ExtensionEntityServiceTest extends BaseSqlTest {
+public class ExtensionEntityServiceTest extends BaseSqlServiceTest {
 
     @BeforeClass
     public static void beforeSuite() { BaseSqlTest.beforeSuite(); }
-
-    @Before
-    public void before(TestContext context) {
-        super.before(context);
-        MockOneEntityHandler entityHandler = startSQL(context, OneSchema.CATALOG, MockOneEntityHandler.class);
-        controller().register(AUTHOR_ADDRESS, new AuthorService(entityHandler));
-        controller().register(BOOK_ADDRESS, new BookService(entityHandler));
-    }
-
-    @NonNull String getJdbcUrl() { return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString(); }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
-    }
 
     @Test
     public void test_get_list_without_another(TestContext context) {
@@ -95,7 +69,7 @@ public class ExtensionEntityServiceTest extends BaseSqlTest {
     @Test
     public void test_patch_by_another_success(TestContext context) {
         JsonObject expected = new JsonObject("{\"resource\":{\"id\":2,\"author_id\":1,\"title\":\"Farm\"," +
-                                             "\"published_in\":\"1944-12-31T09:01Z\",\"language_id\":1}," +
+                                             "\"published_in\":\"1944-12-31T17:01Z\",\"language_id\":1}," +
                                              "\"action\":\"PATCH\",\"status\":\"SUCCESS\"}");
         RequestData reqData = RequestData.builder()
                                          .body(new JsonObject().put("author_id", 1)
