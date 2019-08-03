@@ -2,9 +2,10 @@ package com.nubeiot.core.sql;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.Period;
+import java.time.ZoneOffset;
 
 import org.jooq.Configuration;
 
@@ -45,7 +46,7 @@ public class MockManyEntityHandler extends EntityHandler {
             new TblSample_00().setFBool(true).setFStr("hello").setFValue(new JsonObject().put("key", "english")));
         Single<Integer> insert01 = sample01Dao.insert(
             new TblSample_01().setFBool(false).setFStr("hola").setFValue(new JsonObject().put("key", "spanish")));
-        return Single.zip(insert00, insert01, (r1, r2) -> r1 + r2)
+        return Single.zip(insert00, insert01, Integer::sum)
                      .map(r -> EventMessage.success(EventAction.INIT, new JsonObject().put("records", r)));
     }
 
@@ -95,37 +96,27 @@ public class MockManyEntityHandler extends EntityHandler {
 
         @Override
         public Single<EventMessage> initData() {
-            Single<Integer> insert00 = getSample01Dao().insert(new TblSample_01().setId(1)
-                                                                                 .setFDate_1(LocalDate.of(2018, 1, 1))
-                                                                                 .setFTimestamp(
-                                                                                     LocalDateTime.of(2018, 1, 1, 10,
-                                                                                                      15, 00))
-                                                                                 .setFTimestampz(
-                                                                                     LocalDateTime.of(2018, 1, 1, 10,
-                                                                                                      15, 00))
-                                                                                 .setFTime(LocalTime.of(10, 15, 00))
-                                                                                 .setFDuration(Duration.ofHours(2)
-                                                                                                       .plusMinutes(2)
-                                                                                                       .plusSeconds(2))
-                                                                                 .setFPeriod(Period.ofYears(1)
-                                                                                                   .plusMonths(2)
-                                                                                                   .plusDays(3)));
-            Single<Integer> insert01 = getSample01Dao().insert(new TblSample_01().setId(2)
-                                                                                 .setFDate_1(LocalDate.of(2018, 1, 1))
-                                                                                 .setFTimestamp(
-                                                                                     LocalDateTime.of(2018, 1, 1, 10,
-                                                                                                      15, 00))
-                                                                                 .setFTimestampz(
-                                                                                     LocalDateTime.of(2018, 1, 1, 10,
-                                                                                                      15, 00))
-                                                                                 .setFTime(LocalTime.of(10, 15, 00))
-                                                                                 .setFDuration(Duration.ofHours(2)
-                                                                                                       .plusMinutes(2)
-                                                                                                       .plusSeconds(2))
-                                                                                 .setFPeriod(Period.ofYears(1)
-                                                                                                   .plusMonths(2)
-                                                                                                   .plusDays(3)));
-            return Single.zip(insert00, insert01, (r1, r2) -> r1 + r2)
+            TblSample_01 pojo1 = new TblSample_01().setId(1)
+                                                   .setFDate_1(LocalDate.of(2018, 1, 1))
+                                                   .setFTimestamp(
+                                                       OffsetDateTime.of(2018, 1, 1, 10, 15, 0, 0, ZoneOffset.UTC))
+                                                   .setFTimestampz(
+                                                       OffsetDateTime.of(2018, 1, 1, 10, 15, 0, 0, ZoneOffset.UTC))
+                                                   .setFTime(LocalTime.of(10, 15, 0))
+                                                   .setFDuration(Duration.ofHours(2).plusMinutes(2).plusSeconds(2))
+                                                   .setFPeriod(Period.ofYears(1).plusMonths(2).plusDays(3));
+            TblSample_01 pojo2 = new TblSample_01().setId(2)
+                                                   .setFDate_1(LocalDate.of(2018, 1, 1))
+                                                   .setFTimestamp(
+                                                       OffsetDateTime.of(2018, 1, 1, 10, 15, 0, 0, ZoneOffset.UTC))
+                                                   .setFTimestampz(
+                                                       OffsetDateTime.of(2018, 1, 1, 10, 15, 0, 0, ZoneOffset.UTC))
+                                                   .setFTime(LocalTime.of(10, 15, 0))
+                                                   .setFDuration(Duration.ofHours(2).plusMinutes(2).plusSeconds(2))
+                                                   .setFPeriod(Period.ofYears(1).plusMonths(2).plusDays(3));
+            Single<Integer> insert00 = getSample01Dao().insert(pojo1);
+            Single<Integer> insert01 = getSample01Dao().insert(pojo2);
+            return Single.zip(insert00, insert01, Integer::sum)
                          .map(r -> EventMessage.success(EventAction.INIT, new JsonObject().put("records", r)));
         }
 

@@ -56,7 +56,6 @@ public class H2MemTest extends BaseSqlTest {
         entityHandler.getQueryExecutor()
                      .executeAny(dsl -> dsl.fetch(ManySchema.TBL_SAMPLE_01))
                      .subscribe(rs -> assertSize(context, async, 0, rs));
-        async.awaitSuccess();
     }
 
     @Test
@@ -74,7 +73,6 @@ public class H2MemTest extends BaseSqlTest {
         Async async = context.async(4);
         fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_00, e0);
         fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_01, e1);
-        async.awaitSuccess();
     }
 
     private void fetch(TestContext context, Async async, JDBCRXGenericQueryExecutor queryExecutor,

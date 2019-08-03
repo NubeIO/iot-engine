@@ -2,13 +2,12 @@ package com.nubeiot.core.sql;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.ZoneOffset;
 import java.util.TimeZone;
 
-import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.exception.SQLStateClass;
 import org.junit.After;
@@ -38,7 +37,6 @@ public class PostgresErrorTest extends BaseSqlTest {
 
     @Rule
     public SingleInstancePostgresRule pg = EmbeddedPostgresRules.singleInstance().customize(this::pgBuilder);
-    private DSLContext dsl;
     private MockManyEntityHandler entityHandler;
 
     @BeforeClass
@@ -55,11 +53,12 @@ public class PostgresErrorTest extends BaseSqlTest {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
         super.before(context);
         this.entityHandler = startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
-        this.dsl = entityHandler.getJooqConfig().dsl();
         TblSample_01 pojo = new TblSample_01().setId(3)
                                               .setFDate_1(LocalDate.of(2019, 2, 17))
-                                              .setFTimestamp(LocalDateTime.of(2019, 2, 17, 23, 59, 59))
-                                              .setFTimestampz(LocalDateTime.of(2019, 2, 17, 23, 59, 59))
+                                              .setFTimestamp(
+                                                  OffsetDateTime.of(2019, 2, 17, 23, 59, 59, 0, ZoneOffset.UTC))
+                                              .setFTimestampz(
+                                                  OffsetDateTime.of(2019, 2, 17, 23, 59, 59, 0, ZoneOffset.UTC))
                                               .setFTime(LocalTime.of(23, 59, 59))
                                               .setFDuration(Duration.ofHours(50).plusMinutes(30).plusSeconds(20))
                                               .setFPeriod(Period.ofYears(2).plusMonths(3).plusDays(33));
@@ -74,7 +73,6 @@ public class PostgresErrorTest extends BaseSqlTest {
             context.fail("Error");
             TestHelper.testComplete(async);
         });
-        async.awaitSuccess();
     }
 
     @Override
@@ -97,19 +95,18 @@ public class PostgresErrorTest extends BaseSqlTest {
         Async async = context.async();
         TblSample_01 pojo = new TblSample_01().setId(3)
                                               .setFDate_1(LocalDate.of(2019, 2, 17))
-                                              .setFTimestamp(LocalDateTime.of(2019, 2, 17, 0, 0, 1))
-                                              .setFTimestampz(LocalDateTime.of(2019, 2, 17, 0, 0, 1))
-                                              .setFTime(LocalTime.of(0, 0, 01))
+                                              .setFTimestamp(OffsetDateTime.of(2019, 2, 17, 0, 0, 1, 0, ZoneOffset.UTC))
+                                              .setFTimestampz(
+                                                  OffsetDateTime.of(2019, 2, 17, 0, 0, 1, 0, ZoneOffset.UTC))
+                                              .setFTime(LocalTime.of(0, 0, 1))
                                               .setFDuration(Duration.ofHours(50).plusMinutes(30).plusSeconds(20))
                                               .setFPeriod(Period.ofYears(2).plusMonths(3).plusDays(33));
-        this.entityHandler.getSample01Dao().insert(pojo).subscribe(result -> {
-        }, error -> {
+        this.entityHandler.getSample01Dao().insert(pojo).subscribe(result -> {}, error -> {
             System.out.println(error.getMessage());
             context.assertTrue(error.getMessage().contains(SQLStateClass.C23_INTEGRITY_CONSTRAINT_VIOLATION.name()));
             context.assertTrue(error instanceof DatabaseException);
             TestHelper.testComplete(async);
         });
-        async.awaitSuccess();
     }
 
 }

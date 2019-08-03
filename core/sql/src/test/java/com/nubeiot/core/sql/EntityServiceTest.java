@@ -149,7 +149,7 @@ public class EntityServiceTest extends BaseSqlTest {
     @Test
     public void test_delete_one(TestContext context) {
         JsonObject expected = new JsonObject("{\"resource\":{\"id\":1,\"author_id\":1,\"title\":\"1984\"," +
-                                             "\"published_in\":\"1947-12-31T17:01\",\"language_id\":1}," +
+                                             "\"published_in\":\"1947-12-31T17:01Z\",\"language_id\":1}," +
                                              "\"action\":\"REMOVE\",\"status\":\"SUCCESS\"}");
         RequestData reqData = RequestData.builder().body(new JsonObject().put("book_id", "1")).build();
         asserter(context, true, expected, BOOK_ADDRESS, EventAction.REMOVE, reqData);

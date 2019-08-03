@@ -1,7 +1,8 @@
 package com.nubeiot.core.sql;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,6 +55,7 @@ public class MockOneEntityHandler extends EntityHandler {
         Single<Integer> insert00 = languageDao.insert(lang());
         Single<Integer> insert01 = authorDao.insert(author());
         Single<Integer> insert02 = bookDao.insert(book());
+        //TODO Recheck it
         //        Single<Integer> insert03 = bookStoreDao.insert(bookStore(), true);
         return Single.concatArray(insert00, insert01, insert02)
                      .reduce(0, Integer::sum)
@@ -65,24 +67,24 @@ public class MockOneEntityHandler extends EntityHandler {
         return Single.just(EventMessage.success(EventAction.MIGRATE));
     }
 
-    List<Language> lang() {
+    private List<Language> lang() {
         return Arrays.asList(new Language().setId(1).setCd("en").setDescription("English"),
                              new Language().setId(2).setCd("de").setDescription("Deutsch"),
                              new Language().setId(3).setCd("fr").setDescription("Français"),
                              new Language().setId(4).setCd("pt").setDescription("Português"));
     }
 
-    List<Author> author() {
+    private List<Author> author() {
         Author author = new Author(1, "George", "Orwell", LocalDate.of(1903, 6, 26), true);
         Author author1 = new Author(2, "Paulo", "Coelho", LocalDate.of(1947, 8, 24), false);
         return Arrays.asList(author, author1);
     }
 
-    List<Book> book() {
-        Book book = new Book(1, 1, "1984", LocalDateTime.of(1948, 1, 1, 1, 1), 1);
-        Book book1 = new Book(2, 1, "Animal Farm", LocalDateTime.of(1945, 1, 1, 1, 1), 1);
-        Book book2 = new Book(3, 2, "O Alquimista", LocalDateTime.of(1988, 1, 1, 1, 1), 4);
-        Book book3 = new Book(4, 2, "Brida", LocalDateTime.of(1990, 1, 1, 1, 1), 2);
+    private List<Book> book() {
+        Book book = new Book(1, 1, "1984", OffsetDateTime.of(1948, 1, 1, 1, 1, 0, 0, ZoneOffset.UTC), 1);
+        Book book1 = new Book(2, 1, "Animal Farm", OffsetDateTime.of(1945, 1, 1, 1, 1, 0, 0, ZoneOffset.UTC), 1);
+        Book book2 = new Book(3, 2, "O Alquimista", OffsetDateTime.of(1988, 1, 1, 1, 1, 0, 0, ZoneOffset.UTC), 4);
+        Book book3 = new Book(4, 2, "Brida", OffsetDateTime.of(1990, 1, 1, 1, 1, 0, 0, ZoneOffset.UTC), 2);
         return Arrays.asList(book, book1, book2, book3);
     }
 

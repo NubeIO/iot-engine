@@ -2,8 +2,8 @@ package com.nubeiot.core.sql;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.ZoneOffset;
 import java.util.TimeZone;
@@ -93,11 +93,13 @@ public class H2ConverterDSLQueryTest extends BaseSqlTest {
                                                          .where(Tables.TBL_SAMPLE_01.ID.eq(1))
                                                          .fetchAny();
         System.out.println(tblSample_01Record1.getFTimestamp());
-        Assert.assertEquals(tblSample_01Record1.getFTimestamp(), LocalDateTime.of(2019, 2, 17, 23, 59, 59));
+        Assert.assertEquals(tblSample_01Record1.getFTimestamp(),
+                            OffsetDateTime.of(2019, 2, 17, 23, 59, 59, 0, ZoneOffset.UTC));
         TblSample_01Record tblSample_01Record2 = this.dsl.selectFrom(Tables.TBL_SAMPLE_01)
                                                          .where(Tables.TBL_SAMPLE_01.ID.eq(2))
                                                          .fetchAny();
-        Assert.assertEquals(tblSample_01Record2.getFTimestamp(), LocalDateTime.of(2019, 2, 17, 0, 0, 1));
+        Assert.assertEquals(tblSample_01Record2.getFTimestamp(),
+                            OffsetDateTime.of(2019, 2, 17, 0, 0, 1, 0, ZoneOffset.UTC));
     }
 
     @Test

@@ -9,6 +9,7 @@ import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.slf4j.LoggerFactory;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -67,7 +68,7 @@ abstract class BaseSqlTest {
         vertx.close(context.asyncAssertSuccess());
     }
 
-    protected EventController controller() {
+    EventController controller() {
         return SharedDataDelegate.getEventController(vertx, sharedKey);
     }
 
@@ -101,16 +102,12 @@ abstract class BaseSqlTest {
         }
     }
 
-    static void assertValue(TestContext context, Async async,
-                            com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01 tblSample_01,
-                            String assertFieldName, Object expect, Class expectedClass) {
+    static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, @NonNull VertxPojo pojo,
+                                @NonNull String field, @NonNull T expect) {
         try {
-            context.assertNotNull(tblSample_01);
-            final Class<com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01> clazz
-                = com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01.class;
-            context.assertEquals(expect,
-                                 ReflectionField.getFieldValue(tblSample_01, clazz.getDeclaredField(assertFieldName),
-                                                               expectedClass));
+            context.assertNotNull(pojo);
+            context.assertEquals(expect, ReflectionField.getFieldValue(pojo, pojo.getClass().getDeclaredField(field),
+                                                                       expect.getClass()));
         } catch (AssertionError | NoSuchFieldException ex) {
             context.fail(ex);
         } finally {

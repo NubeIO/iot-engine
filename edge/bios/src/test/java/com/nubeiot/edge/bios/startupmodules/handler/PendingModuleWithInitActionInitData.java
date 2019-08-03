@@ -30,17 +30,15 @@ public class PendingModuleWithInitActionInitData extends MockInitDataEntityHandl
                            .setServiceType(ModuleType.JAVA)
                            .setVersion("1.0.0")
                            .setState(State.PENDING)
-                           .setCreatedAt(DateTimes.nowUTC())
-                           .setModifiedAt(DateTimes.nowUTC())
+                           .setCreatedAt(DateTimes.now())
+                           .setModifiedAt(DateTimes.now())
                            .setSystemConfig(new JsonObject())
                            .setAppConfig(new JsonObject()));
         Single<Integer> insertTransaction01 = tblTransactionDao.insert(
             new TblTransaction().setTransactionId(UUID.randomUUID().toString())
                                 .setModuleId("pending-service-with-transaction-is-wip-prestate-action-is-init")
-                                .setStatus(Status.WIP)
-                                .setEvent(EventAction.INIT)
-                                .setModifiedAt(DateTimes.nowUTC()));
-        return Single.zip(insert01, insertTransaction01, (r1, r2) -> r1 + r2);
+                                .setStatus(Status.WIP).setEvent(EventAction.INIT).setModifiedAt(DateTimes.now()));
+        return Single.zip(insert01, insertTransaction01, Integer::sum);
     }
 
 }

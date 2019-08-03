@@ -39,25 +39,27 @@ public class ExtensionEntityServiceTest extends BaseSqlTest {
     @NonNull String getJdbcUrl() { return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString(); }
 
     @After
-    public void after(TestContext context) { super.after(context); }
+    public void after(TestContext context) {
+        super.after(context);
+    }
 
     @Test
     public void test_get_list_without_another(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"books\":[{\"id\":1,\"author_id\":1,\"title\":\"1984\",\"published_in\":\"1947-12-31T17:01\"," +
+            "{\"books\":[{\"id\":1,\"author_id\":1,\"title\":\"1984\",\"published_in\":\"1947-12-31T17:01Z\"," +
             "\"language_id\":1},{\"id\":2,\"author_id\":1,\"title\":\"Animal Farm\"," +
-            "\"published_in\":\"1944-12-31T17:01\",\"language_id\":1},{\"id\":3,\"author_id\":2,\"title\":\"O " +
-            "Alquimista\",\"published_in\":\"1987-12-31T18:01\",\"language_id\":4},{\"id\":4,\"author_id\":2," +
-            "\"title\":\"Brida\",\"published_in\":\"1989-12-31T18:01\",\"language_id\":2}]}");
+            "\"published_in\":\"1944-12-31T17:01Z\",\"language_id\":1},{\"id\":3,\"author_id\":2,\"title\":\"O " +
+            "Alquimista\",\"published_in\":\"1987-12-31T18:01Z\",\"language_id\":4},{\"id\":4,\"author_id\":2," +
+            "\"title\":\"Brida\",\"published_in\":\"1989-12-31T18:01Z\",\"language_id\":2}]}");
         asserter(context, true, expected, BOOK_ADDRESS, EventAction.GET_LIST, RequestData.builder().build());
     }
 
     @Test
     public void test_get_list_by_another(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"books\":[{\"id\":1,\"title\":\"1984\",\"published_in\":\"1947-12-31T17:01\"," +
+            "{\"books\":[{\"id\":1,\"title\":\"1984\",\"published_in\":\"1947-12-31T17:01Z\"," +
             "\"language_id\":1},{\"id\":2,\"title\":\"Animal Farm\"," +
-            "\"published_in\":\"1944-12-31T17:01\",\"language_id\":1}]}");
+            "\"published_in\":\"1944-12-31T17:01Z\",\"language_id\":1}]}");
         asserter(context, true, expected, BOOK_ADDRESS, EventAction.GET_LIST,
                  RequestData.builder().body(new JsonObject().put("author_id", 1)).build());
     }
@@ -65,7 +67,7 @@ public class ExtensionEntityServiceTest extends BaseSqlTest {
     @Test
     public void test_get_one_by_another_success(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"id\":2,\"language_id\":1,\"title\":\"Animal Farm\"," + "\"published_in\":\"1944-12-31T17:01\"}");
+            "{\"id\":2,\"language_id\":1,\"title\":\"Animal Farm\"," + "\"published_in\":\"1944-12-31T17:01Z\"}");
         RequestData reqData = RequestData.builder()
                                          .body(new JsonObject().put("author_id", "1").put("book_id", "2"))
                                          .build();
@@ -85,7 +87,7 @@ public class ExtensionEntityServiceTest extends BaseSqlTest {
     @Test
     public void test_get_one_without_another_success(TestContext context) {
         JsonObject expected = new JsonObject("{\"id\":2,\"language_id\":1,\"author_id\":1,\"title\":\"Animal Farm\"," +
-                                             "\"published_in\":\"1944-12-31T17:01\"}");
+                                             "\"published_in\":\"1944-12-31T17:01Z\"}");
         RequestData reqData = RequestData.builder().body(new JsonObject().put("book_id", "2")).build();
         asserter(context, true, expected, BOOK_ADDRESS, EventAction.GET_ONE, reqData);
     }
@@ -93,7 +95,7 @@ public class ExtensionEntityServiceTest extends BaseSqlTest {
     @Test
     public void test_patch_by_another_success(TestContext context) {
         JsonObject expected = new JsonObject("{\"resource\":{\"id\":2,\"author_id\":1,\"title\":\"Farm\"," +
-                                             "\"published_in\":\"1944-12-31T09:01\",\"language_id\":1}," +
+                                             "\"published_in\":\"1944-12-31T09:01Z\",\"language_id\":1}," +
                                              "\"action\":\"PATCH\",\"status\":\"SUCCESS\"}");
         RequestData reqData = RequestData.builder()
                                          .body(new JsonObject().put("author_id", 1)
