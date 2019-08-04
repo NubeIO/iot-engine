@@ -1,7 +1,5 @@
 package com.nubeiot.core.sql;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,16 +25,6 @@ public class H2LocalTest extends BaseSqlTest {
     @BeforeClass
     public static void beforeSuite() {
         BaseSqlTest.beforeSuite();
-    }
-
-    @Before
-    public void before(TestContext context) {
-        super.before(context);
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
     }
 
     @Override

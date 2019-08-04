@@ -1,19 +1,33 @@
 package com.nubeiot.iotdata.unit;
 
-import com.nubeiot.core.utils.Strings;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor
-public class NumberDataType implements DataType {
+public class NumberDataType implements InternalDataType {
 
     @Getter
+    @Include
     private final String type;
     private final String unit;
+    private Map<Double, List<String>> possibleValues = new HashMap<>();
 
     NumberDataType() {
         this("number", null);
+    }
+
+    NumberDataType(DataType dt) {
+        this.type = dt.type();
+        this.unit = dt.unit();
+        setPossibleValues(dt.possibleValues());
     }
 
     @Override
@@ -23,11 +37,14 @@ public class NumberDataType implements DataType {
     public final String unit() { return unit; }
 
     @Override
-    public String display(Double value) {
-        if (Strings.isBlank(unit)) {
-            return String.valueOf(value);
-        }
-        return value + " " + unit;
+    public Map<Double, List<String>> possibleValues() {
+        return possibleValues;
+    }
+
+    @Override
+    public InternalDataType setPossibleValues(Map<Double, List<String>> possibleValues) {
+        Optional.ofNullable(possibleValues).ifPresent(pv -> this.possibleValues.putAll(pv));
+        return this;
     }
 
 }

@@ -37,15 +37,6 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
         this.dao = () -> entityHandler.getDao(daoClass());
     }
 
-    /**
-     * Defines key name in respond data in {@code list} resource
-     *
-     * @return key name
-     * @see #list(RequestData)
-     */
-    @NonNull
-    public abstract String listKey();
-
     @Override
     public D get() {
         return dao.get();
@@ -103,7 +94,7 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData requestData) {
         RequestData reqData = recompute(EventAction.REMOVE, requestData);
-        final K pk = parsePK(reqData);
+        final K pk = parsePrimaryKey(reqData);
         return doGetOne(reqData).flatMap(m -> get().deleteById(pk)
                                                    .filter(r -> r > 0)
                                                    .switchIfEmpty(Single.error(notFound(pk)))

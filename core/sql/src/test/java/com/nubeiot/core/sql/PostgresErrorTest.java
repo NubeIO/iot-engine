@@ -9,8 +9,6 @@ import java.time.ZoneOffset;
 
 import org.jooq.SQLDialect;
 import org.jooq.exception.SQLStateClass;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,9 +45,7 @@ public class PostgresErrorTest extends BaseSqlTest {
         builder.setCleanDataDirectory(true).setPort(10002);
     }
 
-    @Before
-    public void before(TestContext context) {
-        super.before(context);
+    protected void setup(TestContext context) {
         this.entityHandler = startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
         TblSample_01 pojo = new TblSample_01().setId(3)
                                               .setFDate_1(LocalDate.of(2019, 2, 17))
@@ -82,11 +78,6 @@ public class PostgresErrorTest extends BaseSqlTest {
     @Override
     public SQLDialect getDialect() {
         return SQLDialect.POSTGRES;
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
     }
 
     @Test

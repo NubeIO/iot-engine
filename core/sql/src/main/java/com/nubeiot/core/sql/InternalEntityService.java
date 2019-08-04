@@ -95,22 +95,42 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
         return JsonPojo.from(pojo).toJson(JsonData.MAPPER, IGNORE_FIELDS);
     }
 
+    /**
+     * Do get list entity resources
+     *
+     * @param requestData Request data
+     * @return list pojo entities
+     */
     default Observable<M> doGetList(RequestData requestData) {
         return get().queryExecutor().findMany(ctx -> query(ctx, requestData)).flattenAsObservable(records -> records);
     }
 
+    /**
+     * Do get one resource by {@code primary key} or by {@code rich query} after analyzing given request data
+     *
+     * @param requestData Request data
+     * @return single pojo
+     */
     default Single<M> doGetOne(RequestData requestData) {
         K pk = parsePrimaryKey(requestData);
         return get().findOneById(pk).map(o -> o.orElseThrow(() -> notFound(pk)));
     }
 
+    /**
+     * Do update data
+     *
+     * @param requestData Request data
+     * @param action      Event action
+     * @param validation  Validation function
+     * @return single response in {@code json}
+     * @see #cudResponse(EventAction, VertxPojo, RequestData)
+     */
     default Single<JsonObject> doUpdate(RequestData requestData, EventAction action,
-                                        Function3<M, M, JsonObject, M> validate) {
+                                        Function3<M, M, JsonObject, M> validation) {
         RequestData reqData = recompute(action, requestData);
-        final K pk = parsePK(reqData);
-        M req = parse(reqData.body().put(jsonKeyName(), pk));
-        JsonObject headers = reqData.headers();
-        return doGetOne(reqData).map(db -> validate.apply(db, req, headers))
+        final K pk = parsePrimaryKey(reqData);
+        return doGetOne(reqData).map(
+            db -> validation.apply(db, parse(reqData.body().put(jsonKeyName(), pk)), reqData.headers()))
                                 .flatMap(get()::update)
                                 .filter(i -> i > 0)
                                 .switchIfEmpty(Single.error(notFound(pk)))
@@ -131,10 +151,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
         if (pojo instanceof HasTimeAudit && enableTimeAudit()) {
             ((HasTimeAudit) pojo).setTimeAudit(TimeAudit.created(headers.getString(Headers.X_REQUEST_USER)));
         }
-        if (pojo instanceof HasSyncAudit) {
-            ((HasSyncAudit) pojo).setSyncAudit(SyncAudit.notSynced());
-        }
-        return pojo;
+        return addNotSyncAudit(pojo);
     }
 
     /**
@@ -144,13 +161,13 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @param dbData  existing resource object from database
      * @param pojo    given request resource object
      * @param headers request header. It is useful to audit
-     * @return instance for fluent API
+     * @return pojo instance for fluent API
      * @throws IllegalArgumentException if any invalid parameter
      */
     @NonNull
     default M validateOnUpdate(@NonNull M dbData, @NonNull M pojo, @NonNull JsonObject headers)
         throws IllegalArgumentException {
-        return addModifiedAudit(dbData, pojo, headers);
+        return addModifiedTimeAudit(dbData, addNotSyncAudit(pojo), headers);
     }
 
     /**
@@ -160,13 +177,13 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @param dbData  existing resource object from database
      * @param pojo    given request resource object
      * @param headers request header. It is useful to audit
-     * @return instance for fluent API
+     * @return pojo instance for fluent API
      * @throws IllegalArgumentException if any invalid parameter
      */
     @NonNull
     default M validateOnPatch(@NonNull M dbData, @NonNull M pojo, @NonNull JsonObject headers)
         throws IllegalArgumentException {
-        return addModifiedAudit(dbData, parse(JsonPojo.merge(dbData, pojo)), headers);
+        return addModifiedTimeAudit(dbData, addNotSyncAudit(parse(JsonPojo.merge(dbData, pojo))), headers);
     }
 
     /**
@@ -210,12 +227,23 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * Do query paging
      *
      * @param sql        SQL select command
-     * @param pagination pag
+     * @param pagination Given pagination
      * @return Database Select DSL
      */
     default SelectOptionStep<R> paging(@NonNull SelectConditionStep<R> sql, Pagination pagination) {
         Pagination paging = Optional.ofNullable(pagination).orElseGet(() -> Pagination.builder().build());
         return sql.limit(paging.getPerPage()).offset((paging.getPage() - 1) * paging.getPerPage());
+    }
+
+    /**
+     * Get one resource by {@code primary key}
+     *
+     * @param primaryKey Given primary key
+     * @return one single data source if found else throw {@code not found exception}
+     * @see #notFound(K)
+     */
+    default Single<M> lookupById(@NonNull K primaryKey) {
+        return get().findOneById(primaryKey).map(o -> o.orElseThrow(() -> notFound(primaryKey)));
     }
 
     /**
@@ -233,35 +261,77 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
                                            .put("status", Status.SUCCESS));
     }
 
-    default Single<M> lookupById(@NonNull K pk) {
-        return get().findOneById(pk).map(o -> o.orElseThrow(() -> notFound(pk)));
-    }
-
-    default Single<JsonObject> cudResponse(@NonNull EventAction action, @NonNull K k,
+    /**
+     * Construct {@code CUD Response} that includes full resource
+     *
+     * @param action      Event action
+     * @param key         Given primary key
+     * @param requestData request data
+     * @return response
+     */
+    default Single<JsonObject> cudResponse(@NonNull EventAction action, @NonNull K key,
                                            @NonNull RequestData requestData) {
         return enableFullResourceInCUDResponse()
-               ? lookupById(k).flatMap(r -> cudResponse(action, r, requestData))
-               : Single.just(new JsonObject().put(requestKeyName(),
-                                                  ReflectionClass.isJavaLangObject(k.getClass()) ? k : k.toString()));
+               ? lookupById(key).flatMap(r -> cudResponse(action, r, requestData))
+               : Single.just(new JsonObject().put(requestKeyName(), ReflectionClass.isJavaLangObject(key.getClass())
+                                                                    ? key
+                                                                    : key.toString()));
     }
 
-    default NotFoundException notFound(K pk) {
-        return new NotFoundException(Strings.format("Not found resource with {0}={1}", requestKeyName(), pk));
+    /**
+     * Construct {@code NotFound exception} by {@code primary key}
+     *
+     * @param primaryKey Given primary key
+     * @return NotFoundException
+     */
+    default NotFoundException notFound(K primaryKey) {
+        return new NotFoundException(Strings.format("Not found resource with {0}={1}", requestKeyName(), primaryKey));
     }
 
-    default K parsePK(RequestData requestData) {
-        return parsePrimaryKey(requestData.body().getValue(requestKeyName()).toString());
-    }
-
-    default M addModifiedAudit(M dbData, @NonNull M pojo, JsonObject headers) {
+    /**
+     * Add modified time audit if current entity is child of {@link HasTimeAudit}
+     *
+     * @param dbData  Existed entity in database
+     * @param pojo    Given entity
+     * @param headers Request headers
+     * @return modified pojo for fluent API
+     */
+    default M addModifiedTimeAudit(@NonNull M dbData, @NonNull M pojo, JsonObject headers) {
         if (pojo instanceof HasTimeAudit && enableTimeAudit()) {
             ((HasTimeAudit) pojo).setTimeAudit(
                 TimeAudit.modified(((HasTimeAudit) dbData).getTimeAudit(), headers.getString(Headers.X_REQUEST_USER)));
         }
+        return pojo;
+    }
+
+    /**
+     * Force not synced audit if current entity is child of {@link HasSyncAudit}
+     *
+     * @param pojo Given entity
+     * @return modified pojo for fluent API
+     * @apiNote It is exclude audit if entity has already had {@code SyncAudit}
+     * @see SyncAudit#notSynced()
+     */
+    default M addNotSyncAudit(@NonNull M pojo) {
         if (pojo instanceof HasSyncAudit) {
-            final SyncAudit syncAudit = Optional.ofNullable(((HasSyncAudit) pojo).getSyncAudit())
-                                                .orElseGet(SyncAudit::notSynced);
-            ((HasSyncAudit) pojo).setSyncAudit(syncAudit);
+            ((HasSyncAudit) pojo).setSyncAudit(
+                Optional.ofNullable(((HasSyncAudit) pojo).getSyncAudit()).orElseGet(SyncAudit::notSynced));
+        }
+        return pojo;
+    }
+
+    /**
+     * Force synced audit if current entity is child of {@link HasSyncAudit}
+     *
+     * @param pojo Given entity
+     * @return modified pojo for fluent API
+     * @apiNote It is exclude audit if entity has already had {@code SyncAudit}
+     * @see SyncAudit#synced()
+     */
+    default M addSyncAudit(@NonNull M pojo) {
+        if (pojo instanceof HasSyncAudit) {
+            ((HasSyncAudit) pojo).setSyncAudit(
+                Optional.ofNullable(((HasSyncAudit) pojo).getSyncAudit()).orElseGet(SyncAudit::synced));
         }
         return pojo;
     }

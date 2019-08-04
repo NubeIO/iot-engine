@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
@@ -16,7 +17,6 @@ import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.iotdata.model.Tables;
 import com.nubeiot.iotdata.model.tables.daos.PointDao;
-import com.nubeiot.iotdata.model.tables.pojos.Network;
 import com.nubeiot.iotdata.model.tables.pojos.Point;
 import com.nubeiot.iotdata.model.tables.records.PointRecord;
 
@@ -56,17 +56,24 @@ public final class PointService extends AbstractDataPointService<UUID, Point, Po
     }
 
     @Override
+    public RequestData recompute(RequestData requestData, Map<String, ?> extra) {
+        NetworkService.optimizeAlias(requestData.body());
+        NetworkService.optimizeAlias(requestData.getFilter());
+        return ExtensionEntityService.super.recompute(requestData, extra);
+    }
+
+    @Override
     public Map<String, Function<String, ?>> extensions() {
-        return Collections.singletonMap(EntityService.createRequestKeyName(Network.class, Tables.NETWORK.ID.getName()),
-                                        Functions.toUUID());
+        return Collections.singletonMap(NetworkService.REQUEST_NETWORK_KEY, Functions.toUUID());
     }
 
     public interface PointExtension extends ExtensionResource {
 
+        String REQUEST_POINT_KEY = EntityService.createRequestKeyName(Point.class, Tables.POINT.ID.getName());
+
         @Override
         default Map<String, Function<String, ?>> extensions() {
-            return Collections.singletonMap(EntityService.createRequestKeyName(Point.class, Tables.POINT.ID.getName()),
-                                            Functions.toUUID());
+            return Collections.singletonMap(REQUEST_POINT_KEY, Functions.toUUID());
         }
 
     }

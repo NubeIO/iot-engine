@@ -427,7 +427,6 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 		<entity schema="PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="64" y="240" />
 		<entity schema="PUBLIC" name="DEVICE_EQUIP" color="EEF7EC" x="1008" y="624" />
 		<entity schema="PUBLIC" name="THING" color="EEF7EC" x="1232" y="320" />
-		<entity schema="PUBLIC" name="NETWORK" color="EEF7EC" x="992" y="384" />
 		<entity schema="PUBLIC" name="POINT_TAG" color="FFCCFF" x="736" y="80" />
 		<entity schema="PUBLIC" name="MEASURE_UNIT" color="FFCCFF" x="896" y="80" />
 		<entity schema="PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="512" y="544" />
@@ -436,6 +435,7 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="384" y="112" />
 		<entity schema="PUBLIC" name="TRANSDUCERS" color="EEF7EC" x="736" y="336" />
 		<entity schema="PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="80" y="576" />
+		<entity schema="PUBLIC" name="NETWORK" color="EEF7EC" x="992" y="384" />
 		<group name="PHYSICAL_THING" color="EEF7EC" >
 			<entity schema="PUBLIC" name="DEVICE_EQUIP" />
 			<entity schema="PUBLIC" name="THING" />

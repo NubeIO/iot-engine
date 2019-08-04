@@ -1,10 +1,6 @@
 package com.nubeiot.core.sql;
 
-import java.util.UUID;
-
 import org.jooq.Table;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,30 +17,12 @@ import com.nubeiot.core.sql.MockManyEntityHandler.MockManyNoData;
 import com.nubeiot.core.sql.mock.manyschema.mock0.tables.pojos.TblSample_00;
 import com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01;
 
-import lombok.NonNull;
-
 @RunWith(VertxUnitRunner.class)
 public class H2MemTest extends BaseSqlTest {
 
     @BeforeClass
     public static void beforeSuite() {
         BaseSqlTest.beforeSuite();
-    }
-
-    @Before
-    public void before(TestContext context) {
-        super.before(context);
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
-    }
-
-    @Override
-    @NonNull
-    public String getJdbcUrl() {
-        return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString();
     }
 
     @Test
@@ -60,7 +38,7 @@ public class H2MemTest extends BaseSqlTest {
     }
 
     @Test
-    public void test_init_with_data(TestContext context) throws InterruptedException {
+    public void test_init_with_data(TestContext context) {
         JsonObject e0 = JsonPojo.from(new TblSample_00().setId(1)
                                                         .setFBool(true)
                                                         .setFStr("hello")

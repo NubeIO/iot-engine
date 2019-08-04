@@ -236,7 +236,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return false;
     }
 
-    public Single<Boolean> isFreshInstall() {
+    protected Single<Boolean> isFreshInstall() {
         return queryExecutor.executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
     }
 

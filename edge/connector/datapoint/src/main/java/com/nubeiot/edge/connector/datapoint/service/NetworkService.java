@@ -1,10 +1,16 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.EntityService;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.iotdata.model.Tables;
@@ -16,6 +22,19 @@ import lombok.NonNull;
 
 public final class NetworkService extends AbstractDataPointService<UUID, Network, NetworkRecord, NetworkDao>
     implements UUIDKeyEntity<Network, NetworkRecord, NetworkDao> {
+
+    private static Set<String> NULL_ALIASES = Collections.unmodifiableSet(
+        new HashSet<>(Arrays.asList("default", "gpio")));
+
+    static String REQUEST_NETWORK_KEY = EntityService.createRequestKeyName(Network.class, Tables.NETWORK.ID.getName());
+
+    static void optimizeAlias(JsonObject req) {
+        Optional.ofNullable(req).ifPresent(r -> {
+            if (NetworkService.NULL_ALIASES.contains(r.getString(NetworkService.REQUEST_NETWORK_KEY, null))) {
+                r.put(NetworkService.REQUEST_NETWORK_KEY, (String) null);
+            }
+        });
+    }
 
     public NetworkService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);

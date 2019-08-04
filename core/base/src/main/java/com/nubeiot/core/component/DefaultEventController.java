@@ -67,7 +67,8 @@ final class DefaultEventController implements EventController {
      * {@inheritDoc}
      */
     public EventController register(String address, boolean local, @NonNull EventListener handler) {
-        Strings.requireNotBlank(address);
+        LOGGER.info("Registering {} Event Listener '{}' | Address '{}'...", local ? "Local" : "Cluster",
+                    handler.getClass().getName(), Strings.requireNotBlank(address));
         if (local) {
             this.eventBus.localConsumer(address, handler::accept);
         } else {

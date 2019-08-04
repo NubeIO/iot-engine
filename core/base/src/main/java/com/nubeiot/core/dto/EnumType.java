@@ -28,7 +28,7 @@ public interface EnumType extends JsonData {
             return defaultType;
         }
         String t = Strings.optimizeMultipleSpace(type).toUpperCase(Locale.ENGLISH);
-        return ReflectionField.streamConstants(clazz, clazz, null)
+        return ReflectionField.streamConstants(clazz, clazz)
                               .filter(enumType -> enumType.type().equals(t) ||
                                                   Objects.nonNull(enumType.aliases()) && enumType.aliases().contains(t))
                               .findAny()

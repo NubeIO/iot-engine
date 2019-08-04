@@ -47,6 +47,8 @@ ext.deps = [
     jackson : [
         core    : "com.fasterxml.jackson.core:jackson-core:$versions.jackson",
         databind: "com.fasterxml.jackson.core:jackson-databind:$versions.jackson",
+        datatype: "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$versions.jackson",
+        datetime: "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$versions.jackson",
     ],
     database: [
         h2              : "com.h2database:h2:$versions.database.h2",

@@ -124,9 +124,17 @@ public final class Reflections {
             return (T) findToStream(clazz, filter).map(field -> getConstant(clazz, field)).findFirst().orElse(null);
         }
 
+        public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass) {
+            return streamConstants(clazz, fieldClass).collect(Collectors.toList());
+        }
+
         public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,
                                                Predicate<Field> predicate) {
             return streamConstants(clazz, fieldClass, predicate).collect(Collectors.toList());
+        }
+
+        public static <T> Stream<T> streamConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass) {
+            return streamConstants(clazz, fieldClass, null);
         }
 
         public static <T> Stream<T> streamConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,

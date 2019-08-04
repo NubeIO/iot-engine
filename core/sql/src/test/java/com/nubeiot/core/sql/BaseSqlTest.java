@@ -1,11 +1,14 @@
 package com.nubeiot.core.sql;
 
 import java.util.Objects;
+import java.util.UUID;
 
 import org.jooq.Catalog;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
+import org.junit.After;
+import org.junit.Before;
 import org.slf4j.LoggerFactory;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -44,8 +47,8 @@ public abstract class BaseSqlTest {
         ((Logger) LoggerFactory.getLogger("com.zaxxer.hikari")).setLevel(Level.DEBUG);
     }
 
-    public static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, @NonNull VertxPojo pojo,
-                                       @NonNull String field, @NonNull T expect) {
+    protected static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, @NonNull VertxPojo pojo,
+                                          @NonNull String field, @NonNull T expect) {
         try {
             context.assertNotNull(pojo);
             context.assertEquals(expect, ReflectionField.getFieldValue(pojo, pojo.getClass().getDeclaredField(field),
@@ -57,21 +60,29 @@ public abstract class BaseSqlTest {
         }
     }
 
-    public void before(TestContext context) {
+    @Before
+    public final void before(TestContext context) {
         SqlConfig sqlConfig = IConfig.from(Configs.loadJsonConfig("sql.json"), SqlConfig.class);
         sqlConfig.setDialect(getDialect());
         sqlConfig.getHikariConfig().setJdbcUrl(getJdbcUrl());
         vertx = Vertx.vertx().exceptionHandler(context.exceptionHandler());
         options = new DeploymentOptions().setConfig(sqlConfig.toJson());
+        setup(context);
     }
 
-    public void after(TestContext context) {
+    @After
+    public final void after(TestContext context) {
         vertx.close(context.asyncAssertSuccess());
     }
 
-    public abstract @NonNull String getJdbcUrl();
+    @NonNull
+    protected String getJdbcUrl() {
+        return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString();
+    }
 
-    public SQLDialect getDialect() { return SQLDialect.H2; }
+    protected SQLDialect getDialect()         { return SQLDialect.H2; }
+
+    protected void setup(TestContext context) { }
 
     protected EventController controller() {
         return SharedDataDelegate.getEventController(vertx, sharedKey);

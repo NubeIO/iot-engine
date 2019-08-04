@@ -7,13 +7,19 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
-public interface DataType extends EnumType {
+@JsonInclude(Include.NON_EMPTY)
+@JsonSerialize(as = DataType.class)
+public interface DataType extends EnumType, Cloneable {
 
     DataType NUMBER = new NumberDataType();
     DataType PERCENTAGE = new NumberDataType("percentage", "%");
@@ -30,27 +36,31 @@ public interface DataType extends EnumType {
     static DataType def() { return NUMBER; }
 
     @NonNull
-    @JsonCreator
     static DataType factory(String dbValue) {
         if (Strings.isBlank(dbValue)) {
             return def();
         }
         final String[] split = dbValue.split(SEP);
-        return factory(split[0], split.length > 1 ? split[1] : null);
+        return factory(split[0], split.length > 1 ? split[1] : null, null);
     }
 
     @NonNull
-    static DataType factory(String type, String unit) {
-        return ReflectionField.streamConstants(DataType.class, DataType.class, null)
-                              .filter(t -> t.type().equalsIgnoreCase(type))
-                              .findAny()
-                              .orElseGet(() -> new NumberDataType(type, unit));
+    @JsonCreator
+    static DataType factory(@JsonProperty(value = "type") String type, @JsonProperty(value = "symbol") String unit,
+                            @JsonProperty(value = "possible_values") Map<Double, List<String>> possibleValues) {
+        return new NumberDataType(ReflectionField.streamConstants(DataType.class, InternalDataType.class)
+                                                 .filter(t -> t.type().equalsIgnoreCase(type))
+                                                 .findAny()
+                                                 .orElseGet(() -> new NumberDataType(type, unit))).setPossibleValues(
+            possibleValues);
     }
 
     @NonNull
-    default String unit() {
-        return "";
-    }
+    @JsonProperty(value = "symbol")
+    String unit();
+
+    @JsonProperty(value = "possible_values")
+    Map<Double, List<String>> possibleValues();
 
     default Double parse(Object data) {
         if (Objects.isNull(data)) {
@@ -65,10 +75,12 @@ public interface DataType extends EnumType {
         return 0d;
     }
 
-    @NonNull String display(Double value);
-
-    @JsonIgnore
-    default Map<Double, List<String>> possibleValue() { return null; }
+    default @NonNull String display(Double value) {
+        if (Strings.isBlank(unit())) {
+            return String.valueOf(value);
+        }
+        return value + " " + unit();
+    }
 
     /**
      * Presents persist value
