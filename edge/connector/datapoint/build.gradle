@@ -17,6 +17,9 @@ dependencies {
     compile project(":core:httpclient")
     compile project(":core:auth")
     compile 'net.thisptr:jackson-jq:0.0.10'
+
+    testCompile project(":core:base").sourceSets.test.output
+    testCompile project(":core:sql").sourceSets.test.output
 }
 
 task jooqGen(type: JooqGenerateTask) {
@@ -69,31 +72,31 @@ task jooqGen(type: JooqGenerateTask) {
 //                         converter: "%s.value()",
 //                         parser: "com.nubeiot.iotdata.unit.DataType.factory((String)%s)",
 //                         defVal: "com.nubeiot.iotdata.unit.DataType.def()"),
-        new JsonDataType(className: "com.nubeiot.iotdata.dto.HistorySettingType",
-                         converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.HistorySettingType.factory((String)%s)",
-                         defVal: "com.nubeiot.iotdata.dto.HistorySettingType.def()"),
-        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointCategory",
-                         converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.PointCategory.factory((String)%s)",
-                         defVal: "com.nubeiot.iotdata.dto.PointCategory.def()"),
-        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointKind",
-                         converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.PointKind.factory((String)%s)",
-                         defVal: "com.nubeiot.iotdata.dto.PointKind.def()"),
-        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointType",
-                         converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.PointType.factory((String)%s)",
-                         defVal: "com.nubeiot.iotdata.dto.PointType.def()"),
-        new JsonDataType(className: "com.nubeiot.iotdata.dto.TransducerCategory",
-                         converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.TransducerCategory.factory((String)%s)"),
-        new JsonDataType(className: "com.nubeiot.iotdata.dto.TransducerType",
-                         converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.TransducerType.factory((String)%s)",
-                         defVal: "com.nubeiot.iotdata.dto.TransducerType.def()"),
-        new JsonDataType(className: "com.nubeiot.iotdata.dto.EquipType",
-                         converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.EquipType.factory((String)%s)")
+new JsonDataType(className: "com.nubeiot.iotdata.dto.HistorySettingType",
+                 converter: "%s.type()",
+                 parser: "com.nubeiot.iotdata.dto.HistorySettingType.factory((String)%s)",
+                 defVal: "com.nubeiot.iotdata.dto.HistorySettingType.def()"),
+new JsonDataType(className: "com.nubeiot.iotdata.dto.PointCategory",
+                 converter: "%s.type()",
+                 parser: "com.nubeiot.iotdata.dto.PointCategory.factory((String)%s)",
+                 defVal: "com.nubeiot.iotdata.dto.PointCategory.def()"),
+new JsonDataType(className: "com.nubeiot.iotdata.dto.PointKind",
+                 converter: "%s.type()",
+                 parser: "com.nubeiot.iotdata.dto.PointKind.factory((String)%s)",
+                 defVal: "com.nubeiot.iotdata.dto.PointKind.def()"),
+new JsonDataType(className: "com.nubeiot.iotdata.dto.PointType",
+                 converter: "%s.type()",
+                 parser: "com.nubeiot.iotdata.dto.PointType.factory((String)%s)",
+                 defVal: "com.nubeiot.iotdata.dto.PointType.def()"),
+new JsonDataType(className: "com.nubeiot.iotdata.dto.TransducerCategory",
+                 converter: "%s.type()",
+                 parser: "com.nubeiot.iotdata.dto.TransducerCategory.factory((String)%s)"),
+new JsonDataType(className: "com.nubeiot.iotdata.dto.TransducerType",
+                 converter: "%s.type()",
+                 parser: "com.nubeiot.iotdata.dto.TransducerType.factory((String)%s)",
+                 defVal: "com.nubeiot.iotdata.dto.TransducerType.def()"),
+new JsonDataType(className: "com.nubeiot.iotdata.dto.EquipType",
+                 converter: "%s.type()",
+                 parser: "com.nubeiot.iotdata.dto.EquipType.factory((String)%s)")
     ]
 }

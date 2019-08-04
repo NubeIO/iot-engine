@@ -40,7 +40,8 @@ public class H2LocalTest extends BaseSqlTest {
     }
 
     @Override
-    @NonNull String getJdbcUrl() {
+    @NonNull
+    public String getJdbcUrl() {
         return "jdbc:h2:file:" + folder.getRoot().toPath().resolve("dbh2local").toString();
     }
 

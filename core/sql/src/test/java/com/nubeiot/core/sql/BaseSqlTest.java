@@ -31,17 +31,30 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-abstract class BaseSqlTest {
+public abstract class BaseSqlTest {
 
     private final String sharedKey = getClass().getName();
     private Vertx vertx;
     private DeploymentOptions options;
     private String deployId;
 
-    static void beforeSuite() {
+    public static void beforeSuite() {
         TestHelper.setup();
         ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.zaxxer.hikari")).setLevel(Level.DEBUG);
+    }
+
+    public static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, @NonNull VertxPojo pojo,
+                                       @NonNull String field, @NonNull T expect) {
+        try {
+            context.assertNotNull(pojo);
+            context.assertEquals(expect, ReflectionField.getFieldValue(pojo, pojo.getClass().getDeclaredField(field),
+                                                                       expect.getClass()));
+        } catch (AssertionError | NoSuchFieldException ex) {
+            context.fail(ex);
+        } finally {
+            TestHelper.testComplete(async);
+        }
     }
 
     public void before(TestContext context) {
@@ -56,11 +69,11 @@ abstract class BaseSqlTest {
         vertx.close(context.asyncAssertSuccess());
     }
 
-    abstract @NonNull String getJdbcUrl();
+    public abstract @NonNull String getJdbcUrl();
 
-    SQLDialect getDialect() { return SQLDialect.H2; }
+    public SQLDialect getDialect() { return SQLDialect.H2; }
 
-    EventController controller() {
+    protected EventController controller() {
         return SharedDataDelegate.getEventController(vertx, sharedKey);
     }
 
@@ -71,7 +84,7 @@ abstract class BaseSqlTest {
         }
     }
 
-    <T extends EntityHandler> T startSQL(TestContext context, Catalog catalog, Class<T> handlerClass) {
+    protected <T extends EntityHandler> T startSQL(TestContext context, Catalog catalog, Class<T> handlerClass) {
         SQLWrapper<T> v = VertxHelper.deploy(vertx, context, options,
                                              new SQLWrapper<>(catalog, handlerClass).registerSharedKey(sharedKey),
                                              TestHelper.TEST_TIMEOUT_SEC * 2);
@@ -89,19 +102,6 @@ abstract class BaseSqlTest {
             context.assertEquals(expected, rs.size());
         } catch (AssertionError e) {
             context.fail(e);
-        } finally {
-            TestHelper.testComplete(async);
-        }
-    }
-
-    static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, @NonNull VertxPojo pojo,
-                                @NonNull String field, @NonNull T expect) {
-        try {
-            context.assertNotNull(pojo);
-            context.assertEquals(expect, ReflectionField.getFieldValue(pojo, pojo.getClass().getDeclaredField(field),
-                                                                       expect.getClass()));
-        } catch (AssertionError | NoSuchFieldException ex) {
-            context.fail(ex);
         } finally {
             TestHelper.testComplete(async);
         }

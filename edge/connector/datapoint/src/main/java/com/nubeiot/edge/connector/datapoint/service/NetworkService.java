@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
@@ -15,21 +14,16 @@ import com.nubeiot.iotdata.model.tables.records.NetworkRecord;
 
 import lombok.NonNull;
 
-public class NetworkService extends DataPointService<UUID, Network, NetworkRecord, NetworkDao>
+public final class NetworkService extends AbstractDataPointService<UUID, Network, NetworkRecord, NetworkDao>
     implements UUIDKeyEntity<Network, NetworkRecord, NetworkDao> {
 
-    public NetworkService(@NonNull EntityHandler entityHandler, @NonNull HttpClientDelegate client) {
-        super(entityHandler, client);
+    public NetworkService(@NonNull EntityHandler entityHandler) {
+        super(entityHandler);
     }
 
     @Override
-    protected String endpoint() {
-        return null;
-    }
-
-    @Override
-    protected @NonNull String listKey() {
-        return "points";
+    public @NonNull String listKey() {
+        return "networks";
     }
 
     @Override

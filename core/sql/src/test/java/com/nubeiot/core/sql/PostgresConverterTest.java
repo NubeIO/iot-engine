@@ -44,12 +44,13 @@ public class PostgresConverterTest extends BaseSqlDaoConverterTest {
     }
 
     @Override
-    SQLDialect getDialect() {
+    public SQLDialect getDialect() {
         return SQLDialect.POSTGRES;
     }
 
     @Override
-    @NonNull String getJdbcUrl() {
+    @NonNull
+    public String getJdbcUrl() {
         return pg.getEmbeddedPostgres().getJdbcUrl("postgres", "postgres");
     }
 

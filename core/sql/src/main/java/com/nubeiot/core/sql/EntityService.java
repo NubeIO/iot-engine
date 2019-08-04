@@ -21,6 +21,7 @@ import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.sql.type.TimeAudit;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -38,6 +39,10 @@ import lombok.NonNull;
  */
 public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>>
     extends EventListener, Supplier<D> {
+
+    static <POJO extends VertxPojo> String createRequestKeyName(@NonNull Class<POJO> modelClass, String jsonKeyName) {
+        return modelClass.getSimpleName().toLowerCase(Locale.ENGLISH) + "_" + Strings.requireNotBlank(jsonKeyName);
+    }
 
     /**
      * Defines {@code CURD} actions
@@ -158,21 +163,34 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
     }
 
     /**
-     * Defines request key name to lookup in doing {@code get/update/patch/delete} resource
+     * Defines request key name that represents for {@code primary key} in {@code table} to lookup in doing {@code get
+     * /update /patch /delete} resource
      *
-     * @return primary key name. Default is {@code <model_name>_<json_key_name>}
+     * @return request key name. Default is {@code <model_name>_<json_key_name>}
      * @apiNote It is not represents for actual primary key column in database table
      * @see #parsePrimaryKey(RequestData)
      * @see #modelClass()
      */
     @NonNull
-    default String primaryKeyName() {
-        return modelClass().getSimpleName().toLowerCase(Locale.ENGLISH) + "_" + jsonKeyName();
+    default String requestKeyName() {
+        return createRequestKeyName(modelClass(), jsonKeyName());
     }
 
+    /**
+     * Primary key column is represented in {@code json} mode
+     * <p>
+     * Default is primary key column in lowercase
+     *
+     * @return primary key column in json
+     * @apiNote It doesn't support composite key or no primary key in {@code table}
+     * @see #table()
+     */
     @NonNull
     default String jsonKeyName() {
-        return "id";
+        if (table().getPrimaryKey().getFields().size() != 1) {
+            throw new UnsupportedOperationException("Doesn't support composite key or no primary key");
+        }
+        return table().getPrimaryKey().getFields().iterator().next().getName().toLowerCase(Locale.ENGLISH);
     }
 
     /**
@@ -184,9 +202,9 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
      */
     @NonNull
     default K parsePrimaryKey(@NonNull RequestData requestData) throws IllegalArgumentException {
-        return Optional.ofNullable(requestData.body().getValue(primaryKeyName()))
+        return Optional.ofNullable(requestData.body().getValue(requestKeyName()))
                        .map(k -> parsePrimaryKey(k.toString()))
-                       .orElseThrow(() -> new IllegalArgumentException("Missing key " + primaryKeyName()));
+                       .orElseThrow(() -> new IllegalArgumentException("Missing key " + requestKeyName()));
     }
 
     /**

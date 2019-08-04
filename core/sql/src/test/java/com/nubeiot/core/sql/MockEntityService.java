@@ -40,21 +40,6 @@ class MockEntityService {
         }
 
         @Override
-        protected @NonNull String listKey() {
-            return "authors";
-        }
-
-        @Override
-        protected Author validateOnCreate(@NonNull Author pojo, @NonNull JsonObject headers)
-            throws IllegalArgumentException {
-            Strings.requireNotBlank(pojo.getLastName(), "last_name is mandatory");
-            if (Objects.isNull(pojo.getDateOfBirth())) {
-                throw new IllegalArgumentException("date_of_birth is mandatory");
-            }
-            return super.validateOnCreate(pojo, headers);
-        }
-
-        @Override
         public @NonNull Class<Author> modelClass() {
             return Author.class;
         }
@@ -69,11 +54,28 @@ class MockEntityService {
             return Tables.AUTHOR;
         }
 
+        @Override
+        @NonNull
+        public String listKey() {
+            return "authors";
+        }
+
+        @Override
+        public Author validateOnCreate(@NonNull Author pojo, @NonNull JsonObject headers)
+            throws IllegalArgumentException {
+            Strings.requireNotBlank(pojo.getLastName(), "last_name is mandatory");
+            if (Objects.isNull(pojo.getDateOfBirth())) {
+                throw new IllegalArgumentException("date_of_birth is mandatory");
+            }
+            return super.validateOnCreate(pojo, headers);
+        }
+
     }
 
 
-    static final class BookService extends ExtensionEntityService<Integer, Book, BookRecord, BookDao>
-        implements SerialKeyEntity<Book, BookRecord, BookDao> {
+    static final class BookService extends AbstractEntityService<Integer, Book, BookRecord, BookDao>
+        implements SerialKeyEntity<Book, BookRecord, BookDao>,
+                   ExtensionEntityService<Integer, Book, BookRecord, BookDao> {
 
         BookService(@NonNull EntityHandler entityHandler) {
             super(entityHandler);
@@ -90,11 +92,6 @@ class MockEntityService {
         }
 
         @Override
-        protected @NonNull String listKey() {
-            return "books";
-        }
-
-        @Override
         public @NonNull Class<Book> modelClass() {
             return Book.class;
         }
@@ -107,6 +104,12 @@ class MockEntityService {
         @Override
         public @NonNull JsonTable<BookRecord> table() {
             return Tables.BOOK;
+        }
+
+        @Override
+        @NonNull
+        public String listKey() {
+            return "books";
         }
 
         @Override

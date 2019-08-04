@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
 import io.vertx.core.logging.Logger;
@@ -352,9 +353,18 @@ public final class Reflections {
          * @param annotationClass Given annotation type class {@code @Target(ElementType.TYPE_USE)}
          * @return List of matching class
          */
-        @SuppressWarnings("unchecked")
         public static <T> List<Class<T>> find(String packageName, Class<T> parentClass,
                                               @NonNull Class<? extends Annotation> annotationClass) {
+            return stream(packageName, parentClass, clazz -> clazz.hasAnnotation(annotationClass.getName())).collect(
+                Collectors.toList());
+        }
+
+        public static <T> Stream<Class<T>> stream(String packageName, Class<T> parentClass) {
+            return stream(packageName, parentClass, clazz -> true);
+        }
+
+        public static <T> Stream<Class<T>> stream(String packageName, Class<T> parentClass,
+                                                  @NonNull Predicate<ClassInfo> filter) {
             Strings.requireNotBlank(packageName, "Package name cannot be empty");
             ClassGraph graph = new ClassGraph().enableAnnotationInfo()
                                                .ignoreClassVisibility()
@@ -373,11 +383,7 @@ public final class Reflections {
                 } else {
                     infoList = scanResult.getAllClasses();
                 }
-                return infoList.filter(clazz -> clazz.hasAnnotation(annotationClass.getName()))
-                               .loadClasses()
-                               .stream()
-                               .map(clazz -> (Class<T>) clazz)
-                               .collect(Collectors.toList());
+                return infoList.filter(filter::test).loadClasses().stream().map(clazz -> (Class<T>) clazz);
             }
         }
 

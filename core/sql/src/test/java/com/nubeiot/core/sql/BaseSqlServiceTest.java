@@ -35,7 +35,8 @@ abstract class BaseSqlServiceTest extends BaseSqlTest {
         controller().register(BOOK_ADDRESS, new BookService(entityHandler));
     }
 
-    @NonNull String getJdbcUrl() { return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString(); }
+    @NonNull
+    public String getJdbcUrl() { return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString(); }
 
     @After
     public void after(TestContext context) {

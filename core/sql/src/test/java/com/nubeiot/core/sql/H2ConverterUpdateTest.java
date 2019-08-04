@@ -27,7 +27,8 @@ public class H2ConverterUpdateTest extends BaseSqlDaoConverterTest {
     }
 
     @Override
-    @NonNull String getJdbcUrl() {
+    @NonNull
+    public String getJdbcUrl() {
         return "jdbc:h2:file:" + folder.getRoot().toPath().resolve("dbh2local").toString();
     }
 

@@ -42,7 +42,8 @@ public class H2MemTest extends BaseSqlTest {
     }
 
     @Override
-    @NonNull String getJdbcUrl() {
+    @NonNull
+    public String getJdbcUrl() {
         return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString();
     }
 

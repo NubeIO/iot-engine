@@ -34,7 +34,8 @@ public class H2ConverterDSLTest extends BaseSqlDslConverterTest {
     protected Class<? extends MockManyEntityHandler> handler() { return MockManyNoData.class; }
 
     @Override
-    @NonNull String getJdbcUrl() {
+    @NonNull
+    public String getJdbcUrl() {
         return "jdbc:h2:file:" + folder.getRoot().toPath().resolve("dbh2local").toString();
     }
 

@@ -1,7 +1,13 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
-public interface Publisher {
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.reactivex.functions.Consumer;
+import io.vertx.core.json.JsonObject;
 
-    void publisher();
+public interface Publisher extends Consumer<JsonObject> {
+
+    static <T extends VertxPojo> Publisher create(Class<T> clazz) {
+        return null;
+    }
 
 }

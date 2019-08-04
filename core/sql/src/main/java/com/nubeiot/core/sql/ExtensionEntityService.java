@@ -7,8 +7,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.jooq.DSLContext;
-import org.jooq.ResultQuery;
 import org.jooq.UpdatableRecord;
 import org.jooq.exception.TooManyRowsException;
 
@@ -24,33 +22,35 @@ import com.nubeiot.core.exceptions.StateException;
 
 import lombok.NonNull;
 
-public abstract class ExtensionEntityService<K, M extends VertxPojo, R extends UpdatableRecord<R>,
-                                                D extends VertxDAO<R, M, K>>
-    extends AbstractEntityService<K, M, R, D> implements ExtensionResource {
-
-    public ExtensionEntityService(@NonNull EntityHandler entityHandler) {
-        super(entityHandler);
-    }
+public interface ExtensionEntityService<KEY, MODEL extends VertxPojo, RECORD extends UpdatableRecord<RECORD>,
+                                           DAO extends VertxDAO<RECORD, MODEL, KEY>>
+    extends InternalEntityService<KEY, MODEL, RECORD, DAO>, ExtensionResource {
 
     @Override
-    protected @NonNull RequestData recompute(@NonNull EventAction action, @NonNull RequestData requestData) {
+    @NonNull
+    default RequestData recompute(@NonNull EventAction action, @NonNull RequestData requestData) {
         if (action == EventAction.GET_LIST) {
             return recompute(requestData, null);
         }
         if (action != EventAction.CREATE) {
             return recompute(requestData, Collections.singletonMap(jsonKeyName(), parsePrimaryKey(requestData)));
         }
-        return super.recompute(action, requestData);
+        return InternalEntityService.super.recompute(action, requestData);
     }
 
     @Override
-    protected ResultQuery<R> query(@NonNull DSLContext ctx, @NonNull RequestData requestData) {
-        return super.query(ctx, requestData);
+    default @NonNull JsonObject customizeGetItem(@NonNull MODEL pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(computeIgnoreFields(requestData));
     }
 
     @Override
-    protected Single<M> doGetOne(RequestData requestData) {
-        K pk = parsePrimaryKey(requestData);
+    default @NonNull JsonObject customizeModifiedItem(@NonNull MODEL pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, computeIgnoreFields(requestData));
+    }
+
+    @Override
+    default Single<MODEL> doGetOne(RequestData requestData) {
+        KEY pk = parsePrimaryKey(requestData);
         return get().queryExecutor()
                     .findOne(ctx -> query(ctx, requestData))
                     .map(o -> o.orElseThrow(() -> notFound(pk)))
@@ -58,17 +58,7 @@ public abstract class ExtensionEntityService<K, M extends VertxPojo, R extends U
                         "Query is not correct, the result contains more than one record", t) : t));
     }
 
-    @Override
-    protected @NonNull JsonObject customizeGetItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(computeIgnoreFields(requestData));
-    }
-
-    @Override
-    protected @NonNull JsonObject customizeModifiedItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, computeIgnoreFields(requestData));
-    }
-
-    protected Set<String> computeIgnoreFields(@NonNull RequestData requestData) {
+    default Set<String> computeIgnoreFields(@NonNull RequestData requestData) {
         JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElseGet(JsonObject::new);
         final Set<String> ignores = new HashSet<>();
         ignores.addAll(IGNORE_FIELDS);
@@ -77,7 +67,7 @@ public abstract class ExtensionEntityService<K, M extends VertxPojo, R extends U
         return ignores;
     }
 
-    protected RequestData recompute(RequestData requestData, Map<String, ?> extra) {
+    default RequestData recompute(RequestData requestData, Map<String, ?> extra) {
         JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElseGet(JsonObject::new);
         Optional.ofNullable(requestData.body())
                 .ifPresent(body -> body.stream()
