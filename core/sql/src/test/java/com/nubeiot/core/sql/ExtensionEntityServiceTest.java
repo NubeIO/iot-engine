@@ -68,7 +68,7 @@ public class ExtensionEntityServiceTest extends BaseSqlServiceTest {
 
     @Test
     public void test_patch_by_another_success(TestContext context) {
-        JsonObject expected = new JsonObject("{\"resource\":{\"id\":2,\"author_id\":1,\"title\":\"Farm\"," +
+        JsonObject expected = new JsonObject("{\"resource\":{\"id\":2,\"title\":\"Farm\"," +
                                              "\"published_in\":\"1944-12-31T17:01Z\",\"language_id\":1}," +
                                              "\"action\":\"PATCH\",\"status\":\"SUCCESS\"}");
         RequestData reqData = RequestData.builder()
