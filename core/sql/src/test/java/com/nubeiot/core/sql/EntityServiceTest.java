@@ -88,8 +88,8 @@ public class EntityServiceTest extends BaseSqlServiceTest {
     @Test
     public void test_update_one(TestContext context) throws InterruptedException {
         JsonObject expected = new JsonObject("{\"resource\":{\"id\":1,\"first_name\":\"ab\",\"last_name\":\"xyz\"," +
-                                             "\"date_of_birth\":\"1980-03-08\",\"distinguished\":null}," +
-                                             "\"action\":\"UPDATE\",\"status\":\"SUCCESS\"}");
+                                             "\"date_of_birth\":\"1980-03-08\"},\"action\":\"UPDATE\"," +
+                                             "\"status\":\"SUCCESS\"}");
         RequestData reqData = RequestData.builder()
                                          .body(new Author().setFirstName("ab")
                                                            .setLastName("xyz")

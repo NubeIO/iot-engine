@@ -41,7 +41,7 @@ public class ExtensionEntityServiceTest extends BaseSqlServiceTest {
     @Test
     public void test_get_one_by_another_success(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"id\":2,\"language_id\":1,\"title\":\"Animal Farm\"," + "\"published_in\":\"1944-12-31T17:01Z\"}");
+            "{\"id\":2,\"language_id\":1,\"title\":\"Animal Farm\",\"published_in\":\"1944-12-31T17:01Z\"}");
         RequestData reqData = RequestData.builder()
                                          .body(new JsonObject().put("author_id", "1").put("book_id", "2"))
                                          .build();

@@ -2,9 +2,11 @@ package com.nubeiot.core.sql;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.jooq.Configuration;
+import org.jooq.Field;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
 import org.jooq.UpdatableRecord;
@@ -14,10 +16,12 @@ import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
@@ -35,7 +39,8 @@ public abstract class EntityHandler {
     protected final JDBCRXGenericQueryExecutor queryExecutor;
     @Getter
     protected Function<String, Object> sharedDataFunc = k -> null;
-    protected String sharedKey = "";
+    @Getter(value = AccessLevel.PROTECTED)
+    private String sharedKey = "";
 
     public EntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         this.jooqConfig = jooqConfig;
@@ -43,7 +48,16 @@ public abstract class EntityHandler {
         this.queryExecutor = new JDBCRXGenericQueryExecutor(jooqConfig, getVertx());
     }
 
-    public <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D getDao(
+    @SuppressWarnings("unchecked")
+    public static <POJO extends VertxPojo> POJO parse(@NonNull Class<POJO> modelClass, @NonNull JsonObject pojo) {
+        return (POJO) ReflectionClass.createObject(modelClass).fromJson(pojo);
+    }
+
+    public static <POJO extends VertxPojo> POJO parse(@NonNull Class<POJO> pojoClass, @NonNull Object data) {
+        return parse(pojoClass, JsonData.tryParse(data).toJson());
+    }
+
+    protected <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D getDao(
         Class<D> daoClass) {
         Map<Class, Object> input = new LinkedHashMap<>();
         input.put(Configuration.class, getJooqConfig());
@@ -59,7 +73,7 @@ public abstract class EntityHandler {
      * Check database is new or not. Normally just checking one specific table is existed or not.
      * <p>
      * Currently, it has not yet supported officially from {@code jooq}. So {@code NubeIO} supports 2 kinds: {@code H2}
-     * and {@code POSTGRESQL}. Other options, must be implemented by yourself.
+     * and {@code PostgreSql}. Other options, must be implemented by yourself.
      *
      * @return {@code true} if new database, else otherwise
      * @see #isNew(Table)
@@ -96,6 +110,20 @@ public abstract class EntityHandler {
                               .where(schema + " = '" + table.getSchema().getName() + "'")
                               .and(tbl + " = '" + table.getName() + "'")
                               .fetchOne(0, int.class);
+    }
+
+    //TODO HACK with H2 due to cannot generate `random_uuid()` from DDL. Must report to `jooq`
+    protected int createDefaultUUID(@NonNull Map<Table, Field<UUID>> defField) {
+        if (jooqConfig.family() == SQLDialect.H2) {
+            return defField.entrySet()
+                           .stream()
+                           .map(entry -> jooqConfig.dsl()
+                                                   .execute("Alter table " + entry.getKey().getName() + " alter" +
+                                                            " column " + entry.getValue().getName() + " set " +
+                                                            "default random_uuid()"))
+                           .reduce(0, Integer::sum);
+        }
+        return 0;
     }
 
     @SuppressWarnings("unchecked")

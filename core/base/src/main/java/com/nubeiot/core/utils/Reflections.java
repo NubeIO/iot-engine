@@ -395,6 +395,11 @@ public final class Reflections {
             }
         }
 
+        @NonNull
+        public static Predicate<ClassInfo> publicClass() {
+            return clazz -> clazz.isStandardClass() && clazz.isPublic() && !clazz.isAbstract();
+        }
+
         public static <T> Class<T> findClass(String clazz) {
             try {
                 return (Class<T>) Class.forName(Strings.requireNotBlank(clazz), true, Reflections.contextClassLoader());

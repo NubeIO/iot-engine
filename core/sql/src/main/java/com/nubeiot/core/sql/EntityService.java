@@ -20,7 +20,6 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.sql.type.TimeAudit;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
@@ -37,6 +36,7 @@ import lombok.NonNull;
  * @see VertxPojo
  * @see VertxDAO
  */
+//TODO Missing `BATCH` Creation/Modification
 public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>>
     extends EventListener, Supplier<D> {
 
@@ -163,10 +163,9 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
      * @return {@code pojo} object resource
      * @throws IllegalArgumentException if cannot parse
      */
-    @SuppressWarnings("unchecked")
     @NonNull
     default M parse(@NonNull JsonObject request) throws IllegalArgumentException {
-        return (M) ReflectionClass.createObject(modelClass()).fromJson(request);
+        return EntityHandler.parse(modelClass(), request);
     }
 
     /**

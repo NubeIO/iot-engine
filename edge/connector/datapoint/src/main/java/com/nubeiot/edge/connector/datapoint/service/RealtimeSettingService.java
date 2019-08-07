@@ -27,7 +27,7 @@ public final class RealtimeSettingService
     @Override
     @NonNull
     public String listKey() {
-        return "realtime_settings";
+        return "realtime_setting";
     }
 
     @Override
@@ -48,7 +48,7 @@ public final class RealtimeSettingService
     @Override
     @NonNull
     public String requestKeyName() {
-        return "point_id";
+        return PointExtension.REQUEST_KEY;
     }
 
 }

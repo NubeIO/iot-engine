@@ -1,7 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS PUBLIC;
 
 CREATE TABLE IF NOT EXISTS DEVICE (
-	ID                   uuid   NOT NULL,
+	ID                   uuid NOT NULL,
 	CODE                 varchar(63)   NOT NULL,
 	CUSTOMER_CODE        varchar(31)   NOT NULL,
 	SITE_CODE            varchar(63)   NOT NULL,

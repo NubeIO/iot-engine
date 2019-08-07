@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -39,7 +40,8 @@ public interface JsonData extends Serializable {
 
     ObjectMapper MAPPER = Json.mapper.copy()
                                      .registerModule(new JavaTimeModule())
-                                     .registerModule(Deserializer.SIMPLE_MODULE);
+                                     .registerModule(Deserializer.SIMPLE_MODULE)
+                                     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     ObjectMapper LENIENT_MAPPER = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     String SUCCESS_KEY = "data";
     String ERROR_KEY = "error";
@@ -168,20 +170,18 @@ public interface JsonData extends Serializable {
         return toJson(mapper(), ignoreFields);
     }
 
-    @SuppressWarnings("unchecked")
     default JsonObject toJson(@NonNull ObjectMapper mapper) {
-        return new JsonObject((Map<String, Object>) mapper.convertValue(this, Map.class));
+        return mapper.convertValue(this, JsonObject.class);
     }
 
-    @SuppressWarnings("unchecked")
     default JsonObject toJson(@NonNull ObjectMapper mapper, @NonNull Set<String> ignoreFields) {
-        return new JsonObject((Map<String, Object>) mapper.copy().addMixIn(JsonData.class, PropertyFilterMixIn.class)
-                                                          .setFilterProvider(ignoreFields(ignoreFields))
-                                                          .convertValue(this, Map.class));
+        return mapper.copy()
+                     .addMixIn(JsonData.class, PropertyFilterMixIn.class)
+                     .setFilterProvider(ignoreFields(ignoreFields))
+                     .convertValue(this, JsonObject.class);
     }
 
     default ObjectMapper mapper() { return MAPPER; }
-
 
     @JsonFilter(FILTER_PROP_BY_NAME)
     class PropertyFilterMixIn {}

@@ -130,10 +130,9 @@ public interface IConfig extends JsonData, Shareable {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     default JsonObject toJson() {
         List<? extends IConfig> fieldValues = ReflectionField.getFieldValuesByType(this, IConfig.class);
-        JsonObject jsonObject = new JsonObject(mapper().convertValue(this, Map.class));
+        JsonObject jsonObject = mapper().convertValue(this, JsonObject.class);
         fieldValues.forEach(val -> jsonObject.put(val.name(), val.toJson()));
         return jsonObject;
     }
@@ -146,7 +145,6 @@ public interface IConfig extends JsonData, Shareable {
     default IConfig copy() {
         return IConfig.from(toJson().getMap(), this.getClass());
     }
-
 
     @RequiredArgsConstructor
     class CreateConfig<T extends IConfig> extends Silencer<T> {

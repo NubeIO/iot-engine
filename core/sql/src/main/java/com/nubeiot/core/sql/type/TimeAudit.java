@@ -13,12 +13,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter(value = AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 @JsonNaming(SnakeCaseStrategy.class)
+@ToString
 public final class TimeAudit implements JsonData {
 
     private OffsetDateTime createdTime;

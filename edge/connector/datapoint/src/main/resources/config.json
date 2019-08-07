@@ -1,57 +1,100 @@
 {
   "__app__": {
     "__datapoint__": {
-      "lowDb_migration": {
-        "enabled": false,
-        "path": ""
-      },
-      "policy": {
-        "history": {
-          "schedule": ""
-        }
-      },
-      "sync_server": {
-        "credential": {
-          "type": "BASIC",
-          "user": "admin",
-          "password": "admin"
-        },
-        "url": "http://ditto:8080/api/2"
-      }
-    },
-    "__micro__": {
-      "__gateway__": {
+      "lowdb_migration": {
         "enabled": false
       },
-      "__serviceDiscovery__": {
+      "__publisher__": {
+        "type": "",
         "enabled": false
       },
-      "__localServiceDiscovery__": {
-        "enabled": true
-      },
-      "__circuitBreaker__": {
-        "enabled": false
+      "builtin_data": {
+        "units": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "percentage",
+            "symbol": "%"
+          },
+          {
+            "type": "voltage",
+            "symbol": "V"
+          },
+          {
+            "type": "celsius",
+            "symbol": "U+2103"
+          },
+          {
+            "type": "dBm",
+            "symbol": "dBm"
+          },
+          {
+            "type": "hPa",
+            "symbol": "hPa"
+          },
+          {
+            "type": "lux",
+            "symbol": "lx"
+          },
+          {
+            "type": "kWh",
+            "symbol": "kWh"
+          },
+          {
+            "type": "bool",
+            "possible_values": {
+              "0.5": [
+                "true",
+                "on",
+                "start",
+                "1"
+              ],
+              "0.0": [
+                "false",
+                "off",
+                "stop",
+                "0",
+                "null"
+              ]
+            }
+          }
+        ]
       }
+    }
+  },
+  "__micro__": {
+    "__gateway__": {
+      "enabled": false
     },
-    "__scheduler__": {
-      "__schedule_worker__": {
-        "poolSize": 2,
-        "maxExecuteTime": 60,
-        "maxExecuteTimeUnit": "SECONDS"
-      },
-      "schedulerName": "datapoint"
+    "__serviceDiscovery__": {
+      "enabled": false
     },
-    "__sql__": {
-      "dialect": "H2",
-      "dbName": "datapoint",
-      "dbLocalFile": true,
-      "__hikari__": {
-        "minimumIdle": 1,
-        "maximumPoolSize": 2,
-        "connectionTimeout": 30000,
-        "idleTimeout": 180000,
-        "maxLifetime": 300000
-      }
+    "__localServiceDiscovery__": {
+      "enabled": true
+    },
+    "__circuitBreaker__": {
+      "enabled": false
+    }
+  },
+  "__scheduler__": {
+    "__schedule_worker__": {
+      "poolSize": 2,
+      "maxExecuteTime": 60,
+      "maxExecuteTimeUnit": "SECONDS"
+    },
+    "schedulerName": "datapoint-scheduler"
+  },
+  "__sql__": {
+    "dialect": "H2",
+    "dbName": "datapoint",
+    "dbLocalFile": true,
+    "__hikari__": {
+      "minimumIdle": 1,
+      "maximumPoolSize": 2,
+      "connectionTimeout": 30000,
+      "idleTimeout": 180000,
+      "maxLifetime": 300000
     }
   }
 }

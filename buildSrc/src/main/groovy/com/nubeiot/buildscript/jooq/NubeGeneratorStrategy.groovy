@@ -56,4 +56,5 @@ class NubeGeneratorStrategy extends VertxGeneratorStrategy {
     String getJavaGetterName(Definition definition, Mode mode) {
         return "get" + StringUtils.toCamelCase(CacheDataType.instance().fieldName(definition.getOutputName()))
     }
+
 }

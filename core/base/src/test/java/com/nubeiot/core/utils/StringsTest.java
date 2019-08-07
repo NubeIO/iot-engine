@@ -162,4 +162,10 @@ public class StringsTest {
         Assert.assertNull(output);
     }
 
+    @Test
+    public void test_toSnakeCase() {
+        Assert.assertEquals("test", Strings.toSnakeCase("test", false));
+        Assert.assertEquals("test_abc", Strings.toSnakeCase("TestAbc", false));
+        Assert.assertEquals("test_abc", Strings.toSnakeCase("test_abc", false));
+    }
 }

@@ -1,7 +1,6 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.Collections;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,7 +22,7 @@ public interface DataPointService<K, M extends VertxPojo, R extends UpdatableRec
     static Set<? extends DataPointService> createServices(EntityHandler entityHandler) {
         final Map<Class, Object> inputs = Collections.singletonMap(EntityHandler.class, entityHandler);
         return ReflectionClass.stream(DataPointService.class.getPackage().getName(), DataPointService.class,
-                                      clazz -> clazz.isStandardClass() && clazz.isPublic() && !clazz.isAbstract())
+                                      ReflectionClass.publicClass())
                               .map(clazz -> ReflectionClass.createObject(clazz, inputs))
                               .collect(Collectors.toSet());
     }
@@ -37,7 +36,7 @@ public interface DataPointService<K, M extends VertxPojo, R extends UpdatableRec
     }
 
     default String address() {
-        return this.getClass().getName().toLowerCase(Locale.ENGLISH);
+        return this.getClass().getName();
     }
 
     default Map<String, EventMethodDefinition> definitions() {

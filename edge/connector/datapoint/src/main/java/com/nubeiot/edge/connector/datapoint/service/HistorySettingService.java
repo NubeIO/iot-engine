@@ -26,7 +26,7 @@ public final class HistorySettingService
     @Override
     @NonNull
     public String listKey() {
-        return "history_settings";
+        return "history_setting";
     }
 
     @Override
@@ -46,7 +46,7 @@ public final class HistorySettingService
 
     @Override
     public @NonNull String requestKeyName() {
-        return "point";
+        return PointExtension.REQUEST_KEY;
     }
 
 }

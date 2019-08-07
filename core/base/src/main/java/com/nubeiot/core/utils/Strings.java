@@ -13,6 +13,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 /**
  * Strings Utilities.
@@ -148,6 +149,18 @@ public final class Strings {
             throw new IllegalArgumentException("Text " + text + " length must be greater than " + minLength);
         }
         return t;
+    }
+
+    public static String toSnakeCase(@NonNull String text, boolean upper) {
+        if (upper && text.equals(text.toUpperCase())) {
+            return text;
+        }
+        if (!upper && text.equals(text.toLowerCase())) {
+            return text;
+        }
+        String regex = upper ? "a-z" : "A-Z";
+        String t = text.replaceAll("([" + regex + "])", "_$1").replaceAll("^_", "");
+        return upper ? t.toUpperCase() : t.toLowerCase();
     }
 
     /**

@@ -24,13 +24,12 @@ import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.DataTransferObject.Headers;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NotFoundException;
-import com.nubeiot.core.sql.type.SyncAudit;
-import com.nubeiot.core.sql.type.TimeAudit;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
@@ -39,6 +38,9 @@ import lombok.NonNull;
 interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>>
     extends EntityService<K, M, R, D> {
 
+    /**
+     * Represents set of audit fields
+     */
     Set<String> IGNORE_FIELDS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("time_audit", "sync_audit")));
 
     /**
@@ -82,16 +84,45 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
     }
 
     /**
-     * Do any transform or convert in {@code CUD response} if {@link #enableFullResourceInCUDResponse()} is {@code
-     * true}
+     * Do any transform resource after {@code CREATE} action successfully if {@link #enableFullResourceInCUDResponse()}
+     * is {@code true}
      *
      * @param pojo        item
      * @param requestData request data
      * @return transformer item
+     * @apiNote By default, result omits {@code null} fields
+     */
+    @NonNull
+    default JsonObject customizeCreatedItem(@NonNull M pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, IGNORE_FIELDS);
+    }
+
+    /**
+     * Do any transform resource after {@code UPDATE} or {@code PATCH} action successfully if {@link
+     * #enableFullResourceInCUDResponse()} is {@code true}
+     *
+     * @param pojo        item
+     * @param requestData request data
+     * @return transformer item
+     * @apiNote By default, result omits {@code null} fields and {@link #IGNORE_FIELDS}
      */
     @NonNull
     default JsonObject customizeModifiedItem(@NonNull M pojo, @NonNull RequestData requestData) {
         return JsonPojo.from(pojo).toJson(IGNORE_FIELDS);
+    }
+
+    /**
+     * Do any transform resource after {@code DELETE} action successfully if {@link #enableFullResourceInCUDResponse()}
+     * is {@code true}
+     *
+     * @param pojo        item
+     * @param requestData request data
+     * @return transformer item
+     * @apiNote By default, result omits {@code null} fields
+     */
+    @NonNull
+    default JsonObject customizeDeletedItem(@NonNull M pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, IGNORE_FIELDS);
     }
 
     /**
@@ -116,7 +147,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
     }
 
     /**
-     * Do update data
+     * Do update data on both {@code UPDATE} or {@code PATCH} action
      *
      * @param requestData Request data
      * @param action      Event action
@@ -147,10 +178,8 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      */
     @NonNull
     default M validateOnCreate(@NonNull M pojo, @NonNull JsonObject headers) throws IllegalArgumentException {
-        if (pojo instanceof HasTimeAudit && enableTimeAudit()) {
-            ((HasTimeAudit) pojo).setTimeAudit(TimeAudit.created(headers.getString(Headers.X_REQUEST_USER)));
-        }
-        return addNotSyncAudit(pojo);
+        return EntityAuditHandler.addCreationAudit(enableTimeAudit(), pojo,
+                                                   headers.getString(Headers.X_REQUEST_USER, null));
     }
 
     /**
@@ -166,7 +195,8 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
     @NonNull
     default M validateOnUpdate(@NonNull M dbData, @NonNull M pojo, @NonNull JsonObject headers)
         throws IllegalArgumentException {
-        return addModifiedTimeAudit(dbData, addNotSyncAudit(pojo), headers);
+        return EntityAuditHandler.addModifiedAudit(enableTimeAudit(), dbData, pojo,
+                                                   headers.getString(Headers.X_REQUEST_USER, null));
     }
 
     /**
@@ -182,7 +212,8 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
     @NonNull
     default M validateOnPatch(@NonNull M dbData, @NonNull M pojo, @NonNull JsonObject headers)
         throws IllegalArgumentException {
-        return addModifiedTimeAudit(dbData, addNotSyncAudit(parse(JsonPojo.merge(dbData, pojo))), headers);
+        return EntityAuditHandler.addModifiedAudit(enableTimeAudit(), dbData, parse(JsonPojo.merge(dbData, pojo)),
+                                                   headers.getString(Headers.X_REQUEST_USER, null));
     }
 
     /**
@@ -255,9 +286,13 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      */
     default Single<JsonObject> cudResponse(@NonNull EventAction action, @NonNull M pojo,
                                            @NonNull RequestData requestData) {
-        return Single.just(new JsonObject().put("resource", customizeModifiedItem(pojo, requestData))
-                                           .put("action", action)
-                                           .put("status", Status.SUCCESS));
+        JsonObject result = action == EventAction.CREATE
+                            ? customizeCreatedItem(pojo, requestData)
+                            : action == EventAction.REMOVE
+                              ? customizeDeletedItem(pojo, requestData)
+                              : customizeModifiedItem(pojo, requestData);
+        return Single.just(
+            new JsonObject().put("resource", result).put("action", action).put("status", Status.SUCCESS));
     }
 
     /**
@@ -285,54 +320,6 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      */
     default NotFoundException notFound(K primaryKey) {
         return new NotFoundException(Strings.format("Not found resource with {0}={1}", requestKeyName(), primaryKey));
-    }
-
-    /**
-     * Add modified time audit if current entity is child of {@link HasTimeAudit}
-     *
-     * @param dbData  Existed entity in database
-     * @param pojo    Given entity
-     * @param headers Request headers
-     * @return modified pojo for fluent API
-     */
-    default M addModifiedTimeAudit(@NonNull M dbData, @NonNull M pojo, JsonObject headers) {
-        if (pojo instanceof HasTimeAudit && enableTimeAudit()) {
-            ((HasTimeAudit) pojo).setTimeAudit(
-                TimeAudit.modified(((HasTimeAudit) dbData).getTimeAudit(), headers.getString(Headers.X_REQUEST_USER)));
-        }
-        return pojo;
-    }
-
-    /**
-     * Force not synced audit if current entity is child of {@link HasSyncAudit}
-     *
-     * @param pojo Given entity
-     * @return modified pojo for fluent API
-     * @apiNote It is exclude audit if entity has already had {@code SyncAudit}
-     * @see SyncAudit#notSynced()
-     */
-    default M addNotSyncAudit(@NonNull M pojo) {
-        if (pojo instanceof HasSyncAudit) {
-            ((HasSyncAudit) pojo).setSyncAudit(
-                Optional.ofNullable(((HasSyncAudit) pojo).getSyncAudit()).orElseGet(SyncAudit::notSynced));
-        }
-        return pojo;
-    }
-
-    /**
-     * Force synced audit if current entity is child of {@link HasSyncAudit}
-     *
-     * @param pojo Given entity
-     * @return modified pojo for fluent API
-     * @apiNote It is exclude audit if entity has already had {@code SyncAudit}
-     * @see SyncAudit#synced()
-     */
-    default M addSyncAudit(@NonNull M pojo) {
-        if (pojo instanceof HasSyncAudit) {
-            ((HasSyncAudit) pojo).setSyncAudit(
-                Optional.ofNullable(((HasSyncAudit) pojo).getSyncAudit()).orElseGet(SyncAudit::synced));
-        }
-        return pojo;
     }
 
 }

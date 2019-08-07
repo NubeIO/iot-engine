@@ -49,12 +49,11 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
         return from.toJson().mergeIn(new JsonPojo<>(to).toJson(), true);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public JsonObject toJson() {
         JsonObject json = this.pojo.toJson();
         try {
-            return new JsonObject(mapper.readValue(mapper.writeValueAsBytes(json.getMap()), Map.class));
+            return mapper.readValue(mapper.writeValueAsBytes(json.getMap()), JsonObject.class);
         } catch (IOException e) {
             LOGGER.warn("Cannot reparse pojo {}", e, pojo.getClass());
             return json;
@@ -62,19 +61,22 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
     }
 
     @Override
-    public JsonObject toJson(Set<String> ignoreFields) {
+    public JsonObject toJson(@NonNull Set<String> ignoreFields) {
         return toJson(mapper, ignoreFields);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public JsonObject toJson(ObjectMapper mapper, Set<String> ignoreFields) {
+    public JsonObject toJson(@NonNull ObjectMapper mapper, @NonNull Set<String> ignoreFields) {
         JsonObject json = this.pojo.toJson();
         try {
-            final ObjectMapper m = mapper.copy();
-            return new JsonObject(m.readValue(m.addMixIn(VertxPojo.class, PropertyFilterMixIn.class)
-                                               .writer(JsonData.ignoreFields(ignoreFields))
-                                               .writeValueAsBytes(json.getMap()), Map.class));
+            final ObjectMapper m = mapper.copy()
+                                         .addMixIn(Map.class, PropertyFilterMixIn.class)
+                                         .addMixIn(JsonObject.class, PropertyFilterMixIn.class)
+                                         .addMixIn(VertxPojo.class, PropertyFilterMixIn.class)
+                                         .addMixIn(JsonData.class, PropertyFilterMixIn.class)
+                                         .setFilterProvider(JsonData.ignoreFields(ignoreFields));
+            return m.readValue(m.writer(JsonData.ignoreFields(ignoreFields)).writeValueAsBytes(json.getMap()),
+                               JsonObject.class);
         } catch (IOException e) {
             LOGGER.warn("Cannot re-parse pojo {}", e, pojo.getClass());
             return json;

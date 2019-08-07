@@ -20,6 +20,7 @@ import com.nubeiot.iotdata.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.unit.DataType;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -28,12 +29,17 @@ import lombok.Setter;
 @Setter(value = AccessLevel.PACKAGE)
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public final class DataPointConfig implements IConfig {
 
     private LowdbMigration lowdbMigration = new LowdbMigration();
     @JsonProperty(PublisherConfig.NAME)
     private PublisherConfig publisherConfig;
-    private BuiltinData builtinData = new BuiltinData();
+    private BuiltinData builtinData;
+
+    static DataPointConfig def() {
+        return new DataPointConfig(new LowdbMigration(), new PublisherConfig(), BuiltinData.def());
+    }
 
     @Override
     public String name() {
@@ -61,7 +67,12 @@ public final class DataPointConfig implements IConfig {
 
         static final String NAME = "__publisher__";
 
+        private boolean enabled = false;
         private JsonObject location;
+
+        PublisherConfig() {
+            super("");
+        }
 
         @JsonCreator
         PublisherConfig(@JsonProperty("type") String type, @JsonProperty("location") JsonObject location) {
@@ -83,11 +94,13 @@ public final class DataPointConfig implements IConfig {
     @Getter
     public static final class BuiltinData extends HashMap<String, Object> implements JsonData {
 
-        public BuiltinData() {
-            this.put("units", ReflectionField.streamConstants(DataType.class, DataType.class)
-                                             .map(dt -> new MeasureUnit(dt.toJson()))
-                                             .map(IMeasureUnit::toJson)
-                                             .collect(JsonArray::new, JsonArray::add, JsonArray::addAll));
+        public static BuiltinData def() {
+            final BuiltinData builtinData = new BuiltinData();
+            builtinData.put("measure_unit", ReflectionField.streamConstants(DataType.class, DataType.class)
+                                                           .map(dt -> new MeasureUnit(dt.toJson()))
+                                                           .map(IMeasureUnit::toJson)
+                                                           .collect(JsonArray::new, JsonArray::add, JsonArray::addAll));
+            return builtinData;
         }
 
     }

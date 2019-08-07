@@ -44,7 +44,18 @@ public interface ExtensionEntityService<KEY, MODEL extends VertxPojo, RECORD ext
     }
 
     @Override
+    default @NonNull JsonObject customizeCreatedItem(@NonNull MODEL pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, computeIgnoreFields(requestData));
+    }
+
+    @Override
     default @NonNull JsonObject customizeModifiedItem(@NonNull MODEL pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(computeIgnoreFields(requestData));
+    }
+
+    @Override
+    @NonNull
+    default JsonObject customizeDeletedItem(@NonNull MODEL pojo, @NonNull RequestData requestData) {
         return JsonPojo.from(pojo).toJson(JsonData.MAPPER, computeIgnoreFields(requestData));
     }
 
