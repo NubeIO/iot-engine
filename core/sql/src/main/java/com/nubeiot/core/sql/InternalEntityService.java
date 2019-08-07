@@ -27,6 +27,7 @@ import com.nubeiot.core.dto.DataTransferObject.Headers;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NotFoundException;
@@ -39,7 +40,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
     extends EntityService<K, M, R, D> {
 
     /**
-     * Represents set of audit fields
+     * Represents set of audit fields. Use {@link Filters#AUDIT} is {@code true} to expose these fields
      */
     Set<String> IGNORE_FIELDS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("time_audit", "sync_audit")));
 
@@ -80,7 +81,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      */
     @NonNull
     default JsonObject customizeGetItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(IGNORE_FIELDS);
+        return JsonPojo.from(pojo).toJson(requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
     }
 
     /**
@@ -94,7 +95,8 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      */
     @NonNull
     default JsonObject customizeCreatedItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, IGNORE_FIELDS);
+        return JsonPojo.from(pojo)
+                       .toJson(JsonData.MAPPER, requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
     }
 
     /**
@@ -108,7 +110,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      */
     @NonNull
     default JsonObject customizeModifiedItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(IGNORE_FIELDS);
+        return JsonPojo.from(pojo).toJson(requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
     }
 
     /**
@@ -122,7 +124,8 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      */
     @NonNull
     default JsonObject customizeDeletedItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, IGNORE_FIELDS);
+        return JsonPojo.from(pojo)
+                       .toJson(JsonData.MAPPER, requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.junit.BeforeClass;
@@ -7,16 +8,25 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.sql.BaseSqlServiceTest;
 import com.nubeiot.core.sql.BaseSqlTest;
 import com.nubeiot.core.sql.JsonPojo;
+import com.nubeiot.core.sql.type.SyncAudit;
+import com.nubeiot.core.sql.type.TimeAudit;
 import com.nubeiot.edge.connector.datapoint.DataPointConfig.BuiltinData;
 import com.nubeiot.edge.connector.datapoint.MockDataPointEntityHandler;
 import com.nubeiot.iotdata.model.DefaultCatalog;
@@ -60,6 +70,33 @@ public class DataPointServiceTest extends BaseSqlServiceTest {
                                      .body(new JsonObject().put("device_id", "d7cd3f57-a188-4462-b959-df7a23994c92"))
                                      .build();
         asserter(context, true, expected, DeviceService.class.getName(), EventAction.GET_ONE, req);
+    }
+
+    @Test
+    public void test_get_device_with_audit(TestContext context) {
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("device_id", "d7cd3f57-a188-4462-b959-df7a23994c92"))
+                                     .filter(new JsonObject().put(Filters.AUDIT, true))
+                                     .build();
+        final Async async = context.async();
+        final ReplyEventHandler replyAsserter = ReplyEventHandler.builder().action(EventAction.GET_ONE).success(msg -> {
+            System.out.println(msg.toJson().encode());
+            try {
+                final JsonObject data = Objects.requireNonNull(msg.getData());
+                final TimeAudit timeAudit = JsonData.from(data.getJsonObject("time_audit"), TimeAudit.class);
+                final SyncAudit syncAudit = JsonData.from(data.getJsonObject("sync_audit"), SyncAudit.class);
+                context.assertNotNull(timeAudit.getCreatedTime());
+                context.assertEquals("SYSTEM_INITIATOR", timeAudit.getCreatedBy());
+                context.assertNull(timeAudit.getLastModifiedTime());
+                context.assertNull(timeAudit.getLastModifiedBy());
+                context.assertFalse(syncAudit.isSynced());
+                context.assertNull(syncAudit.getSyncedTime());
+            } finally {
+                TestHelper.testComplete(async);
+            }
+        }).build();
+        controller().request(DeviceService.class.getName(), EventPattern.REQUEST_RESPONSE,
+                             EventMessage.initial(EventAction.GET_ONE, req), replyAsserter);
     }
 
     @Test

@@ -72,7 +72,7 @@ public interface ExtensionEntityService<KEY, MODEL extends VertxPojo, RECORD ext
     default Set<String> computeIgnoreFields(@NonNull RequestData requestData) {
         JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElseGet(JsonObject::new);
         final Set<String> ignores = new HashSet<>();
-        ignores.addAll(IGNORE_FIELDS);
+        ignores.addAll(requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
         ignores.addAll(
             extensions().keySet().stream().filter(s -> filter.fieldNames().contains(s)).collect(Collectors.toSet()));
         return ignores;

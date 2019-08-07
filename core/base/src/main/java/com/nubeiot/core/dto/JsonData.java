@@ -175,6 +175,9 @@ public interface JsonData extends Serializable {
     }
 
     default JsonObject toJson(@NonNull ObjectMapper mapper, @NonNull Set<String> ignoreFields) {
+        if (ignoreFields.isEmpty()) {
+            return toJson(mapper);
+        }
         return mapper.copy()
                      .addMixIn(JsonData.class, PropertyFilterMixIn.class)
                      .setFilterProvider(ignoreFields(ignoreFields))

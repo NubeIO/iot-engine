@@ -43,12 +43,12 @@ public abstract class BaseSqlServiceTest extends BaseSqlTest {
         final Async async = context.async();
         controller().request(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(action, reqData),
                              ReplyEventHandler.builder().action(action).success(msg -> {
+                                 latch.countDown();
                                  System.out.println(msg.toJson().encode());
                                  context.assertEquals(isSuccess, msg.isSuccess());
                                  JsonHelper.assertJson(context, async, expected, isSuccess
                                                                                  ? Objects.requireNonNull(msg.getData())
                                                                                  : msg.getError().toJson());
-                                 latch.countDown();
                              }).build());
     }
 

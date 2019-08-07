@@ -51,6 +51,11 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
 
     @Override
     public JsonObject toJson() {
+        return toJson(mapper);
+    }
+
+    @Override
+    public JsonObject toJson(@NonNull ObjectMapper mapper) {
         JsonObject json = this.pojo.toJson();
         try {
             return mapper.readValue(mapper.writeValueAsBytes(json.getMap()), JsonObject.class);
@@ -67,6 +72,9 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
 
     @Override
     public JsonObject toJson(@NonNull ObjectMapper mapper, @NonNull Set<String> ignoreFields) {
+        if (ignoreFields.isEmpty()) {
+            return this.toJson(mapper);
+        }
         JsonObject json = this.pojo.toJson();
         try {
             final ObjectMapper m = mapper.copy()
