@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -64,16 +65,19 @@ public final class PointService extends AbstractDataPointService<UUID, Point, Po
 
     @Override
     public Map<String, Function<String, ?>> extensions() {
-        return Collections.singletonMap(NetworkService.REQUEST_NETWORK_KEY, Functions.toUUID());
+        final HashMap<String, Function<String, ?>> extensions = new HashMap<>();
+        extensions.put(DeviceService.REQUEST_KEY, Functions.toUUID());
+        extensions.put(NetworkService.REQUEST_KEY, Functions.toUUID());
+        return extensions;
     }
 
     public interface PointExtension extends ExtensionResource {
 
-        String REQUEST_POINT_KEY = EntityService.createRequestKeyName(Point.class, Tables.POINT.ID.getName());
+        String REQUEST_KEY = EntityService.createRequestKeyName(Point.class, Tables.POINT.ID.getName());
 
         @Override
         default Map<String, Function<String, ?>> extensions() {
-            return Collections.singletonMap(REQUEST_POINT_KEY, Functions.toUUID());
+            return Collections.singletonMap(REQUEST_KEY, Functions.toUUID());
         }
 
     }

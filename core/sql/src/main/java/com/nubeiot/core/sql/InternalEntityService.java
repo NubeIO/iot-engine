@@ -24,7 +24,6 @@ import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.DataTransferObject.Headers;
-import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.Status;
@@ -92,7 +91,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      */
     @NonNull
     default JsonObject customizeModifiedItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, IGNORE_FIELDS);
+        return JsonPojo.from(pojo).toJson(IGNORE_FIELDS);
     }
 
     /**

@@ -72,7 +72,7 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
         JsonObject json = this.pojo.toJson();
         try {
             final ObjectMapper m = mapper.copy();
-            return new JsonObject(m.readValue(m.addMixIn(Object.class, PropertyFilterMixIn.class)
+            return new JsonObject(m.readValue(m.addMixIn(VertxPojo.class, PropertyFilterMixIn.class)
                                                .writer(JsonData.ignoreFields(ignoreFields))
                                                .writeValueAsBytes(json.getMap()), Map.class));
         } catch (IOException e) {

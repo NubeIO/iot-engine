@@ -44,6 +44,13 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
         return modelClass.getSimpleName().toLowerCase(Locale.ENGLISH) + "_" + Strings.requireNotBlank(jsonKeyName);
     }
 
+    static <RECORD extends UpdatableRecord<RECORD>> String createJsonKeyName(@NonNull Table<RECORD> table) {
+        if (table.getPrimaryKey().getFields().size() != 1) {
+            throw new UnsupportedOperationException("Doesn't support composite key or no primary key");
+        }
+        return table.getPrimaryKey().getFields().iterator().next().getName().toLowerCase(Locale.ENGLISH);
+    }
+
     /**
      * Defines {@code CURD} actions
      *
@@ -187,10 +194,7 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
      */
     @NonNull
     default String jsonKeyName() {
-        if (table().getPrimaryKey().getFields().size() != 1) {
-            throw new UnsupportedOperationException("Doesn't support composite key or no primary key");
-        }
-        return table().getPrimaryKey().getFields().iterator().next().getName().toLowerCase(Locale.ENGLISH);
+        return createJsonKeyName(table());
     }
 
     /**

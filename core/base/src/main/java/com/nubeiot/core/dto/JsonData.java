@@ -155,6 +155,11 @@ public interface JsonData extends Serializable {
         }
     }
 
+    static FilterProvider ignoreFields(Set<String> ignoreFields) {
+        return new SimpleFilterProvider().addFilter(FILTER_PROP_BY_NAME,
+                                                    SimpleBeanPropertyFilter.serializeAllExcept(ignoreFields));
+    }
+
     default JsonObject toJson() {
         return toJson(mapper());
     }
@@ -170,18 +175,13 @@ public interface JsonData extends Serializable {
 
     @SuppressWarnings("unchecked")
     default JsonObject toJson(@NonNull ObjectMapper mapper, @NonNull Set<String> ignoreFields) {
-        return new JsonObject((Map<String, Object>) mapper.copy()
-                                                          .addMixIn(Object.class, PropertyFilterMixIn.class)
+        return new JsonObject((Map<String, Object>) mapper.copy().addMixIn(JsonData.class, PropertyFilterMixIn.class)
                                                           .setFilterProvider(ignoreFields(ignoreFields))
                                                           .convertValue(this, Map.class));
     }
 
     default ObjectMapper mapper() { return MAPPER; }
 
-    static FilterProvider ignoreFields(Set<String> ignoreFields) {
-        return new SimpleFilterProvider().addFilter(FILTER_PROP_BY_NAME,
-                                                    SimpleBeanPropertyFilter.serializeAllExcept(ignoreFields));
-    }
 
     @JsonFilter(FILTER_PROP_BY_NAME)
     class PropertyFilterMixIn {}

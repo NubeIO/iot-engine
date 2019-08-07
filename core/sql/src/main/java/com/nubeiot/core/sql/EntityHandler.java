@@ -14,6 +14,8 @@ import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventMessage;
@@ -25,6 +27,7 @@ import lombok.NonNull;
 
 public abstract class EntityHandler {
 
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected final Vertx vertx;
     @Getter(value = AccessLevel.PACKAGE)
     protected final Configuration jooqConfig;

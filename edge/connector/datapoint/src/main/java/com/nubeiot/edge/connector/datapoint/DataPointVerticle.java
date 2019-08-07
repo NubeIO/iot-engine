@@ -12,7 +12,6 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
@@ -35,14 +34,13 @@ public final class DataPointVerticle extends ContainerVerticle {
     public void start() {
         super.start();
         DataPointConfig pointCfg = IConfig.from(nubeConfig.getAppConfig(), DataPointConfig.class);
-        final HttpClientDelegate client = HttpClientDelegate.create(vertx.getDelegate(),
-                                                                    pointCfg.getSyncServer().toHost());
-        this.addSharedData(LOWDB_MIGRATION, pointCfg.getLowDbMigration());
-        this.addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
+        this.addSharedData(LOWDB_MIGRATION, pointCfg.getLowdbMigration())
+            .addSharedData(DataPointEntityHandler.BUILTIN_DATA, pointCfg.getBuiltinData().toJson())
+            .addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
             .addProvider(new SchedulerProvider(), ctx -> schedulerCtx = (QuartzSchedulerContext) ctx)
             .addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, DataPointEntityHandler.class),
-                         ctx -> entityHandler = ((SqlContext<DataPointEntityHandler>) ctx).getEntityHandler());
-        this.registerSuccessHandler(v -> successHandler(entityHandler, microCtx, schedulerCtx));
+                         ctx -> entityHandler = ((SqlContext<DataPointEntityHandler>) ctx).getEntityHandler())
+            .registerSuccessHandler(v -> successHandler(entityHandler, microCtx, schedulerCtx));
     }
 
     private void successHandler(DataPointEntityHandler entityHandler, MicroContext microCtx,

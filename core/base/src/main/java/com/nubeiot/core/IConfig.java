@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.Shareable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -24,10 +25,12 @@ import com.nubeiot.core.utils.Strings;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-public interface IConfig extends JsonData {
+public interface IConfig extends JsonData, Shareable {
 
     ObjectMapper MAPPER = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
-    ObjectMapper MAPPER_IGNORE_UNKNOWN_PROPERTY = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    ObjectMapper MAPPER_IGNORE_UNKNOWN_PROPERTY = MAPPER.copy()
+                                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+                                                                   false);
 
     static <T extends IConfig> T fromClasspath(String jsonFile, Class<T> clazz) {
         return IConfig.from(Configs.loadJsonConfig(jsonFile), clazz);
@@ -138,6 +141,12 @@ public interface IConfig extends JsonData {
     default ObjectMapper mapper() {
         return MAPPER;
     }
+
+    @Override
+    default IConfig copy() {
+        return IConfig.from(toJson().getMap(), this.getClass());
+    }
+
 
     @RequiredArgsConstructor
     class CreateConfig<T extends IConfig> extends Silencer<T> {

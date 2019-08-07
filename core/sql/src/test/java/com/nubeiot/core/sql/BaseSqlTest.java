@@ -36,8 +36,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public abstract class BaseSqlTest {
 
-    private final String sharedKey = getClass().getName();
-    private Vertx vertx;
+    protected final String sharedKey = getClass().getName();
+    protected Vertx vertx;
     private DeploymentOptions options;
     private String deployId;
 

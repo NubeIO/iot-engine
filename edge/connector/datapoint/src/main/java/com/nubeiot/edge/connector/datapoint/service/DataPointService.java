@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ public interface DataPointService<K, M extends VertxPojo, R extends UpdatableRec
     }
 
     default String address() {
-        return this.getClass().getName();
+        return this.getClass().getName().toLowerCase(Locale.ENGLISH);
     }
 
     default Map<String, EventMethodDefinition> definitions() {
