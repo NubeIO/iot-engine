@@ -26,7 +26,7 @@ public class BACnetConfig implements IConfig {
     private String deviceName = "NubeIO-Edge28";
     private String modelName = deviceName;
     private int deviceId = 123456;
-    private long discoveryTimeout = 5000;
+    private long discoveryTimeout = 10000;
     private boolean allowSlave = true;
     private String localPointsApiAddress = "/edge-api/points";
     @JsonProperty(value = "__ipConfigs__")
