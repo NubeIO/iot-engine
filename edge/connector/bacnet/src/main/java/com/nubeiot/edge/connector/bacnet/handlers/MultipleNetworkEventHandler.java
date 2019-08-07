@@ -58,18 +58,17 @@ public class MultipleNetworkEventHandler implements EventListener {
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<String> startDiscovery(RequestData requestData) throws Exception {
 
-        if(requestData.body().getString("timeout") != null){
+        if (requestData.body().getString("timeout") != null) {
             long timeout = Long.parseLong(requestData.body().getString("timeout"));
             if (timeout > 0 && timeout < 200) {
                 throw new BACnetException("Timout too short. must be >= 200");
             }
             bacnetInstances.forEach((network, instance) -> instance.startRemoteDiscover(timeout));
-        }
-        else{
+        } else {
             bacnetInstances.forEach((network, instance) -> instance.startRemoteDiscover());
         }
         //TODO: Allow to return devices in future fix
-        return Single.just("Starting remote discovery");
+        return Single.just("starting remote discovery");
     }
 
 }

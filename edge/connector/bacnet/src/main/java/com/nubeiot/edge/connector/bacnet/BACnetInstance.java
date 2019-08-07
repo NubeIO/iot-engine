@@ -26,6 +26,7 @@ import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.utils.LocalPointObjectUtils;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
+import com.serotonin.bacnet4j.cache.RemoteEntityCachePolicy;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
@@ -130,7 +131,9 @@ public class BACnetInstance {
     public void terminate() {
         clearLocalObjects();
         localDevice.clearRemoteDevices();
-        deviceDiscoverer.stop();
+        if (deviceDiscoverer != null) {
+            deviceDiscoverer.stop();
+        }
         localDevice.terminate();
     }
 
@@ -143,7 +146,10 @@ public class BACnetInstance {
             deviceDiscoverer.stop();
         }
         localDevice.clearRemoteDevices();
-        deviceDiscoverer = localDevice.startRemoteDeviceDiscovery();
+        deviceDiscoverer = localDevice.startRemoteDeviceDiscovery(remoteDevice -> {
+            localDevice.getCachePolicies()
+                       .putDevicePolicy(remoteDevice.getInstanceNumber(), RemoteEntityCachePolicy.NEVER_EXPIRE);
+        });
         vertx.setTimer(timeout, s -> {
             deviceDiscoverer.stop();
         });
@@ -367,7 +373,8 @@ public class BACnetInstance {
     public Single<JsonObject> readMultipleRemoteObjectvalue(RemoteDevice remoteDevice, List<ObjectIdentifier> oids) {
         return callAsyncBlocking(() -> {
             PropertyValues values = RequestUtils.readOidPresentValues(localDevice, remoteDevice, oids, null);
-            return new JsonObject().put("deviceId", remoteDevice.getInstanceNumber()).put("points", BACnetDataConversions.readMultipleToJson(values));
+            return new JsonObject().put("deviceId", remoteDevice.getInstanceNumber())
+                                   .put("points", BACnetDataConversions.readMultipleToJson(values));
         });
     }
 
