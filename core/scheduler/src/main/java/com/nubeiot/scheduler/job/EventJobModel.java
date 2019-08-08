@@ -14,16 +14,21 @@ import com.nubeiot.core.utils.Strings;
 import com.nubeiot.scheduler.job.JobModel.AbstractJobModel;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
 import lombok.NonNull;
 
 @Getter
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = EventJobModel.Builder.class)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public final class EventJobModel extends AbstractJobModel {
 
     @NonNull
+    @Include
     private final DeliveryEvent process;
+    @Include
     private final DeliveryEvent callback;
 
     private EventJobModel(JobKey key, DeliveryEvent process, DeliveryEvent callback, boolean forwardIfFailure) {

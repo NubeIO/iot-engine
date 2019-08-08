@@ -14,6 +14,8 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -54,11 +56,15 @@ public interface JobModel<T extends VertxJob> extends JsonData {
 
 
     @RequiredArgsConstructor
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     abstract class AbstractJobModel implements JobModel {
 
         @Getter
+        @Include
         private final JobKey key;
+        @Include
         private final JobType type;
+        @Include
         private final boolean forwardIfFailure;
 
         @Override

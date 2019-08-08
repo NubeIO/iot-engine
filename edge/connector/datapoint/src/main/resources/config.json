@@ -61,40 +61,40 @@
           }
         ]
       }
-    }
-  },
-  "__micro__": {
-    "__gateway__": {
-      "enabled": false
     },
-    "__serviceDiscovery__": {
-      "enabled": false
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": false
+      },
+      "__localServiceDiscovery__": {
+        "enabled": true
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
     },
-    "__localServiceDiscovery__": {
-      "enabled": true
+    "__scheduler__": {
+      "__schedule_worker__": {
+        "poolSize": 2,
+        "maxExecuteTime": 60,
+        "maxExecuteTimeUnit": "SECONDS"
+      },
+      "schedulerName": "datapoint-scheduler"
     },
-    "__circuitBreaker__": {
-      "enabled": false
-    }
-  },
-  "__scheduler__": {
-    "__schedule_worker__": {
-      "poolSize": 2,
-      "maxExecuteTime": 60,
-      "maxExecuteTimeUnit": "SECONDS"
-    },
-    "schedulerName": "datapoint-scheduler"
-  },
-  "__sql__": {
-    "dialect": "H2",
-    "dbName": "datapoint",
-    "dbLocalFile": true,
-    "__hikari__": {
-      "minimumIdle": 1,
-      "maximumPoolSize": 2,
-      "connectionTimeout": 30000,
-      "idleTimeout": 180000,
-      "maxLifetime": 300000
+    "__sql__": {
+      "dialect": "H2",
+      "dbName": "datapoint",
+      "dbLocalFile": true,
+      "__hikari__": {
+        "minimumIdle": 1,
+        "maximumPoolSize": 2,
+        "connectionTimeout": 30000,
+        "idleTimeout": 180000,
+        "maxLifetime": 300000
+      }
     }
   }
 }

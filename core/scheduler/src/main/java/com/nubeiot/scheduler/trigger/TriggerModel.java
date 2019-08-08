@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -45,10 +46,13 @@ public interface TriggerModel extends JsonData {
 
 
     @RequiredArgsConstructor
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     abstract class AbstractTriggerModel implements TriggerModel {
 
         @Getter
+        @EqualsAndHashCode.Include
         private final TriggerKey key;
+        @EqualsAndHashCode.Include
         private final TriggerType type;
 
         @NonNull
@@ -63,8 +67,8 @@ public interface TriggerModel extends JsonData {
         }
 
         @SuppressWarnings("unchecked")
-        public static abstract class AbstractTriggerModelBuilder<T extends TriggerModel,
-                                                                            B extends AbstractTriggerModelBuilder> {
+        static abstract class AbstractTriggerModelBuilder<T extends TriggerModel,
+                                                                     B extends AbstractTriggerModelBuilder> {
 
             String name;
             String group;

@@ -44,11 +44,11 @@ final class RegisterScheduleListener implements EventListener {
     }
 
     @EventContractor(action = EventAction.CREATE)
-    public JsonObject create(@Param("job") JobModel jobModel, @Param("trigger") TriggerModel triggerModel) {
+    public JsonObject create(@Param(SchedulerRequestData.JOB_KEY) JobModel jobModel,
+                             @Param(SchedulerRequestData.TRIGGER_KEY) TriggerModel triggerModel) {
         try {
             final JobDetail jobDetail = jobModel.toJobDetail();
             final Trigger trigger = triggerModel.toTrigger();
-            LOGGER.info("Scheduler register | Job: {} | Trigger: {}", jobModel.toString(), triggerModel.toString());
             LOGGER.info("Scheduler register | Job: {} | Trigger: {}", jobModel.toJson(), triggerModel.toJson());
             Date firstFire = scheduler.scheduleJob(jobDetail, trigger);
             return new JsonObject().put("trigger", keyToJson(trigger.getKey()))
@@ -66,10 +66,11 @@ final class RegisterScheduleListener implements EventListener {
         if (Strings.isBlank(jobName)) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Missing job name");
         }
+        final JobKey jobKey = JobKey.jobKey(jobName, jobGroup);
         try {
-            return new JsonObject().put("unschedule", scheduler.deleteJob(JobKey.jobKey(jobName, jobGroup)));
+            return new JsonObject().put("unschedule", scheduler.deleteJob(jobKey));
         } catch (SchedulerException e) {
-            throw new NubeException(ErrorCode.SERVICE_ERROR, "Cannot job trigger", e);
+            throw new NubeException(ErrorCode.SERVICE_ERROR, "Cannot remove job id " + jobKey.toString(), e);
         }
     }
 

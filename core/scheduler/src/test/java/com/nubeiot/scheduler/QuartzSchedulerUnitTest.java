@@ -38,7 +38,7 @@ import com.nubeiot.core.utils.Strings;
 import com.nubeiot.scheduler.MockEventScheduler.FailureProcessEventSchedulerListener;
 import com.nubeiot.scheduler.MockEventScheduler.MockJobModel;
 import com.nubeiot.scheduler.MockEventScheduler.MockProcessEventSchedulerListener;
-import com.nubeiot.scheduler.job.EventJobModel;
+import com.nubeiot.scheduler.job.JobModel;
 import com.nubeiot.scheduler.trigger.CronTriggerModel;
 import com.nubeiot.scheduler.trigger.PeriodicTriggerModel;
 import com.nubeiot.scheduler.trigger.TriggerModel;
@@ -187,12 +187,11 @@ public class QuartzSchedulerUnitTest {
         controller.request(removeEvent, EventbusHelper.replyAsserter(context, async, r));
     }
 
-    private DeliveryEvent initRegisterEvent(EventJobModel job, TriggerModel trigger) {
+    private DeliveryEvent initRegisterEvent(JobModel job, TriggerModel trigger) {
         return DeliveryEvent.builder()
                             .address(config.getRegisterAddress())
                             .pattern(EventPattern.REQUEST_RESPONSE)
-                            .action(EventAction.CREATE)
-                            .payload(new JsonObject().put("job", job.toJson()).put("trigger", trigger.toJson()))
+                            .action(EventAction.CREATE).payload(SchedulerRequestData.create(job, trigger).toJson())
                             .build();
     }
 
