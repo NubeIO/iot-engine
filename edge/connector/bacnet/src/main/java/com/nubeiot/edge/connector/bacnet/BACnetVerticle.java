@@ -11,6 +11,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
@@ -54,7 +55,7 @@ public class BACnetVerticle extends ContainerVerticle {
             ServiceDiscoveryController localController = ((MicroContext) microContext).getLocalController();
             this.microContext = (MicroContext) microContext;
             startBACnet(bacnetConfig, localController);
-            registerEventbus(new EventController(vertx));
+            registerEventbus(SharedDataDelegate.getEventController(this.getVertx(), this.getClass().getName()));
             publishServices(localController);
             if (allowSlave) {
                 initLocalPoints(bacnetConfig.getLocalPointsApiAddress(), localController);
