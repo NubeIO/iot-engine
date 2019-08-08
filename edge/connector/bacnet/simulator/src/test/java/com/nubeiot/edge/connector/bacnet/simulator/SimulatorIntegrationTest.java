@@ -1,11 +1,9 @@
 package com.nubeiot.edge.connector.bacnet.simulator;
 
 import java.io.IOException;
-import java.util.Scanner;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -20,6 +18,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -28,7 +27,6 @@ import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
-import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 
@@ -56,7 +54,8 @@ public class SimulatorIntegrationTest {
         TestHelper.setup();
         verticle = new BACnetSimulator();
         vertx = Vertx.vertx();
-        eventController = new EventController(vertx);
+        eventController = SharedDataDelegate.getEventController(vertx.getDelegate(),
+                                                                SimulatorIntegrationTest.class.getName());
         JsonObject masterConfig = IConfig.fromClasspath("master.json", NubeConfig.class).toJson();
         masterBACnetConfig = IConfig.from(masterConfig, BACnetConfig.class);
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(masterConfig), verticle);
@@ -76,7 +75,7 @@ public class SimulatorIntegrationTest {
                                  context.assertTrue(message.isSuccess());
                                  context.assertTrue(message.getData().containsKey(Integer.toString(remoteDeviceId)));
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -91,7 +90,7 @@ public class SimulatorIntegrationTest {
                                  context.assertTrue(message.isSuccess());
                                  context.assertEquals(remoteDeviceId, data.getInteger("instanceNumber"));
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -105,7 +104,7 @@ public class SimulatorIntegrationTest {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  context.assertTrue(message.isError());
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -133,7 +132,7 @@ public class SimulatorIntegrationTest {
                                      }
                                  });
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -159,7 +158,7 @@ public class SimulatorIntegrationTest {
                                                                   .getValue(
                                                                       PropertyIdentifier.presentValue.toString()));
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -175,7 +174,7 @@ public class SimulatorIntegrationTest {
                              messageAsyncResult -> {
                                  context.assertTrue(messageAsyncResult.failed());
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -199,7 +198,7 @@ public class SimulatorIntegrationTest {
                                  }
                                  context.assertEquals(val, message.getData().getValue("value"));
                                  TestHelper.testComplete(async);
-                             });
+                             }, null);
     }
 
     @Test
@@ -229,8 +228,8 @@ public class SimulatorIntegrationTest {
                                          int expected = val ? 0 : 1;
                                          context.assertEquals(expected, message2.getData().getValue("value"));
                                          TestHelper.testComplete(async);
-                                     });
-            });
+                                     }, null);
+            }, null);
     }
 
     private JsonObject addNetWorkToJson(JsonObject json) {
