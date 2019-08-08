@@ -41,4 +41,14 @@ public final class TagPointService extends AbstractDataPointService<Long, PointT
         return Tables.POINT_TAG;
     }
 
+    @Override
+    public @NonNull String requestKeyName() {
+        return jsonKeyName();
+    }
+
+    @Override
+    public String servicePath() {
+        return "/tags";
+    }
+
 }

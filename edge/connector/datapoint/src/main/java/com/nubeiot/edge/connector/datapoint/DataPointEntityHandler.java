@@ -69,7 +69,7 @@ class DataPointEntityHandler extends EntityHandler implements EntityAuditHandler
     }
 
     private String jsonKey(Class<VertxPojo> c) {
-        return Strings.toSnakeCase(c.getSimpleName(), false);
+        return Strings.toSnakeCaseWithLC(c.getSimpleName());
     }
 
     private Single<Integer> insert(@NonNull JsonObject builtinData, @NonNull Class<VertxPojo> pojoClass) {

@@ -1,8 +1,13 @@
 package com.nubeiot.core.http.dynamic;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import org.junit.After;
+import org.junit.Before;
+import org.skyscreamer.jsonassert.Customization;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.json.JsonObject;
@@ -14,7 +19,20 @@ import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.dynamic.mock.GatewayServer;
 
-public class DynamicServiceTestBase extends HttpServerTestBase {
+public abstract class DynamicServiceTestBase extends HttpServerTestBase {
+
+    static final Customization IGNORE_URI = new Customization("message.uri", (o1, o2) -> false);
+
+    @Before
+    public void before(TestContext context) throws IOException {
+        super.before(context);
+        startGatewayAndService(context, service(), getServiceOptions());
+    }
+
+    @After
+    public void after(TestContext context) {
+        super.after(context);
+    }
 
     protected void startGatewayAndService(TestContext context, ContainerVerticle service,
                                           DeploymentOptions serviceOptions) {
@@ -50,5 +68,11 @@ public class DynamicServiceTestBase extends HttpServerTestBase {
     protected <T extends ContainerVerticle> Supplier<T> gateway() {
         return () -> (T) new GatewayServer();
     }
+
+    protected DeploymentOptions getServiceOptions() throws IOException {
+        return new DeploymentOptions();
+    }
+
+    protected abstract <T extends ContainerVerticle> T service();
 
 }

@@ -1,22 +1,19 @@
 package com.nubeiot.core.http.dynamic;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.dynamic.mock.MockEventMessageService;
 
@@ -26,15 +23,9 @@ public class DynamicEventServiceTest extends DynamicServiceTestBase {
     @BeforeClass
     public static void beforeSuite() { TestHelper.setup(); }
 
-    @Before
-    public void before(TestContext context) throws IOException {
-        super.before(context);
-        startGatewayAndService(context, new MockEventMessageService(), new DeploymentOptions());
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
+    @Override
+    protected <T extends ContainerVerticle> T service() {
+        return (T) new MockEventMessageService();
     }
 
     @Test

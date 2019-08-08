@@ -37,12 +37,12 @@ import lombok.NonNull;
 @RunWith(VertxUnitRunner.class)
 public class DataPointServiceTest extends BaseSqlServiceTest {
 
-    private static final Device DEVICE = new Device().setId(UUID.fromString("d7cd3f57-a188-4462-b959-df7a23994c92"))
-                                                     .setCode("NUBEIO-0001")
-                                                     .setCustomerCode("NUBEIO")
-                                                     .setSiteCode("xxx")
-                                                     .setPolicyId("yyy")
-                                                     .setDataVersion("0.0.1");
+    public static final Device DEVICE = new Device().setId(UUID.fromString("d7cd3f57-a188-4462-b959-df7a23994c92"))
+                                                    .setCode("NUBEIO-0001")
+                                                    .setCustomerCode("NUBEIO")
+                                                    .setSiteCode("xxx")
+                                                    .setPolicyId("yyy")
+                                                    .setDataVersion("0.0.1");
 
     @BeforeClass
     public static void beforeSuite() { BaseSqlTest.beforeSuite(); }

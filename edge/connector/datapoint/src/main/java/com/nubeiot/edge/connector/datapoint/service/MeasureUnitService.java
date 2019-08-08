@@ -39,4 +39,9 @@ public final class MeasureUnitService
         return Tables.MEASURE_UNIT;
     }
 
+    @Override
+    public @NonNull String requestKeyName() {
+        return jsonKeyName();
+    }
+
 }

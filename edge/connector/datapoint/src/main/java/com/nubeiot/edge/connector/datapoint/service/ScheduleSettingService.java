@@ -45,4 +45,14 @@ public final class ScheduleSettingService
         return Tables.SCHEDULE_SETTING;
     }
 
+    @Override
+    public @NonNull String requestKeyName() {
+        return "setting_id";
+    }
+
+    @Override
+    public String servicePath() {
+        return "/schedules";
+    }
+
 }

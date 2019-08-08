@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,30 +38,39 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     private String registration;
 
     @BeforeClass
-    public static void beforeSuite() {
-        TestHelper.setup();
-    }
+    public static void beforeSuite() { TestHelper.setup(); }
 
-    @SuppressWarnings("unchecked")
-    protected <T extends ContainerVerticle> Supplier<T> gateway() {
-        return () -> (T) new EdgeGatewayVerticle();
-    }
-
-    @Before
-    public void before(TestContext context) throws IOException {
-        super.before(context);
-        httpServicePort = TestHelper.getRandomPort();
+    @Override
+    protected void startGatewayAndService(TestContext context, ContainerVerticle service,
+                                          DeploymentOptions serviceOptions) {
         CountDownLatch latch = new CountDownLatch(1);
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions(), new MockGatewayForwarder(),
                            deployId -> latch.countDown());
         try {
             latch.await(TestHelper.TEST_TIMEOUT_SEC, TimeUnit.SECONDS);
+            super.startGatewayAndService(context, service, serviceOptions);
+            create(context, "xyz", httpServicePort, successAsserter(context, "xyz", id -> registration = id));
         } catch (InterruptedException e) {
             context.fail(e);
         }
-        startGatewayAndService(context, new ExternalHttpServer(),
-                               new DeploymentOptions().setConfig(deployConfig(httpServicePort)));
-        create(context, "xyz", httpServicePort, successAsserter(context, "xyz", id -> registration = id));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected <T extends ContainerVerticle> Supplier<T> gateway() {
+        return () -> (T) new EdgeGatewayVerticle();
+    }
+
+    @Override
+    protected DeploymentOptions getServiceOptions() throws IOException {
+        httpServicePort = TestHelper.getRandomPort();
+        return new DeploymentOptions().setConfig(deployConfig(httpServicePort));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected <T extends ContainerVerticle> T service() {
+        return (T) new ExternalHttpServer();
     }
 
     @Test
@@ -96,7 +104,9 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     }
 
     private void create(TestContext context, String serviceName, int port, @NonNull Consumer<ResponseData> asserter) {
-        JsonObject data = new HttpLocation().setHost(DEFAULT_HOST).setPort(port).setRoot("/gpio")
+        JsonObject data = new HttpLocation().setHost(DEFAULT_HOST)
+                                            .setPort(port)
+                                            .setRoot("/gpio")
                                             .toJson()
                                             .put("name", serviceName);
         restRequest(context, HttpMethod.POST, "/gw/register", RequestData.builder().body(data).build()).subscribe(
@@ -139,7 +149,9 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
 
     @Test
     public void test_register_alreadyExist(TestContext context) {
-        JsonObject body = new HttpLocation().setHost(DEFAULT_HOST).setPort(httpServicePort).setRoot("/gpio")
+        JsonObject body = new HttpLocation().setHost(DEFAULT_HOST)
+                                            .setPort(httpServicePort)
+                                            .setRoot("/gpio")
                                             .toJson()
                                             .put("name", "xyz");
         restRequest(context, HttpMethod.POST, "/gw/register", RequestData.builder().body(body).build()).subscribe(

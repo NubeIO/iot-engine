@@ -43,4 +43,14 @@ public final class RealtimeDataService
         return Tables.POINT_REALTIME_DATA;
     }
 
+    @Override
+    public @NonNull String requestKeyName() {
+        return "realtime_id";
+    }
+
+    @Override
+    public String servicePath() {
+        return "realtime-data";
+    }
+
 }

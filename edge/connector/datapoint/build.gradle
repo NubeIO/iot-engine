@@ -20,6 +20,7 @@ dependencies {
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:sql").sourceSets.test.output
+    testCompile project(":core:httpserver")
     testCompile project(":core:httpserver").sourceSets.test.output
 }
 

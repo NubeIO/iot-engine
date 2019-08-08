@@ -2,8 +2,6 @@ package com.nubeiot.core.http.dynamic;
 
 import java.io.IOException;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,6 +14,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
+import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.dynamic.mock.HttpServiceServer;
 
@@ -27,15 +26,15 @@ public class DynamicHttpServerTest extends DynamicServiceTestBase {
     @BeforeClass
     public static void beforeSuite() { TestHelper.setup(); }
 
-    @Before
-    public void before(TestContext context) throws IOException {
-        super.before(context);
+    protected DeploymentOptions getServiceOptions() throws IOException {
         port = TestHelper.getRandomPort();
-        startGatewayAndService(context, new HttpServiceServer(), new DeploymentOptions().setConfig(deployConfig(port)));
+        return new DeploymentOptions().setConfig(deployConfig(port));
     }
 
-    @After
-    public void after(TestContext context) { super.after(context); }
+    @Override
+    protected <T extends ContainerVerticle> T service() {
+        return (T) new HttpServiceServer();
+    }
 
     @Test
     public void test_get_success(TestContext context) {

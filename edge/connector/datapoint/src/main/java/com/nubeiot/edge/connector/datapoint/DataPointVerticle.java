@@ -2,6 +2,7 @@ package com.nubeiot.edge.connector.datapoint;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import io.reactivex.Observable;
 import io.vertx.servicediscovery.Record;
@@ -10,7 +11,6 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
@@ -25,6 +25,7 @@ import com.nubeiot.scheduler.SchedulerProvider;
 public final class DataPointVerticle extends ContainerVerticle {
 
     static final String LOWDB_MIGRATION = "LOWDB_MIGRATION";
+    static final String SCHEDULER_ADDRESS = "SCHEDULER_ADDRESS";
     private DataPointEntityHandler entityHandler;
     private MicroContext microCtx;
     private QuartzSchedulerContext schedulerCtx;
@@ -40,21 +41,19 @@ public final class DataPointVerticle extends ContainerVerticle {
             .addProvider(new SchedulerProvider(), ctx -> schedulerCtx = (QuartzSchedulerContext) ctx)
             .addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, DataPointEntityHandler.class),
                          ctx -> entityHandler = ((SqlContext<DataPointEntityHandler>) ctx).getEntityHandler())
-            .registerSuccessHandler(v -> successHandler(entityHandler, microCtx, schedulerCtx));
+            .registerSuccessHandler(v -> successHandler());
     }
 
-    private void successHandler(DataPointEntityHandler entityHandler, MicroContext microCtx,
-                                QuartzSchedulerContext schedulerCtx) {
+    private void successHandler() {
+        this.addSharedData(SCHEDULER_ADDRESS, schedulerCtx.getRegisterModel().getAddress());
         EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
-        final ServiceDiscoveryController discovery = microCtx.getLocalController();
+        ServiceDiscoveryController discovery = microCtx.getLocalController();
         Observable.fromIterable(DataPointService.createServices(entityHandler))
-                  .doOnEach(s -> controller.register(s.getValue().address(), s.getValue()))
+                  .doOnEach(s -> Optional.ofNullable(s.getValue())
+                                         .ifPresent(service -> controller.register(service.address(), service)))
                   .filter(s -> Objects.nonNull(s.definitions()))
-                  .map(s -> registerEndpoint(discovery, s))
+                  .flatMap(s -> registerEndpoint(discovery, s))
                   .subscribe();
-        discovery.addEventMessageRecord("datapoint-scheduler", schedulerCtx.getRegisterModel().getAddress(),
-                                        EventMethodDefinition.create("/scheduler", "/:service_id",
-                                                                     ActionMethodMapping.CUD_MAP, false)).subscribe();
     }
 
     @SuppressWarnings("unchecked")

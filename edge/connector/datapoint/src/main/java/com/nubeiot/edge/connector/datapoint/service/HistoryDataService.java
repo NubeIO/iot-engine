@@ -43,4 +43,14 @@ public final class HistoryDataService
         return Tables.POINT_HISTORY_DATA;
     }
 
+    @Override
+    public @NonNull String requestKeyName() {
+        return "history_id";
+    }
+
+    @Override
+    public String servicePath() {
+        return "/histories";
+    }
+
 }
