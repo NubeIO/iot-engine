@@ -2,7 +2,9 @@
 <project name="H2" id="Project_20250b0" template="Default" database="H2" >
 	<schema name="PUBLIC" catalogname="01_edge_datapoint.sql" schemaname="PUBLIC" >
 		<table name="DEVICE" >
-			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" >
+				<defo>RANDOM_UUID()</defo>
+			</column>
 			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" >
 				<comment><![CDATA[Device Code]]></comment>
 			</column>
@@ -165,18 +167,10 @@
 				<comment><![CDATA[ANALOG | DIGITAL | DC_10 | DC_12 | MA_20 | THERMISTOR_10K]]></comment>
 			</column>
 			<column name="MEASURE_UNIT" type="varchar" length="15" decimal="0" jt="12" mandatory="y" />
-			<column name="MIN_SCALE" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
-				<defo>0</defo>
-			</column>
-			<column name="MAX_SCALE" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
-				<defo>10</defo>
-			</column>
-			<column name="PRECISION" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
-				<defo>3</defo>
-			</column>
-			<column name="OFFSET_VAL" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
-				<defo>0</defo>
-			</column>
+			<column name="MIN_SCALE" type="smallint" jt="5" />
+			<column name="MAX_SCALE" type="smallint" jt="5" />
+			<column name="PRECISION" type="smallint" jt="5" />
+			<column name="OFFSET_VAL" type="smallint" jt="5" />
 			<column name="VERSION" type="varchar" length="31" decimal="0" jt="12" />
 			<column name="METADATA_JSON" type="clob" length="2147483647" decimal="0" jt="2005" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
@@ -210,7 +204,7 @@
 			<fk name="FK_POINT_NETWORK" to_schema="PUBLIC" to_table="NETWORK" delete_action="restrict" update_action="cascade" >
 				<fk_column name="NETWORK" pk="ID" />
 			</fk>
-			<fk name="FK_POINT_TRANSDUCER" to_schema="PUBLIC" to_table="TRANSDUCERS" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_POINT_TRANSDUCER" to_schema="PUBLIC" to_table="TRANSDUCER" delete_action="restrict" update_action="cascade" >
 				<fk_column name="TRANSDUCER" pk="ID" />
 			</fk>
 		</table>
@@ -391,24 +385,19 @@
 			<fk name="FK_THING_MEASURE" to_schema="PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
 				<fk_column name="MEASURE_UNIT" pk="MEASURE_TYPE" />
 			</fk>
-			<fk name="FK_THING_TRANSDUCER" to_schema="PUBLIC" to_table="TRANSDUCERS" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_THING_TRANSDUCER" to_schema="PUBLIC" to_table="TRANSDUCER" delete_action="restrict" update_action="cascade" >
 				<fk_column name="TRANSDUCER" pk="ID" />
 			</fk>
 		</table>
-		<table name="TRANSDUCERS" >
+		<table name="TRANSDUCER" >
 			<comment><![CDATA[Represents for a set of actual transducers that plugged in device point. Mean that one or many transducers from one or many equipment, no duplicate and must be same type and category.
 It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kinds or ACTUATOR kinds]]></comment>
 			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
-			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" >
-				<comment><![CDATA[User define code. Default it will be]]></comment>
-			</column>
+			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
 			<column name="TRANSDUCER_TYPE" type="varchar" length="15" decimal="0" jt="12" mandatory="y" >
 				<defo>&#039;SENSOR&#039;</defo>
-				<comment><![CDATA[SENSOR | ACTUATOR]]></comment>
 			</column>
-			<column name="TRANSDUCER_CATEGORY" type="varchar" length="31" decimal="0" jt="12" mandatory="y" >
-				<comment><![CDATA[Transducer Category. It can be `TEMP`, `HUMIDITY`, `MOTION`, `VELOCITY`, etc]]></comment>
-			</column>
+			<column name="TRANSDUCER_CATEGORY" type="varchar" length="31" decimal="0" jt="12" mandatory="y" />
 			<column name="LABEL" type="varchar" length="1000" decimal="0" jt="12" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
@@ -431,19 +420,19 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
 		<entity schema="PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
 		<entity schema="PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="64" y="608" />
-		<entity schema="PUBLIC" name="EQUIPMENT" color="C7F4BE" x="1136" y="576" />
+		<entity schema="PUBLIC" name="EQUIPMENT" color="EEF7EC" x="1136" y="576" />
 		<entity schema="PUBLIC" name="POINT_TAG" color="FFCCE6" x="672" y="80" />
 		<entity schema="PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="1104" y="80" />
 		<entity schema="PUBLIC" name="NETWORK" color="FFCCE6" x="880" y="80" />
-		<entity schema="PUBLIC" name="DEVICE_EQUIP" color="C7F4BE" x="928" y="560" />
-		<entity schema="PUBLIC" name="THING" color="C7F4BE" x="1152" y="352" />
-		<entity schema="PUBLIC" name="TRANSDUCERS" color="C7F4BE" x="672" y="352" />
-		<entity schema="PUBLIC" name="DEVICE" color="C7F4BE" x="672" y="560" />
+		<entity schema="PUBLIC" name="DEVICE_EQUIP" color="EEF7EC" x="928" y="560" />
+		<entity schema="PUBLIC" name="THING" color="EEF7EC" x="1152" y="352" />
+		<entity schema="PUBLIC" name="DEVICE" color="EEF7EC" x="672" y="560" />
 		<entity schema="PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="400" />
 		<entity schema="PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="240" />
-		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="368" y="112" />
 		<entity schema="PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="272" y="544" />
 		<entity schema="PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="448" y="640" />
+		<entity schema="PUBLIC" name="TRANSDUCER" color="EEF7EC" x="672" y="352" />
+		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="368" y="112" />
 		<group name="POINT" color="ECF0F7" >
 			<entity schema="PUBLIC" name="POINT" />
 			<entity schema="PUBLIC" name="HISTORY_SETTING" />
@@ -458,7 +447,7 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 			<entity schema="PUBLIC" name="DEVICE" />
 			<entity schema="PUBLIC" name="DEVICE_EQUIP" />
 			<entity schema="PUBLIC" name="EQUIPMENT" />
-			<entity schema="PUBLIC" name="TRANSDUCERS" />
+			<entity schema="PUBLIC" name="TRANSDUCER" />
 		</group>
 		<group name="Common" color="FFCCE6" >
 			<entity schema="PUBLIC" name="NETWORK" />
@@ -756,8 +745,7 @@ ALTER TABLE THING ADD CONSTRAINT FK_THING_EQUIP FOREIGN KEY ( EQUIP ) REFERENCES
 
 ALTER TABLE THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES TRANSDUCERS( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
-]]></string>
+ALTER TABLE THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES TRANSDUCERS( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;]]></string>
 		</script>
 	</layout>
 </project>
