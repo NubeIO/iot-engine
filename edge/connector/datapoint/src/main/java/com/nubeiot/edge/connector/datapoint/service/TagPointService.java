@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.datapoint.service;
 
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.BigSerialKeyEntity;
-import com.nubeiot.core.sql.ExtensionEntityService;
+import com.nubeiot.core.sql.HasReferenceEntityService;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.edge.connector.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.model.Tables;
@@ -14,7 +14,7 @@ import lombok.NonNull;
 
 public final class TagPointService extends AbstractDataPointService<Long, PointTag, PointTagRecord, PointTagDao>
     implements BigSerialKeyEntity<PointTag, PointTagRecord, PointTagDao>,
-               ExtensionEntityService<Long, PointTag, PointTagRecord, PointTagDao>, PointExtension {
+               HasReferenceEntityService<Long, PointTag, PointTagRecord, PointTagDao>, PointExtension {
 
     public TagPointService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);

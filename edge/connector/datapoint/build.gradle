@@ -63,7 +63,11 @@ task jooqGen(type: JooqGenerateTask) {
         new ForcedType(userType: "com.nubeiot.iotdata.dto.TransducerType",
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("transducer_type"),
-                       converter: "com.nubeiot.iotdata.converter.TransducerTypeConverter")
+                       converter: "com.nubeiot.iotdata.converter.TransducerTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.core.sql.type.Label",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("product_label"),
+                       converter: "com.nubeiot.core.sql.converter.LabelConverter")
     ]
     javaTypes = project(':core:sql').ext.javaTypes + [
         new JsonDataType(className: "com.nubeiot.iotdata.dto.HistorySettingType",

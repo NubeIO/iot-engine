@@ -14,6 +14,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.iotdata.unit.DataTypeCategory.ElectricPotential;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Illumination;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Power;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Pressure;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Velocity;
 
 import lombok.NonNull;
 
@@ -23,13 +29,14 @@ public interface DataType extends EnumType, Cloneable {
 
     DataType NUMBER = new NumberDataType();
     DataType PERCENTAGE = new NumberDataType("percentage", "%");
-    DataType VOLTAGE = new NumberDataType("voltage", "V");
-    DataType CELSIUS = new NumberDataType("celsius", "U+2103");
+    DataType VOLTAGE = new NumberDataType("voltage", "V", ElectricPotential.TYPE);
+    DataType CELSIUS = new NumberDataType("celsius", "U+2103", Temperature.TYPE);
     DataType BOOLEAN = new BooleanDataType();
-    DataType DBM = new NumberDataType("dBm", "dBm");
-    DataType HPA = new NumberDataType("hPa", "hPa");
-    DataType LUX = new NumberDataType("lux", "lx");
-    DataType KWH = new NumberDataType("kWh", "kWh");
+    DataType DBM = new NumberDataType("dBm", "dBm", Power.TYPE);
+    DataType HPA = new NumberDataType("hPa", "hPa", Pressure.TYPE);
+    DataType LUX = new NumberDataType("lux", "lx", Illumination.TYPE);
+    DataType KWH = new NumberDataType("kWh", "kWh", Power.TYPE);
+    DataType RPM = new NumberDataType("rpm", "rpm", Velocity.TYPE);
     String SEP = "::";
 
     @NonNull
@@ -41,12 +48,18 @@ public interface DataType extends EnumType, Cloneable {
             return def();
         }
         final String[] split = dbValue.split(SEP);
-        return factory(split[0], split.length > 1 ? split[1] : null, null);
+        return factory(split[0], split.length > 1 ? split[1] : null);
+    }
+
+    @NonNull
+    static DataType factory(String type, String unit) {
+        return factory(type, unit, NUMBER.category(), null);
     }
 
     @NonNull
     @JsonCreator
     static DataType factory(@JsonProperty(value = "type") String type, @JsonProperty(value = "symbol") String unit,
+                            @JsonProperty(value = "category") String category,
                             @JsonProperty(value = "possible_values") Map<Double, List<String>> possibleValues) {
         return new NumberDataType(ReflectionField.streamConstants(DataType.class, InternalDataType.class)
                                                  .filter(t -> t.type().equalsIgnoreCase(type))
@@ -58,6 +71,10 @@ public interface DataType extends EnumType, Cloneable {
     @NonNull
     @JsonProperty(value = "symbol")
     String unit();
+
+    @NonNull
+    @JsonProperty(value = "category")
+    String category();
 
     @JsonProperty(value = "possible_values")
     Map<Double, List<String>> possibleValues();

@@ -10,6 +10,8 @@ public final class TransducerCategory extends AbstractEnumType {
     public static final TransducerCategory HUMIDITY = new TransducerCategory("HUMIDITY");
     public static final TransducerCategory MOTION = new TransducerCategory("MOTION");
     public static final TransducerCategory VELOCITY = new TransducerCategory("VELOCITY");
+    public static final TransducerCategory SWITCH = new TransducerCategory("SWITCH");
+    public static final TransducerCategory RELAY = new TransducerCategory("RELAY");
 
     private TransducerCategory(String type) {
         super(type);

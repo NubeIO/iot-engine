@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
-import com.nubeiot.core.sql.ExtensionEntityService;
+import com.nubeiot.core.sql.HasReferenceEntityService;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.edge.connector.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.model.Tables;
@@ -17,7 +17,7 @@ import lombok.NonNull;
 public final class RealtimeSettingService
     extends AbstractDataPointService<UUID, RealtimeSetting, RealtimeSettingRecord, RealtimeSettingDao>
     implements UUIDKeyEntity<RealtimeSetting, RealtimeSettingRecord, RealtimeSettingDao>,
-               ExtensionEntityService<UUID, RealtimeSetting, RealtimeSettingRecord, RealtimeSettingDao>,
+               HasReferenceEntityService<UUID, RealtimeSetting, RealtimeSettingRecord, RealtimeSettingDao>,
                PointExtension {
 
     public RealtimeSettingService(@NonNull EntityHandler entityHandler) {

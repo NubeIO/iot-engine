@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.datapoint.service;
 
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.BigSerialKeyEntity;
-import com.nubeiot.core.sql.ExtensionEntityService;
+import com.nubeiot.core.sql.HasReferenceEntityService;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.edge.connector.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.model.Tables;
@@ -15,7 +15,7 @@ import lombok.NonNull;
 public final class HistoryDataService
     extends AbstractDataPointService<Long, PointHistoryData, PointHistoryDataRecord, PointHistoryDataDao>
     implements BigSerialKeyEntity<PointHistoryData, PointHistoryDataRecord, PointHistoryDataDao>,
-               ExtensionEntityService<Long, PointHistoryData, PointHistoryDataRecord, PointHistoryDataDao>,
+               HasReferenceEntityService<Long, PointHistoryData, PointHistoryDataRecord, PointHistoryDataDao>,
                PointExtension {
 
     public HistoryDataService(@NonNull EntityHandler entityHandler) {

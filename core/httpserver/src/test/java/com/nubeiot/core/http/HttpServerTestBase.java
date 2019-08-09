@@ -43,7 +43,7 @@ import com.zandero.rest.RestRouter;
 
 public class HttpServerTestBase {
 
-    public static final String DEFAULT_HOST = "127.0.0.1";
+    protected static final String DEFAULT_HOST = "127.0.0.1";
     protected Vertx vertx;
     protected HttpConfig httpConfig;
     protected HttpClient client;
@@ -95,15 +95,24 @@ public class HttpServerTestBase {
         HttpClientDelegate.create(vertx.getDelegate(), HostInfo.from(requestOptions))
                           .execute(path, method, requestData)
                           .doFinally(() -> TestHelper.testComplete(async))
-                          .subscribe(resp -> {
-                              System.out.println("Client asserting...");
-                              System.out.println(resp.getStatus());
-                              context.assertEquals(HttpUtils.DEFAULT_CONTENT_TYPE,
-                                                   resp.headers().getString(HttpHeaders.CONTENT_TYPE.toString()));
-                              context.assertNotNull(resp.headers().getString("x-response-time"));
-                              context.assertEquals(codeExpected, resp.getStatus().code());
-                              JsonHelper.assertJson(context, async, bodyExpected, resp.body(), customizations);
-                          }, context::fail);
+                          .subscribe(
+                              resp -> assertResponse(context, codeExpected, bodyExpected, async, resp, customizations),
+                              context::fail);
+    }
+
+    private void assertResponse(TestContext context, int codeExpected, JsonObject bodyExpected, Async async,
+                                ResponseData resp, Customization[] customizations) {
+        System.out.println("Client asserting...");
+        System.out.println(resp.getStatus());
+        try {
+            context.assertEquals(HttpUtils.DEFAULT_CONTENT_TYPE,
+                                 resp.headers().getString(HttpHeaders.CONTENT_TYPE.toString()));
+            context.assertNotNull(resp.headers().getString("x-response-time"));
+            context.assertEquals(codeExpected, resp.getStatus().code());
+            JsonHelper.assertJson(context, async, bodyExpected, resp.body(), customizations);
+        } catch (AssertionError e) {
+            context.fail(e);
+        }
     }
 
     protected Single<ResponseData> restRequest(TestContext context, HttpMethod method, String path,

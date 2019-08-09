@@ -20,12 +20,15 @@ public class DataPointConfigTest {
     @Test
     public void serialize_default_config() throws JSONException {
         final JsonObject expected = new JsonObject(
-            "{\"lowdb_migration\":{\"enabled\":false},\"builtin_data\":{\"measure_unit\":[{\"type\":\"number\"}," +
-            "{\"type\":\"percentage\",\"symbol\":\"%\"},{\"type\":\"voltage\",\"symbol\":\"V\"}," +
-            "{\"type\":\"celsius\",\"symbol\":\"U+2103\"},{\"type\":\"bool\",\"possible_values\":{\"0.5\":[\"true\"," +
-            "\"on\",\"start\",\"1\"],\"0.0\":[\"false\",\"off\",\"stop\",\"0\",\"null\"]}},{\"type\":\"dBm\"," +
-            "\"symbol\":\"dBm\"},{\"type\":\"hPa\",\"symbol\":\"hPa\"},{\"type\":\"lux\",\"symbol\":\"lx\"}," +
-            "{\"type\":\"kWh\",\"symbol\":\"kWh\"}]},\"__publisher__\":{\"type\":\"\",\"enabled\":false}," +
+            "{\"lowdb_migration\":{\"enabled\":false},\"builtin_data\":{\"measure_unit\":[{\"type\":\"number\"," +
+            "\"category\":\"ALL\"},{\"type\":\"percentage\",\"category\":\"ALL\",\"symbol\":\"%\"}," +
+            "{\"type\":\"voltage\",\"category\":\"ELECTRIC_POTENTIAL\",\"symbol\":\"V\"},{\"type\":\"celsius\"," +
+            "\"category\":\"TEMPERATURE\",\"symbol\":\"U+2103\"},{\"type\":\"bool\",\"category\":\"ALL\"," +
+            "\"possible_values\":{\"0.5\":[\"true\",\"on\",\"start\",\"1\"],\"0.0\":[\"false\",\"off\",\"stop\"," +
+            "\"0\",\"null\"]}},{\"type\":\"dBm\",\"category\":\"POWER\",\"symbol\":\"dBm\"},{\"type\":\"hPa\"," +
+            "\"category\":\"PRESSURE\",\"symbol\":\"hPa\"},{\"type\":\"lux\",\"category\":\"ILLUMINATION\"," +
+            "\"symbol\":\"lx\"},{\"type\":\"kWh\",\"category\":\"POWER\",\"symbol\":\"kWh\"},{\"type\":\"rpm\"," +
+            "\"category\":\"VELOCITY\",\"symbol\":\"rpm\"}]},\"__publisher__\":{\"type\":\"\",\"enabled\":false}," +
             "\"__cleanup_policy__\":{\"enabled\":true,\"process\":{\"address\":\"com.nubeiot.edge.connector.datapoint" +
             ".service.HistoryDataService\",\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"BATCH_DELETE\"}," +
             "\"triggerModel\":{\"type\":\"CRON\",\"name\":\"historyData\",\"group\":\"cleanup\"," +

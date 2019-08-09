@@ -7,6 +7,7 @@ import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 public final class EquipType extends AbstractEnumType {
 
     public static final EquipType HVAC = new EquipType("HVAC");
+    public static final EquipType DROPLET = new EquipType("DROPLET");
 
     private EquipType(String type) {
         super(type);

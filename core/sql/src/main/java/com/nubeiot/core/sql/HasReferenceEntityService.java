@@ -19,12 +19,13 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.StateException;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 
-public interface ExtensionEntityService<KEY, MODEL extends VertxPojo, RECORD extends UpdatableRecord<RECORD>,
+public interface HasReferenceEntityService<KEY, MODEL extends VertxPojo, RECORD extends UpdatableRecord<RECORD>,
                                            DAO extends VertxDAO<RECORD, MODEL, KEY>>
-    extends InternalEntityService<KEY, MODEL, RECORD, DAO>, ExtensionResource {
+    extends InternalEntityService<KEY, MODEL, RECORD, DAO>, HasReferenceResource {
 
     @Override
     @NonNull
@@ -83,10 +84,16 @@ public interface ExtensionEntityService<KEY, MODEL extends VertxPojo, RECORD ext
         Optional.ofNullable(requestData.body())
                 .ifPresent(body -> body.stream()
                                        .filter(entry -> this.extensions().containsKey(entry.getKey()))
-                                       .forEach(entry -> filter.put(entry.getKey(), this.extensions()
-                                                                                        .get(entry.getKey())
-                                                                                        .apply(entry.getValue()
-                                                                                                    .toString()))));
+                                       .forEach(entry -> {
+                                           final Object v = this.extensions()
+                                                                .get(entry.getKey())
+                                                                .apply(entry.getValue().toString());
+                                           final String dbField = this.jsonFields()
+                                                                      .getOrDefault(entry.getKey(), entry.getKey());
+                                           filter.put(dbField, ReflectionClass.isJavaLangObject(v.getClass())
+                                                               ? v
+                                                               : v.toString());
+                                       }));
         Optional.ofNullable(extra).ifPresent(m -> filter.getMap().putAll(m));
         return RequestData.builder()
                           .body(requestData.body())

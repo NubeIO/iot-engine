@@ -1,13 +1,17 @@
 package com.nubeiot.edge.connector.datapoint;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jooq.Configuration;
+import org.jooq.Field;
+import org.jooq.Table;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.AbstractVertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -25,6 +29,13 @@ import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.iotdata.model.Tables;
 import com.nubeiot.iotdata.model.tables.pojos.Device;
+import com.nubeiot.iotdata.model.tables.pojos.DeviceEquip;
+import com.nubeiot.iotdata.model.tables.pojos.Equipment;
+import com.nubeiot.iotdata.model.tables.pojos.MeasureUnit;
+import com.nubeiot.iotdata.model.tables.pojos.Network;
+import com.nubeiot.iotdata.model.tables.pojos.Point;
+import com.nubeiot.iotdata.model.tables.pojos.Thing;
+import com.nubeiot.iotdata.model.tables.pojos.Transducer;
 
 import lombok.NonNull;
 
@@ -32,8 +43,23 @@ class DataPointEntityHandler extends EntityHandler implements EntityAuditHandler
 
     public static final String BUILTIN_DATA = "BUILTIN_DATA";
 
+    private static final Map<Class<? extends VertxPojo>, Integer> DEPENDENCIES = initDependencies();
+
     public DataPointEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         super(jooqConfig, vertx);
+    }
+
+    private static Map<Class<? extends VertxPojo>, Integer> initDependencies() {
+        Map<Class<? extends VertxPojo>, Integer> map = new HashMap<>();
+        map.put(MeasureUnit.class, 10);
+        map.put(Device.class, 10);
+        map.put(Equipment.class, 10);
+        map.put(Transducer.class, 10);
+        map.put(Network.class, 20);
+        map.put(Thing.class, 20);
+        map.put(DeviceEquip.class, 30);
+        map.put(Point.class, 40);
+        return map;
     }
 
     @Override
@@ -43,7 +69,13 @@ class DataPointEntityHandler extends EntityHandler implements EntityAuditHandler
 
     @Override
     public Single<EventMessage> initData() {
-        createDefaultUUID(Collections.singletonMap(Tables.DEVICE, Tables.DEVICE.ID));
+        Map<Table, Field<UUID>> map = new HashMap<>();
+        map.put(Tables.DEVICE, Tables.DEVICE.ID);
+        map.put(Tables.EQUIPMENT, Tables.EQUIPMENT.ID);
+        map.put(Tables.NETWORK, Tables.NETWORK.ID);
+        map.put(Tables.POINT, Tables.POINT.ID);
+        map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
+        createDefaultUUID(map);
         return initDataFromConfig();
     }
 
@@ -53,23 +85,24 @@ class DataPointEntityHandler extends EntityHandler implements EntityAuditHandler
     }
 
     private Single<EventMessage> initDataFromConfig() {
-        final Optional<JsonObject> apply = Optional.ofNullable(
-            (JsonObject) this.getSharedDataFunc().apply(BUILTIN_DATA));
-        return apply.map(builtinData -> Single.merge(
-            ReflectionClass.stream(Device.class.getPackage().getName(), VertxPojo.class, ReflectionClass.publicClass())
-                           .filter(c -> builtinData.containsKey(jsonKey(c)))
-                           .map(c -> insert(builtinData, c))
-                           .collect(Collectors.toList()))
-                                              .buffer(5)
-                                              .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
-                                              .map(r -> EventMessage.success(EventAction.INIT,
-                                                                             new JsonObject().put("records", r))))
-                    .orElseGet(
-                        () -> Single.just(EventMessage.success(EventAction.INIT, new JsonObject().put("records", 0))));
+        return Optional.ofNullable((JsonObject) this.getSharedDataFunc().apply(BUILTIN_DATA))
+                       .map(data -> Single.merge(
+                           ReflectionClass.stream(Device.class.getPackage().getName(), VertxPojo.class,
+                                                  ReflectionClass.publicClass())
+                                          .filter(c -> data.containsKey(jsonKey(c)))
+                                          .sorted(Comparator.comparingInt(o -> DEPENDENCIES.getOrDefault(o, 999)))
+                                          .map(c -> insert(data, c))
+                                          .collect(Collectors.toList()))
+                                          .buffer(5)
+                                          .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
+                                          .map(r -> EventMessage.success(EventAction.INIT,
+                                                                         new JsonObject().put("records", r))))
+                       .orElseGet(() -> Single.just(
+                           EventMessage.success(EventAction.INIT, new JsonObject().put("records", 0))));
     }
 
     private String jsonKey(Class<VertxPojo> c) {
-        return Strings.toSnakeCaseWithLC(c.getSimpleName());
+        return Strings.toSnakeCaseLC(c.getSimpleName());
     }
 
     private Single<Integer> insert(@NonNull JsonObject builtinData, @NonNull Class<VertxPojo> pojoClass) {

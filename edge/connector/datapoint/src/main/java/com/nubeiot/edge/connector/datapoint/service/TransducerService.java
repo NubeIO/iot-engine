@@ -6,15 +6,14 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.iotdata.model.Tables;
-import com.nubeiot.iotdata.model.tables.daos.TransducersDao;
-import com.nubeiot.iotdata.model.tables.pojos.Transducers;
-import com.nubeiot.iotdata.model.tables.records.TransducersRecord;
+import com.nubeiot.iotdata.model.tables.daos.TransducerDao;
+import com.nubeiot.iotdata.model.tables.pojos.Transducer;
+import com.nubeiot.iotdata.model.tables.records.TransducerRecord;
 
 import lombok.NonNull;
 
-public final class TransducerService
-    extends AbstractDataPointService<UUID, Transducers, TransducersRecord, TransducersDao>
-    implements UUIDKeyEntity<Transducers, TransducersRecord, TransducersDao> {
+public final class TransducerService extends AbstractDataPointService<UUID, Transducer, TransducerRecord, TransducerDao>
+    implements UUIDKeyEntity<Transducer, TransducerRecord, TransducerDao> {
 
     public TransducerService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
@@ -27,18 +26,18 @@ public final class TransducerService
     }
 
     @Override
-    public @NonNull Class<Transducers> modelClass() {
-        return Transducers.class;
+    public @NonNull Class<Transducer> modelClass() {
+        return Transducer.class;
     }
 
     @Override
-    public @NonNull Class<TransducersDao> daoClass() {
-        return TransducersDao.class;
+    public @NonNull Class<TransducerDao> daoClass() {
+        return TransducerDao.class;
     }
 
     @Override
-    public @NonNull JsonTable<TransducersRecord> table() {
-        return Tables.TRANSDUCERS;
+    public @NonNull JsonTable<TransducerRecord> table() {
+        return Tables.TRANSDUCER;
     }
 
 }

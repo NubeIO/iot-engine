@@ -151,8 +151,12 @@ public final class Strings {
         return t;
     }
 
-    public static String toSnakeCaseWithLC(@NonNull String text) {
+    public static String toSnakeCaseLC(@NonNull String text) {
         return toSnakeCase(text, false);
+    }
+
+    public static String toSnakeCaseUC(@NonNull String text) {
+        return toSnakeCase(text, true);
     }
 
     public static String toUrlPathWithLC(@NonNull String text) {
@@ -170,8 +174,7 @@ public final class Strings {
         if (!upper && text.equals(text.toLowerCase())) {
             return text;
         }
-        String regex = upper ? "a-z" : "A-Z";
-        String t = text.replaceAll("([" + regex + "])", separate + "$1").replaceAll("^" + separate, "");
+        String t = text.replaceAll("([A-Z])", separate + "$1").replaceAll("^" + separate, "");
         return upper ? t.toUpperCase() : t.toLowerCase();
     }
 

@@ -41,7 +41,7 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
     extends EventListener, Supplier<D> {
 
     static <POJO extends VertxPojo> String createRequestKeyName(@NonNull Class<POJO> modelClass, String jsonKeyName) {
-        return (Strings.toSnakeCaseWithLC(modelClass.getSimpleName()) + "_" +
+        return (Strings.toSnakeCaseLC(modelClass.getSimpleName()) + "_" +
                 Strings.requireNotBlank(jsonKeyName)).toLowerCase(Locale.ENGLISH);
     }
 

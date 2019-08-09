@@ -75,7 +75,7 @@ class MockEntityService {
 
     static final class BookService extends AbstractEntityService<Integer, Book, BookRecord, BookDao>
         implements SerialKeyEntity<Book, BookRecord, BookDao>,
-                   ExtensionEntityService<Integer, Book, BookRecord, BookDao> {
+                   HasReferenceEntityService<Integer, Book, BookRecord, BookDao> {
 
         BookService(@NonNull EntityHandler entityHandler) {
             super(entityHandler);

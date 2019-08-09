@@ -20,7 +20,6 @@ import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.core.sql.JsonPojo;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.edge.connector.datapoint.DataPointConfig.BuiltinData;
-import com.nubeiot.edge.connector.datapoint.service.DataPointServiceTest;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -37,7 +36,7 @@ public class DataPointGatewayVerticleTest extends DynamicServiceTestBase {
     @Override
     protected DeploymentOptions getServiceOptions() {
         BuiltinData def = BuiltinData.def();
-        def.put("device", DataPointServiceTest.DEVICE.toJson());
+        def.put("device", MockData.DEVICE.toJson());
         JsonObject sqlConfig = new JsonObject(
             "{\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString() + "\"}}");
         final JsonObject appConfig = new JsonObject().put(DataPointConfig.NAME, DataPointConfig.def(def).toJson())
@@ -51,9 +50,14 @@ public class DataPointGatewayVerticleTest extends DynamicServiceTestBase {
     }
 
     @Test
-    public void test_event_not_found(TestContext context) {
-        assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + DataPointServiceTest.DEVICE.getId(), 200,
-                           JsonPojo.from(DataPointServiceTest.DEVICE).toJson().put("data_version", "0.0.1"));
+    public void test_get_device(TestContext context) {
+        assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + MockData.DEVICE.getId(), 200,
+                           JsonPojo.from(MockData.DEVICE).toJson().put("data_version", "0.0.1"));
+    }
+
+    @Test
+    public void test_get_measure_unit(TestContext context) {
+        assertRestByClient(context, HttpMethod.GET, "/api/s/measure-unit", 200, MockData.MEASURE_UNITS);
     }
 
 }
