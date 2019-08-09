@@ -10,20 +10,21 @@ import java.util.function.Function;
 public interface HasReferenceResource {
 
     /**
-     * Defines mapping between json request field in {@code request body} and {@code actual field} in database
+     * Defines mapping between {@code json request field} in {@code request body} and {@code database field}
      *
-     * @return map field
+     * @return a mapping between {@code json request field} and {@code database field}
      */
-    default Map<String, String> jsonFields() {
+    default Map<String, String> jsonRefFields() {
         return Collections.emptyMap();
     }
 
     /**
-     * Defines mapping between json request field in {@code request body} and converter request value to actual database
-     * value. It will be used when overriding filter
+     * Defines mapping between {@code json} request field in {@code request body} and converter function from {@code
+     * request value} to {@code actual database value}. The converter output function will be used when overriding in
+     * filter
      *
-     * @return map field
+     * @return a mapping between {@code json request field} and {@code value converter}
      */
-    Map<String, Function<String, ?>> extensions();
+    Map<String, Function<String, ?>> jsonFieldConverter();
 
 }

@@ -1,11 +1,11 @@
 package com.nubeiot.core.sql;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jooq.UpdatableRecord;
 import org.jooq.exception.TooManyRowsException;
@@ -23,8 +23,7 @@ import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 
-public interface HasReferenceEntityService<KEY, MODEL extends VertxPojo, RECORD extends UpdatableRecord<RECORD>,
-                                           DAO extends VertxDAO<RECORD, MODEL, KEY>>
+public interface HasReferenceEntityService<KEY, MODEL extends VertxPojo, RECORD extends UpdatableRecord<RECORD>, DAO extends VertxDAO<RECORD, MODEL, KEY>>
     extends InternalEntityService<KEY, MODEL, RECORD, DAO>, HasReferenceResource {
 
     @Override
@@ -72,28 +71,27 @@ public interface HasReferenceEntityService<KEY, MODEL extends VertxPojo, RECORD 
 
     default Set<String> computeIgnoreFields(@NonNull RequestData requestData) {
         JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElseGet(JsonObject::new);
-        final Set<String> ignores = new HashSet<>();
-        ignores.addAll(requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
-        ignores.addAll(
-            extensions().keySet().stream().filter(s -> filter.fieldNames().contains(s)).collect(Collectors.toSet()));
-        return ignores;
+        return Stream.of(requestData.hasAudit() ? Stream.<String>empty() : IGNORE_FIELDS.stream(),
+                         jsonFieldConverter().keySet().stream().filter(s -> filter.fieldNames().contains(s)),
+                         jsonRefFields().values().stream().filter(s -> filter.fieldNames().contains(s)))
+                     .flatMap(s -> s)
+                     .collect(Collectors.toSet());
     }
 
     default RequestData recompute(RequestData requestData, Map<String, ?> extra) {
         JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElseGet(JsonObject::new);
         Optional.ofNullable(requestData.body())
                 .ifPresent(body -> body.stream()
-                                       .filter(entry -> this.extensions().containsKey(entry.getKey()))
-                                       .forEach(entry -> {
-                                           final Object v = this.extensions()
-                                                                .get(entry.getKey())
-                                                                .apply(entry.getValue().toString());
-                                           final String dbField = this.jsonFields()
-                                                                      .getOrDefault(entry.getKey(), entry.getKey());
-                                           filter.put(dbField, ReflectionClass.isJavaLangObject(v.getClass())
-                                                               ? v
-                                                               : v.toString());
-                                       }));
+                                       .filter(entry -> this.jsonFieldConverter().containsKey(entry.getKey()))
+                                       .forEach(entry -> filter.put(
+                                           jsonRefFields().getOrDefault(entry.getKey(), entry.getKey()),
+                                           Optional.ofNullable(entry.getValue())
+                                                   .map(v -> jsonFieldConverter().get(entry.getKey())
+                                                                                 .apply(v.toString()))
+                                                   .map(v -> ReflectionClass.isJavaLangObject(v.getClass())
+                                                             ? v
+                                                             : v.toString())
+                                                   .orElse(null))));
         Optional.ofNullable(extra).ifPresent(m -> filter.getMap().putAll(m));
         return RequestData.builder()
                           .body(requestData.body())

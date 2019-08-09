@@ -14,7 +14,6 @@ import com.nubeiot.core.sql.EntityService;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.HasReferenceEntityService;
 import com.nubeiot.core.sql.HasReferenceResource;
-import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.iotdata.model.Tables;
 import com.nubeiot.iotdata.model.tables.daos.PointDao;
@@ -48,7 +47,7 @@ public final class PointService extends AbstractDataPointService<UUID, Point, Po
     }
 
     @Override
-    public @NonNull JsonTable<PointRecord> table() {
+    public @NonNull com.nubeiot.iotdata.model.tables.Point table() {
         return Tables.POINT;
     }
 
@@ -65,8 +64,16 @@ public final class PointService extends AbstractDataPointService<UUID, Point, Po
     }
 
     @Override
-    public Map<String, Function<String, ?>> extensions() {
-        final HashMap<String, Function<String, ?>> extensions = new HashMap<>();
+    public Map<String, String> jsonRefFields() {
+        final Map<String, String> jsonRefFields = new HashMap<>();
+        jsonRefFields.put(DeviceService.REQUEST_KEY, table().DEVICE.getName());
+        jsonRefFields.put(NetworkService.REQUEST_KEY, table().NETWORK.getName());
+        return jsonRefFields;
+    }
+
+    @Override
+    public Map<String, Function<String, ?>> jsonFieldConverter() {
+        final Map<String, Function<String, ?>> extensions = new HashMap<>();
         extensions.put(DeviceService.REQUEST_KEY, Functions.toUUID());
         extensions.put(NetworkService.REQUEST_KEY, Functions.toUUID());
         return extensions;
@@ -77,7 +84,12 @@ public final class PointService extends AbstractDataPointService<UUID, Point, Po
         String REQUEST_KEY = EntityService.createRequestKeyName(Point.class, Tables.POINT.ID.getName());
 
         @Override
-        default Map<String, Function<String, ?>> extensions() {
+        default Map<String, String> jsonRefFields() {
+            return Collections.singletonMap(REQUEST_KEY, "point");
+        }
+
+        @Override
+        default Map<String, Function<String, ?>> jsonFieldConverter() {
             return Collections.singletonMap(REQUEST_KEY, Functions.toUUID());
         }
 

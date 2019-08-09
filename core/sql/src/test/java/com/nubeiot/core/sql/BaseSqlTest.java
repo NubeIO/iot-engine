@@ -9,6 +9,7 @@ import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.slf4j.LoggerFactory;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -41,6 +42,7 @@ public abstract class BaseSqlTest {
     private DeploymentOptions options;
     private String deployId;
 
+    @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
         ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);

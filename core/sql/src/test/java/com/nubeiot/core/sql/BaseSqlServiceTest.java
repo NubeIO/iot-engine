@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
+import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
@@ -31,7 +32,7 @@ public abstract class BaseSqlServiceTest extends BaseSqlTest {
     }
 
     @NonNull
-    public String getJdbcUrl() { return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString(); }
+    protected String getJdbcUrl() { return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString(); }
 
     protected void asserter(TestContext context, boolean isSuccess, JsonObject expected, String address,
                             EventAction action, RequestData reqData) {
@@ -44,12 +45,21 @@ public abstract class BaseSqlServiceTest extends BaseSqlTest {
         controller().request(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(action, reqData),
                              ReplyEventHandler.builder().action(action).success(msg -> {
                                  latch.countDown();
-                                 System.out.println(msg.toJson().encode());
-                                 context.assertEquals(isSuccess, msg.isSuccess());
-                                 JsonHelper.assertJson(context, async, expected, isSuccess
-                                                                                 ? Objects.requireNonNull(msg.getData())
-                                                                                 : msg.getError().toJson());
+                                 asserter(context, async, isSuccess, expected, msg);
                              }).build());
+    }
+
+    private void asserter(TestContext context, Async async, boolean isSuccess, JsonObject expected, EventMessage msg) {
+        try {
+            System.out.println(msg.toJson().encode());
+            context.assertEquals(isSuccess, msg.isSuccess());
+            JsonHelper.assertJson(context, async, expected,
+                                  isSuccess ? Objects.requireNonNull(msg.getData()) : msg.getError().toJson());
+        } catch (AssertionError error) {
+            context.fail(error);
+        } finally {
+            TestHelper.testComplete(async);
+        }
     }
 
 }

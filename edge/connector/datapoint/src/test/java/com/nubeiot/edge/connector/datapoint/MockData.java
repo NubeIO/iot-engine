@@ -37,7 +37,7 @@ public final class MockData {
     public static class PrimaryKey {
 
         public static final UUID DEVICE = UUID.fromString("d7cd3f57-a188-4462-b959-df7a23994c92");
-        public static final UUID P_GPIO_HUM = UUID.fromString("3bea3c91-850d-4409-b594-8ffb5aa6b8a0");
+        public static final UUID P_GPIO_HUMIDITY = UUID.fromString("3bea3c91-850d-4409-b594-8ffb5aa6b8a0");
         public static final UUID P_GPIO_TEMP = UUID.fromString("1efaf662-1333-48d1-a60f-8fc60f259f0e");
         public static final UUID P_BACNET_TEMP = UUID.fromString("edbe3acf-5fca-4672-b633-72aa73004917");
         public static final UUID P_BACNET_FAN = UUID.fromString("6997056d-4c1b-4d30-b205-969432f72a93");
@@ -74,7 +74,9 @@ public final class MockData {
                                            .setTagName("source")
                                            .setTagValue("droplet"),
                              new PointTag().setPoint(PrimaryKey.P_BACNET_TEMP).setTagName("sensor").setTagValue("temp"),
-                             new PointTag().setPoint(PrimaryKey.P_GPIO_TEMP).setTagName("source").setTagValue("hvac"));
+                             new PointTag().setPoint(PrimaryKey.P_BACNET_TEMP)
+                                           .setTagName("source")
+                                           .setTagValue("hvac"));
     }
 
     private static Network network() {
@@ -98,7 +100,7 @@ public final class MockData {
     }
 
     private static List<Point> points() {
-        final Point p1 = new Point().setId(PrimaryKey.P_GPIO_HUM)
+        final Point p1 = new Point().setId(PrimaryKey.P_GPIO_HUMIDITY)
                                     .setCode("2CB2B763_HUMIDITY")
                                     .setCategory(PointCategory.GPIO)
                                     .setDevice(DEVICE.getId())
@@ -106,8 +108,7 @@ public final class MockData {
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(DataType.PERCENTAGE.type())
                                     .setTransducer(PrimaryKey.TRANS_HUMIDITY)
-                                    .setEnabled(true)
-                                    .setMaxScale((short) 10)
+                                    .setEnabled(true).setMaxScale((short) 100)
                                     .setMinScale((short) 0)
                                     .setOffset((short) 0)
                                     .setPrecision((short) 3);
@@ -228,25 +229,31 @@ public final class MockData {
         return Arrays.asList(t1, t2, t3, t4, t5);
     }
 
-    public static JsonObject dataOnlyDevice() {
-        return BuiltinData.def().toJson().put("device", DEVICE.toJson());
+    public static Point search(UUID pointKey) {
+        return POINTS.stream().filter(p -> p.getId().equals(pointKey)).findFirst().orElse(null);
+    }
+
+    public static JsonObject data_Device_Network() {
+        return BuiltinData.def().toJson().put("device", DEVICE.toJson()).put("network", NETWORK.toJson());
+    }
+
+    public static JsonObject data_Equip_Thing() {
+        return data_Device_Network().put("equipment",
+                                         EQUIPS.stream().map(IEquipment::toJson).collect(Collectors.toList()))
+                                    .put("device_equip",
+                                         DEVICE_EQUIPS.stream().map(IDeviceEquip::toJson).collect(Collectors.toList()))
+                                    .put("transducer",
+                                         TRANSDUCERS.stream().map(ITransducer::toJson).collect(Collectors.toList()))
+                                    .put("thing", THINGS.stream().map(IThing::toJson).collect(Collectors.toList()));
     }
 
     public static JsonObject fullData() {
-        return dataOnlyDevice().put("network", NETWORK.toJson())
-                               .put("equipment", EQUIPS.stream().map(IEquipment::toJson).collect(Collectors.toList()))
-                               .put("device_equip",
-                                    DEVICE_EQUIPS.stream().map(IDeviceEquip::toJson).collect(Collectors.toList()))
-                               .put("transducer",
-                                    TRANSDUCERS.stream().map(ITransducer::toJson).collect(Collectors.toList()))
-                               .put("thing", THINGS.stream().map(IThing::toJson).collect(Collectors.toList()))
-                               .put("point", POINTS.stream().map(IPoint::toJson).collect(Collectors.toList()))
-                               .put("tag", TAGS.stream().map(IPointTag::toJson).collect(Collectors.toList()));
+        return data_Equip_Thing().put("point", POINTS.stream().map(IPoint::toJson).collect(Collectors.toList()))
+                                 .put("point_tag", TAGS.stream().map(IPointTag::toJson).collect(Collectors.toList()));
     }
 
     public static void main(String[] args) {
         IntStream.range(0, 10).forEach(i -> System.out.println(UUID.randomUUID()));
-        THINGS.stream().map(IThing::toJson).findFirst().ifPresent(t -> System.out.println(t.encodePrettily()));
     }
 
 }

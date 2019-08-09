@@ -131,14 +131,14 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     }
 
     private Map<Table, Set<Constraint>> listConstraint(Table<?> table) {
-        Set<Constraint> constraints = table.getKeys().stream().map(Key::constraint).collect(Collectors.toSet());
+        Stream<Constraint> constraints = table.getKeys().stream().map(Key::constraint);
         if (Objects.nonNull(table.getPrimaryKey())) {
-            constraints.add(table.getPrimaryKey().constraint());
+            constraints = Stream.concat(constraints, Stream.of(table.getPrimaryKey().constraint()));
         }
         if (Objects.nonNull(table.getReferences())) {
-            constraints.addAll(table.getReferences().stream().map(ForeignKey::constraint).collect(Collectors.toSet()));
+            constraints = Stream.concat(constraints, table.getReferences().stream().map(ForeignKey::constraint));
         }
-        return Collections.singletonMap(table, constraints);
+        return Collections.singletonMap(table, constraints.collect(Collectors.toSet()));
     }
 
     private Table<?> createTableAndIndex(Configuration jooqConfig, Table<?> table) {

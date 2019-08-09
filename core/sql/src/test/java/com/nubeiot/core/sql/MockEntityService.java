@@ -113,7 +113,7 @@ class MockEntityService {
         }
 
         @Override
-        public Map<String, Function<String, ?>> extensions() {
+        public Map<String, Function<String, ?>> jsonFieldConverter() {
             return Collections.singletonMap(Tables.BOOK.AUTHOR_ID.getName().toLowerCase(), Functions.toInt());
         }
 

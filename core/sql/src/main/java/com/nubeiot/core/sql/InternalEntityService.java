@@ -250,9 +250,10 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
             return sql;
         }
         final Map<String, String> jsonFields = table().jsonFields();
-        filter.stream()
-              .forEach(f -> sql.and(
-                  ((Field) table().field(jsonFields.getOrDefault(f.getKey(), f.getKey()))).eq(f.getValue())));
+        filter.stream().map(entry -> {
+            final Field field = table().field(jsonFields.getOrDefault(entry.getKey(), entry.getKey()));
+            return Optional.ofNullable(entry.getValue()).map(field::eq).orElseGet(field::isNull);
+        }).forEach(sql::and);
         return sql;
     }
 

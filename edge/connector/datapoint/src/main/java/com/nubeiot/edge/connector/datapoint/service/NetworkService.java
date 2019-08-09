@@ -15,7 +15,6 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.HasReferenceEntityService;
-import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.iotdata.model.Tables;
 import com.nubeiot.iotdata.model.tables.daos.NetworkDao;
@@ -38,7 +37,7 @@ public final class NetworkService extends AbstractDataPointService<UUID, Network
 
     static void optimizeAlias(JsonObject req) {
         Optional.ofNullable(req).ifPresent(r -> {
-            if (NetworkService.NULL_ALIASES.contains(r.getString(NetworkService.REQUEST_KEY, null))) {
+            if (NetworkService.NULL_ALIASES.contains(r.getString(NetworkService.REQUEST_KEY, "").toLowerCase())) {
                 r.put(NetworkService.REQUEST_KEY, (String) null);
             }
         });
@@ -60,7 +59,7 @@ public final class NetworkService extends AbstractDataPointService<UUID, Network
     }
 
     @Override
-    public @NonNull JsonTable<NetworkRecord> table() {
+    public @NonNull com.nubeiot.iotdata.model.tables.Network table() {
         return Tables.NETWORK;
     }
 
@@ -70,13 +69,13 @@ public final class NetworkService extends AbstractDataPointService<UUID, Network
     }
 
     @Override
-    public Map<String, Function<String, ?>> extensions() {
-        return Collections.singletonMap(DeviceService.REQUEST_KEY, Functions.toUUID());
+    public Map<String, String> jsonRefFields() {
+        return Collections.singletonMap(DeviceService.REQUEST_KEY, table().DEVICE.getName());
     }
 
     @Override
-    public Map<String, String> jsonFields() {
-        return Collections.singletonMap(DeviceService.REQUEST_KEY, "device");
+    public Map<String, Function<String, ?>> jsonFieldConverter() {
+        return Collections.singletonMap(DeviceService.REQUEST_KEY, Functions.toUUID());
     }
 
 }
