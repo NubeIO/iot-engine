@@ -1,6 +1,5 @@
 package com.nubeiot.edge.connector.datapoint;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -58,8 +57,9 @@ public final class DataPointVerticle extends ContainerVerticle {
 
     @SuppressWarnings("unchecked")
     private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, DataPointService s) {
-        return Observable.fromIterable(((Map<String, EventMethodDefinition>) s.definitions()).entrySet())
-                         .flatMapSingle(e -> discovery.addEventMessageRecord(e.getKey(), s.address(), e.getValue()));
+        return Observable.fromIterable(s.definitions())
+                         .flatMapSingle(
+                             e -> discovery.addEventMessageRecord(s.api(), s.address(), (EventMethodDefinition) e));
     }
 
 }

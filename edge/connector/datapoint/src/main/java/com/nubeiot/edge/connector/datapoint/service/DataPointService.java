@@ -25,7 +25,8 @@ public interface DataPointService<K, M extends VertxPojo, R extends UpdatableRec
         final Map<Class, Object> inputs = Collections.singletonMap(EntityHandler.class, entityHandler);
         return ReflectionClass.stream(DataPointService.class.getPackage().getName(), DataPointService.class,
                                       ReflectionClass.publicClass())
-                              .map(clazz -> ReflectionClass.createObject(clazz, inputs)).filter(Objects::nonNull)
+                              .map(clazz -> ReflectionClass.createObject(clazz, inputs))
+                              .filter(Objects::nonNull)
                               .collect(Collectors.toSet());
     }
 
@@ -45,9 +46,8 @@ public interface DataPointService<K, M extends VertxPojo, R extends UpdatableRec
         return this.getClass().getName();
     }
 
-    default Map<String, EventMethodDefinition> definitions() {
-        return Collections.singletonMap(api(),
-                                        EventMethodDefinition.createDefault(servicePath(), "/:" + requestKeyName()));
+    default Set<EventMethodDefinition> definitions() {
+        return Collections.singleton(EventMethodDefinition.createDefault(servicePath(), "/:" + requestKeyName()));
     }
 
     default String servicePath() {

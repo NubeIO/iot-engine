@@ -1,5 +1,10 @@
 package com.nubeiot.edge.connector.datapoint.service;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.BigSerialKeyEntity;
 import com.nubeiot.core.sql.HasReferenceEntityService;
@@ -43,7 +48,14 @@ public final class TagPointService extends AbstractDataPointService<Long, PointT
 
     @Override
     public @NonNull String requestKeyName() {
-        return jsonKeyName();
+        return "tag_" + jsonKeyName();
+    }
+
+    @Override
+    public Set<EventMethodDefinition> definitions() {
+        return Stream.concat(super.definitions().stream(),
+                             Stream.of(EventMethodDefinition.createDefault("/point/:point_id/tags", "tag_id")))
+                     .collect(Collectors.toSet());
     }
 
     @Override

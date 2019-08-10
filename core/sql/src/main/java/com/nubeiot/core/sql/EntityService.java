@@ -206,8 +206,9 @@ public interface EntityService<K, M extends VertxPojo, R extends UpdatableRecord
      */
     @NonNull
     default K parsePrimaryKey(@NonNull RequestData requestData) throws IllegalArgumentException {
-        return Optional.ofNullable(requestData.body().getValue(requestKeyName()))
-                       .map(k -> parsePrimaryKey(k.toString()))
+        return Optional.ofNullable(requestData.body())
+                       .flatMap(body -> Optional.ofNullable(body.getValue(requestKeyName()))
+                                                .map(k -> parsePrimaryKey(k.toString())))
                        .orElseThrow(() -> new IllegalArgumentException("Missing key " + requestKeyName()));
     }
 
