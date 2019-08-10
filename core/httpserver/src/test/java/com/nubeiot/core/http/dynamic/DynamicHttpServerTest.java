@@ -16,7 +16,7 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.http.dynamic.mock.HttpServiceServer;
+import com.nubeiot.core.http.dynamic.mock.MockHttpServiceServer;
 
 @RunWith(VertxUnitRunner.class)
 public class DynamicHttpServerTest extends DynamicServiceTestBase {
@@ -33,7 +33,7 @@ public class DynamicHttpServerTest extends DynamicServiceTestBase {
 
     @Override
     protected <T extends ContainerVerticle> T service() {
-        return (T) new HttpServiceServer();
+        return (T) new MockHttpServiceServer();
     }
 
     @Test

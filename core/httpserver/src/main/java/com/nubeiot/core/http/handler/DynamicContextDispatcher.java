@@ -1,5 +1,6 @@
 package com.nubeiot.core.http.handler;
 
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import io.reactivex.Single;
@@ -24,9 +25,14 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Represents for dispatching {@code HTTP request} from client then
+ * Represents for {@code HTTP request} dispatcher between {@code client} and {@code micro service owner}
+ * <p>
+ * It's responsible for keeping {@code micro REST API} definition to handle an incoming request context then forwarding
+ * to {@code micro service owner}. After receiving {@code micro service owner} response, it will return back result to
+ * client
  *
- * @param <T>
+ * @param <T> Dynamic REST API
+ * @see DynamicRestApi
  */
 public interface DynamicContextDispatcher<T extends DynamicRestApi> extends Handler<RoutingContext>, Supplier<T> {
 
@@ -42,38 +48,76 @@ public interface DynamicContextDispatcher<T extends DynamicRestApi> extends Hand
         return null;
     }
 
-    @NonNull ServiceDiscoveryController getDispatcher();
-
-    @NonNull String getGatewayPath();
-
-    Single<ResponseData> process(HttpMethod httpMethod, String path, RoutingContext context);
-
-    default boolean filter(Record record) {
-        return record.getName().equals(get().name());
-    }
-
+    /**
+     * Handle incoming request
+     *
+     * @param context Request context
+     */
     @Override
     default void handle(RoutingContext context) {
         HttpMethod httpMethod = validateMethod(context.request().method());
         String path = context.request().path();
         String servicePath = Urls.normalize(path.replaceAll("^" + getGatewayPath(), ""));
-        this.process(httpMethod, servicePath, context)
-            .subscribe(responseData -> handleResponse(context, responseData),
-                       throwable -> handleError(context, throwable));
+        this.handle(httpMethod, servicePath, context)
+            .subscribe(r -> handleSuccess(context, r), t -> handleError(context, ErrorMessage.parse(t)));
     }
 
-    default void handleResponse(RoutingContext context, ResponseData responseData) {
+    /**
+     * Service dispatcher
+     *
+     * @return service dispatcher
+     * @see ServiceDiscoveryController
+     */
+    @NonNull ServiceDiscoveryController getDispatcher();
+
+    /**
+     * Gateway service path
+     *
+     * @return gateway service path
+     */
+    @NonNull String getGatewayPath();
+
+    /**
+     * Handle incoming request then dispatch to a {@code micro service owner}
+     *
+     * @param httpMethod HTTP method
+     * @param path       url path
+     * @param context    Request context
+     * @return single response data
+     * @see ResponseData
+     */
+    Single<ResponseData> handle(HttpMethod httpMethod, String path, RoutingContext context);
+
+    /**
+     * Filter {@code micro service owner} based on incoming request
+     *
+     * @param method Current request {@code HTTP Method}
+     * @param path   Current request {@code HTTP Path}
+     * @return filter function
+     */
+    default Predicate<Record> filter(HttpMethod method, String path) {
+        return record -> record.getName().equals(get().name());
+    }
+
+    /**
+     * Handle success response from {@code micro service owner}
+     *
+     * @param context      Routing context
+     * @param responseData Response data
+     */
+    default void handleSuccess(RoutingContext context, ResponseData responseData) {
         context.response()
                .setStatusCode(HttpStatusMapping.success(context.request().method()).code())
                .end(HttpUtils.prettify(responseData.body(), context.request()));
     }
 
-    default void handleError(RoutingContext context, Throwable t) {
-        ErrorMessage errorMessage = ErrorMessage.parse(t);
-        handleErrorMessage(context, errorMessage);
-    }
-
-    default void handleErrorMessage(RoutingContext context, ErrorMessage errorMessage) {
+    /**
+     * Handle error response from {@code micro service owner}
+     *
+     * @param context      Routing context
+     * @param errorMessage Response data
+     */
+    default void handleError(@NonNull RoutingContext context, ErrorMessage errorMessage) {
         context.response()
                .setStatusCode(HttpStatusMapping.error(context.request().method(), errorMessage.getCode()).code())
                .end(HttpUtils.prettify(errorMessage.toJson(), context.request()));

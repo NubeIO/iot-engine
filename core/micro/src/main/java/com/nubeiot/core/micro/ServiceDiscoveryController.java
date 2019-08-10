@@ -40,6 +40,7 @@ import com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor;
 import com.nubeiot.core.micro.monitor.ServiceGatewayUsageMonitor;
 import com.nubeiot.core.micro.type.EventMessagePusher;
 import com.nubeiot.core.micro.type.EventMessageService;
+import com.nubeiot.core.utils.Functions;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -137,12 +138,12 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return addDecoratorRecord(EventMessageService.createRecord(name, address, definition, metadata));
     }
 
-    public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
+    public Single<ResponseData> executeHttpService(Predicate<Record> filter, String path, HttpMethod method,
                                                    RequestData requestData) {
         return executeHttpService(filter, path, method, requestData, null);
     }
 
-    public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
+    public Single<ResponseData> executeHttpService(Predicate<Record> filter, String path, HttpMethod method,
                                                    RequestData requestData, HttpClientOptions options) {
         return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
             ServiceReference reference = get().getReferenceWithConfiguration(record, Objects.isNull(options)
@@ -154,19 +155,18 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {}::{}", t, method, path));
     }
 
-    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
-                                                           HttpMethod method, RequestData requestData) {
+    public Single<ResponseData> executeEventMessageService(Predicate<Record> filter, String path, HttpMethod method,
+                                                           RequestData requestData) {
         return executeEventMessageService(filter, path, method, requestData.toJson());
     }
 
-    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
-                                                           HttpMethod method, JsonObject requestData) {
+    public Single<ResponseData> executeEventMessageService(Predicate<Record> filter, String path, HttpMethod method,
+                                                           JsonObject requestData) {
         return executeEventMessageService(filter, path, method, requestData, null);
     }
 
-    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
-                                                           HttpMethod method, JsonObject requestData,
-                                                           DeliveryOptions options) {
+    public Single<ResponseData> executeEventMessageService(Predicate<Record> filter, String path, HttpMethod method,
+                                                           JsonObject requestData, DeliveryOptions options) {
         return findRecord(filter, EventMessageService.TYPE).flatMap(record -> {
             JsonObject config = new JsonObject().put(EventMessageService.SHARED_KEY_CONFIG, sharedKey)
                                                 .put(EventMessageService.DELIVERY_OPTIONS_CONFIG,
@@ -179,8 +179,8 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
-    private Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
-        return getRx().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r))
+    private Single<Record> findRecord(Predicate<Record> filter, String type) {
+        return getRx().rxGetRecord(Functions.and(r -> type.equals(r.getType()), filter)::test)
                       .switchIfEmpty(Single.error(
                           new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
     }

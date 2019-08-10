@@ -47,6 +47,10 @@ public final class Functions {
         return Arrays.stream(predicates).reduce(Predicate::or).orElse(x -> false);
     }
 
+    public static <T> Function<T, Boolean> to(Predicate<T> predicate) {
+        return predicate::test;
+    }
+
     public static Function<String, Integer> toInt() {
         return Integer::valueOf;
     }

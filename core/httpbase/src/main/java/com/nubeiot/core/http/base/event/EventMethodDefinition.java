@@ -1,9 +1,11 @@
 package com.nubeiot.core.http.base.event;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -200,11 +202,17 @@ public final class EventMethodDefinition implements JsonData {
         return EventMethodDefinition.builder().servicePath(sPath).useRequestData(useRequestData).mapping(map).build();
     }
 
+    public static EventMethodDefinition from(@NonNull JsonObject json) {
+        return JsonData.from(json, EventMethodDefinition.class);
+    }
+
+    public Optional<String> search(String actualPath) {
+        return Optional.of(Strings.requireNotBlank(actualPath))
+                       .filter(path -> path.matches(searchRegex(this.servicePath)));
+    }
+
     public EventAction search(String actualPath, @NonNull HttpMethod method) {
-        final String path = Strings.requireNotBlank(actualPath);
-        if (!path.matches(searchRegex(this.servicePath))) {
-            throw new NotFoundException("Not found path " + actualPath);
-        }
+        final String path = search(actualPath).orElseThrow(() -> new NotFoundException("Not found path " + actualPath));
         return mapping.stream()
                       .filter(mapping -> {
                           String regex = Strings.isBlank(mapping.getRegexPath()) ? servicePath : mapping.getRegexPath();

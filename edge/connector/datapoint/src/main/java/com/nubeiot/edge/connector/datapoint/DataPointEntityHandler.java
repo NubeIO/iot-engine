@@ -45,7 +45,7 @@ class DataPointEntityHandler extends EntityHandler implements EntityAuditHandler
 
     private static final Map<Class<? extends VertxPojo>, Integer> DEPENDENCIES = initDependencies();
 
-    public DataPointEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
+    DataPointEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         super(jooqConfig, vertx);
     }
 

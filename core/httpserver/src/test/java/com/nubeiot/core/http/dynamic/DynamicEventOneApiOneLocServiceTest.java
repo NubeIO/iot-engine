@@ -3,7 +3,6 @@ package com.nubeiot.core.http.dynamic;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -12,20 +11,16 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-import com.nubeiot.core.TestHelper;
-import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.http.dynamic.mock.MockEventMessageService;
+import com.nubeiot.core.http.dynamic.mock.MockEventOneApiOneLocService;
 
 @RunWith(VertxUnitRunner.class)
-public class DynamicEventServiceTest extends DynamicServiceTestBase {
-
-    @BeforeClass
-    public static void beforeSuite() { TestHelper.setup(); }
+public class DynamicEventOneApiOneLocServiceTest extends DynamicServiceTestBase {
 
     @Override
-    protected <T extends ContainerVerticle> T service() {
-        return (T) new MockEventMessageService();
+    @SuppressWarnings("unchecked")
+    protected MockEventOneApiOneLocService service() {
+        return new MockEventOneApiOneLocService();
     }
 
     @Test

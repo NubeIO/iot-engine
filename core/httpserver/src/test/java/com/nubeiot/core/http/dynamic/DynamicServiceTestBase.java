@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.skyscreamer.jsonassert.Customization;
 
 import io.vertx.core.DeploymentOptions;
@@ -17,11 +18,14 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpServerTestBase;
-import com.nubeiot.core.http.dynamic.mock.GatewayServer;
+import com.nubeiot.core.http.dynamic.mock.MockGatewayServer;
 
 public abstract class DynamicServiceTestBase extends HttpServerTestBase {
 
     static final Customization IGNORE_URI = new Customization("message.uri", (o1, o2) -> false);
+
+    @BeforeClass
+    public static void beforeSuite() { TestHelper.setup(); }
 
     @Before
     public void before(TestContext context) throws IOException {
@@ -66,7 +70,7 @@ public abstract class DynamicServiceTestBase extends HttpServerTestBase {
 
     @SuppressWarnings("unchecked")
     protected <T extends ContainerVerticle> Supplier<T> gateway() {
-        return () -> (T) new GatewayServer();
+        return () -> (T) new MockGatewayServer();
     }
 
     protected DeploymentOptions getServiceOptions() throws IOException {

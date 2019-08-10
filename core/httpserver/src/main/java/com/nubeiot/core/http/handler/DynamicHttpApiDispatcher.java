@@ -12,13 +12,13 @@ import com.nubeiot.core.micro.ServiceDiscoveryController;
 
 public final class DynamicHttpApiDispatcher<T extends DynamicHttpRestApi> extends AbstractDynamicContextDispatcher<T> {
 
-    public DynamicHttpApiDispatcher(T api, String gatewayPath, ServiceDiscoveryController dispatcher) {
+    DynamicHttpApiDispatcher(T api, String gatewayPath, ServiceDiscoveryController dispatcher) {
         super(api, gatewayPath, dispatcher);
     }
 
     @Override
-    public Single<ResponseData> process(HttpMethod httpMethod, String path, RoutingContext context) {
-        return getDispatcher().executeHttpService(this::filter, path, httpMethod,
+    public Single<ResponseData> handle(HttpMethod httpMethod, String path, RoutingContext context) {
+        return getDispatcher().executeHttpService(filter(httpMethod, path), path, httpMethod,
                                                   RequestDataConverter.convert(context));
     }
 

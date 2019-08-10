@@ -18,7 +18,7 @@ import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 
-public class HttpServiceServer extends ContainerVerticle {
+public class MockHttpServiceServer extends ContainerVerticle {
 
     private HttpServerContext httpContext;
     private MicroContext microContext;

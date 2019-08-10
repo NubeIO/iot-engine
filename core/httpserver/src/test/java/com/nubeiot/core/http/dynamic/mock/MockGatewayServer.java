@@ -5,7 +5,7 @@ import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.micro.MicroserviceProvider;
 
-public class GatewayServer extends ContainerVerticle {
+public class MockGatewayServer extends ContainerVerticle {
 
     @Override
     public void start() {
