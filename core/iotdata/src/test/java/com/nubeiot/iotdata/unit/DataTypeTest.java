@@ -3,35 +3,38 @@ package com.nubeiot.iotdata.unit;
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.JsonData;
 
 public class DataTypeTest {
 
     @Test
     public void test_serialize_dataType() throws JSONException {
-        JSONAssert.assertEquals("{\"type\":\"number\"}", DataType.NUMBER.toJson().encode(), JSONCompareMode.STRICT);
-        JSONAssert.assertEquals("{\"type\":\"percentage\", \"symbol\": \"%\"}", DataType.PERCENTAGE.toJson().encode(),
-                                JSONCompareMode.STRICT);
-        JSONAssert.assertEquals("{\"type\":\"celsius\", \"symbol\": \"U+2103\"}", DataType.CELSIUS.toJson().encode(),
-                                JSONCompareMode.STRICT);
-        JSONAssert.assertEquals("{\"type\":\"voltage\", \"symbol\": \"V\"}", DataType.VOLTAGE.toJson().encode(),
-                                JSONCompareMode.STRICT);
-        JSONAssert.assertEquals("{\"type\":\"dBm\", \"symbol\": \"dBm\"}", DataType.DBM.toJson().encode(),
-                                JSONCompareMode.STRICT);
-        JSONAssert.assertEquals("{\"type\":\"hPa\", \"symbol\": \"hPa\"}", DataType.HPA.toJson().encode(),
-                                JSONCompareMode.STRICT);
-        JSONAssert.assertEquals("{\"type\":\"lux\", \"symbol\": \"lx\"}", DataType.LUX.toJson().encode(),
-                                JSONCompareMode.STRICT);
-        JSONAssert.assertEquals("{\"type\":\"kWh\", \"symbol\": \"kWh\"}", DataType.KWH.toJson().encode(),
-                                JSONCompareMode.STRICT);
-        JSONAssert.assertEquals("{\"type\":\"bool\", \"possible_values\":{\"0.5\":[\"true\",\"on\",\"start\",\"1\"]," +
-                                "\"0.0\":[\"false\",\"off\",\"stop\",\"0\",\"null\"]}}",
-                                DataType.BOOLEAN.toJson().encode(), JSONCompareMode.STRICT);
+        JsonHelper.assertJson(new JsonObject("{\"type\":\"number\", \"category\":\"ALL\"}"), DataType.NUMBER.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"type\":\"percentage\", \"symbol\": \"%\", \"category\":\"ALL\"}"),
+                              DataType.PERCENTAGE.toJson());
+        JsonHelper.assertJson(
+            new JsonObject("{\"type\":\"celsius\", \"symbol\": \"U+2103\", \"category\":\"TEMPERATURE\"}"),
+            DataType.CELSIUS.toJson());
+        JsonHelper.assertJson(
+            new JsonObject("{\"type\":\"voltage\", \"symbol\": \"V\", \"category\":\"ELECTRIC_POTENTIAL\"}"),
+            DataType.VOLTAGE.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"type\":\"dBm\", \"symbol\": \"dBm\", \"category\":\"POWER\"}"),
+                              DataType.DBM.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"type\":\"hPa\", \"symbol\": \"hPa\", \"category\":\"PRESSURE\"}"),
+                              DataType.HPA.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"type\":\"lux\", \"symbol\": \"lx\", \"category\":\"ILLUMINATION\"}"),
+                              DataType.LUX.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"type\":\"kWh\", \"symbol\": \"kWh\", \"category\":\"POWER\"}"),
+                              DataType.KWH.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"type\":\"rpm\", \"symbol\": \"rpm\", \"category\":\"VELOCITY\"}"),
+                              DataType.RPM.toJson());
+        JsonHelper.assertJson(new JsonObject(
+            "{\"type\":\"bool\",\"category\":\"ALL\", \"possible_values\":{\"0.5\":[\"true\",\"on\",\"start\",\"1\"]," +
+            "\"0.0\":[\"false\",\"off\",\"stop\",\"0\",\"null\"]}}"), DataType.BOOLEAN.toJson());
     }
 
     @Test
@@ -69,8 +72,7 @@ public class DataTypeTest {
         Assert.assertTrue(dt instanceof NumberDataType);
         Assert.assertEquals("bool", dt.type());
         Assert.assertNull(dt.unit());
-        JSONAssert.assertEquals(possibleValues.encode(), JsonObject.mapFrom(dt.possibleValues()).encode(),
-                                JSONCompareMode.STRICT);
+        JsonHelper.assertJson(possibleValues, JsonObject.mapFrom(dt.possibleValues()));
     }
 
 }
