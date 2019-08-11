@@ -36,9 +36,9 @@ public class MockWebsocketEvent {
                                                                                                           SERVER_PUBLISHER);
 
 
-    public static class MockWebsocketEventServerHandler extends MockEventBusHandler {
+    public static class MockWebsocketEventServerListener extends MockEventBusListener {
 
-        public MockWebsocketEventServerHandler(EventBus eventBus) {
+        public MockWebsocketEventServerListener(EventBus eventBus) {
             super(eventBus, SERVER_PROCESSOR);
         }
 

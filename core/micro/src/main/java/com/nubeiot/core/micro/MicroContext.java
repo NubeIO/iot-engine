@@ -3,10 +3,10 @@ package com.nubeiot.core.micro;
 import java.util.Objects;
 
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.component.UnitContext;
 import com.nubeiot.core.micro.MicroConfig.GatewayConfig;
@@ -27,22 +27,18 @@ public final class MicroContext extends UnitContext {
     @Getter
     private ServiceDiscoveryController localController;
 
-    MicroContext create(io.vertx.core.Vertx vertx, MicroConfig config) {
+    MicroContext create(Vertx vertx, MicroConfig config) {
         return create(vertx, config, null);
     }
 
-    MicroContext create(io.vertx.core.Vertx vertx, MicroConfig config, String sharedKey) {
-        create(Vertx.newInstance(vertx), config, sharedKey);
-        return this;
-    }
-
-    private void create(Vertx vertx, MicroConfig config, String sharedKey) {
+    MicroContext create(Vertx vertx, MicroConfig config, String sharedKey) {
         this.breakerController = CircuitBreakerController.create(vertx, config.getCircuitConfig());
         this.clusterController = new ClusterSDController(vertx, config.getDiscoveryConfig(), sharedKey,
                                                          this.breakerController);
         this.localController = new LocalSDController(vertx, config.getLocalDiscoveryConfig(), sharedKey,
                                                      this.breakerController);
         setupGateway(vertx, config.getGatewayConfig(), clusterController, localController);
+        return this;
     }
 
     private void setupGateway(Vertx vertx, GatewayConfig config, ServiceDiscoveryController clusterController,
@@ -53,11 +49,10 @@ public final class MicroContext extends UnitContext {
         }
         logger.info("Service Discovery Gateway Config : {}", config.toJson().encode());
         if (vertx.isClustered()) {
-            clusterController.subscribe(vertx.getDelegate(), config.getClusterAnnounceMonitorClass(),
+            clusterController.subscribe(vertx, config.getClusterAnnounceMonitorClass(),
                                         config.getClusterUsageMonitorClass());
         }
-        localController.subscribe(vertx.getDelegate(), config.getLocalAnnounceMonitorClass(),
-                                  config.getLocalUsageMonitorClass());
+        localController.subscribe(vertx, config.getLocalAnnounceMonitorClass(), config.getLocalUsageMonitorClass());
     }
 
     void unregister(Future future) {

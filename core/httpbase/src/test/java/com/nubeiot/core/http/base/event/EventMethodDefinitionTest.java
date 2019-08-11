@@ -34,14 +34,11 @@ public class EventMethodDefinitionTest {
 
     @Test(expected = IllegalStateException.class)
     public void test_create_duplicate() {
-        ActionMethodMapping mapping = new ActionMethodMapping() {
-            @Override
-            public Map<EventAction, HttpMethod> get() {
-                Map<EventAction, HttpMethod> test = new HashMap<>();
-                test.put(EventAction.GET_LIST, HttpMethod.GET);
-                test.put(EventAction.GET_ONE, HttpMethod.GET);
-                return test;
-            }
+        ActionMethodMapping mapping = () -> {
+            Map<EventAction, HttpMethod> test = new HashMap<>();
+            test.put(EventAction.GET_LIST, HttpMethod.GET);
+            test.put(EventAction.GET_ONE, HttpMethod.GET);
+            return test;
         };
         EventMethodDefinition.create("/abc", mapping);
     }
@@ -65,17 +62,14 @@ public class EventMethodDefinitionTest {
 
     @Test
     public void test_no_capture() {
-        ActionMethodMapping mapping = new ActionMethodMapping() {
-            @Override
-            public Map<EventAction, HttpMethod> get() {
-                Map<EventAction, HttpMethod> test = new HashMap<>();
-                test.put(EventAction.GET_LIST, HttpMethod.GET);
-                test.put(EventAction.CREATE, HttpMethod.POST);
-                test.put(EventAction.UPDATE, HttpMethod.PUT);
-                test.put(EventAction.PATCH, HttpMethod.PATCH);
-                test.put(EventAction.REMOVE, HttpMethod.DELETE);
-                return test;
-            }
+        ActionMethodMapping mapping = () -> {
+            Map<EventAction, HttpMethod> test = new HashMap<>();
+            test.put(EventAction.GET_LIST, HttpMethod.GET);
+            test.put(EventAction.CREATE, HttpMethod.POST);
+            test.put(EventAction.UPDATE, HttpMethod.PUT);
+            test.put(EventAction.PATCH, HttpMethod.PATCH);
+            test.put(EventAction.REMOVE, HttpMethod.DELETE);
+            return test;
         };
         EventMethodDefinition definition = EventMethodDefinition.create("/translate", mapping);
         Assert.assertTrue(definition.isUseRequestData());

@@ -62,7 +62,9 @@ public final class KafkaHeaderConverter {
         EventAction prevAction = getHeader(headers, PREV_ACTION, EventAction.UNKNOWN);
         Status status = getHeader(headers, STATUS, Status.INITIAL);
         ErrorMessage error = status == Status.FAILED ? getHeader(headers) : null;
-        return EventMessage.from(status, action, prevAction, error);
+        return Objects.isNull(error)
+               ? EventMessage.from(status, action, prevAction)
+               : EventMessage.error(action, prevAction, error);
     }
 
     @SuppressWarnings("unchecked")

@@ -31,9 +31,8 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
     /**
      * For test independent
      */
-    protected UnitVerticle(T context, String sharedKey, Path testDir) {
-        this(context);
-        this.registerSharedData(Strings.isBlank(sharedKey) ? toString() : sharedKey);
+    protected void injectTest(String sharedKey, Path testDir) {
+        this.registerSharedKey(Strings.isBlank(sharedKey) ? toString() : sharedKey);
         this.testDir = Objects.isNull(testDir) ? FileUtils.DEFAULT_DATADIR : testDir;
     }
 
@@ -51,7 +50,7 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
     }
 
     @Override
-    public final Unit<C, T> registerSharedData(String sharedKey) {
+    public final Unit<C, T> registerSharedKey(String sharedKey) {
         logger.debug("Register SharedData with shared key: {}", sharedKey);
         this.sharedKey = sharedKey;
         return this;

@@ -15,6 +15,7 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -59,63 +60,81 @@ public final class EventMessage implements Serializable, JsonData {
         this.error = error;
     }
 
-    private EventMessage(EventAction action, Status status) {
+    private EventMessage(Status status, EventAction action) {
         this(status, action, null, null, null, null);
     }
 
-    private EventMessage(EventAction action, Status status, @NonNull ErrorMessage error) {
-        this(status, action, null, null, null, error);
+    private EventMessage(Status status, EventAction action, @NonNull ErrorMessage error) {
+        this(status, action, null, error);
     }
 
-    private EventMessage(EventAction action, Status status, @NonNull JsonData data) {
+    private EventMessage(Status status, EventAction action, EventAction prevAction, @NonNull ErrorMessage error) {
+        this(status, action, prevAction, null, null, error);
+    }
+
+    private EventMessage(Status status, EventAction action, @NonNull JsonData data) {
         this(status, action, null, data.toJson().getMap(), data.getClass(), null);
     }
 
-    private EventMessage(EventAction action, Status status, @NonNull JsonObject data) {
-        this(status, action, null, data.getMap(), null, null);
+    private EventMessage(Status status, EventAction action, JsonObject data) {
+        this(status, action, null, data);
+    }
+
+    private EventMessage(Status status, EventAction action, EventAction prevAction, JsonObject data) {
+        this(status, action, prevAction, Objects.isNull(data) ? null : data.getMap(), null, null);
     }
 
     public static EventMessage error(EventAction action, @NonNull Throwable throwable) {
-        return new EventMessage(action, Status.FAILED, ErrorMessage.parse(throwable));
+        return new EventMessage(Status.FAILED, action, ErrorMessage.parse(throwable));
     }
 
-    public static EventMessage error(EventAction action, @NonNull NubeException.ErrorCode code,
-                                     @NonNull String message) {
-        return new EventMessage(action, Status.FAILED, ErrorMessage.parse(code, message));
+    public static EventMessage error(@NonNull EventAction action, @NonNull ErrorCode code, @NonNull String message) {
+        return new EventMessage(Status.FAILED, action, ErrorMessage.parse(code, message));
+    }
+
+    public static EventMessage error(@NonNull EventAction action, EventAction prevAction,
+                                     @NonNull ErrorMessage message) {
+        return new EventMessage(Status.FAILED, action, prevAction, message);
     }
 
     public static EventMessage initial(EventAction action) {
-        return new EventMessage(action, Status.INITIAL);
+        return new EventMessage(Status.INITIAL, action);
     }
 
     public static EventMessage initial(EventAction action, JsonObject data) {
-        return new EventMessage(action, Status.INITIAL, data);
+        return new EventMessage(Status.INITIAL, action, data);
     }
 
     public static EventMessage initial(EventAction action, JsonData data) {
-        return new EventMessage(action, Status.INITIAL, data);
+        return new EventMessage(Status.INITIAL, action, data);
     }
 
     public static EventMessage success(EventAction action) {
-        return new EventMessage(action, Status.SUCCESS);
+        return new EventMessage(Status.SUCCESS, action);
     }
 
     public static EventMessage success(EventAction action, JsonObject data) {
-        return new EventMessage(action, Status.SUCCESS, data);
+        return new EventMessage(Status.SUCCESS, action, data);
     }
 
     public static EventMessage success(EventAction action, JsonData data) {
-        return new EventMessage(action, Status.SUCCESS, data);
+        return new EventMessage(Status.SUCCESS, action, data);
     }
 
-    public static EventMessage from(@NonNull Status status, @NonNull EventAction action, EventAction prevAction,
-                                    ErrorMessage message) {
-        return new EventMessage(status, action, prevAction, null, null, message);
+    public static EventMessage from(@NonNull Status status, @NonNull EventAction action, EventAction prevAction) {
+        return new EventMessage(status, action, prevAction, (JsonObject) null);
     }
 
     public static EventMessage from(@NonNull Status status, @NonNull EventAction action, EventAction prevAction,
                                     JsonObject data) {
-        return new EventMessage(action, status, data);
+        return new EventMessage(status, action, prevAction, data);
+    }
+
+    public static EventMessage override(@NonNull EventMessage message, @NonNull EventAction action) {
+        if (message.isError()) {
+            return error(action, message.getAction(), message.getError());
+        }
+        return from(message.getStatus(), action, message.getAction(), message.getData());
     }
 
     /**

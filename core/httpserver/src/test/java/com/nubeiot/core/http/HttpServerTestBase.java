@@ -7,8 +7,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
 import org.skyscreamer.jsonassert.Customization;
 
 import io.reactivex.Single;
@@ -46,8 +44,6 @@ import com.zandero.rest.RestRouter;
 public class HttpServerTestBase {
 
     public static final String DEFAULT_HOST = "127.0.0.1";
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
     protected Vertx vertx;
     protected HttpConfig httpConfig;
     protected HttpClient client;
@@ -120,13 +116,12 @@ public class HttpServerTestBase {
 
     protected HttpServer startServer(TestContext context, HttpServerRouter httpRouter) {
         return VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(httpConfig.toJson()),
-                                  createHttpServer(context, httpRouter));
+                                  new HttpServer(httpRouter));
     }
 
-    protected void startServer(TestContext context, HttpServerRouter httpRouter, Consumer<Throwable> consumer) {
-        vertx.deployVerticle(createHttpServer(context, httpRouter),
-                             new DeploymentOptions().setConfig(httpConfig.toJson()),
-                             context.asyncAssertFailure(consumer::accept));
+    protected void startServer(TestContext context, HttpServerRouter httpRouter, Handler<Throwable> consumer) {
+        VertxHelper.deployFailed(vertx.getDelegate(), context, new DeploymentOptions().setConfig(httpConfig.toJson()),
+                                 new HttpServer(httpRouter), consumer);
     }
 
     protected JsonObject notFoundResponse(int port, String path) {
@@ -146,8 +141,8 @@ public class HttpServerTestBase {
         return e -> client.close();
     }
 
-    protected void assertConsumerData(Async async, String address, Consumer<Object> assertData) {
-        EventbusHelper.assertConsumerData(vertx.getDelegate(), async, address, assertData, closeClient());
+    protected void assertJsonData(Async async, String address, Consumer<Object> asserter) {
+        EventbusHelper.assertReceivedData(vertx.getDelegate(), async, address, asserter, closeClient());
     }
 
     protected WebSocket setupSockJsClient(TestContext context, Async async, Consumer<Throwable> error)
@@ -187,16 +182,6 @@ public class HttpServerTestBase {
 
     protected JsonObject createWebsocketMsg(String address, EventMessage body, BridgeEventType send) {
         return WebsocketEventMessage.builder().type(send).address(address).body(body).build().toJson();
-    }
-
-    private HttpServer createHttpServer(TestContext context, HttpServerRouter httpRouter) {
-        try {
-            return new HttpServer(httpRouter, this.getClass().getName(),
-                                  tempFolder.newFolder(this.getClass().getName()).toPath());
-        } catch (IOException e) {
-            context.fail(e);
-            return null;
-        }
     }
 
 }

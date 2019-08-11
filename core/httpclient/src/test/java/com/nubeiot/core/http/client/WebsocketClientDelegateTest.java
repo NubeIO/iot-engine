@@ -1,7 +1,7 @@
 package com.nubeiot.core.http.client;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,7 +21,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
@@ -71,7 +71,8 @@ public class WebsocketClientDelegateTest {
 
     @Test(expected = HttpException.class)
     public void test_connect_failed_due_unknown_dns() {
-        HostInfo opt = HostInfo.builder().host("echo.websocket.orgx").port(443).ssl(true).build();
+        config.getOptions().setConnectTimeout(6 * 1000);
+        HostInfo opt = HostInfo.builder().host("echo.websocket.test").port(443).ssl(true).build();
         WebsocketClientDelegate client = WebsocketClientDelegate.create(vertx, config, opt);
         client.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
     }
@@ -123,7 +124,7 @@ public class WebsocketClientDelegateTest {
     }
 
     @RequiredArgsConstructor
-    static class EventAsserter implements EventHandler {
+    static class EventAsserter implements EventListener {
 
         private final EventModel eventModel;
         private final TestContext context;
@@ -138,7 +139,7 @@ public class WebsocketClientDelegateTest {
         }
 
         @Override
-        public @NonNull List<EventAction> getAvailableEvents() {
+        public @NonNull Collection<EventAction> getAvailableEvents() {
             return new ArrayList<>(eventModel.getEvents());
         }
 

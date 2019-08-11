@@ -2,6 +2,7 @@ package com.nubeiot.core.http.dynamic.mock;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -14,7 +15,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
@@ -48,10 +49,10 @@ public class MockEventMessageService extends ContainerVerticle {
 
     @Override
     public void registerEventbus(EventController controller) {
-        controller.register(TEST_EVENT_MODEL_1, new EventBusTestHandler(TEST_EVENT_MODEL_1.getEvents()));
-        controller.register(TEST_EVENT_MODEL_2, new EventBusMultiParamTestHandler(TEST_EVENT_MODEL_2.getEvents()));
+        controller.register(TEST_EVENT_MODEL_1, new EventBusTestListener(TEST_EVENT_MODEL_1.getEvents()));
+        controller.register(TEST_EVENT_MODEL_2, new EventBusMultiParamTestListener(TEST_EVENT_MODEL_2.getEvents()));
         controller.register(TEST_EVENT_MODEL_3,
-                            new EventBusNotUseRequestDataTestHandler(TEST_EVENT_MODEL_3.getEvents()));
+                            new EventBusNotUseRequestDataTestListener(TEST_EVENT_MODEL_3.getEvents()));
     }
 
     private void publishService(MicroContext microContext) {
@@ -66,12 +67,12 @@ public class MockEventMessageService extends ContainerVerticle {
     }
 
     @RequiredArgsConstructor
-    static class EventBusTestHandler implements EventHandler {
+    static class EventBusTestListener implements EventListener {
 
         private final Set<EventAction> actions;
 
         @Override
-        public @NonNull List<EventAction> getAvailableEvents() { return new ArrayList<>(actions); }
+        public @NonNull Collection<EventAction> getAvailableEvents() { return new ArrayList<>(actions); }
 
         @EventContractor(action = EventAction.GET_LIST, returnType = List.class)
         public List<String> list() { return Arrays.asList("1", "2", "3"); }
@@ -83,12 +84,12 @@ public class MockEventMessageService extends ContainerVerticle {
 
 
     @RequiredArgsConstructor
-    static class EventBusMultiParamTestHandler implements EventHandler {
+    static class EventBusMultiParamTestListener implements EventListener {
 
         private final Set<EventAction> actions;
 
         @Override
-        public @NonNull List<EventAction> getAvailableEvents() { return new ArrayList<>(actions); }
+        public @NonNull Collection<EventAction> getAvailableEvents() { return new ArrayList<>(actions); }
 
         @EventContractor(action = EventAction.GET_LIST, returnType = List.class)
         public List<String> list(RequestData data) { return Collections.singletonList(data.body().getString("cId")); }
@@ -100,12 +101,12 @@ public class MockEventMessageService extends ContainerVerticle {
 
 
     @RequiredArgsConstructor
-    static class EventBusNotUseRequestDataTestHandler implements EventHandler {
+    static class EventBusNotUseRequestDataTestListener implements EventListener {
 
         private final Set<EventAction> actions;
 
         @Override
-        public @NonNull List<EventAction> getAvailableEvents() { return new ArrayList<>(actions); }
+        public @NonNull Collection<EventAction> getAvailableEvents() { return new ArrayList<>(actions); }
 
         @EventContractor(action = EventAction.GET_LIST, returnType = List.class)
         public List<String> list(@Param("xId") String xId) {

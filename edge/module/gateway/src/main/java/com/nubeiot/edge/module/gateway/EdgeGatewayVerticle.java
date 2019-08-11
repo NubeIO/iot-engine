@@ -9,7 +9,7 @@ import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
-import com.nubeiot.edge.module.gateway.handlers.DriverRegistrationEventHandler;
+import com.nubeiot.edge.module.gateway.handlers.DriverRegistrationEventListener;
 import com.nubeiot.eventbus.edge.gateway.GatewayEventBus;
 import com.zandero.rest.RestRouter;
 
@@ -36,7 +36,7 @@ public class EdgeGatewayVerticle extends ContainerVerticle {
     @Override
     public void registerEventbus(EventController controller) {
         controller.register(GatewayEventBus.DRIVER_REGISTRATION,
-                            new DriverRegistrationEventHandler(this, GatewayEventBus.DRIVER_REGISTRATION));
+                            new DriverRegistrationEventListener(this, GatewayEventBus.DRIVER_REGISTRATION));
     }
 
     private void publishService() {

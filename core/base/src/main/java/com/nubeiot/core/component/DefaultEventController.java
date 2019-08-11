@@ -12,7 +12,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
 
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.ErrorMessage;
@@ -66,7 +66,7 @@ final class DefaultEventController implements EventController {
     /**
      * {@inheritDoc}
      */
-    public void register(String address, boolean local, @NonNull EventHandler handler) {
+    public void register(String address, boolean local, @NonNull EventListener handler) {
         Strings.requireNotBlank(address);
         if (local) {
             this.eventBus.localConsumer(address, handler::accept);

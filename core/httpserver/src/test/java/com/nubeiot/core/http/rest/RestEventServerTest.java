@@ -21,8 +21,8 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.mock.MockApiDefinition;
-import com.nubeiot.core.http.mock.MockEventBusErrorHandler;
-import com.nubeiot.core.http.mock.MockEventBusSuccessHandler;
+import com.nubeiot.core.http.mock.MockEventBusErrorListener;
+import com.nubeiot.core.http.mock.MockEventBusSuccessListener;
 
 @RunWith(VertxUnitRunner.class)
 public class RestEventServerTest extends HttpServerTestBase {
@@ -55,7 +55,7 @@ public class RestEventServerTest extends HttpServerTestBase {
 
     @Test
     public void test_api_eventbus_error_unexpected(TestContext context) {
-        MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
+        MockEventBusErrorListener.create(this.vertx.eventBus()).start();
         String path = "/api/test/events";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.UNKNOWN_ERROR)
                                               .put("message", "UNKNOWN_ERROR | Cause: xxx");
@@ -65,7 +65,7 @@ public class RestEventServerTest extends HttpServerTestBase {
 
     @Test
     public void test_api_eventbus_error_from_server(TestContext context) {
-        MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
+        MockEventBusErrorListener.create(this.vertx.eventBus()).start();
         String path = "/api/test/events";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.ENGINE_ERROR)
                                               .put("message", "Engine error");
@@ -75,7 +75,7 @@ public class RestEventServerTest extends HttpServerTestBase {
 
     @Test
     public void test_api_eventbus_error_from_user(TestContext context) {
-        MockEventBusErrorHandler.create(this.vertx.eventBus()).start();
+        MockEventBusErrorListener.create(this.vertx.eventBus()).start();
         String path = "/api/test/events/:event_id";
         JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.INVALID_ARGUMENT)
                                               .put("message", "invalid");
@@ -95,7 +95,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     @Test
     public void test_api_eventbus_success_data_list(TestContext context) {
         try {
-            MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
+            MockEventBusSuccessListener.create(this.vertx.eventBus()).start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -108,7 +108,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     @Test
     public void test_api_eventbus_success_data_other(TestContext context) {
         try {
-            MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
+            MockEventBusSuccessListener.create(this.vertx.eventBus()).start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -121,7 +121,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     @Test
     public void test_api_eventbus_success_data_json(TestContext context) {
         try {
-            MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
+            MockEventBusSuccessListener.create(this.vertx.eventBus()).start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -134,7 +134,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     @Test
     public void test_api_eventbus_success_data_single(TestContext context) {
         try {
-            MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
+            MockEventBusSuccessListener.create(this.vertx.eventBus()).start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -147,7 +147,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     @Test
     public void test_api_eventbus_success_data_single_json(TestContext context) {
         try {
-            MockEventBusSuccessHandler.create(this.vertx.eventBus()).start();
+            MockEventBusSuccessListener.create(this.vertx.eventBus()).start();
         } catch (Exception e) {
             e.printStackTrace();
         }

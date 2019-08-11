@@ -61,11 +61,6 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         this.httpRouter = httpRouter;
     }
 
-    HttpServer(HttpServerRouter httpRouter, String sharedKey, Path testDir) {
-        super(new HttpServerContext(), sharedKey, testDir);
-        this.httpRouter = httpRouter;
-    }
-
     @Override
     public void start(Future<Void> future) {
         logger.info("Starting HTTP Server...");

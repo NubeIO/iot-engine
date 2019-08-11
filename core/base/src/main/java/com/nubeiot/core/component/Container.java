@@ -7,7 +7,7 @@ import io.vertx.core.Handler;
 
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventModel;
 
 /**
@@ -37,9 +37,9 @@ public interface Container extends HasConfig<NubeConfig> {
      * Register eventbus consumer
      *
      * @param controller EventController
-     * @see EventController#register(EventModel, EventHandler)
-     * @see EventController#register(String, EventHandler)
-     * @see EventController#register(String, boolean, EventHandler)
+     * @see EventController#register(EventModel, EventListener)
+     * @see EventController#register(String, EventListener)
+     * @see EventController#register(String, boolean, EventListener)
      */
     void registerEventbus(EventController controller);
 

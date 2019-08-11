@@ -19,18 +19,23 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.CustomComparator;
 import org.slf4j.LoggerFactory;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.reactivex.core.buffer.Buffer;
+
+import com.nubeiot.core.component.UnitVerticle;
+import com.nubeiot.core.component.UnitVerticleTestHelper;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import lombok.NonNull;
 
 public interface TestHelper {
 
@@ -68,9 +73,14 @@ public interface TestHelper {
 
     interface VertxHelper {
 
-        static <T extends Verticle> void deploy(Vertx vertx, TestContext context, DeploymentOptions options, T verticle,
-                                                Handler<String> handlerSuccess) {
+        static <T extends Verticle> T deploy(@NonNull Vertx vertx, @NonNull TestContext context,
+                                             @NonNull DeploymentOptions options, @NonNull T verticle,
+                                             @NonNull Handler<String> handlerSuccess) {
+            if (verticle instanceof UnitVerticle) {
+                UnitVerticleTestHelper.injectTest((UnitVerticle) verticle, verticle.getClass().getName(), null);
+            }
             vertx.deployVerticle(verticle, options, context.asyncAssertSuccess(handlerSuccess));
+            return verticle;
         }
 
         static <T extends Verticle> T deploy(Vertx vertx, TestContext context, DeploymentOptions options, T verticle) {
@@ -79,8 +89,21 @@ public interface TestHelper {
 
         static <T extends Verticle> T deploy(Vertx vertx, TestContext context, DeploymentOptions options, T verticle,
                                              int timeout) {
+            return deploy(vertx, context, options, verticle, timeout,
+                          id -> System.out.println("Success deploy verticle: " + verticle.getClass() + " | ID: " + id));
+        }
+
+        static <T extends Verticle> T deploy(@NonNull Vertx vertx, @NonNull TestContext context,
+                                             @NonNull DeploymentOptions options, @NonNull T verticle, int timeout,
+                                             @NonNull Handler<String> handlerSuccess) {
+            if (verticle instanceof UnitVerticle) {
+                UnitVerticleTestHelper.injectTest((UnitVerticle) verticle, verticle.getClass().getName(), null);
+            }
             CountDownLatch latch = new CountDownLatch(1);
-            vertx.deployVerticle(verticle, options, context.asyncAssertSuccess(id -> latch.countDown()));
+            vertx.deployVerticle(verticle, options, context.asyncAssertSuccess(id -> {
+                latch.countDown();
+                handlerSuccess.handle(id);
+            }));
             try {
                 context.assertTrue(latch.await(timeout, TimeUnit.SECONDS));
             } catch (InterruptedException e) {
@@ -91,6 +114,9 @@ public interface TestHelper {
 
         static <T extends Verticle> void deployFailed(Vertx vertx, TestContext context, DeploymentOptions options,
                                                       T verticle, Handler<Throwable> errorHandler) {
+            if (verticle instanceof UnitVerticle) {
+                UnitVerticleTestHelper.injectTest((UnitVerticle) verticle, verticle.getClass().getName(), null);
+            }
             vertx.deployVerticle(verticle, options, context.asyncAssertFailure(errorHandler));
         }
 
@@ -99,11 +125,29 @@ public interface TestHelper {
 
     interface EventbusHelper {
 
-        static void assertConsumerData(Vertx vertx, Async async, String address, Consumer<Object> assertData) {
-            assertConsumerData(vertx, async, address, assertData, null);
+        static Handler<AsyncResult<Message<Object>>> replyAsserter(TestContext context, Async async,
+                                                                   JsonObject expected) {
+            return context.asyncAssertSuccess(
+                result -> JsonHelper.assertJson(context, async, expected, (JsonObject) result.body()));
         }
 
-        static void assertConsumerData(Vertx vertx, Async async, String address, Consumer<Object> assertData,
+        static Handler<AsyncResult<Message<Object>>> replyAsserter(TestContext context, Async async,
+                                                                   JsonObject expected,
+                                                                   Customization... customizations) {
+            return context.asyncAssertSuccess(
+                result -> JsonHelper.assertJson(context, async, expected, (JsonObject) result.body(), customizations));
+        }
+
+        static Handler<AsyncResult<Message<Object>>> replyAsserter(TestContext context,
+                                                                   Handler<JsonObject> bodyAsserter) {
+            return context.asyncAssertSuccess(result -> bodyAsserter.handle((JsonObject) result.body()));
+        }
+
+        static void assertReceivedData(Vertx vertx, Async async, String address, Consumer<Object> assertData) {
+            assertReceivedData(vertx, async, address, assertData, null);
+        }
+
+        static void assertReceivedData(Vertx vertx, Async async, String address, Consumer<Object> assertData,
                                        Handler<Void> testCompleted) {
             MessageConsumer<Object> consumer = vertx.eventBus().consumer(address);
             consumer.handler(event -> {
@@ -152,18 +196,15 @@ public interface TestHelper {
             return new CustomComparator(JSONCompareMode.LENIENT, customizations);
         }
 
-        static void assertJson(TestContext context, JsonObject expected, Buffer actual) {
-            try {
-                JSONAssert.assertEquals(expected.encode(), actual.toJsonObject().encode(), JSONCompareMode.STRICT);
-            } catch (JSONException | AssertionError e) {
-                context.fail(e);
-            }
+        static Consumer<Object> asserter(TestContext context, Async async, JsonObject expected) {
+            return resp -> JsonHelper.assertJson(context, async, expected, (JsonObject) resp);
         }
 
         static void assertJson(TestContext context, Async async, JsonObject expected, JsonObject actual) {
             try {
                 JSONAssert.assertEquals(expected.encode(), actual.encode(), JSONCompareMode.STRICT);
             } catch (JSONException | AssertionError e) {
+                System.out.println("Actual: " + actual.encode());
                 context.fail(e);
             } finally {
                 testComplete(async);
@@ -175,6 +216,7 @@ public interface TestHelper {
             try {
                 JSONAssert.assertEquals(expected.encode(), actual.encode(), comparator(customizations));
             } catch (JSONException | AssertionError e) {
+                System.out.println("Actual: " + actual.encode());
                 context.fail(e);
             } finally {
                 testComplete(async);

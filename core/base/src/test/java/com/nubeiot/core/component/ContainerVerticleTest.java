@@ -17,9 +17,7 @@ import io.vertx.reactivex.core.Vertx;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.utils.mock.MockConfig;
-import com.nubeiot.core.utils.mock.MockContainerVerticle;
 import com.nubeiot.core.utils.mock.MockProvider;
-import com.nubeiot.core.utils.mock.MockUnitVerticle;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;

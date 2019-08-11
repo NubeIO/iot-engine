@@ -1,5 +1,7 @@
 package com.nubeiot.core.component;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -53,9 +55,15 @@ public interface SharedDataDelegate {
         if (Objects.nonNull(eventController)) {
             return eventController;
         }
-        final EventController controller = new DefaultEventController(vertx);
-        addLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS, controller);
-        return controller;
+        synchronized (EventController.class) {
+            final EventController controller = new DefaultEventController(vertx);
+            addLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS, controller);
+            return controller;
+        }
+    }
+
+    static Path getDataDir(@NonNull Vertx vertx, String sharedKey) {
+        return Paths.get((String) getLocalDataValue(vertx, sharedKey, SHARED_DATADIR));
     }
 
     /**

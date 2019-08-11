@@ -90,12 +90,6 @@ public class KafkaUnitTestBase {
         return kafkaConfig;
     }
 
-    private static KafkaUnit startKafkaUnit(Vertx vertx, TestContext context, KafkaConfig config, KafkaRouter router) {
-        DeploymentOptions options = new DeploymentOptions().setConfig(config.toJson());
-        KafkaUnit verticle = new KafkaUnit(router, KafkaUnit.class.getName(), dataDir.toPath().resolve("kafka"));
-        return VertxHelper.deploy(vertx, context, options, verticle, TEST_TIMEOUT_SEC);
-    }
-
     @Before
     public void before(TestContext context) {
         vertx = Vertx.vertx();
@@ -108,7 +102,8 @@ public class KafkaUnitTestBase {
     }
 
     KafkaUnit startKafkaUnit(TestContext context, KafkaRouter router) {
-        return startKafkaUnit(vertx, context, kafkaConfig, router);
+        return VertxHelper.deploy(vertx, context, new DeploymentOptions().setConfig(kafkaConfig.toJson()),
+                                  new KafkaUnit(router), TEST_TIMEOUT_SEC);
     }
 
 }

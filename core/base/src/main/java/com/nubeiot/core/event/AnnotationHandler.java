@@ -35,7 +35,7 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
-final class AnnotationHandler<T extends EventHandler> {
+final class AnnotationHandler<T extends EventListener> {
 
     private static final Logger logger = LoggerFactory.getLogger(AnnotationHandler.class);
     private final T eventHandler;

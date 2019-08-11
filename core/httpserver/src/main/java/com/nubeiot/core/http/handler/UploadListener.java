@@ -1,5 +1,6 @@
 package com.nubeiot.core.http.handler;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +9,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
@@ -19,7 +20,7 @@ import lombok.RequiredArgsConstructor;
  * Upload listener to handle uploaded file (update database, transfer to another host)
  */
 @RequiredArgsConstructor
-public class UploadListener implements EventHandler {
+public class UploadListener implements EventListener {
 
     private final List<EventAction> actions;
 
@@ -33,7 +34,7 @@ public class UploadListener implements EventHandler {
     }
 
     @Override
-    public @NonNull List<EventAction> getAvailableEvents() { return actions; }
+    public @NonNull Collection<EventAction> getAvailableEvents() { return actions; }
 
     @EventContractor(action = EventAction.CREATE)
     public JsonObject create(JsonObject data) { return data; }

@@ -77,8 +77,8 @@ public class KafkaWebsocketTest extends HttpServerTestBase {
         startServer(context, new HttpServerRouter().registerEventBusSocket(metadata));
         startKafkaClient(metadata);
         Async async = context.async(1);
-        assertConsumerData(async, metadata.getPublisher().getAddress(),
-                           o -> JsonHelper.assertJson(context, async, supply().get().toJson(), (JsonObject) o));
+        assertJsonData(async, metadata.getPublisher().getAddress(),
+                       JsonHelper.asserter(context, async, supply().get().toJson()));
     }
 
     @Test

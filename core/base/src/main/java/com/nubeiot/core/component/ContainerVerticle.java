@@ -104,7 +104,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
             return;
         }
         Observable.fromIterable(components.entrySet()).flatMapSingle(entry -> {
-            Unit unit = entry.getValue().get().registerSharedData(getSharedKey());
+            Unit unit = entry.getValue().get().registerSharedKey(getSharedKey());
             JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
             DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
             return vertx.rxDeployVerticle(unit, options)

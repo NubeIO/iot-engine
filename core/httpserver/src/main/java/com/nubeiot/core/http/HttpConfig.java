@@ -15,12 +15,10 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.http.base.HttpScheme;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.DownloadFileHandler;
 import com.nubeiot.core.http.handler.UploadFileHandler;
 import com.nubeiot.core.http.handler.UploadListener;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -57,17 +55,6 @@ public final class HttpConfig implements IConfig {
     private FileStorageConfig fileStorageConfig = new FileStorageConfig();
     @JsonProperty(value = StaticWebConfig.NAME)
     private StaticWebConfig staticWebConfig = new StaticWebConfig();
-
-    static String computeRootApi(String rootApi, String fallback) {
-        if (Strings.isBlank(rootApi)) {
-            return fallback;
-        }
-        String root = Urls.combinePath(rootApi);
-        if (!Urls.validatePath(root)) {
-            throw new InvalidUrlException("Root API is not valid");
-        }
-        return root;
-    }
 
     @Override
     public String name() { return NAME; }

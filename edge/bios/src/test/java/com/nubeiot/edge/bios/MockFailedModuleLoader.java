@@ -1,7 +1,7 @@
 package com.nubeiot.edge.bios;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -10,14 +10,15 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.edge.core.PreDeploymentResult;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class MockFailedModuleLoader implements EventHandler {
+public class MockFailedModuleLoader implements EventListener {
 
     private final DeploymentAsserter deploymentAsserter;
 
@@ -31,7 +32,7 @@ public class MockFailedModuleLoader implements EventHandler {
     }
 
     @Override
-    public List<EventAction> getAvailableEvents() {
+    public @NonNull Collection<EventAction> getAvailableEvents() {
         return Arrays.asList(EventAction.UPDATE, EventAction.PATCH, EventAction.INIT, EventAction.CREATE);
     }
 

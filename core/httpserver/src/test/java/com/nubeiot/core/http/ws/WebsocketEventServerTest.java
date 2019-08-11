@@ -32,7 +32,7 @@ import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
-import com.nubeiot.core.http.mock.MockWebsocketEvent.MockWebsocketEventServerHandler;
+import com.nubeiot.core.http.mock.MockWebsocketEvent.MockWebsocketEventServerListener;
 
 @RunWith(VertxUnitRunner.class)
 public class WebsocketEventServerTest extends HttpServerTestBase {
@@ -50,7 +50,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         super.before(context);
         this.enableWebsocket();
         try {
-            new MockWebsocketEventServerHandler(vertx.eventBus()).start();
+            new MockWebsocketEventServerListener(vertx.eventBus()).start();
         } catch (Exception e) {
             context.fail(e);
         }
@@ -92,8 +92,8 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         EventMessage message = EventMessage.success(EventAction.GET_LIST, new JsonObject().put("echo", 1));
         startServer(context, new HttpServerRouter().registerEventBusSocket(MockWebsocketEvent.ALL_EVENTS));
         Async async = context.async(2);
-        assertConsumerData(async, MockWebsocketEvent.ALL_EVENTS.getPublisher().getAddress(),
-                           o -> JsonHelper.assertJson(context, async, expected, (JsonObject) o));
+        assertJsonData(async, MockWebsocketEvent.ALL_EVENTS.getPublisher().getAddress(),
+                       JsonHelper.asserter(context, async, expected));
         WebSocket ws = setupSockJsClient(context, async, context::fail);
         clientSend(pushAddress, message).accept(
             ws.handler(buffer -> assertResponse(context, async, responseExpected, buffer)));
@@ -120,8 +120,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
                                                                            this.getClass().getName());
         vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo));
         Async async = context.async(1);
-        assertConsumerData(async, publisher.getAddress(),
-                           o -> JsonHelper.assertJson(context, async, echo.toJson(), (JsonObject) o));
+        assertJsonData(async, publisher.getAddress(), JsonHelper.asserter(context, async, echo.toJson()));
     }
 
     @Test

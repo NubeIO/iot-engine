@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.utils.Networks;
@@ -101,7 +101,7 @@ public final class EventMethodDefinition implements JsonData {
      * @param servicePath    Origin service path that represents for manipulating {@code resource} in default {@code
      *                       HTTPMethod} list
      * @param paramPath      Parameter path for manipulating {@code resource}
-     * @param useRequestData Whether use {@link RequestData} in parameter in {@link EventHandler} or not
+     * @param useRequestData Whether use {@link RequestData} in parameter in {@link EventListener} or not
      * @return new instance of {@link EventMethodDefinition}
      * @implNote {@code paramPath} will be append after {@code servicePath}. For example:
      *     <ul>
