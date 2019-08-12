@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -26,7 +26,7 @@ import oshi.software.os.OperatingSystem.ProcessSort;
 import oshi.util.FormatUtil;
 
 @NoArgsConstructor
-public class MonitorStatusEventHandler implements EventHandler {
+public class MonitorStatusEventHandler implements EventListener {
 
     private static JsonObject getProcessor(CentralProcessor processor) {
         return new JsonObject().put("processor", processor.toString())

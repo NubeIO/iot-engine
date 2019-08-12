@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -22,7 +22,7 @@ import oshi.software.os.OperatingSystem;
 import oshi.util.FormatUtil;
 
 @NoArgsConstructor
-public class MonitorNetworkStatusEventHandler implements EventHandler {
+public class MonitorNetworkStatusEventHandler implements EventListener {
 
     private static JsonArray getNetworkInterfaces(NetworkIF[] networkIFs) {
         JsonArray networkInterfaces = new JsonArray();

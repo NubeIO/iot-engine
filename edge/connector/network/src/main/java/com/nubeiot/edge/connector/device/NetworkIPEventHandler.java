@@ -12,7 +12,7 @@ import io.vertx.core.logging.LoggerFactory;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @NoArgsConstructor
-public class NetworkIPEventHandler implements EventHandler {
+public class NetworkIPEventHandler implements EventListener {
 
     private static final String REGEX_WHITE_SPACE = "\\s";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
