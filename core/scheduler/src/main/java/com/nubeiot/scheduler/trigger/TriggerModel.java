@@ -34,16 +34,12 @@ public interface TriggerModel extends JsonData {
     TriggerKey getKey();
 
     @JsonProperty(value = "type", required = true)
+    @JsonUnwrapped
     TriggerType type();
 
     Trigger toTrigger();
 
     String toString();
-
-    enum TriggerType {
-        CRON, PERIODIC
-    }
-
 
     @RequiredArgsConstructor
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)

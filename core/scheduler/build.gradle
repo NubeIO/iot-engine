@@ -1,6 +1,7 @@
 dependencies {
     compile project(":core:base")
     compile "org.quartz-scheduler:quartz:2.3.0"
+    compileOnly project(':core:sql')
 
     testCompile project(":core:base").sourceSets.test.output
 }

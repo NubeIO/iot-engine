@@ -1,5 +1,6 @@
 package com.nubeiot.iotdata.converter;
 
+import com.nubeiot.core.sql.converter.AbstractEnumConverter;
 import com.nubeiot.iotdata.dto.PointKind;
 
 public final class PointKindConverter extends AbstractEnumConverter<PointKind> {

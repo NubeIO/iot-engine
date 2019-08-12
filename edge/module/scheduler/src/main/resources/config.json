@@ -1,0 +1,38 @@
+{
+  "__app__": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": false
+      },
+      "__localServiceDiscovery__": {
+        "enabled": true
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
+    },
+    "__scheduler__": {
+      "__schedule_worker__": {
+        "poolSize": 2,
+        "maxExecuteTime": 60,
+        "maxExecuteTimeUnit": "SECONDS"
+      },
+      "schedulerName": "edge-scheduler"
+    },
+    "__sql__": {
+      "dialect": "H2",
+      "dbName": "edge-scheduler",
+      "dbLocalFile": true,
+      "__hikari__": {
+        "minimumIdle": 1,
+        "maximumPoolSize": 1,
+        "connectionTimeout": 30000,
+        "idleTimeout": 180000,
+        "maxLifetime": 300000
+      }
+    }
+  }
+}

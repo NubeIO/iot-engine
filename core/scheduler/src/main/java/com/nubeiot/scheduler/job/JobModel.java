@@ -35,6 +35,7 @@ public interface JobModel<T extends VertxJob> extends JsonData {
     JobKey getKey();
 
     @JsonProperty(value = "type", required = true)
+    @JsonUnwrapped
     JobType type();
 
     Class<T> implementation();
@@ -49,11 +50,6 @@ public interface JobModel<T extends VertxJob> extends JsonData {
         jobDataMap.put(JOB_DATA_KEY, this);
         return JobBuilder.newJob(implementation()).withIdentity(getKey()).setJobData(jobDataMap).build();
     }
-
-    enum JobType {
-        EVENT_JOB
-    }
-
 
     @RequiredArgsConstructor
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)

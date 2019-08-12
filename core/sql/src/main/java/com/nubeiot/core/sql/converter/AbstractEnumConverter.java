@@ -1,4 +1,4 @@
-package com.nubeiot.iotdata.converter;
+package com.nubeiot.core.sql.converter;
 
 import java.util.Objects;
 
@@ -6,7 +6,7 @@ import org.jooq.Converter;
 
 import com.nubeiot.core.dto.EnumType;
 
-abstract class AbstractEnumConverter<T extends EnumType> implements Converter<String, T> {
+public abstract class AbstractEnumConverter<T extends EnumType> implements Converter<String, T> {
 
     @Override
     public final T from(String databaseObject) {

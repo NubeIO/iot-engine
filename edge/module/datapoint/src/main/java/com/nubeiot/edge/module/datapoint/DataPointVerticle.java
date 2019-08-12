@@ -18,16 +18,12 @@ import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
 import com.nubeiot.iotdata.edge.model.DefaultCatalog;
-import com.nubeiot.scheduler.QuartzSchedulerContext;
-import com.nubeiot.scheduler.SchedulerProvider;
 
 public final class DataPointVerticle extends ContainerVerticle {
 
     static final String LOWDB_MIGRATION = "LOWDB_MIGRATION";
-    static final String SCHEDULER_ADDRESS = "SCHEDULER_ADDRESS";
     private DataPointEntityHandler entityHandler;
     private MicroContext microCtx;
-    private QuartzSchedulerContext schedulerCtx;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -37,14 +33,12 @@ public final class DataPointVerticle extends ContainerVerticle {
         this.addSharedData(LOWDB_MIGRATION, pointCfg.getLowdbMigration())
             .addSharedData(DataPointEntityHandler.BUILTIN_DATA, pointCfg.getBuiltinData().toJson())
             .addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
-            .addProvider(new SchedulerProvider(), ctx -> schedulerCtx = (QuartzSchedulerContext) ctx)
             .addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, DataPointEntityHandler.class),
                          ctx -> entityHandler = ((SqlContext<DataPointEntityHandler>) ctx).getEntityHandler())
             .registerSuccessHandler(v -> successHandler());
     }
 
     private void successHandler() {
-        this.addSharedData(SCHEDULER_ADDRESS, schedulerCtx.getRegisterModel().getAddress());
         EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
         ServiceDiscoveryController discovery = microCtx.getLocalController();
         Observable.fromIterable(DataPointService.createServices(entityHandler))

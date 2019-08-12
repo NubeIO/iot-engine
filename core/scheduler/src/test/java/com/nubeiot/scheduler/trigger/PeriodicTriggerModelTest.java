@@ -10,7 +10,6 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.scheduler.trigger.TriggerModel.TriggerType;
 
 public class PeriodicTriggerModelTest {
 

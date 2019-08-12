@@ -26,8 +26,6 @@ import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.edge.model.tables.interfaces.IMeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.unit.DataType;
-import com.nubeiot.scheduler.trigger.CronTriggerModel;
-import com.nubeiot.scheduler.trigger.TriggerModel;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -133,7 +131,7 @@ public final class DataPointConfig implements IConfig {
         private static final String NAME = "__cleanup_policy__";
         private boolean enabled = false;
         private DeliveryEvent process;
-        private TriggerModel triggerModel;
+        private JsonObject triggerModel;
         private CleanupPolicy policy;
 
         static CleanupPolicyConfig def() {
@@ -142,12 +140,10 @@ public final class DataPointConfig implements IConfig {
                                                      .pattern(EventPattern.REQUEST_RESPONSE)
                                                      .action(EventAction.BATCH_DELETE)
                                                      .build();
-            final TriggerModel trigger = CronTriggerModel.builder()
-                                                         .expr("0 0 0 ? * SUN *")
-                                                         .tz("Australia/Sydney")
-                                                         .name("historyData")
-                                                         .group("cleanup")
-                                                         .build();
+            final JsonObject trigger = new JsonObject().put("expr", "0 0 0 ? * SUN *")
+                                                       .put("tz", "Australia/Sydney")
+                                                       .put("name", "historyData")
+                                                       .put("group", "cleanup");
             return new CleanupPolicyConfig(true, event, trigger,
                                            new OldestCleanupPolicy(100, PointExtension.REQUEST_KEY,
                                                                    Duration.ofDays(30)));

@@ -76,14 +76,6 @@
         "enabled": false
       }
     },
-    "__scheduler__": {
-      "__schedule_worker__": {
-        "poolSize": 2,
-        "maxExecuteTime": 60,
-        "maxExecuteTimeUnit": "SECONDS"
-      },
-      "schedulerName": "datapoint-scheduler"
-    },
     "__sql__": {
       "dialect": "H2",
       "dbName": "datapoint",
@@ -98,4 +90,3 @@
     }
   }
 }
-

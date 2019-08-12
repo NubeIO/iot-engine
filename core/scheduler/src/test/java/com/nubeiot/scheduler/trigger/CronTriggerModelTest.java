@@ -11,7 +11,6 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.scheduler.trigger.TriggerModel.TriggerType;
 
 public class CronTriggerModelTest {
 

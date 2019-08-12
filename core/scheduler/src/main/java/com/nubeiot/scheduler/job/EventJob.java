@@ -13,7 +13,7 @@ public final class EventJob extends AbstractVertxJob<EventJobModel> {
         ReplyEventHandler handler = null;
         if (jobModel.getProcess().getPattern() == EventPattern.REQUEST_RESPONSE) {
             handler = ReplyEventHandler.builder()
-                                       .system(jobModel.type().name())
+                                       .system(jobModel.type().type())
                                        .action(jobModel.getProcess().getAction())
                                        .success(monitor(jobModel, jobModel.getCallback()))
                                        .error(errorMonitor(jobModel))
