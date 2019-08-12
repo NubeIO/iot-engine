@@ -1,7 +1,7 @@
 package com.nubeiot.edge.module.datapoint.model.ditto;
 
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel.AbstractDittoModel;
-import com.nubeiot.iotdata.model.tables.interfaces.ITransducer;
+import com.nubeiot.iotdata.edge.model.tables.interfaces.ITransducer;
 
 import lombok.NonNull;
 

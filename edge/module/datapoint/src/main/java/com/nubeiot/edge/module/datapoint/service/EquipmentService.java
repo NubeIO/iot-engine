@@ -7,10 +7,10 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
-import com.nubeiot.iotdata.model.Tables;
-import com.nubeiot.iotdata.model.tables.daos.EquipmentDao;
-import com.nubeiot.iotdata.model.tables.pojos.Equipment;
-import com.nubeiot.iotdata.model.tables.records.EquipmentRecord;
+import com.nubeiot.iotdata.edge.model.Tables;
+import com.nubeiot.iotdata.edge.model.tables.daos.EquipmentDao;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
+import com.nubeiot.iotdata.edge.model.tables.records.EquipmentRecord;
 
 import lombok.NonNull;
 

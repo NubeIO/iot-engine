@@ -7,10 +7,10 @@ import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.HasReferenceEntityService;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
-import com.nubeiot.iotdata.model.Tables;
-import com.nubeiot.iotdata.model.tables.daos.ScheduleSettingDao;
-import com.nubeiot.iotdata.model.tables.pojos.ScheduleSetting;
-import com.nubeiot.iotdata.model.tables.records.ScheduleSettingRecord;
+import com.nubeiot.iotdata.edge.model.Tables;
+import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
+import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
+import com.nubeiot.iotdata.edge.model.tables.records.ScheduleSettingRecord;
 
 import lombok.NonNull;
 

@@ -25,7 +25,7 @@ dependencies {
 }
 
 task jooqGen(type: JooqGenerateTask) {
-    packageName = "com.nubeiot.iotdata.model"
+    packageName = "com.nubeiot.iotdata.edge.model"
     enumTypes = project(':core:sql').ext.enumTypes
     renameFields = ["history_setting_type|point_type|equip_type|transducer_type|measure_type": "type",
                     "point_category|measure_category|transducer_category"                    : "category",

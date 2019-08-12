@@ -15,10 +15,10 @@ import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.HasReferenceEntityService;
 import com.nubeiot.core.sql.HasReferenceResource;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.iotdata.model.Tables;
-import com.nubeiot.iotdata.model.tables.daos.PointDao;
-import com.nubeiot.iotdata.model.tables.pojos.Point;
-import com.nubeiot.iotdata.model.tables.records.PointRecord;
+import com.nubeiot.iotdata.edge.model.Tables;
+import com.nubeiot.iotdata.edge.model.tables.daos.PointDao;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
+import com.nubeiot.iotdata.edge.model.tables.records.PointRecord;
 
 import lombok.NonNull;
 
@@ -47,7 +47,7 @@ public final class PointService extends AbstractDataPointService<UUID, Point, Po
     }
 
     @Override
-    public @NonNull com.nubeiot.iotdata.model.tables.Point table() {
+    public @NonNull com.nubeiot.iotdata.edge.model.tables.Point table() {
         return Tables.POINT;
     }
 

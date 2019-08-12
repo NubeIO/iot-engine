@@ -10,7 +10,7 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.sql.BaseSqlServiceTest;
 import com.nubeiot.edge.module.datapoint.MockDataPointEntityHandler;
-import com.nubeiot.iotdata.model.DefaultCatalog;
+import com.nubeiot.iotdata.edge.model.DefaultCatalog;
 
 @RunWith(VertxUnitRunner.class)
 public abstract class BaseDataPointServiceTest extends BaseSqlServiceTest {

@@ -27,15 +27,15 @@ import com.nubeiot.core.sql.EntityAuditHandler;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.iotdata.model.Tables;
-import com.nubeiot.iotdata.model.tables.pojos.Device;
-import com.nubeiot.iotdata.model.tables.pojos.DeviceEquip;
-import com.nubeiot.iotdata.model.tables.pojos.Equipment;
-import com.nubeiot.iotdata.model.tables.pojos.MeasureUnit;
-import com.nubeiot.iotdata.model.tables.pojos.Network;
-import com.nubeiot.iotdata.model.tables.pojos.Point;
-import com.nubeiot.iotdata.model.tables.pojos.Thing;
-import com.nubeiot.iotdata.model.tables.pojos.Transducer;
+import com.nubeiot.iotdata.edge.model.Tables;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
+import com.nubeiot.iotdata.edge.model.tables.pojos.DeviceEquip;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
+import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 
 import lombok.NonNull;
 

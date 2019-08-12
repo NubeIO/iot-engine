@@ -17,7 +17,7 @@ import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
-import com.nubeiot.iotdata.model.DefaultCatalog;
+import com.nubeiot.iotdata.edge.model.DefaultCatalog;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
 import com.nubeiot.scheduler.SchedulerProvider;
 

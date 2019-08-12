@@ -3,10 +3,10 @@ package com.nubeiot.edge.module.datapoint.service;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.StringKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
-import com.nubeiot.iotdata.model.Tables;
-import com.nubeiot.iotdata.model.tables.daos.MeasureUnitDao;
-import com.nubeiot.iotdata.model.tables.pojos.MeasureUnit;
-import com.nubeiot.iotdata.model.tables.records.MeasureUnitRecord;
+import com.nubeiot.iotdata.edge.model.Tables;
+import com.nubeiot.iotdata.edge.model.tables.daos.MeasureUnitDao;
+import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
+import com.nubeiot.iotdata.edge.model.tables.records.MeasureUnitRecord;
 
 import lombok.NonNull;
 

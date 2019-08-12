@@ -16,10 +16,10 @@ import com.nubeiot.core.sql.EntityService;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.HasReferenceEntityService;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.iotdata.model.Tables;
-import com.nubeiot.iotdata.model.tables.daos.NetworkDao;
-import com.nubeiot.iotdata.model.tables.pojos.Network;
-import com.nubeiot.iotdata.model.tables.records.NetworkRecord;
+import com.nubeiot.iotdata.edge.model.Tables;
+import com.nubeiot.iotdata.edge.model.tables.daos.NetworkDao;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
+import com.nubeiot.iotdata.edge.model.tables.records.NetworkRecord;
 
 import lombok.NonNull;
 
@@ -59,7 +59,7 @@ public final class NetworkService extends AbstractDataPointService<UUID, Network
     }
 
     @Override
-    public @NonNull com.nubeiot.iotdata.model.tables.Network table() {
+    public @NonNull com.nubeiot.iotdata.edge.model.tables.Network table() {
         return Tables.NETWORK;
     }
 

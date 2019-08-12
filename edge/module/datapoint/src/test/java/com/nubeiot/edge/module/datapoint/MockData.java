@@ -21,16 +21,16 @@ import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.dto.TransducerCategory;
 import com.nubeiot.iotdata.dto.TransducerType;
-import com.nubeiot.iotdata.model.tables.pojos.Device;
-import com.nubeiot.iotdata.model.tables.pojos.DeviceEquip;
-import com.nubeiot.iotdata.model.tables.pojos.Equipment;
-import com.nubeiot.iotdata.model.tables.pojos.HistorySetting;
-import com.nubeiot.iotdata.model.tables.pojos.Network;
-import com.nubeiot.iotdata.model.tables.pojos.Point;
-import com.nubeiot.iotdata.model.tables.pojos.PointHistoryData;
-import com.nubeiot.iotdata.model.tables.pojos.PointTag;
-import com.nubeiot.iotdata.model.tables.pojos.Thing;
-import com.nubeiot.iotdata.model.tables.pojos.Transducer;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
+import com.nubeiot.iotdata.edge.model.tables.pojos.DeviceEquip;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
+import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 import com.nubeiot.iotdata.unit.DataType;
 
 public final class MockData {

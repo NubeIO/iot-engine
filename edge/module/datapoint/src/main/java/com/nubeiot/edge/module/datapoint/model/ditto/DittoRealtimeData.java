@@ -1,7 +1,7 @@
 package com.nubeiot.edge.module.datapoint.model.ditto;
 
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel.AbstractDittoModel;
-import com.nubeiot.iotdata.model.tables.interfaces.IPointRealtimeData;
+import com.nubeiot.iotdata.edge.model.tables.interfaces.IPointRealtimeData;
 
 import lombok.NonNull;
 

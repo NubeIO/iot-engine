@@ -5,10 +5,10 @@ import com.nubeiot.core.sql.EntityService.BigSerialKeyEntity;
 import com.nubeiot.core.sql.HasReferenceEntityService;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
-import com.nubeiot.iotdata.model.Tables;
-import com.nubeiot.iotdata.model.tables.daos.PointRealtimeDataDao;
-import com.nubeiot.iotdata.model.tables.pojos.PointRealtimeData;
-import com.nubeiot.iotdata.model.tables.records.PointRealtimeDataRecord;
+import com.nubeiot.iotdata.edge.model.Tables;
+import com.nubeiot.iotdata.edge.model.tables.daos.PointRealtimeDataDao;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
+import com.nubeiot.iotdata.edge.model.tables.records.PointRealtimeDataRecord;
 
 import lombok.NonNull;
 

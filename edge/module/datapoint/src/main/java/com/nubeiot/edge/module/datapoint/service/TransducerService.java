@@ -5,10 +5,10 @@ import java.util.UUID;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityService.UUIDKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
-import com.nubeiot.iotdata.model.Tables;
-import com.nubeiot.iotdata.model.tables.daos.TransducerDao;
-import com.nubeiot.iotdata.model.tables.pojos.Transducer;
-import com.nubeiot.iotdata.model.tables.records.TransducerRecord;
+import com.nubeiot.iotdata.edge.model.Tables;
+import com.nubeiot.iotdata.edge.model.tables.daos.TransducerDao;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
+import com.nubeiot.iotdata.edge.model.tables.records.TransducerRecord;
 
 import lombok.NonNull;
 

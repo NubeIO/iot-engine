@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel.AbstractDittoModel;
-import com.nubeiot.iotdata.model.tables.interfaces.IPointHistoryData;
-import com.nubeiot.iotdata.model.tables.pojos.PointHistoryData;
+import com.nubeiot.iotdata.edge.model.tables.interfaces.IPointHistoryData;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 
 import lombok.NonNull;
 

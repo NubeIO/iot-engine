@@ -5,8 +5,8 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel.AbstractDittoModel;
-import com.nubeiot.iotdata.model.tables.interfaces.IPoint;
-import com.nubeiot.iotdata.model.tables.pojos.Point;
+import com.nubeiot.iotdata.edge.model.tables.interfaces.IPoint;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
 public final class DittoPoint extends AbstractDittoModel<IPoint> {
 
