@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventHandler;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.connector.dashboard.model.tables.interfaces.ITblDashboardConnection;
@@ -18,7 +18,7 @@ import com.nubeiot.edge.connector.dashboard.model.tables.interfaces.ITblDashboar
 import lombok.NonNull;
 import lombok.Setter;
 
-public class EdgeDashboardEventHandler implements EventHandler {
+public class EdgeDashboardEventHandler implements EventListener {
 
     @Setter
     EdgeDashboardEntityHandler entityHandler;
