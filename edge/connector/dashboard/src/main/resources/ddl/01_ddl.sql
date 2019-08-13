@@ -5,6 +5,9 @@ CREATE TABLE IF NOT EXISTS tbl_dashboard_connection (
 	gateway_port                    INTEGER NOT NULL,
 	gateway_root_api                VARCHAR(50),
 	edge_root_api                   VARCHAR(50) NOT NULL,
+	nodered_schema                  VARCHAR(5) NOT NULL,
+	nodered_host                    VARCHAR(50) NOT NULL,
+	nodered_port                    INTEGER NOT NULL,
 	created_at                      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	modified_at                     TIMESTAMP NOT NULL DEFAULT 1,
 	CONSTRAINT Pk_tbl_dashboard_connection PRIMARY KEY ( id )

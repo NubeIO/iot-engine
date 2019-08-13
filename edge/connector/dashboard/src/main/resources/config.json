@@ -21,6 +21,19 @@
       "__static__": {
         "enabled": true,
         "webPath": ""
+      },
+      "__cors__": {
+        "allowedHeaders": [
+          "Access-Control-Request-Method",
+          "Access-Control-Allow-Credentials",
+          "Access-Control-Allow-Origin",
+          "Access-Control-Allow-Headers",
+          "Content-Type",
+          "origin",
+          "x-requested-with",
+          "accept",
+          "Authorization"
+        ]
       }
     },
     "__sql__": {
