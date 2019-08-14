@@ -6,6 +6,8 @@ import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.utils.Key;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -42,6 +44,8 @@ public interface JobModel<T extends VertxJob> extends JsonData {
 
     @JsonProperty(value = "forwardIfFailure")
     boolean forwardIfFailure();
+
+    JsonObject toDetail();
 
     String toString();
 

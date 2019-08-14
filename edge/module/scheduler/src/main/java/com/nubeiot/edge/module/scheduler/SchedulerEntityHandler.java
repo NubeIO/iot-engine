@@ -13,7 +13,7 @@ import com.nubeiot.iotdata.scheduler.model.Tables;
 
 import lombok.NonNull;
 
-final class SchedulerEntityHandler extends EntityHandler implements EntityAuditHandler {
+class SchedulerEntityHandler extends EntityHandler implements EntityAuditHandler {
 
     public SchedulerEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         super(jooqConfig, vertx);

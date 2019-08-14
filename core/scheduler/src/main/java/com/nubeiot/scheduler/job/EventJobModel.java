@@ -1,11 +1,15 @@
 package com.nubeiot.scheduler.job;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.quartz.JobKey;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.NubeException;
@@ -39,6 +43,12 @@ public final class EventJobModel extends AbstractJobModel {
 
     @Override
     public Class<EventJob> implementation() { return EventJob.class; }
+
+    @Override
+    public JsonObject toDetail() {
+        return new JsonObject().put("process", process.toJson())
+                               .put("callback", Optional.ofNullable(callback).map(JsonData::toJson).orElse(null));
+    }
 
     @Override
     public String toString() {

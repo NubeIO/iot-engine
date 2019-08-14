@@ -11,6 +11,8 @@ import org.quartz.CronTrigger;
 import org.quartz.ScheduleBuilder;
 import org.quartz.TriggerKey;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -59,6 +61,16 @@ public final class CronTriggerModel extends AbstractTriggerModel {
     @JsonProperty("timezone")
     private String tz() {
         return timezone.getID();
+    }
+
+    @Override
+    public JsonObject toDetail() {
+        return new JsonObject().put("expression", expr()).put("timezone", tz());
+    }
+
+    @Override
+    public String logicalThread() {
+        return expr() + "::" + tz();
     }
 
     @JsonPOJOBuilder(withPrefix = "")

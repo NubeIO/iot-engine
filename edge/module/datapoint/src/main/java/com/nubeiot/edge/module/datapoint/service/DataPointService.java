@@ -14,12 +14,14 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.EntityService;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
-public interface DataPointService<K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>>
-    extends EntityService<K, M, R, D>, EventHttpService {
+public interface DataPointService<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
+                                     M extends EntityMetadata<K, P, R, D>>
+    extends EntityService<K, P, R, D, M>, EventHttpService {
 
     static Set<? extends DataPointService> createServices(EntityHandler entityHandler) {
         final Map<Class, Object> inputs = Collections.singletonMap(EntityHandler.class, entityHandler);
@@ -34,24 +36,17 @@ public interface DataPointService<K, M extends VertxPojo, R extends UpdatableRec
         return true;
     }
 
-    default boolean enableFullResourceInCUDResponse() {
-        return true;
-    }
-
     default String api() {
         return "datapoint." + this.getClass().getSimpleName();
     }
 
-    default String address() {
-        return this.getClass().getName();
-    }
-
     default Set<EventMethodDefinition> definitions() {
-        return Collections.singleton(EventMethodDefinition.createDefault(servicePath(), "/:" + requestKeyName()));
+        return Collections.singleton(
+            EventMethodDefinition.createDefault(servicePath(), "/:" + metadata().requestKeyName()));
     }
 
     default String servicePath() {
-        return "/" + Strings.toUrlPathWithLC(modelClass().getSimpleName());
+        return "/" + Strings.toUrlPathWithLC(metadata().modelClass().getSimpleName());
     }
 
     Publisher publisher();

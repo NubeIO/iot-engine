@@ -42,6 +42,10 @@
             "symbol": "kWh"
           },
           {
+            "type": "rpm",
+            "symbol": "rpm"
+          },
+          {
             "type": "bool",
             "possible_values": {
               "0.5": [

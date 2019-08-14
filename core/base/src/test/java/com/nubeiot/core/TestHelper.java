@@ -235,6 +235,10 @@ public interface TestHelper {
 
         static void assertJson(TestContext context, Async async, JsonObject expected, JsonObject actual,
                                Customization... customizations) {
+            if (customizations.length == 0) {
+                assertJson(context, async, expected, actual);
+                return;
+            }
             try {
                 JSONAssert.assertEquals(expected.encode(), actual.encode(), comparator(customizations));
             } catch (JSONException | AssertionError e) {

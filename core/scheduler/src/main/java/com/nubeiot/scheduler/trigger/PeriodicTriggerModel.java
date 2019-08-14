@@ -5,6 +5,8 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
 import org.quartz.TriggerKey;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.scheduler.trigger.TriggerModel.AbstractTriggerModel;
@@ -41,6 +43,16 @@ public final class PeriodicTriggerModel extends AbstractTriggerModel {
     @Override
     protected @NonNull ScheduleBuilder<SimpleTrigger> scheduleBuilder() {
         return SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(intervalInSeconds).withRepeatCount(repeat);
+    }
+
+    @Override
+    public JsonObject toDetail() {
+        return new JsonObject().put("intervalInSeconds", intervalInSeconds).put("repeat", repeat);
+    }
+
+    @Override
+    public String logicalThread() {
+        return null;
     }
 
     @JsonPOJOBuilder(withPrefix = "")

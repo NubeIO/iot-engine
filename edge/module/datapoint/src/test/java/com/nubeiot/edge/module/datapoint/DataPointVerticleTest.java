@@ -62,14 +62,20 @@ public class DataPointVerticleTest extends DynamicServiceTestBase {
     }
 
     @Test
-    public void test_get_tags_by_point(TestContext context) {
+    public void test_get_list_tags_by_point(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "/tags", 200,
                            new JsonObject("{\"tags\":[{\"id\":1,\"tag_name\":\"sensor\",\"tag_value\":\"temp\"}," +
                                           "{\"id\":2,\"tag_name\":\"source\",\"tag_value\":\"droplet\"}]}"));
     }
 
     @Test
-    public void test_get_tags(TestContext context) {
+    public void test_get_tag_by_point_and_id(TestContext context) {
+        assertRestByClient(context, HttpMethod.GET, "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "/tags/2", 200,
+                           new JsonObject("{\"id\":2,\"tag_name\":\"source\",\"tag_value\":\"droplet\"}"));
+    }
+
+    @Test
+    public void test_get_list_tags(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"tags\":[{\"id\":1,\"tag_name\":\"sensor\",\"point\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\"," +
             "\"tag_value\":\"temp\"},{\"id\":2,\"tag_name\":\"source\"," +
@@ -79,6 +85,14 @@ public class DataPointVerticleTest extends DynamicServiceTestBase {
             "\"tag_value\":\"temp\"},{\"id\":4,\"tag_name\":\"source\"," +
             "\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\",\"tag_value\":\"hvac\"}]}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/tags", 200, expected);
+    }
+
+    @Test
+    public void test_get_tag_by_id(TestContext context) {
+        final JsonObject expected = new JsonObject(
+            "{\"id\":1,\"tag_name\":\"sensor\",\"point\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\"," +
+            "\"tag_value\":\"temp\"}");
+        assertRestByClient(context, HttpMethod.GET, "/api/s/tags/1", 200, expected);
     }
 
 }

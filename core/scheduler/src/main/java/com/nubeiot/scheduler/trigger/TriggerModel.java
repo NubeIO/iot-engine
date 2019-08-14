@@ -6,6 +6,8 @@ import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.quartz.utils.Key;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -39,7 +41,9 @@ public interface TriggerModel extends JsonData {
 
     Trigger toTrigger();
 
-    String toString();
+    JsonObject toDetail();
+
+    String logicalThread();
 
     @RequiredArgsConstructor
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)

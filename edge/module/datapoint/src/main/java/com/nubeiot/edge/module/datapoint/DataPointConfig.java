@@ -22,7 +22,7 @@ import com.nubeiot.core.utils.Reflections.ReflectionField;
 import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.OldestCleanupPolicy;
 import com.nubeiot.edge.module.datapoint.service.HistoryDataService;
-import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
+import com.nubeiot.edge.module.datapoint.service.Metadata.PointMetadata;
 import com.nubeiot.iotdata.edge.model.tables.interfaces.IMeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.unit.DataType;
@@ -140,12 +140,13 @@ public final class DataPointConfig implements IConfig {
                                                      .pattern(EventPattern.REQUEST_RESPONSE)
                                                      .action(EventAction.BATCH_DELETE)
                                                      .build();
-            final JsonObject trigger = new JsonObject().put("expr", "0 0 0 ? * SUN *")
-                                                       .put("tz", "Australia/Sydney")
+            final JsonObject trigger = new JsonObject().put("type", "CRON")
+                                                       .put("expression", "0 0 0 ? * SUN *")
+                                                       .put("timezone", "Australia/Sydney")
                                                        .put("name", "historyData")
                                                        .put("group", "cleanup");
             return new CleanupPolicyConfig(true, event, trigger,
-                                           new OldestCleanupPolicy(100, PointExtension.REQUEST_KEY,
+                                           new OldestCleanupPolicy(100, PointMetadata.INSTANCE.requestKeyName(),
                                                                    Duration.ofDays(30)));
         }
 

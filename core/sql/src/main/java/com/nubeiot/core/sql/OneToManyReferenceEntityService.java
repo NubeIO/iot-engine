@@ -15,7 +15,6 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.StateException;
@@ -23,8 +22,20 @@ import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 
-public interface HasReferenceEntityService<KEY, MODEL extends VertxPojo, RECORD extends UpdatableRecord<RECORD>, DAO extends VertxDAO<RECORD, MODEL, KEY>>
-    extends InternalEntityService<KEY, MODEL, RECORD, DAO>, HasReferenceResource {
+/**
+ * Represents service that holds a {@code resource} has one or more {@code reference} to other resources. It presents
+ * one-to-one or one-to-many relationship.
+ *
+ * @param <KEY>      Primary key type
+ * @param <POJO>     Pojo model type
+ * @param <RECORD>   Record type
+ * @param <DAO>      DAO Type
+ * @param <METADATA> Metadata Type
+ */
+public interface OneToManyReferenceEntityService<KEY, POJO extends VertxPojo, RECORD extends UpdatableRecord<RECORD>,
+                                                    DAO extends VertxDAO<RECORD, POJO, KEY>,
+                                                    METADATA extends EntityMetadata<KEY, POJO, RECORD, DAO>>
+    extends InternalEntityService<KEY, POJO, RECORD, DAO, METADATA>, HasReferenceResource {
 
     @Override
     @NonNull
@@ -33,49 +44,30 @@ public interface HasReferenceEntityService<KEY, MODEL extends VertxPojo, RECORD 
             return recompute(requestData, null);
         }
         if (action != EventAction.CREATE) {
-            return recompute(requestData, Collections.singletonMap(jsonKeyName(), parsePrimaryKey(requestData)));
+            return recompute(requestData,
+                             Collections.singletonMap(metadata().jsonKeyName(), parsePrimaryKey(requestData)));
         }
         return InternalEntityService.super.recompute(action, requestData);
     }
 
     @Override
-    default @NonNull JsonObject customizeGetItem(@NonNull MODEL pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(computeIgnoreFields(requestData));
+    default Set<String> ignoreFields(@NonNull RequestData requestData) {
+        JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElseGet(JsonObject::new);
+        return Stream.of(InternalEntityService.super.ignoreFields(requestData).stream(),
+                         jsonFieldConverter().keySet().stream().filter(s -> filter.fieldNames().contains(s)),
+                         jsonRefFields().values().stream().filter(s -> filter.fieldNames().contains(s)))
+                     .flatMap(s -> s)
+                     .collect(Collectors.toSet());
     }
 
     @Override
-    default @NonNull JsonObject customizeCreatedItem(@NonNull MODEL pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, computeIgnoreFields(requestData));
-    }
-
-    @Override
-    default @NonNull JsonObject customizeModifiedItem(@NonNull MODEL pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(computeIgnoreFields(requestData));
-    }
-
-    @Override
-    @NonNull
-    default JsonObject customizeDeletedItem(@NonNull MODEL pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, computeIgnoreFields(requestData));
-    }
-
-    @Override
-    default Single<MODEL> doGetOne(RequestData requestData) {
+    default Single<POJO> doGetOne(RequestData requestData) {
         KEY pk = parsePrimaryKey(requestData);
         return get().queryExecutor()
                     .findOne(ctx -> query(ctx, requestData))
                     .map(o -> o.orElseThrow(() -> notFound(pk)))
                     .onErrorResumeNext(t -> Single.error(t instanceof TooManyRowsException ? new StateException(
                         "Query is not correct, the result contains more than one record", t) : t));
-    }
-
-    default Set<String> computeIgnoreFields(@NonNull RequestData requestData) {
-        JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElseGet(JsonObject::new);
-        return Stream.of(requestData.hasAudit() ? Stream.<String>empty() : IGNORE_FIELDS.stream(),
-                         jsonFieldConverter().keySet().stream().filter(s -> filter.fieldNames().contains(s)),
-                         jsonRefFields().values().stream().filter(s -> filter.fieldNames().contains(s)))
-                     .flatMap(s -> s)
-                     .collect(Collectors.toSet());
     }
 
     default RequestData recompute(RequestData requestData, Map<String, ?> extra) {

@@ -9,7 +9,9 @@ public interface EventHttpService extends EventListener {
 
     String api();
 
-    String address();
+    default String address() {
+        return this.getClass().getName();
+    }
 
     Set<EventMethodDefinition> definitions();
 

@@ -1,5 +1,7 @@
 package com.nubeiot.core.event;
 
+import java.util.Optional;
+
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -42,6 +44,10 @@ public final class DeliveryEvent implements JsonData {
     private final EventAction action;
 
     private final JsonObject payload;
+
+    public static DeliveryEvent from(JsonObject data) {
+        return Optional.ofNullable(data).map(d -> JsonData.convert(d, DeliveryEvent.class)).orElse(null);
+    }
 
     public static DeliveryEvent from(EventModel model, EventAction action) {
         if (!model.getEvents().contains(action)) {

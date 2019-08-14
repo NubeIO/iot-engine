@@ -36,21 +36,14 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
-interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>>
-    extends EntityService<K, M, R, D> {
+interface InternalEntityService<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
+                                   M extends EntityMetadata<K, P, R, D>>
+    extends EntityService<K, P, R, D, M> {
 
     /**
-     * Represents set of audit fields. Use {@link Filters#AUDIT} is {@code true} to expose these fields
+     * Represents set of audit fields. Use {@link Filters#AUDIT} to expose these fields
      */
-    Set<String> IGNORE_FIELDS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("time_audit", "sync_audit")));
-
-    /**
-     * Defines key name in respond data in {@code list} resource
-     *
-     * @return key name
-     * @see #list(RequestData)
-     */
-    @NonNull String listKey();
+    Set<String> AUDIT_FIELDS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("time_audit", "sync_audit")));
 
     /**
      * Do recompute request data
@@ -61,14 +54,32 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
     }
 
     /**
+     * Get ignore fields by request data. By default, it excludes {@link #AUDIT_FIELDS}.
+     * <p>
+     * If {@code request data} has {@link Filters#AUDIT}, it will expose these {@code audit fields}
+     *
+     * @param requestData Request data
+     * @return set of ignore fields when do customizing response data
+     * @see #customizeCreatedItem(VertxPojo, RequestData)
+     * @see #customizeDeletedItem(VertxPojo, RequestData)
+     * @see #customizeModifiedItem(VertxPojo, RequestData)
+     * @see #customizeGetItem(VertxPojo, RequestData)
+     * @see #customizeEachItem(VertxPojo, RequestData)
+     */
+    default Set<String> ignoreFields(@NonNull RequestData requestData) {
+        return requestData.hasAudit() ? Collections.emptySet() : AUDIT_FIELDS;
+    }
+
+    /**
      * Do any transform or convert each resource item in {@link #list(RequestData)}
      *
      * @param pojo        item
      * @param requestData request data
      * @return transformer item
+     * @apiNote By default, result omits {@code null} fields
      */
     @NonNull
-    default JsonObject customizeEachItem(@NonNull M pojo, @NonNull RequestData requestData) {
+    default JsonObject customizeEachItem(@NonNull P pojo, @NonNull RequestData requestData) {
         return customizeGetItem(pojo, requestData);
     }
 
@@ -78,10 +89,11 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @param pojo        item
      * @param requestData request data
      * @return transformer item
+     * @apiNote By default, result omits {@code null} fields
      */
     @NonNull
-    default JsonObject customizeGetItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
+    default JsonObject customizeGetItem(@NonNull P pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(ignoreFields(requestData));
     }
 
     /**
@@ -91,12 +103,11 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @param pojo        item
      * @param requestData request data
      * @return transformer item
-     * @apiNote By default, result omits {@code null} fields
+     * @apiNote By default, result doesn't omits {@code null} fields
      */
     @NonNull
-    default JsonObject customizeCreatedItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo)
-                       .toJson(JsonData.MAPPER, requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
+    default JsonObject customizeCreatedItem(@NonNull P pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData));
     }
 
     /**
@@ -106,11 +117,11 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @param pojo        item
      * @param requestData request data
      * @return transformer item
-     * @apiNote By default, result omits {@code null} fields and {@link #IGNORE_FIELDS}
+     * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
      */
     @NonNull
-    default JsonObject customizeModifiedItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
+    default JsonObject customizeModifiedItem(@NonNull P pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(ignoreFields(requestData));
     }
 
     /**
@@ -120,12 +131,11 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @param pojo        item
      * @param requestData request data
      * @return transformer item
-     * @apiNote By default, result omits {@code null} fields
+     * @apiNote By default, result doesn't omits {@code null} fields
      */
     @NonNull
-    default JsonObject customizeDeletedItem(@NonNull M pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo)
-                       .toJson(JsonData.MAPPER, requestData.hasAudit() ? Collections.emptySet() : IGNORE_FIELDS);
+    default JsonObject customizeDeletedItem(@NonNull P pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData));
     }
 
     /**
@@ -134,7 +144,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @param requestData Request data
      * @return list pojo entities
      */
-    default Observable<M> doGetList(RequestData requestData) {
+    default Observable<P> doGetList(RequestData requestData) {
         return get().queryExecutor().findMany(ctx -> query(ctx, requestData)).flattenAsObservable(records -> records);
     }
 
@@ -144,7 +154,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @param requestData Request data
      * @return single pojo
      */
-    default Single<M> doGetOne(RequestData requestData) {
+    default Single<P> doGetOne(RequestData requestData) {
         K pk = parsePrimaryKey(requestData);
         return get().findOneById(pk).map(o -> o.orElseThrow(() -> notFound(pk)));
     }
@@ -159,11 +169,11 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @see #cudResponse(EventAction, VertxPojo, RequestData)
      */
     default Single<JsonObject> doUpdate(RequestData requestData, EventAction action,
-                                        Function3<M, M, JsonObject, M> validation) {
+                                        Function3<P, P, JsonObject, P> validation) {
         RequestData reqData = recompute(action, requestData);
         final K pk = parsePrimaryKey(reqData);
         return doGetOne(reqData).map(
-            db -> validation.apply(db, parse(reqData.body().put(jsonKeyName(), pk)), reqData.headers()))
+            db -> validation.apply(db, parse(reqData.body().put(metadata().jsonKeyName(), pk)), reqData.headers()))
                                 .flatMap(get()::update)
                                 .filter(i -> i > 0)
                                 .switchIfEmpty(Single.error(notFound(pk)))
@@ -180,7 +190,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @throws IllegalArgumentException if any invalid parameter
      */
     @NonNull
-    default M validateOnCreate(@NonNull M pojo, @NonNull JsonObject headers) throws IllegalArgumentException {
+    default P validateOnCreate(@NonNull P pojo, @NonNull JsonObject headers) throws IllegalArgumentException {
         return EntityAuditHandler.addCreationAudit(enableTimeAudit(), pojo,
                                                    headers.getString(Headers.X_REQUEST_USER, null));
     }
@@ -196,7 +206,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @throws IllegalArgumentException if any invalid parameter
      */
     @NonNull
-    default M validateOnUpdate(@NonNull M dbData, @NonNull M pojo, @NonNull JsonObject headers)
+    default P validateOnUpdate(@NonNull P dbData, @NonNull P pojo, @NonNull JsonObject headers)
         throws IllegalArgumentException {
         return EntityAuditHandler.addModifiedAudit(enableTimeAudit(), dbData, pojo,
                                                    headers.getString(Headers.X_REQUEST_USER, null));
@@ -213,7 +223,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @throws IllegalArgumentException if any invalid parameter
      */
     @NonNull
-    default M validateOnPatch(@NonNull M dbData, @NonNull M pojo, @NonNull JsonObject headers)
+    default P validateOnPatch(@NonNull P dbData, @NonNull P pojo, @NonNull JsonObject headers)
         throws IllegalArgumentException {
         return EntityAuditHandler.addModifiedAudit(enableTimeAudit(), dbData, parse(JsonPojo.merge(dbData, pojo)),
                                                    headers.getString(Headers.X_REQUEST_USER, null));
@@ -229,7 +239,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @see #paging(SelectConditionStep, Pagination)
      */
     default ResultQuery<R> query(@NonNull DSLContext ctx, @NonNull RequestData requestData) {
-        return paging(filter(ctx.selectFrom(table()).where(DSL.trueCondition()), requestData.getFilter()),
+        return paging(filter(ctx.selectFrom(metadata().table()).where(DSL.trueCondition()), requestData.getFilter()),
                       requestData.getPagination());
     }
 
@@ -243,15 +253,15 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @return Database Select DSL
      * @see SelectConditionStep
      */
-    //TODO It depends on RQL in future https://github.com/NubeIO/iot-engine/issues/128
+    //TODO Rich query depends on RQL in future https://github.com/NubeIO/iot-engine/issues/128
     @SuppressWarnings("unchecked")
     default SelectConditionStep<R> filter(@NonNull SelectConditionStep<R> sql, JsonObject filter) {
         if (Objects.isNull(filter)) {
             return sql;
         }
-        final Map<String, String> jsonFields = table().jsonFields();
+        final Map<String, String> jsonFields = metadata().table().jsonFields();
         filter.stream().map(entry -> {
-            final Field field = table().field(jsonFields.getOrDefault(entry.getKey(), entry.getKey()));
+            final Field field = metadata().table().field(jsonFields.getOrDefault(entry.getKey(), entry.getKey()));
             return Optional.ofNullable(entry.getValue()).map(field::eq).orElseGet(field::isNull);
         }).forEach(sql::and);
         return sql;
@@ -276,7 +286,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @return one single data source if found else throw {@code not found exception}
      * @see #notFound(K)
      */
-    default Single<M> lookupById(@NonNull K primaryKey) {
+    default Single<P> lookupById(@NonNull K primaryKey) {
         return get().findOneById(primaryKey).map(o -> o.orElseThrow(() -> notFound(primaryKey)));
     }
 
@@ -288,7 +298,7 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @param requestData request data
      * @return response
      */
-    default Single<JsonObject> cudResponse(@NonNull EventAction action, @NonNull M pojo,
+    default Single<JsonObject> cudResponse(@NonNull EventAction action, @NonNull P pojo,
                                            @NonNull RequestData requestData) {
         JsonObject result = action == EventAction.CREATE
                             ? customizeCreatedItem(pojo, requestData)
@@ -311,9 +321,10 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
                                            @NonNull RequestData requestData) {
         return enableFullResourceInCUDResponse()
                ? lookupById(key).flatMap(r -> cudResponse(action, r, requestData))
-               : Single.just(new JsonObject().put(requestKeyName(), ReflectionClass.isJavaLangObject(key.getClass())
-                                                                    ? key
-                                                                    : key.toString()));
+               : Single.just(new JsonObject().put(metadata().requestKeyName(),
+                                                  ReflectionClass.isJavaLangObject(key.getClass())
+                                                  ? key
+                                                  : key.toString()));
     }
 
     /**
@@ -323,7 +334,8 @@ interface InternalEntityService<K, M extends VertxPojo, R extends UpdatableRecor
      * @return NotFoundException
      */
     default NotFoundException notFound(K primaryKey) {
-        return new NotFoundException(Strings.format("Not found resource with {0}={1}", requestKeyName(), primaryKey));
+        return new NotFoundException(
+            Strings.format("Not found resource with {0}={1}", metadata().requestKeyName(), primaryKey));
     }
 
 }

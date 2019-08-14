@@ -1,7 +1,5 @@
 package com.nubeiot.core.sql;
 
-import java.util.function.Supplier;
-
 import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
@@ -23,23 +21,21 @@ import lombok.NonNull;
 /**
  * Abstract service to implement {@code CRUD} listeners for entity
  */
-public abstract class AbstractEntityService<K, M extends VertxPojo, R extends UpdatableRecord<R>,
-                                               D extends VertxDAO<R, M, K>>
-    implements InternalEntityService<K, M, R, D> {
+public abstract class AbstractEntityService<K, P extends VertxPojo, R extends UpdatableRecord<R>,
+                                               D extends VertxDAO<R, P, K>, M extends EntityMetadata<K, P, R, D>>
+    implements InternalEntityService<K, P, R, D, M> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Getter(value = AccessLevel.PROTECTED)
     private final EntityHandler entityHandler;
-    private final Supplier<D> dao;
 
     public AbstractEntityService(@NonNull EntityHandler entityHandler) {
         this.entityHandler = entityHandler;
-        this.dao = () -> entityHandler.getDao(daoClass());
     }
 
     @Override
     public D get() {
-        return dao.get();
+        return this.entityHandler.getDao(metadata().daoClass());
     }
 
     /**
@@ -50,7 +46,7 @@ public abstract class AbstractEntityService<K, M extends VertxPojo, R extends Up
         RequestData reqData = recompute(EventAction.GET_LIST, requestData);
         return doGetList(reqData).flatMapSingle(m -> Single.just(customizeEachItem(m, reqData)))
                                  .collect(JsonArray::new, JsonArray::add)
-                                 .map(results -> new JsonObject().put(listKey(), results));
+                                 .map(results -> new JsonObject().put(metadata().listKey(), results));
     }
 
     /**
