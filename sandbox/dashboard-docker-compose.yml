@@ -8,7 +8,6 @@ services:
       - ${DASHBOARD_IOT_EVENTBUS_PORT}:5000
       - ${DASHBOARD_IOT_CLUSTER_PORT}:5701
     volumes:
-      - dashboad-data:/data
       - ./engine/dashboard-server.json:/app/conf/config.json
       - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
       - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
@@ -22,7 +21,6 @@ services:
       - ${DASHBOARD_CONNECTOR_PSQL_EVENTBUS_PORT}:5000
       - ${DASHBOARD_CONNECTOR_PSQL_CLUSTER_PORT}:5701
     volumes:
-      - dashboad-connector-psql-data:/data
       - ./engine/dashboard-connector-postgresql.json:/app/conf/config.json
       - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
       - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
@@ -38,8 +36,22 @@ services:
       - ${DASHBOARD_CONNECTOR_DITTO_EVENTBUS_PORT}:5000
       - ${DASHBOARD_CONNECTOR_DITTO_CLUSTER_PORT}:5701
     volumes:
-      - dashboad-connector-ditto-data:/data
       - ./engine/dashboard-connector-ditto.json:/app/conf/config.json
+      - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
+      - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
+    depends_on:
+      - backend
+
+  connector-mist:
+    image: ${PREFIX_IMG}/nube-dashboard-connector-mist:${IOT_VERSION}
+    command: >-
+      ./wait-for-it.sh backend:8080 --timeout=30 -s -- ./entrypoint.sh
+    ports:
+      - ${DASHBOARD_CONNECTOR_MIST_PORT}:8080
+      - ${DASHBOARD_CONNECTOR_MIST_EVENTBUS_PORT}:5000
+      - ${DASHBOARD_CONNECTOR_MIST_CLUSTER_PORT}:5701
+    volumes:
+      - ./engine/dashboard-connector-mist.json:/app/conf/config.json
       - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
       - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
     depends_on:
@@ -60,11 +72,3 @@ services:
       DITTO_POLICY: fasle
     ports:
       - ${DASHBOARD_PORT}:80
-
-volumes:
-  dashboad-data:
-    driver: local
-  dashboad-connector-psql-data:
-    driver: local
-  dashboad-connector-ditto-data:
-    driver: local
