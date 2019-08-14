@@ -11,6 +11,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.serotonin.bacnet4j.exception.BACnetException;
 
@@ -37,8 +40,14 @@ public class RemotePointsInfoEventHandlerTest {
 
     @Test
     public void noNetworkTest() throws Exception {
-        eventHandler.getRemoteDevicePoints("testNetFalse", id).test().assertError(BACnetException.class);
-        eventHandler.getRemoteDevicePointExtended("testNetFalse", id, p).test().assertError(BACnetException.class);
+        eventHandler.getRemoteDevicePoints(
+            RequestData.builder().body(new JsonObject().put("network", "testNetFalse").put("deviceId", "1234")).build())
+                    .test()
+                    .assertError(BACnetException.class);
+        eventHandler.getRemoteDevicePointExtended(
+            RequestData.builder().body(new JsonObject().put("network", "testNetFalse").put("deviceId", "1234")).build())
+                    .test()
+                    .assertError(BACnetException.class);
     }
 
 }

@@ -156,10 +156,17 @@ public class BACnetDataConversions {
     }
 
     public static String  pointIDNubeToBACnet(String id) throws Exception {
-        String pointPrefix = id.substring(0, id.length() - 1);
-        int inst;
+        //TODO: problem with Relays and having more than 10 Binary Outputs... kill me
+        String pointPrefix = null;
+        int inst = 0;
+        if(id.startsWith("UI") || id.startsWith("UO") || id.startsWith("DI") || id.startsWith("DO")){
+            pointPrefix = id.substring(0, 2);
+        }else if(id.startsWith("R")){
+            pointPrefix = id.substring(0,1);
+        }else throw new BACnetException("Invalid Nube point Id");
+
         try {
-            inst = Integer.parseInt(id.substring(id.length() - 1));
+            inst = Integer.parseInt(id.substring(pointPrefix.length()));
         } catch (Exception e) {
             throw new BACnetException("Invalid Nube point Id");
         }
@@ -208,7 +215,7 @@ public class BACnetDataConversions {
 
     public static ObjectIdentifier getObjectIdentifier(String idString) throws BACnetRuntimeException {
         String[] arr = idString.split(":");
-        if (arr.length <= 1) {
+        if (arr.length < 2 || arr.length > 2) {
             throw new BACnetRuntimeException("Illegal Object Identifier");
         }
         ObjectType type = ObjectType.forName(arr[0]);

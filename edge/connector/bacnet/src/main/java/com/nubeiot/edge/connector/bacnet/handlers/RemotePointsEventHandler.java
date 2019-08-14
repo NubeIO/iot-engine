@@ -12,13 +12,10 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventHandler;
 import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.serotonin.bacnet4j.exception.BACnetException;
-import com.serotonin.bacnet4j.type.Encodable;
-import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -28,13 +25,13 @@ import lombok.RequiredArgsConstructor;
  *  calls respective messages in BACnetInstance
  */
 @RequiredArgsConstructor
-public class RemotePointEventHandler implements EventHandler {
+public class RemotePointsEventHandler implements EventHandler {
 
     private final Map<String, BACnetInstance> bacnetInstances;
 
     @Override
     public @NonNull List<EventAction> getAvailableEvents() {
-        return Collections.unmodifiableList(new ArrayList<>(BACnetEventModels.POINT.getEvents()));
+        return Collections.unmodifiableList(new ArrayList<>(BACnetEventModels.POINTS.getEvents()));
     }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
@@ -72,6 +69,10 @@ public class RemotePointEventHandler implements EventHandler {
         String objectId = requestData.body().getString("objectId");
         String priority = requestData.body().getString("priority");
         Object obj = requestData.body().getValue("value");
+
+        if (priority == null || priority.isEmpty()) {
+            priority = "16";
+        }
 
         try {
             return bacnetInstances.get(network)

@@ -50,17 +50,22 @@ public class BACnetDataConversionsTest {
 
     @Test
     public void pointIDNubetoBACnetTest() throws Exception {
-        String UI = "UI1";
-        String UO = "UO1";
-        String DI = "DI1";
-        String DO = "DO1";
-        String R = "R1";
 
-        Assert.assertEquals("analog-input:1", BACnetDataConversions.pointIDNubeToBACnet(UI));
-        Assert.assertEquals("analog-output:1", BACnetDataConversions.pointIDNubeToBACnet(UO));
-        Assert.assertEquals("binary-input:1", BACnetDataConversions.pointIDNubeToBACnet(DI));
-        Assert.assertEquals("binary-output:1", BACnetDataConversions.pointIDNubeToBACnet(DO));
-        Assert.assertEquals("binary-output:11", BACnetDataConversions.pointIDNubeToBACnet(R));
+        Assert.assertEquals("analog-input:1", BACnetDataConversions.pointIDNubeToBACnet("UI1"));
+        Assert.assertEquals("analog-output:1", BACnetDataConversions.pointIDNubeToBACnet("UO1"));
+        Assert.assertEquals("binary-input:1", BACnetDataConversions.pointIDNubeToBACnet("DI1"));
+        Assert.assertEquals("binary-output:1", BACnetDataConversions.pointIDNubeToBACnet("DO1"));
+        Assert.assertEquals("binary-output:11", BACnetDataConversions.pointIDNubeToBACnet("R1"));
+
+
+        Assert.assertEquals("analog-input:11", BACnetDataConversions.pointIDNubeToBACnet("UI11"));
+        Assert.assertEquals("analog-input:111", BACnetDataConversions.pointIDNubeToBACnet("UI111"));
+        Assert.assertEquals("analog-output:12", BACnetDataConversions.pointIDNubeToBACnet("UO12"));
+        Assert.assertEquals("binary-input:13", BACnetDataConversions.pointIDNubeToBACnet("DI13"));
+        Assert.assertEquals("binary-output:14", BACnetDataConversions.pointIDNubeToBACnet("DO14"));
+        //TODO: the relay with more than 10 BI's problem.....
+
+        //        Assert.assertEquals("binary-output:15", BACnetDataConversions.pointIDNubeToBACnet("R15"));
     }
 
 //    @Test
