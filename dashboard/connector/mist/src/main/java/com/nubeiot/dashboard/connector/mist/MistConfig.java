@@ -17,7 +17,7 @@ public class MistConfig implements IConfig {
 
     private String schema = "http";
     private String host = "0.0.0.0";
-    private int port = 8080;
+    private int port = 2004;
 
     @Override
     public String name() {
