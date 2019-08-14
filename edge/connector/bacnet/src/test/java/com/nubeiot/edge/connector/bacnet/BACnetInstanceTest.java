@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -80,7 +81,7 @@ public class BACnetInstanceTest {
         Mockito.when(ld.startRemoteDeviceDiscovery()).thenReturn(Mockito.mock(RemoteDeviceDiscoverer.class));
         inst.startRemoteDiscover();
         Mockito.verify(ld).clearRemoteDevices();
-        Mockito.verify(ld).startRemoteDeviceDiscovery();
+        Mockito.verify(ld).startRemoteDeviceDiscovery(Mockito.any(Consumer.class));
         Mockito.verify(vertx).setTimer(Mockito.anyLong(), Mockito.any(Handler.class));
     }
 

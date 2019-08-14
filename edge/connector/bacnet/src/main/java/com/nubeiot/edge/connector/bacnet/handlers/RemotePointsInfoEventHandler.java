@@ -8,6 +8,7 @@ import java.util.Map;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventContractor.Param;
@@ -34,10 +35,11 @@ public class RemotePointsInfoEventHandler implements EventHandler {
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
-    public Single<JsonObject> getRemoteDevicePoints(@Param("network") String network,
-                                                    @Param("deviceId") String instanceNumber) {
+    public Single<JsonObject> getRemoteDevicePoints(RequestData requestData) {
+        String network = requestData.body().getString("network");
+        Integer instanceNumber = Integer.parseInt(requestData.body().getString("deviceId"));
         try {
-            return bacnetInstances.get(network).getRemoteDeviceObjectList(Integer.parseInt(instanceNumber));
+            return bacnetInstances.get(network).getRemoteDeviceObjectList(instanceNumber);
         } catch (NullPointerException e) {
             return Single.error(new BACnetException("No network found", e));
         } catch (ClassCastException e) {
@@ -46,11 +48,13 @@ public class RemotePointsInfoEventHandler implements EventHandler {
     }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
-    public Single<JsonObject> getRemoteDevicePointExtended(@Param("network") String network,
-                                                           @Param("deviceId") String instanceNumber,
-                                                           @Param("objectId") String objectId) {
+    public Single<JsonObject> getRemoteDevicePointExtended(RequestData requestData) {
+        String network = requestData.body().getString("network");
+        Integer instanceNumber = Integer.parseInt(requestData.body().getString("deviceId"));
+        String objectId = requestData.body().getString("objectId");
+
         try {
-            return bacnetInstances.get(network).getRemoteObjectProperties(Integer.parseInt(instanceNumber), objectId);
+            return bacnetInstances.get(network).getRemoteObjectProperties(instanceNumber, objectId);
         } catch (NullPointerException e) {
             return Single.error(new BACnetException("No network found", e));
         } catch (ClassCastException e) {

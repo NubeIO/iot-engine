@@ -74,10 +74,15 @@ public class LocalPointObjectUtils {
             } else if (t == ObjectType.analogValue) {
                 return new AnalogValueObject(localDevice, oid.getInstanceNumber(), point.getName(),
                                              BACnetDataConversions.primitiveToReal(point.getValue()).floatValue(),
-                                             EngineeringUnits.noUnits, false);
+                                             EngineeringUnits.noUnits, false).supportWritable()
+                                                                             .supportCovReporting(
+                                                                                 point.getCovTolerance());
             } else if (t == ObjectType.binaryValue) {
                 return new BinaryValueObject(localDevice, oid.getInstanceNumber(), point.getName(),
-                                             BACnetDataConversions.primitiveToBinary(point.getValue()), false);
+                                             BACnetDataConversions.primitiveToBinary(point.getValue()),
+                                             false).supportWritable()
+                                                   .supportCovReporting()
+                                                   .supportCommandable(BACnetDataConversions.primitiveToBinary(point.getValue()));
             } else {
                 throw new BACnetException("Point type creation error");
             }

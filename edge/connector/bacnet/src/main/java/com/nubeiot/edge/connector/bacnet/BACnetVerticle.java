@@ -24,7 +24,7 @@ import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.edge.connector.bacnet.handlers.MultipleNetworkEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.NubeServiceEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.RemoteDeviceEventHandler;
-import com.nubeiot.edge.connector.bacnet.handlers.RemotePointEventHandler;
+import com.nubeiot.edge.connector.bacnet.handlers.RemotePointsEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.RemotePointsInfoEventHandler;
 
 /*
@@ -74,7 +74,7 @@ public class BACnetVerticle extends ContainerVerticle {
         controller.register(BACnetEventModels.NETWORKS_ALL, new MultipleNetworkEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.DEVICES, new RemoteDeviceEventHandler(bacnetInstances));
         controller.register(BACnetEventModels.POINTS_INFO, new RemotePointsInfoEventHandler(bacnetInstances));
-        controller.register(BACnetEventModels.POINT, new RemotePointEventHandler(bacnetInstances));
+        controller.register(BACnetEventModels.POINTS, new RemotePointsEventHandler(bacnetInstances));
         this.eventController = controller;
     }
 
@@ -84,7 +84,7 @@ public class BACnetVerticle extends ContainerVerticle {
             logger.info("Terminating Network Transport {}", s);
             baCnet.terminate();
         });
-        this.stopUnits(future);
+        super.stop(future);
     }
 
     protected void startBACnet(BACnetConfig bacnetConfig, ServiceDiscoveryController localController) {
@@ -123,26 +123,24 @@ public class BACnetVerticle extends ContainerVerticle {
 
         localController.addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),
                                               EventMethodDefinition.createDefault("/bacnet/remote/:network/device",
-                                                                                  "/bacnet/remote/:network/device" +
                                                                                   "/:deviceId", false)).subscribe();
 
         localController.addEventMessageRecord("bacnet-points-info-service", BACnetEventModels.POINTS_INFO.getAddress(),
                                               EventMethodDefinition.createDefault(
                                                   "/bacnet/remote/:network/device/:deviceId/points-info",
-                                                  "/bacnet/remote/:network/device/:deviceId/points-info/:objectId",
-                                                  false)).subscribe();
+                                                  "/:objectId",
+                                                  true)).subscribe();
 
-        localController.addEventMessageRecord("bacnet-point-service", BACnetEventModels.POINT.getAddress(),
+        localController.addEventMessageRecord("bacnet-point-service", BACnetEventModels.POINTS.getAddress(),
                                               EventMethodDefinition.createDefault(
-                                                  "/bacnet/remote/:network/device/:deviceId/point",
-                                                  "/bacnet/remote/:network/device/:deviceId/point/:objectId", true))
+                                                  "/bacnet/remote/:network/device/:deviceId/points",
+                                                  "/:objectId", true))
                        .subscribe();
     }
 
     protected void initLocalPoints(String localPointsAddress, ServiceDiscoveryController localController) {
         logger.info("Requesting local points from address {}", localPointsAddress);
 
-        //TODO: need auth for bs-api??
         localController.executeHttpService(r -> r.getName().equals("edge-api"), "/edge-api/points", HttpMethod.GET,
                                            RequestData.builder().build())
                        .subscribe(responseData -> initLocalPoints(responseData.body()),

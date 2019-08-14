@@ -17,7 +17,6 @@ public class BACnetConfigTest {
     @Test
     public void test_default() throws JSONException {
         BACnetConfig config = new BACnetConfig();
-        System.out.println(config.toJson().encode());
         BACnetConfig fromFile = IConfig.from(Configs.loadJsonConfig("bacnetTestConfig.json"), BACnetConfig.class);
         JSONAssert.assertEquals(fromFile.toJson().encode(), config.toJson().encode(), JSONCompareMode.LENIENT);
     }

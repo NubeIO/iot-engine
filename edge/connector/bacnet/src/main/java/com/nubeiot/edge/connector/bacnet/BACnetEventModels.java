@@ -33,19 +33,19 @@ public final class BACnetEventModels {
                                                        .build();
 
     public static final EventModel POINTS_INFO = EventModel.builder()
-                                                           .address("nubeiot.edge.connector.bacnet.device.points")
+                                                           .address("nubeiot.edge.connector.bacnet.device.points-info")
                                                            .pattern(EventPattern.REQUEST_RESPONSE)
                                                            .local(true)
                                                            .events(
                                                                Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE))
                                                            .build();
 
-    public static final EventModel POINT = EventModel.builder()
-                                                     .address("nubeiot.edge.connector.bacnet.device.point")
-                                                     .pattern(EventPattern.REQUEST_RESPONSE)
-                                                     .local(true)
-                                                     .events(Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE,
+    public static final EventModel POINTS = EventModel.builder()
+                                                      .address("nubeiot.edge.connector.bacnet.device.points")
+                                                      .pattern(EventPattern.REQUEST_RESPONSE)
+                                                      .local(true)
+                                                      .events(Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE,
                                                                            EventAction.PATCH))
-                                                     .build();
+                                                      .build();
 
 }

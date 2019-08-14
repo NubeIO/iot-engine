@@ -46,12 +46,10 @@ public class MultipleNetworkEventHandlerTest {
         BACnetInstance inst1 = Mockito.mock(BACnetInstance.class);
         bacnetInstances.put("net1", inst1);
 
-        RequestData requestData = RequestData.builder().build();
-        requestData.getFilter().put("timeout","1000");
+        RequestData requestData = RequestData.builder().body(new JsonObject().put("timeout","1000")).build();
         eventHandler.startDiscovery(requestData);
         Mockito.verify(inst1).startRemoteDiscover(Mockito.anyLong());
         requestData = RequestData.builder().build();
-        requestData.getFilter().put("timeout","0");
         eventHandler.startDiscovery(requestData);
         Mockito.verify(inst1).startRemoteDiscover();
     }

@@ -8,6 +8,7 @@ import java.util.Map;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
@@ -58,7 +59,7 @@ public class MultipleNetworkEventHandler implements EventHandler {
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<String> startDiscovery(RequestData requestData) throws Exception {
 
-        if (requestData.body().getString("timeout") != null) {
+        if (requestData.body() != null && requestData.body().getString("timeout") != null) {
             long timeout = Long.parseLong(requestData.body().getString("timeout"));
             if (timeout > 0 && timeout < 200) {
                 throw new BACnetException("Timout too short. must be >= 200");

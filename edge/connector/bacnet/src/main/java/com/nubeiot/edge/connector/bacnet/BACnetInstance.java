@@ -63,15 +63,12 @@ import lombok.NonNull;
 
 public class BACnetInstance {
 
-    //TODO execute blocking will throw warnings after 10 seconds. is it possible for this to happen on local network
-    // requests?
-
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private Vertx vertx;
     private LocalDevice localDevice;
     private BACnetConfig config;
     private RemoteDeviceDiscoverer deviceDiscoverer;
-    //only mapping virtual points as other points can be calculated to get ObjectIdentifier so this savs memory
+    //only mapping virtual points as other points can be calculated to get ObjectIdentifier so this saves memory
     //TODO: look into moving this higher up to save memory. need to check if each instance creates the exact same point
     // and instance number every time across all BACnetInstances
     private Map<String, ObjectIdentifier> virtualPointsMap;
@@ -304,7 +301,7 @@ public class BACnetInstance {
         }
         try {
             return getRemoteObjectProperties(remoteDevice, BACnetDataConversions.getObjectIdentifier(objectID));
-        } catch (BACnetRuntimeException e) {
+        } catch (Exception e) {
             return Single.error(e);
         }
     }
@@ -330,7 +327,9 @@ public class BACnetInstance {
                 propValuesFinal.put(pid, val);
                 d.setObjectProperty(oid, pid, val);
             });
-
+//            if(propValuesFinal.isEmpty()){
+//                throw new BACnetException("Object not found");
+//            }
             return BACnetDataConversions.objectProperties(propValuesFinal);
         });
     }
