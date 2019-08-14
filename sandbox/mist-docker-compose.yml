@@ -1,0 +1,8 @@
+version: "2.4"
+services:
+  mist:
+    image: hydrosphere/mist:${MIST_VERSION}
+    ports:
+      - ${MIST_PORT}:2004
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

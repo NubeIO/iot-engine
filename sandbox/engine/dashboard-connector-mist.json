@@ -43,7 +43,7 @@
     },
     "__mist__": {
       "schema": "http",
-      "host": "0.0.0.0",
+      "host": "mist",
       "port": 2004
     }
   }
