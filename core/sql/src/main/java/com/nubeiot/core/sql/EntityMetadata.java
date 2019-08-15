@@ -41,7 +41,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      *
      * @return model class
      */
-    @NonNull Class<P> modelClass();
+    @NonNull Class<? extends P> modelClass();
 
     /**
      * DAO class

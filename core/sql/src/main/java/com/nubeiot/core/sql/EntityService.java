@@ -68,6 +68,13 @@ public interface EntityService<K, P extends VertxPojo, R extends UpdatableRecord
     }
 
     /**
+     * Entity handler
+     *
+     * @return entity handler
+     */
+    @NonNull EntityHandler entityHandler();
+
+    /**
      * Entity metadata
      *
      * @return entity metadata

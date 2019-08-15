@@ -34,6 +34,9 @@ public abstract class AbstractEntityService<K, P extends VertxPojo, R extends Up
     }
 
     @Override
+    public @NonNull EntityHandler entityHandler() { return entityHandler; }
+
+    @Override
     public D get() {
         return this.entityHandler.getDao(metadata().daoClass());
     }

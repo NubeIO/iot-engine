@@ -18,6 +18,7 @@ import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ManyToOneReferenceEntityService;
 import com.nubeiot.core.utils.Functions;
+import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobTriggerView;
 import com.nubeiot.iotdata.scheduler.model.Tables;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.JobTriggerDao;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobTrigger;
@@ -88,8 +89,8 @@ abstract class JobTriggerSchedulerService<M extends EntityMetadata<Integer, JobT
     static abstract class Metadata implements SerialKeyEntity<JobTrigger, JobTriggerRecord, JobTriggerDao> {
 
         @Override
-        public final @NonNull Class<JobTrigger> modelClass() {
-            return JobTrigger.class;
+        public final @NonNull Class<? extends JobTrigger> modelClass() {
+            return JobTriggerView.class;
         }
 
         @Override

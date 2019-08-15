@@ -2,6 +2,8 @@ package com.nubeiot.core.sql;
 
 import java.util.Collections;
 
+import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
@@ -41,16 +43,25 @@ public interface ManyToOneReferenceEntityService<KEY, POJO extends VertxPojo, RE
     @Override
     default Single<JsonObject> list(RequestData requestData) {
         RequestData reqData = recompute(EventAction.GET_LIST, requestData);
-
         return doGetList(reqData).flatMapSingle(m -> Single.just(customizeEachItem(m, reqData)))
                                  .collect(JsonArray::new, JsonArray::add)
                                  .map(results -> new JsonObject().put(metadata().listKey(), results));
+        //        return this.entityHandler()
+        //                   .getQueryExecutor()
+        //                   .query(ctx -> queryView(ctx, reqData))
+        //                   .flatMapSingle(m -> Single.just(customizeEachItem(m, reqData)))
+        //                   .collect(JsonArray::new, JsonArray::add)
+        //                   .map(results -> new JsonObject().put(metadata().listKey(), results));
     }
 
     @Override
     default Single<JsonObject> get(RequestData requestData) {
         RequestData reqData = recompute(EventAction.GET_ONE, requestData);
         return doGetOne(reqData).map(pojo -> customizeGetItem(pojo, reqData));
+    }
+
+    default Single<Record> queryView(@NonNull DSLContext ctx, @NonNull RequestData requestData) {
+        return null;
     }
 
 }

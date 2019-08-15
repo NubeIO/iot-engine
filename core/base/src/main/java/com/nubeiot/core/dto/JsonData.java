@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -46,6 +48,26 @@ public interface JsonData extends Serializable {
     String SUCCESS_KEY = "data";
     String ERROR_KEY = "error";
     String FILTER_PROP_BY_NAME = "filter_by_name";
+
+    static <D> D safeGet(@NonNull JsonObject jsonObject, @NonNull String key, @NonNull Class<D> clazz) {
+        return safeGet(jsonObject, key, clazz, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    static <D> D safeGet(@NonNull JsonObject jsonObject, @NonNull String key, @NonNull Class<D> clazz, D defValue) {
+        final Object value = jsonObject.getValue(key);
+        if (Objects.isNull(value)) {
+            return defValue;
+        }
+        if (ReflectionClass.assertDataType(value.getClass(), clazz)) {
+            return clazz.cast(value);
+        }
+        if (ReflectionClass.assertDataType(clazz, JsonObject.class) &&
+            ReflectionClass.assertDataType(value.getClass(), Map.class)) {
+            return (D) JsonData.tryParse(clazz).toJson();
+        }
+        return defValue;
+    }
 
     static <T> T convert(@NonNull JsonObject jsonObject, @NonNull Class<T> clazz) {
         return convert(jsonObject, clazz, MAPPER);
