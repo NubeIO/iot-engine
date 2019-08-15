@@ -19,6 +19,7 @@ import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.HttpConfig;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
@@ -81,7 +82,11 @@ public class MistRestController implements RestApi {
             logger.info("Proxying Response StatusCode: {}", res.statusCode());
             res.bodyHandler(data -> {
                 logger.info("Proxy Response Completed.");
-                future.complete(ResponseDataWriter.serializeResponseData(data.toString()).setStatus(res.statusCode()));
+                logger.info("Data is: " + JsonData.tryParse(data).toJson().encode());
+
+                future.complete(
+                    ResponseDataWriter.serializeResponseData(JsonData.tryParse(data, true).toJson().encode())
+                                      .setStatus(res.statusCode()));
             });
         }).exceptionHandler(e -> future.complete(ResponseDataConverter.convert(e)));
 

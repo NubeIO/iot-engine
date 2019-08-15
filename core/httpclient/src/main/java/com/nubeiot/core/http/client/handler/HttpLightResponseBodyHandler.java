@@ -78,10 +78,10 @@ public abstract class HttpLightResponseBodyHandler implements Handler<Buffer> {
         final boolean isError = response.statusCode() >= 400;
         if (Strings.isNotBlank(contentType) && contentType.contains("json")) {
             logger.info("Try parsing Json data from {}::{}", method, uri);
-            return JsonData.tryParse(buffer, true, isError).toJson();
+            return JsonData.tryParse(buffer, true, isError, false).toJson();
         }
         logger.warn("Try parsing Json in ambiguous case from {}::{}", method, uri);
-        return JsonData.tryParse(buffer, false, isError).toJson();
+        return JsonData.tryParse(buffer, false, isError, false).toJson();
     }
 
 }
