@@ -1,16 +1,17 @@
 package com.nubeiot.edge.module.scheduler.service;
 
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.sql.CompositePojo;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.iotdata.scheduler.model.Tables;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.JobEntityDao;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.TriggerEntityDao;
-import com.nubeiot.iotdata.scheduler.model.tables.interfaces.IJobTrigger;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobEntity;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobTrigger;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.TriggerEntity;
@@ -18,7 +19,6 @@ import com.nubeiot.iotdata.scheduler.model.tables.records.JobEntityRecord;
 import com.nubeiot.iotdata.scheduler.model.tables.records.TriggerEntityRecord;
 
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
@@ -45,14 +45,10 @@ interface SchedulerMetadata {
         }
 
         @Override
-        public @NonNull String requestKeyName() {
-            return "job_id";
-        }
+        public @NonNull String requestKeyName() { return "job_id"; }
 
         @Override
-        public @NonNull String listKey() {
-            return "jobs";
-        }
+        public @NonNull String singularKeyName() { return "job"; }
 
     }
 
@@ -78,27 +74,21 @@ interface SchedulerMetadata {
         }
 
         @Override
-        public @NonNull String requestKeyName() {
-            return "trigger_id";
-        }
+        public @NonNull String requestKeyName() { return "trigger_id"; }
 
         @Override
-        public @NonNull String listKey() {
-            return "triggers";
-        }
+        public @NonNull String singularKeyName() { return "trigger"; }
 
     }
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class TriggerByJobMetadata extends JobTriggerSchedulerService.Metadata {
+    final class TriggerByJobMetadata extends JobTriggerCompositeService.Metadata {
 
         static final TriggerByJobMetadata INSTANCE = new TriggerByJobMetadata();
 
         @Override
-        public @NonNull String requestKeyName() {
-            return "job_id";
-        }
+        public @NonNull String requestKeyName() { return "job_id"; }
 
         @Override
         public @NonNull String jsonKeyName() {
@@ -106,7 +96,7 @@ interface SchedulerMetadata {
         }
 
         @Override
-        public @NonNull String listKey() {
+        public @NonNull String pluralKeyName() {
             return "triggers";
         }
 
@@ -114,7 +104,7 @@ interface SchedulerMetadata {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class JobByTriggerMetadata extends JobTriggerSchedulerService.Metadata {
+    final class JobByTriggerMetadata extends JobTriggerCompositeService.Metadata {
 
         static final JobByTriggerMetadata INSTANCE = new JobByTriggerMetadata();
 
@@ -129,46 +119,25 @@ interface SchedulerMetadata {
         }
 
         @Override
-        public @NonNull String listKey() {
+        public @NonNull String pluralKeyName() {
             return "jobs";
         }
 
     }
 
 
-    @Getter
-    final class JobTriggerView extends JobTrigger {
+    final class JobTriggerComposite extends JobTrigger implements CompositePojo<JobTrigger> {
 
-        private JobEntity job;
-        private TriggerEntity trigger;
-
-        public JobTriggerView setJob(JobEntity job) {
-            this.job = job;
-            return this;
-        }
-
-        public JobTriggerView setTrigger(TriggerEntity trigger) {
-            this.trigger = trigger;
-            return this;
-        }
+        private final Map<String, VertxPojo> other = new HashMap<>();
 
         @Override
-        public IJobTrigger fromJson(JsonObject json) {
-            final IJobTrigger jobTrigger = super.fromJson(json);
-            final JsonObject job = JsonData.safeGet(json, "job", JsonObject.class, new JsonObject());
-            final JsonObject trigger = JsonData.safeGet(json, "trigger", JsonObject.class, new JsonObject());
-            if (job.isEmpty() && trigger.isEmpty()) {
-                return jobTrigger;
-            }
-            final JobTriggerView view = (JobTriggerView) jobTrigger;
-            return view.setJob(new JobEntity(job)).setTrigger(new TriggerEntity(trigger));
+        public @NonNull Map<String, VertxPojo> other() {
+            return other;
         }
 
         @Override
         public JsonObject toJson() {
-            return super.toJson()
-                        .put("job", Objects.isNull(job) ? null : job.toJson())
-                        .put("trigger", Objects.isNull(trigger) ? null : trigger.toJson());
+            return super.toJson().mergeIn(otherToJson(), true);
         }
 
     }

@@ -96,11 +96,24 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     }
 
     /**
-     * Defines key name in respond data in {@code list} resource
+     * Define response key name for single resource
      *
      * @return response key name
+     * @apiNote Default is {@link #table()} name in lowercase
      */
-    @NonNull String listKey();
+    default @NonNull String singularKeyName() {
+        return table().getName().toLowerCase();
+    }
+
+    /**
+     * Defines response  key name for multiple resource
+     *
+     * @return response key name
+     * @apiNote Default is {@link #singularKeyName()} appends "{@code s}" character
+     */
+    default @NonNull String pluralKeyName() {
+        return singularKeyName() + "s";
+    }
 
     /**
      * Represents entity primary key is in {@code Integer} data type

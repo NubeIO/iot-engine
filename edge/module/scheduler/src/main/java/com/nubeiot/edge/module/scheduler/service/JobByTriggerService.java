@@ -1,13 +1,13 @@
 package com.nubeiot.edge.module.scheduler.service;
 
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobByTriggerMetadata;
+import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobEntityMetadata;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
 
-public final class JobByTriggerService extends JobTriggerSchedulerService<JobByTriggerMetadata> {
+public final class JobByTriggerService extends JobTriggerCompositeService<JobByTriggerMetadata> {
 
     public JobByTriggerService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
         super(entityHandler, schedulerContext);
@@ -24,8 +24,9 @@ public final class JobByTriggerService extends JobTriggerSchedulerService<JobByT
     }
 
     @Override
-    public EntityMetadata reference() {
-        return SchedulerMetadata.JobEntityMetadata.INSTANCE;
+    @SuppressWarnings("unchecked")
+    public JobEntityMetadata reference() {
+        return JobEntityMetadata.INSTANCE;
     }
 
     @Override

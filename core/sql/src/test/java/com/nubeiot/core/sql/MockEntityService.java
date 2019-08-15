@@ -48,12 +48,6 @@ class MockEntityService {
                 return Tables.AUTHOR;
             }
 
-            @Override
-            @NonNull
-            public String listKey() {
-                return "authors";
-            }
-
         }
 
 
@@ -75,12 +69,6 @@ class MockEntityService {
             @Override
             public @NonNull JsonTable<BookRecord> table() {
                 return Tables.BOOK;
-            }
-
-            @Override
-            @NonNull
-            public String listKey() {
-                return "books";
             }
 
         }

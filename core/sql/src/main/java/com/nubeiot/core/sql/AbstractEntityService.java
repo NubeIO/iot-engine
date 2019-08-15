@@ -36,20 +36,15 @@ public abstract class AbstractEntityService<K, P extends VertxPojo, R extends Up
     @Override
     public @NonNull EntityHandler entityHandler() { return entityHandler; }
 
-    @Override
-    public D get() {
-        return this.entityHandler.getDao(metadata().daoClass());
-    }
-
     /**
      * {@inheritDoc}
      */
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(RequestData requestData) {
         RequestData reqData = recompute(EventAction.GET_LIST, requestData);
-        return doGetList(reqData).flatMapSingle(m -> Single.just(customizeEachItem(m, reqData)))
+        return doGetList(reqData).map(m -> customizeEachItem(m, reqData))
                                  .collect(JsonArray::new, JsonArray::add)
-                                 .map(results -> new JsonObject().put(metadata().listKey(), results));
+                                 .map(results -> new JsonObject().put(metadata().pluralKeyName(), results));
     }
 
     /**
@@ -100,6 +95,11 @@ public abstract class AbstractEntityService<K, P extends VertxPojo, R extends Up
                                                    .flatMap(r -> enableFullResourceInCUDResponse()
                                                                  ? cudResponse(EventAction.REMOVE, m, reqData)
                                                                  : cudResponse(EventAction.REMOVE, pk, reqData)));
+    }
+
+    @Override
+    public D get() {
+        return this.entityHandler.getDao(metadata().daoClass());
     }
 
 }

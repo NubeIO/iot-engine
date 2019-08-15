@@ -144,7 +144,7 @@ interface InternalEntityService<K, P extends VertxPojo, R extends UpdatableRecor
      * @param requestData Request data
      * @return list pojo entities
      */
-    default Observable<P> doGetList(RequestData requestData) {
+    default Observable<? extends P> doGetList(RequestData requestData) {
         return get().queryExecutor().findMany(ctx -> query(ctx, requestData)).flattenAsObservable(records -> records);
     }
 
@@ -154,7 +154,7 @@ interface InternalEntityService<K, P extends VertxPojo, R extends UpdatableRecor
      * @param requestData Request data
      * @return single pojo
      */
-    default Single<P> doGetOne(RequestData requestData) {
+    default Single<? extends P> doGetOne(RequestData requestData) {
         K pk = parsePrimaryKey(requestData);
         return get().findOneById(pk).map(o -> o.orElseThrow(() -> notFound(pk)));
     }

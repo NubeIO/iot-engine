@@ -26,16 +26,15 @@ import lombok.NonNull;
  * Represents service that holds a {@code resource} has one or more {@code reference} to other resources. It presents
  * one-to-one or one-to-many relationship.
  *
- * @param <KEY>      Primary key type
- * @param <POJO>     Pojo model type
- * @param <RECORD>   Record type
- * @param <DAO>      DAO Type
- * @param <METADATA> Metadata Type
+ * @param <KEY>    Primary key type
+ * @param <POJO>   Pojo model type
+ * @param <RECORD> Record type
+ * @param <DAO>    DAO Type
+ * @param <META>   Metadata Type
  */
 public interface OneToManyReferenceEntityService<KEY, POJO extends VertxPojo, RECORD extends UpdatableRecord<RECORD>,
-                                                    DAO extends VertxDAO<RECORD, POJO, KEY>,
-                                                    METADATA extends EntityMetadata<KEY, POJO, RECORD, DAO>>
-    extends InternalEntityService<KEY, POJO, RECORD, DAO, METADATA>, HasReferenceResource {
+                                                    DAO extends VertxDAO<RECORD, POJO, KEY>, META extends EntityMetadata<KEY, POJO, RECORD, DAO>>
+    extends InternalEntityService<KEY, POJO, RECORD, DAO, META>, HasReferenceResource {
 
     @Override
     @NonNull

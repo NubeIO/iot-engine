@@ -12,13 +12,13 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
+import com.nubeiot.core.sql.CompositeEntityMetadata;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.JsonTable;
 import com.nubeiot.core.sql.ManyToOneReferenceEntityService;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobTriggerView;
+import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobTriggerComposite;
 import com.nubeiot.iotdata.scheduler.model.Tables;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.JobTriggerDao;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobTrigger;
@@ -27,12 +27,12 @@ import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
 
-abstract class JobTriggerSchedulerService<M extends EntityMetadata<Integer, JobTrigger, JobTriggerRecord,
-                                                                      JobTriggerDao>>
-    extends AbstractSchedulerService<Integer, JobTrigger, JobTriggerRecord, JobTriggerDao, M>
-    implements ManyToOneReferenceEntityService<Integer, JobTrigger, JobTriggerRecord, JobTriggerDao, M> {
+abstract class JobTriggerCompositeService<META extends CompositeEntityMetadata<Integer, JobTrigger, JobTriggerRecord,
+                                                                                  JobTriggerDao, JobTriggerComposite>>
+    extends AbstractSchedulerService<Integer, JobTrigger, JobTriggerRecord, JobTriggerDao, META> implements
+                                                                                                 ManyToOneReferenceEntityService<Integer, JobTrigger, JobTriggerRecord, JobTriggerDao, META, JobTriggerComposite> {
 
-    JobTriggerSchedulerService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
+    JobTriggerCompositeService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
         super(entityHandler, schedulerContext);
     }
 
@@ -86,21 +86,22 @@ abstract class JobTriggerSchedulerService<M extends EntityMetadata<Integer, JobT
         return super.delete(requestData);
     }
 
-    static abstract class Metadata implements SerialKeyEntity<JobTrigger, JobTriggerRecord, JobTriggerDao> {
+    static abstract class Metadata implements SerialKeyEntity<JobTrigger, JobTriggerRecord, JobTriggerDao>,
+                                              CompositeEntityMetadata<Integer, JobTrigger, JobTriggerRecord,
+                                                                         JobTriggerDao, JobTriggerComposite> {
 
         @Override
-        public final @NonNull Class<? extends JobTrigger> modelClass() {
-            return JobTriggerView.class;
-        }
+        public final @NonNull Class<? extends JobTrigger> modelClass() { return JobTrigger.class; }
 
         @Override
-        public final @NonNull Class<JobTriggerDao> daoClass() {
-            return JobTriggerDao.class;
-        }
+        public final @NonNull Class<JobTriggerDao> daoClass() { return JobTriggerDao.class; }
 
         @Override
-        public final @NonNull JsonTable<JobTriggerRecord> table() {
-            return Tables.JOB_TRIGGER;
+        public final @NonNull JsonTable<JobTriggerRecord> table() { return Tables.JOB_TRIGGER; }
+
+        @Override
+        public @NonNull Class<JobTriggerComposite> compositeModelClass() {
+            return JobTriggerComposite.class;
         }
 
     }

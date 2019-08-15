@@ -82,7 +82,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "equipments";
         }
 
@@ -111,7 +111,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "devices";
         }
 
@@ -146,7 +146,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "histories";
         }
 
@@ -181,7 +181,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "history_setting";
         }
 
@@ -215,7 +215,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "units";
         }
 
@@ -254,7 +254,7 @@ public interface Metadata {
         }
 
         @Override
-        public @NonNull String listKey() {
+        public @NonNull String pluralKeyName() {
             return "networks";
         }
 
@@ -283,7 +283,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "points";
         }
 
@@ -318,7 +318,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "realtime_data";
         }
 
@@ -354,7 +354,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "realtime_setting";
         }
 
@@ -389,7 +389,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "schedules";
         }
 
@@ -423,7 +423,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "tags";
         }
 
@@ -452,7 +452,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "things";
         }
 
@@ -481,7 +481,7 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String listKey() {
+        public String pluralKeyName() {
             return "transducers";
         }
 
