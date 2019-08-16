@@ -39,7 +39,9 @@ import lombok.NonNull;
  * @param <CP>     Pojo composite type
  */
 public interface ManyToOneReferenceEntityService<KEY, POJO extends VertxPojo, RECORD extends UpdatableRecord<RECORD>,
-                                                    DAO extends VertxDAO<RECORD, POJO, KEY>, META extends CompositeEntityMetadata<KEY, POJO, RECORD, DAO, CP>, CP extends CompositePojo<POJO>>
+                                                    DAO extends VertxDAO<RECORD, POJO, KEY>,
+                                                    META extends CompositeEntityMetadata<KEY, POJO, RECORD, DAO, CP>,
+                                                    CP extends CompositePojo<POJO>>
     extends OneToManyReferenceEntityService<KEY, POJO, RECORD, DAO, META> {
 
     <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> EntityMetadata<K, P, R, D> reference();
@@ -70,6 +72,28 @@ public interface ManyToOneReferenceEntityService<KEY, POJO extends VertxPojo, RE
                      .onErrorResumeNext(t -> Single.error(t instanceof TooManyRowsException ? new StateException(
                          "Query is not correct, the result contains more than one record", t) : t))
                      .map(pojo -> customizeGetItem(pojo.unwrap(), reqData));
+    }
+
+    @Override
+    default Single<JsonObject> create(RequestData requestData) {
+        RequestData reqData = recompute(EventAction.CREATE, requestData);
+        return get().insertReturningPrimary(validateOnCreate(parse(reqData.body()), reqData.headers()))
+                    .flatMap(k -> cudResponse(EventAction.CREATE, k, reqData));
+    }
+
+    @Override
+    default Single<JsonObject> update(RequestData requestData) {
+        return Single.just(new JsonObject());
+    }
+
+    @Override
+    default Single<JsonObject> patch(RequestData requestData) {
+        return Single.just(new JsonObject());
+    }
+
+    @Override
+    default Single<JsonObject> delete(RequestData requestData) {
+        return Single.just(new JsonObject());
     }
 
     @Override

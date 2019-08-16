@@ -2,6 +2,7 @@ package com.nubeiot.edge.module.scheduler;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -17,11 +18,15 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.ExpectedResponse;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
+import com.nubeiot.core.sql.JsonPojo;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.JobConverter;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.TriggerConverter;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobEntity;
+import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobTrigger;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.TriggerEntity;
 import com.nubeiot.scheduler.job.JobType;
 
@@ -155,15 +160,14 @@ public class EdgeSchedulerVerticleTest extends DynamicServiceTestBase {
     }
 
     @Test
-    public void test_create_job(TestContext context) {
-        final JobEntity job2 = JobConverter.convert(MockSchedulerEntityHandler.JOB_2);
-        final RequestData reqData = RequestData.builder().body(job2.toJson()).build();
+    public void test_create_job_success(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"action\":\"CREATE\",\"resource\":{\"id\":2,\"group\":\"group1\",\"name\":\"job2\"," +
             "\"type\":\"EVENT_JOB\",\"forward_if_failure\":true,\"detail\":{\"process\":{\"address\":\"scheduler.1\"," +
             "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"CREATE\"},\"callback\":{\"address\":\"scheduler.2\"," +
             "\"pattern\":\"POINT_2_POINT\",\"action\":\"PUBLISH\"}}},\"status\":\"SUCCESS\"}");
-        assertRestByClient(context, HttpMethod.POST, "/api/s/job", reqData, 201, expected);
+        create_job(context, JobConverter.convert(MockSchedulerEntityHandler.JOB_2),
+                   ExpectedResponse.builder().expected(expected).statusCode(201).build());
     }
 
     @Test
@@ -171,8 +175,9 @@ public class EdgeSchedulerVerticleTest extends DynamicServiceTestBase {
         final JobEntity job = JobConverter.convert(MockSchedulerEntityHandler.JOB_2).setName("unknown").setDetail(null);
         final RequestData reqData = RequestData.builder().body(job.toJson()).build();
         final JsonObject expected = new JsonObject(
-            "{\"message\":\"Job detail cannot be null\",\"code\":\"INVALID_ARGUMENT\"}");
-        assertRestByClient(context, HttpMethod.POST, "/api/s/job", reqData, 400, expected);
+            "{\"message\":\"Job detail cannot be null\"," + "\"code\":\"INVALID_ARGUMENT\"}");
+        assertRestByClient(context, HttpMethod.POST, "/api/s/job", reqData,
+                           ExpectedResponse.builder().expected(expected).statusCode(400).build());
     }
 
     @Test
@@ -183,7 +188,32 @@ public class EdgeSchedulerVerticleTest extends DynamicServiceTestBase {
         final RequestData reqData = RequestData.builder().body(job.toJson()).build();
         final JsonObject expected = new JsonObject(
             "{\"message\":\"Not yet supported job type: XXX\",\"code\":\"INVALID_ARGUMENT\"}");
-        assertRestByClient(context, HttpMethod.POST, "/api/s/job", reqData, 400, expected);
+        assertRestByClient(context, HttpMethod.POST, "/api/s/job", reqData,
+                           ExpectedResponse.builder().expected(expected).statusCode(400).build());
+    }
+
+    @Test
+    public void test_create_job_then_assign_to_trigger(TestContext context) {
+        Consumer<ResponseData> after = r -> {
+            final Integer jobId = r.body().getJsonObject("resource").getInteger("id");
+            JobTrigger composite = new JobTrigger().setEnabled(true).setJobId(jobId);
+            final RequestData reqData = RequestData.builder().body(JsonPojo.from(composite).toJson()).build();
+            final JsonObject expected = new JsonObject(
+                "{\"message\":\"Not yet supported job type: XXX\",\"code\":\"INVALID_ARGUMENT\"}");
+            assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/1/job", reqData, 201, expected);
+        };
+        final JsonObject expected = new JsonObject(
+            "{\"action\":\"CREATE\",\"resource\":{\"id\":2,\"group\":\"group1\",\"name\":\"job2\"," +
+            "\"type\":\"EVENT_JOB\",\"forward_if_failure\":true,\"detail\":{\"process\":{\"address\":\"scheduler.1\"," +
+            "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"CREATE\"},\"callback\":{\"address\":\"scheduler.2\"," +
+            "\"pattern\":\"POINT_2_POINT\",\"action\":\"PUBLISH\"}}},\"status\":\"SUCCESS\"}");
+        create_job(context, JobConverter.convert(MockSchedulerEntityHandler.JOB_2),
+                   ExpectedResponse.builder().expected(expected).statusCode(201).after(after).build());
+    }
+
+    private void create_job(TestContext context, JobEntity job, ExpectedResponse expected) {
+        final RequestData reqData = RequestData.builder().body(job.toJson()).build();
+        assertRestByClient(context, HttpMethod.POST, "/api/s/job", reqData, expected);
     }
 
 }

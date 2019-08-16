@@ -35,7 +35,8 @@ public interface SchedulerConverter {
         }
 
         static JobModel convert(@NonNull JobEntity entity) {
-            if (entity.getType().equals(JobType.EVENT_JOB)) {
+            final JobType type = Objects.requireNonNull(entity.getType(), "Job Type cannot be null");
+            if (JobType.EVENT_JOB.equals(type)) {
                 JsonObject detail = Objects.requireNonNull(entity.getDetail(), "Job detail cannot be null");
                 return EventJobModel.builder()
                                     .group(entity.getGroup())
@@ -45,7 +46,7 @@ public interface SchedulerConverter {
                                     .callback(DeliveryEvent.from(detail.getJsonObject("callback")))
                                     .build();
             }
-            throw new IllegalArgumentException("Not yet supported job type: " + entity.getType().type());
+            throw new IllegalArgumentException("Not yet supported job type: " + type.type());
         }
 
         static JobEntity validate(@NonNull JobEntity entity) {

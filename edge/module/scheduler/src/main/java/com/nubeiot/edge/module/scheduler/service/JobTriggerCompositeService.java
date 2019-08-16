@@ -65,25 +65,25 @@ abstract class JobTriggerCompositeService<META extends CompositeEntityMetadata<I
     @Override
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData requestData) {
-        return super.create(requestData);
+        return ManyToOneReferenceEntityService.super.create(requestData);
     }
 
     @Override
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData requestData) {
-        return super.update(requestData);
+        return ManyToOneReferenceEntityService.super.update(requestData);
     }
 
     @Override
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData requestData) {
-        return super.patch(requestData);
+        return ManyToOneReferenceEntityService.super.patch(requestData);
     }
 
     @Override
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData requestData) {
-        return super.delete(requestData);
+        return ManyToOneReferenceEntityService.super.delete(requestData);
     }
 
     static abstract class Metadata implements SerialKeyEntity<JobTrigger, JobTriggerRecord, JobTriggerDao>,
