@@ -59,6 +59,19 @@ public interface JsonData {
     /**
      * Try parse {@code buffer} to {@code json data}
      *
+     * @param buffer      Buffer data
+     * @param isJson      Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
+     * @param useErrorKey Use whether {@link #ERROR_KEY} or {@link #SUCCESS_KEY} in case of fallback if given {@code
+     *                    buffer} is not {@link JsonObject}
+     * @return default {@code json data} instance
+     */
+    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean useErrorKey) {
+        return tryParse(buffer, isJson, useErrorKey ? ERROR_KEY : SUCCESS_KEY, false);
+    }
+
+    /**
+     * Try parse {@code buffer} to {@code json data}
+     *
      * @param buffer     Buffer data
      * @param isJson     Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
      * @param backupKey Fallback key if given {@code buffer} is not {@link JsonObject}
@@ -172,6 +185,7 @@ public interface JsonData {
                                                 "Cannot parse json data. Received data: " + buffer.toString(), ex);
                     }
                     logger.trace("Failed to parse json array. Use text", ex);
+                    //TODO check length, check encode
                     data.put(backupKey, buffer.toString());
                 }
                 return new DefaultJsonData(data);

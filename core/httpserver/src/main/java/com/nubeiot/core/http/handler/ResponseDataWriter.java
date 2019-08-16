@@ -17,6 +17,10 @@ public class ResponseDataWriter implements HttpResponseWriter<ResponseData> {
 
     private static String SERIALIZATION_KEY = "message";
 
+    public static ResponseData serializeResponseData(ResponseData message) {
+        return message.setBody(new JsonObject().put(SERIALIZATION_KEY, message.body())).setHeaders(new JsonObject());
+    }
+
     public static ResponseData serializeResponseData(String message) {
         return new ResponseData().setBody(new JsonObject().put(SERIALIZATION_KEY, message));
     }
@@ -27,7 +31,7 @@ public class ResponseDataWriter implements HttpResponseWriter<ResponseData> {
 
     @Override
     public void write(ResponseData result, HttpServerRequest request, HttpServerResponse response) {
-        String message = deSerializeResponseBody(result.body());
+        Object message = deSerializeResponseBody(result.body());
         response.setStatusCode(result.getStatus().code());
         response.headers().addAll(HttpUtils.HttpHeaderUtils.deserializeHeaders(result.headers()));
         response.putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE);
@@ -35,12 +39,12 @@ public class ResponseDataWriter implements HttpResponseWriter<ResponseData> {
         if (Objects.isNull(message)) {
             response.end();
         } else {
-            response.end(message);
+            response.end(message.toString());
         }
     }
 
-    private String deSerializeResponseBody(JsonObject body) {
-        return body.getString(SERIALIZATION_KEY);
+    private Object deSerializeResponseBody(JsonObject body) {
+        return body.getValue(SERIALIZATION_KEY);
     }
 
 }
