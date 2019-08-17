@@ -2,7 +2,6 @@ package com.nubeiot.edge.module.scheduler.service;
 
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.service.HasReferenceResource;
-import com.nubeiot.core.sql.service.ManyToOneReferenceEntityService;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.TriggerByJobMetadata;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.TriggerEntityMetadata;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
@@ -38,11 +37,11 @@ public final class TriggerByJobService extends JobTriggerCompositeService<Trigge
 
     @Override
     public TriggerByJobService validation() {
-        return null;
+        return this;
     }
 
     @Override
-    public @NonNull ManyToOneReferenceEntityService.ManyToOneEntityTransformer transformer() {
+    public @NonNull ManyToOneEntityTransformer transformer() {
         return this;
     }
 

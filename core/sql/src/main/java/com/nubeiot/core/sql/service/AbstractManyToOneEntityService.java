@@ -8,6 +8,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.CompositeMetadata;
+import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.sql.validation.CompositeValidation;
 
 import lombok.NonNull;
@@ -53,6 +54,11 @@ public abstract class AbstractManyToOneEntityService<M extends CompositeMetadata
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData requestData) {
         return super.delete(requestData);
+    }
+
+    @Override
+    public @NonNull ComplexQueryExecutor queryExecutor() {
+        return ManyToOneReferenceEntityService.super.queryExecutor();
     }
 
 }

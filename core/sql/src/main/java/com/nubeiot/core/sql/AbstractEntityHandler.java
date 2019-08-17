@@ -21,6 +21,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
@@ -28,7 +29,6 @@ import lombok.NonNull;
 public abstract class AbstractEntityHandler implements EntityHandler {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    private final JDBCRXGenericQueryExecutor simpleQuery;
     private final Vertx vertx;
     private final Configuration jooqConfig;
     private String sharedKey = getClass().getName();
@@ -36,7 +36,6 @@ public abstract class AbstractEntityHandler implements EntityHandler {
     public AbstractEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         this.jooqConfig = jooqConfig;
         this.vertx = vertx;
-        this.simpleQuery = new JDBCRXGenericQueryExecutor(jooqConfig, getVertx());
     }
 
     @Override
@@ -59,12 +58,13 @@ public abstract class AbstractEntityHandler implements EntityHandler {
         return SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
     }
 
+    @Override
     public DSLContext dsl() {
         return jooqConfig.dsl();
     }
 
-    public <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(
-        Class<D> daoClass) {
+    @Override
+    public <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(Class<D> daoClass) {
         Map<Class, Object> input = new LinkedHashMap<>();
         input.put(Configuration.class, jooqConfig);
         input.put(io.vertx.reactivex.core.Vertx.class, getVertx());
@@ -72,8 +72,13 @@ public abstract class AbstractEntityHandler implements EntityHandler {
     }
 
     @Override
-    public JDBCRXGenericQueryExecutor simpleQuery() {
-        return simpleQuery;
+    public JDBCRXGenericQueryExecutor genericQuery() {
+        return new JDBCRXGenericQueryExecutor(jooqConfig, getVertx());
+    }
+
+    @Override
+    public ComplexQueryExecutor complexQuery() {
+        return ComplexQueryExecutor.create(this);
     }
 
     protected boolean isNew(Table table) {

@@ -14,7 +14,7 @@ import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
 
-class SchedulerDelegate<M extends EntityMetadata, V extends EntityValidation>
+final class SchedulerDelegate<M extends EntityMetadata, V extends EntityValidation>
     extends EntityServiceDelegate<M, V, SchedulerService<M, V>> implements SchedulerService<M, V> {
 
     SchedulerDelegate(@NonNull AbstractEntityHandler entityHandler, @NonNull Class<SchedulerService<M, V>> serviceClass,

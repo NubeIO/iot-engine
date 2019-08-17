@@ -1,22 +1,13 @@
 package com.nubeiot.core.sql.service;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.ResultQuery;
 import org.jooq.SelectConditionStep;
 import org.jooq.SelectOptionStep;
 import org.jooq.UpdatableRecord;
-import org.jooq.impl.DSL;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Observable;
+import io.reactivex.Maybe;
 import io.reactivex.Single;
-import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
@@ -25,11 +16,15 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.query.SimpleQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
 
 import lombok.NonNull;
 
 interface InternalEntityService<M extends EntityMetadata, V extends EntityValidation> extends EntityService<M, V> {
+
+    @Override
+    @NonNull SimpleQueryExecutor queryExecutor();
 
     /**
      * Do recompute request data
@@ -39,68 +34,9 @@ interface InternalEntityService<M extends EntityMetadata, V extends EntityValida
         return requestData;
     }
 
-    /**
-     * Do get list entity resources
-     *
-     * @param requestData Request data
-     * @return list pojo entities
-     */
-    default Observable<VertxPojo> doGetList(RequestData requestData) {
-        return dao().queryExecutor().findMany(ctx -> query(ctx, requestData)).flattenAsObservable(records -> records);
-    }
-
     @SuppressWarnings("unchecked")
     default @NonNull <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao() {
-        return (D) metadata().getDao(entityHandler());
-    }
-
-    /**
-     * Do get one resource by {@code primary key} or by {@code rich query} after analyzing given request data
-     *
-     * @param requestData Request data
-     * @return single pojo
-     */
-    default Single<VertxPojo> doGetOne(RequestData requestData) {
-        Object pk = metadata().parsePrimaryKey(requestData);
-        return dao().findOneById(pk).map(o -> o.orElseThrow(() -> metadata().notFound(pk)));
-    }
-
-    /**
-     * Do update data on both {@code UPDATE} or {@code PATCH} action
-     *
-     * @param requestData Request data
-     * @param action      Event action
-     * @param validation  Validation function
-     * @return single response in {@code json}
-     * @see #cudResponse(EventAction, VertxPojo, RequestData)
-     */
-    default Single<JsonObject> doUpdate(RequestData requestData, EventAction action,
-                                        Function3<VertxPojo, VertxPojo, JsonObject, VertxPojo> validation) {
-        RequestData reqData = recompute(action, requestData);
-        final Object pk = metadata().parsePrimaryKey(reqData);
-        return doGetOne(reqData).map(
-            db -> validation.apply(db, metadata().parse(reqData.body().put(metadata().jsonKeyName(), pk)),
-                                   reqData.headers()))
-                                .flatMap(dao()::update)
-                                .filter(i -> i > 0)
-                                .switchIfEmpty(Single.error(metadata().notFound(pk)))
-                                .flatMap(i -> cudResponse(action, pk, reqData));
-    }
-
-    /**
-     * Do query data
-     *
-     * @param ctx         DSL Context
-     * @param requestData Request data
-     * @return result query
-     * @see #filter(SelectConditionStep, JsonObject)
-     * @see #paging(SelectConditionStep, Pagination)
-     */
-    @SuppressWarnings("unchecked")
-    default <R extends UpdatableRecord<R>> ResultQuery<R> query(@NonNull DSLContext ctx,
-                                                                @NonNull RequestData requestData) {
-        return paging(filter(ctx.selectFrom(metadata().table()).where(DSL.trueCondition()), requestData.getFilter()),
-                      requestData.getPagination());
+        return (D) metadata().dao(entityHandler());
     }
 
     /**
@@ -115,17 +51,10 @@ interface InternalEntityService<M extends EntityMetadata, V extends EntityValida
      */
     //TODO Rich query depends on RQL in future https://github.com/NubeIO/iot-engine/issues/128
     @SuppressWarnings("unchecked")
+    //TODO REMOVE
     default <R extends UpdatableRecord<R>> SelectConditionStep<R> filter(@NonNull SelectConditionStep<R> sql,
                                                                          JsonObject filter) {
-        if (Objects.isNull(filter)) {
-            return sql;
-        }
-        final Map<String, String> jsonFields = metadata().table().jsonFields();
-        filter.stream().map(entry -> {
-            final Field field = metadata().table().field(jsonFields.getOrDefault(entry.getKey(), entry.getKey()));
-            return Optional.ofNullable(entry.getValue()).map(field::eq).orElseGet(field::isNull);
-        }).forEach(sql::and);
-        return sql;
+        return queryExecutor().filter(sql.configuration().dsl(), metadata().table(), filter);
     }
 
     /**
@@ -135,10 +64,10 @@ interface InternalEntityService<M extends EntityMetadata, V extends EntityValida
      * @param pagination Given pagination
      * @return Database Select DSL
      */
+    @SuppressWarnings("unchecked")
     default <R extends UpdatableRecord<R>> SelectOptionStep<R> paging(@NonNull SelectConditionStep<R> sql,
                                                                       Pagination pagination) {
-        Pagination paging = Optional.ofNullable(pagination).orElseGet(() -> Pagination.builder().build());
-        return sql.limit(paging.getPerPage()).offset((paging.getPage() - 1) * paging.getPerPage());
+        return (SelectOptionStep<R>) queryExecutor().paging(sql, pagination);
     }
 
     /**
@@ -148,8 +77,8 @@ interface InternalEntityService<M extends EntityMetadata, V extends EntityValida
      * @return one single data source if found else throw {@code not found exception}
      * @see EntityMetadata#notFound(Object)
      */
-    default Single<? extends VertxPojo> lookupById(@NonNull Object primaryKey) {
-        return dao().findOneById(primaryKey).map(o -> o.orElseThrow(() -> metadata().notFound(primaryKey)));
+    default Maybe<? extends VertxPojo> lookupById(@NonNull Object primaryKey) {
+        return queryExecutor().lookupById(primaryKey);
     }
 
     /**
@@ -181,9 +110,9 @@ interface InternalEntityService<M extends EntityMetadata, V extends EntityValida
      */
     default Single<JsonObject> cudResponse(@NonNull EventAction action, @NonNull Object key,
                                            @NonNull RequestData requestData) {
-        return transformer().enableFullResourceInCUDResponse()
-               ? lookupById(key).flatMap(r -> cudResponse(action, r, requestData))
-               : Single.just(new JsonObject().put(metadata().requestKeyName(), JsonData.checkAndConvert(key)));
+        return transformer().enableFullResourceInCUDResponse() ? lookupById(key).flatMapSingle(
+            r -> cudResponse(action, r, requestData))
+                                                               : Single.just(new JsonObject().put(metadata().requestKeyName(), JsonData.checkAndConvert(key)));
     }
 
 }

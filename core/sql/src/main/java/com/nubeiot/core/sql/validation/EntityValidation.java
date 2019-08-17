@@ -4,7 +4,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.DataTransferObject.Headers;
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityAuditDecorator;
 import com.nubeiot.core.sql.pojos.JsonPojo;
@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 public interface EntityValidation<P extends VertxPojo> {
 
-    AbstractEntityHandler entityHandler();
+    EntityHandler entityHandler();
 
     EntityMetadata metadata();
 
@@ -75,11 +75,11 @@ public interface EntityValidation<P extends VertxPojo> {
     @RequiredArgsConstructor
     class DefaultEntityValidation implements EntityValidation {
 
-        private final AbstractEntityHandler handler;
+        private final EntityHandler handler;
         private final EntityMetadata metadata;
 
         @Override
-        public AbstractEntityHandler entityHandler() {
+        public EntityHandler entityHandler() {
             return handler;
         }
 

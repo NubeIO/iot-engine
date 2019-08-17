@@ -8,18 +8,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.jooq.exception.TooManyRowsException;
-
-import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.exceptions.StateException;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
+import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
 
 import lombok.NonNull;
@@ -30,11 +26,17 @@ import lombok.NonNull;
  *
  * @param <M> Metadata Type
  */
+@SuppressWarnings("unchecked")
 public interface OneToManyReferenceEntityService<M extends EntityMetadata, V extends EntityValidation>
     extends InternalEntityService<M, V>, HasReferenceResource {
 
     @Override
     @NonNull ReferenceEntityTransformer transformer();
+
+    @Override
+    default @NonNull ReferenceQueryExecutor queryExecutor() {
+        return ReferenceQueryExecutor.create(entityHandler(), metadata());
+    }
 
     @Override
     @NonNull
@@ -47,16 +49,6 @@ public interface OneToManyReferenceEntityService<M extends EntityMetadata, V ext
                 metadata().parsePrimaryKey(requestData))));
         }
         return InternalEntityService.super.recompute(action, requestData);
-    }
-
-    @Override
-    default Single<VertxPojo> doGetOne(RequestData requestData) {
-        Object pk = metadata().parsePrimaryKey(requestData);
-        return dao().queryExecutor()
-                    .findOne(ctx -> query(ctx, requestData))
-                    .map(o -> o.orElseThrow(() -> metadata().notFound(pk)))
-                    .onErrorResumeNext(t -> Single.error(t instanceof TooManyRowsException ? new StateException(
-                        "Query is not correct, the result contains more than one record", t) : t));
     }
 
     default RequestData recompute(@NonNull RequestData requestData, JsonObject extra) {

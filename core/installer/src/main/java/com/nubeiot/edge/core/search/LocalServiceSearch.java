@@ -45,7 +45,7 @@ public final class LocalServiceSearch implements IServiceSearch {
     @Override
     public Single<JsonObject> search(RequestData requestData) throws NubeException {
         logger.info("Start executing local service searching  {}", requestData.getFilter());
-        return this.entityHandler.simpleQuery()
+        return this.entityHandler.genericQuery()
                                  .executeAny(context -> filter(validateFilter(requestData.getFilter()),
                                                                requestData.getPagination(), context))
                                  .flattenAsObservable(records -> records)

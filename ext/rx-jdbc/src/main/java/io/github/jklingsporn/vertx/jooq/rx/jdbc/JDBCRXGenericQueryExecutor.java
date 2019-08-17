@@ -24,12 +24,15 @@ import io.vertx.reactivex.core.Vertx;
 import com.nubeiot.core.exceptions.DatabaseException;
 import com.nubeiot.core.exceptions.HiddenException;
 
+import lombok.Getter;
+
 /**
  * Created by jensklingsporn on 05.02.18.
  */
 public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
     implements JDBCQueryExecutor<Single<?>>, RXQueryExecutor {
 
+    @Getter
     protected final Vertx vertx;
 
     public JDBCRXGenericQueryExecutor(Configuration configuration, Vertx vertx) {

@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEntityTransformer;
@@ -48,6 +49,11 @@ public final class TagPointService extends AbstractDataPointService<TagPointMeta
     @Override
     public ReferenceEntityTransformer transformer() {
         return this;
+    }
+
+    @Override
+    public @NonNull ReferenceQueryExecutor queryExecutor() {
+        return OneToManyReferenceEntityService.super.queryExecutor();
     }
 
 }

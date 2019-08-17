@@ -15,6 +15,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
@@ -47,7 +48,9 @@ public interface EntityHandler {
 
     <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(Class<D> daoClass);
 
-    JDBCRXGenericQueryExecutor simpleQuery();
+    JDBCRXGenericQueryExecutor genericQuery();
+
+    ComplexQueryExecutor complexQuery();
 
     /**
      * Check database is new or not. Normally just checking one specific table is existed or not.

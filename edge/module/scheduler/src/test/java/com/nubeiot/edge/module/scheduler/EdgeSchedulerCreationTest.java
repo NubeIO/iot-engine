@@ -90,13 +90,13 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
     }
 
     @Test
-    public void test_assign_job_is_already_link_to_trigger(TestContext context) {
+    public void test_assign_job_is_already_linked_to_trigger(TestContext context) {
         final JobTrigger composite = new JobTrigger().setEnabled(true).setJobId(1);
         final RequestData reqData = RequestData.builder().body(JsonPojo.from(composite).toJson()).build();
         JsonObject expected = new JsonObject(
             "{\"message\":\"Not found resource with job_id=3\",\"code\":\"NOT_FOUND\"}");
         assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/1/job", reqData,
-                           ExpectedResponse.builder().expected(expected).code(409).build());
+                           ExpectedResponse.builder().expected(expected).code(500).build());
     }
 
     @Test

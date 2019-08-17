@@ -11,9 +11,10 @@ import io.vertx.reactivex.core.eventbus.Message;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
+import com.nubeiot.core.sql.query.EntityQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
 
 import lombok.NonNull;
@@ -37,7 +38,7 @@ public abstract class EntityServiceDelegate<M extends EntityMetadata, V extends 
     }
 
     @Override
-    public @NonNull AbstractEntityHandler entityHandler() {
+    public @NonNull EntityHandler entityHandler() {
         return unwrap().entityHandler();
     }
 
@@ -52,8 +53,18 @@ public abstract class EntityServiceDelegate<M extends EntityMetadata, V extends 
     }
 
     @Override
+    public @NonNull EntityQueryExecutor queryExecutor() {
+        return unwrap().queryExecutor();
+    }
+
+    @Override
     public @NonNull EntityTransformer transformer() {
         return unwrap().transformer();
+    }
+
+    @Override
+    public @NonNull PostService postService() {
+        return unwrap().postService();
     }
 
     @Override

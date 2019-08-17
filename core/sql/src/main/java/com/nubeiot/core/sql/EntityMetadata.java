@@ -97,7 +97,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      * @param handler Entity handler
      * @return DAO that corresponding to {@link #daoClass()}
      */
-    default @NonNull D getDao(@NonNull AbstractEntityHandler handler) {
+    default @NonNull D dao(EntityHandler handler) {
         return handler.dao(daoClass());
     }
 

@@ -17,6 +17,7 @@ import com.nubeiot.core.sql.mock.oneschema.tables.pojos.Author;
 import com.nubeiot.core.sql.mock.oneschema.tables.pojos.Book;
 import com.nubeiot.core.sql.mock.oneschema.tables.records.AuthorRecord;
 import com.nubeiot.core.sql.mock.oneschema.tables.records.BookRecord;
+import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.MockEntityService.Metadata.AuthorMetadata;
 import com.nubeiot.core.sql.service.MockEntityService.Metadata.BookMetadata;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEntityTransformer;
@@ -146,7 +147,7 @@ interface MockEntityService {
         }
 
         @Override
-        public @NonNull OneToManyReferenceEntityService.ReferenceEntityTransformer transformer() {
+        public @NonNull ReferenceEntityTransformer transformer() {
             return this;
         }
 
@@ -158,6 +159,11 @@ interface MockEntityService {
         @Override
         public HasReferenceResource ref() {
             return this;
+        }
+
+        @Override
+        public @NonNull ReferenceQueryExecutor queryExecutor() {
+            return OneToManyReferenceEntityService.super.queryExecutor();
         }
 
     }

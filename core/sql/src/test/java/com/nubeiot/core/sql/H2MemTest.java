@@ -30,9 +30,9 @@ public class H2MemTest extends BaseSqlTest {
     public void test_init_no_data(TestContext context) {
         MockManyEntityHandler entityHandler = startSQL(context, SchemaTest.ManySchema.CATALOG, MockManyNoData.class);
         Async async = context.async(2);
-        entityHandler.simpleQuery().executeAny(dsl -> dsl.fetch(SchemaTest.ManySchema.TBL_SAMPLE_00))
+        entityHandler.genericQuery().executeAny(dsl -> dsl.fetch(SchemaTest.ManySchema.TBL_SAMPLE_00))
                      .subscribe(rs -> assertSize(context, async, 0, rs));
-        entityHandler.simpleQuery().executeAny(dsl -> dsl.fetch(SchemaTest.ManySchema.TBL_SAMPLE_01))
+        entityHandler.genericQuery().executeAny(dsl -> dsl.fetch(SchemaTest.ManySchema.TBL_SAMPLE_01))
                      .subscribe(rs -> assertSize(context, async, 0, rs));
     }
 
@@ -50,8 +50,8 @@ public class H2MemTest extends BaseSqlTest {
         MockManyEntityHandler entityHandler = startSQL(context, SchemaTest.ManySchema.CATALOG,
                                                        MockManyEntityHandler.class);
         Async async = context.async(4);
-        fetch(context, async, entityHandler.simpleQuery(), SchemaTest.ManySchema.TBL_SAMPLE_00, e0);
-        fetch(context, async, entityHandler.simpleQuery(), SchemaTest.ManySchema.TBL_SAMPLE_01, e1);
+        fetch(context, async, entityHandler.genericQuery(), SchemaTest.ManySchema.TBL_SAMPLE_00, e0);
+        fetch(context, async, entityHandler.genericQuery(), SchemaTest.ManySchema.TBL_SAMPLE_01, e1);
     }
 
     private void fetch(TestContext context, Async async, JDBCRXGenericQueryExecutor queryExecutor,

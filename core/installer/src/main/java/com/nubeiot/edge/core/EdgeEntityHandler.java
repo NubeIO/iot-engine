@@ -19,6 +19,7 @@ import org.jooq.DSLContext;
 import org.jooq.TableField;
 import org.jooq.impl.DSL;
 
+import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -189,7 +190,7 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
         return moduleDao.get()
                         .findManyByState(Collections.singletonList(State.PENDING))
                         .flattenAsObservable(pendingModules -> pendingModules)
-                        .flatMapSingle(module -> simpleQuery().executeAny(context -> getTransactions(module, context)))
+                        .flatMapSingle(module -> genericQuery().executeAny(context -> getTransactions(module, context)))
                         .collect(ArrayList::new,
                                  (modules, optional) -> optional.ifPresent(o -> modules.add((TblModule) o)));
     }
@@ -232,7 +233,7 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
     }
 
     protected Single<Boolean> isFreshInstall() {
-        return simpleQuery().executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
+        return genericQuery().executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
     }
 
     Single<Optional<TblModule>> findModuleById(String serviceId) {
@@ -318,7 +319,8 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
                                                                  module.getServiceName()))
                                   .deployId(module.getDeployId())
                                   .appConfig(module.getAppConfig())
-                                  .systemConfig(module.getSystemConfig()).dataDir(dataDir().toString())
+                                  .systemConfig(module.getSystemConfig())
+                                  .dataDir(dataDir().toString())
                                   .build();
     }
 
@@ -348,8 +350,9 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
                .subscribe();
         } else {
             Map<TableField, String> v = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
-            simpleQuery().executeAny(c -> updateTransStatus(c, transId, status, null))
-                         .flatMap(r1 -> simpleQuery().executeAny(c -> updateModuleState(c, serviceId, state, v))
+            final JDBCRXGenericQueryExecutor queryExecutor = genericQuery();
+            queryExecutor.executeAny(c -> updateTransStatus(c, transId, status, null))
+                         .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, v))
                                                      .map(r2 -> r1 + r2))
                          .subscribe();
         }
@@ -358,10 +361,11 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
     //TODO: register EventBus to send message somewhere
     private void errorPostDeployment(String serviceId, String transId, EventAction action, ErrorMessage error) {
         logger.error("Handle entities after error deployment...");
-        simpleQuery().executeAny(c -> updateTransStatus(c, transId, Status.FAILED,
+        final JDBCRXGenericQueryExecutor queryExecutor = genericQuery();
+        queryExecutor.executeAny(c -> updateTransStatus(c, transId, Status.FAILED,
                                                         Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR,
                                                                                  error.toJson())))
-                     .flatMap(r1 -> simpleQuery().executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
+                     .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
                                                  .map(r2 -> r1 + r2))
                      .subscribe();
     }

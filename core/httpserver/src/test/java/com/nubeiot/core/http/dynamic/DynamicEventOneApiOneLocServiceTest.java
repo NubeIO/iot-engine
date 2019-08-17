@@ -43,7 +43,8 @@ public class DynamicEventOneApiOneLocServiceTest extends DynamicServiceTestBase 
 
     @Test
     public void test_not_found(TestContext context) {
-        assertRestByClient(context, HttpMethod.GET, "/api/s/xxx", 404, new JsonObject());
+        assertRestByClient(context, HttpMethod.GET, "/api/s/xxx", 404,
+                           new JsonObject("{\"message\":\"Resource not found\"}"), IGNORE_URI);
     }
 
     @Test

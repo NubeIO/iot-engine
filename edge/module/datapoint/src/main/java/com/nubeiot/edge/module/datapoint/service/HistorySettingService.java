@@ -1,6 +1,7 @@
 package com.nubeiot.edge.module.datapoint.service;
 
 import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEntityTransformer;
@@ -31,6 +32,11 @@ public final class HistorySettingService extends AbstractDataPointService<Histor
     @Override
     public @NonNull OneToManyReferenceEntityService.ReferenceEntityTransformer transformer() {
         return this;
+    }
+
+    @Override
+    public @NonNull ReferenceQueryExecutor queryExecutor() {
+        return OneToManyReferenceEntityService.super.queryExecutor();
     }
 
 }

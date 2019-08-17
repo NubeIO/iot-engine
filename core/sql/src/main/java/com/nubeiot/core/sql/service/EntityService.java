@@ -13,9 +13,10 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
+import com.nubeiot.core.sql.query.EntityQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
 
 import lombok.NonNull;
@@ -48,7 +49,7 @@ public interface EntityService<M extends EntityMetadata, V extends EntityValidat
      *
      * @return entity handler
      */
-    @NonNull AbstractEntityHandler entityHandler();
+    @NonNull EntityHandler entityHandler();
 
     /**
      * Entity metadata
@@ -59,9 +60,11 @@ public interface EntityService<M extends EntityMetadata, V extends EntityValidat
 
     @NonNull V validation();
 
+    @NonNull EntityQueryExecutor queryExecutor();
+
     @NonNull EntityTransformer transformer();
 
-    default @NonNull PostService postAction() {
+    default @NonNull PostService postService() {
         return PostService.EMPTY;
     }
 
