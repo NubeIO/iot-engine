@@ -5,35 +5,37 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
-
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.sql.CompositeEntityMetadata;
-import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.CompositeMetadata.AbstractCompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
-import com.nubeiot.core.sql.JsonTable;
-import com.nubeiot.core.sql.ManyToOneReferenceEntityService;
+import com.nubeiot.core.sql.service.AbstractManyToOneEntityService;
+import com.nubeiot.core.sql.service.ManyToOneReferenceEntityService.ManyToOneEntityTransformer;
+import com.nubeiot.core.sql.tables.JsonTable;
+import com.nubeiot.core.sql.validation.CompositeValidation;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobTriggerComposite;
+import com.nubeiot.edge.module.scheduler.service.JobTriggerCompositeService.Metadata;
 import com.nubeiot.iotdata.scheduler.model.Tables;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.JobTriggerDao;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobTrigger;
 import com.nubeiot.iotdata.scheduler.model.tables.records.JobTriggerRecord;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
 
+import lombok.Getter;
 import lombok.NonNull;
 
-abstract class JobTriggerCompositeService<META extends CompositeEntityMetadata<Integer, JobTrigger, JobTriggerRecord,
-                                                                                  JobTriggerDao, JobTriggerComposite>>
-    extends AbstractSchedulerService<Integer, JobTrigger, JobTriggerRecord, JobTriggerDao, META> implements
-                                                                                                 ManyToOneReferenceEntityService<Integer, JobTrigger, JobTriggerRecord, JobTriggerDao, META, JobTriggerComposite> {
+abstract class JobTriggerCompositeService<M extends Metadata, V extends JobTriggerCompositeService>
+    extends AbstractManyToOneEntityService<M, V> implements SchedulerService<M, V>,
+                                                            CompositeValidation<JobTrigger, JobTriggerComposite>,
+                                                            ManyToOneEntityTransformer {
 
-    JobTriggerCompositeService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
-        super(entityHandler, schedulerContext);
+    @Getter
+    private QuartzSchedulerContext schedulerContext;
+
+    JobTriggerCompositeService(@NonNull AbstractEntityHandler entityHandler,
+                               @NonNull QuartzSchedulerContext schedulerContext) {
+        super(entityHandler);
+        this.schedulerContext = schedulerContext;
     }
 
     @Override
@@ -50,59 +52,19 @@ abstract class JobTriggerCompositeService<META extends CompositeEntityMetadata<I
 
     abstract String servicePath();
 
-    @Override
-    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
-    public Single<JsonObject> list(RequestData requestData) {
-        return ManyToOneReferenceEntityService.super.list(requestData);
-    }
-
-    @Override
-    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
-    public Single<JsonObject> get(RequestData requestData) {
-        return ManyToOneReferenceEntityService.super.get(requestData);
-    }
-
-    @Override
-    @EventContractor(action = EventAction.CREATE, returnType = Single.class)
-    public Single<JsonObject> create(RequestData requestData) {
-        return ManyToOneReferenceEntityService.super.create(requestData);
-    }
-
-    @Override
-    @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
-    public Single<JsonObject> update(RequestData requestData) {
-        return ManyToOneReferenceEntityService.super.update(requestData);
-    }
-
-    @Override
-    @EventContractor(action = EventAction.PATCH, returnType = Single.class)
-    public Single<JsonObject> patch(RequestData requestData) {
-        return ManyToOneReferenceEntityService.super.patch(requestData);
-    }
-
-    @Override
-    @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
-    public Single<JsonObject> delete(RequestData requestData) {
-        return ManyToOneReferenceEntityService.super.delete(requestData);
-    }
-
-    static abstract class Metadata implements SerialKeyEntity<JobTrigger, JobTriggerRecord, JobTriggerDao>,
-                                              CompositeEntityMetadata<Integer, JobTrigger, JobTriggerRecord,
-                                                                         JobTriggerDao, JobTriggerComposite> {
+    static abstract class Metadata
+        extends AbstractCompositeMetadata<Integer, JobTrigger, JobTriggerRecord, JobTriggerDao, JobTriggerComposite>
+        implements SerialKeyEntity<JobTrigger, JobTriggerRecord, JobTriggerDao> {
 
         @Override
-        public final @NonNull Class<? extends JobTrigger> modelClass() { return JobTrigger.class; }
+        @SuppressWarnings("unchecked")
+        public final @NonNull Class<JobTriggerComposite> modelClass() { return JobTriggerComposite.class; }
 
         @Override
         public final @NonNull Class<JobTriggerDao> daoClass() { return JobTriggerDao.class; }
 
         @Override
         public final @NonNull JsonTable<JobTriggerRecord> table() { return Tables.JOB_TRIGGER; }
-
-        @Override
-        public @NonNull Class<JobTriggerComposite> compositeModelClass() {
-            return JobTriggerComposite.class;
-        }
 
     }
 

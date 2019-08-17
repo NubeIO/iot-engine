@@ -24,8 +24,6 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.sql.mock.manyschema.mock0.tables.TblSample_00;
-import com.nubeiot.core.sql.mock.manyschema.mock1.tables.TblSample_01;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
 
@@ -49,8 +47,8 @@ public abstract class BaseSqlTest {
         ((Logger) LoggerFactory.getLogger("com.zaxxer.hikari")).setLevel(Level.DEBUG);
     }
 
-    protected static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, @NonNull VertxPojo pojo,
-                                          @NonNull String field, @NonNull T expect) {
+    static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, @NonNull VertxPojo pojo,
+                                @NonNull String field, @NonNull T expect) {
         try {
             context.assertNotNull(pojo);
             context.assertEquals(expect, ReflectionField.getFieldValue(pojo, pojo.getClass().getDeclaredField(field),
@@ -97,7 +95,8 @@ public abstract class BaseSqlTest {
         }
     }
 
-    protected <T extends EntityHandler> T startSQL(TestContext context, Catalog catalog, Class<T> handlerClass) {
+    protected <T extends AbstractEntityHandler> T startSQL(TestContext context, Catalog catalog,
+                                                           Class<T> handlerClass) {
         SQLWrapper<T> v = VertxHelper.deploy(vertx, context, options,
                                              new SQLWrapper<>(catalog, handlerClass).registerSharedKey(sharedKey),
                                              TestHelper.TEST_TIMEOUT_SEC * 2);
@@ -105,8 +104,8 @@ public abstract class BaseSqlTest {
         return v.getContext().getEntityHandler();
     }
 
-    <T extends EntityHandler> void startSQLFailed(TestContext context, Catalog catalog, Class<T> handlerClass,
-                                                  Handler<Throwable> consumer) {
+    <T extends AbstractEntityHandler> void startSQLFailed(TestContext context, Catalog catalog, Class<T> handlerClass,
+                                                          Handler<Throwable> consumer) {
         VertxHelper.deployFailed(vertx, context, options, new SQLWrapper<>(catalog, handlerClass), consumer);
     }
 
@@ -118,21 +117,6 @@ public abstract class BaseSqlTest {
         } finally {
             TestHelper.testComplete(async);
         }
-    }
-
-    static class OneSchema {
-
-        static final Catalog CATALOG = com.nubeiot.core.sql.mock.oneschema.DefaultCatalog.DEFAULT_CATALOG;
-
-    }
-
-
-    static class ManySchema {
-
-        static final Catalog CATALOG = com.nubeiot.core.sql.mock.manyschema.DefaultCatalog.DEFAULT_CATALOG;
-        static final TblSample_00 TBL_SAMPLE_00 = TblSample_00.TBL_SAMPLE_00;
-        static final TblSample_01 TBL_SAMPLE_01 = TblSample_01.TBL_SAMPLE_01;
-
     }
 
 }

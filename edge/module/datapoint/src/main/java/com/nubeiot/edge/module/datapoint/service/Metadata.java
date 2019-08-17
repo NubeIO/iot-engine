@@ -12,7 +12,7 @@ import com.nubeiot.core.sql.EntityMetadata.BigSerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.StringKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.UUIDKeyEntity;
-import com.nubeiot.core.sql.JsonTable;
+import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EquipmentDao;
@@ -58,6 +58,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+@SuppressWarnings("unchecked")
 public interface Metadata {
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -154,8 +155,7 @@ public interface Metadata {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class HistorySettingMetadata
-        implements UUIDKeyEntity<HistorySetting, HistorySettingRecord, HistorySettingDao> {
+    final class HistorySettingMetadata implements UUIDKeyEntity<HistorySetting, HistorySettingRecord, HistorySettingDao> {
 
         static final HistorySettingMetadata INSTANCE = new HistorySettingMetadata();
 

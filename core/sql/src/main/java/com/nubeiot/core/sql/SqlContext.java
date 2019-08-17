@@ -20,7 +20,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class SqlContext<T extends EntityHandler> extends UnitContext {
+public final class SqlContext<T extends AbstractEntityHandler> extends UnitContext {
 
     @NonNull
     @Getter(value = AccessLevel.PACKAGE)
@@ -39,7 +39,7 @@ public final class SqlContext<T extends EntityHandler> extends UnitContext {
         return entityHandler;
     }
 
-    private static class CreationHandler<E extends EntityHandler> extends Silencer<E> {
+    private static class CreationHandler<E extends AbstractEntityHandler> extends Silencer<E> {
 
         @Override
         public void accept(E obj, HiddenException e) {

@@ -1,19 +1,13 @@
 package com.nubeiot.edge.module.datapoint.service;
 
-import java.util.UUID;
-
-import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.edge.module.datapoint.service.Metadata.EquipmentMetadata;
-import com.nubeiot.iotdata.edge.model.tables.daos.EquipmentDao;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
-import com.nubeiot.iotdata.edge.model.tables.records.EquipmentRecord;
 
 import lombok.NonNull;
 
-public final class EquipmentService
-    extends AbstractDataPointService<UUID, Equipment, EquipmentRecord, EquipmentDao, EquipmentMetadata> {
+public final class EquipmentService extends AbstractDataPointService<EquipmentMetadata, EquipmentService> {
 
-    public EquipmentService(@NonNull EntityHandler entityHandler) {
+    public EquipmentService(@NonNull AbstractEntityHandler entityHandler) {
         super(entityHandler);
     }
 

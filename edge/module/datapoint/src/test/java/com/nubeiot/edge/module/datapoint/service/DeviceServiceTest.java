@@ -17,7 +17,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.ReplyEventHandler;
-import com.nubeiot.core.sql.JsonPojo;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.SyncAudit;
 import com.nubeiot.core.sql.type.TimeAudit;
 import com.nubeiot.edge.module.datapoint.MockData;

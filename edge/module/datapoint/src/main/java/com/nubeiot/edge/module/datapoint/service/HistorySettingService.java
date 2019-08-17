@@ -1,31 +1,36 @@
 package com.nubeiot.edge.module.datapoint.service;
 
-import java.util.UUID;
-
-import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.OneToManyReferenceEntityService;
+import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.service.HasReferenceResource;
+import com.nubeiot.core.sql.service.OneToManyReferenceEntityService;
+import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEntityTransformer;
 import com.nubeiot.edge.module.datapoint.service.Metadata.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
-import com.nubeiot.iotdata.edge.model.tables.daos.HistorySettingDao;
-import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
-import com.nubeiot.iotdata.edge.model.tables.records.HistorySettingRecord;
 
 import lombok.NonNull;
 
-public final class HistorySettingService extends
-                                         AbstractDataPointService<UUID, HistorySetting, HistorySettingRecord,
-                                                                     HistorySettingDao, HistorySettingMetadata>
-    implements PointExtension,
-               OneToManyReferenceEntityService<UUID, HistorySetting, HistorySettingRecord, HistorySettingDao,
-                                                  HistorySettingMetadata> {
+public final class HistorySettingService extends AbstractDataPointService<HistorySettingMetadata, HistorySettingService>
+    implements OneToManyReferenceEntityService<HistorySettingMetadata, HistorySettingService>,
+               ReferenceEntityTransformer,
+               PointExtension {
 
-    public HistorySettingService(@NonNull EntityHandler entityHandler) {
+    public HistorySettingService(@NonNull AbstractEntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
     public HistorySettingMetadata metadata() {
         return HistorySettingMetadata.INSTANCE;
+    }
+
+    @Override
+    public HasReferenceResource ref() {
+        return this;
+    }
+
+    @Override
+    public @NonNull OneToManyReferenceEntityService.ReferenceEntityTransformer transformer() {
+        return this;
     }
 
 }

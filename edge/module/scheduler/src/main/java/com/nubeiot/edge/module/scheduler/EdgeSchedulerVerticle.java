@@ -13,7 +13,7 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
-import com.nubeiot.edge.module.scheduler.service.AbstractSchedulerService;
+import com.nubeiot.edge.module.scheduler.service.SchedulerService;
 import com.nubeiot.iotdata.scheduler.model.DefaultCatalog;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
 import com.nubeiot.scheduler.SchedulerProvider;
@@ -46,7 +46,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     private void successHandler() {
         EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
         ServiceDiscoveryController discovery = microCtx.getLocalController();
-        Observable.fromIterable(AbstractSchedulerService.createServices(entityHandler, schedulerCtx))
+        Observable.fromIterable(SchedulerService.createServices(entityHandler, schedulerCtx))
                   .doOnEach(s -> Optional.ofNullable(s.getValue())
                                          .ifPresent(service -> controller.register(service.address(), service)))
                   .filter(s -> Objects.nonNull(s.definitions()))

@@ -21,8 +21,8 @@ public abstract class MockInitDataEntityHandler extends EdgeEntityHandler {
 
     protected MockInitDataEntityHandler(Configuration configuration, Vertx vertx) {
         super(configuration, vertx);
-        this.tblModuleDao = new TblModuleDao(jooqConfig, getVertx());
-        this.tblTransactionDao = new TblTransactionDao(jooqConfig, getVertx());
+        this.tblModuleDao = dao(TblModuleDao.class);
+        this.tblTransactionDao = dao(TblTransactionDao.class);
     }
 
     @Override

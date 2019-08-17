@@ -23,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 abstract class ClientDelegate implements IClientDelegate {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    @Getter
+    private final Vertx vertx;
     @NonNull
     private final HttpClient client;
     @Getter
@@ -34,6 +36,7 @@ abstract class ClientDelegate implements IClientDelegate {
 
     ClientDelegate(@NonNull HttpClient client) {
         HttpClientConfig config = new HttpClientConfig(((HttpClientImpl) client).getOptions());
+        this.vertx = ((HttpClientImpl) client).getVertx();
         this.userAgent = config.getUserAgent();
         this.handlerConfig = config.getHandlerConfig();
         this.hostInfo = HostInfo.builder()
@@ -49,6 +52,7 @@ abstract class ClientDelegate implements IClientDelegate {
         this.handlerConfig = config.getHandlerConfig();
         this.hostInfo = config.getHostInfo();
         this.client = vertx.createHttpClient(config.getOptions());
+        this.vertx = vertx;
     }
 
     static HttpClientConfig cloneConfig(@NonNull HttpClientConfig config, HostInfo hostInfo, int idleTimeout) {

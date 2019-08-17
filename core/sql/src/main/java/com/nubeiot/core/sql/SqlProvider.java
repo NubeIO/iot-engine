@@ -7,7 +7,7 @@ import com.nubeiot.core.component.UnitProvider;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class SqlProvider<T extends EntityHandler> implements UnitProvider<SQLWrapper> {
+public final class SqlProvider<T extends AbstractEntityHandler> implements UnitProvider<SQLWrapper> {
 
     private final Catalog catalog;
     private final Class<T> entityHandlerClass;

@@ -29,7 +29,7 @@ import lombok.Getter;
  * @see <a href="http://www.jooq.org/doc/3.11/manual-single-page/#sample-database">sample-database</a>
  */
 @Getter
-public class MockOneEntityHandler extends EntityHandler {
+public class MockOneEntityHandler extends AbstractEntityHandler {
 
     private final LanguageDao languageDao;
     private final AuthorDao authorDao;
@@ -38,10 +38,10 @@ public class MockOneEntityHandler extends EntityHandler {
 
     public MockOneEntityHandler(Configuration jooqConfig, Vertx vertx) {
         super(jooqConfig, vertx);
-        this.authorDao = new AuthorDao(jooqConfig, getVertx());
-        this.languageDao = new LanguageDao(jooqConfig, getVertx());
-        this.bookDao = new BookDao(jooqConfig, getVertx());
-        this.bookStoreDao = new BookToBookStoreDao(jooqConfig, getVertx());
+        this.authorDao = dao(AuthorDao.class);
+        this.languageDao = dao(LanguageDao.class);
+        this.bookDao = dao(BookDao.class);
+        this.bookStoreDao = dao(BookToBookStoreDao.class);
     }
 
     @Override

@@ -16,6 +16,7 @@ import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.sql.MockManyEntityHandler.MockManyNoData;
 import com.nubeiot.core.sql.mock.manyschema.mock0.tables.pojos.TblSample_00;
 import com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 
 @RunWith(VertxUnitRunner.class)
 public class H2MemTest extends BaseSqlTest {
@@ -27,13 +28,11 @@ public class H2MemTest extends BaseSqlTest {
 
     @Test
     public void test_init_no_data(TestContext context) {
-        MockManyEntityHandler entityHandler = startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
+        MockManyEntityHandler entityHandler = startSQL(context, SchemaTest.ManySchema.CATALOG, MockManyNoData.class);
         Async async = context.async(2);
-        entityHandler.getQueryExecutor()
-                     .executeAny(dsl -> dsl.fetch(ManySchema.TBL_SAMPLE_00))
+        entityHandler.simpleQuery().executeAny(dsl -> dsl.fetch(SchemaTest.ManySchema.TBL_SAMPLE_00))
                      .subscribe(rs -> assertSize(context, async, 0, rs));
-        entityHandler.getQueryExecutor()
-                     .executeAny(dsl -> dsl.fetch(ManySchema.TBL_SAMPLE_01))
+        entityHandler.simpleQuery().executeAny(dsl -> dsl.fetch(SchemaTest.ManySchema.TBL_SAMPLE_01))
                      .subscribe(rs -> assertSize(context, async, 0, rs));
     }
 
@@ -48,10 +47,11 @@ public class H2MemTest extends BaseSqlTest {
                                                         .setFStr("hola")
                                                         .setFValue(new JsonObject().put("key", "spanish"))).toJson();
 
-        MockManyEntityHandler entityHandler = startSQL(context, ManySchema.CATALOG, MockManyEntityHandler.class);
+        MockManyEntityHandler entityHandler = startSQL(context, SchemaTest.ManySchema.CATALOG,
+                                                       MockManyEntityHandler.class);
         Async async = context.async(4);
-        fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_00, e0);
-        fetch(context, async, entityHandler.getQueryExecutor(), ManySchema.TBL_SAMPLE_01, e1);
+        fetch(context, async, entityHandler.simpleQuery(), SchemaTest.ManySchema.TBL_SAMPLE_00, e0);
+        fetch(context, async, entityHandler.simpleQuery(), SchemaTest.ManySchema.TBL_SAMPLE_01, e1);
     }
 
     private void fetch(TestContext context, Async async, JDBCRXGenericQueryExecutor queryExecutor,
@@ -65,7 +65,7 @@ public class H2MemTest extends BaseSqlTest {
 
     @Test
     public void test_init_complex_model(TestContext context) {
-        startSQL(context, OneSchema.CATALOG, MockOneEntityHandler.class);
+        startSQL(context, SchemaTest.OneSchema.CATALOG, MockOneEntityHandler.class);
     }
 
 }

@@ -2,9 +2,11 @@ package com.nubeiot.core.dto;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -41,13 +43,30 @@ import lombok.NonNull;
 public interface JsonData extends Serializable {
 
     ObjectMapper MAPPER = Json.mapper.copy()
-                                     .registerModule(new JavaTimeModule())
-                                     .registerModule(Deserializer.SIMPLE_MODULE)
+                                     .registerModule(new JavaTimeModule()).registerModule(JsonModule.BASIC)
                                      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     ObjectMapper LENIENT_MAPPER = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     String SUCCESS_KEY = "data";
     String ERROR_KEY = "error";
     String FILTER_PROP_BY_NAME = "filter_by_name";
+
+    /**
+     * Check if given class is able to added in json
+     *
+     * @param clazz Given class
+     * @return {@code true} if able to added
+     * @see Json
+     */
+    static boolean isAbleHandler(@NonNull Class<?> clazz) {
+        return ReflectionClass.isJavaLangObject(clazz) || ReflectionClass.assertDataType(clazz, Instant.class) ||
+               ReflectionClass.assertDataType(clazz, Map.class) || ReflectionClass.assertDataType(clazz, List.class) ||
+               ReflectionClass.assertDataType(clazz, JsonObject.class) ||
+               ReflectionClass.assertDataType(clazz, JsonArray.class);
+    }
+
+    static Object checkAndConvert(@NonNull Object val) {
+        return isAbleHandler(val.getClass()) ? val : val.toString();
+    }
 
     static <D> D safeGet(@NonNull JsonObject jsonObject, @NonNull String key, @NonNull Class<D> clazz) {
         return safeGet(jsonObject, key, clazz, null);

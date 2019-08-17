@@ -15,7 +15,7 @@ abstract class BaseSqlConverterTest extends BaseSqlTest {
 
     @Override
     protected void setup(TestContext context) {
-        this.entityHandler = startSQL(context, ManySchema.CATALOG, handler());
+        this.entityHandler = startSQL(context, SchemaTest.ManySchema.CATALOG, handler());
         this.initData(context);
     }
 

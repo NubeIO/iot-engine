@@ -23,8 +23,9 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.sql.EntityAuditHandler;
+import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.decorator.EntityAuditDecorator;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.iotdata.edge.model.Tables;
@@ -39,7 +40,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 
 import lombok.NonNull;
 
-class DataPointEntityHandler extends EntityHandler implements EntityAuditHandler {
+class DataPointEntityHandler extends AbstractEntityHandler implements EntityAuditDecorator {
 
     public static final String BUILTIN_DATA = "BUILTIN_DATA";
 
@@ -85,7 +86,7 @@ class DataPointEntityHandler extends EntityHandler implements EntityAuditHandler
     }
 
     private Single<EventMessage> initDataFromConfig() {
-        return Optional.ofNullable((JsonObject) this.getSharedDataFunc().apply(BUILTIN_DATA))
+        return Optional.ofNullable((JsonObject) sharedData(BUILTIN_DATA))
                        .map(data -> Single.merge(
                            ReflectionClass.stream(Device.class.getPackage().getName(), VertxPojo.class,
                                                   ReflectionClass.publicClass())
@@ -114,17 +115,17 @@ class DataPointEntityHandler extends EntityHandler implements EntityAuditHandler
     private Single<Integer> insert(AbstractVertxDAO dao, @NonNull Class<VertxPojo> pojoClass, @NonNull Object data) {
         if (parsable(pojoClass, data)) {
             return ((Single<Integer>) dao.insert(
-                EntityAuditHandler.addCreationAudit(true, parse(pojoClass, data), "SYSTEM_INITIATOR"))).doOnSuccess(
-                initLog(pojoClass));
+                EntityAuditDecorator.addCreationAudit(true, EntityHandler.parse(pojoClass, data),
+                                                      "SYSTEM_INITIATOR"))).doOnSuccess(initLog(pojoClass));
         }
         if (data instanceof JsonArray || data instanceof Collection) {
             final Stream<Object> stream = data instanceof JsonArray
                                           ? ((JsonArray) data).stream()
                                           : ((Collection) data).stream();
             return ((Single<Integer>) dao.insert(stream.filter(o -> parsable(pojoClass, o))
-                                                       .map(o -> parse(pojoClass, o))
-                                                       .map(pojo -> EntityAuditHandler.addCreationAudit(true, pojo,
-                                                                                                        "SYSTEM_INITIATOR"))
+                                                       .map(o -> EntityHandler.parse(pojoClass, o))
+                                                       .map(pojo -> EntityAuditDecorator.addCreationAudit(true, pojo,
+                                                                                                          "SYSTEM_INITIATOR"))
                                                        .collect(Collectors.toList()))).doOnSuccess(initLog(pojoClass));
         }
         return Single.just(0);
@@ -143,7 +144,7 @@ class DataPointEntityHandler extends EntityHandler implements EntityAuditHandler
         try {
             final Class daoClass = Class.forName(pojoClass.getName().replaceAll("pojos", "daos") + "Dao");
             if (ReflectionClass.assertDataType(daoClass, AbstractVertxDAO.class)) {
-                return Optional.ofNullable((AbstractVertxDAO) getDao(daoClass));
+                return Optional.ofNullable((AbstractVertxDAO) dao(daoClass));
             }
         } catch (ClassNotFoundException e) {
             logger.warn("Not found DAO of pojo {}", e, pojoClass);

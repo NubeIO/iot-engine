@@ -331,11 +331,11 @@ public final class Reflections {
                    clazzName.startsWith("io.netty.") || clazzName.startsWith("com.fasterxml.jackson");
         }
 
-        public static boolean isJavaLangObject(Class<?> clazz) {
+        public static boolean isJavaLangObject(@NonNull Class<?> clazz) {
             return clazz.isPrimitive() || clazz.isEnum() || "java.lang".equals(clazz.getPackage().getName());
         }
 
-        private static <T> Class<?> getPrimitiveClass(Class<T> findClazz) {
+        private static <T> Class<?> getPrimitiveClass(@NonNull Class<T> findClazz) {
             try {
                 Field t = findClazz.getField("TYPE");
                 if (!hasModifiers(Modifier.PUBLIC, Modifier.STATIC).test(t)) {

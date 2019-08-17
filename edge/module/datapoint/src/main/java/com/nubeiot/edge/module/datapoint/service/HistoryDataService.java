@@ -1,23 +1,20 @@
 package com.nubeiot.edge.module.datapoint.service;
 
-import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.OneToManyReferenceEntityService;
+import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.service.HasReferenceResource;
+import com.nubeiot.core.sql.service.OneToManyReferenceEntityService;
+import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEntityTransformer;
 import com.nubeiot.edge.module.datapoint.service.Metadata.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
-import com.nubeiot.iotdata.edge.model.tables.daos.PointHistoryDataDao;
-import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
-import com.nubeiot.iotdata.edge.model.tables.records.PointHistoryDataRecord;
 
 import lombok.NonNull;
 
-public final class HistoryDataService extends
-                                      AbstractDataPointService<Long, PointHistoryData, PointHistoryDataRecord,
-                                                                  PointHistoryDataDao, HistoryDataMetadata>
-    implements PointExtension,
-               OneToManyReferenceEntityService<Long, PointHistoryData, PointHistoryDataRecord, PointHistoryDataDao,
-                                                  HistoryDataMetadata> {
+public final class HistoryDataService extends AbstractDataPointService<HistoryDataMetadata, HistoryDataService>
+    implements OneToManyReferenceEntityService<HistoryDataMetadata, HistoryDataService>,
+               ReferenceEntityTransformer,
+               PointExtension {
 
-    public HistoryDataService(@NonNull EntityHandler entityHandler) {
+    public HistoryDataService(@NonNull AbstractEntityHandler entityHandler) {
         super(entityHandler);
     }
 
@@ -29,6 +26,16 @@ public final class HistoryDataService extends
     @Override
     public HistoryDataMetadata metadata() {
         return HistoryDataMetadata.INSTANCE;
+    }
+
+    @Override
+    public HasReferenceResource ref() {
+        return this;
+    }
+
+    @Override
+    public @NonNull ReferenceEntityTransformer transformer() {
+        return this;
     }
 
 }

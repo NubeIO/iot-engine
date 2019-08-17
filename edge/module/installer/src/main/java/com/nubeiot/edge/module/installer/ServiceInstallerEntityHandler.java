@@ -26,8 +26,8 @@ public final class ServiceInstallerEntityHandler extends EdgeEntityHandler {
 
     @Override
     public Single<EventMessage> initData() {
-        InstallerConfig installerCfg = IConfig.from(
-            this.sharedDataFunc.apply(EdgeServiceInstallerVerticle.SHARED_INSTALLER_CFG), InstallerConfig.class);
+        InstallerConfig installerCfg = IConfig.from(sharedData(EdgeServiceInstallerVerticle.SHARED_INSTALLER_CFG),
+                                                    InstallerConfig.class);
         super.setupServiceRepository(installerCfg.getRepoConfig());
         return this.startupModules().map(r -> EventMessage.success(EventAction.INIT, r));
     }

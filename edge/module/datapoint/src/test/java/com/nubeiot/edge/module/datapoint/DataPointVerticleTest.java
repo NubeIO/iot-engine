@@ -18,8 +18,8 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
-import com.nubeiot.core.sql.JsonPojo;
 import com.nubeiot.core.sql.SqlConfig;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 

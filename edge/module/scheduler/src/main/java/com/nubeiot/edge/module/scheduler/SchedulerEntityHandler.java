@@ -7,13 +7,13 @@ import io.vertx.core.Vertx;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.sql.EntityAuditHandler;
-import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.decorator.EntityAuditDecorator;
 import com.nubeiot.iotdata.scheduler.model.Tables;
 
 import lombok.NonNull;
 
-class SchedulerEntityHandler extends EntityHandler implements EntityAuditHandler {
+class SchedulerEntityHandler extends AbstractEntityHandler implements EntityAuditDecorator {
 
     public SchedulerEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         super(jooqConfig, vertx);

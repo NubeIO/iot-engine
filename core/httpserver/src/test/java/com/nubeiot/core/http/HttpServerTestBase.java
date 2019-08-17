@@ -27,7 +27,6 @@ import io.vertx.reactivex.core.http.HttpClient;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
-import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
@@ -73,11 +72,6 @@ public class HttpServerTestBase {
         this.httpConfig.getWebsocketConfig().setEnabled(true);
     }
 
-    protected static void assertResponse(TestContext context, Async async, JsonObject expected,
-                                         io.vertx.core.buffer.Buffer actual) {
-        JsonHelper.assertJson(context, async, expected, actual.toJsonObject());
-    }
-
     protected HttpClientOptions createClientOptions() {
         return new HttpClientOptions().setConnectTimeout(TestHelper.TEST_TIMEOUT_SEC);
     }
@@ -85,8 +79,7 @@ public class HttpServerTestBase {
     protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected,
                                       JsonObject bodyExpected, Customization... customizations) {
         assertRestByClient(context, method, path, null, ExpectedResponse.builder()
-                                                                        .expected(bodyExpected)
-                                                                        .statusCode(codeExpected)
+                                                                        .expected(bodyExpected).code(codeExpected)
                                                                         .customizations(customizations)
                                                                         .build());
     }
@@ -95,14 +88,14 @@ public class HttpServerTestBase {
                                       int codeExpected, JsonObject bodyExpected, Customization... customizations) {
         assertRestByClient(context, method, path, requestData, ExpectedResponse.builder()
                                                                                .expected(bodyExpected)
-                                                                               .statusCode(codeExpected)
+                                                                               .code(codeExpected)
                                                                                .customizations(customizations)
                                                                                .build());
     }
 
     protected void assertRestByClient(TestContext context, HttpMethod method, String path, RequestData requestData,
                                       ExpectedResponse expected) {
-        Async async = context.async();
+        Async async = context.async(expected.hasAfter() ? 2 : 1);
         HttpClientDelegate.create(vertx.getDelegate(), HostInfo.from(requestOptions))
                           .execute(path, method, requestData)
                           .doFinally(() -> TestHelper.testComplete(async))

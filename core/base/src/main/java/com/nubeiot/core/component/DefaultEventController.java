@@ -6,7 +6,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
@@ -18,6 +17,7 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.Getter;
 import lombok.NonNull;
 
 /**
@@ -28,7 +28,8 @@ import lombok.NonNull;
  */
 final class DefaultEventController implements EventController {
 
-    private final EventBus eventBus;
+    @Getter
+    private final Vertx vertx;
     private final DeliveryOptions deliveryOptions;
 
     DefaultEventController(@NonNull Vertx vertx) {
@@ -36,11 +37,7 @@ final class DefaultEventController implements EventController {
     }
 
     DefaultEventController(@NonNull Vertx vertx, DeliveryOptions deliveryOptions) {
-        this(vertx.eventBus(), deliveryOptions);
-    }
-
-    private DefaultEventController(@NonNull EventBus eventBus, DeliveryOptions deliveryOptions) {
-        this.eventBus = eventBus;
+        this.vertx = vertx;
         this.deliveryOptions = Objects.nonNull(deliveryOptions) ? deliveryOptions : new DeliveryOptions();
     }
 
@@ -52,14 +49,14 @@ final class DefaultEventController implements EventController {
         DeliveryOptions options = Objects.nonNull(deliveryOptions) ? deliveryOptions : this.deliveryOptions;
         Strings.requireNotBlank(address);
         if (pattern == EventPattern.PUBLISH_SUBSCRIBE) {
-            eventBus.publish(address, data, options);
+            vertx.eventBus().publish(address, data, options);
         }
         if (pattern == EventPattern.POINT_2_POINT) {
-            eventBus.send(address, data, options);
+            vertx.eventBus().send(address, data, options);
         }
         if (pattern == EventPattern.REQUEST_RESPONSE) {
             Objects.requireNonNull(replyConsumer, "Must provide reply consumer");
-            eventBus.send(address, data, options, replyConsumer);
+            vertx.eventBus().send(address, data, options, replyConsumer);
         }
     }
 
@@ -70,16 +67,16 @@ final class DefaultEventController implements EventController {
         LOGGER.info("Registering {} Event Listener '{}' | Address '{}'...", local ? "Local" : "Cluster",
                     handler.getClass().getName(), Strings.requireNotBlank(address));
         if (local) {
-            this.eventBus.localConsumer(address, handler::accept);
+            vertx.eventBus().localConsumer(address, handler::accept);
         } else {
-            this.eventBus.consumer(address, handler::accept);
+            vertx.eventBus().consumer(address, handler::accept);
         }
         return this;
     }
 
     @Override
     public Shareable copy() {
-        return new DefaultEventController(eventBus, new DeliveryOptions(deliveryOptions.toJson()));
+        return new DefaultEventController(vertx, new DeliveryOptions(deliveryOptions.toJson()));
     }
 
 }

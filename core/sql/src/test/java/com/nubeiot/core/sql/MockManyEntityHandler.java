@@ -24,15 +24,15 @@ import com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01;
 import lombok.Getter;
 
 @Getter
-public class MockManyEntityHandler extends EntityHandler {
+public class MockManyEntityHandler extends AbstractEntityHandler {
 
     private final TblSample_00Dao sample00Dao;
     private final TblSample_01Dao sample01Dao;
 
     public MockManyEntityHandler(Configuration jooqConfig, Vertx vertx) {
         super(jooqConfig, vertx);
-        this.sample00Dao = new TblSample_00Dao(jooqConfig, getVertx());
-        this.sample01Dao = new TblSample_01Dao(jooqConfig, getVertx());
+        this.sample00Dao = dao(TblSample_00Dao.class);
+        this.sample01Dao = dao(TblSample_01Dao.class);
     }
 
     @Override

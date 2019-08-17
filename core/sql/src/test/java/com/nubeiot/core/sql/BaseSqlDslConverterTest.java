@@ -10,7 +10,7 @@ abstract class BaseSqlDslConverterTest extends BaseSqlConverterTest {
 
     @Override
     protected void initData(TestContext context) {
-        this.dsl = entityHandler.getJooqConfig().dsl();
+        this.dsl = entityHandler.dsl();
         //id = 1, f_date_1 = 2019-02-17
         //f_timestamp = 2019-02-17 23:59:59, f_timestampz = 2019-02-17 23:59:59
         //f_duration = PT50H30M20S, id = P2Y3M4W5D

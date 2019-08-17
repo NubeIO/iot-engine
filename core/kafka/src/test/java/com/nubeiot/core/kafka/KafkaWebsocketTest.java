@@ -91,7 +91,7 @@ public class KafkaWebsocketTest extends HttpServerTestBase {
         Async async = context.async(1);
         WebSocket ws = setupSockJsClient(context, async, Urls.combinePath("ws", metadata.getPath()),
                                          clientRegister(metadata.getPublisher().getAddress()), context::fail);
-        ws.handler(buffer -> assertResponse(context, async, expected, buffer));
+        ws.handler(buffer -> JsonHelper.assertJson(context, async, expected, buffer));
     }
 
     private void startKafkaClient(WebsocketServerEventMetadata metadata) {

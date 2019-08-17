@@ -96,7 +96,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
                        JsonHelper.asserter(context, async, expected));
         WebSocket ws = setupSockJsClient(context, async, context::fail);
         clientSend(pushAddress, message).accept(
-            ws.handler(buffer -> assertResponse(context, async, responseExpected, buffer)));
+            ws.handler(buffer -> JsonHelper.assertJson(context, async, responseExpected, buffer)));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         Async async = context.async(1);
         WebSocket ws = setupSockJsClient(context, async, context::fail);
         clientSend(pushAddress, message).accept(
-            ws.handler(buffer -> assertResponse(context, async, responseExpected, buffer)));
+            ws.handler(buffer -> JsonHelper.assertJson(context, async, responseExpected, buffer)));
     }
 
     @Test
@@ -136,7 +136,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         WebSocket ws = setupSockJsClient(context, async,
                                          Urls.combinePath("/ws", MockWebsocketEvent.ONLY_PUBLISHER.getPath()),
                                          clientRegister(publisher.getAddress()), context::fail);
-        ws.handler(buffer -> assertResponse(context, async, expected, buffer));
+        ws.handler(buffer -> JsonHelper.assertJson(context, async, expected, buffer));
     }
 
     @Test
@@ -145,7 +145,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         startServer(context, new HttpServerRouter().registerEventBusSocket(MockWebsocketEvent.NO_PUBLISHER));
         Async async = context.async(1);
         WebSocket ws = setupSockJsClient(context, async, context::fail);
-        ws.handler(buffer -> assertResponse(context, async, expected, buffer));
+        ws.handler(buffer -> JsonHelper.assertJson(context, async, expected, buffer));
         ws.writeTextMessage("xx");
     }
 
@@ -159,7 +159,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         JsonObject msg = socketMsg.put("body", new JsonObject("{\"type\":\"err\"}"));
         Async async = context.async(1);
         WebSocket ws = setupSockJsClient(context, async, context::fail);
-        clientWrite(msg).accept(ws.handler(buffer -> assertResponse(context, async, body.toJson(), buffer)));
+        clientWrite(msg).accept(ws.handler(buffer -> JsonHelper.assertJson(context, async, body.toJson(), buffer)));
     }
 
     private void assertGreeting(TestContext context, Async async, String uri) {

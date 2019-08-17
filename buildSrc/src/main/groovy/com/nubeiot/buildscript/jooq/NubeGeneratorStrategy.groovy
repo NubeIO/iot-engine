@@ -16,19 +16,19 @@ class NubeGeneratorStrategy extends VertxGeneratorStrategy {
         if (mode == Mode.INTERFACE || mode == Mode.POJO || mode == Mode.RECORD) {
             TableDefinition table = definition.database.getTable(definition.schema, definition.name)
             if (table.columns.find({ it.name.matches(DB.COL_REGEX.timeAudit) })) {
-                javaClassImplements.add("com.nubeiot.core.sql.HasTimeAudit")
+                javaClassImplements.add("com.nubeiot.core.sql.pojos.HasTimeAudit")
             }
             if (table.columns.find({ it.name.matches(DB.COL_REGEX.syncAudit) })) {
-                javaClassImplements.add("com.nubeiot.core.sql.HasSyncAudit")
+                javaClassImplements.add("com.nubeiot.core.sql.pojos.HasSyncAudit")
             }
             if (table.columns.find({ it.name.matches(DB.COL_REGEX.label) })) {
-                javaClassImplements.add("com.nubeiot.core.sql.HasLabel")
+                javaClassImplements.add("com.nubeiot.core.sql.pojos.HasLabel")
             }
         }
         if (mode == Mode.DEFAULT && definition instanceof TableDefinition) {
             //TODO very hacky to add RECORD
             String recordClass = StringUtils.toCamelCase(definition.name) + "Record"
-            javaClassImplements.add("com.nubeiot.core.sql.JsonTable<" + recordClass + ">")
+            javaClassImplements.add("com.nubeiot.core.sql.tables.JsonTable<" + recordClass + ">")
         }
         return javaClassImplements
     }

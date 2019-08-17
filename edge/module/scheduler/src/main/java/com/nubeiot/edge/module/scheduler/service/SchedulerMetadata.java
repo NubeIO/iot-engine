@@ -1,19 +1,11 @@
 package com.nubeiot.edge.module.scheduler.service;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.vertx.core.json.JsonObject;
-
-import com.nubeiot.core.sql.CompositePojo;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
-import com.nubeiot.core.sql.JsonTable;
+import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.iotdata.scheduler.model.Tables;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.JobEntityDao;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.TriggerEntityDao;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobEntity;
-import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobTrigger;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.TriggerEntity;
 import com.nubeiot.iotdata.scheduler.model.tables.records.JobEntityRecord;
 import com.nubeiot.iotdata.scheduler.model.tables.records.TriggerEntityRecord;
@@ -121,23 +113,6 @@ interface SchedulerMetadata {
         @Override
         public @NonNull String pluralKeyName() {
             return "jobs";
-        }
-
-    }
-
-
-    final class JobTriggerComposite extends JobTrigger implements CompositePojo<JobTrigger> {
-
-        private final Map<String, VertxPojo> other = new HashMap<>();
-
-        @Override
-        public @NonNull Map<String, VertxPojo> other() {
-            return other;
-        }
-
-        @Override
-        public JsonObject toJson() {
-            return super.toJson().mergeIn(otherToJson(), true);
         }
 
     }

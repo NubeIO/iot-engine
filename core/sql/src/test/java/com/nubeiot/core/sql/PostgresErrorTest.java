@@ -46,7 +46,7 @@ public class PostgresErrorTest extends BaseSqlTest {
     }
 
     protected void setup(TestContext context) {
-        this.entityHandler = startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
+        this.entityHandler = startSQL(context, SchemaTest.ManySchema.CATALOG, MockManyNoData.class);
         TblSample_01 pojo = new TblSample_01().setId(3)
                                               .setFDate_1(LocalDate.of(2019, 2, 17))
                                               .setFTimestamp(

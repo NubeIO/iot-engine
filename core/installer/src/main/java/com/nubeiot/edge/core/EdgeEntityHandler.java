@@ -33,18 +33,16 @@ import com.nubeiot.auth.ExternalServer;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.FileUtils;
@@ -66,7 +64,7 @@ import com.nubeiot.edge.core.model.tables.records.TblTransactionRecord;
 
 import lombok.NonNull;
 
-public abstract class EdgeEntityHandler extends EntityHandler {
+public abstract class EdgeEntityHandler extends AbstractEntityHandler {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -76,9 +74,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     protected EdgeEntityHandler(Configuration configuration, Vertx vertx) {
         super(configuration, vertx);
-        moduleDao = () -> new TblModuleDao(jooqConfig, getVertx());
-        transDao = () -> new TblTransactionDao(jooqConfig, getVertx());
-        historyDao = () -> new TblRemoveHistoryDao(jooqConfig, getVertx());
+        moduleDao = () -> dao(TblModuleDao.class);
+        transDao = () -> dao(TblTransactionDao.class);
+        historyDao = () -> dao(TblRemoveHistoryDao.class);
     }
 
     @Override
@@ -122,7 +120,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
             ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
                 externalServers.stream().map(ExternalServer::getUrl).collect(Collectors.toList()))
                                                             .setLocalRepository(javaLocal);
-            vertx.registerVerticleFactory(new MavenVerticleFactory(resolver));
+            vertx().registerVerticleFactory(new MavenVerticleFactory(resolver));
         }
     }
 
@@ -149,9 +147,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                          .appConfig(appConfig)
                                                                          .systemConfig(
                                                                              result.getSystemConfig().toJson())
-                                                                         .dataDir((String) this.getSharedDataFunc()
-                                                                                               .apply(
-                                                                                                   SharedDataDelegate.SHARED_DATADIR))
+                                                                         .dataDir(dataDir().toString())
                                                                          .build();
             return preDeploymentResult.toJson().put("message", "Work in progress").put("status", Status.WIP);
         });
@@ -164,7 +160,6 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         logger.info("Execute transaction: {}", transactionId);
         preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
         EventMessage request = EventMessage.success(action, preDeployResult.toRequestData());
-        EventController controller = (EventController) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
         ReplyEventHandler reply = ReplyEventHandler.builder()
                                                    .action(action)
                                                    .system("VERTX_DEPLOY")
@@ -174,7 +169,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                                        preDeployResult.getTargetState()))
                                                    .error(e -> errorPostDeployment(serviceId, transactionId, action, e))
                                                    .build();
-        controller.request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply);
+        eventClient().request(deploymentEvent().getAddress(), deploymentEvent().getPattern(), request, reply);
     }
 
     private Single<List<TblModule>> getModulesWhenBootstrap() {
@@ -194,7 +189,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
         return moduleDao.get()
                         .findManyByState(Collections.singletonList(State.PENDING))
                         .flattenAsObservable(pendingModules -> pendingModules)
-                        .flatMapSingle(module -> queryExecutor.executeAny(context -> getTransactions(module, context)))
+                        .flatMapSingle(module -> simpleQuery().executeAny(context -> getTransactions(module, context)))
                         .collect(ArrayList::new,
                                  (modules, optional) -> optional.ifPresent(o -> modules.add((TblModule) o)));
     }
@@ -237,7 +232,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     }
 
     protected Single<Boolean> isFreshInstall() {
-        return queryExecutor.executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
+        return simpleQuery().executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
     }
 
     Single<Optional<TblModule>> findModuleById(String serviceId) {
@@ -273,8 +268,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
 
     private Single<PreDeploymentResult> handlePreDeployment(ITblModule module, EventAction event) {
         logger.info("Handle entities before do deployment...");
-        InstallerConfig config = IConfig.from(sharedDataFunc.apply(EdgeVerticle.SHARED_INSTALLER_CFG),
-                                              InstallerConfig.class);
+        InstallerConfig config = IConfig.from(sharedData(EdgeVerticle.SHARED_INSTALLER_CFG), InstallerConfig.class);
         if (event == EventAction.REMOVE) {
             module.setState(State.UNAVAILABLE);
         }
@@ -324,8 +318,7 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                                                  module.getServiceName()))
                                   .deployId(module.getDeployId())
                                   .appConfig(module.getAppConfig())
-                                  .systemConfig(module.getSystemConfig())
-                                  .dataDir((String) this.getSharedDataFunc().apply(SharedDataDelegate.SHARED_DATADIR))
+                                  .systemConfig(module.getSystemConfig()).dataDir(dataDir().toString())
                                   .build();
     }
 
@@ -354,9 +347,9 @@ public abstract class EdgeEntityHandler extends EntityHandler {
                                             .flatMap(ignore -> moduleDao.get().deleteById(serviceId)))
                .subscribe();
         } else {
-            Map<TableField, String> values = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
-            queryExecutor.executeAny(c -> updateTransStatus(c, transId, status, null))
-                         .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, values))
+            Map<TableField, String> v = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
+            simpleQuery().executeAny(c -> updateTransStatus(c, transId, status, null))
+                         .flatMap(r1 -> simpleQuery().executeAny(c -> updateModuleState(c, serviceId, state, v))
                                                      .map(r2 -> r1 + r2))
                          .subscribe();
         }
@@ -365,10 +358,10 @@ public abstract class EdgeEntityHandler extends EntityHandler {
     //TODO: register EventBus to send message somewhere
     private void errorPostDeployment(String serviceId, String transId, EventAction action, ErrorMessage error) {
         logger.error("Handle entities after error deployment...");
-        queryExecutor.executeAny(c -> updateTransStatus(c, transId, Status.FAILED,
+        simpleQuery().executeAny(c -> updateTransStatus(c, transId, Status.FAILED,
                                                         Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR,
                                                                                  error.toJson())))
-                     .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
+                     .flatMap(r1 -> simpleQuery().executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
                                                  .map(r2 -> r1 + r2))
                      .subscribe();
     }

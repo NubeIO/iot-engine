@@ -5,9 +5,12 @@ import java.lang.reflect.Field;
 import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -25,6 +28,7 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
@@ -33,6 +37,7 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.component.UnitVerticleTestHelper;
+import com.nubeiot.core.dto.JsonData;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -231,6 +236,12 @@ public interface TestHelper {
             } finally {
                 testComplete(async);
             }
+        }
+
+        static void assertJson(TestContext context, Async async, JsonObject expected, JsonObject actual,
+                               List<Customization> customizations) {
+            assertJson(context, async, expected, actual,
+                       Optional.ofNullable(customizations).orElse(new ArrayList<>()).toArray(new Customization[] {}));
         }
 
         static void assertJson(TestContext context, Async async, JsonObject expected, JsonObject actual,

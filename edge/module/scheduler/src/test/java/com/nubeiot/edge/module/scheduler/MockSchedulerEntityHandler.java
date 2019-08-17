@@ -74,9 +74,9 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
 
     @Override
     public Single<EventMessage> initData() {
-        final JobEntityDao jobDao = getDao(JobEntityDao.class);
-        final TriggerEntityDao triggerDao = getDao(TriggerEntityDao.class);
-        final JobTriggerDao jobTriggerDao = getDao(JobTriggerDao.class);
+        final JobEntityDao jobDao = dao(JobEntityDao.class);
+        final TriggerEntityDao triggerDao = dao(TriggerEntityDao.class);
+        final JobTriggerDao jobTriggerDao = dao(JobTriggerDao.class);
         return Single.concatArray(jobDao.insert(JobConverter.convert(JOB_1).setId(1)),
                                   triggerDao.insert(TriggerConverter.convert(TRIGGER_1).setId(1)),
                                   triggerDao.insert(TriggerConverter.convert(TRIGGER_3).setId(2)),
