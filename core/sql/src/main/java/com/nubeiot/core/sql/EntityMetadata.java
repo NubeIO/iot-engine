@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.UpdatableRecord;
 
@@ -38,7 +39,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
                 Strings.requireNotBlank(jsonKeyName)).toLowerCase(Locale.ENGLISH);
     }
 
-    static <RECORD extends UpdatableRecord<RECORD>> String createJsonKeyName(@NonNull Table<RECORD> table) {
+    static String createJsonKeyName(@NonNull Table<? extends Record> table) {
         if (table.getPrimaryKey().getFields().size() != 1) {
             throw new UnsupportedOperationException("Doesn't support composite key or no primary key");
         }
@@ -103,17 +104,19 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     }
 
     /**
-     * Extract primary key from request then parse to primary key with proper data type
+     * Extract {@code primary/unique key} from request by {@link #requestKeyName()} then parse to proper data type
      *
      * @param requestData Request data
      * @return Actual primary key
      * @throws IllegalArgumentException if data key is not valid or missing
+     * @see #requestKeyName()
+     * @see #parseKey(String)
      */
     @NonNull
-    default K parsePrimaryKey(@NonNull RequestData requestData) throws IllegalArgumentException {
+    default K parseKey(@NonNull RequestData requestData) throws IllegalArgumentException {
         return Optional.ofNullable(requestData.body())
                        .flatMap(body -> Optional.ofNullable(body.getValue(requestKeyName()))
-                                                .map(k -> parsePrimaryKey(k.toString())))
+                                                .map(k -> parseKey(k.toString())))
                        .orElseThrow(() -> new IllegalArgumentException("Missing key " + requestKeyName()));
     }
 
@@ -124,11 +127,11 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      * @return Actual primary key
      * @throws IllegalArgumentException if data key is not valid or missing
      */
-    @NonNull K parsePrimaryKey(@NonNull String dataKey) throws IllegalArgumentException;
+    @NonNull K parseKey(@NonNull String dataKey) throws IllegalArgumentException;
 
     /**
-     * Defines request key name that represents for {@code primary key} in {@code table} to lookup in doing {@code get
-     * /update /patch /delete} resource
+     * Defines request key name that represents for {@code primary/unique key} in {@code table} to lookup in doing
+     * {@code get /update /patch /delete} resource
      *
      * @return request key name. Default is {@code <model_name>_<json_key_name>}
      * @apiNote It is not represents for actual primary key column in database table
@@ -202,7 +205,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     interface SerialKeyEntity<P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, Integer>>
         extends EntityMetadata<Integer, P, R, D> {
 
-        default Integer parsePrimaryKey(String dataKey) throws IllegalArgumentException {
+        default Integer parseKey(String dataKey) throws IllegalArgumentException {
             return Functions.toInt().apply(dataKey);
         }
 
@@ -217,7 +220,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     interface BigSerialKeyEntity<P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, Long>>
         extends EntityMetadata<Long, P, R, D> {
 
-        default Long parsePrimaryKey(String dataKey) throws IllegalArgumentException {
+        default Long parseKey(String dataKey) throws IllegalArgumentException {
             return Functions.toLong().apply(dataKey);
         }
 
@@ -232,7 +235,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     interface StringKeyEntity<P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, String>>
         extends EntityMetadata<String, P, R, D> {
 
-        default String parsePrimaryKey(String dataKey) throws IllegalArgumentException {
+        default String parseKey(String dataKey) throws IllegalArgumentException {
             return dataKey;
         }
 
@@ -247,7 +250,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     interface UUIDKeyEntity<P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, UUID>>
         extends EntityMetadata<UUID, P, R, D> {
 
-        default UUID parsePrimaryKey(String dataKey) throws IllegalArgumentException {
+        default UUID parseKey(String dataKey) throws IllegalArgumentException {
             return Functions.toUUID().apply(dataKey);
         }
 

@@ -105,9 +105,8 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData requestData) {
         RequestData reqData = recompute(EventAction.REMOVE, requestData);
-        final Object pk = metadata().parsePrimaryKey(reqData);
-        return queryExecutor().findOneByKey(reqData)
-                              .flatMapMaybe(p -> queryExecutor().deleteByPrimary(p, pk))
+        final Object pk = metadata().parseKey(reqData);
+        return queryExecutor().deleteOneByKey(reqData)
                               .doOnSuccess(p -> postService().onSuccess(EventAction.REMOVE, p.toJson()))
                               .doOnError(t -> postService().onError(EventAction.REMOVE, t))
                               .flatMapSingle(p -> transformer().response(metadata().requestKeyName(), pk,

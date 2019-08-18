@@ -48,7 +48,7 @@ public interface OneToManyReferenceEntityService<P extends VertxPojo, M extends 
         }
         if (action != EventAction.CREATE) {
             return recompute(requestData, new JsonObject().put(metadata().jsonKeyName(), JsonData.checkAndConvert(
-                metadata().parsePrimaryKey(requestData))));
+                metadata().parseKey(requestData))));
         }
         return InternalEntityService.super.recompute(action, requestData);
     }

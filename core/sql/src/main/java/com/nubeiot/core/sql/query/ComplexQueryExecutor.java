@@ -6,7 +6,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.JoinType;
 import org.jooq.Record;
 import org.jooq.RecordMapper;
@@ -93,7 +95,7 @@ public interface ComplexQueryExecutor<P extends CompositePojo>
         public Single<P> findOneByKey(RequestData reqData) {
             return executeAny(viewQuery(reqData)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
                                                  .map(o -> o.orElseThrow(
-                                                     () -> metadata.notFound(metadata.parsePrimaryKey(reqData))))
+                                                     () -> metadata.notFound(metadata.parseKey(reqData))))
                                                  .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
         }
 
@@ -109,7 +111,7 @@ public interface ComplexQueryExecutor<P extends CompositePojo>
             final JsonObject refJson = JsonData.safeGet(reqData.body(), reference.singularKeyName(), JsonObject.class);
             VertxPojo ref = Optional.ofNullable(refJson).map(j -> reference.parse(j)).orElse(null);
             if (Objects.isNull(ref)) {
-                Object refKey = reference.parsePrimaryKey(reqData);
+                Object refKey = reference.parseKey(reqData);
                 reqData.getFilter()
                        .put(reference.singularKeyName(), new JsonObject().put(reference.jsonKeyName(), refKey));
                 return checkExist(pojo, reqData, refKey).onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError)
@@ -131,8 +133,18 @@ public interface ComplexQueryExecutor<P extends CompositePojo>
         }
 
         @Override
-        public Maybe<P> deleteByPrimary(P pojo, Object pk) {
-            throw new UnsupportedOperationException("Not yet supported");
+        public Maybe<P> deleteOneByKey(RequestData requestData) {
+            return findOneByKey(requestData).flatMapMaybe(pojo -> {
+                final JsonTable<? extends Record> table = table(metadata);
+                final Field field1 = table.field(
+                    table.jsonFields().getOrDefault(metadata.jsonKeyName(), metadata.jsonKeyName()));
+                final Field field2 = table.field(
+                    table.jsonFields().getOrDefault(reference.jsonKeyName(), reference.jsonKeyName()));
+                final Condition condition = field1.eq(metadata.parseKey(requestData))
+                                                  .and(field2.eq(reference.parseKey(requestData)));
+                return ((Single<Integer>) handler.dao(metadata.daoClass()).deleteByCondition(condition)).filter(
+                    r -> r > 0).map(r -> pojo).switchIfEmpty(Maybe.error(metadata.notFound(condition.toString())));
+            });
         }
 
         private Single<P> checkExist(@NonNull P pojo, @NonNull RequestData reqData, @NonNull Object refKey) {
@@ -146,7 +158,7 @@ public interface ComplexQueryExecutor<P extends CompositePojo>
         }
 
         Function<DSLContext, ResultQuery<? extends Record>> viewQuery(RequestData reqData) {
-            final Pagination paging = reqData.getPagination();
+            final Pagination paging = Optional.ofNullable(reqData.getPagination()).orElse(Pagination.builder().build());
             final JsonObject filter = reqData.getFilter();
             return ctx -> ctx.select()
                              .from(filter(ctx, table(metadata), filter))
@@ -187,6 +199,13 @@ public interface ComplexQueryExecutor<P extends CompositePojo>
             return Objects.isNull(refKey)
                    ? Single.just(Optional.empty())
                    : (Single<Optional<? extends VertxPojo>>) dao(metadata).findOneById(refKey);
+        }
+
+        private Condition condition(@NonNull EntityMetadata metadata, @NonNull RequestData requestData) {
+            final JsonTable<? extends Record> table = table(metadata);
+            final Field field1 = table.field(
+                table.jsonFields().getOrDefault(metadata.jsonKeyName(), metadata.jsonKeyName()));
+            return field1.eq(metadata.parseKey(requestData));
         }
 
     }

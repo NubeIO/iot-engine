@@ -79,6 +79,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      *
      * @param requestData Request data
      * @param action      Event action
+     * @param validation  Compare and convert function between {@code database resource} and {@code requested resource}
      * @return primary key
      */
     Single<?> modifyReturningPrimary(@NonNull RequestData requestData, @NonNull EventAction action,
@@ -87,9 +88,10 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
     /**
      * Do delete data by primary
      *
+     * @param requestData Request data
      * @return deleted resource
      */
-    Maybe<P> deleteByPrimary(@NonNull P pojo, @NonNull Object pk);
+    Maybe<P> deleteOneByKey(RequestData requestData);
 
     /**
      * Do query filter

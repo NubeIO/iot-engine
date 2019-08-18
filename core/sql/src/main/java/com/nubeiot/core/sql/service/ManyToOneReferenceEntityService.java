@@ -51,8 +51,8 @@ public interface ManyToOneReferenceEntityService<P extends CompositePojo, M exte
     @Override
     @NonNull
     default RequestData recompute(@NonNull EventAction action, @NonNull RequestData requestData) {
-        return recompute(requestData, new JsonObject().put(metadata().jsonKeyName(), JsonData.checkAndConvert(
-            metadata().parsePrimaryKey(requestData))));
+        return recompute(requestData, new JsonObject().put(metadata().jsonKeyName(),
+                                                           JsonData.checkAndConvert(metadata().parseKey(requestData))));
     }
 
     interface ManyToOneEntityTransformer extends ReferenceEntityTransformer {

@@ -28,13 +28,12 @@ public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQuery
 
         @Override
         public Single<P> findOneByKey(RequestData requestData) {
-            K pk = metadata.parsePrimaryKey(requestData);
+            K pk = metadata.parseKey(requestData);
             return handler.dao(metadata.daoClass())
                           .queryExecutor()
                           .findOne(ctx -> query(ctx, requestData))
                           .flatMap(o -> o.map(Single::just).orElse(Single.error(metadata.notFound(pk))))
-                          .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError)
-                          .map(p -> p);
+                          .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
         }
 
     }

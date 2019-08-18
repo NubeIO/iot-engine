@@ -48,7 +48,7 @@ public interface SimpleQueryExecutor<P extends VertxPojo> extends EntityQueryExe
 
         @Override
         public Single<P> findOneByKey(RequestData requestData) {
-            K pk = metadata.parsePrimaryKey(requestData);
+            K pk = metadata.parseKey(requestData);
             return handler.dao(metadata.daoClass())
                           .findOneById(pk)
                           .flatMap(o -> o.map(Single::just).orElse(Single.error(metadata.notFound(pk))));
@@ -69,7 +69,7 @@ public interface SimpleQueryExecutor<P extends VertxPojo> extends EntityQueryExe
         @Override
         public Single<K> modifyReturningPrimary(RequestData requestData, EventAction action,
                                                 Function3<VertxPojo, VertxPojo, JsonObject, VertxPojo> validation) {
-            final K pk = metadata.parsePrimaryKey(requestData);
+            final K pk = metadata.parseKey(requestData);
             final D dao = handler.dao(metadata.daoClass());
             return findOneByKey(requestData).map(
                 db -> validation.apply(db, metadata.parse(requestData.body().put(metadata.jsonKeyName(), pk)),
@@ -82,10 +82,14 @@ public interface SimpleQueryExecutor<P extends VertxPojo> extends EntityQueryExe
         }
 
         @Override
-        public Maybe<P> deleteByPrimary(P pojo, @NonNull Object pk) {
-            return handler.dao(metadata.daoClass())
-                          .deleteById((K) pk)
-                          .flatMapMaybe(r -> r > 0 ? Maybe.just(pojo) : Maybe.error(metadata.notFound(pk)));
+        public Maybe<P> deleteOneByKey(RequestData requestData) {
+            final K pk = metadata.parseKey(requestData);
+            return findOneByKey(requestData).flatMapMaybe(pojo -> handler.dao(metadata.daoClass())
+                                                                         .deleteById(pk)
+                                                                         .filter(r -> r > 0)
+                                                                         .map(r -> pojo)
+                                                                         .switchIfEmpty(
+                                                                             Maybe.error(metadata.notFound(pk))));
         }
 
         /**
