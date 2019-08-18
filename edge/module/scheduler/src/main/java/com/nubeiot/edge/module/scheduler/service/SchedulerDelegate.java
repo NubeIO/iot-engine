@@ -4,8 +4,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.EntityServiceDelegate;
 import com.nubeiot.core.sql.validation.EntityValidation;
@@ -14,19 +16,19 @@ import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
 
-final class SchedulerDelegate<M extends EntityMetadata, V extends EntityValidation>
-    extends EntityServiceDelegate<M, V, SchedulerService<M, V>> implements SchedulerService<M, V> {
+final class SchedulerDelegate<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation>
+    extends EntityServiceDelegate<P, M, V, SchedulerService<P, M, V>> implements SchedulerService<P, M, V> {
 
-    SchedulerDelegate(@NonNull AbstractEntityHandler entityHandler, @NonNull Class<SchedulerService<M, V>> serviceClass,
+    SchedulerDelegate(@NonNull EntityHandler entityHandler, @NonNull Class<SchedulerService<P, M, V>> serviceClass,
                       @NonNull QuartzSchedulerContext schedulerContext) {
         super(ReflectionClass.createObject(serviceClass, createInputs(entityHandler, schedulerContext)));
     }
 
     @NonNull
-    private static Map<Class, Object> createInputs(@NonNull AbstractEntityHandler entityHandler,
+    private static Map<Class, Object> createInputs(@NonNull EntityHandler entityHandler,
                                                    @NonNull QuartzSchedulerContext schedulerContext) {
         Map<Class, Object> params = new LinkedHashMap<>();
-        params.put(AbstractEntityHandler.class, entityHandler);
+        params.put(EntityHandler.class, entityHandler);
         params.put(QuartzSchedulerContext.class, schedulerContext);
         return params;
     }

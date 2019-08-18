@@ -3,6 +3,7 @@ package com.nubeiot.core.sql.service;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -21,9 +22,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public abstract class EntityServiceDelegate<M extends EntityMetadata, V extends EntityValidation,
-                                               S extends EntityService<M, V>>
-    implements EntityService<M, V> {
+public abstract class EntityServiceDelegate<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation
+                                               , S extends EntityService<P, M, V>> implements EntityService<P, M, V> {
 
     @NonNull
     private final S service;
@@ -53,7 +53,7 @@ public abstract class EntityServiceDelegate<M extends EntityMetadata, V extends 
     }
 
     @Override
-    public @NonNull EntityQueryExecutor queryExecutor() {
+    public @NonNull EntityQueryExecutor<P> queryExecutor() {
         return unwrap().queryExecutor();
     }
 

@@ -13,6 +13,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.ExpectedResponse;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.scheduler.service.JobTriggerComposite;
@@ -80,7 +81,7 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
     }
 
     @Test
-    public void test_assign_non_existed_job_to_trigger(TestContext context) {
+    public void test_assign_non_existed_job_to_existed_trigger(TestContext context) {
         final JobTrigger composite = new JobTrigger().setEnabled(true).setJobId(3);
         final RequestData reqData = RequestData.builder().body(JsonPojo.from(composite).toJson()).build();
         JsonObject expected = new JsonObject(
@@ -90,13 +91,24 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
     }
 
     @Test
+    public void test_assign_existed_job_to_non_existed_trigger(TestContext context) {
+        final JobTrigger composite = new JobTrigger().setEnabled(true).setJobId(1);
+        final RequestData reqData = RequestData.builder().body(JsonPojo.from(composite).toJson()).build();
+        JsonObject expected = new JsonObject(
+            "{\"message\":\"Not found resource with trigger_id=3\",\"code\":\"NOT_FOUND\"}");
+        assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/3/job", reqData,
+                           ExpectedResponse.builder().expected(expected).code(404).build());
+    }
+
+    @Test
     public void test_assign_job_is_already_linked_to_trigger(TestContext context) {
         final JobTrigger composite = new JobTrigger().setEnabled(true).setJobId(1);
         final RequestData reqData = RequestData.builder().body(JsonPojo.from(composite).toJson()).build();
         JsonObject expected = new JsonObject(
-            "{\"message\":\"Not found resource with job_id=3\",\"code\":\"NOT_FOUND\"}");
+            "{\"message\":\"Resource with job_id=1 is already referenced to resource with trigger_id=1\",\"code\":\"" +
+            ErrorCode.ALREADY_EXIST + "\"}");
         assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/1/job", reqData,
-                           ExpectedResponse.builder().expected(expected).code(500).build());
+                           ExpectedResponse.builder().expected(expected).code(409).build());
     }
 
     @Test
@@ -129,7 +141,6 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
         final RequestData reqData = RequestData.builder().body(body).build();
         assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/1/job", reqData,
                            ExpectedResponse.builder().expected(expected).code(201).build());
-        createJob(context, job, ExpectedResponse.builder().expected(expected).code(201).build());
     }
 
 }

@@ -1,22 +1,22 @@
 package com.nubeiot.edge.module.datapoint.service;
 
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEntityTransformer;
 import com.nubeiot.edge.module.datapoint.service.Metadata.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
+import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 
 import lombok.NonNull;
 
 public final class RealtimeSettingService
-    extends AbstractDataPointService<RealtimeSettingMetadata, RealtimeSettingService> implements
-                                                                                      ReferenceEntityTransformer,
-                                                                                      PointExtension,
-                                                                                      OneToManyReferenceEntityService<RealtimeSettingMetadata, RealtimeSettingService> {
+    extends AbstractDataPointService<RealtimeSetting, RealtimeSettingMetadata, RealtimeSettingService>
+    implements ReferenceEntityTransformer, PointExtension,
+               OneToManyReferenceEntityService<RealtimeSetting, RealtimeSettingMetadata, RealtimeSettingService> {
 
-    public RealtimeSettingService(@NonNull AbstractEntityHandler entityHandler) {
+    public RealtimeSettingService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
@@ -36,7 +36,7 @@ public final class RealtimeSettingService
     }
 
     @Override
-    public @NonNull ReferenceQueryExecutor queryExecutor() {
+    public @NonNull ReferenceQueryExecutor<RealtimeSetting> queryExecutor() {
         return OneToManyReferenceEntityService.super.queryExecutor();
     }
 

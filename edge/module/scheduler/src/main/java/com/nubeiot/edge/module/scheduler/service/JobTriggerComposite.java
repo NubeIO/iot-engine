@@ -16,6 +16,12 @@ public final class JobTriggerComposite extends JobTrigger implements CompositePo
     private final Map<String, VertxPojo> other = new HashMap<>();
 
     @Override
+    public JobTriggerComposite wrap(JobTrigger pojo) {
+        this.from(pojo);
+        return this;
+    }
+
+    @Override
     public @NonNull Map<String, VertxPojo> other() {
         return other;
     }

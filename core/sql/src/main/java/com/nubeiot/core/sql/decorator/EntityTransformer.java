@@ -4,13 +4,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 
 import lombok.NonNull;
@@ -24,6 +29,21 @@ public interface EntityTransformer {
      * Represents set of audit fields. Use {@link Filters#AUDIT} to expose these fields
      */
     Set<String> AUDIT_FIELDS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("time_audit", "sync_audit")));
+
+    /**
+     * Construct {@code CUD Response} that includes full resource
+     *
+     * @param action Event action
+     * @param result Result data
+     * @return response
+     */
+    static JsonObject fullResponse(@NonNull EventAction action, @NonNull JsonObject result) {
+        return new JsonObject().put("resource", result).put("action", action).put("status", Status.SUCCESS);
+    }
+
+    static JsonObject keyResponse(@NonNull String keyName, @NonNull Object keyValue) {
+        return new JsonObject().put(keyName, JsonData.checkAndConvert(keyValue));
+    }
 
     /**
      * Enable {@code CUD} response includes full resource instead of simple resource with only response status and
@@ -44,7 +64,8 @@ public interface EntityTransformer {
      * @return set of ignore fields when do customizing response data
      * @see #afterCreate(VertxPojo, RequestData)
      * @see #afterDelete(VertxPojo, RequestData)
-     * @see #afterModify(VertxPojo, RequestData)
+     * @see #afterUpdate(VertxPojo, RequestData)
+     * @see #afterPatch(VertxPojo, RequestData)
      * @see #afterGet(VertxPojo, RequestData)
      * @see #afterEachList(VertxPojo, RequestData)
      */
@@ -89,12 +110,12 @@ public interface EntityTransformer {
      */
     @NonNull
     default JsonObject afterCreate(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData));
+        return fullResponse(EventAction.CREATE, JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData)));
     }
 
     /**
-     * Do any transform resource after {@code UPDATE} or {@code PATCH} action successfully if {@link
-     * #enableFullResourceInCUDResponse()} is {@code true}
+     * Do any transform resource after {@code UPDATE} action successfully if {@link #enableFullResourceInCUDResponse()}
+     * is {@code true}
      *
      * @param pojo        item
      * @param requestData request data
@@ -102,8 +123,22 @@ public interface EntityTransformer {
      * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
      */
     @NonNull
-    default JsonObject afterModify(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(ignoreFields(requestData));
+    default JsonObject afterUpdate(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return fullResponse(EventAction.UPDATE, JsonPojo.from(pojo).toJson(ignoreFields(requestData)));
+    }
+
+    /**
+     * Do any transform resource after {@code PATCH} action successfully if {@link #enableFullResourceInCUDResponse()}
+     * is {@code true}
+     *
+     * @param pojo        item
+     * @param requestData request data
+     * @return transformer item
+     * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
+     */
+    @NonNull
+    default JsonObject afterPatch(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return fullResponse(EventAction.PATCH, JsonPojo.from(pojo).toJson(ignoreFields(requestData)));
     }
 
     /**
@@ -117,7 +152,26 @@ public interface EntityTransformer {
      */
     @NonNull
     default JsonObject afterDelete(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData));
+        return fullResponse(EventAction.REMOVE, JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData)));
+    }
+
+    /**
+     * Construct {@code CUD Response}
+     *
+     * @param key      Primary key
+     * @param provider Response provider function
+     * @return single json
+     */
+    default Single<JsonObject> response(@NonNull String keyName, @NonNull Object key,
+                                        @NonNull Function<Object, Single<JsonObject>> provider) {
+        return enableFullResourceInCUDResponse()
+               ? provider.apply(key)
+               : Single.just(EntityTransformer.keyResponse(keyName, key));
+    }
+
+    default Single<JsonObject> response(@NonNull String keyName, @NonNull Object key,
+                                        @NonNull Supplier<JsonObject> provider) {
+        return response(keyName, key, k -> Single.just(provider.get()));
     }
 
 }

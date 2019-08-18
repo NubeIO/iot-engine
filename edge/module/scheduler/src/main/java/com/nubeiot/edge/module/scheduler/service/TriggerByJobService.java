@@ -1,6 +1,6 @@
 package com.nubeiot.edge.module.scheduler.service;
 
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.TriggerByJobMetadata;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.TriggerEntityMetadata;
@@ -8,10 +8,10 @@ import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
 
-public final class TriggerByJobService extends JobTriggerCompositeService<TriggerByJobMetadata, TriggerByJobService> {
+public final class TriggerByJobService
+    extends JobTriggerCompositeService<JobTriggerComposite, TriggerByJobMetadata, TriggerByJobService> {
 
-    public TriggerByJobService(@NonNull AbstractEntityHandler entityHandler,
-                               @NonNull QuartzSchedulerContext schedulerContext) {
+    public TriggerByJobService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
         super(entityHandler, schedulerContext);
     }
 

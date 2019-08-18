@@ -33,11 +33,6 @@ public interface EntityHandler {
 
     Vertx vertx();
 
-    //TODO Remove it
-    default io.vertx.reactivex.core.Vertx getVertx() {
-        return io.vertx.reactivex.core.Vertx.newInstance(vertx());
-    }
-
     EventController eventClient();
 
     Path dataDir();

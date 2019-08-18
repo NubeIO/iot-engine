@@ -5,22 +5,22 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEntityTransformer;
 import com.nubeiot.edge.module.datapoint.service.Metadata.TagPointMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
 
 import lombok.NonNull;
 
-public final class TagPointService extends AbstractDataPointService<TagPointMetadata, TagPointService> implements
-                                                                                                       OneToManyReferenceEntityService<TagPointMetadata, TagPointService>,
-                                                                                                       ReferenceEntityTransformer,
-                                                                                                       PointExtension {
+public final class TagPointService extends AbstractDataPointService<PointTag, TagPointMetadata, TagPointService>
+    implements OneToManyReferenceEntityService<PointTag, TagPointMetadata, TagPointService>, ReferenceEntityTransformer,
+               PointExtension {
 
-    public TagPointService(@NonNull AbstractEntityHandler entityHandler) {
+    public TagPointService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
@@ -52,7 +52,7 @@ public final class TagPointService extends AbstractDataPointService<TagPointMeta
     }
 
     @Override
-    public @NonNull ReferenceQueryExecutor queryExecutor() {
+    public @NonNull ReferenceQueryExecutor<PointTag> queryExecutor() {
         return OneToManyReferenceEntityService.super.queryExecutor();
     }
 

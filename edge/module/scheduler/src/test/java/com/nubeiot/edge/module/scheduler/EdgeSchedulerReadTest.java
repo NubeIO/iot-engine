@@ -77,6 +77,23 @@ public class EdgeSchedulerReadTest extends EdgeSchedulerVerticleTest {
     }
 
     @Test
+    public void test_get_list_trigger_by_job_and_enable(TestContext context) {
+        JsonObject expected = new JsonObject(
+            "{\"triggers\":[{\"id\":1,\"enabled\":true,\"trigger\":{\"id\":1,\"group\":\"group1\"," +
+            "\"name\":\"trigger1\",\"type\":\"CRON\",\"detail\":{\"expression\":\"0 0 0 ? * SUN *\"," +
+            "\"timezone\":\"Australia/Sydney\"},\"thread\":\"0 0 0 ? * SUN *::Australia/Sydney\"}}]}");
+        assertRestByClient(context, HttpMethod.GET, "/api/s/job/1/trigger?enabled=true", 200, expected);
+    }
+
+    @Test
+    public void test_get_list_trigger_by_job_and_by_trigger_type(TestContext context) {
+        JsonObject expected = new JsonObject(
+            "{\"triggers\":[{\"id\":2,\"enabled\":false,\"trigger\":{\"id\":2,\"group\":\"group1\"," +
+            "\"name\":\"trigger3\",\"type\":\"PERIODIC\",\"detail\":{\"intervalInSeconds\":120,\"repeat\":10}}}]}");
+        assertRestByClient(context, HttpMethod.GET, "/api/s/job/1/trigger?trigger.type=PERIODIC", 200, expected);
+    }
+
+    @Test
     public void test_get_trigger_by_job(TestContext context) {
         JsonObject expected = new JsonObject(
             "{\"id\":2,\"trigger\":{\"id\":2,\"group\":\"group1\",\"name\":\"trigger3\",\"type\":\"PERIODIC\"," +

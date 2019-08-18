@@ -64,16 +64,17 @@ public abstract class AbstractEntityHandler implements EntityHandler {
     }
 
     @Override
-    public <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(Class<D> daoClass) {
+    public <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(
+        Class<D> daoClass) {
         Map<Class, Object> input = new LinkedHashMap<>();
         input.put(Configuration.class, jooqConfig);
-        input.put(io.vertx.reactivex.core.Vertx.class, getVertx());
+        input.put(io.vertx.reactivex.core.Vertx.class, io.vertx.reactivex.core.Vertx.newInstance(vertx()));
         return ReflectionClass.createObject(daoClass, input);
     }
 
     @Override
     public JDBCRXGenericQueryExecutor genericQuery() {
-        return new JDBCRXGenericQueryExecutor(jooqConfig, getVertx());
+        return new JDBCRXGenericQueryExecutor(jooqConfig, io.vertx.reactivex.core.Vertx.newInstance(vertx()));
     }
 
     @Override
@@ -108,7 +109,7 @@ public abstract class AbstractEntityHandler implements EntityHandler {
     }
 
     @SuppressWarnings("unchecked")
-    <T extends AbstractEntityHandler> T registerSharedKey(String sharedKey) {
+    <T extends EntityHandler> T registerSharedKey(String sharedKey) {
         this.sharedKey = sharedKey;
         return (T) this;
     }

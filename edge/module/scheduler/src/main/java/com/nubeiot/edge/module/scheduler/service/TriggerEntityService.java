@@ -6,7 +6,7 @@ import java.util.Set;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.core.sql.validation.EntityValidation;
@@ -18,15 +18,15 @@ import com.nubeiot.scheduler.QuartzSchedulerContext;
 import lombok.Getter;
 import lombok.NonNull;
 
-public final class TriggerEntityService extends AbstractEntityService<TriggerEntityMetadata, TriggerEntityService>
-    implements SchedulerService<TriggerEntityMetadata, TriggerEntityService>,
-               EntityValidation<TriggerEntity>,
-               EntityTransformer {
+public final class TriggerEntityService
+    extends AbstractEntityService<TriggerEntity, TriggerEntityMetadata, TriggerEntityService>
+    implements SchedulerService<TriggerEntity, TriggerEntityMetadata, TriggerEntityService>,
+               EntityValidation<TriggerEntity>, EntityTransformer {
 
     @Getter
     private QuartzSchedulerContext schedulerContext;
 
-    public TriggerEntityService(@NonNull AbstractEntityHandler entityHandler,
+    public TriggerEntityService(@NonNull EntityHandler entityHandler,
                                 @NonNull QuartzSchedulerContext schedulerContext) {
         super(entityHandler);
         this.schedulerContext = schedulerContext;

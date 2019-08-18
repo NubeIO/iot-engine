@@ -37,7 +37,7 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.zaxxer.hikari.HikariDataSource;
 
-public final class SQLWrapper<T extends AbstractEntityHandler> extends UnitVerticle<SqlConfig, SqlContext<T>> {
+public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlConfig, SqlContext<T>> {
 
     private final Catalog catalog;
     private DataSource dataSource;
@@ -91,8 +91,8 @@ public final class SQLWrapper<T extends AbstractEntityHandler> extends UnitVerti
 
     private Single<EventMessage> createDatabase(Configuration jooqConfig) {
         try {
-            AbstractEntityHandler handler = getContext().createHandler(jooqConfig, vertx)
-                                                        .registerSharedKey(this.getSharedKey());
+            final T handle = getContext().createHandler(jooqConfig, vertx);
+            EntityHandler handler = ((AbstractEntityHandler) handle).registerSharedKey(this.getSharedKey());
             if (handler.isNew()) {
                 createNewDatabase(jooqConfig);
                 logger.info("Initializing data...");

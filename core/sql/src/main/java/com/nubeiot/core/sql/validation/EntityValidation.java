@@ -10,7 +10,6 @@ import com.nubeiot.core.sql.decorator.EntityAuditDecorator;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 public interface EntityValidation<P extends VertxPojo> {
 
@@ -70,24 +69,6 @@ public interface EntityValidation<P extends VertxPojo> {
 
     default P onDelete(@NonNull P pojo, @NonNull JsonObject headers) throws IllegalArgumentException {
         return pojo;
-    }
-
-    @RequiredArgsConstructor
-    class DefaultEntityValidation implements EntityValidation {
-
-        private final EntityHandler handler;
-        private final EntityMetadata metadata;
-
-        @Override
-        public EntityHandler entityHandler() {
-            return handler;
-        }
-
-        @Override
-        public EntityMetadata metadata() {
-            return metadata;
-        }
-
     }
 
 }

@@ -1,18 +1,17 @@
 package com.nubeiot.edge.module.scheduler.service;
 
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.HasReferenceResource;
-import com.nubeiot.core.sql.service.ManyToOneReferenceEntityService;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobByTriggerMetadata;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobEntityMetadata;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
 
-public final class JobByTriggerService extends JobTriggerCompositeService<JobByTriggerMetadata, JobByTriggerService> {
+public final class JobByTriggerService
+    extends JobTriggerCompositeService<JobTriggerComposite, JobByTriggerMetadata, JobByTriggerService> {
 
-    public JobByTriggerService(@NonNull AbstractEntityHandler entityHandler,
-                               @NonNull QuartzSchedulerContext schedulerContext) {
+    public JobByTriggerService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
         super(entityHandler, schedulerContext);
     }
 
@@ -26,7 +25,6 @@ public final class JobByTriggerService extends JobTriggerCompositeService<JobByT
         return "/trigger/:" + metadata().requestKeyName() + "/job";
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public JobEntityMetadata reference() {
         return JobEntityMetadata.INSTANCE;
@@ -43,7 +41,7 @@ public final class JobByTriggerService extends JobTriggerCompositeService<JobByT
     }
 
     @Override
-    public @NonNull ManyToOneReferenceEntityService.ManyToOneEntityTransformer transformer() {
+    public @NonNull ManyToOneEntityTransformer transformer() {
         return this;
     }
 

@@ -8,6 +8,7 @@ import java.util.function.Function;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.mock.oneschema.Tables;
@@ -89,10 +90,10 @@ interface MockEntityService {
     }
 
 
-    final class AuthorService extends AbstractEntityService<AuthorMetadata, AuthorService>
+    final class AuthorService extends AbstractEntityService<Author, AuthorMetadata, AuthorService>
         implements EntityValidation<Author>, EntityTransformer {
 
-        AuthorService(@NonNull AbstractEntityHandler entityHandler) {
+        AuthorService(@NonNull EntityHandler entityHandler) {
             super(entityHandler);
         }
 
@@ -123,9 +124,9 @@ interface MockEntityService {
     }
 
 
-    final class BookService extends AbstractEntityService<BookMetadata, BookService> implements EntityValidation<Book>,
-                                                                                                ReferenceEntityTransformer,
-                                                                                                OneToManyReferenceEntityService<BookMetadata, BookService> {
+    final class BookService extends AbstractEntityService<Book, BookMetadata, BookService>
+        implements EntityValidation<Book>, ReferenceEntityTransformer,
+                   OneToManyReferenceEntityService<Book, BookMetadata, BookService> {
 
         BookService(@NonNull AbstractEntityHandler entityHandler) {
             super(entityHandler);
@@ -162,7 +163,7 @@ interface MockEntityService {
         }
 
         @Override
-        public @NonNull ReferenceQueryExecutor queryExecutor() {
+        public @NonNull ReferenceQueryExecutor<Book> queryExecutor() {
             return OneToManyReferenceEntityService.super.queryExecutor();
         }
 

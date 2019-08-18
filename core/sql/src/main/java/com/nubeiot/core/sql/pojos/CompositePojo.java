@@ -2,45 +2,53 @@ package com.nubeiot.core.sql.pojos;
 
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
 public interface CompositePojo<P extends VertxPojo, CP extends CompositePojo> extends VertxPojo {
 
+    @SuppressWarnings("unchecked")
+    static <M extends VertxPojo, C extends CompositePojo> C create(Object pojo, Class<M> pojoClass, Class<C> clazz) {
+        return (C) ReflectionClass.createObject(clazz).wrap(pojoClass.cast(pojo));
+    }
+
     @NonNull Map<String, VertxPojo> other();
 
     @NonNull Class<P> pojoClass();
 
-    default P unwrap() {
-        return pojoClass().cast(this);
-    }
+    CP wrap(@NonNull P pojo);
 
     @SuppressWarnings("unchecked")
-    default CP wrap(Map<String, VertxPojo> other) {
+    default CP wrap(@NonNull Map<String, VertxPojo> other) {
         other().putAll(other);
         return (CP) this;
     }
 
+    default Object prop(String key) {
+        return this.toJson().getValue(Strings.requireNotBlank(key));
+    }
+
     @SuppressWarnings("unchecked")
-    default <M extends VertxPojo> M get(String key) {
+    default CP prop(String key, Object value) {
+        return (CP) fromJson(this.toJson().put(Strings.requireNotBlank(key), value));
+    }
+
+    @SuppressWarnings("unchecked")
+    default <M extends VertxPojo> M getOther(String key) {
         return (M) other().get(Strings.requireNotBlank(key));
     }
 
     @SuppressWarnings("unchecked")
-    default <M extends VertxPojo> M safeGet(String key, @NonNull Class<M> clazz) {
+    default <M extends VertxPojo> M safeGetOther(String key, @NonNull Class<M> clazz) {
         final VertxPojo data = other().get(Strings.requireNotBlank(key));
         return clazz.isInstance(data) ? (M) data : null;
-    }
-
-    default JsonObject getJson(String key) {
-        return Optional.ofNullable(other().get(Strings.requireNotBlank(key))).map(VertxPojo::toJson).orElse(null);
     }
 
     default JsonObject otherToJson() {

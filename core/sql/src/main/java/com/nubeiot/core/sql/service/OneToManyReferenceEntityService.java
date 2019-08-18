@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
@@ -26,15 +27,16 @@ import lombok.NonNull;
  *
  * @param <M> Metadata Type
  */
-@SuppressWarnings("unchecked")
-public interface OneToManyReferenceEntityService<M extends EntityMetadata, V extends EntityValidation>
-    extends InternalEntityService<M, V>, HasReferenceResource {
+public interface OneToManyReferenceEntityService<P extends VertxPojo, M extends EntityMetadata,
+                                                    V extends EntityValidation>
+    extends InternalEntityService<P, M, V>, HasReferenceResource {
 
     @Override
     @NonNull ReferenceEntityTransformer transformer();
 
     @Override
-    default @NonNull ReferenceQueryExecutor queryExecutor() {
+    @SuppressWarnings("unchecked")
+    default @NonNull ReferenceQueryExecutor<P> queryExecutor() {
         return ReferenceQueryExecutor.create(entityHandler(), metadata());
     }
 

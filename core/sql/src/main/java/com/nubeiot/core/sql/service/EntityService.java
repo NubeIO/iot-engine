@@ -24,14 +24,17 @@ import lombok.NonNull;
 /**
  * Event Database entity service
  *
+ * @param <P> Vertx Pojo
  * @param <M> Metadata type
+ * @param <V> Entity Validation
  * @see EventListener
  * @see UpdatableRecord
  * @see VertxPojo
  * @see VertxDAO
  */
 //TODO Missing `BATCH` Creation/Modification/Deletion
-public interface EntityService<M extends EntityMetadata, V extends EntityValidation> extends EventListener {
+public interface EntityService<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation>
+    extends EventListener {
 
     /**
      * Defines {@code CURD} actions
@@ -60,7 +63,7 @@ public interface EntityService<M extends EntityMetadata, V extends EntityValidat
 
     @NonNull V validation();
 
-    @NonNull EntityQueryExecutor queryExecutor();
+    @NonNull EntityQueryExecutor<P> queryExecutor();
 
     @NonNull EntityTransformer transformer();
 

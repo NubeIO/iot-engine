@@ -12,6 +12,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.exceptions.AlreadyExistException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.sql.tables.JsonTable;
@@ -180,6 +181,17 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      */
     default NotFoundException notFound(@NonNull Object primaryKey) {
         return new NotFoundException(Strings.format("Not found resource with {0}={1}", requestKeyName(), primaryKey));
+    }
+
+    /**
+     * Construct {@code AlreadyExist exception} by {@code primary key}
+     *
+     * @param primaryKey Given primary key
+     * @return AlreadyExistException
+     */
+    default AlreadyExistException alreadyExisted(@NonNull Object primaryKey) {
+        return new AlreadyExistException(
+            Strings.format("Already existed resource with {0}={1}", requestKeyName(), primaryKey));
     }
 
     /**

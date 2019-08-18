@@ -1,6 +1,8 @@
 package com.nubeiot.edge.module.datapoint.service;
 
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.service.AbstractEntityService;
@@ -11,10 +13,10 @@ import lombok.NonNull;
 /**
  * {@inheritDoc}
  */
-abstract class AbstractDataPointService<M extends EntityMetadata, V extends EntityValidation>
-    extends AbstractEntityService<M, V> implements DataPointService<M, V> {
+abstract class AbstractDataPointService<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation>
+    extends AbstractEntityService<P, M, V> implements DataPointService<P, M, V> {
 
-    AbstractDataPointService(@NonNull AbstractEntityHandler entityHandler) {
+    AbstractDataPointService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 

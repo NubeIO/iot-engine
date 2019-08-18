@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.core.sql.service.OneToManyReferenceEntityService;
@@ -12,13 +12,14 @@ import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEnt
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.module.datapoint.service.Metadata.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.service.Metadata.NetworkMetadata;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 import lombok.NonNull;
 
-public final class NetworkService extends AbstractDataPointService<NetworkMetadata, NetworkService>
-    implements OneToManyReferenceEntityService<NetworkMetadata, NetworkService>, ReferenceEntityTransformer {
+public final class NetworkService extends AbstractDataPointService<Network, NetworkMetadata, NetworkService>
+    implements OneToManyReferenceEntityService<Network, NetworkMetadata, NetworkService>, ReferenceEntityTransformer {
 
-    public NetworkService(@NonNull AbstractEntityHandler entityHandler) {
+    public NetworkService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
@@ -48,7 +49,7 @@ public final class NetworkService extends AbstractDataPointService<NetworkMetada
     }
 
     @Override
-    public @NonNull ReferenceQueryExecutor queryExecutor() {
+    public @NonNull ReferenceQueryExecutor<Network> queryExecutor() {
         return OneToManyReferenceEntityService.super.queryExecutor();
     }
 

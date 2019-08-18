@@ -1,19 +1,24 @@
 package com.nubeiot.edge.module.scheduler.service;
 
+import com.nubeiot.core.sql.CompositeMetadata.AbstractCompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.iotdata.scheduler.model.Tables;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.JobEntityDao;
+import com.nubeiot.iotdata.scheduler.model.tables.daos.JobTriggerDao;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.TriggerEntityDao;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobEntity;
+import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobTrigger;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.TriggerEntity;
 import com.nubeiot.iotdata.scheduler.model.tables.records.JobEntityRecord;
+import com.nubeiot.iotdata.scheduler.model.tables.records.JobTriggerRecord;
 import com.nubeiot.iotdata.scheduler.model.tables.records.TriggerEntityRecord;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+@SuppressWarnings("unchecked")
 interface SchedulerMetadata {
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -75,7 +80,7 @@ interface SchedulerMetadata {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class TriggerByJobMetadata extends JobTriggerCompositeService.Metadata {
+    final class TriggerByJobMetadata extends Metadata {
 
         static final TriggerByJobMetadata INSTANCE = new TriggerByJobMetadata();
 
@@ -96,7 +101,7 @@ interface SchedulerMetadata {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class JobByTriggerMetadata extends JobTriggerCompositeService.Metadata {
+    final class JobByTriggerMetadata extends Metadata {
 
         static final JobByTriggerMetadata INSTANCE = new JobByTriggerMetadata();
 
@@ -113,6 +118,27 @@ interface SchedulerMetadata {
         @Override
         public @NonNull String pluralKeyName() {
             return "jobs";
+        }
+
+    }
+
+
+    abstract class Metadata
+        extends AbstractCompositeMetadata<Integer, JobTrigger, JobTriggerRecord, JobTriggerDao, JobTriggerComposite>
+        implements SerialKeyEntity<JobTrigger, JobTriggerRecord, JobTriggerDao> {
+
+        @Override
+        public final @NonNull Class<JobTriggerComposite> modelClass() { return JobTriggerComposite.class; }
+
+        @Override
+        public final @NonNull Class<JobTriggerDao> daoClass() { return JobTriggerDao.class; }
+
+        @Override
+        public final @NonNull JsonTable<JobTriggerRecord> table() { return Tables.JOB_TRIGGER; }
+
+        @Override
+        public @NonNull Class<JobTrigger> rawClass() {
+            return JobTrigger.class;
         }
 
     }

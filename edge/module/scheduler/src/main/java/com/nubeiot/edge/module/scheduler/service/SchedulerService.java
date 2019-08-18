@@ -3,8 +3,10 @@ package com.nubeiot.edge.module.scheduler.service;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+
 import com.nubeiot.core.http.base.EventHttpService;
-import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.sql.validation.EntityValidation;
@@ -13,11 +15,11 @@ import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
 
-public interface SchedulerService<M extends EntityMetadata, V extends EntityValidation>
-    extends EntityService<M, V>, EventHttpService {
+public interface SchedulerService<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation>
+    extends EntityService<P, M, V>, EventHttpService {
 
     @SuppressWarnings("unchecked")
-    static Set<? extends SchedulerService> createServices(@NonNull AbstractEntityHandler entityHandler,
+    static Set<? extends SchedulerService> createServices(@NonNull EntityHandler entityHandler,
                                                           @NonNull QuartzSchedulerContext schedulerCtx) {
         return ReflectionClass.stream(SchedulerService.class.getPackage().getName(), SchedulerService.class,
                                       ReflectionClass.publicClass())
