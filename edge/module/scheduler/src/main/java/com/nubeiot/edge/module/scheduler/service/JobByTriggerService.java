@@ -1,9 +1,11 @@
 package com.nubeiot.edge.module.scheduler.service;
 
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobByTriggerMetadata;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobEntityMetadata;
+import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.TriggerEntityMetadata;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
@@ -26,6 +28,13 @@ public final class JobByTriggerService
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public @NonNull ComplexQueryExecutor<JobTriggerComposite> queryExecutor() {
+        return super.queryExecutor().context(TriggerEntityMetadata.INSTANCE);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public JobEntityMetadata reference() {
         return JobEntityMetadata.INSTANCE;
     }

@@ -104,10 +104,16 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @see SelectConditionStep
      */
     //TODO Rich query depends on RQL in future https://github.com/NubeIO/iot-engine/issues/128
-    @SuppressWarnings("unchecked")
     default SelectConditionStep<? extends Record> filter(DSLContext context, JsonTable<? extends Record> table,
                                                          JsonObject filter) {
-        final SelectConditionStep<? extends Record> where = context.selectFrom(table).where(DSL.trueCondition());
+        return filter(context, table, filter, table.fields());
+    }
+
+    default SelectConditionStep<? extends Record> filter(DSLContext context, JsonTable<? extends Record> table,
+                                                         JsonObject filter, Field... fields) {
+        final SelectConditionStep<? extends Record> where = context.select(fields)
+                                                                   .from(table)
+                                                                   .where(DSL.trueCondition());
         if (Objects.isNull(filter)) {
             return where;
         }

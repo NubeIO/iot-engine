@@ -22,9 +22,9 @@ public class EdgeSchedulerDeletionTest extends EdgeSchedulerVerticleTest {
 
     @Test
     public void test_delete_not_found_job(TestContext context) {
-        JsonObject expected = new JsonObject().put("message", "Not found resource with trigger_id=1")
+        JsonObject expected = new JsonObject().put("message", "Not found resource with trigger_id=1 and job_id=3")
                                               .put("code", ErrorCode.NOT_FOUND);
-        assertRestByClient(context, HttpMethod.DELETE, "/api/s/trigger/1/job/13", RequestData.builder().build(), 410,
+        assertRestByClient(context, HttpMethod.DELETE, "/api/s/trigger/1/job/3", RequestData.builder().build(), 410,
                            expected);
     }
 

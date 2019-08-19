@@ -17,7 +17,11 @@ public final class Pagination implements Serializable, JsonData {
     private int page;
     private int perPage;
 
-    public static Builder builder() {return new Builder();}
+    public static Pagination oneValue() {
+        return Pagination.builder().perPage(1).page(1).build();
+    }
+
+    public static Builder builder() { return new Builder(); }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Builder {

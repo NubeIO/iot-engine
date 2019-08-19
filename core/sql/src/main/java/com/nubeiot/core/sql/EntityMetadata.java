@@ -34,6 +34,9 @@ import lombok.NonNull;
  */
 public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> {
 
+    String NOT_FOUND_RESOURCE_MSG = "Not found resource with {0}={1}";
+    String ALREADY_EXISTED_RESOURCE_MSG = "Already existed resource with {0}={1}";
+
     static <POJO extends VertxPojo> String createRequestKeyName(@NonNull Class<POJO> modelClass, String jsonKeyName) {
         return (Strings.toSnakeCaseLC(modelClass.getSimpleName()) + "_" +
                 Strings.requireNotBlank(jsonKeyName)).toLowerCase(Locale.ENGLISH);
@@ -58,11 +61,37 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     }
 
     /**
+     * Declare entity table
+     *
+     * @return entity table
+     * @see Table
+     * @see JsonTable
+     */
+    @NonNull JsonTable<R> table();
+
+    /**
      * Pojo model class
      *
      * @return model class
      */
     @NonNull <PP extends P> Class<PP> modelClass();
+
+    /**
+     * DAO class
+     *
+     * @return dao class
+     */
+    @NonNull Class<D> daoClass();
+
+    /**
+     * Get DAO
+     *
+     * @param handler Entity handler
+     * @return DAO that corresponding to {@link #daoClass()}
+     */
+    default @NonNull D dao(EntityHandler handler) {
+        return handler.dao(daoClass());
+    }
 
     /**
      * Parse given data from external service to {@code pojo} object
@@ -75,32 +104,6 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     @SuppressWarnings("unchecked")
     default <PP extends P> PP parse(@NonNull JsonObject request) throws IllegalArgumentException {
         return (PP) EntityHandler.parse(modelClass(), request);
-    }
-
-    /**
-     * DAO class
-     *
-     * @return dao class
-     */
-    @NonNull Class<D> daoClass();
-
-    /**
-     * Declare entity table
-     *
-     * @return entity table
-     * @see Table
-     * @see JsonTable
-     */
-    @NonNull JsonTable<R> table();
-
-    /**
-     * Get DAO
-     *
-     * @param handler Entity handler
-     * @return DAO that corresponding to {@link #daoClass()}
-     */
-    default @NonNull D dao(EntityHandler handler) {
-        return handler.dao(daoClass());
     }
 
     /**
@@ -183,7 +186,17 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      * @return NotFoundException
      */
     default NotFoundException notFound(@NonNull Object primaryKey) {
-        return new NotFoundException(Strings.format("Not found resource with {0}={1}", requestKeyName(), primaryKey));
+        return new NotFoundException(Strings.format(NOT_FOUND_RESOURCE_MSG, requestKeyName(), primaryKey));
+    }
+
+    /**
+     * Construct {@code NotFound exception} by {@code request key}
+     *
+     * @param requestData data Given request data
+     * @return NotFoundException
+     */
+    default NotFoundException notFound(@NonNull RequestData requestData) {
+        return new NotFoundException(Strings.format(NOT_FOUND_RESOURCE_MSG, requestKeyName(), parseKey(requestData)));
     }
 
     /**
@@ -193,8 +206,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      * @return AlreadyExistException
      */
     default AlreadyExistException alreadyExisted(@NonNull Object primaryKey) {
-        return new AlreadyExistException(
-            Strings.format("Already existed resource with {0}={1}", requestKeyName(), primaryKey));
+        return new AlreadyExistException(Strings.format(ALREADY_EXISTED_RESOURCE_MSG, requestKeyName(), primaryKey));
     }
 
     /**
