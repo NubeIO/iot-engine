@@ -23,6 +23,7 @@ import com.nubeiot.core.http.HttpConfig;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.client.HttpClientDelegate;
+import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestConfigProvider;
@@ -69,7 +70,7 @@ public class MistRestController implements RestApi {
         client.execute(uri, httpMethod, requestDataBuilder.build()).subscribe(data -> {
             future.complete(ResponseDataWriter.serializeResponseData(data));
             client.close();
-        });
+        }, err -> future.complete(ResponseDataConverter.convert(err)));
         return future;
     }
 
