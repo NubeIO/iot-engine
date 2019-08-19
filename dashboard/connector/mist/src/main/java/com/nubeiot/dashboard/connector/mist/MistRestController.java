@@ -67,10 +67,9 @@ public class MistRestController implements RestApi {
             requestDataBuilder.body(new JsonObject(ctx.getBody().toString()));
         }
         requestDataBuilder.headers(HttpUtils.HttpHeaderUtils.serializeHeaders(ctx.request().headers()));
-        client.execute(uri, httpMethod, requestDataBuilder.build()).subscribe(data -> {
-            future.complete(ResponseDataWriter.serializeResponseData(data));
-            client.close();
-        }, err -> future.complete(ResponseDataConverter.convert(err)));
+        client.execute(uri, httpMethod, requestDataBuilder.build())
+              .subscribe(data -> future.complete(ResponseDataWriter.serializeResponseData(data)),
+                         err -> future.complete(ResponseDataConverter.convert(err)));
         return future;
     }
 

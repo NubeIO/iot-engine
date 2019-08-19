@@ -1,5 +1,6 @@
 package com.nubeiot.dashboard.connector.mist;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.types.HttpLocation;
 
@@ -8,6 +9,7 @@ import com.nubeiot.core.http.HttpServerContext;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.ServerInfo;
+import com.nubeiot.core.http.client.HttpClientRegistry;
 import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
@@ -33,6 +35,12 @@ public class MistVerticle extends ContainerVerticle {
                         .subscribe();
         });
         RestRouter.addProvider(RestConfigProvider.class, ctx -> new RestConfigProvider(this.nubeConfig));
+    }
+
+    @Override
+    public void stop(Future<Void> future) {
+        HttpClientRegistry.getInstance().clear();
+        super.stop(future);
     }
 
 }

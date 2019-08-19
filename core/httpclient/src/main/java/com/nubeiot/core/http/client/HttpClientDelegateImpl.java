@@ -20,6 +20,7 @@ import io.vertx.core.streams.WriteStream;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
 import com.nubeiot.core.http.client.handler.ClientEndHandler;
 import com.nubeiot.core.http.client.handler.HttpClientWriter;
@@ -51,7 +52,7 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
             HttpErrorHandler exceptionHandler = HttpErrorHandler.create(emitter, getHostInfo(),
                                                                         config.getHttpErrorHandlerClass());
             String query = HttpRequests.serializeQuery(reqData.getFilter());
-            HttpClientRequest r = get().request(method, path + query, responseHandler)
+            HttpClientRequest r = get().request(method, Urls.buildURL(path, query), responseHandler)
                                        .exceptionHandler(exceptionHandler)
                                        .endHandler(new ClientEndHandler(getHostInfo(), false));
             if (logger.isDebugEnabled()) {

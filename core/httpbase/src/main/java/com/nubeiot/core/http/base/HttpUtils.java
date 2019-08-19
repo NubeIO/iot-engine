@@ -143,18 +143,12 @@ public final class HttpUtils {
         }
 
         public static String serializeQuery(JsonObject filter) {
-            StringBuilder query = new StringBuilder();
-            boolean isFirst = true;
-            for (String name : filter.fieldNames()) {
-                if (isFirst) {
-                    query.append("?");
-                } else {
-                    query.append(SEPARATE);
-                }
-                query.append(name).append(EQUAL).append(filter.getValue(name));
-                isFirst = false;
-            }
-            return query.toString();
+            return filter.fieldNames().isEmpty()
+                   ? null
+                   : filter.fieldNames()
+                           .stream()
+                           .map(name -> name.concat(EQUAL).concat(filter.getString(name)))
+                           .collect(Collectors.joining(SEPARATE));
         }
 
     }

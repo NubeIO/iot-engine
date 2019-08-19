@@ -1,8 +1,5 @@
 package com.nubeiot.dashboard.connector.ditto;
 
-import static org.apache.http.HttpHeaders.AUTHORIZATION;
-
-import java.util.Base64;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -12,6 +9,7 @@ import javax.ws.rs.core.Context;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
@@ -19,6 +17,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
+import com.nubeiot.auth.BasicCredential;
+import com.nubeiot.auth.Credential.CredentialType;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.dto.RequestData;
@@ -86,7 +86,8 @@ public class ServerDittoRestController implements RestApi {
         Builder requestDataBuilder = RequestData.builder();
 
         if (dittoConfig.getPolicy()) {
-            requestDataBuilder.headers(new JsonObject().put(AUTHORIZATION, ctx.request().headers().get(AUTHORIZATION)));
+            requestDataBuilder.headers(new JsonObject().put(HttpHeaders.AUTHORIZATION.toString(),
+                                                            ctx.request().headers().get(HttpHeaders.AUTHORIZATION)));
             if (Strings.isNotBlank(ctx.getBody().toString())) {
                 if (Strings.isBlank(uri.replaceAll("/api/2/things/[^/]*(/)?", ""))) {
                     // This means we are we are PUTing device value for the first time or going to updated whole data
@@ -99,22 +100,18 @@ public class ServerDittoRestController implements RestApi {
                 }
             }
         } else {
-            String authorization = "Basic " + getAuthKey(dittoConfig.getUsername(), dittoConfig.getPassword());
-            requestDataBuilder.headers(new JsonObject().put(AUTHORIZATION, authorization));
+            BasicCredential basicCredential = new BasicCredential(CredentialType.BASIC, dittoConfig.getUsername(),
+                                                                  dittoConfig.getPassword());
+            requestDataBuilder.headers(
+                new JsonObject().put(HttpHeaders.AUTHORIZATION.toString(), basicCredential.computeHeader()));
             if (Strings.isNotBlank(ctx.getBody().toString())) {
                 requestDataBuilder.body(new JsonObject(ctx.getBody().toString()));
             }
         }
-        client.execute(uri, httpMethod, requestDataBuilder.build()).subscribe(data -> {
-            future.complete(ResponseDataWriter.serializeResponseData(data));
-            client.close();
-        }, err -> future.complete(ResponseDataConverter.convert(err)));
+        client.execute(uri, httpMethod, requestDataBuilder.build())
+              .subscribe(data -> future.complete(ResponseDataWriter.serializeResponseData(data)),
+                         err -> future.complete(ResponseDataConverter.convert(err)));
         return future;
-    }
-
-    private String getAuthKey(String username, String password) {
-        String auth = username + ":" + password;
-        return Base64.getEncoder().encodeToString(auth.getBytes());
     }
 
 }

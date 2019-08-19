@@ -1,6 +1,7 @@
 
 dependencies {
     compile project(':core:micro')
+    compile project(':core:auth')
     compile project(':core:cluster:hazelcast')
     compile project(':core:httpserver')
 }
