@@ -46,17 +46,22 @@ public class NetworksTest {
     }
 
     @Test
-    public void test_valid_ip() {
-        Assert.assertTrue(Networks.validIP("255.255.255.255"));
-        Assert.assertTrue(Networks.validIP("0.0.0.0"));
-        Assert.assertTrue(Networks.validIP("192.168.1.1"));
-        Assert.assertTrue(Networks.validIP("10.0.1.1"));
+    public void test_valid_ipv4() {
+        Assert.assertTrue(Networks.validIPv4("255.255.255.255"));
+        Assert.assertTrue(Networks.validIPv4("0.0.0.0"));
+        Assert.assertTrue(Networks.validIPv4("192.168.1.1"));
+        Assert.assertTrue(Networks.validIPv4("10.0.1.1"));
     }
 
     @Test
-    public void test_invalid_ip() {
-        Assert.assertFalse(Networks.validIP("256.255.255.255"));
-        Assert.assertFalse(Networks.validIP("0.0.0"));
+    public void test_invalid_ipv4() {
+        Assert.assertFalse(Networks.validIPv4("256.255.255.255"));
+        Assert.assertFalse(Networks.validIPv4("0.0.0"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void test_invalid_ipv4_catch() {
+        Assert.assertFalse(Networks.validIPv4(""));
     }
 
 }

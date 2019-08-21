@@ -11,6 +11,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
+import com.nubeiot.edge.module.monitor.NetworkInterface;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -19,7 +20,6 @@ import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 import oshi.software.os.NetworkParams;
 import oshi.software.os.OperatingSystem;
-import oshi.util.FormatUtil;
 
 @NoArgsConstructor
 public class MonitorNetworkStatusEventHandler implements EventListener {
@@ -27,24 +27,7 @@ public class MonitorNetworkStatusEventHandler implements EventListener {
     private static JsonArray getNetworkInterfaces(NetworkIF[] networkIFs) {
         JsonArray networkInterfaces = new JsonArray();
         for (NetworkIF net : networkIFs) {
-            boolean hasData = net.getBytesRecv() > 0 || net.getBytesSent() > 0 || net.getPacketsRecv() > 0 ||
-                              net.getPacketsSent() > 0;
-
-            String traffic = String.format("received %s/%s%s; transmitted %s/%s%s",
-                                           hasData ? net.getPacketsRecv() + " packets" : "?",
-                                           hasData ? FormatUtil.formatBytes(net.getBytesRecv()) : "?",
-                                           hasData ? " (" + net.getInErrors() + " err)" : "",
-                                           hasData ? net.getPacketsSent() + " packets" : "?",
-                                           hasData ? FormatUtil.formatBytes(net.getBytesSent()) : "?",
-                                           hasData ? " (" + net.getOutErrors() + " err)" : "");
-            networkInterfaces.add(new JsonObject().put("name", net.getName())
-                                                  .put("display_name", net.getDisplayName())
-                                                  .put("mac_address", net.getMacaddr())
-                                                  .put("mtu", net.getMTU())
-                                                  .put("speed", FormatUtil.formatValue(net.getSpeed(), "bps"))
-                                                  .put("ipv4", Arrays.toString(net.getIPv4addr()))
-                                                  .put("ipv6", Arrays.toString(net.getIPv6addr()))
-                                                  .put("traffic", traffic));
+            networkInterfaces.add(NetworkInterface.from(net).toJson());
         }
         return networkInterfaces;
     }
