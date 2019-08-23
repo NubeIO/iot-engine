@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 files=""
-dashboard="dashboard mongo keycloak postgres"
+dashboard="dashboard mongo keycloak postgres mist"
 edge="edge nexus"
 kafka="kafka"
 ditto="mongo"

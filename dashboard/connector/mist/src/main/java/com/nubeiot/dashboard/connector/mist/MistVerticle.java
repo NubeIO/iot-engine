@@ -1,4 +1,4 @@
-package com.nubeiot.dashboard.connector.ditto;
+package com.nubeiot.dashboard.connector.mist;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -15,27 +15,25 @@ import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.zandero.rest.RestRouter;
 
-public class ServerDittoDriver extends ContainerVerticle {
+public class MistVerticle extends ContainerVerticle {
 
     private HttpServerContext httpContext;
     private MicroContext microContext;
 
     @Override
-    @SuppressWarnings("Duplicates")
     public void start() {
         super.start();
-        HttpServerRouter router = new HttpServerRouter().registerApi(ServerDittoRestController.class);
+        HttpServerRouter router = new HttpServerRouter().registerApi(MistRestController.class);
         this.addProvider(new HttpServerProvider(router), c -> this.httpContext = (HttpServerContext) c)
             .addProvider(new MicroserviceProvider(), c -> this.microContext = (MicroContext) c);
 
         this.registerSuccessHandler(event -> {
             ServerInfo info = this.httpContext.getServerInfo();
             microContext.getClusterController()
-                        .addHttpRecord("ServerDittoDriver", new HttpLocation(info.toJson()).setRoot(info.getApiPath()),
+                        .addHttpRecord("MistVerticle", new HttpLocation(info.toJson()).setRoot(info.getApiPath()),
                                        new JsonObject())
                         .subscribe();
         });
-
         RestRouter.addProvider(RestConfigProvider.class, ctx -> new RestConfigProvider(this.nubeConfig));
     }
 

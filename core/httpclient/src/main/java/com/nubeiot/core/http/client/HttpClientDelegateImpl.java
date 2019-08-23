@@ -1,5 +1,7 @@
 package com.nubeiot.core.http.client;
 
+import static com.nubeiot.core.http.base.HttpUtils.HttpRequests;
+
 import java.util.Objects;
 
 import io.reactivex.Single;
@@ -18,6 +20,7 @@ import io.vertx.core.streams.WriteStream;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
 import com.nubeiot.core.http.client.handler.ClientEndHandler;
 import com.nubeiot.core.http.client.handler.HttpClientWriter;
@@ -48,7 +51,8 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
                 config.getHttpLightBodyHandlerClass(), emitter, swallowError);
             HttpErrorHandler exceptionHandler = HttpErrorHandler.create(emitter, getHostInfo(),
                                                                         config.getHttpErrorHandlerClass());
-            HttpClientRequest r = get().request(method, path, responseHandler)
+            String query = HttpRequests.serializeQuery(reqData.getFilter());
+            HttpClientRequest r = get().request(method, Urls.buildURL(path, query), responseHandler)
                                        .exceptionHandler(exceptionHandler)
                                        .endHandler(new ClientEndHandler(getHostInfo(), false));
             if (logger.isDebugEnabled()) {

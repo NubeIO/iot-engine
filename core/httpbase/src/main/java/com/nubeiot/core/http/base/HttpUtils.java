@@ -127,8 +127,7 @@ public final class HttpUtils {
 
         public static JsonObject query(@NonNull HttpServerRequest request) {
             String query = request.query();
-            return Strings.isBlank(query)
-                   ? new JsonObject() : JsonObject.mapFrom(deserializeQuery(query));
+            return Strings.isBlank(query) ? new JsonObject() : JsonObject.mapFrom(deserializeQuery(query));
         }
 
         public static Map<String, Object> deserializeQuery(String query) {
@@ -141,6 +140,15 @@ public final class HttpUtils {
                 map.put(Urls.decode(keyValues[0]), Urls.decode(keyValues[1]));
             }
             return map;
+        }
+
+        public static String serializeQuery(JsonObject filter) {
+            return filter.fieldNames().isEmpty()
+                   ? null
+                   : filter.fieldNames()
+                           .stream()
+                           .map(name -> name.concat(EQUAL).concat(filter.getString(name)))
+                           .collect(Collectors.joining(SEPARATE));
         }
 
     }

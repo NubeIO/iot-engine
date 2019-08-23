@@ -59,13 +59,27 @@ public interface JsonData {
     /**
      * Try parse {@code buffer} to {@code json data}
      *
-     * @param buffer    Buffer data
-     * @param isJson    Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
-     * @param backupKey Fallback key if given {@code buffer} is not {@link JsonObject}
+     * @param buffer      Buffer data
+     * @param isJson      Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
+     * @param useErrorKey Use whether {@link #ERROR_KEY} or {@link #SUCCESS_KEY} in case of fallback if given {@code
+     *                    buffer} is not {@link JsonObject}
      * @return default {@code json data} instance
      */
-    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, @NonNull String backupKey) {
-        return DefaultJsonData.tryParse(buffer, isJson, backupKey);
+    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean useErrorKey) {
+        return tryParse(buffer, isJson, useErrorKey ? ERROR_KEY : SUCCESS_KEY, false);
+    }
+
+    /**
+     * Try parse {@code buffer} to {@code json data}
+     *
+     * @param buffer     Buffer data
+     * @param isJson     Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
+     * @param backupKey Fallback key if given {@code buffer} is not {@link JsonObject}
+     * @param isWrapped  Whether output is needed to be wrapped or not
+     * @return default {@code json data} instance
+     */
+    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, @NonNull String backupKey, boolean isWrapped) {
+        return DefaultJsonData.tryParse(buffer, isJson, backupKey, isWrapped);
     }
 
     /**
@@ -75,10 +89,11 @@ public interface JsonData {
      * @param isJson      Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
      * @param useErrorKey Use whether {@link #ERROR_KEY} or {@link #SUCCESS_KEY} in case of fallback if given {@code
      *                    buffer} is not {@link JsonObject}
+     * @param isWrapped   Whether output is needed to be wrapped or not
      * @return default {@code json data} instance
      */
-    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean useErrorKey) {
-        return tryParse(buffer, isJson, useErrorKey ? ERROR_KEY : SUCCESS_KEY);
+    static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, boolean useErrorKey, boolean isWrapped) {
+        return tryParse(buffer, isJson, useErrorKey ? ERROR_KEY : SUCCESS_KEY, isWrapped);
     }
 
     /**
@@ -86,10 +101,22 @@ public interface JsonData {
      *
      * @param buffer Buffer data
      * @return default {@code json data} instance
-     * @see JsonData#tryParse(Buffer, boolean, boolean)
+     * @see JsonData#tryParse(Buffer, boolean, boolean, boolean)
      */
     static JsonData tryParse(@NonNull Buffer buffer) {
-        return tryParse(buffer, false, false);
+        return tryParse(buffer, false, false, false);
+    }
+
+    /**
+     * Try parse {@code buffer} to {@code json data} with {@link #SUCCESS_KEY}
+     *
+     * @param buffer    Buffer data
+     * @param isWrapped Whether output is needed to be wrapped or not
+     * @return default {@code json data} instance
+     * @see JsonData#tryParse(Buffer, boolean, boolean, boolean)
+     */
+    static JsonData tryParse(@NonNull Buffer buffer, boolean isWrapped) {
+        return tryParse(buffer, false, false, isWrapped);
     }
 
     static JsonData tryParse(@NonNull Object obj) {
@@ -138,11 +165,14 @@ public interface JsonData {
 
         DefaultJsonData(@NonNull JsonObject json)         { this(json.getMap()); }
 
-        static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, String backupKey) {
+        static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, String backupKey, boolean isWrapper) {
             if (buffer.length() == 0) {
                 return new DefaultJsonData();
             }
             try {
+                if (isWrapper) {
+                    return new DefaultJsonData(new JsonObject().put(backupKey, buffer.toJsonObject()));
+                }
                 return new DefaultJsonData(buffer.toJsonObject());
             } catch (DecodeException e) {
                 logger.trace("Failed to parse json. Try json array", e);
@@ -155,9 +185,9 @@ public interface JsonData {
                                                 "Cannot parse json data. Received data: " + buffer.toString(), ex);
                     }
                     logger.trace("Failed to parse json array. Use text", ex);
+                    //TODO check length, check encode
+                    data.put(backupKey, buffer.toString());
                 }
-                //TODO check length, check encode
-                data.put(backupKey, buffer.toString());
                 return new DefaultJsonData(data);
             }
         }
@@ -167,7 +197,7 @@ public interface JsonData {
                 return (JsonData) obj;
             }
             if (obj instanceof Buffer) {
-                return tryParse((Buffer) obj, true, SUCCESS_KEY);
+                return tryParse((Buffer) obj, true, SUCCESS_KEY, false);
             }
             return new DefaultJsonData(
                 SerializerFunction.builder().backupKey(SUCCESS_KEY).lenient(true).mapper(MAPPER).build().apply(obj));

@@ -1,0 +1,50 @@
+{
+  "dataDir": "/data",
+  "__system__": {
+    "__eventBus__": {
+      "ssl": true,
+      "keyStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      },
+      "trustStoreOptions": {
+        "path": "eventBusKeystore.jks",
+        "password": "nubesparkEventBus"
+      }
+    },
+    "__cluster__": {
+      "active": true,
+      "ha": true
+    }
+  },
+  "__app__": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": true
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
+    },
+    "__http__": {
+      "port": 8080,
+      "__rest__": {
+        "rootApi": "/mist",
+        "__dynamic__": {
+          "enabled": false
+        }
+      }
+    },
+    "__mist__": {
+      "schema": "http",
+      "host": "mist",
+      "port": 2004
+    }
+  }
+}
