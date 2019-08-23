@@ -17,9 +17,9 @@ import com.nubeiot.scheduler.QuartzSchedulerContext;
 import lombok.NonNull;
 
 final class SchedulerDelegate<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation>
-    extends EntityServiceDelegate<P, M, V, SchedulerService<P, M, V>> implements SchedulerService<P, M, V> {
+    extends EntityServiceDelegate<P, M, SchedulerService<P, M>> implements SchedulerService<P, M> {
 
-    SchedulerDelegate(@NonNull EntityHandler entityHandler, @NonNull Class<SchedulerService<P, M, V>> serviceClass,
+    SchedulerDelegate(@NonNull EntityHandler entityHandler, @NonNull Class<SchedulerService<P, M>> serviceClass,
                       @NonNull QuartzSchedulerContext schedulerContext) {
         super(ReflectionClass.createObject(serviceClass, createInputs(entityHandler, schedulerContext)));
     }

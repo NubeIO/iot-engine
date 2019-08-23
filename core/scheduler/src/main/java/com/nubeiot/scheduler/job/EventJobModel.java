@@ -21,7 +21,6 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
-import lombok.NonNull;
 
 @Getter
 @Builder(builderClassName = "Builder")
@@ -29,7 +28,6 @@ import lombok.NonNull;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public final class EventJobModel extends AbstractJobModel {
 
-    @NonNull
     @Include
     private final DeliveryEvent process;
     @Include
@@ -37,7 +35,7 @@ public final class EventJobModel extends AbstractJobModel {
 
     private EventJobModel(JobKey key, DeliveryEvent process, DeliveryEvent callback, boolean forwardIfFailure) {
         super(key, JobType.EVENT_JOB, forwardIfFailure);
-        this.process = process;
+        this.process = Objects.requireNonNull(process, "Job detail cannot be null");
         this.callback = callback;
     }
 

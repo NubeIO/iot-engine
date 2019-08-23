@@ -1,8 +1,11 @@
 package com.nubeiot.core.sql.query;
 
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 import org.jooq.DSLContext;
 import org.jooq.ResultQuery;
-import org.jooq.SelectConditionStep;
 import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
@@ -10,7 +13,6 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
@@ -18,6 +20,8 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.decorator.AuditDecorator;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -39,10 +43,15 @@ public interface SimpleQueryExecutor<P extends VertxPojo> extends EntityQueryExe
         protected final EntityMetadata<K, P, R, D> metadata;
 
         @Override
-        public Observable<P> findMany(RequestData requestData) {
+        public EntityHandler entityHandler() {
+            return handler;
+        }
+
+        @Override
+        public Observable<P> findMany(RequestData reqData) {
+            final Pagination paging = Optional.ofNullable(reqData.getPagination()).orElse(Pagination.builder().build());
             return handler.dao(metadata.daoClass())
-                          .queryExecutor()
-                          .findMany(ctx -> query(ctx, requestData))
+                          .queryExecutor().findMany(viewQuery(reqData.getFilter(), paging))
                           .flattenAsObservable(records -> records);
         }
 
@@ -62,47 +71,51 @@ public interface SimpleQueryExecutor<P extends VertxPojo> extends EntityQueryExe
         }
 
         @Override
-        public Single<K> insertReturningPrimary(VertxPojo pojo, RequestData requestData) {
-            return handler.dao(metadata.daoClass()).insertReturningPrimary((P) pojo);
+        public Single<K> insertReturningPrimary(VertxPojo pojo, RequestData reqData) {
+            //TODO validate unique keys
+            return handler.dao(metadata.daoClass())
+                          .insertReturningPrimary((P) AuditDecorator.addCreationAudit(reqData, metadata, pojo));
         }
 
         @Override
-        public Single<K> modifyReturningPrimary(RequestData requestData, EventAction action,
-                                                Function3<VertxPojo, VertxPojo, JsonObject, VertxPojo> validation) {
-            final K pk = metadata.parseKey(requestData);
+        public Single<K> modifyReturningPrimary(RequestData reqData, EventAction action,
+                                                BiFunction<VertxPojo, RequestData, VertxPojo> validator) {
+            final K pk = metadata.parseKey(reqData);
             final D dao = handler.dao(metadata.daoClass());
-            return findOneByKey(requestData).map(
-                db -> validation.apply(db, metadata.parse(requestData.body().put(metadata.jsonKeyName(), pk)),
-                                       requestData.headers()))
-                                            .map(p -> (P) p)
-                                            .flatMap(dao::update)
-                                            .filter(i -> i > 0)
-                                            .switchIfEmpty(Single.error(metadata.notFound(pk)))
-                                            .map(i -> pk);
+            //TODO validate unique keys
+            return findOneByKey(reqData).map(
+                db -> (P) AuditDecorator.addModifiedAudit(reqData, metadata, db, validator.apply(db, reqData)))
+                                        .flatMap(dao::update)
+                                        .filter(i -> i > 0)
+                                        .switchIfEmpty(Single.error(metadata.notFound(pk)))
+                                        .map(i -> pk);
         }
 
         @Override
-        public Maybe<P> deleteOneByKey(RequestData requestData) {
-            final K pk = metadata.parseKey(requestData);
-            return findOneByKey(requestData).flatMapMaybe(pojo -> handler.dao(metadata.daoClass())
-                                                                         .deleteById(pk)
-                                                                         .filter(r -> r > 0)
-                                                                         .map(r -> pojo)
-                                                                         .switchIfEmpty(
-                                                                             Maybe.error(metadata.notFound(pk))));
+        public Single<P> deleteOneByKey(RequestData reqData) {
+            final K pk = metadata.parseKey(reqData);
+            return findOneByKey(reqData).flatMap(dbPojo -> isAbleToDelete(dbPojo, metadata, this::pojoKeyMsg))
+                                        .flatMap(pojo -> handler.dao(metadata.daoClass())
+                                                                .deleteById(pk)
+                                                                .filter(r -> r > 0)
+                                                                .map(r -> pojo)
+                                                                .switchIfEmpty(EntityQueryExecutor.unableDelete(
+                                                                    Strings.kvMsg(metadata.requestKeyName(), pk))));
         }
 
-        /**
-         * Do query data
-         *
-         * @param ctx         DSL Context
-         * @param requestData Request data
-         * @return result query
-         * @see #paging(SelectConditionStep, Pagination)
-         */
-        protected ResultQuery<R> query(@NonNull DSLContext ctx, @NonNull RequestData requestData) {
-            return (ResultQuery<R>) paging(filter(ctx, metadata.table(), requestData.getFilter()),
-                                           requestData.getPagination());
+        @Override
+        public Function<DSLContext, ResultQuery<R>> viewQuery(JsonObject filter, Pagination pagination) {
+            return ctx -> (ResultQuery<R>) paging(
+                ctx.select().from(metadata.table()).where(condition(metadata.table(), filter)), pagination);
+        }
+
+        @Override
+        public Function<DSLContext, ResultQuery<R>> viewOneQuery(JsonObject filter) {
+            return viewQuery(filter, Pagination.oneValue());
+        }
+
+        protected String pojoKeyMsg(VertxPojo pojo) {
+            return Strings.kvMsg(metadata.requestKeyName(), pojo.toJson().getValue(metadata.jsonKeyName()));
         }
 
     }

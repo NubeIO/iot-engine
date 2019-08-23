@@ -49,6 +49,13 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
                                                       .process(EVENT_1)
                                                       .callback(EVENT_2)
                                                       .build();
+    public static final JobModel JOB_3 = EventJobModel.builder()
+                                                      .group("group1")
+                                                      .name("job3")
+                                                      .forwardIfFailure(true)
+                                                      .process(EVENT_1)
+                                                      .callback(EVENT_2)
+                                                      .build();
     public static final TriggerModel TRIGGER_1 = CronTriggerModel.builder()
                                                                  .group("group1")
                                                                  .name("trigger1")
@@ -57,8 +64,7 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
                                                                  .build();
     public static final TriggerModel TRIGGER_2 = CronTriggerModel.builder()
                                                                  .group("group1")
-                                                                 .name("trigger2")
-                                                                 .expr("0 0 1 ? * SUN *")
+                                                                 .name("trigger2").expr("1 1 1 ? * MON *")
                                                                  .tz("Australia/Sydney")
                                                                  .build();
     public static final TriggerModel TRIGGER_3 = PeriodicTriggerModel.builder()
@@ -78,6 +84,7 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
         final TriggerEntityDao triggerDao = dao(TriggerEntityDao.class);
         final JobTriggerDao jobTriggerDao = dao(JobTriggerDao.class);
         return Single.concatArray(jobDao.insert(JobConverter.convert(JOB_1).setId(1)),
+                                  jobDao.insert(JobConverter.convert(JOB_3).setId(2)),
                                   triggerDao.insert(TriggerConverter.convert(TRIGGER_1).setId(1)),
                                   triggerDao.insert(TriggerConverter.convert(TRIGGER_3).setId(2)),
                                   jobTriggerDao.insert(new JobTrigger().setJobId(1).setTriggerId(1)),

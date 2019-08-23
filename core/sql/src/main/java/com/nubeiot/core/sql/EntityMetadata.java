@@ -13,11 +13,10 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.exceptions.AlreadyExistException;
-import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.sql.type.TimeAudit;
+import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Strings;
 
@@ -32,10 +31,8 @@ import lombok.NonNull;
  * @param <D> DAO type
  * @see EntityService
  */
-public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> {
-
-    String NOT_FOUND_RESOURCE_MSG = "Not found resource with {0}={1}";
-    String ALREADY_EXISTED_RESOURCE_MSG = "Already existed resource with {0}={1}";
+public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>>
+    extends EntityValidation<P> {
 
     static <POJO extends VertxPojo> String createRequestKeyName(@NonNull Class<POJO> modelClass, String jsonKeyName) {
         return (Strings.toSnakeCaseLC(modelClass.getSimpleName()) + "_" +
@@ -93,17 +90,32 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
         return handler.dao(daoClass());
     }
 
+    @Override
+    default EntityMetadata context() { return this; }
+
     /**
-     * Parse given data from external service to {@code pojo} object
+     * Parse given data from entity database to {@code pojo} object
+     *
+     * @param request Given entity data
+     * @return {@code pojo} object resource
+     * @throws IllegalArgumentException if cannot parse
+     */
+    @NonNull
+    @SuppressWarnings("unchecked")
+    default <PP extends P> PP parseFromEntity(@NonNull JsonObject request) throws IllegalArgumentException {
+        return (PP) EntityHandler.parse(modelClass(), request);
+    }
+
+    /**
+     * Parse given data from service request to {@code pojo} object
      *
      * @param request Given request data
      * @return {@code pojo} object resource
      * @throws IllegalArgumentException if cannot parse
      */
     @NonNull
-    @SuppressWarnings("unchecked")
-    default <PP extends P> PP parse(@NonNull JsonObject request) throws IllegalArgumentException {
-        return (PP) EntityHandler.parse(modelClass(), request);
+    default <PP extends P> PP parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
+        return parseFromEntity(request);
     }
 
     /**
@@ -177,36 +189,6 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      */
     default @NonNull String pluralKeyName() {
         return singularKeyName() + "s";
-    }
-
-    /**
-     * Construct {@code NotFound exception} by {@code primary key}
-     *
-     * @param primaryKey Given primary key
-     * @return NotFoundException
-     */
-    default NotFoundException notFound(@NonNull Object primaryKey) {
-        return new NotFoundException(Strings.format(NOT_FOUND_RESOURCE_MSG, requestKeyName(), primaryKey));
-    }
-
-    /**
-     * Construct {@code NotFound exception} by {@code request key}
-     *
-     * @param requestData data Given request data
-     * @return NotFoundException
-     */
-    default NotFoundException notFound(@NonNull RequestData requestData) {
-        return new NotFoundException(Strings.format(NOT_FOUND_RESOURCE_MSG, requestKeyName(), parseKey(requestData)));
-    }
-
-    /**
-     * Construct {@code AlreadyExist exception} by {@code primary key}
-     *
-     * @param primaryKey Given primary key
-     * @return AlreadyExistException
-     */
-    default AlreadyExistException alreadyExisted(@NonNull Object primaryKey) {
-        return new AlreadyExistException(Strings.format(ALREADY_EXISTED_RESOURCE_MSG, requestKeyName(), primaryKey));
     }
 
     /**

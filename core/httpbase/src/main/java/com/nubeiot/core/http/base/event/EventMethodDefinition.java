@@ -184,7 +184,7 @@ public final class EventMethodDefinition implements JsonData {
     public static EventMethodDefinition create(String servicePath, String paramPath,
                                                @NonNull ActionMethodMapping mapping, boolean useRequestData) {
         final String sPath = Urls.combinePath(Strings.requireNotBlank(servicePath));
-        final String pPath = Strings.isBlank(paramPath) ? paramPath : Urls.combinePath(paramPath);
+        final String pPath = Strings.isBlank(paramPath) ? paramPath : Urls.toCapture(paramPath);
         if ((Strings.isBlank(pPath) || sPath.equals(pPath)) && mapping.hasDuplicateMethod()) {
             throw new IllegalStateException("Has duplicate HTTP method for same endpoint");
         }

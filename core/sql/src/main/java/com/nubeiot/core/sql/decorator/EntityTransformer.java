@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -152,7 +151,10 @@ public interface EntityTransformer {
      */
     @NonNull
     default JsonObject afterDelete(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return fullResponse(EventAction.REMOVE, JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData)));
+        return enableFullResourceInCUDResponse()
+               ? fullResponse(EventAction.REMOVE, JsonPojo.from(pojo)
+                                                          .toJson(JsonData.MAPPER, ignoreFields(requestData)))
+               : new JsonObject();
     }
 
     /**
@@ -167,11 +169,6 @@ public interface EntityTransformer {
         return enableFullResourceInCUDResponse()
                ? provider.apply(key)
                : Single.just(EntityTransformer.keyResponse(keyName, key));
-    }
-
-    default Single<JsonObject> response(@NonNull String keyName, @NonNull Object key,
-                                        @NonNull Supplier<JsonObject> provider) {
-        return response(keyName, key, k -> Single.just(provider.get()));
     }
 
 }

@@ -49,6 +49,10 @@ public final class JsonPojo<T extends VertxPojo> implements JsonData {
         return from.toJson().mergeIn(new JsonPojo<>(to).toJson(), true);
     }
 
+    public static <T extends VertxPojo> JsonObject merge(@NonNull T from, @NonNull JsonObject to) {
+        return from.toJson().mergeIn(to, true);
+    }
+
     @Override
     public JsonObject toJson() {
         return toJson(mapper);

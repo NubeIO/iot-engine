@@ -97,10 +97,10 @@ TRIGGER_TYPE = CRON]]></comment>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="-1" instance="C:/projects/nubeio/iot-engine/edge/module/scheduler/src/main/resources/ddl/edge_scheduler" />
 	<layout name="Parsed Script Layout" id="Layout_573523a" show_relation="columns" >
 		<entity schema="PUBLIC" name="JOB_ENTITY" color="BED3F4" x="560" y="48" />
-		<entity schema="PUBLIC" name="JOB_TRIGGER" color="BED3F4" x="320" y="48" />
 		<entity schema="PUBLIC" name="TRIGGER_ENTITY" color="BED3F4" x="48" y="48" />
+		<entity schema="PUBLIC" name="JOB_TRIGGER" color="BED3F4" x="320" y="48" />
 		<script name="01_edge_scheduler.sql" id="Editor_455bd57" language="SQL" >
-			<string><![CDATA[CREATE SCHEMA IF NOT EXISTS PUBLIC;
+			<string><![CDATA[select * from "PUBLIC"."JOB_TRIGGER" join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1) where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."ENABLED" = true and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1) limit 20CREATE SCHEMA IF NOT EXISTS PUBLIC;
 
 CREATE TABLE IF NOT EXISTS JOB_ENTITY (
 	ID                   IDENTITY NOT NULL,
@@ -167,25 +167,30 @@ values (2, 'group1', 'trigger3', 'PERIODIC', '{"intervalInSeconds":120,"repeat":
 insert into "PUBLIC"."JOB_TRIGGER" ("JOB_ID", "TRIGGER_ID", "ENABLED", "TIME_AUDIT", "SYNC_AUDIT") values (1, 1, default, null, null);
 insert into "PUBLIC"."JOB_TRIGGER" ("JOB_ID", "TRIGGER_ID", "ENABLED", "TIME_AUDIT", "SYNC_AUDIT") values (1, 2, false, null, null);]]></string>
 		</script>
-		<script name="TRIGGER_ENTITY" id="Editor_39f6a3e" language="SQL" >
-			<string><![CDATA[select "alias_34766038"."ID", "alias_34766038"."JOB_ID", "alias_34766038"."TRIGGER_ID", 
-"alias_34766038"."ENABLED", "alias_34766038"."TIME_AUDIT", "alias_34766038"."SYNC_AUDIT", 
-"alias_94059676"."ID" AS "JOB", "alias_64919763"."ID" AS "TRIGGER"
+		<script name="JOB_TRIGGER" id="Editor_cfd41f" language="SQL" >
+			<string><![CDATA[select "alias_34766038"."ID", "alias_34766038"."JOB_ID", "alias_34766038"."TRIGGER_ID", "alias_34766038"."ENABLED", "alias_34766038"."TIME_AUDIT", "alias_34766038"."SYNC_AUDIT", 
+        "alias_xxx"."ID"
 from (
-    select "PUBLIC"."JOB_TRIGGER"."ID", "PUBLIC"."JOB_TRIGGER"."JOB_ID", "PUBLIC"."JOB_TRIGGER"."TRIGGER_ID",
-            "PUBLIC"."JOB_TRIGGER"."ENABLED", "PUBLIC"."JOB_TRIGGER"."TIME_AUDIT", "PUBLIC"."JOB_TRIGGER"."SYNC_AUDIT"
-    from "PUBLIC"."JOB_TRIGGER"
-    where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 3 and "PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = 1)
-) "alias_34766038" 
+    select "PUBLIC"."JOB_TRIGGER"."ID", "PUBLIC"."JOB_TRIGGER"."JOB_ID", "PUBLIC"."JOB_TRIGGER"."TRIGGER_ID", "PUBLIC"."JOB_TRIGGER"."ENABLED", "PUBLIC"."JOB_TRIGGER"."TIME_AUDIT", 
+            "PUBLIC"."JOB_TRIGGER"."SYNC_AUDIT" , "alias_xxx"."ID"
+    from "PUBLIC"."JOB_TRIGGER" 
+    where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1)
+	right outer join (select "PUBLIC"."TRIGGER_ENTITY"."ID" from "PUBLIC"."TRIGGER_ENTITY"  where (1 = 1 and "PUBLIC"."TRIGGER_ENTITY"."ID" = 11)) "alias_xxx"  on "alias_34766038"."ID" = "alias_xxx"."ID" 
+) "alias_34766038"
+	
 right outer join (
-    select "PUBLIC"."JOB_ENTITY"."ID" from "PUBLIC"."JOB_ENTITY"
-    where (1 = 1 and "PUBLIC"."JOB_ENTITY"."ID" = 3)
-) "alias_94059676" on "alias_34766038"."ID" = "alias_94059676"."ID"     
-right outer join (
-    select "PUBLIC"."TRIGGER_ENTITY"."ID" from "PUBLIC"."TRIGGER_ENTITY"
-    where (1 = 1 and "PUBLIC"."TRIGGER_ENTITY"."ID" = 1)
-) "alias_64919763" on "alias_34766038"."ID" = "alias_64919763"."ID"
+    select "PUBLIC"."JOB_ENTITY"."ID" 
+    from "PUBLIC"."JOB_ENTITY" 
+    where (1 = 1 and "PUBLIC"."JOB_ENTITY"."ID" = 1)) "alias_94059676" 
+    on "alias_34766038"."ID" = "alias_94059676"."ID" 
 limit 1]]></string>
+		</script>
+		<script name="TRIGGER_ENTITY" id="Editor_39f6a3e" language="SQL" >
+			<string><![CDATA[select *
+from "PUBLIC"."JOB_TRIGGER" 
+join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1)
+where (1 = 1 )
+limit 20]]></string>
 		</script>
 	</layout>
 </project>

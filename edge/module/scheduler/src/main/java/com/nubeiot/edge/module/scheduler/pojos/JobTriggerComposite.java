@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.scheduler.service;
+package com.nubeiot.edge.module.scheduler.pojos;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,11 +24,6 @@ public final class JobTriggerComposite extends JobTrigger implements CompositePo
     @Override
     public @NonNull Map<String, VertxPojo> other() {
         return other;
-    }
-
-    @Override
-    public Class<JobTrigger> pojoClass() {
-        return JobTrigger.class;
     }
 
     @Override

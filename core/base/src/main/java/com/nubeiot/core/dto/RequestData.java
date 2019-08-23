@@ -31,7 +31,7 @@ public final class RequestData extends AbstractDTO {
         /**
          * To {@code prettify} response
          */
-        public static final String PRETTY = "pretty";
+        public static final String PRETTY = "_pretty";
 
         /**
          * For {@code language}

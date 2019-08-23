@@ -1,14 +1,18 @@
 package com.nubeiot.core.sql.query;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
+import org.jooq.ResultQuery;
 import org.jooq.SelectConditionStep;
 import org.jooq.SelectOptionStep;
+import org.jooq.Table;
 import org.jooq.exception.TooManyRowsException;
 import org.jooq.impl.DSL;
 
@@ -16,15 +20,18 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
+import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.tables.JsonTable;
 
 import lombok.NonNull;
@@ -39,6 +46,13 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
         }
         return Single.error(throwable);
     }
+
+    static Single unableDelete(String clue) {
+        return Single.error(
+            new NubeException("Cannot delete record", new HiddenException(ErrorCode.DATABASE_ERROR, clue)));
+    }
+
+    EntityHandler entityHandler();
 
     /**
      * Find many entity resources
@@ -79,11 +93,11 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      *
      * @param requestData Request data
      * @param action      Event action
-     * @param validation  Compare and convert function between {@code database resource} and {@code requested resource}
+     * @param validator   Compare and convert function between {@code database resource} and {@code requested resource}
      * @return primary key
      */
     Single<?> modifyReturningPrimary(@NonNull RequestData requestData, @NonNull EventAction action,
-                                     @NonNull Function3<VertxPojo, VertxPojo, JsonObject, VertxPojo> validation);
+                                     BiFunction<VertxPojo, RequestData, VertxPojo> validator);
 
     /**
      * Do delete data by primary
@@ -91,40 +105,88 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @param requestData Request data
      * @return deleted resource
      */
-    Maybe<P> deleteOneByKey(RequestData requestData);
+    Single<P> deleteOneByKey(RequestData requestData);
 
     /**
-     * Do query filter
+     * Create view query
+     *
+     * @param filter     Request filter
+     * @param pagination pagination
+     * @return query function
+     */
+    Function<DSLContext, ? extends ResultQuery<? extends Record>> viewQuery(JsonObject filter, Pagination pagination);
+
+    /**
+     * Create view query for one resource
+     *
+     * @param filter Request filter
+     * @return query function
+     */
+    default Function<DSLContext, ? extends ResultQuery<? extends Record>> viewOneQuery(JsonObject filter) {
+        return viewQuery(filter, Pagination.oneValue());
+    }
+
+    default Function<DSLContext, Boolean> fetchExists(@NonNull Table table, @NonNull Condition condition) {
+        return dsl -> dsl.fetchExists(table, condition);
+    }
+
+    default Function<DSLContext, Boolean> fetchExists(@NonNull EntityMetadata metadata, @NonNull Object key) {
+        return fetchExists(metadata.table(), conditionByPrimary(metadata, key));
+    }
+
+    @SuppressWarnings("unchecked")
+    default Single<P> isAbleToDelete(@NonNull P pojo, @NonNull EntityMetadata metadata,
+                                     Function<VertxPojo, String> keyProvider) {
+        if (!(entityHandler() instanceof EntityConstraintHolder)) {
+            return Single.just(pojo);
+        }
+        final Object pk = pojo.toJson().getValue(metadata.jsonKeyName());
+        final EntityConstraintHolder holder = (EntityConstraintHolder) entityHandler();
+        return Observable.fromIterable(holder.referenceTableKeysTo(metadata.table()))
+                         .flatMapSingle(e -> entityHandler().genericQuery()
+                                                            .executeAny(fetchExists(e.getKey(), e.getValue().eq(pk)))
+                                                            .filter(exist -> !exist)
+                                                            .switchIfEmpty(Single.error(
+                                                                metadata.unableDeleteDueUsing(keyProvider.apply(pojo))))
+                                                            .map(b -> pojo))
+                         .switchIfEmpty(Observable.just(pojo))
+                         .singleOrError();
+    }
+
+    /**
+     * Create database condition by request filter
      * <p>
      * It is simple filter function by equal comparision. Any complex query should be override by each service.
      *
-     * @param context Select condition step command
-     * @param filter  Filter request
+     * @param table  Resource table
+     * @param filter Filter request
      * @return Database Select DSL
-     * @see SelectConditionStep
+     * @see Condition
      */
     //TODO Rich query depends on RQL in future https://github.com/NubeIO/iot-engine/issues/128
-    default SelectConditionStep<? extends Record> filter(DSLContext context, JsonTable<? extends Record> table,
-                                                         JsonObject filter) {
-        return filter(context, table, filter, table.fields());
+    default Condition condition(@NonNull JsonTable<? extends Record> table, JsonObject filter) {
+        return condition(table, filter, false);
     }
 
-    default SelectConditionStep<? extends Record> filter(DSLContext context, JsonTable<? extends Record> table,
-                                                         JsonObject filter, Field... fields) {
-        final SelectConditionStep<? extends Record> where = context.select(fields)
-                                                                   .from(table)
-                                                                   .where(DSL.trueCondition());
+    default Condition condition(@NonNull JsonTable<? extends Record> table, JsonObject filter, boolean allowNullable) {
         if (Objects.isNull(filter)) {
-            return where;
+            return DSL.trueCondition();
         }
-        final Map<String, String> jsonFields = table.jsonFields();
+        Condition[] c = new Condition[] {DSL.trueCondition()};
         filter.stream().map(entry -> {
-            final Field field = table.field(jsonFields.getOrDefault(entry.getKey(), entry.getKey()));
+            final Field field = table.getField(entry.getKey());
             return Optional.ofNullable(field)
-                           .map(f -> Optional.ofNullable(entry.getValue()).map(f::eq).orElseGet(f::isNull))
+                           .map(f -> Optional.ofNullable(entry.getValue())
+                                             .map(v -> allowNullable ? f.eq(v).or(f.isNull()) : f.eq(v))
+                                             .orElseGet(f::isNull))
                            .orElse(null);
-        }).filter(Objects::nonNull).forEach(where::and);
-        return where;
+        }).filter(Objects::nonNull).forEach(condition -> c[0] = c[0].and(condition));
+        return c[0];
+    }
+
+    @SuppressWarnings("unchecked")
+    default Condition conditionByPrimary(@NonNull EntityMetadata metadata, @NonNull Object key) {
+        return metadata.table().getField(metadata.jsonKeyName()).eq(key);
     }
 
     /**

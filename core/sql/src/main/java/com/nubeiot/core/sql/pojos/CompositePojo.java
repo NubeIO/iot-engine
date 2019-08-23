@@ -21,8 +21,6 @@ public interface CompositePojo<P extends VertxPojo, CP extends CompositePojo> ex
 
     @NonNull Map<String, VertxPojo> other();
 
-    @NonNull Class<P> pojoClass();
-
     CP wrap(@NonNull P pojo);
 
     @SuppressWarnings("unchecked")
@@ -36,7 +34,7 @@ public interface CompositePojo<P extends VertxPojo, CP extends CompositePojo> ex
     }
 
     @SuppressWarnings("unchecked")
-    default CP prop(String key, Object value) {
+    default CP with(String key, Object value) {
         return (CP) fromJson(this.toJson().put(Strings.requireNotBlank(key), value));
     }
 

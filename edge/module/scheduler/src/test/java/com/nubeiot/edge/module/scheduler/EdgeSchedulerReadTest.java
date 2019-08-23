@@ -20,7 +20,11 @@ public class EdgeSchedulerReadTest extends EdgeSchedulerVerticleTest {
         final JsonObject expected = new JsonObject(
             "{\"jobs\":[{\"id\":1,\"group\":\"group1\",\"name\":\"job1\",\"type\":\"EVENT_JOB\"," +
             "\"forward_if_failure\":true,\"detail\":{\"process\":{\"address\":\"scheduler.1\"," +
-            "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"CREATE\"}}}]}");
+            "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"CREATE\"}}},{\"id\":2,\"group\":\"group1\"," +
+            "\"name\":\"job3\",\"type\":\"EVENT_JOB\",\"forward_if_failure\":true," +
+            "\"detail\":{\"process\":{\"address\":\"scheduler.1\",\"pattern\":\"REQUEST_RESPONSE\"," +
+            "\"action\":\"CREATE\"},\"callback\":{\"address\":\"scheduler.2\",\"pattern\":\"POINT_2_POINT\"," +
+            "\"action\":\"PUBLISH\"}}}]}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/job", 200, expected);
     }
 
@@ -37,7 +41,6 @@ public class EdgeSchedulerReadTest extends EdgeSchedulerVerticleTest {
     public void test_get_non_existed_job_by_id(TestContext context) {
         final JsonObject expected = new JsonObject().put("message", "Not found resource with job_id=5")
                                                     .put("code", ErrorCode.NOT_FOUND);
-        ;
         assertRestByClient(context, HttpMethod.GET, "/api/s/job/5", 404, expected);
     }
 
@@ -96,6 +99,13 @@ public class EdgeSchedulerReadTest extends EdgeSchedulerVerticleTest {
         JsonObject expected = new JsonObject().put("message", "Not found resource with trigger_id=1 and job_id=5")
                                               .put("code", ErrorCode.NOT_FOUND);
         assertRestByClient(context, HttpMethod.GET, "/api/s/trigger/1/job/5", 404, expected);
+    }
+
+    @Test
+    public void test_get_non_existed_job_by_non_existed_trigger(TestContext context) {
+        JsonObject expected = new JsonObject().put("message", "Not found resource with trigger_id=8 and job_id=5")
+                                              .put("code", ErrorCode.NOT_FOUND);
+        assertRestByClient(context, HttpMethod.GET, "/api/s/trigger/8/job/5", 404, expected);
     }
 
     @Test

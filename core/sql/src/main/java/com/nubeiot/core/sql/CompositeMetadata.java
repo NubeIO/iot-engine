@@ -1,12 +1,17 @@
 package com.nubeiot.core.sql;
 
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.RecordMapper;
 import org.jooq.UpdatableRecord;
@@ -16,75 +21,112 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.utils.Functions;
+import com.nubeiot.core.sql.validation.CompositeValidation;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 
 public interface CompositeMetadata<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
                                       C extends CompositePojo<P, C>>
-    extends EntityMetadata<K, P, R, D> {
+    extends EntityMetadata<K, P, R, D>, CompositeValidation<P, C> {
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     @NonNull Class<C> modelClass();
 
-    @SuppressWarnings("unchecked")
     @Override
-    default @NonNull C parse(@NonNull JsonObject request) throws IllegalArgumentException {
-        return EntityHandler.parse(modelClass(), request);
+    default CompositeMetadata context() {
+        return this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    default @NonNull C parseFromEntity(@NonNull JsonObject entity) throws IllegalArgumentException {
+        Map<String, VertxPojo> sub = subItems().stream()
+                                               .filter(m -> entity.getValue(m.singularKeyName()) instanceof JsonObject)
+                                               .collect(Collectors.toMap(EntityMetadata::singularKeyName,
+                                                                         m -> m.parseFromEntity(entity.getJsonObject(
+                                                                             m.singularKeyName()))));
+        return ((C) ReflectionClass.createObject(modelClass()).fromJson(entity)).wrap(sub);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    default @NonNull C parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
+        Map<String, VertxPojo> sub = subItems().stream()
+                                               .filter(m -> request.getValue(m.singularKeyName()) instanceof JsonObject)
+                                               .collect(Collectors.toMap(EntityMetadata::singularKeyName,
+                                                                         m -> m.parseFromRequest(request.getJsonObject(
+                                                                             m.singularKeyName()))));
+        return ((C) ReflectionClass.createObject(modelClass()).fromJson(request)).wrap(sub);
     }
 
     @NonNull Class<P> rawClass();
 
-    default @NonNull C wrap(@NonNull JsonObject request, @NonNull EntityMetadata reference)
-        throws IllegalArgumentException {
-        final String refKey = reference.singularKeyName();
-        return parse(request).wrap(Collections.singletonMap(refKey, reference.parse(request.getJsonObject(refKey))));
+    @Override
+    @SuppressWarnings("unchecked")
+    default C onCreating(RequestData reqData) throws IllegalArgumentException {
+        return CompositeValidation.super.onCreating(reqData);
     }
 
-    default NotFoundException notFound(@NonNull RequestData reqData, EntityMetadata... references) {
-        return notFound(reqData, Stream.of(references).collect(Collectors.toList()));
-    }
-
-    default NotFoundException notFound(@NonNull RequestData reqData, Collection<EntityMetadata> references) {
-        if (Objects.isNull(references)) {
-            return notFound(reqData);
-        }
-        String msg = references.stream()
-                               .filter(Objects::nonNull)
-                               .filter(m -> !requestKeyName().equals(m.requestKeyName()))
-                               .map(ref -> new SimpleEntry<>(ref.requestKeyName(),
-                                                             Functions.getIfThrow(() -> ref.parseKey(reqData))
-                                                                      .orElse("")))
-                               .map(entry -> entry.getKey() + "=" + entry.getValue())
-                               .collect(Collectors.joining(" and ", " and ", ""));
-        return new NotFoundException(notFound(reqData).getMessage() + msg);
-    }
+    @NonNull List<EntityMetadata> subItems();
 
     default @NonNull C convert(@NonNull P pojo) {
         return CompositePojo.create(pojo, rawClass(), modelClass());
     }
 
+    //TODO hack way due to jooq bug. Must guard the order of given references
     default <REC extends Record> RecordMapper<REC, C> mapper(EntityMetadata... references) {
-        return r -> (C) r.into(modelClass())
-                         .wrap(Stream.of(references)
-                                     .filter(Objects::nonNull)
-                                     .collect(Collectors.toMap(EntityMetadata::singularKeyName,
-                                                               ref -> (VertxPojo) r.into(ref.modelClass()))));
+        return r -> {
+            final C into = r.into(table().fields()).into(modelClass());
+            final Iterator<EntityMetadata> iterator = Stream.of(references).iterator();
+            Map<String, List<Field>> group = Stream.of(
+                r.fieldsRow().fields(IntStream.range(table().fields().length, r.fields().length).toArray()))
+                                                   .collect(LinkedHashMap::new, (map, f) -> map.computeIfAbsent(
+                                                       f.getQualifiedName().first(), k -> new ArrayList<>()).add(f),
+                                                            Map::putAll);
+            final Map<String, VertxPojo> other = new HashMap<>();
+            for (List<Field> fields : group.values()) {
+                if (!iterator.hasNext()) {
+                    break;
+                }
+                final EntityMetadata ref = iterator.next();
+                other.put(ref.singularKeyName(),
+                          (VertxPojo) r.into(fields.toArray(new Field[0])).into(ref.modelClass()));
+            }
+            return (C) into.wrap(other);
+        };
     }
 
     abstract class AbstractCompositeMetadata<K, P extends VertxPojo, R extends UpdatableRecord<R>,
                                                 D extends VertxDAO<R, P, K>, C extends CompositePojo<P, C>>
         implements CompositeMetadata<K, P, R, D, C> {
 
+        private final List<EntityMetadata> sub = new ArrayList<>();
+
         @Override
         public abstract @NonNull Class<C> modelClass();
 
         @Override
-        public C parse(@NonNull JsonObject request) throws IllegalArgumentException {
-            return CompositeMetadata.super.parse(request);
+        public @NonNull List<EntityMetadata> subItems() {
+            return sub;
+        }
+
+        @Override
+        public C parseFromEntity(@NonNull JsonObject entity) throws IllegalArgumentException {
+            return CompositeMetadata.super.parseFromEntity(entity);
+        }
+
+        @Override
+        public C parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
+            return CompositeMetadata.super.parseFromRequest(request);
+        }
+
+        @SuppressWarnings("unchecked")
+        protected <T extends CompositeMetadata> T addSubItem(EntityMetadata... metadata) {
+            sub.addAll(Stream.of(metadata).filter(Objects::nonNull).collect(Collectors.toList()));
+            return (T) this;
         }
 
     }

@@ -3,9 +3,6 @@ package com.nubeiot.core.sql.service;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.jooq.UpdatableRecord;
-
-import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -26,15 +23,13 @@ import lombok.NonNull;
  *
  * @param <P> Vertx Pojo
  * @param <M> Metadata type
- * @param <V> Entity Validation
  * @see EventListener
- * @see UpdatableRecord
  * @see VertxPojo
- * @see VertxDAO
+ * @see EntityMetadata
+ * @see EntityValidation
  */
 //TODO Missing `BATCH` Creation/Modification/Deletion
-public interface EntityService<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation>
-    extends EventListener {
+public interface EntityService<P extends VertxPojo, M extends EntityMetadata> extends EventListener {
 
     /**
      * Defines {@code CURD} actions
@@ -55,19 +50,44 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata, V 
     @NonNull EntityHandler entityHandler();
 
     /**
-     * Entity metadata
+     * Query executor to execute {@code CRUD} resource in database layer
      *
-     * @return entity metadata
+     * @return query executor
+     * @see EntityQueryExecutor
      */
-    @NonNull M metadata();
-
-    @NonNull V validation();
-
     @NonNull EntityQueryExecutor<P> queryExecutor();
 
+    /**
+     * Context entity metadata
+     *
+     * @return entity metadata
+     * @see EntityMetadata
+     */
+    @NonNull M context();
+
+    /**
+     * Service validation for context resource
+     *
+     * @return validation
+     * @see EntityValidation
+     */
+    @NonNull EntityValidation validation();
+
+    /**
+     * Transformer to convert backend response before pass to client
+     *
+     * @return transformer
+     * @see EntityTransformer
+     */
     @NonNull EntityTransformer transformer();
 
-    default @NonNull PostService postService() {
+    /**
+     * Async post-back service to publish response
+     *
+     * @return post service
+     * @see PostService
+     */
+    default @NonNull PostService asyncPostService() {
         return PostService.EMPTY;
     }
 

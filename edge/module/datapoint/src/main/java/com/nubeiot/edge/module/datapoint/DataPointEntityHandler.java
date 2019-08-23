@@ -25,9 +25,11 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.decorator.EntityAuditDecorator;
+import com.nubeiot.core.sql.decorator.AuditDecorator;
+import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.iotdata.edge.model.Keys;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.DeviceEquip;
@@ -40,7 +42,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 
 import lombok.NonNull;
 
-class DataPointEntityHandler extends AbstractEntityHandler implements EntityAuditDecorator {
+class DataPointEntityHandler extends AbstractEntityHandler implements AuditDecorator, EntityConstraintHolder {
 
     public static final String BUILTIN_DATA = "BUILTIN_DATA";
 
@@ -61,6 +63,11 @@ class DataPointEntityHandler extends AbstractEntityHandler implements EntityAudi
         map.put(DeviceEquip.class, 30);
         map.put(Point.class, 40);
         return map;
+    }
+
+    @Override
+    public @NonNull Class keyClass() {
+        return Keys.class;
     }
 
     @Override
@@ -115,8 +122,8 @@ class DataPointEntityHandler extends AbstractEntityHandler implements EntityAudi
     private Single<Integer> insert(AbstractVertxDAO dao, @NonNull Class<VertxPojo> pojoClass, @NonNull Object data) {
         if (parsable(pojoClass, data)) {
             return ((Single<Integer>) dao.insert(
-                EntityAuditDecorator.addCreationAudit(true, EntityHandler.parse(pojoClass, data),
-                                                      "SYSTEM_INITIATOR"))).doOnSuccess(initLog(pojoClass));
+                AuditDecorator.addCreationAudit(true, EntityHandler.parse(pojoClass, data),
+                                                "SYSTEM_INITIATOR"))).doOnSuccess(initLog(pojoClass));
         }
         if (data instanceof JsonArray || data instanceof Collection) {
             final Stream<Object> stream = data instanceof JsonArray
@@ -124,8 +131,8 @@ class DataPointEntityHandler extends AbstractEntityHandler implements EntityAudi
                                           : ((Collection) data).stream();
             return ((Single<Integer>) dao.insert(stream.filter(o -> parsable(pojoClass, o))
                                                        .map(o -> EntityHandler.parse(pojoClass, o))
-                                                       .map(pojo -> EntityAuditDecorator.addCreationAudit(true, pojo,
-                                                                                                          "SYSTEM_INITIATOR"))
+                                                       .map(pojo -> AuditDecorator.addCreationAudit(true, pojo,
+                                                                                                    "SYSTEM_INITIATOR"))
                                                        .collect(Collectors.toList()))).doOnSuccess(initLog(pojoClass));
         }
         return Single.just(0);

@@ -5,8 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import io.vertx.core.json.JsonObject;
-
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
@@ -18,10 +17,8 @@ import com.nubeiot.core.sql.mock.oneschema.tables.pojos.Author;
 import com.nubeiot.core.sql.mock.oneschema.tables.pojos.Book;
 import com.nubeiot.core.sql.mock.oneschema.tables.records.AuthorRecord;
 import com.nubeiot.core.sql.mock.oneschema.tables.records.BookRecord;
-import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.MockEntityService.Metadata.AuthorMetadata;
 import com.nubeiot.core.sql.service.MockEntityService.Metadata.BookMetadata;
-import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEntityTransformer;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.utils.Functions;
@@ -90,7 +87,7 @@ interface MockEntityService {
     }
 
 
-    final class AuthorService extends AbstractEntityService<Author, AuthorMetadata, AuthorService>
+    final class AuthorService extends AbstractEntityService<Author, AuthorMetadata>
         implements EntityValidation<Author>, EntityTransformer {
 
         AuthorService(@NonNull EntityHandler entityHandler) {
@@ -98,35 +95,29 @@ interface MockEntityService {
         }
 
         @Override
-        public AuthorMetadata metadata() {
+        public AuthorMetadata context() {
             return AuthorMetadata.INSTANCE;
         }
 
         @Override
-        public AuthorService validation() {
+        public @NonNull EntityValidation validation() {
             return this;
         }
 
         @Override
-        public @NonNull EntityTransformer transformer() {
-            return this;
-        }
-
-        @Override
-        public Author onCreate(@NonNull Author pojo, @NonNull JsonObject headers) throws IllegalArgumentException {
-            Strings.requireNotBlank(pojo.getLastName(), "last_name is mandatory");
-            if (Objects.isNull(pojo.getDateOfBirth())) {
+        public Author onCreating(RequestData reqData) throws IllegalArgumentException {
+            final Author author = EntityValidation.super.onCreating(reqData);
+            Strings.requireNotBlank(author.getLastName(), "last_name is mandatory");
+            if (Objects.isNull(author.getDateOfBirth())) {
                 throw new IllegalArgumentException("date_of_birth is mandatory");
             }
-            return EntityValidation.super.onCreate(pojo, headers);
+            return author;
         }
 
     }
 
 
-    final class BookService extends AbstractEntityService<Book, BookMetadata, BookService>
-        implements EntityValidation<Book>, ReferenceEntityTransformer,
-                   OneToManyReferenceEntityService<Book, BookMetadata, BookService> {
+    final class BookService extends AbstractOneToManyEntityService<Book, BookMetadata> {
 
         BookService(@NonNull AbstractEntityHandler entityHandler) {
             super(entityHandler);
@@ -138,33 +129,13 @@ interface MockEntityService {
         }
 
         @Override
-        public BookMetadata metadata() {
+        public BookMetadata context() {
             return BookMetadata.INSTANCE;
-        }
-
-        @Override
-        public BookService validation() {
-            return this;
-        }
-
-        @Override
-        public @NonNull ReferenceEntityTransformer transformer() {
-            return this;
         }
 
         @Override
         public Map<String, Function<String, ?>> jsonFieldConverter() {
             return Collections.singletonMap(Tables.BOOK.AUTHOR_ID.getName().toLowerCase(), Functions.toInt());
-        }
-
-        @Override
-        public HasReferenceResource ref() {
-            return this;
-        }
-
-        @Override
-        public @NonNull ReferenceQueryExecutor<Book> queryExecutor() {
-            return OneToManyReferenceEntityService.super.queryExecutor();
         }
 
     }

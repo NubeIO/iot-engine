@@ -12,6 +12,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.SimpleQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
 
@@ -22,8 +23,8 @@ import lombok.RequiredArgsConstructor;
  * Abstract service to implement {@code CRUD} listeners for entity
  */
 @RequiredArgsConstructor
-public abstract class AbstractEntityService<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation>
-    implements InternalEntityService<P, M, V> {
+public abstract class AbstractEntityService<P extends VertxPojo, M extends EntityMetadata>
+    implements SimpleEntityService<P, M>, EntityTransformer {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final EntityHandler entityHandler;
@@ -33,16 +34,20 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return entityHandler;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
-    public Single<JsonObject> get(RequestData requestData) {
-        RequestData reqData = recompute(EventAction.GET_ONE, requestData);
-        return queryExecutor().findOneByKey(reqData)
-                              .map(pojo -> transformer().afterGet(pojo, reqData))
-                              .doOnSuccess(j -> postService().onSuccess(EventAction.GET_ONE, j))
-                              .doOnError(t -> postService().onError(EventAction.GET_ONE, t));
+    @Override
+    @SuppressWarnings("unchecked")
+    public @NonNull SimpleQueryExecutor<P> queryExecutor() {
+        return SimpleQueryExecutor.create(entityHandler(), context());
+    }
+
+    @Override
+    public @NonNull EntityValidation validation() {
+        return context();
+    }
+
+    @Override
+    public @NonNull EntityTransformer transformer() {
+        return this;
     }
 
     /**
@@ -50,13 +55,25 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
      */
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(RequestData requestData) {
-        RequestData reqData = recompute(EventAction.GET_LIST, requestData);
+        RequestData reqData = onHandlingManyResource(requestData);
         return queryExecutor().findMany(reqData)
                               .map(m -> transformer().afterEachList(m, reqData))
                               .collect(JsonArray::new, JsonArray::add)
-                              .map(results -> new JsonObject().put(metadata().pluralKeyName(), results))
-                              .doOnSuccess(j -> postService().onSuccess(EventAction.GET_LIST, j))
-                              .doOnError(t -> postService().onError(EventAction.GET_LIST, t));
+                              .map(this::combineListData)
+                              .doOnSuccess(j -> asyncPostService().onSuccess(EventAction.GET_LIST, j))
+                              .doOnError(t -> asyncPostService().onError(EventAction.GET_LIST, t));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
+    public Single<JsonObject> get(RequestData requestData) {
+        RequestData reqData = onHandlingOneResource(requestData);
+        return queryExecutor().findOneByKey(reqData)
+                              .map(pojo -> transformer().afterGet(pojo, reqData))
+                              .doOnSuccess(j -> asyncPostService().onSuccess(EventAction.GET_ONE, j))
+                              .doOnError(t -> asyncPostService().onError(EventAction.GET_ONE, t));
     }
 
     /**
@@ -65,12 +82,11 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @SuppressWarnings("unchecked")
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData requestData) {
-        RequestData reqData = recompute(EventAction.CREATE, requestData);
-        final P pojo = (P) validation().onCreate(metadata().parse(reqData.body()), reqData.headers());
-        return queryExecutor().insertReturningPrimary(pojo, reqData)
+        RequestData reqData = onHandlingNewResource(requestData);
+        return queryExecutor().insertReturningPrimary((P) validation().onCreating(reqData), reqData)
                               .flatMap(pk -> responseByLookupKey(pk, reqData, transformer()::afterCreate))
-                              .doOnSuccess(j -> postService().onSuccess(EventAction.CREATE, j))
-                              .doOnError(t -> postService().onError(EventAction.CREATE, t));
+                              .doOnSuccess(j -> asyncPostService().onSuccess(EventAction.CREATE, j))
+                              .doOnError(t -> asyncPostService().onError(EventAction.CREATE, t));
     }
 
     /**
@@ -79,11 +95,11 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @SuppressWarnings("unchecked")
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData requestData) {
-        RequestData reqData = recompute(EventAction.UPDATE, requestData);
-        return queryExecutor().modifyReturningPrimary(reqData, EventAction.UPDATE, validation()::onUpdate)
+        RequestData reqData = onHandlingOneResource(requestData);
+        return queryExecutor().modifyReturningPrimary(reqData, EventAction.UPDATE, validation()::onUpdating)
                               .flatMap(pk -> responseByLookupKey(pk, reqData, transformer()::afterUpdate))
-                              .doOnSuccess(j -> postService().onSuccess(EventAction.UPDATE, j))
-                              .doOnError(t -> postService().onError(EventAction.UPDATE, t));
+                              .doOnSuccess(j -> asyncPostService().onSuccess(EventAction.UPDATE, j))
+                              .doOnError(t -> asyncPostService().onError(EventAction.UPDATE, t));
     }
 
     /**
@@ -92,11 +108,11 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @SuppressWarnings("unchecked")
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData requestData) {
-        RequestData reqData = recompute(EventAction.PATCH, requestData);
-        return queryExecutor().modifyReturningPrimary(reqData, EventAction.PATCH, validation()::onPatch)
+        RequestData reqData = onHandlingOneResource(requestData);
+        return queryExecutor().modifyReturningPrimary(reqData, EventAction.PATCH, validation()::onPatching)
                               .flatMap(pk -> responseByLookupKey(pk, reqData, transformer()::afterPatch))
-                              .doOnSuccess(j -> postService().onSuccess(EventAction.PATCH, j))
-                              .doOnError(t -> postService().onError(EventAction.PATCH, t));
+                              .doOnSuccess(j -> asyncPostService().onSuccess(EventAction.PATCH, j))
+                              .doOnError(t -> asyncPostService().onError(EventAction.PATCH, t));
     }
 
     /**
@@ -104,19 +120,15 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
      */
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData requestData) {
-        RequestData reqData = recompute(EventAction.REMOVE, requestData);
-        final Object pk = metadata().parseKey(reqData);
+        RequestData reqData = onHandlingOneResource(requestData);
         return queryExecutor().deleteOneByKey(reqData)
-                              .doOnSuccess(p -> postService().onSuccess(EventAction.REMOVE, p.toJson()))
-                              .doOnError(t -> postService().onError(EventAction.REMOVE, t))
-                              .flatMapSingle(p -> transformer().response(metadata().requestKeyName(), pk,
-                                                                         () -> transformer().afterDelete(p, reqData)));
+                              .doOnSuccess(p -> asyncPostService().onSuccess(EventAction.REMOVE, p.toJson()))
+                              .doOnError(t -> asyncPostService().onError(EventAction.REMOVE, t))
+                              .map(p -> transformer().afterDelete(p, reqData));
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public @NonNull SimpleQueryExecutor<P> queryExecutor() {
-        return SimpleQueryExecutor.create(entityHandler(), metadata());
+    protected JsonObject combineListData(JsonArray results) {
+        return new JsonObject().put(context().pluralKeyName(), results);
     }
 
 }

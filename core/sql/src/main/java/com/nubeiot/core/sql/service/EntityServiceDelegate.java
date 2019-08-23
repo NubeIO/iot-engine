@@ -22,8 +22,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public abstract class EntityServiceDelegate<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation
-                                               , S extends EntityService<P, M, V>> implements EntityService<P, M, V> {
+public abstract class EntityServiceDelegate<P extends VertxPojo, M extends EntityMetadata, S extends EntityService<P, M>>
+    implements EntityService<P, M> {
 
     @NonNull
     private final S service;
@@ -43,12 +43,12 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public M metadata() {
-        return unwrap().metadata();
+    public M context() {
+        return unwrap().context();
     }
 
     @Override
-    public V validation() {
+    public EntityValidation validation() {
         return unwrap().validation();
     }
 
@@ -63,8 +63,8 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public @NonNull PostService postService() {
-        return unwrap().postService();
+    public @NonNull PostService asyncPostService() {
+        return unwrap().asyncPostService();
     }
 
     @Override

@@ -15,6 +15,7 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.mock.oneschema.tables.pojos.Author;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 
 @RunWith(VertxUnitRunner.class)
 public class EntityServiceTest extends BaseSqlServiceTest {
@@ -107,9 +108,8 @@ public class EntityServiceTest extends BaseSqlServiceTest {
         JsonObject expected = new JsonObject("{\"resource\":{\"id\":2,\"first_name\":\"ab\",\"last_name\":\"Coelho\"," +
                                              "\"date_of_birth\":\"1947-08-24\",\"distinguished\":false}," +
                                              "\"action\":\"PATCH\",\"status\":\"SUCCESS\"}");
-        RequestData reqData = RequestData.builder()
-                                         .body(new Author().setFirstName("ab").toJson().put("author_id", 2))
-                                         .build();
+        final JsonObject body = JsonPojo.from(new Author().setFirstName("ab")).toJson().put("author_id", 2);
+        RequestData reqData = RequestData.builder().body(body).build();
         CountDownLatch latch = new CountDownLatch(1);
         asserter(context, true, expected, AUTHOR_ADDRESS, EventAction.PATCH, reqData, latch);
         expected = new JsonObject("{\"id\":2,\"first_name\":\"ab\",\"last_name\":\"Coelho\"," +

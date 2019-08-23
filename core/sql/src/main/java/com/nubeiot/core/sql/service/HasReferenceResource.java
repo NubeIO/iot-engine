@@ -31,7 +31,9 @@ public interface HasReferenceResource {
      *
      * @return a mapping between {@code json request field} and {@code value converter}
      */
-    Map<String, Function<String, ?>> jsonFieldConverter();
+    default Map<String, Function<String, ?>> jsonFieldConverter() {
+        return Collections.emptyMap();
+    }
 
     default Function<Entry<String, Object>, String> keyMapper() {
         return e -> jsonRefFields().getOrDefault(e.getKey(), e.getKey());

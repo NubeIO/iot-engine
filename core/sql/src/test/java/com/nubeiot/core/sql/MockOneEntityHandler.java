@@ -14,6 +14,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
+import com.nubeiot.core.sql.mock.oneschema.Keys;
 import com.nubeiot.core.sql.mock.oneschema.tables.daos.AuthorDao;
 import com.nubeiot.core.sql.mock.oneschema.tables.daos.BookDao;
 import com.nubeiot.core.sql.mock.oneschema.tables.daos.BookToBookStoreDao;
@@ -24,12 +26,13 @@ import com.nubeiot.core.sql.mock.oneschema.tables.pojos.BookToBookStore;
 import com.nubeiot.core.sql.mock.oneschema.tables.pojos.Language;
 
 import lombok.Getter;
+import lombok.NonNull;
 
 /**
  * @see <a href="http://www.jooq.org/doc/3.11/manual-single-page/#sample-database">sample-database</a>
  */
 @Getter
-public class MockOneEntityHandler extends AbstractEntityHandler {
+public class MockOneEntityHandler extends AbstractEntityHandler implements EntityConstraintHolder {
 
     private final LanguageDao languageDao;
     private final AuthorDao authorDao;
@@ -42,6 +45,15 @@ public class MockOneEntityHandler extends AbstractEntityHandler {
         this.languageDao = dao(LanguageDao.class);
         this.bookDao = dao(BookDao.class);
         this.bookStoreDao = dao(BookToBookStoreDao.class);
+    }
+
+    public Configuration getJooq() {
+        return this.jooqConfig;
+    }
+
+    @Override
+    public @NonNull Class keyClass() {
+        return Keys.class;
     }
 
     @Override

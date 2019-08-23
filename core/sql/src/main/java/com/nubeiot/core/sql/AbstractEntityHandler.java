@@ -30,7 +30,7 @@ public abstract class AbstractEntityHandler implements EntityHandler {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final Vertx vertx;
-    private final Configuration jooqConfig;
+    final Configuration jooqConfig;
     private String sharedKey = getClass().getName();
 
     public AbstractEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {

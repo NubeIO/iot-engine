@@ -1,11 +1,15 @@
 package com.nubeiot.edge.module.scheduler.utils;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 import io.vertx.core.json.JsonObject;
 
+import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
+import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.DeliveryEvent;
+import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobEntity;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.TriggerEntity;
 import com.nubeiot.scheduler.job.EventJobModel;
@@ -20,10 +24,28 @@ import lombok.NonNull;
 
 public interface SchedulerConverter {
 
+    static <T> T convert(String objType, JsonObject request, Function<JsonObject, T> converter) {
+        try {
+            return converter.apply(request);
+        } catch (Exception e) {
+            if (e instanceof IllegalArgumentException) {
+                if (e.getCause() instanceof InvalidDefinitionException) {
+                    throw NubeExceptionConverter.friendly(e.getCause().getCause());
+                }
+                if (e.getCause() instanceof InvalidTypeIdException) {
+                    throw new IllegalArgumentException(
+                        "Not yet supported " + objType + " type: " + request.getString("type"));
+                }
+            }
+            throw NubeExceptionConverter.friendly(e);
+        }
+    }
+
     interface JobConverter {
 
         static JobEntity convert(@NonNull JsonObject object) {
-            return convert(JsonData.from(object, JobModel.class));
+            return SchedulerConverter.convert("job", object,
+                                              (json) -> convert(JsonData.convertLenient(json, JobModel.class)));
         }
 
         static JobEntity convert(@NonNull JobModel job) {
@@ -60,7 +82,8 @@ public interface SchedulerConverter {
     interface TriggerConverter {
 
         static TriggerEntity convert(@NonNull JsonObject object) {
-            return convert(JsonData.from(object, TriggerModel.class));
+            return SchedulerConverter.convert("trigger", object,
+                                              json -> convert(JsonData.convertLenient(json, TriggerModel.class)));
         }
 
         static TriggerEntity convert(@NonNull TriggerModel trigger) {

@@ -27,13 +27,13 @@ public abstract class BaseSqlServiceTest extends BaseSqlTest {
 
     static final String AUTHOR_ADDRESS = "com.nubeiot.core.sql.author";
     static final String BOOK_ADDRESS = "com.nubeiot.core.sql.book";
+    protected MockOneEntityHandler entityHandler;
 
     @NonNull
     protected String getJdbcUrl() { return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString(); }
 
     protected void setup(TestContext context) {
-        MockOneEntityHandler entityHandler = startSQL(context, SchemaTest.OneSchema.CATALOG,
-                                                      MockOneEntityHandler.class);
+        entityHandler = startSQL(context, SchemaTest.OneSchema.CATALOG, MockOneEntityHandler.class);
         controller().register(AUTHOR_ADDRESS, new AuthorService(entityHandler));
         controller().register(BOOK_ADDRESS, new BookService(entityHandler));
     }

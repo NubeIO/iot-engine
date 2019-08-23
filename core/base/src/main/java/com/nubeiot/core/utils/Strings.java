@@ -5,7 +5,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import io.vertx.core.logging.Logger;
@@ -59,7 +61,7 @@ public final class Strings {
      * @return {@code True} if blank, else otherwise
      */
     public static boolean isBlank(String text) {
-        return text == null || "".equals(text.trim());
+        return text == null || "" .equals(text.trim());
     }
 
     /**
@@ -159,15 +161,11 @@ public final class Strings {
         return toSnakeCase(text, true);
     }
 
-    public static String toUrlPathWithLC(@NonNull String text) {
-        return transform(text, false, "-");
-    }
-
     public static String toSnakeCase(@NonNull String text, boolean upper) {
         return transform(text, upper, "_");
     }
 
-    private static String transform(@NonNull String text, boolean upper, String separate) {
+    public static String transform(@NonNull String text, boolean upper, String separate) {
         if (upper && text.equals(text.toUpperCase())) {
             return text;
         }
@@ -210,7 +208,7 @@ public final class Strings {
 
     public static String format(String msgPattern, Object... params) {
         String[] args = Arrays.stream(params).map(String::valueOf).toArray(String[]::new);
-        return MessageFormat.format(msgPattern, (Object[]) args);
+        return MessageFormat.format(msgPattern, args);
     }
 
     /**
@@ -275,6 +273,14 @@ public final class Strings {
             }
         }
         return null;
+    }
+
+    public static String kvMsg(Object key, Object value) {
+        return key + "=" + value;
+    }
+
+    public static Function<Entry, String> kvMsg() {
+        return entry -> kvMsg(entry.getKey(), entry.getValue());
     }
 
 }

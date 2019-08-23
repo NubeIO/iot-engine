@@ -1,62 +1,26 @@
 package com.nubeiot.edge.module.scheduler.service;
 
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.query.ComplexQueryExecutor;
-import com.nubeiot.core.sql.service.HasReferenceResource;
-import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobByTriggerMetadata;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobEntityMetadata;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.TriggerEntityMetadata;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
 
-public final class JobByTriggerService
-    extends JobTriggerCompositeService<JobTriggerComposite, JobByTriggerMetadata, JobByTriggerService> {
+public final class JobByTriggerService extends JobTriggerCompositeService {
 
     public JobByTriggerService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
         super(entityHandler, schedulerContext);
     }
 
     @Override
-    String secondaryParam() {
-        return reference().requestKeyName();
+    public TriggerEntityMetadata reference() {
+        return TriggerEntityMetadata.INSTANCE;
     }
 
     @Override
-    String servicePath() {
-        return "/trigger/:" + metadata().requestKeyName() + "/job";
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public @NonNull ComplexQueryExecutor<JobTriggerComposite> queryExecutor() {
-        return super.queryExecutor().context(TriggerEntityMetadata.INSTANCE);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public JobEntityMetadata reference() {
+    public @NonNull JobEntityMetadata resource() {
         return JobEntityMetadata.INSTANCE;
-    }
-
-    @Override
-    public JobByTriggerMetadata metadata() {
-        return JobByTriggerMetadata.INSTANCE;
-    }
-
-    @Override
-    public JobByTriggerService validation() {
-        return this;
-    }
-
-    @Override
-    public @NonNull ManyToOneEntityTransformer transformer() {
-        return this;
-    }
-
-    @Override
-    public HasReferenceResource ref() {
-        return this;
     }
 
 }

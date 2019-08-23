@@ -76,7 +76,9 @@ public final class CronTriggerModel extends AbstractTriggerModel {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder extends AbstractTriggerModelBuilder<CronTriggerModel, Builder> {
 
+        @JsonProperty("expression")
         private String expr;
+        @JsonProperty("timezone")
         private String tz;
 
         static CronExpression toCronExpr(String expression) {

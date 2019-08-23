@@ -14,6 +14,7 @@ import io.vertx.core.http.HttpMethod;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.http.base.InvalidUrlException;
 
 public class EventMethodDefinitionTest {
 
@@ -27,7 +28,7 @@ public class EventMethodDefinitionTest {
         EventMethodDefinition.createDefault("/abc", "");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = InvalidUrlException.class)
     public void test_same_capture() {
         EventMethodDefinition.createDefault("abc", "/abc");
     }

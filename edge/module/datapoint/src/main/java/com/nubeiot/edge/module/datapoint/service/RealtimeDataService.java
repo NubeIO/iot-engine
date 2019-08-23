@@ -1,20 +1,15 @@
 package com.nubeiot.edge.module.datapoint.service;
 
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
-import com.nubeiot.core.sql.service.HasReferenceResource;
-import com.nubeiot.core.sql.service.OneToManyReferenceEntityService;
-import com.nubeiot.core.sql.service.OneToManyReferenceEntityService.ReferenceEntityTransformer;
+import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
 import com.nubeiot.edge.module.datapoint.service.Metadata.RealtimeDataMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
 
 import lombok.NonNull;
 
-public final class RealtimeDataService
-    extends AbstractDataPointService<PointRealtimeData, RealtimeDataMetadata, RealtimeDataService>
-    implements OneToManyReferenceEntityService<PointRealtimeData, RealtimeDataMetadata, RealtimeDataService>,
-               ReferenceEntityTransformer, PointExtension {
+public final class RealtimeDataService extends AbstractOneToManyEntityService<PointRealtimeData, RealtimeDataMetadata>
+    implements DataPointService<PointRealtimeData, RealtimeDataMetadata>, PointExtension {
 
     public RealtimeDataService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
@@ -26,23 +21,8 @@ public final class RealtimeDataService
     }
 
     @Override
-    public RealtimeDataMetadata metadata() {
+    public RealtimeDataMetadata context() {
         return RealtimeDataMetadata.INSTANCE;
-    }
-
-    @Override
-    public HasReferenceResource ref() {
-        return this;
-    }
-
-    @Override
-    public @NonNull OneToManyReferenceEntityService.ReferenceEntityTransformer transformer() {
-        return this;
-    }
-
-    @Override
-    public @NonNull ReferenceQueryExecutor<PointRealtimeData> queryExecutor() {
-        return OneToManyReferenceEntityService.super.queryExecutor();
     }
 
 }

@@ -9,17 +9,15 @@ import java.util.stream.Collectors;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 
 import com.nubeiot.core.http.base.EventHttpService;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.service.EntityService;
-import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Strings;
 
-public interface DataPointService<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation>
-    extends EntityService<P, M, V>, EventHttpService, EntityValidation, EntityTransformer {
+public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
+    extends EntityService<P, M>, EventHttpService {
 
     static Set<? extends DataPointService> createServices(EntityHandler entityHandler) {
         final Map<Class, Object> inputs = Collections.singletonMap(EntityHandler.class, entityHandler);
@@ -35,18 +33,11 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata,
     }
 
     default Set<EventMethodDefinition> definitions() {
-        return Collections.singleton(
-            EventMethodDefinition.createDefault(servicePath(), "/:" + metadata().requestKeyName()));
+        return Collections.singleton(EventMethodDefinition.createDefault(servicePath(), context().requestKeyName()));
     }
 
     default String servicePath() {
-        return "/" + Strings.toUrlPathWithLC(metadata().modelClass().getSimpleName());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    default V validation() {
-        return (V) this;
+        return Urls.toPathWithLC(context().modelClass().getSimpleName());
     }
 
 }
