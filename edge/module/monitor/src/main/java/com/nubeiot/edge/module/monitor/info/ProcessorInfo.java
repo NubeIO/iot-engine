@@ -1,7 +1,6 @@
 package com.nubeiot.edge.module.monitor.info;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.dto.JsonData;
 
@@ -14,7 +13,6 @@ import oshi.hardware.CentralProcessor;
 @RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-@JsonDeserialize(builder = ProcessorInfo.Builder.class)
 public class ProcessorInfo implements JsonData {
 
     final String processor;

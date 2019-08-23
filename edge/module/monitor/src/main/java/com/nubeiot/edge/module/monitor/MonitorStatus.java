@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.edge.module.monitor.info.CpuInfo;
@@ -26,7 +25,6 @@ import oshi.software.os.OperatingSystem;
 @RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-@JsonDeserialize(builder = MonitorStatus.Builder.class)
 public class MonitorStatus implements JsonData {
 
     final String os;

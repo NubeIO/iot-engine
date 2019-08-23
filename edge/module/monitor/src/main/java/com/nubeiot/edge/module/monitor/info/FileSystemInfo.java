@@ -1,7 +1,6 @@
 package com.nubeiot.edge.module.monitor.info;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.dto.JsonData;
 
@@ -15,7 +14,6 @@ import oshi.util.FormatUtil;
 @RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-@JsonDeserialize(builder = FileSystemInfo.Builder.class)
 public class FileSystemInfo implements JsonData {
 
     final String name;

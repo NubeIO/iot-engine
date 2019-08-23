@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.dto.JsonData;
 
@@ -22,7 +21,6 @@ import oshi.util.FormatUtil;
 @RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-@JsonDeserialize(builder = ProcessesInfo.Builder.class)
 public class ProcessesInfo implements JsonData {
 
     final int processCount;
@@ -59,7 +57,6 @@ public class ProcessesInfo implements JsonData {
 @RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-@JsonDeserialize(builder = ProcessInfo.Builder.class)
 class ProcessInfo implements JsonData {
 
     final int pid;

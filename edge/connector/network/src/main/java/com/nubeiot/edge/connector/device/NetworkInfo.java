@@ -2,7 +2,10 @@ package com.nubeiot.edge.connector.device;
 
 import io.vertx.core.json.JsonObject;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
@@ -12,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = NetworkInfo.Builder.class)
+@JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 @RequiredArgsConstructor
 public class NetworkInfo implements JsonData {
 
@@ -26,5 +30,9 @@ public class NetworkInfo implements JsonData {
                           .gateway(options.getString("gateway"))
                           .build();
     }
+
+    @JsonPOJOBuilder(withPrefix = "")
+    @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
+    public static class Builder {}
 
 }
