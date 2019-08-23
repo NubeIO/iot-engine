@@ -6,7 +6,7 @@ class NetworkManager {
 
     static NetworkCommand findNetworkCommand() {
         if (OS.contains("nix") || OS.contains("nux") || OS.contains("aix")) {
-            return new UnixNetworkCommand();
+            return new ConnmanctlNetwork();
         } else {
             throw new IllegalArgumentException("Currently this functionality is limited to the Unix OS family only.");
         }
