@@ -37,6 +37,15 @@ public final class Functions {
         }
     }
 
+    public static <T> T getOrThrow(@NonNull Supplier<T> provider,
+                                   @NonNull Supplier<? extends RuntimeException> override) {
+        try {
+            return provider.get();
+        } catch (Throwable t) {
+            throw (RuntimeException) override.get().initCause(t);
+        }
+    }
+
     @SafeVarargs
     public static <T> Predicate<T> and(Predicate<T>... predicates) {
         return Arrays.stream(predicates).reduce(Predicate::and).orElse(x -> true);

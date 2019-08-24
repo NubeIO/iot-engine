@@ -2,19 +2,28 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.EntityMetadata.BigSerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.StringKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.UUIDKeyEntity;
+import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.tables.JsonTable;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.core.utils.Reflections.ReflectionField;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.DeviceEquipDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EquipmentDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.HistorySettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.MeasureUnitDao;
@@ -28,6 +37,7 @@ import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ThingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.TransducerDao;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
+import com.nubeiot.iotdata.edge.model.tables.pojos.DeviceEquip;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
 import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
@@ -40,6 +50,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
+import com.nubeiot.iotdata.edge.model.tables.records.DeviceEquipRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.DeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EquipmentRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.HistorySettingRecord;
@@ -59,12 +70,35 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @SuppressWarnings("unchecked")
-public interface Metadata {
+public interface DataPointIndex extends MetadataIndex {
+
+    List<EntityMetadata> INDEX = ReflectionClass.stream(DataPointIndex.class.getPackage().getName(),
+                                                        EntityMetadata.class, ReflectionClass.publicClass())
+                                                .flatMap(ReflectionField::streamConstants)
+                                                .collect(Collectors.toList());
+
+    static Map<EntityMetadata, Integer> dependencies() {
+        Map<EntityMetadata, Integer> map = new HashMap<>();
+        map.put(MeasureUnitMetadata.INSTANCE, 10);
+        map.put(DeviceMetadata.INSTANCE, 10);
+        map.put(EquipmentMetadata.INSTANCE, 10);
+        map.put(TransducerMetadata.INSTANCE, 10);
+        map.put(NetworkMetadata.INSTANCE, 20);
+        map.put(ThingMetadata.INSTANCE, 20);
+        map.put(DeviceEquipMetadata.INSTANCE, 30);
+        map.put(PointMetadata.INSTANCE, 40);
+        return map;
+    }
+
+    @Override
+    default List<EntityMetadata> index() {
+        return INDEX;
+    }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class EquipmentMetadata implements UUIDKeyEntity<Equipment, EquipmentRecord, EquipmentDao> {
 
-        static final EquipmentMetadata INSTANCE = new EquipmentMetadata();
+        public static final EquipmentMetadata INSTANCE = new EquipmentMetadata();
 
         @Override
         public @NonNull Class<Equipment> modelClass() {
@@ -81,19 +115,13 @@ public interface Metadata {
             return Tables.EQUIPMENT;
         }
 
-        @Override
-        @NonNull
-        public String pluralKeyName() {
-            return "equipments";
-        }
-
     }
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class DeviceMetadata implements UUIDKeyEntity<Device, DeviceRecord, DeviceDao> {
 
-        static final DeviceMetadata INSTANCE = new DeviceMetadata();
+        public static final DeviceMetadata INSTANCE = new DeviceMetadata();
 
         @Override
         public @NonNull Class<Device> modelClass() {
@@ -110,12 +138,6 @@ public interface Metadata {
             return Tables.DEVICE;
         }
 
-        @Override
-        @NonNull
-        public String pluralKeyName() {
-            return "devices";
-        }
-
     }
 
 
@@ -123,7 +145,7 @@ public interface Metadata {
     final class HistoryDataMetadata
         implements BigSerialKeyEntity<PointHistoryData, PointHistoryDataRecord, PointHistoryDataDao> {
 
-        static final HistoryDataMetadata INSTANCE = new HistoryDataMetadata();
+        public static final HistoryDataMetadata INSTANCE = new HistoryDataMetadata();
 
         @Override
         public @NonNull Class<PointHistoryData> modelClass() {
@@ -147,7 +169,12 @@ public interface Metadata {
 
         @Override
         @NonNull
-        public String pluralKeyName() {
+        public String singularKeyName() {
+            return "history";
+        }
+
+        @Override
+        public @NonNull String pluralKeyName() {
             return "histories";
         }
 
@@ -155,9 +182,10 @@ public interface Metadata {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class HistorySettingMetadata implements UUIDKeyEntity<HistorySetting, HistorySettingRecord, HistorySettingDao> {
+    final class HistorySettingMetadata
+        implements UUIDKeyEntity<HistorySetting, HistorySettingRecord, HistorySettingDao> {
 
-        static final HistorySettingMetadata INSTANCE = new HistorySettingMetadata();
+        public static final HistorySettingMetadata INSTANCE = new HistorySettingMetadata();
 
         @Override
         public @NonNull Class<HistorySetting> modelClass() {
@@ -180,6 +208,11 @@ public interface Metadata {
         }
 
         @Override
+        public @NonNull String singularKeyName() {
+            return "history_setting";
+        }
+
+        @Override
         @NonNull
         public String pluralKeyName() {
             return "history_setting";
@@ -191,7 +224,7 @@ public interface Metadata {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class MeasureUnitMetadata implements StringKeyEntity<MeasureUnit, MeasureUnitRecord, MeasureUnitDao> {
 
-        static final MeasureUnitMetadata INSTANCE = new MeasureUnitMetadata();
+        public static final MeasureUnitMetadata INSTANCE = new MeasureUnitMetadata();
 
         @Override
         public @NonNull Class<MeasureUnit> modelClass() {
@@ -214,9 +247,8 @@ public interface Metadata {
         }
 
         @Override
-        @NonNull
-        public String pluralKeyName() {
-            return "units";
+        public @NonNull String singularKeyName() {
+            return "unit";
         }
 
     }
@@ -225,7 +257,7 @@ public interface Metadata {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class NetworkMetadata implements UUIDKeyEntity<Network, NetworkRecord, NetworkDao> {
 
-        static final NetworkMetadata INSTANCE = new NetworkMetadata();
+        public static final NetworkMetadata INSTANCE = new NetworkMetadata();
 
         private static Set<String> NULL_ALIASES = Collections.unmodifiableSet(
             new HashSet<>(Arrays.asList("default", "gpio")));
@@ -253,11 +285,6 @@ public interface Metadata {
             return Tables.NETWORK;
         }
 
-        @Override
-        public @NonNull String pluralKeyName() {
-            return "networks";
-        }
-
     }
 
 
@@ -281,12 +308,6 @@ public interface Metadata {
             return Tables.POINT;
         }
 
-        @Override
-        @NonNull
-        public String pluralKeyName() {
-            return "points";
-        }
-
     }
 
 
@@ -294,7 +315,7 @@ public interface Metadata {
     final class RealtimeDataMetadata
         implements BigSerialKeyEntity<PointRealtimeData, PointRealtimeDataRecord, PointRealtimeDataDao> {
 
-        static final RealtimeDataMetadata INSTANCE = new RealtimeDataMetadata();
+        public static final RealtimeDataMetadata INSTANCE = new RealtimeDataMetadata();
 
         @Override
         public @NonNull Class<PointRealtimeData> modelClass() {
@@ -317,6 +338,11 @@ public interface Metadata {
         }
 
         @Override
+        public @NonNull String singularKeyName() {
+            return "realtime_data";
+        }
+
+        @Override
         @NonNull
         public String pluralKeyName() {
             return "realtime_data";
@@ -329,7 +355,7 @@ public interface Metadata {
     final class RealtimeSettingMetadata
         implements UUIDKeyEntity<RealtimeSetting, RealtimeSettingRecord, RealtimeSettingDao> {
 
-        static final RealtimeSettingMetadata INSTANCE = new RealtimeSettingMetadata();
+        public static final RealtimeSettingMetadata INSTANCE = new RealtimeSettingMetadata();
 
         @Override
         public @NonNull Class<RealtimeSetting> modelClass() {
@@ -353,6 +379,11 @@ public interface Metadata {
         }
 
         @Override
+        public @NonNull String singularKeyName() {
+            return "realtime_setting";
+        }
+
+        @Override
         @NonNull
         public String pluralKeyName() {
             return "realtime_setting";
@@ -365,7 +396,7 @@ public interface Metadata {
     final class SchedulerSettingMetadata
         implements UUIDKeyEntity<ScheduleSetting, ScheduleSettingRecord, ScheduleSettingDao> {
 
-        static final SchedulerSettingMetadata INSTANCE = new SchedulerSettingMetadata();
+        public static final SchedulerSettingMetadata INSTANCE = new SchedulerSettingMetadata();
 
         @Override
         public @NonNull Class<ScheduleSetting> modelClass() {
@@ -388,9 +419,8 @@ public interface Metadata {
         }
 
         @Override
-        @NonNull
-        public String pluralKeyName() {
-            return "schedules";
+        public @NonNull String singularKeyName() {
+            return "schedule";
         }
 
     }
@@ -399,7 +429,7 @@ public interface Metadata {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class TagPointMetadata implements BigSerialKeyEntity<PointTag, PointTagRecord, PointTagDao> {
 
-        static final TagPointMetadata INSTANCE = new TagPointMetadata();
+        public static final TagPointMetadata INSTANCE = new TagPointMetadata();
 
         @Override
         public @NonNull Class<PointTag> modelClass() {
@@ -422,9 +452,8 @@ public interface Metadata {
         }
 
         @Override
-        @NonNull
-        public String pluralKeyName() {
-            return "tags";
+        public @NonNull String singularKeyName() {
+            return "tag";
         }
 
     }
@@ -433,7 +462,7 @@ public interface Metadata {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class ThingMetadata implements SerialKeyEntity<Thing, ThingRecord, ThingDao> {
 
-        static final ThingMetadata INSTANCE = new ThingMetadata();
+        public static final ThingMetadata INSTANCE = new ThingMetadata();
 
         @Override
         public @NonNull Class<Thing> modelClass() {
@@ -450,19 +479,13 @@ public interface Metadata {
             return Tables.THING;
         }
 
-        @Override
-        @NonNull
-        public String pluralKeyName() {
-            return "things";
-        }
-
     }
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class TransducerMetadata implements UUIDKeyEntity<Transducer, TransducerRecord, TransducerDao> {
 
-        static final TransducerMetadata INSTANCE = new TransducerMetadata();
+        public static final TransducerMetadata INSTANCE = new TransducerMetadata();
 
         @Override
         public @NonNull Class<Transducer> modelClass() {
@@ -479,10 +502,27 @@ public interface Metadata {
             return Tables.TRANSDUCER;
         }
 
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    final class DeviceEquipMetadata implements BigSerialKeyEntity<DeviceEquip, DeviceEquipRecord, DeviceEquipDao> {
+
+        public static final DeviceEquipMetadata INSTANCE = new DeviceEquipMetadata();
+
         @Override
-        @NonNull
-        public String pluralKeyName() {
-            return "transducers";
+        public @NonNull JsonTable<DeviceEquipRecord> table() {
+            return Tables.DEVICE_EQUIP;
+        }
+
+        @Override
+        public @NonNull Class<DeviceEquip> modelClass() {
+            return DeviceEquip.class;
+        }
+
+        @Override
+        public @NonNull Class<DeviceEquipDao> daoClass() {
+            return DeviceEquipDao.class;
         }
 
     }

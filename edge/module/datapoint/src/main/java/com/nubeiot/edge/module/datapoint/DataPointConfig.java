@@ -18,11 +18,11 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.utils.Reflections.ReflectionField;
 import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.OldestCleanupPolicy;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.service.HistoryDataService;
-import com.nubeiot.edge.module.datapoint.service.Metadata.PointMetadata;
 import com.nubeiot.iotdata.edge.model.tables.interfaces.IMeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.unit.DataType;
@@ -113,10 +113,11 @@ public final class DataPointConfig implements IConfig {
 
         public static BuiltinData def() {
             final BuiltinData bd = new BuiltinData();
-            bd.put("measure_unit", ReflectionField.streamConstants(DataType.class, DataType.class)
-                                                  .map(dt -> new MeasureUnit(dt.toJson()))
-                                                  .map(IMeasureUnit::toJson)
-                                                  .collect(JsonArray::new, JsonArray::add, JsonArray::addAll));
+            bd.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.available()
+                                                                           .map(dt -> new MeasureUnit(dt.toJson()))
+                                                                           .map(IMeasureUnit::toJson)
+                                                                           .collect(JsonArray::new, JsonArray::add,
+                                                                                    JsonArray::addAll));
             return bd;
         }
 

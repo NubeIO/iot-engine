@@ -12,9 +12,9 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.edge.module.datapoint.service.Metadata.DeviceMetadata;
-import com.nubeiot.edge.module.datapoint.service.Metadata.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.service.Metadata.PointMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
 import lombok.NonNull;
@@ -33,8 +33,8 @@ public final class PointService extends AbstractOneToManyEntityService<Point, Po
 
     @Override
     public RequestData recompute(RequestData requestData, JsonObject extra) {
-        Metadata.NetworkMetadata.optimizeAlias(requestData.body());
-        Metadata.NetworkMetadata.optimizeAlias(requestData.getFilter());
+        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.body());
+        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.getFilter());
         return super.recompute(requestData, extra);
     }
 

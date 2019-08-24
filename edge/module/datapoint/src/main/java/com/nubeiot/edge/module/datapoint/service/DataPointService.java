@@ -37,7 +37,7 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     default String servicePath() {
-        return Urls.toPathWithLC(context().modelClass().getSimpleName());
+        return Urls.toPathWithLC(context().singularKeyName());
     }
 
 }

@@ -4,66 +4,117 @@
       "lowdb_migration": {
         "enabled": false
       },
+      "builtin_data": {
+        "unit": [
+          {
+            "type": "kilowatt_hour",
+            "category": "ALL",
+            "symbol": "kWh"
+          },
+          {
+            "type": "dBm",
+            "category": "ALL",
+            "symbol": "dBm"
+          },
+          {
+            "type": "number",
+            "category": "ALL"
+          },
+          {
+            "type": "percentage",
+            "category": "ALL",
+            "symbol": "%"
+          },
+          {
+            "type": "bool",
+            "category": "ALL"
+          },
+          {
+            "type": "revolutions_per_minute",
+            "category": "VELOCITY",
+            "symbol": "rpm"
+          },
+          {
+            "type": "radians_per_second",
+            "category": "VELOCITY",
+            "symbol": "rad/s"
+          },
+          {
+            "type": "volt",
+            "category": "ELECTRIC_POTENTIAL",
+            "symbol": "V"
+          },
+          {
+            "type": "lux",
+            "category": "ILLUMINATION",
+            "symbol": "lx"
+          },
+          {
+            "type": "kilowatt_hour",
+            "category": "POWER",
+            "symbol": "kWh"
+          },
+          {
+            "type": "dBm",
+            "category": "POWER",
+            "symbol": "dBm"
+          },
+          {
+            "type": "hectopascal",
+            "category": "PRESSURE",
+            "symbol": "hPa"
+          },
+          {
+            "type": "fahrenheit",
+            "category": "TEMPERATURE",
+            "symbol": "°F"
+          },
+          {
+            "type": "celsius",
+            "category": "TEMPERATURE",
+            "symbol": "°C"
+          },
+          {
+            "type": "meters_per_second",
+            "category": "VELOCITY",
+            "symbol": "m/s"
+          },
+          {
+            "type": "kilometers_per_hour",
+            "category": "VELOCITY",
+            "symbol": "km/h"
+          },
+          {
+            "type": "miles_per_hour",
+            "category": "VELOCITY",
+            "symbol": "mph"
+          }
+        ]
+      },
       "__publisher__": {
         "type": "",
         "enabled": false
       },
-      "builtin_data": {
-        "units": [
-          {
-            "type": "number"
-          },
-          {
-            "type": "percentage",
-            "symbol": "%"
-          },
-          {
-            "type": "voltage",
-            "symbol": "V"
-          },
-          {
-            "type": "celsius",
-            "symbol": "U+2103"
-          },
-          {
-            "type": "dBm",
-            "symbol": "dBm"
-          },
-          {
-            "type": "hPa",
-            "symbol": "hPa"
-          },
-          {
-            "type": "lux",
-            "symbol": "lx"
-          },
-          {
-            "type": "kWh",
-            "symbol": "kWh"
-          },
-          {
-            "type": "rpm",
-            "symbol": "rpm"
-          },
-          {
-            "type": "bool",
-            "possible_values": {
-              "0.5": [
-                "true",
-                "on",
-                "start",
-                "1"
-              ],
-              "0.0": [
-                "false",
-                "off",
-                "stop",
-                "0",
-                "null"
-              ]
-            }
-          }
-        ]
+      "__cleanup_policy__": {
+        "enabled": true,
+        "process": {
+          "address": "com.nubeiot.edge.module.datapoint.service.HistoryDataService",
+          "pattern": "REQUEST_RESPONSE",
+          "action": "BATCH_DELETE"
+        },
+        "triggerModel": {
+          "type": "CRON",
+          "expression": "0 0 0 ? * SUN *",
+          "timezone": "Australia/Sydney",
+          "name": "historyData",
+          "group": "cleanup"
+        },
+        "policy": {
+          "type": "oldest",
+          "max_item": 100,
+          "group_by": "point_id",
+          "duration": "PT720H"
+        }
       }
     },
     "__micro__": {

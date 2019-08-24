@@ -47,6 +47,14 @@ task jooqGen(type: JooqGenerateTask) {
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("point_type"),
                        converter: "com.nubeiot.iotdata.converter.PointTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.PointPriorityValue",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("priority_values"),
+                       converter: "com.nubeiot.iotdata.converter.PointPriorityValueConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.unit.UnitLabel",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("measure_unit_label"),
+                       converter: "com.nubeiot.iotdata.converter.UnitLabelConverter"),
         new ForcedType(userType: "io.vertx.core.json.JsonArray",
                        types: DB.TYPES.array,
                        expression: Strings.toRegexIgnoreCase("weekdays"),
@@ -94,6 +102,12 @@ task jooqGen(type: JooqGenerateTask) {
                          defVal: "com.nubeiot.iotdata.dto.TransducerType.def()"),
         new JsonDataType(className: "com.nubeiot.iotdata.dto.EquipType",
                          converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.EquipType.factory((String)%s)")
+                         parser: "com.nubeiot.iotdata.dto.EquipType.factory((String)%s)"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointPriorityValue",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.dto.PointPriorityValue.class)"),
+        new JsonDataType(className: "com.nubeiot.iotdata.unit.UnitLabel",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.unit.UnitLabel.class)")
     ]
 }

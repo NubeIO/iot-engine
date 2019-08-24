@@ -1,14 +1,11 @@
 package com.nubeiot.iotdata.unit;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 public final class BooleanDataType extends NumberDataType {
 
     BooleanDataType() {
         super("bool", null);
-        possibleValues().put(0.5d, Arrays.asList("true", "on", "start", "1"));
-        possibleValues().put(0d, Arrays.asList("false", "off", "stop", "0", "null"));
     }
 
     @Override
@@ -17,17 +14,15 @@ public final class BooleanDataType extends NumberDataType {
             return 0d;
         }
         if (data instanceof Number) {
-            return ((Number) data).doubleValue() > 0.5 ? 1d : 0d;
+            return ((Number) data).doubleValue() > 0 ? 1d : 0d;
+        }
+        if (data instanceof Boolean) {
+            return Boolean.TRUE == data ? 1d : 0d;
         }
         if (data instanceof String) {
-            return possibleValues().get(0.5d).contains(data) ? 1d : 0d;
+            return Boolean.TRUE == Boolean.valueOf((String) data) ? 1d : 0d;
         }
         return 0d;
-    }
-
-    @Override
-    public String display(Double value) {
-        return value > 0.5 ? "true" : "false";
     }
 
 }

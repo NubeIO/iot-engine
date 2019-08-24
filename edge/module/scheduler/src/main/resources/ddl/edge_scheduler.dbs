@@ -92,7 +92,7 @@ TRIGGER_TYPE = CRON]]></comment>
 		</table>
 		<sequence name="SYSTEM_SEQUENCE_73EAA25A_08FB_415E_87B5_2D15FDE056E0" start="1" />
 		<sequence name="SYSTEM_SEQUENCE_791ADE3A_2022_4B7F_8824_980853CA3E2D" start="1" />
-		<sequence name="SYSTEM_SEQUENCE_7D183FB6_980A_414E_8E46_15136B03979D" start="8" />
+		<sequence name="SYSTEM_SEQUENCE_7D183FB6_980A_414E_8E46_15136B03979D" start="10" />
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="-1" instance="C:/projects/nubeio/iot-engine/edge/module/scheduler/src/main/resources/ddl/edge_scheduler" />
 	<layout name="Parsed Script Layout" id="Layout_573523a" show_relation="columns" >
@@ -100,7 +100,7 @@ TRIGGER_TYPE = CRON]]></comment>
 		<entity schema="PUBLIC" name="TRIGGER_ENTITY" color="BED3F4" x="48" y="48" />
 		<entity schema="PUBLIC" name="JOB_TRIGGER" color="BED3F4" x="320" y="48" />
 		<script name="01_edge_scheduler.sql" id="Editor_455bd57" language="SQL" >
-			<string><![CDATA[select * from "PUBLIC"."JOB_TRIGGER" join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1) where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."ENABLED" = true and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1) limit 20CREATE SCHEMA IF NOT EXISTS PUBLIC;
+			<string><![CDATA[select "PUBLIC"."JOB_TRIGGER".*, "PUBLIC"."JOB_ENTITY"."ID", "PUBLIC"."TRIGGER_ENTITY"."ID" from "PUBLIC"."JOB_TRIGGER" right outer join "PUBLIC"."JOB_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."JOB_ID" = "PUBLIC"."JOB_ENTITY"."ID" and 1 = 1 and "PUBLIC"."JOB_ENTITY"."ID" = 2) right outer join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1 and "PUBLIC"."TRIGGER_ENTITY"."ID" = 1) where 1 = 1 limit 1select * from "PUBLIC"."JOB_TRIGGER" join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1) where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."ENABLED" = true and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1) limit 20CREATE SCHEMA IF NOT EXISTS PUBLIC;
 
 CREATE TABLE IF NOT EXISTS JOB_ENTITY (
 	ID                   IDENTITY NOT NULL,
@@ -168,29 +168,37 @@ insert into "PUBLIC"."JOB_TRIGGER" ("JOB_ID", "TRIGGER_ID", "ENABLED", "TIME_AUD
 insert into "PUBLIC"."JOB_TRIGGER" ("JOB_ID", "TRIGGER_ID", "ENABLED", "TIME_AUDIT", "SYNC_AUDIT") values (1, 2, false, null, null);]]></string>
 		</script>
 		<script name="JOB_TRIGGER" id="Editor_cfd41f" language="SQL" >
-			<string><![CDATA[select "alias_34766038"."ID", "alias_34766038"."JOB_ID", "alias_34766038"."TRIGGER_ID", "alias_34766038"."ENABLED", "alias_34766038"."TIME_AUDIT", "alias_34766038"."SYNC_AUDIT", 
-        "alias_xxx"."ID"
-from (
-    select "PUBLIC"."JOB_TRIGGER"."ID", "PUBLIC"."JOB_TRIGGER"."JOB_ID", "PUBLIC"."JOB_TRIGGER"."TRIGGER_ID", "PUBLIC"."JOB_TRIGGER"."ENABLED", "PUBLIC"."JOB_TRIGGER"."TIME_AUDIT", 
-            "PUBLIC"."JOB_TRIGGER"."SYNC_AUDIT" , "alias_xxx"."ID"
-    from "PUBLIC"."JOB_TRIGGER" 
-    where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1)
-	right outer join (select "PUBLIC"."TRIGGER_ENTITY"."ID" from "PUBLIC"."TRIGGER_ENTITY"  where (1 = 1 and "PUBLIC"."TRIGGER_ENTITY"."ID" = 11)) "alias_xxx"  on "alias_34766038"."ID" = "alias_xxx"."ID" 
-) "alias_34766038"
-	
-right outer join (
-    select "PUBLIC"."JOB_ENTITY"."ID" 
-    from "PUBLIC"."JOB_ENTITY" 
-    where (1 = 1 and "PUBLIC"."JOB_ENTITY"."ID" = 1)) "alias_94059676" 
-    on "alias_34766038"."ID" = "alias_94059676"."ID" 
+			<string><![CDATA[select "PUBLIC"."JOB_TRIGGER".*, "PUBLIC"."JOB_ENTITY"."ID", "PUBLIC"."TRIGGER_ENTITY"."ID"
+from "PUBLIC"."JOB_TRIGGER" 
+right outer join "PUBLIC"."JOB_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."JOB_ID" = "PUBLIC"."JOB_ENTITY"."ID" and 1 = 1 and "PUBLIC"."JOB_ENTITY"."ID" = 2) 
+left outer join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1 and "PUBLIC"."TRIGGER_ENTITY"."ID" = 1)
+where 1 = 1
+limit 1
+
+SELECT CASE WHEN EXISTS( select 1 FROM TRIGGER_ENTITY WHERE TRIGGER_ENTITY.ID = 1 )
+  THEN 1 ELSE 0 END as y
+
+select "PUBLIC"."JOB_TRIGGER".*, "PUBLIC"."JOB_ENTITY"."ID"
+from "PUBLIC"."JOB_TRIGGER" 
+right outer join "PUBLIC"."JOB_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."JOB_ID" = "PUBLIC"."JOB_ENTITY"."ID" and "PUBLIC"."JOB_ENTITY"."ID" = 2)
+where (1 = 1 and ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = 1 OR "PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" is null))
+limit 1
+
+select "PUBLIC"."JOB_TRIGGER".*, "PUBLIC"."JOB_ENTITY"."ID"
+from "PUBLIC"."JOB_TRIGGER" 
+right outer join "PUBLIC"."JOB_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."JOB_ID" = "PUBLIC"."JOB_ENTITY"."ID" and 1 = 1 and "PUBLIC"."JOB_ENTITY"."ID" = 3)
+where (1 = 1 and ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = 1 or "PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" is null))
 limit 1]]></string>
 		</script>
 		<script name="TRIGGER_ENTITY" id="Editor_39f6a3e" language="SQL" >
 			<string><![CDATA[select *
 from "PUBLIC"."JOB_TRIGGER" 
 join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1)
-where (1 = 1 )
-limit 20]]></string>
+where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."ENABLED" = true and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1) 
+limit 20
+
+select * from "PUBLIC"."JOB_TRIGGER" join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1) 
+where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1) limit 1]]></string>
 		</script>
 	</layout>
 </project>

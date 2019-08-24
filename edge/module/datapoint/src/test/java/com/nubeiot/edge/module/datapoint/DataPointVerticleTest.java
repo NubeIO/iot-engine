@@ -15,7 +15,6 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.TestHelper;
-import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.core.sql.SqlConfig;
@@ -46,8 +45,9 @@ public class DataPointVerticleTest extends DynamicServiceTestBase {
     }
 
     @Override
-    protected <T extends ContainerVerticle> T service() {
-        return (T) new DataPointVerticle();
+    @SuppressWarnings("unchecked")
+    protected DataPointVerticle service() {
+        return new DataPointVerticle();
     }
 
     @Test

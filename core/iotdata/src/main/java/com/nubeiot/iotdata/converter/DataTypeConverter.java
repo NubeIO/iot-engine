@@ -5,6 +5,7 @@ import java.util.Objects;
 import org.jooq.Converter;
 
 import com.nubeiot.iotdata.unit.DataType;
+import com.nubeiot.iotdata.unit.DataTypeCategory.All;
 
 public final class DataTypeConverter implements Converter<String, DataType> {
 
@@ -13,7 +14,7 @@ public final class DataTypeConverter implements Converter<String, DataType> {
 
     @Override
     public String to(DataType userObject) {
-        return Objects.isNull(userObject) ? DataType.NUMBER.value() : userObject.value();
+        return Objects.isNull(userObject) ? All.NUMBER.value() : userObject.value();
     }
 
     @Override

@@ -113,6 +113,27 @@ public final class Strings {
     }
 
     /**
+     * Checks that the specified string reference is not {@code blank}. This method is designed primarily for doing
+     * parameter validation in methods and constructors, as demonstrated below:
+     * <blockquote><pre>
+     * public Foo(Bar bar) {
+     *     this.bar = Strings.requireNotBlank(bar, "String cannot blank");
+     * }
+     * </pre></blockquote>
+     *
+     * @param text    the text to check for blank
+     * @param message the error message will be included in exception
+     * @return Trimmed {@code text} if not {@code blank}
+     * @throws IllegalArgumentException if {@code obj} is {@code blank}
+     */
+    public static String requireNotBlank(Object text, String message) {
+        if (Objects.isNull(text) || isBlank(text.toString())) {
+            throw new IllegalArgumentException(message);
+        }
+        return text.toString().trim();
+    }
+
+    /**
      * Checks that the specified string reference is not {@code blank} then remove multiple space characters to one
      * space.
      *

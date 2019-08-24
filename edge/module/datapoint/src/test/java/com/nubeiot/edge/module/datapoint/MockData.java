@@ -14,6 +14,16 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.type.Label;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceEquipMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.EquipmentMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistoryDataMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistorySettingMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TagPointMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.ThingMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TransducerMetadata;
 import com.nubeiot.iotdata.dto.EquipType;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointCategory;
@@ -31,7 +41,9 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
-import com.nubeiot.iotdata.unit.DataType;
+import com.nubeiot.iotdata.unit.DataTypeCategory.All;
+import com.nubeiot.iotdata.unit.DataTypeCategory.AngularVelocity;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
 public final class MockData {
 
@@ -126,8 +138,10 @@ public final class MockData {
                                     .setDevice(DEVICE.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
-                                    .setMeasureUnit(DataType.PERCENTAGE.type())
-                                    .setTransducer(PrimaryKey.TRANS_HUMIDITY).setEnabled(true).setMaxScale((short) 100)
+                                    .setMeasureUnit(All.PERCENTAGE.type())
+                                    .setTransducer(PrimaryKey.TRANS_HUMIDITY)
+                                    .setEnabled(true)
+                                    .setMaxScale((short) 100)
                                     .setMinScale((short) 0)
                                     .setOffset((short) 0)
                                     .setPrecision((short) 3);
@@ -136,8 +150,7 @@ public final class MockData {
                                     .setCategory(PointCategory.GPIO)
                                     .setDevice(DEVICE.getId())
                                     .setKind(PointKind.INPUT)
-                                    .setType(PointType.DIGITAL)
-                                    .setMeasureUnit(DataType.CELSIUS.type())
+                                    .setType(PointType.DIGITAL).setMeasureUnit(Temperature.CELSIUS.type())
                                     .setTransducer(PrimaryKey.TRANS_TEMP)
                                     .setEnabled(true)
                                     .setOffset((short) 0)
@@ -148,8 +161,7 @@ public final class MockData {
                                     .setDevice(DEVICE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
-                                    .setType(PointType.DIGITAL)
-                                    .setMeasureUnit(DataType.CELSIUS.type())
+                                    .setType(PointType.DIGITAL).setMeasureUnit(Temperature.CELSIUS.type())
                                     .setTransducer(PrimaryKey.TRANS_TEMP)
                                     .setEnabled(true)
                                     .setOffset((short) 0)
@@ -160,8 +172,7 @@ public final class MockData {
                                     .setDevice(DEVICE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
-                                    .setType(PointType.DIGITAL)
-                                    .setMeasureUnit(DataType.RPM.type())
+                                    .setType(PointType.DIGITAL).setMeasureUnit(AngularVelocity.RPM.type())
                                     .setEnabled(true)
                                     .setOffset((short) 0)
                                     .setPrecision((short) 3);
@@ -171,25 +182,28 @@ public final class MockData {
                                     .setDevice(DEVICE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.OUTPUT)
-                                    .setType(PointType.DIGITAL)
-                                    .setMeasureUnit(DataType.BOOLEAN.type())
+                                    .setType(PointType.DIGITAL).setMeasureUnit(All.BOOLEAN.type())
                                     .setTransducer(PrimaryKey.TRANS_SWITCH)
                                     .setEnabled(true);
         return Arrays.asList(p1, p2, p3, p4, p5);
     }
 
     private static JsonObject measures() {
-        return new JsonObject("{\"units\":[{\"type\":\"number\",\"category\":\"ALL\"}," +
-                              "{\"type\":\"percentage\",\"category\":\"ALL\",\"symbol\":\"%\"}," +
-                              "{\"type\":\"voltage\",\"category\":\"ELECTRIC_POTENTIAL\",\"symbol\":\"V\"}," +
-                              "{\"type\":\"celsius\",\"category\":\"TEMPERATURE\",\"symbol\":\"U+2103\"}," +
-                              "{\"type\":\"bool\",\"category\":\"ALL\",\"possible_values\":{\"0.5\":[\"true\",\"on\"," +
-                              "\"start\",\"1\"],\"0.0\":[\"false\",\"off\",\"stop\",\"0\",\"null\"]}}," +
-                              "{\"type\":\"dBm\",\"category\":\"POWER\",\"symbol\":\"dBm\"}," +
-                              "{\"type\":\"hPa\",\"category\":\"PRESSURE\",\"symbol\":\"hPa\"}," +
-                              "{\"type\":\"lux\",\"category\":\"ILLUMINATION\",\"symbol\":\"lx\"}," +
-                              "{\"type\":\"kWh\",\"category\":\"POWER\",\"symbol\":\"kWh\"}," +
-                              "{\"type\":\"rpm\",\"category\":\"VELOCITY\",\"symbol\":\"rpm\"}]}");
+        return new JsonObject("{\"units\":[{\"type\":\"number\",\"category\":\"ALL\"},{\"type\":\"percentage\"," +
+                              "\"category\":\"ALL\",\"symbol\":\"%\"},{\"type\":\"bool\",\"category\":\"ALL\"}," +
+                              "{\"type\":\"revolutions_per_minute\",\"category\":\"ANGULAR_VELOCITY\"," +
+                              "\"symbol\":\"rpm\"},{\"type\":\"radians_per_second\"," +
+                              "\"category\":\"ANGULAR_VELOCITY\",\"symbol\":\"rad/s\"},{\"type\":\"volt\"," +
+                              "\"category\":\"ELECTRIC_POTENTIAL\",\"symbol\":\"V\"},{\"type\":\"lux\"," +
+                              "\"category\":\"ILLUMINATION\",\"symbol\":\"lx\"},{\"type\":\"kilowatt_hour\"," +
+                              "\"category\":\"POWER\",\"symbol\":\"kWh\"},{\"type\":\"dBm\",\"category\":\"POWER\"," +
+                              "\"symbol\":\"dBm\"},{\"type\":\"hectopascal\",\"category\":\"PRESSURE\"," +
+                              "\"symbol\":\"hPa\"},{\"type\":\"fahrenheit\",\"category\":\"TEMPERATURE\"," +
+                              "\"symbol\":\"°F\"},{\"type\":\"celsius\",\"category\":\"TEMPERATURE\"," +
+                              "\"symbol\":\"°C\"},{\"type\":\"meters_per_second\",\"category\":\"VELOCITY\"," +
+                              "\"symbol\":\"m/s\"},{\"type\":\"kilometers_per_hour\",\"category\":\"VELOCITY\"," +
+                              "\"symbol\":\"km/h\"},{\"type\":\"miles_per_hour\",\"category\":\"VELOCITY\"," +
+                              "\"symbol\":\"mph\"}]}");
     }
 
     private static List<DeviceEquip> deviceEquips() {
@@ -221,28 +235,23 @@ public final class MockData {
 
     private static List<Thing> things() {
         final Thing t1 = new Thing().setEquip(PrimaryKey.EQUIP_DROPLET)
-                                    .setTransducer(PrimaryKey.TRANS_HUMIDITY)
-                                    .setMeasureUnit(DataType.PERCENTAGE.type())
+                                    .setTransducer(PrimaryKey.TRANS_HUMIDITY).setMeasureUnit(All.PERCENTAGE.type())
                                     .setProductCode("DROPLET-2CB2B763-H")
                                     .setProductLabel(Label.builder().label("Droplet Humidity").build());
         final Thing t2 = new Thing().setEquip(PrimaryKey.EQUIP_DROPLET)
-                                    .setTransducer(PrimaryKey.TRANS_TEMP)
-                                    .setMeasureUnit(DataType.CELSIUS.type())
+                                    .setTransducer(PrimaryKey.TRANS_TEMP).setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("DROPLET-2CB2B763-T")
                                     .setProductLabel(Label.builder().label("Droplet Temp").build());
         final Thing t3 = new Thing().setEquip(PrimaryKey.EQUIP_HVAC)
-                                    .setTransducer(PrimaryKey.TRANS_TEMP)
-                                    .setMeasureUnit(DataType.CELSIUS.type())
+                                    .setTransducer(PrimaryKey.TRANS_TEMP).setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("HVAC-XYZ-TEMP")
                                     .setProductLabel(Label.builder().label("HVAC Temp").build());
         final Thing t4 = new Thing().setEquip(PrimaryKey.EQUIP_HVAC)
-                                    .setTransducer(PrimaryKey.TRANS_FAN)
-                                    .setMeasureUnit(DataType.RPM.type())
+                                    .setTransducer(PrimaryKey.TRANS_FAN).setMeasureUnit(AngularVelocity.RPM.type())
                                     .setProductCode("HVAC-XYZ-FAN")
                                     .setProductLabel(Label.builder().label("HVAC Fan").build());
         final Thing t5 = new Thing().setEquip(PrimaryKey.EQUIP_HVAC)
-                                    .setTransducer(PrimaryKey.TRANS_SWITCH)
-                                    .setMeasureUnit(DataType.BOOLEAN.type())
+                                    .setTransducer(PrimaryKey.TRANS_SWITCH).setMeasureUnit(All.BOOLEAN.type())
                                     .setProductCode("HVAC-XYZ-FAN-CONTROL")
                                     .setProductLabel(Label.builder().label("HVAC Fan Control").build());
         return Arrays.asList(t1, t2, t3, t4, t5);
@@ -253,21 +262,24 @@ public final class MockData {
     }
 
     public static JsonObject data_Device_Network() {
-        return BuiltinData.def().toJson().put("device", DEVICE.toJson()).put("network", NETWORK.toJson());
+        return BuiltinData.def()
+                          .toJson()
+                          .put(DeviceMetadata.INSTANCE.singularKeyName(), DEVICE.toJson())
+                          .put(NetworkMetadata.INSTANCE.singularKeyName(), NETWORK.toJson());
     }
 
     public static JsonObject data_Equip_Thing() {
-        return data_Device_Network().put("equipment", data(EQUIPS))
-                                    .put("device_equip", data(DEVICE_EQUIPS))
-                                    .put("transducer", data(TRANSDUCERS))
-                                    .put("thing", data(THINGS));
+        return data_Device_Network().put(EquipmentMetadata.INSTANCE.singularKeyName(), data(EQUIPS))
+                                    .put(DeviceEquipMetadata.INSTANCE.singularKeyName(), data(DEVICE_EQUIPS))
+                                    .put(TransducerMetadata.INSTANCE.singularKeyName(), data(TRANSDUCERS))
+                                    .put(ThingMetadata.INSTANCE.singularKeyName(), data(THINGS));
     }
 
     public static JsonObject data_Point_Setting_Tag() {
-        return data_Equip_Thing().put("point", data(POINTS))
-                                 .put("point_tag", data(TAGS))
-                                 .put("history_setting", data(HISTORY_SETTINGS))
-                                 .put("point_history_data", data(HISTORY_DATA));
+        return data_Equip_Thing().put(PointMetadata.INSTANCE.singularKeyName(), data(POINTS))
+                                 .put(TagPointMetadata.INSTANCE.singularKeyName(), data(TAGS))
+                                 .put(HistorySettingMetadata.INSTANCE.singularKeyName(), data(HISTORY_SETTINGS))
+                                 .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA));
     }
 
     public static <T extends VertxPojo> List<JsonObject> data(List<T> list) {

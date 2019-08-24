@@ -101,13 +101,12 @@
 			</fk>
 		</table>
 		<table name="MEASURE_UNIT" >
-			<column name="MEASURE_TYPE" type="varchar" length="15" decimal="0" jt="12" mandatory="y" />
-			<column name="MEASURE_CATEGORY" type="varchar" length="31" decimal="0" jt="12" mandatory="y" >
+			<column name="MEASURE_TYPE" type="varchar" length="63" jt="12" mandatory="y" />
+			<column name="MEASURE_CATEGORY" type="varchar" length="63" jt="12" mandatory="y" >
 				<defo>&#039;ALL&#039;</defo>
 			</column>
 			<column name="SYMBOL" type="varchar" length="15" decimal="0" jt="12" />
 			<column name="LABEL" type="varchar" length="1000" decimal="0" jt="12" />
-			<column name="POSSIBLE_VALUES_JSON" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<index name="PK_MEASURE_UNIT" unique="PRIMARY_KEY" >
@@ -166,7 +165,8 @@
 				<defo>&#039;UNKNOWN&#039;</defo>
 				<comment><![CDATA[ANALOG | DIGITAL | DC_10 | DC_12 | MA_20 | THERMISTOR_10K]]></comment>
 			</column>
-			<column name="MEASURE_UNIT" type="varchar" length="15" decimal="0" jt="12" mandatory="y" />
+			<column name="MEASURE_UNIT" type="varchar" length="63" jt="12" mandatory="y" />
+			<column name="MEASURE_UNIT_LABEL" type="varchar" length="500" jt="12" />
 			<column name="MIN_SCALE" type="smallint" jt="5" />
 			<column name="MAX_SCALE" type="smallint" jt="5" />
 			<column name="PRECISION" type="smallint" jt="5" />
@@ -215,6 +215,7 @@
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="TIME" type="timestamp" length="26" decimal="6" jt="93" mandatory="y" />
 			<column name="VALUE" type="double" length="17" decimal="0" jt="8" />
+			<column name="PRIORITY" type="integer" jt="4" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<index name="CONSTRAINT_B" unique="PRIMARY_KEY" >
@@ -241,6 +242,7 @@
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="TIME" type="timestamp" length="26" decimal="6" jt="93" mandatory="y" />
 			<column name="VALUE_JSON" type="clob" length="2147483647" decimal="0" jt="2005" />
+			<column name="PRIORITY" type="integer" length="10" decimal="0" jt="4" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<index name="CONSTRAINT_6" unique="PRIMARY_KEY" >
@@ -289,8 +291,8 @@
 		<table name="POINT_VALUE_DATA" >
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="VALUE" type="double" length="17" decimal="0" jt="8" />
-			<column name="PRIORITY" type="smallint" length="5" decimal="0" jt="5" mandatory="y" />
-			<column name="PRIORITY_VALUES_JSON" type="clob" length="2147483647" decimal="0" jt="2005" />
+			<column name="PRIORITY" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="PRIORITY_VALUES" type="varchar" length="500" jt="12" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<index name="PK_POINT_VALUE_DATA" unique="PRIMARY_KEY" >
@@ -354,7 +356,7 @@
 			<column name="PRODUCT_LABEL" type="varchar" length="1000" decimal="0" jt="12" >
 				<comment><![CDATA[Manufacturer transducer label depends on equipment]]></comment>
 			</column>
-			<column name="MEASURE_UNIT" type="varchar" length="15" decimal="0" jt="12" >
+			<column name="MEASURE_UNIT" type="varchar" length="63" jt="12" >
 				<comment><![CDATA[Standard manufacturer transducer measure unit]]></comment>
 			</column>
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
@@ -418,21 +420,21 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="-1" instance="C:/projects/nubeio/iot-engine/edge/connector/datapoint/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
-		<entity schema="PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
-		<entity schema="PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="64" y="608" />
-		<entity schema="PUBLIC" name="EQUIPMENT" color="EEF7EC" x="1136" y="576" />
-		<entity schema="PUBLIC" name="POINT_TAG" color="FFCCE6" x="672" y="80" />
-		<entity schema="PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="1104" y="80" />
-		<entity schema="PUBLIC" name="NETWORK" color="FFCCE6" x="880" y="80" />
-		<entity schema="PUBLIC" name="DEVICE_EQUIP" color="EEF7EC" x="928" y="560" />
-		<entity schema="PUBLIC" name="THING" color="EEF7EC" x="1152" y="352" />
-		<entity schema="PUBLIC" name="DEVICE" color="EEF7EC" x="672" y="560" />
-		<entity schema="PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="400" />
-		<entity schema="PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="240" />
-		<entity schema="PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="272" y="544" />
-		<entity schema="PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="448" y="640" />
 		<entity schema="PUBLIC" name="TRANSDUCER" color="EEF7EC" x="672" y="352" />
-		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="368" y="112" />
+		<entity schema="PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="240" />
+		<entity schema="PUBLIC" name="DEVICE" color="EEF7EC" x="688" y="560" />
+		<entity schema="PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="432" y="592" />
+		<entity schema="PUBLIC" name="POINT_TAG" color="FFCCE6" x="672" y="128" />
+		<entity schema="PUBLIC" name="NETWORK" color="FFCCE6" x="880" y="80" />
+		<entity schema="PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="64" y="592" />
+		<entity schema="PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="256" y="560" />
+		<entity schema="PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="416" />
+		<entity schema="PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
+		<entity schema="PUBLIC" name="EQUIPMENT" color="EEF7EC" x="1136" y="576" />
+		<entity schema="PUBLIC" name="DEVICE_EQUIP" color="EEF7EC" x="928" y="576" />
+		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="352" y="112" />
+		<entity schema="PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="1088" y="80" />
+		<entity schema="PUBLIC" name="THING" color="EEF7EC" x="1152" y="352" />
 		<group name="POINT" color="ECF0F7" >
 			<entity schema="PUBLIC" name="POINT" />
 			<entity schema="PUBLIC" name="HISTORY_SETTING" />
@@ -454,6 +456,93 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 			<entity schema="PUBLIC" name="MEASURE_UNIT" />
 			<entity schema="PUBLIC" name="POINT_TAG" />
 		</group>
+		<script name="POINT" id="Editor_37a712" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.POINT ( 
+	ID                   uuid(2147483647)   NOT NULL,
+	CODE                 varchar(63)   NOT NULL,
+	DEVICE               uuid(2147483647)   NOT NULL,
+	TRANSDUCER           uuid(2147483647)   ,
+	NETWORK              uuid(2147483647)   ,
+	LABEL                varchar(1000)   ,
+	ENABLED              boolean  DEFAULT TRUE NOT NULL,
+	POINT_CATEGORY       varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
+	POINT_KIND           varchar(15)  DEFAULT 'UNKNOWN' NOT NULL,
+	POINT_TYPE           varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
+	MEASURE_UNIT         varchar(15)   NOT NULL,
+	MEASURE_DISPLAY_JSON varchar(500)   ,
+	MIN_SCALE            smallint   ,
+	MAX_SCALE            smallint   ,
+	PRECISION            smallint   ,
+	OFFSET_VAL           smallint   ,
+	VERSION              varchar(31)   ,
+	METADATA_JSON        clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_POINT PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_POINT_INDEX_4 UNIQUE ( CODE, DEVICE, NETWORK ) 
+ );
+
+CREATE INDEX IDX_FK_POINT_DEVICE ON PUBLIC.POINT ( DEVICE );
+
+CREATE INDEX IDX_FK_POINT_MEASURE_UNIT ON PUBLIC.POINT ( MEASURE_UNIT );
+
+CREATE INDEX IDX_FK_POINT_NETWORK ON PUBLIC.POINT ( NETWORK );
+
+CREATE INDEX IDX_FK_POINT_TRANSDUCER ON PUBLIC.POINT ( TRANSDUCER );
+
+COMMENT ON TABLE PUBLIC.POINT IS 'Represents for:\n- Edge device pin if category is GPIO\n- Virtual point if category is not GPIO';
+
+ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_DEVICE FOREIGN KEY ( DEVICE ) REFERENCES PUBLIC.DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_MEASURE_UNIT FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_NETWORK FOREIGN KEY ( NETWORK ) REFERENCES PUBLIC.NETWORK( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+]]></string>
+		</script>
+		<script name="POINT_VALUE_DATA" id="Editor_3a1a87c" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.POINT_VALUE_DATA ( 
+	POINT                uuid(2147483647)   NOT NULL,
+	VALUE                double   ,
+	PRIORITY             smallint   NOT NULL,
+	PRIORITY_VALUES_JSON clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_POINT_VALUE_DATA PRIMARY KEY ( POINT )
+ );
+
+ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+]]></string>
+		</script>
+		<script name="POINT_VALUE_DATA_001" id="Editor_5aecb3e" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.POINT_VALUE_DATA ( 
+	POINT                uuid(2147483647)   NOT NULL,
+	VALUE                double   ,
+	PRIORITY             integer   NOT NULL,
+	PRIORITY_VALUES_JSON clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_POINT_VALUE_DATA PRIMARY KEY ( POINT )
+ );
+
+ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+]]></string>
+		</script>
+		<script name="POINT_VALUE_DATA_002" id="Editor_502c922" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.POINT_VALUE_DATA ( 
+	POINT                uuid(2147483647)   NOT NULL,
+	VALUE                double   ,
+	PRIORITY             integer   NOT NULL,
+	PRIORITY_VALUES      varchar(500)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_POINT_VALUE_DATA PRIMARY KEY ( POINT )
+ );
+
+ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+]]></string>
+		</script>
 		<script name="SQL_Editor" id="Editor_20e3cad" language="SQL" >
 			<string><![CDATA[CREATE SCHEMA IF NOT EXISTS PUBLIC;
 

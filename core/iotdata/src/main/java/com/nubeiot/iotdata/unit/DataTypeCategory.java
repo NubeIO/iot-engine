@@ -7,8 +7,6 @@ import lombok.NonNull;
 
 public interface DataTypeCategory extends DataType {
 
-    String DEFAULT = "ALL";
-
     <T extends DataType, V extends DataType> T convert(V v);
 
     @Override
@@ -16,9 +14,20 @@ public interface DataTypeCategory extends DataType {
         return ReflectionField.constantByName(this.getClass(), "TYPE");
     }
 
+    interface All extends DataTypeCategory {
+
+        String TYPE = Strings.toSnakeCaseUC(All.class.getSimpleName());
+        DataType NUMBER = new NumberDataType();
+        DataType PERCENTAGE = new NumberDataType("percentage", "%");
+        DataType BOOLEAN = new BooleanDataType();
+
+    }
+
     interface Power extends DataTypeCategory {
 
         String TYPE = Strings.toSnakeCaseUC(Power.class.getSimpleName());
+        DataType KWH = new NumberDataType("kilowatt_hour", "kWh", TYPE);
+        DataType DBM = new NumberDataType("dBm", "dBm", TYPE);
 
     }
 
@@ -26,6 +35,7 @@ public interface DataTypeCategory extends DataType {
     interface Pressure extends DataTypeCategory {
 
         String TYPE = Strings.toSnakeCaseUC(Pressure.class.getSimpleName());
+        DataType HPA = new NumberDataType("hectopascal", "hPa", TYPE);
 
     }
 
@@ -33,6 +43,8 @@ public interface DataTypeCategory extends DataType {
     interface Temperature extends DataTypeCategory {
 
         String TYPE = Strings.toSnakeCaseUC(Temperature.class.getSimpleName());
+        DataType FAHRENHEIT = new NumberDataType("fahrenheit", "°F", TYPE);
+        DataType CELSIUS = new NumberDataType("celsius", "°C", TYPE);
 
     }
 
@@ -40,6 +52,18 @@ public interface DataTypeCategory extends DataType {
     interface Velocity extends DataTypeCategory {
 
         String TYPE = Strings.toSnakeCaseUC(Velocity.class.getSimpleName());
+        DataType M_PER_SECOND = new NumberDataType("meters_per_second", "m/s", TYPE);
+        DataType KM_PER_HOUR = new NumberDataType("kilometers_per_hour", "km/h", TYPE);
+        DataType MILE_PER_HOUR = new NumberDataType("miles_per_hour", "mph", TYPE);
+
+    }
+
+
+    interface AngularVelocity extends Velocity {
+
+        String TYPE = Strings.toSnakeCaseUC(AngularVelocity.class.getSimpleName());
+        DataType RPM = new NumberDataType("revolutions_per_minute", "rpm", TYPE);
+        DataType RAD_PER_SECOND = new NumberDataType("radians_per_second", "rad/s", TYPE);
 
     }
 
@@ -47,6 +71,7 @@ public interface DataTypeCategory extends DataType {
     interface Illumination extends DataTypeCategory {
 
         String TYPE = Strings.toSnakeCaseUC(Illumination.class.getSimpleName());
+        DataType LUX = new NumberDataType("lux", "lx", TYPE);
 
     }
 
@@ -54,6 +79,7 @@ public interface DataTypeCategory extends DataType {
     interface ElectricPotential extends DataTypeCategory {
 
         String TYPE = Strings.toSnakeCaseUC(ElectricPotential.class.getSimpleName());
+        DataType VOLTAGE = new NumberDataType("volt", "V", TYPE);
 
     }
 

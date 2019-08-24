@@ -42,8 +42,7 @@ import lombok.NonNull;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public interface JsonData extends Serializable {
 
-    ObjectMapper MAPPER = Json.mapper.copy()
-                                     .registerModule(new JavaTimeModule()).registerModule(JsonModule.BASIC)
+    ObjectMapper MAPPER = Json.mapper.copy().registerModule(new JavaTimeModule()).registerModule(JsonModule.BASIC)
                                      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     ObjectMapper LENIENT_MAPPER = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     String SUCCESS_KEY = "data";
@@ -201,6 +200,10 @@ public interface JsonData extends Serializable {
     static FilterProvider ignoreFields(Set<String> ignoreFields) {
         return new SimpleFilterProvider().addFilter(FILTER_PROP_BY_NAME,
                                                     SimpleBeanPropertyFilter.serializeAllExcept(ignoreFields));
+    }
+
+    static <T extends JsonData> T merge(@NonNull JsonObject from, @NonNull JsonObject to, @NonNull Class<T> clazz) {
+        return from(from.mergeIn(to, true), clazz);
     }
 
     default JsonObject toJson() {

@@ -20,20 +20,25 @@ public class DataPointConfigTest {
     @Test
     public void serialize_default_config() throws JSONException {
         final JsonObject expected = new JsonObject(
-            "{\"lowdb_migration\":{\"enabled\":false},\"builtin_data\":{\"measure_unit\":[{\"type\":\"number\"," +
+            "{\"lowdb_migration\":{\"enabled\":false},\"builtin_data\":{\"unit\":[{\"type\":\"number\"," +
             "\"category\":\"ALL\"},{\"type\":\"percentage\",\"category\":\"ALL\",\"symbol\":\"%\"}," +
-            "{\"type\":\"voltage\",\"category\":\"ELECTRIC_POTENTIAL\",\"symbol\":\"V\"},{\"type\":\"celsius\"," +
-            "\"category\":\"TEMPERATURE\",\"symbol\":\"U+2103\"},{\"type\":\"bool\",\"category\":\"ALL\"," +
-            "\"possible_values\":{\"0.5\":[\"true\",\"on\",\"start\",\"1\"],\"0.0\":[\"false\",\"off\",\"stop\"," +
-            "\"0\",\"null\"]}},{\"type\":\"dBm\",\"category\":\"POWER\",\"symbol\":\"dBm\"},{\"type\":\"hPa\"," +
-            "\"category\":\"PRESSURE\",\"symbol\":\"hPa\"},{\"type\":\"lux\",\"category\":\"ILLUMINATION\"," +
-            "\"symbol\":\"lx\"},{\"type\":\"kWh\",\"category\":\"POWER\",\"symbol\":\"kWh\"},{\"type\":\"rpm\"," +
-            "\"category\":\"VELOCITY\",\"symbol\":\"rpm\"}]},\"__publisher__\":{\"type\":\"\",\"enabled\":false}," +
-            "\"__cleanup_policy__\":{\"enabled\":true,\"process\":{\"address\":\"com.nubeiot.edge.module.datapoint" +
-            ".service.HistoryDataService\",\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"BATCH_DELETE\"}," +
-            "\"triggerModel\":{\"type\":\"CRON\",\"name\":\"historyData\",\"group\":\"cleanup\"," +
-            "\"timezone\":\"Australia/Sydney\",\"expression\":\"0 0 0 ? * SUN *\"},\"policy\":{\"type\":\"oldest\"," +
-            "\"max_item\":100,\"group_by\":\"point_id\",\"duration\":\"PT720H\"}}}");
+            "{\"type\":\"bool\",\"category\":\"ALL\"},{\"type\":\"revolutions_per_minute\"," +
+            "\"category\":\"ANGULAR_VELOCITY\",\"symbol\":\"rpm\"},{\"type\":\"radians_per_second\"," +
+            "\"category\":\"ANGULAR_VELOCITY\",\"symbol\":\"rad/s\"},{\"type\":\"volt\"," +
+            "\"category\":\"ELECTRIC_POTENTIAL\",\"symbol\":\"V\"},{\"type\":\"lux\",\"category\":\"ILLUMINATION\"," +
+            "\"symbol\":\"lx\"},{\"type\":\"kilowatt_hour\",\"category\":\"POWER\",\"symbol\":\"kWh\"}," +
+            "{\"type\":\"dBm\",\"category\":\"POWER\",\"symbol\":\"dBm\"},{\"type\":\"hectopascal\"," +
+            "\"category\":\"PRESSURE\",\"symbol\":\"hPa\"},{\"type\":\"fahrenheit\",\"category\":\"TEMPERATURE\"," +
+            "\"symbol\":\"°F\"},{\"type\":\"celsius\",\"category\":\"TEMPERATURE\",\"symbol\":\"°C\"}," +
+            "{\"type\":\"meters_per_second\",\"category\":\"VELOCITY\",\"symbol\":\"m/s\"}," +
+            "{\"type\":\"kilometers_per_hour\",\"category\":\"VELOCITY\",\"symbol\":\"km/h\"}," +
+            "{\"type\":\"miles_per_hour\",\"category\":\"VELOCITY\",\"symbol\":\"mph\"}]}," +
+            "\"__publisher__\":{\"type\":\"\",\"enabled\":false},\"__cleanup_policy__\":{\"enabled\":true," +
+            "\"process\":{\"address\":\"com.nubeiot.edge.module.datapoint.service.HistoryDataService\"," +
+            "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"BATCH_DELETE\"},\"triggerModel\":{\"type\":\"CRON\"," +
+            "\"expression\":\"0 0 0 ? * SUN *\",\"timezone\":\"Australia/Sydney\",\"name\":\"historyData\"," +
+            "\"group\":\"cleanup\"},\"policy\":{\"type\":\"oldest\",\"max_item\":100,\"group_by\":\"point_id\"," +
+            "\"duration\":\"PT720H\"}}}");
         JsonHelper.assertJson(expected, DataPointConfig.def().toJson());
         final DataPointConfig from = IConfig.from(expected, DataPointConfig.class);
         JsonHelper.assertJson(expected, from.toJson());
@@ -55,7 +60,7 @@ public class DataPointConfigTest {
     public void serialize_cleanupPolicy() throws JSONException {
         CleanupPolicy cleanupPolicy = new OldestCleanupPolicy(10, "xx", Duration.ofHours(1));
         JsonHelper.assertJson(
-            new JsonObject("{\"type\":\"oldest\",\"max_item\":10,\"group_by\":\"xx\"," + "\"duration\":\"PT1H\"}"),
+            new JsonObject("{\"type\":\"oldest\",\"max_item\":10,\"group_by\":\"xx\",\"duration\":\"PT1H\"}"),
             cleanupPolicy.toJson());
     }
 

@@ -1,9 +1,11 @@
 package com.nubeiot.iotdata.unit;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
+
+import io.github.classgraph.ClassInfo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -12,14 +14,10 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nubeiot.core.dto.EnumType;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.iotdata.unit.DataTypeCategory.ElectricPotential;
-import com.nubeiot.iotdata.unit.DataTypeCategory.Illumination;
-import com.nubeiot.iotdata.unit.DataTypeCategory.Power;
-import com.nubeiot.iotdata.unit.DataTypeCategory.Pressure;
-import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
-import com.nubeiot.iotdata.unit.DataTypeCategory.Velocity;
+import com.nubeiot.iotdata.unit.DataTypeCategory.All;
 
 import lombok.NonNull;
 
@@ -27,20 +25,16 @@ import lombok.NonNull;
 @JsonSerialize(as = DataType.class)
 public interface DataType extends EnumType, Cloneable {
 
-    DataType NUMBER = new NumberDataType();
-    DataType PERCENTAGE = new NumberDataType("percentage", "%");
-    DataType VOLTAGE = new NumberDataType("voltage", "V", ElectricPotential.TYPE);
-    DataType CELSIUS = new NumberDataType("celsius", "U+2103", Temperature.TYPE);
-    DataType BOOLEAN = new BooleanDataType();
-    DataType DBM = new NumberDataType("dBm", "dBm", Power.TYPE);
-    DataType HPA = new NumberDataType("hPa", "hPa", Pressure.TYPE);
-    DataType LUX = new NumberDataType("lux", "lx", Illumination.TYPE);
-    DataType KWH = new NumberDataType("kWh", "kWh", Power.TYPE);
-    DataType RPM = new NumberDataType("rpm", "rpm", Velocity.TYPE);
     String SEP = "::";
 
+    static Stream<DataType> available() {
+        return ReflectionClass.stream(DataType.class.getPackage().getName(), DataTypeCategory.class,
+                                      ClassInfo::isInterface)
+                              .flatMap(clazz -> ReflectionField.streamConstants(clazz, InternalDataType.class));
+    }
+
     @NonNull
-    static DataType def() { return NUMBER; }
+    static DataType def() { return All.NUMBER; }
 
     @NonNull
     static DataType factory(String dbValue) {
@@ -53,19 +47,18 @@ public interface DataType extends EnumType, Cloneable {
 
     @NonNull
     static DataType factory(String type, String unit) {
-        return factory(type, unit, NUMBER.category(), null);
+        return factory(type, unit, All.NUMBER.category(), null);
     }
 
     @NonNull
     @JsonCreator
     static DataType factory(@JsonProperty(value = "type") String type, @JsonProperty(value = "symbol") String unit,
                             @JsonProperty(value = "category") String category,
-                            @JsonProperty(value = "possible_values") Map<Double, List<String>> possibleValues) {
-        return new NumberDataType(ReflectionField.streamConstants(DataType.class, InternalDataType.class)
-                                                 .filter(t -> t.type().equalsIgnoreCase(type))
-                                                 .findAny()
-                                                 .orElseGet(() -> new NumberDataType(type, unit))).setPossibleValues(
-            possibleValues);
+                            @JsonProperty(value = "display") Map<String, String> display) {
+        final DataType dt = available().filter(t -> t.type().equalsIgnoreCase(type))
+                                       .findAny()
+                                       .orElseGet(() -> new NumberDataType(type, unit));
+        return new NumberDataType(dt).setCategory(category).setLabel(UnitLabel.create(display));
     }
 
     @NonNull
@@ -76,8 +69,10 @@ public interface DataType extends EnumType, Cloneable {
     @JsonProperty(value = "category")
     String category();
 
-    @JsonProperty(value = "possible_values")
-    Map<Double, List<String>> possibleValues();
+    @JsonProperty(value = "label")
+    UnitLabel label();
+
+    DataType setLabel(UnitLabel label);
 
     default Double parse(Object data) {
         if (Objects.isNull(data)) {
@@ -92,7 +87,16 @@ public interface DataType extends EnumType, Cloneable {
         return 0d;
     }
 
-    default @NonNull String display(Double value) {
+    default @NonNull String label(Double value) {
+        if (Objects.isNull(value)) {
+            return null;
+        }
+        if (Objects.nonNull(label())) {
+            String label = label().eval(value);
+            if (Strings.isBlank(label)) {
+                return label;
+            }
+        }
         if (Strings.isBlank(unit())) {
             return String.valueOf(value);
         }

@@ -7,8 +7,8 @@ import java.util.function.Function;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.edge.module.datapoint.service.Metadata.DeviceMetadata;
-import com.nubeiot.edge.module.datapoint.service.Metadata.NetworkMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 import lombok.NonNull;

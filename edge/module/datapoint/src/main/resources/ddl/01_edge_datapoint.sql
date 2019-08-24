@@ -53,11 +53,10 @@ COMMENT ON COLUMN EQUIPMENT.MANUFACTURER IS 'Manufacturing company';
 COMMENT ON COLUMN EQUIPMENT.METADATA_JSON IS 'Extra information';
 
 CREATE TABLE IF NOT EXISTS MEASURE_UNIT (
-	MEASURE_TYPE         varchar(15)  NOT NULL,
-	MEASURE_CATEGORY     varchar(31)  DEFAULT 'ALL' NOT NULL,
+	MEASURE_TYPE         varchar(63)  NOT NULL,
+	MEASURE_CATEGORY     varchar(63)  DEFAULT 'ALL' NOT NULL,
 	SYMBOL               varchar(15)   ,
 	LABEL                varchar(1000)   ,
-	POSSIBLE_VALUES_JSON varchar(500)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_MEASURE_UNIT PRIMARY KEY ( MEASURE_TYPE )
@@ -105,7 +104,7 @@ CREATE TABLE THING (
 	TRANSDUCER           uuid   NOT NULL,
 	PRODUCT_CODE         varchar(127)   ,
 	PRODUCT_LABEL        varchar(1000)   ,
-	MEASURE_UNIT         varchar(15)   ,
+	MEASURE_UNIT         varchar(63)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT IDX_UQ_EQUIP_THING_CODE UNIQUE ( EQUIP, PRODUCT_CODE ) ,
@@ -135,7 +134,8 @@ CREATE TABLE IF NOT EXISTS POINT (
 	POINT_CATEGORY       varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
 	POINT_KIND           varchar(15)  DEFAULT 'UNKNOWN' NOT NULL,
 	POINT_TYPE           varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
-	MEASURE_UNIT         varchar(15)  NOT NULL,
+	MEASURE_UNIT         varchar(63)  NOT NULL,
+	MEASURE_UNIT_LABEL   varchar(500)   ,
 	MIN_SCALE            smallint,
 	MAX_SCALE            smallint,
 	PRECISION            smallint,
@@ -166,6 +166,7 @@ CREATE TABLE IF NOT EXISTS POINT_HISTORY_DATA (
 	POINT                uuid   NOT NULL,
 	TIME                 timestamp   NOT NULL,
 	VALUE                double   ,
+	PRIORITY             integer  ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT IDX_UQ_POINT_HISTORY_DATA UNIQUE ( POINT, TIME ) ,
@@ -181,6 +182,7 @@ CREATE TABLE IF NOT EXISTS POINT_REALTIME_DATA (
 	POINT                uuid   NOT NULL,
 	TIME                 timestamp   NOT NULL,
 	VALUE_JSON           clob(2147483647)   ,
+	PRIORITY             integer  ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT IDX_UQ_POINT_REALTIME_DATA UNIQUE ( POINT, TIME ) ,
@@ -209,8 +211,8 @@ CREATE INDEX IDX_TAG_BY_POINT ON POINT_TAG ( TAG_NAME );
 CREATE TABLE IF NOT EXISTS POINT_VALUE_DATA ( 
 	POINT                uuid   NOT NULL,
 	VALUE                double   ,
-	PRIORITY             smallint   NOT NULL,
-	PRIORITY_VALUES_JSON clob(2147483647)   ,
+	PRIORITY             integer   NOT NULL,
+	PRIORITY_VALUES      varchar(500)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_POINT_VALUE_DATA PRIMARY KEY ( POINT )

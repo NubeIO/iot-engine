@@ -13,7 +13,7 @@ import org.jooq.Configuration;
 import org.jooq.Field;
 import org.jooq.Table;
 
-import io.github.jklingsporn.vertx.jooq.shared.internal.AbstractVertxDAO;
+import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.reactivex.functions.Consumer;
@@ -25,44 +25,22 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 import com.nubeiot.iotdata.edge.model.Keys;
 import com.nubeiot.iotdata.edge.model.Tables;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
-import com.nubeiot.iotdata.edge.model.tables.pojos.DeviceEquip;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
-import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 
 import lombok.NonNull;
 
-class DataPointEntityHandler extends AbstractEntityHandler implements AuditDecorator, EntityConstraintHolder {
+class DataPointEntityHandler extends AbstractEntityHandler
+    implements AuditDecorator, EntityConstraintHolder, DataPointIndex {
 
     public static final String BUILTIN_DATA = "BUILTIN_DATA";
 
-    private static final Map<Class<? extends VertxPojo>, Integer> DEPENDENCIES = initDependencies();
-
     DataPointEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         super(jooqConfig, vertx);
-    }
-
-    private static Map<Class<? extends VertxPojo>, Integer> initDependencies() {
-        Map<Class<? extends VertxPojo>, Integer> map = new HashMap<>();
-        map.put(MeasureUnit.class, 10);
-        map.put(Device.class, 10);
-        map.put(Equipment.class, 10);
-        map.put(Transducer.class, 10);
-        map.put(Network.class, 20);
-        map.put(Thing.class, 20);
-        map.put(DeviceEquip.class, 30);
-        map.put(Point.class, 40);
-        return map;
     }
 
     @Override
@@ -93,14 +71,13 @@ class DataPointEntityHandler extends AbstractEntityHandler implements AuditDecor
     }
 
     private Single<EventMessage> initDataFromConfig() {
+        Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
         return Optional.ofNullable((JsonObject) sharedData(BUILTIN_DATA))
-                       .map(data -> Single.merge(
-                           ReflectionClass.stream(Device.class.getPackage().getName(), VertxPojo.class,
-                                                  ReflectionClass.publicClass())
-                                          .filter(c -> data.containsKey(jsonKey(c)))
-                                          .sorted(Comparator.comparingInt(o -> DEPENDENCIES.getOrDefault(o, 999)))
-                                          .map(c -> insert(data, c))
-                                          .collect(Collectors.toList()))
+                       .map(data -> Single.merge(index().stream()
+                                                        .filter(meta -> data.containsKey(meta.singularKeyName()))
+                                                        .sorted(Comparator.comparingInt(m -> dep.getOrDefault(m, 999)))
+                                                        .map(m -> insert(m, data.getValue(m.singularKeyName())))
+                                                        .collect(Collectors.toList()))
                                           .buffer(5)
                                           .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
                                           .map(r -> EventMessage.success(EventAction.INIT,
@@ -109,21 +86,15 @@ class DataPointEntityHandler extends AbstractEntityHandler implements AuditDecor
                            EventMessage.success(EventAction.INIT, new JsonObject().put("records", 0))));
     }
 
-    private String jsonKey(Class<VertxPojo> c) {
-        return Strings.toSnakeCaseLC(c.getSimpleName());
-    }
-
-    private Single<Integer> insert(@NonNull JsonObject builtinData, @NonNull Class<VertxPojo> pojoClass) {
-        final Object data = builtinData.getValue(jsonKey(pojoClass));
-        return findDao(pojoClass).map(dao -> insert(dao, pojoClass, data)).orElseGet(() -> Single.just(0));
-    }
-
     @SuppressWarnings("unchecked")
-    private Single<Integer> insert(AbstractVertxDAO dao, @NonNull Class<VertxPojo> pojoClass, @NonNull Object data) {
+    private Single<Integer> insert(EntityMetadata metadata, @NonNull Object data) {
+        final String createdBy = "SYSTEM_INITIATOR";
+        Class<? extends VertxPojo> pojoClass = metadata.modelClass();
+        VertxDAO dao = metadata.dao(this);
         if (parsable(pojoClass, data)) {
             return ((Single<Integer>) dao.insert(
-                AuditDecorator.addCreationAudit(true, EntityHandler.parse(pojoClass, data),
-                                                "SYSTEM_INITIATOR"))).doOnSuccess(initLog(pojoClass));
+                AuditDecorator.addCreationAudit(true, EntityHandler.parse(pojoClass, data), createdBy))).doOnSuccess(
+                initLog(pojoClass));
         }
         if (data instanceof JsonArray || data instanceof Collection) {
             final Stream<Object> stream = data instanceof JsonArray
@@ -132,31 +103,18 @@ class DataPointEntityHandler extends AbstractEntityHandler implements AuditDecor
             return ((Single<Integer>) dao.insert(stream.filter(o -> parsable(pojoClass, o))
                                                        .map(o -> EntityHandler.parse(pojoClass, o))
                                                        .map(pojo -> AuditDecorator.addCreationAudit(true, pojo,
-                                                                                                    "SYSTEM_INITIATOR"))
+                                                                                                    createdBy))
                                                        .collect(Collectors.toList()))).doOnSuccess(initLog(pojoClass));
         }
         return Single.just(0);
     }
 
-    private boolean parsable(@NonNull Class<VertxPojo> pojoClass, @NonNull Object data) {
+    private boolean parsable(@NonNull Class<? extends VertxPojo> pojoClass, @NonNull Object data) {
         return data instanceof JsonObject || data instanceof Map || pojoClass.isInstance(data);
     }
 
-    private Consumer<Integer> initLog(@NonNull Class<VertxPojo> pojoClass) {
+    private Consumer<Integer> initLog(@NonNull Class<? extends VertxPojo> pojoClass) {
         return r -> logger.info("Inserted {} record(s) in {}", r, pojoClass.getSimpleName());
-    }
-
-    @SuppressWarnings("unchecked")
-    private Optional<AbstractVertxDAO> findDao(@NonNull Class<VertxPojo> pojoClass) {
-        try {
-            final Class daoClass = Class.forName(pojoClass.getName().replaceAll("pojos", "daos") + "Dao");
-            if (ReflectionClass.assertDataType(daoClass, AbstractVertxDAO.class)) {
-                return Optional.ofNullable((AbstractVertxDAO) dao(daoClass));
-            }
-        } catch (ClassNotFoundException e) {
-            logger.warn("Not found DAO of pojo {}", e, pojoClass);
-        }
-        return Optional.empty();
     }
 
 }

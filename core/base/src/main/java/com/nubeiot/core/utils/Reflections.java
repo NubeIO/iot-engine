@@ -133,6 +133,10 @@ public final class Reflections {
             return streamConstants(clazz, fieldClass, predicate).collect(Collectors.toList());
         }
 
+        public static <T> Stream<T> streamConstants(@NonNull Class<T> clazz) {
+            return streamConstants(clazz, clazz, null);
+        }
+
         public static <T> Stream<T> streamConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass) {
             return streamConstants(clazz, fieldClass, null);
         }
@@ -332,7 +336,7 @@ public final class Reflections {
         }
 
         public static boolean isJavaLangObject(@NonNull Class<?> clazz) {
-            return clazz.isPrimitive() || clazz.isEnum() || "java.lang".equals(clazz.getPackage().getName());
+            return clazz.isPrimitive() || clazz.isEnum() || "java.lang" .equals(clazz.getPackage().getName());
         }
 
         private static <T> Class<?> getPrimitiveClass(@NonNull Class<T> findClazz) {
