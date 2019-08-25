@@ -22,7 +22,6 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
-import com.nubeiot.core.http.client.handler.ClientEndHandler;
 import com.nubeiot.core.http.client.handler.HttpClientWriter;
 import com.nubeiot.core.http.client.handler.HttpErrorHandler;
 import com.nubeiot.core.http.client.handler.HttpLightResponseHandler;
@@ -48,13 +47,12 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
         return Single.create(emitter -> {
             HandlerConfig config = getHandlerConfig();
             HttpLightResponseHandler responseHandler = new HttpLightResponseHandler<>(
-                config.getHttpLightBodyHandlerClass(), emitter, swallowError);
+                config.getHttpLightBodyHandlerClass(), emitter, swallowError, getHostInfo());
             HttpErrorHandler exceptionHandler = HttpErrorHandler.create(emitter, getHostInfo(),
                                                                         config.getHttpErrorHandlerClass());
             String query = HttpRequests.serializeQuery(reqData.getFilter());
             HttpClientRequest r = get().request(method, Urls.buildURL(path, query), responseHandler)
-                                       .exceptionHandler(exceptionHandler)
-                                       .endHandler(new ClientEndHandler(getHostInfo(), false));
+                                       .exceptionHandler(exceptionHandler);
             if (logger.isDebugEnabled()) {
                 logger.debug("Send HTTP request {}::{} | <{}>", r.method(), r.absoluteURI(), reqData.toJson());
             } else {

@@ -14,7 +14,6 @@ import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.base.event.WebsocketClientEventMetadata;
 import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
-import com.nubeiot.core.http.client.handler.ClientEndHandler;
 import com.nubeiot.core.http.client.handler.WebsocketClientWriter;
 import com.nubeiot.core.http.client.handler.WsConnectErrorHandler;
 import com.nubeiot.core.http.client.handler.WsLightResponseDispatcher;
@@ -41,10 +40,9 @@ class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketCli
             logger.info("Websocket to {} is connected", getHostInfo().toJson());
             controller.register(metadata.getPublisher(), new WebsocketClientWriter(ws, metadata.getPublisher()));
             EventModel listener = metadata.getListener();
-            ws.handler(
-                WsLightResponseDispatcher.create(controller, listener, handler.getWsLightResponseHandlerClass()));
+            ws.handler(WsLightResponseDispatcher.create(controller, listener, getHostInfo(),
+                                                        handler.getWsLightResponseHandlerClass()));
             ws.exceptionHandler(WsResponseErrorHandler.create(controller, listener, handler.getWsErrorHandlerClass()));
-            ws.endHandler(new ClientEndHandler(getHostInfo(), true));
         }, t -> {
             ref.set(t);
             latch.countDown();

@@ -19,8 +19,10 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
+import com.nubeiot.core.http.client.HttpClientRegistry;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
@@ -39,18 +41,21 @@ public abstract class HttpLightResponseBodyHandler implements Handler<Buffer> {
     @NonNull
     private final SingleEmitter<ResponseData> emitter;
     private final boolean swallowError;
+    private final HostInfo hostInfo;
 
     @SuppressWarnings("unchecked")
     public static <T extends HttpLightResponseBodyHandler> T create(HttpClientResponse response,
                                                                     SingleEmitter<ResponseData> emitter,
-                                                                    boolean swallowError, Class<T> bodyHandlerClass) {
+                                                                    boolean swallowError, HostInfo hostInfo,
+                                                                    Class<T> bodyHandlerClass) {
         if (Objects.isNull(bodyHandlerClass) || HttpLightResponseBodyHandler.class.equals(bodyHandlerClass)) {
-            return (T) new HttpLightResponseBodyHandler(response, emitter, swallowError) {};
+            return (T) new HttpLightResponseBodyHandler(response, emitter, swallowError, hostInfo) {};
         }
         Map<Class, Object> params = new LinkedHashMap<>();
         params.put(HttpClientResponse.class, response);
         params.put(SingleEmitter.class, emitter);
         params.put(boolean.class, swallowError);
+        params.put(HostInfo.class, hostInfo);
         return ReflectionClass.createObject(bodyHandlerClass, params);
     }
 
@@ -64,6 +69,7 @@ public abstract class HttpLightResponseBodyHandler implements Handler<Buffer> {
         }
         emitter.onSuccess(
             new ResponseData().setStatus(response.statusCode()).setHeaders(overrideHeader(response)).setBody(body));
+        HttpClientRegistry.getInstance().remove(hostInfo, false);
     }
 
     private JsonObject overrideHeader(HttpClientResponse response) {

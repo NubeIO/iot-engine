@@ -13,7 +13,9 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
+import com.nubeiot.core.http.client.HttpClientRegistry;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
@@ -33,17 +35,21 @@ public abstract class WsLightResponseDispatcher implements Handler<Buffer> {
     private final EventController controller;
     @NonNull
     private final EventModel listener;
+    @NonNull
+    private final HostInfo hostInfo;
 
     @SuppressWarnings("unchecked")
     public static <T extends WsLightResponseDispatcher> T create(@NonNull EventController controller,
                                                                  @NonNull EventModel listener,
+                                                                 @NonNull HostInfo hostInfo,
                                                                  @NonNull Class<T> bodyHandlerClass) {
         if (Objects.isNull(bodyHandlerClass) || WsLightResponseDispatcher.class.equals(bodyHandlerClass)) {
-            return (T) new WsLightResponseDispatcher(controller, listener) {};
+            return (T) new WsLightResponseDispatcher(controller, listener, hostInfo) {};
         }
         Map<Class, Object> params = new LinkedHashMap<>();
         params.put(EventController.class, controller);
         params.put(EventModel.class, listener);
+        params.put(HostInfo.class, hostInfo);
         return ReflectionClass.createObject(bodyHandlerClass, params);
     }
 
@@ -52,6 +58,7 @@ public abstract class WsLightResponseDispatcher implements Handler<Buffer> {
         logger.info("Websocket Client received message then dispatch data to '{}'", listener.getAddress());
         controller.request(listener.getAddress(), listener.getPattern(),
                            EventMessage.tryParse(JsonData.tryParse(data), true));
+        HttpClientRegistry.getInstance().remove(hostInfo, true);
     }
 
 }
