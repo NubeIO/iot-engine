@@ -23,6 +23,7 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.dashboard.controllers.AuthRestController;
+import com.nubeiot.dashboard.controllers.GlobalSettingsController;
 import com.nubeiot.dashboard.controllers.InfoRestController;
 import com.nubeiot.dashboard.controllers.LayoutGridController;
 import com.nubeiot.dashboard.controllers.MediaController;
@@ -52,6 +53,7 @@ public class DashboardServerVerticle extends ContainerVerticle {
         HttpServerRouter router = new HttpServerRouter().registerApi(InfoRestController.class, AuthRestController.class,
                                                                      LayoutGridController.class, MenuController.class,
                                                                      SettingsController.class,
+                                                                     GlobalSettingsController.class,
                                                                      WidgetImageController.class, MediaController.class,
                                                                      MultiTenantUserController.class,
                                                                      MultiTenantCompanyController.class,

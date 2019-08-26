@@ -15,10 +15,10 @@ import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.dashboard.helpers.DynamicCollectionHelper;
 import com.zandero.rest.annotation.RouteOrder;
 
-@Path("/settings")
-public class SettingsController implements RestApi {
+@Path("/global_settings")
+public class GlobalSettingsController implements RestApi {
 
-    private static final String COLLECTION = "settings";
+    private static final String COLLECTION = "global_settings";
 
     @GET
     @Path("/")
