@@ -35,6 +35,10 @@ public interface CompositeMetadata<K, P extends VertxPojo, R extends UpdatableRe
     @SuppressWarnings("unchecked")
     @NonNull Class<C> modelClass();
 
+    @NonNull Class<P> rawClass();
+
+    @NonNull List<EntityMetadata> subItems();
+
     @Override
     default CompositeMetadata context() {
         return this;
@@ -62,18 +66,18 @@ public interface CompositeMetadata<K, P extends VertxPojo, R extends UpdatableRe
         return ((C) ReflectionClass.createObject(modelClass()).fromJson(request)).wrap(sub);
     }
 
-    @NonNull Class<P> rawClass();
-
     @Override
     @SuppressWarnings("unchecked")
     default C onCreating(RequestData reqData) throws IllegalArgumentException {
         return CompositeValidation.super.onCreating(reqData);
     }
 
-    @NonNull List<EntityMetadata> subItems();
-
     default @NonNull C convert(@NonNull P pojo) {
         return CompositePojo.create(pojo, rawClass(), modelClass());
+    }
+
+    default <REC extends Record> RecordMapper<REC, C> mapper() {
+        return mapper(subItems().toArray(new EntityMetadata[] {}));
     }
 
     //TODO hack way due to jooq bug. Must guard the order of given references

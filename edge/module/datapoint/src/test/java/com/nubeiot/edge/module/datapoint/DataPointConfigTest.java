@@ -5,6 +5,7 @@ import java.time.Duration;
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.json.JsonObject;
 
@@ -39,7 +40,7 @@ public class DataPointConfigTest {
             "\"expression\":\"0 0 0 ? * SUN *\",\"timezone\":\"Australia/Sydney\",\"name\":\"historyData\"," +
             "\"group\":\"cleanup\"},\"policy\":{\"type\":\"oldest\",\"max_item\":100,\"group_by\":\"point_id\"," +
             "\"duration\":\"PT720H\"}}}");
-        JsonHelper.assertJson(expected, DataPointConfig.def().toJson());
+        JsonHelper.assertJson(expected, DataPointConfig.def().toJson(), JSONCompareMode.LENIENT);
         final DataPointConfig from = IConfig.from(expected, DataPointConfig.class);
         JsonHelper.assertJson(expected, from.toJson());
     }

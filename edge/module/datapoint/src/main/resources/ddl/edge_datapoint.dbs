@@ -178,7 +178,7 @@
 			<index name="PK_POINT" unique="PRIMARY_KEY" >
 				<column name="ID" />
 			</index>
-			<index name="IDX_UQ_POINT_INDEX_4" unique="UNIQUE" >
+			<index name="IDX_UQ_POINT" unique="UNIQUE" >
 				<column name="CODE" />
 				<column name="DEVICE" />
 				<column name="NETWORK" />
@@ -432,9 +432,9 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 		<entity schema="PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
 		<entity schema="PUBLIC" name="EQUIPMENT" color="EEF7EC" x="1136" y="576" />
 		<entity schema="PUBLIC" name="DEVICE_EQUIP" color="EEF7EC" x="928" y="576" />
-		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="352" y="112" />
 		<entity schema="PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="1088" y="80" />
 		<entity schema="PUBLIC" name="THING" color="EEF7EC" x="1152" y="352" />
+		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="352" y="112" />
 		<group name="POINT" color="ECF0F7" >
 			<entity schema="PUBLIC" name="POINT" />
 			<entity schema="PUBLIC" name="HISTORY_SETTING" />

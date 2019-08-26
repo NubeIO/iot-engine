@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
@@ -95,7 +96,7 @@ public class EntityServiceTest extends BaseSqlServiceTest {
                                                            .put("author_id", 1))
                                          .build();
         CountDownLatch latch = new CountDownLatch(1);
-        asserter(context, true, expected, AUTHOR_ADDRESS, EventAction.UPDATE, reqData, latch);
+        asserter(context, true, expected, AUTHOR_ADDRESS, EventAction.UPDATE, reqData, latch, JSONCompareMode.STRICT);
         expected = new JsonObject(
             "{\"id\":1,\"first_name\":\"ab\",\"last_name\":\"xyz\",\"date_of_birth\":\"1980-03-08\"}");
         reqData = RequestData.builder().body(new JsonObject().put("author_id", "1")).build();
@@ -111,7 +112,7 @@ public class EntityServiceTest extends BaseSqlServiceTest {
         final JsonObject body = JsonPojo.from(new Author().setFirstName("ab")).toJson().put("author_id", 2);
         RequestData reqData = RequestData.builder().body(body).build();
         CountDownLatch latch = new CountDownLatch(1);
-        asserter(context, true, expected, AUTHOR_ADDRESS, EventAction.PATCH, reqData, latch);
+        asserter(context, true, expected, AUTHOR_ADDRESS, EventAction.PATCH, reqData, latch, JSONCompareMode.STRICT);
         expected = new JsonObject("{\"id\":2,\"first_name\":\"ab\",\"last_name\":\"Coelho\"," +
                                   "\"date_of_birth\":\"1947-08-24\",\"distinguished\":false}");
         reqData = RequestData.builder().body(new JsonObject().put("author_id", "2")).build();

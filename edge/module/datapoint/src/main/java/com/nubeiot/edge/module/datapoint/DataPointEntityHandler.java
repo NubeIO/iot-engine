@@ -24,6 +24,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
@@ -74,7 +75,8 @@ class DataPointEntityHandler extends AbstractEntityHandler
         Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
         return Optional.ofNullable((JsonObject) sharedData(BUILTIN_DATA))
                        .map(data -> Single.merge(index().stream()
-                                                        .filter(meta -> data.containsKey(meta.singularKeyName()))
+                                                        .filter(meta -> !(meta instanceof CompositeMetadata) &&
+                                                                        data.containsKey(meta.singularKeyName()))
                                                         .sorted(Comparator.comparingInt(m -> dep.getOrDefault(m, 999)))
                                                         .map(m -> insert(m, data.getValue(m.singularKeyName())))
                                                         .collect(Collectors.toList()))

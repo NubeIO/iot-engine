@@ -14,14 +14,15 @@ public interface DataTypeCategory extends DataType {
         return ReflectionField.constantByName(this.getClass(), "TYPE");
     }
 
-    interface All extends DataTypeCategory {
+    interface Base extends DataTypeCategory {
 
-        String TYPE = Strings.toSnakeCaseUC(All.class.getSimpleName());
+        String TYPE = "ALL";
         DataType NUMBER = new NumberDataType();
         DataType PERCENTAGE = new NumberDataType("percentage", "%");
         DataType BOOLEAN = new BooleanDataType();
 
     }
+
 
     interface Power extends DataTypeCategory {
 

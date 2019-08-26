@@ -8,14 +8,18 @@ import java.util.function.Function;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jooq.JoinType;
 import org.jooq.Record;
 import org.jooq.ResultQuery;
 import org.jooq.SelectConditionStep;
+import org.jooq.SelectJoinStep;
 import org.jooq.SelectOptionStep;
 import org.jooq.Table;
+import org.jooq.UpdatableRecord;
 import org.jooq.exception.TooManyRowsException;
 import org.jooq.impl.DSL;
 
+import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
@@ -36,6 +40,7 @@ import com.nubeiot.core.sql.tables.JsonTable;
 
 import lombok.NonNull;
 
+//TODO lack unique keys validation
 public interface EntityQueryExecutor<P extends VertxPojo> {
 
     static Single wrapDatabaseError(Throwable throwable) {
@@ -54,6 +59,10 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
 
     EntityHandler entityHandler();
 
+    default <K, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(Class<D> daoClass) {
+        return entityHandler().dao(daoClass);
+    }
+
     /**
      * Find many entity resources
      *
@@ -69,6 +78,18 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @return single pojo
      */
     Single<P> findOneByKey(RequestData requestData);
+
+    /**
+     * Check whether resource is existed or not
+     *
+     * @param query Given query
+     * @return empty if resource is not existed or {@code true}
+     * @see #existQuery(Table, Condition)
+     * @see #existQuery(EntityMetadata, Object)
+     */
+    default Maybe<Boolean> fetchExists(@NonNull Function<DSLContext, Boolean> query) {
+        return executeAny(query).filter(b -> b).switchIfEmpty(Maybe.empty());
+    }
 
     /**
      * Get one resource by {@code primary key}
@@ -108,6 +129,20 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
     Single<P> deleteOneByKey(RequestData requestData);
 
     /**
+     * Execute any function
+     *
+     * @param function query function
+     * @param <X>      Result type
+     * @return single of result
+     * @apiNote Only using it in very complex case or special case
+     * @see #viewQuery(JsonObject, Pagination)
+     * @see #viewOneQuery(JsonObject)
+     * @see #existQuery(Table, Condition)
+     * @see #existQuery(Table, Condition)
+     */
+    <X> Single<X> executeAny(@NonNull Function<DSLContext, X> function);
+
+    /**
      * Create view query
      *
      * @param filter     Request filter
@@ -126,12 +161,20 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
         return viewQuery(filter, Pagination.oneValue());
     }
 
-    default Function<DSLContext, Boolean> fetchExists(@NonNull Table table, @NonNull Condition condition) {
+    default Function<DSLContext, Boolean> existQuery(@NonNull Table table, @NonNull Condition condition) {
         return dsl -> dsl.fetchExists(table, condition);
     }
 
-    default Function<DSLContext, Boolean> fetchExists(@NonNull EntityMetadata metadata, @NonNull Object key) {
-        return fetchExists(metadata.table(), conditionByPrimary(metadata, key));
+    default Function<DSLContext, Boolean> existQuery(@NonNull EntityMetadata metadata, @NonNull Object key) {
+        return existQuery(metadata.table(), conditionByPrimary(metadata, key));
+    }
+
+    @SuppressWarnings("unchecked")
+    default SelectConditionStep<? extends Record> join(@NonNull SelectJoinStep<? extends Record> base,
+                                                       @NonNull EntityMetadata metadata, @NonNull JoinType joinType,
+                                                       @NonNull JsonObject filter) {
+        JsonObject f = filter.getJsonObject(metadata.singularKeyName());
+        return base.join(metadata.table(), joinType).onKey().where(condition(metadata.table(), f));
     }
 
     @SuppressWarnings("unchecked")
@@ -143,12 +186,9 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
         final Object pk = pojo.toJson().getValue(metadata.jsonKeyName());
         final EntityConstraintHolder holder = (EntityConstraintHolder) entityHandler();
         return Observable.fromIterable(holder.referenceTableKeysTo(metadata.table()))
-                         .flatMapSingle(e -> entityHandler().genericQuery()
-                                                            .executeAny(fetchExists(e.getKey(), e.getValue().eq(pk)))
-                                                            .filter(exist -> !exist)
-                                                            .switchIfEmpty(Single.error(
-                                                                metadata.unableDeleteDueUsing(keyProvider.apply(pojo))))
-                                                            .map(b -> pojo))
+                         .flatMapMaybe(e -> fetchExists(existQuery(e.getKey(), e.getValue().eq(pk))))
+                         .flatMap(b -> Observable.error(metadata.unableDeleteDueUsing(keyProvider.apply(pojo))))
+                         .map(b -> pojo)
                          .switchIfEmpty(Observable.just(pojo))
                          .singleOrError();
     }
@@ -168,6 +208,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
         return condition(table, filter, false);
     }
 
+    @SuppressWarnings("unchecked")
     default Condition condition(@NonNull JsonTable<? extends Record> table, JsonObject filter, boolean allowNullable) {
         if (Objects.isNull(filter)) {
             return DSL.trueCondition();

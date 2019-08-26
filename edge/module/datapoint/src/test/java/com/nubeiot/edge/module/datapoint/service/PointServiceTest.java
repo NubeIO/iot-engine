@@ -8,9 +8,12 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
 public class PointServiceTest extends BaseDataPointServiceTest {
 
@@ -21,7 +24,10 @@ public class PointServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_point_by_device(TestContext context) {
-        JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
+        JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP))
+                                      .toJson()
+                                      .put("unit", Temperature.CELSIUS.toJson());
+        expected.remove("measure_unit");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString())
                                                            .put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
@@ -31,7 +37,10 @@ public class PointServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_point_by_network(TestContext context) {
-        JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
+        JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP))
+                                      .toJson()
+                                      .put("unit", Temperature.CELSIUS.toJson());
+        expected.remove("measure_unit");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("network_id", "GPIO")
                                                            .put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
@@ -62,8 +71,9 @@ public class PointServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_point_by_network_not_found(TestContext context) {
-        JsonObject expected = new JsonObject("{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with point_id=" +
-                                             PrimaryKey.P_GPIO_TEMP.toString() + "\"}");
+        JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+                                              .put("message",
+                                                   "Not found resource with point_id=" + PrimaryKey.P_GPIO_TEMP);
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("network_id", PrimaryKey.NETWORK.toString())
                                                            .put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
@@ -73,7 +83,10 @@ public class PointServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_point_by_device_and_default_network(TestContext context) {
-        JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_HUMIDITY)).toJson();
+        JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_HUMIDITY))
+                                      .toJson()
+                                      .put("unit", Base.PERCENTAGE.toJson());
+        expected.remove("measure_unit");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString())
                                                            .put("network_id", "GPIO")
@@ -84,7 +97,10 @@ public class PointServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_point_by_device_and_another_network(TestContext context) {
-        JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_BACNET_TEMP)).toJson();
+        JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_BACNET_TEMP))
+                                      .toJson()
+                                      .put("unit", Temperature.CELSIUS.toJson());
+        expected.remove("measure_unit");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString())
                                                            .put("network_id", PrimaryKey.NETWORK.toString())
@@ -162,36 +178,6 @@ public class PointServiceTest extends BaseDataPointServiceTest {
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
                                      .build();
         asserter(context, false, expected, HistorySettingService.class.getName(), EventAction.GET_ONE, req);
-    }
-
-    @Test
-    public void test_get_history_data_by_point(TestContext context) {
-        JsonObject expected = new JsonObject(
-            "{\"histories\":[{\"id\":1,\"time\":\"2019-08-10T09:15Z\",\"value\":30.0},{\"id\":2," +
-            "\"time\":\"2019-08-10T09:18Z\",\"value\":35.0},{\"id\":3,\"time\":\"2019-08-10T09:20Z\",\"value\":32.0}," +
-            "{\"id\":4,\"time\":\"2019-08-10T09:22Z\",\"value\":42.0}]}");
-        RequestData req = RequestData.builder()
-                                     .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
-                                     .build();
-        asserter(context, true, expected, HistoryDataService.class.getName(), EventAction.GET_LIST, req);
-    }
-
-    @Test
-    public void test_get_history_data(TestContext context) {
-        JsonObject expected = new JsonObject(
-            "{\"histories\":[{\"id\":1,\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\"," +
-            "\"time\":\"2019-08-10T09:15Z\",\"value\":30.0},{\"id\":2," +
-            "\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"time\":\"2019-08-10T09:18Z\",\"value\":35.0}," +
-            "{\"id\":3,\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"time\":\"2019-08-10T09:20Z\",\"value\":32" +
-            ".0},{\"id\":4,\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"time\":\"2019-08-10T09:22Z\"," +
-            "\"value\":42.0},{\"id\":5,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
-            "\"time\":\"2019-08-10T09:15:15Z\",\"value\":20.5},{\"id\":6," +
-            "\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\",\"time\":\"2019-08-10T09:16:15Z\",\"value\":20.8}," +
-            "{\"id\":7,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\",\"time\":\"2019-08-10T09:17:15Z\"," +
-            "\"value\":20.8},{\"id\":8,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
-            "\"time\":\"2019-08-10T09:18:15Z\",\"value\":20.6}]}");
-        RequestData req = RequestData.builder().build();
-        asserter(context, true, expected, HistoryDataService.class.getName(), EventAction.GET_LIST, req);
     }
 
 }

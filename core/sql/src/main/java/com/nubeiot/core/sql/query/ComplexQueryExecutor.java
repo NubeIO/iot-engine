@@ -18,7 +18,7 @@ public interface ComplexQueryExecutor<CP extends CompositePojo>
     extends ReferenceQueryExecutor<CP>, JDBCQueryExecutor<Single<?>>, RXQueryExecutor {
 
     static ComplexQueryExecutor create(@NonNull EntityHandler handler) {
-        return new DaoComplexQueryExecutor(handler);
+        return new ComplexDaoQueryExecutor(handler);
     }
 
     /**

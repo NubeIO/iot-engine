@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.skyscreamer.jsonassert.Customization;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
@@ -27,6 +28,7 @@ public class ExpectedResponse {
     private final JsonObject expected;
     private final int code;
     private final List<Customization> customizations;
+    private JSONCompareMode mode;
     private Consumer<ResponseData> after;
 
     public boolean hasAfter() {
@@ -41,7 +43,11 @@ public class ExpectedResponse {
                                  actual.headers().getString(HttpHeaders.CONTENT_TYPE.toString()));
             context.assertNotNull(actual.headers().getString("x-response-time"));
             context.assertEquals(code, actual.getStatus().code());
-            JsonHelper.assertJson(context, async, expected, actual.body(), customizations);
+            if (customizations.isEmpty()) {
+                JsonHelper.assertJson(context, async, expected, actual.body(), mode);
+            } else {
+                JsonHelper.assertJson(context, async, expected, actual.body(), customizations);
+            }
             Optional.ofNullable(after).ifPresent(c -> c.accept(actual));
         } finally {
             TestHelper.testComplete(async);

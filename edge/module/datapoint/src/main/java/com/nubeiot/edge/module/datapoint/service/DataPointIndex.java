@@ -8,10 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.sql.CompositeMetadata.AbstractCompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.EntityMetadata.BigSerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
@@ -19,8 +21,8 @@ import com.nubeiot.core.sql.EntityMetadata.StringKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.UUIDKeyEntity;
 import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.tables.JsonTable;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Reflections.ReflectionField;
+import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
+import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceEquipDao;
@@ -32,6 +34,7 @@ import com.nubeiot.iotdata.edge.model.tables.daos.PointDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointHistoryDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointRealtimeDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointTagDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.PointValueDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.RealtimeSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ThingDao;
@@ -46,6 +49,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
@@ -60,6 +64,7 @@ import com.nubeiot.iotdata.edge.model.tables.records.PointHistoryDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointRealtimeDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointTagRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.PointValueDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.RealtimeSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ScheduleSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ThingRecord;
@@ -72,10 +77,7 @@ import lombok.NonNull;
 @SuppressWarnings("unchecked")
 public interface DataPointIndex extends MetadataIndex {
 
-    List<EntityMetadata> INDEX = ReflectionClass.stream(DataPointIndex.class.getPackage().getName(),
-                                                        EntityMetadata.class, ReflectionClass.publicClass())
-                                                .flatMap(ReflectionField::streamConstants)
-                                                .collect(Collectors.toList());
+    List<EntityMetadata> INDEX = MetadataIndex.find(DataPointIndex.class);
 
     static Map<EntityMetadata, Integer> dependencies() {
         Map<EntityMetadata, Integer> map = new HashMap<>();
@@ -306,6 +308,73 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull com.nubeiot.iotdata.edge.model.tables.Point table() {
             return Tables.POINT;
+        }
+
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    final class PointCompositeMetadata
+        extends AbstractCompositeMetadata<UUID, Point, PointRecord, PointDao, PointComposite>
+        implements UUIDKeyEntity<Point, PointRecord, PointDao> {
+
+        public static final PointCompositeMetadata INSTANCE = new PointCompositeMetadata().addSubItem(
+            MeasureUnitMetadata.INSTANCE);
+
+        @Override
+        public final @NonNull Class<PointComposite> modelClass() { return PointComposite.class; }
+
+        @Override
+        public final @NonNull JsonTable<PointRecord> table() { return Tables.POINT; }
+
+        @Override
+        public final @NonNull Class<PointDao> daoClass() { return PointDao.class; }
+
+        @Override
+        public @NonNull Class<Point> rawClass() {
+            return Point.class;
+        }
+
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    final class PointValueMetadata implements UUIDKeyEntity<PointValueData, PointValueDataRecord, PointValueDataDao> {
+
+        public static final PointValueMetadata INSTANCE = new PointValueMetadata();
+
+        @Override
+        public final @NonNull JsonTable<PointValueDataRecord> table() { return Tables.POINT_VALUE_DATA; }
+
+        @Override
+        public final @NonNull Class<PointValueData> modelClass() { return PointValueData.class; }
+
+        @Override
+        public final @NonNull Class<PointValueDataDao> daoClass() { return PointValueDataDao.class; }
+
+        @Override
+        public @NonNull String requestKeyName() {
+            return PointMetadata.INSTANCE.requestKeyName();
+        }
+
+        @Override
+        public @NonNull String singularKeyName() {
+            return "data";
+        }
+
+        @Override
+        public @NonNull String pluralKeyName() {
+            return "data";
+        }
+
+        @Override
+        public @NonNull PointValueData onCreating(RequestData reqData) throws IllegalArgumentException {
+            final PointValueData pojo = parseFromRequest(reqData.body());
+            pojo.setPriority(Optional.ofNullable(pojo.getPriority()).orElse(PointPriorityValue.DEFAULT_PRIORITY));
+            pojo.setPriorityValues(Optional.ofNullable(pojo.getPriorityValues())
+                                           .orElse(new PointPriorityValue())
+                                           .add(pojo.getPriority(), pojo.getValue()));
+            return pojo;
         }
 
     }

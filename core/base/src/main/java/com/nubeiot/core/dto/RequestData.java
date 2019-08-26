@@ -53,6 +53,11 @@ public final class RequestData extends AbstractDTO {
          */
         public static final String AUDIT = "_audit";
 
+        /**
+         * For {@code sort}
+         */
+        public static final String SORT = "_sort";
+
     }
 
     @JsonCreator

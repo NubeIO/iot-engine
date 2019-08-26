@@ -36,7 +36,7 @@ public final class HttpClientConfig implements IConfig {
     private HttpClientOptions options;
     private HandlerConfig handlerConfig = new HandlerConfig();
 
-    HttpClientConfig() {
+    public HttpClientConfig() {
         this(new HttpClientOptions().setIdleTimeout(HTTP_IDLE_TIMEOUT_SECOND)
                                     .setIdleTimeoutUnit(TimeUnit.SECONDS)
                                     .setConnectTimeout(CONNECT_TIMEOUT_SECOND * 1000)

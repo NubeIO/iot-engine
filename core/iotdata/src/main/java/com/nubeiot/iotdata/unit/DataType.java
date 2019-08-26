@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import io.github.classgraph.ClassInfo;
+import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,7 +18,7 @@ import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.iotdata.unit.DataTypeCategory.All;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 
 import lombok.NonNull;
 
@@ -34,20 +35,20 @@ public interface DataType extends EnumType, Cloneable {
     }
 
     @NonNull
-    static DataType def() { return All.NUMBER; }
+    static DataType def() { return Base.NUMBER; }
 
     @NonNull
-    static DataType factory(String dbValue) {
-        if (Strings.isBlank(dbValue)) {
+    static DataType factory(String dittoValue) {
+        if (Strings.isBlank(dittoValue)) {
             return def();
         }
-        final String[] split = dbValue.split(SEP);
+        final String[] split = dittoValue.split(SEP);
         return factory(split[0], split.length > 1 ? split[1] : null);
     }
 
     @NonNull
     static DataType factory(String type, String unit) {
-        return factory(type, unit, All.NUMBER.category(), null);
+        return factory(type, unit, Base.NUMBER.category(), null);
     }
 
     @NonNull
@@ -59,6 +60,12 @@ public interface DataType extends EnumType, Cloneable {
                                        .findAny()
                                        .orElseGet(() -> new NumberDataType(type, unit));
         return new NumberDataType(dt).setCategory(category).setLabel(UnitLabel.create(display));
+    }
+
+    @NonNull
+    static DataType factory(@NonNull JsonObject dataType, UnitLabel label) {
+        return factory(dataType.getString("type"), dataType.getString("symbol"), dataType.getString("category"),
+                       null).setLabel(label);
     }
 
     @NonNull

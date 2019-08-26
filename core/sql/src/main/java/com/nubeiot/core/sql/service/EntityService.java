@@ -10,7 +10,6 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
-import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
@@ -29,7 +28,8 @@ import lombok.NonNull;
  * @see EntityValidation
  */
 //TODO Missing `BATCH` Creation/Modification/Deletion
-public interface EntityService<P extends VertxPojo, M extends EntityMetadata> extends EventListener {
+public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
+    extends EventListener, BaseEntityService<M> {
 
     /**
      * Defines {@code CURD} actions
@@ -43,27 +43,12 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata> ex
     }
 
     /**
-     * Entity handler
-     *
-     * @return entity handler
-     */
-    @NonNull EntityHandler entityHandler();
-
-    /**
      * Query executor to execute {@code CRUD} resource in database layer
      *
      * @return query executor
      * @see EntityQueryExecutor
      */
     @NonNull EntityQueryExecutor<P> queryExecutor();
-
-    /**
-     * Context entity metadata
-     *
-     * @return entity metadata
-     * @see EntityMetadata
-     */
-    @NonNull M context();
 
     /**
      * Service validation for context resource

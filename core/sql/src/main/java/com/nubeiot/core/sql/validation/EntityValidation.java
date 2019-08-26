@@ -22,7 +22,6 @@ public interface EntityValidation<P extends VertxPojo> {
 
     String NOT_FOUND_MSG = "Not found resource with {0}";
     String ALREADY_EXISTED_MSG = "Already existed resource with {0}";
-    String ALREADY_LINKED_MSG = "Resource with {0} is already referenced to resource with {1}";
     String RESOURCE_IS_USING_MSG = "Resource with {0} is using by another resource";
 
     EntityMetadata context();

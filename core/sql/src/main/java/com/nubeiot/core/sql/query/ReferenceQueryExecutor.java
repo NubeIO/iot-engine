@@ -1,10 +1,14 @@
 package com.nubeiot.core.sql.query;
 
+import java.util.Collection;
+import java.util.Objects;
+
 import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Single;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
@@ -15,26 +19,15 @@ import lombok.NonNull;
 public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQueryExecutor<P> {
 
     static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> ReferenceQueryExecutor create(
-        EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata) {
-        return new DaoReferenceQueryExecutor<>(handler, metadata);
+        @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata) {
+        return new ReferenceDaoQueryExecutor<>(handler, metadata);
     }
 
-    class DaoReferenceQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>>
-        extends DaoQueryExecutor<K, P, R, D> implements ReferenceQueryExecutor<P> {
-
-        DaoReferenceQueryExecutor(EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata) {
-            super(handler, metadata);
-        }
-
-        @Override
-        public Single<P> findOneByKey(RequestData requestData) {
-            K pk = metadata.parseKey(requestData);
-            return handler.dao(metadata.daoClass())
-                          .queryExecutor().findOne(viewOneQuery(requestData.getFilter()))
-                          .flatMap(o -> o.map(Single::just).orElse(Single.error(metadata.notFound(pk))))
-                          .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
-        }
-
+    default Maybe<Boolean> mustExists(@NonNull RequestData reqData, @NonNull Collection<EntityMetadata> refMetadata) {
+        return Observable.fromIterable(refMetadata).filter(Objects::nonNull).flatMapMaybe(meta -> {
+            Object key = meta.parseKey(reqData);
+            return fetchExists(existQuery(meta, key)).switchIfEmpty(Maybe.error(meta.notFound(key)));
+        }).reduce((b1, b2) -> b1 && b2);
     }
 
 }

@@ -1,9 +1,6 @@
 package com.nubeiot.core.sql.service;
 
-import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.AbstractEntityHandler;
@@ -21,7 +18,6 @@ import com.nubeiot.core.sql.service.MockEntityService.Metadata.AuthorMetadata;
 import com.nubeiot.core.sql.service.MockEntityService.Metadata.BookMetadata;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.sql.validation.EntityValidation;
-import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
@@ -134,8 +130,8 @@ interface MockEntityService {
         }
 
         @Override
-        public Map<String, Function<String, ?>> jsonFieldConverter() {
-            return Collections.singletonMap(Tables.BOOK.AUTHOR_ID.getName().toLowerCase(), Functions.toInt());
+        public EntityReferences entityReferences() {
+            return new EntityReferences().add(AuthorMetadata.INSTANCE);
         }
 
     }

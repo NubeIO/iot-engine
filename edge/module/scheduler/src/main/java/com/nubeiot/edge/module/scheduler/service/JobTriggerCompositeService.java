@@ -1,16 +1,12 @@
 package com.nubeiot.edge.module.scheduler.service;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
-import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.module.scheduler.pojos.JobTriggerComposite;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobTriggerMetadata;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
@@ -36,11 +32,8 @@ abstract class JobTriggerCompositeService
     }
 
     @Override
-    public final Map<String, Function<String, ?>> jsonFieldConverter() {
-        final Map<String, Function<String, ?>> map = new HashMap<>();
-        map.put(reference().requestKeyName(), Functions.toInt());
-        map.put(resource().requestKeyName(), Functions.toInt());
-        return Collections.unmodifiableMap(map);
+    public EntityReferences entityReferences() {
+        return new EntityReferences().add(reference()).add(resource());
     }
 
     @Override

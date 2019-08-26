@@ -8,12 +8,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.skyscreamer.jsonassert.Customization;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.http.WebSocket;
@@ -77,11 +77,17 @@ public class HttpServerTestBase {
         return new HttpClientOptions().setConnectTimeout(TestHelper.TEST_TIMEOUT_SEC);
     }
 
+    protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected, JsonObject bodyExpected, Customization... customizations) {
+        assertRestByClient(context, method, path, codeExpected, bodyExpected, JSONCompareMode.STRICT, customizations);
+    }
+
     protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected,
-                                      JsonObject bodyExpected, Customization... customizations) {
+                                      JsonObject bodyExpected, JSONCompareMode mode, Customization... customizations) {
         assertRestByClient(context, method, path, null, ExpectedResponse.builder()
-                                                                        .expected(bodyExpected).code(codeExpected)
+                                                                        .expected(bodyExpected)
+                                                                        .code(codeExpected)
                                                                         .customizations(customizations)
+                                                                        .mode(mode)
                                                                         .build());
     }
 
@@ -91,6 +97,7 @@ public class HttpServerTestBase {
                                                                                .expected(bodyExpected)
                                                                                .code(codeExpected)
                                                                                .customizations(customizations)
+                                                                               .mode(JSONCompareMode.STRICT)
                                                                                .build());
     }
 

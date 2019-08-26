@@ -5,6 +5,8 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.transport.Transporter;
 
+import lombok.NonNull;
+
 public interface PostService {
 
     PostService EMPTY = new PostService() {
@@ -12,16 +14,16 @@ public interface PostService {
         public Transporter transporter() { return null; }
 
         @Override
-        public void onSuccess(EventAction action, JsonObject json) { }
+        public void onSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull JsonObject data) { }
 
         @Override
-        public void onError(EventAction action, Throwable throwable) { }
+        public void onError(@NonNull EntityService service, @NonNull EventAction action, @NonNull Throwable t) { }
     };
 
     Transporter transporter();
 
-    void onSuccess(EventAction action, JsonObject json);
+    void onSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull JsonObject data);
 
-    void onError(EventAction action, Throwable throwable);
+    void onError(@NonNull EntityService service, @NonNull EventAction action, @NonNull Throwable throwable);
 
 }

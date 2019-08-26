@@ -8,8 +8,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.iotdata.unit.DataTypeCategory.All;
 import com.nubeiot.iotdata.unit.DataTypeCategory.AngularVelocity;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 import com.nubeiot.iotdata.unit.DataTypeCategory.ElectricPotential;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Illumination;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Power;
@@ -20,9 +20,9 @@ public class DataTypeTest {
 
     @Test
     public void test_serialize_dataType() throws JSONException {
-        JsonHelper.assertJson(new JsonObject("{\"type\":\"number\", \"category\":\"ALL\"}"), All.NUMBER.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"type\":\"number\", \"category\":\"ALL\"}"), Base.NUMBER.toJson());
         JsonHelper.assertJson(new JsonObject("{\"type\":\"percentage\", \"symbol\": \"%\", \"category\":\"ALL\"}"),
-                              All.PERCENTAGE.toJson());
+                              Base.PERCENTAGE.toJson());
         JsonHelper.assertJson(
             new JsonObject("{\"type\":\"celsius\", \"symbol\": \"°C\", \"category\":\"TEMPERATURE\"}"),
             Temperature.CELSIUS.toJson());
@@ -42,7 +42,7 @@ public class DataTypeTest {
         JsonHelper.assertJson(
             new JsonObject("{\"type\":\"revolutions_per_minute\", \"symbol\": \"rpm\", \"category\":\"VELOCITY\"}"),
             AngularVelocity.RPM.toJson());
-        JsonHelper.assertJson(new JsonObject("{\"type\":\"bool\",\"category\":\"ALL\"}"), All.BOOLEAN.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"type\":\"bool\",\"category\":\"ALL\"}"), Base.BOOLEAN.toJson());
     }
 
     @Test

@@ -118,6 +118,14 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
         return parseFromEntity(request);
     }
 
+    @NonNull
+    default Optional<K> getKey(@NonNull RequestData requestData) throws IllegalArgumentException {
+        return Optional.ofNullable(requestData.body())
+                       .flatMap(body -> Optional.ofNullable(body.getValue(requestKeyName())))
+                       .map(Object::toString)
+                       .map(this::parseKey);
+    }
+
     /**
      * Extract {@code primary/unique key} from request by {@link #requestKeyName()} then parse to proper data type
      *
@@ -129,10 +137,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      */
     @NonNull
     default K parseKey(@NonNull RequestData requestData) throws IllegalArgumentException {
-        return Optional.ofNullable(requestData.body())
-                       .flatMap(body -> Optional.ofNullable(body.getValue(requestKeyName()))
-                                                .map(k -> parseKey(k.toString())))
-                       .orElseThrow(() -> new IllegalArgumentException("Missing key " + requestKeyName()));
+        return getKey(requestData).orElseThrow(() -> new IllegalArgumentException("Missing key " + requestKeyName()));
     }
 
     /**

@@ -7,7 +7,7 @@ public class DataPointIndexTest {
 
     @Test
     public void test_how_many_model() {
-        Assert.assertEquals(14, DataPointIndex.INDEX.size());
+        Assert.assertEquals(16, DataPointIndex.INDEX.size());
     }
 
 }

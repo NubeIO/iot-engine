@@ -1,8 +1,5 @@
 package com.nubeiot.core.sql.service;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
@@ -32,13 +29,13 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     @Override
     @NonNull
     public RequestData onHandlingManyResource(@NonNull RequestData requestData) {
-        return recompute(requestData, convertKey(requestData, reference()));
+        return recomputeRequestData(requestData, convertKey(requestData, reference()));
     }
 
     @Override
     @NonNull
     public RequestData onHandlingOneResource(@NonNull RequestData requestData) {
-        return recompute(requestData, convertKey(requestData, reference(), resource()));
+        return recomputeRequestData(requestData, convertKey(requestData, reference(), resource()));
     }
 
     @Override
@@ -48,14 +45,14 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     public @NonNull CompositeValidation validation() { return this.context(); }
 
     @Override
-    protected JsonObject combineListData(JsonArray results) {
-        return new JsonObject().put(resource().pluralKeyName(), results);
+    public @NonNull String resourcePluralKey() {
+        return resource().pluralKeyName();
     }
 
     @Override
     @NonNull
     public RequestData onHandlingNewResource(@NonNull RequestData requestData) {
-        return recompute(requestData, convertKey(requestData, reference()));
+        return recomputeRequestData(requestData, convertKey(requestData, reference()));
     }
 
 }

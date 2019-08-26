@@ -10,14 +10,11 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.ForeignKey;
 import org.jooq.JoinType;
 import org.jooq.Record;
 import org.jooq.RecordMapper;
@@ -40,8 +37,6 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
-import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -54,7 +49,7 @@ import com.nubeiot.core.utils.Strings;
 import lombok.NonNull;
 
 @SuppressWarnings("unchecked")
-class DaoComplexQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQueryExecutor
+class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQueryExecutor
     implements ComplexQueryExecutor<CP> {
 
     private final EntityHandler handler;
@@ -63,7 +58,7 @@ class DaoComplexQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
     private EntityMetadata context;
     private EntityMetadata resource;
 
-    DaoComplexQueryExecutor(EntityHandler handler) {
+    ComplexDaoQueryExecutor(EntityHandler handler) {
         super(handler.dsl().configuration(), io.vertx.reactivex.core.Vertx.newInstance(handler.vertx()));
         this.handler = handler;
     }
@@ -127,42 +122,44 @@ class DaoComplexQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
                                     .map(r -> getKey(r, resource))
                                     .orElse(Functions.getIfThrow(() -> resource.parseKey(reqData)).orElse(null));
         final Object cKey = context.parseKey(reqData);
-        final JsonObject query = reqData.getFilter()
-                                        .copy()
-                                        .put(context.singularKeyName(), putKey(cKey, context))
-                                        .put(resource.singularKeyName(), putKey(sKey, resource));
+        JsonObject q = reqData.getFilter()
+                              .copy()
+                              .put(context.singularKeyName(), Collections.singletonMap(context.jsonKeyName(), cKey))
+                              .put(resource.singularKeyName(), Collections.singletonMap(resource.jsonKeyName(), sKey));
         final String cKeyN = context.requestKeyName();
         final String sKeyN = resource.requestKeyName();
         if (Objects.isNull(src)) {
-            return isExist(cKey, sKey, query).filter(p -> Objects.isNull(p.prop(cKeyN)))
-                                             .switchIfEmpty(Single.error(base.alreadyExisted(
-                                                 base.msg(reqData.getFilter(), references.values()))))
-                                             .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError)
-                                             .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo))
-                                             .flatMap(p -> (Single) dao(base).insertReturningPrimary(pojo));
+            return isExist(cKey, sKey, q).filter(p -> Objects.isNull(p.prop(cKeyN)))
+                                         .switchIfEmpty(Single.error(
+                                             base.alreadyExisted(base.msg(reqData.getFilter(), references.values()))))
+                                         .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError)
+                                         .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo))
+                                         .flatMap(p -> (Single) dao(base).insertReturningPrimary(pojo));
         }
-        return isExist(context, cKey).flatMap(b -> findOneById(resource, sKey))
-                                     .filter(Optional::isPresent)
-                                     .flatMap(o -> Maybe.error(resource.alreadyExisted(Strings.kvMsg(sKeyN, sKey))))
-                                     .switchIfEmpty((Single) dao(resource).insertReturningPrimary(
-                                         AuditDecorator.addCreationAudit(reqData, resource,
-                                                                         resource.parseFromRequest(src))))
-                                     .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo.with(sKeyN, k)))
-                                     .flatMap(p -> (Single) dao(base).insertReturningPrimary(p));
+        return fetchExists(existQuery(context, cKey)).flatMapSingle(b -> findOneById(resource, sKey))
+                                                     .filter(Optional::isPresent)
+                                                     .flatMap(o -> Maybe.error(
+                                                         resource.alreadyExisted(Strings.kvMsg(sKeyN, sKey))))
+                                                     .switchIfEmpty((Single) dao(resource).insertReturningPrimary(
+                                                         AuditDecorator.addCreationAudit(reqData, resource,
+                                                                                         resource.parseFromRequest(
+                                                                                             src))))
+                                                     .map(k -> AuditDecorator.addCreationAudit(reqData, base,
+                                                                                               pojo.with(sKeyN, k)))
+                                                     .flatMap(p -> (Single) dao(base).insertReturningPrimary(p));
     }
 
     @Override
-    public Single<?> modifyReturningPrimary(RequestData reqData, EventAction action,
+    public Single<?> modifyReturningPrimary(RequestData req, EventAction action,
                                             BiFunction<VertxPojo, RequestData, VertxPojo> validator) {
-        return findOneByKey(reqData).map(db -> (CP) validator.apply(db, reqData))
-                                    .flatMap(p -> Optional.ofNullable(p.getOther(resource.singularKeyName()))
-                                                          .map(r -> (Single) dao(resource).update(
-                                                              AuditDecorator.addModifiedAudit(reqData, resource,
-                                                                                              (VertxPojo) r)))
-                                                          .orElse(Single.just(p))
-                                                          .map(r -> p))
-                                    .flatMap(
-                                        p -> dao(base).update(AuditDecorator.addModifiedAudit(reqData, base, (CP) p)));
+        return findOneByKey(req).map(db -> (CP) validator.apply(db, req))
+                                .flatMap(p -> Optional.ofNullable(p.getOther(resource.singularKeyName()))
+                                                      .map(VertxPojo.class::cast)
+                                                      .map(r -> (Single) dao(resource).update(
+                                                          AuditDecorator.addModifiedAudit(req, resource, r)))
+                                                      .orElse(Single.just(p))
+                                                      .map(r -> p))
+                                .flatMap(p -> dao(base).update(AuditDecorator.addModifiedAudit(req, base, (CP) p)));
     }
 
     @Override
@@ -172,38 +169,32 @@ class DaoComplexQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
                                     .flatMap(pojo -> doDelete(reqData, pojo));
     }
 
-    public Function<DSLContext, ResultQuery<? extends Record>> viewQuery(@NonNull JsonObject filter,
-                                                                         Pagination pagination) {
+    public Function<DSLContext, ResultQuery<? extends Record>> viewQuery(JsonObject filter, Pagination pagination) {
         Predicate<Entry<String, EntityMetadata>> predicate = e -> Objects.nonNull(context) &&
                                                                   !e.getKey().equals(context.singularKeyName());
         return context -> paging(
-            join(context, ReferenceFilterCreation.createFilter(references, filter), JoinType.JOIN, predicate, false),
-            pagination);
+            join(base.table(), context, ReferenceFilterCreation.createFilter(references, filter), JoinType.JOIN,
+                 predicate, false), pagination);
     }
 
     private Object getKey(JsonObject data, EntityMetadata metadata) {
         return data.getValue(metadata.jsonKeyName());
     }
 
-    private Single<CP> isExist(@NonNull Object contextKey, @NonNull Object resourceKey,
-                               @NonNull JsonObject baseFilter) {
-        return isExist(context, contextKey).flatMap(
-            e -> executeAny(existQueryByJoin(baseFilter)).map(r -> Optional.ofNullable(r.fetchOne(toMapper()))))
-                                           .filter(Optional::isPresent)
-                                           .switchIfEmpty(Single.error(resource.notFound(resourceKey)))
-                                           .map(Optional::get);
-    }
-
-    private Single<Boolean> isExist(@NonNull EntityMetadata metadata, @NonNull Object ctxKey) {
-        return executeAny(fetchExists(metadata, ctxKey)).filter(exist -> exist)
-                                                        .switchIfEmpty(Single.error(metadata.notFound(ctxKey)));
+    private Single<CP> isExist(@NonNull Object ctxKey, @NonNull Object resourceKey, @NonNull JsonObject baseFilter) {
+        return fetchExists(existQuery(context, ctxKey)).switchIfEmpty(Single.error(context.notFound(ctxKey)))
+                                                       .flatMap(e -> executeAny(existQueryByJoin(baseFilter)).map(
+                                                           r -> Optional.ofNullable(r.fetchOne(toMapper()))))
+                                                       .filter(Optional::isPresent)
+                                                       .switchIfEmpty(Single.error(resource.notFound(resourceKey)))
+                                                       .map(Optional::get);
     }
 
     private Function<DSLContext, ResultQuery<? extends Record>> existQueryByJoin(JsonObject filter) {
         Predicate<Entry<String, EntityMetadata>> predicate = e -> Objects.nonNull(context) &&
                                                                   !e.getKey().equals(context.singularKeyName());
-        return dsl -> join(dsl, ReferenceFilterCreation.createFilter(references, filter), JoinType.RIGHT_OUTER_JOIN,
-                           predicate, true).limit(1);
+        return dsl -> join(base.table(), dsl, ReferenceFilterCreation.createFilter(references, filter),
+                           JoinType.RIGHT_OUTER_JOIN, predicate, true).limit(1);
     }
 
     private RecordMapper<? super Record, CP> toMapper() {
@@ -220,36 +211,20 @@ class DaoComplexQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
                : (Single<Optional<? extends VertxPojo>>) dao(metadata).findOneById(key);
     }
 
-    private SelectConditionStep<Record> join(@NonNull DSLContext ctx, @NonNull JsonObject filter,
-                                             @NonNull JoinType joinType,
+    private SelectConditionStep<Record> join(@NonNull JsonTable<? extends Record> from, @NonNull DSLContext ctx,
+                                             @NonNull JsonObject filter, @NonNull JoinType joinType,
                                              @NonNull Predicate<Entry<String, EntityMetadata>> predicate,
                                              boolean checkExist) {
-        final JsonTable<? extends Record> from = base.table();
         final SelectJoinStep<Record> baseQuery = ctx.select(joinFields(from, checkExist, predicate)).from(from);
         final JsonObject baseFilter = checkExist ? new JsonObject() : filter.copy();
         references.entrySet().forEach(entry -> {
             if (predicate.test(entry)) {
-                doJoin(baseQuery, from, entry.getValue(), joinType, filter);
+                join(baseQuery, entry.getValue(), joinType, filter);
             } else {
                 baseFilter.put(entry.getValue().requestKeyName(), filter.getValue(entry.getValue().requestKeyName()));
             }
         });
         return baseQuery.where(condition(from, baseFilter, checkExist));
-    }
-
-    private void doJoin(@NonNull SelectJoinStep<Record> base, @NonNull JsonTable<? extends Record> from,
-                        @NonNull EntityMetadata refMetadata, @NonNull JoinType joinType, @NonNull JsonObject filter) {
-        JsonObject f = filter.getJsonObject(refMetadata.singularKeyName());
-        base.join(refMetadata.table(), joinType).onKey().where(condition(refMetadata.table(), f));
-    }
-
-    private Condition joinCondition(JsonTable<? extends Record> from, JsonTable<? extends Record> ref) {
-        final ForeignKey<? extends Record, ? extends Record> fk = from.getReferencesTo(ref)
-                                                                      .stream()
-                                                                      .findFirst()
-                                                                      .orElseThrow(noReference(from, ref));
-        final Field refField = ref.getPrimaryKey().getFields().get(0);
-        return from.field(fk.getFields().get(0)).eq(refField);
     }
 
     private List<SelectFieldOrAsterisk> joinFields(@NonNull JsonTable<? extends Record> from, boolean showKeyOnly,
@@ -265,16 +240,6 @@ class DaoComplexQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
                                                                                       .getPrimaryKey()
                                                                                       .getFieldsArray())
                                                                    .flatMap(Stream::of)).collect(Collectors.toList());
-    }
-
-    private Supplier<ImplementationError> noReference(JsonTable<? extends Record> from,
-                                                      JsonTable<? extends Record> ref) {
-        return () -> new ImplementationError(ErrorCode.DATABASE_ERROR,
-                                             "No foreign key between " + from.getName() + " and " + ref.getName());
-    }
-
-    private JsonObject putKey(Object cKey, EntityMetadata context) {
-        return new JsonObject().put(context.jsonKeyName(), cKey);
     }
 
     private SingleSource<? extends CP> doDelete(RequestData requestData, CP pojo) {

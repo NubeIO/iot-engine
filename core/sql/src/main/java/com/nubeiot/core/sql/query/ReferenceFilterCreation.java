@@ -2,9 +2,11 @@ package com.nubeiot.core.sql.query;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonObject;
@@ -14,6 +16,15 @@ import com.nubeiot.core.sql.EntityMetadata;
 import lombok.NonNull;
 
 public interface ReferenceFilterCreation {
+
+    static JsonObject createFilter(@NonNull List<EntityMetadata> references, JsonObject filter) {
+        if (Objects.isNull(filter)) {
+            return new JsonObject();
+        }
+        return createFilter(
+            references.stream().collect(Collectors.toMap(EntityMetadata::singularKeyName, Function.identity())),
+            filter);
+    }
 
     static JsonObject createFilter(@NonNull Map<String, EntityMetadata> references, JsonObject filter) {
         if (Objects.isNull(filter)) {

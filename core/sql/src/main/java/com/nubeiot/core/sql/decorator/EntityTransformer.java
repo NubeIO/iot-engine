@@ -8,6 +8,7 @@ import java.util.function.Function;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
@@ -43,6 +44,15 @@ public interface EntityTransformer {
     static JsonObject keyResponse(@NonNull String keyName, @NonNull Object keyValue) {
         return new JsonObject().put(keyName, JsonData.checkAndConvert(keyValue));
     }
+
+    static JsonObject getData(@NonNull JsonObject responseData) {
+        return responseData.getJsonObject("resource");
+    }
+
+    /**
+     * @return resource plural key name
+     */
+    @NonNull String resourcePluralKey();
 
     /**
      * Enable {@code CUD} response includes full resource instead of simple resource with only response status and
@@ -83,6 +93,17 @@ public interface EntityTransformer {
     @NonNull
     default JsonObject afterEachList(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return afterGet(pojo, requestData);
+    }
+
+    /**
+     * Wrap list data to json object
+     *
+     * @param results given results
+     * @return json object of list data
+     */
+    @NonNull
+    default JsonObject wrapListData(@NonNull JsonArray results) {
+        return new JsonObject().put(resourcePluralKey(), results);
     }
 
     /**

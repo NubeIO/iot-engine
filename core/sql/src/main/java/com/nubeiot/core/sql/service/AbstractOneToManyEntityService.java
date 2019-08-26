@@ -1,12 +1,12 @@
 package com.nubeiot.core.sql.service;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.reactivex.Maybe;
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
@@ -44,24 +44,28 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
     @Override
     @NonNull
     public RequestData onHandlingManyResource(@NonNull RequestData requestData) {
-        return recompute(requestData, null);
+        return recomputeRequestData(requestData, null);
     }
 
     @Override
     @NonNull
     public RequestData onHandlingOneResource(@NonNull RequestData requestData) {
-        return recompute(requestData, convertKey(requestData, context()));
+        return recomputeRequestData(requestData, convertKey(requestData, context()));
     }
 
-    protected RequestData recompute(@NonNull RequestData requestData, JsonObject extra) {
+    @Override
+    protected Single<?> doInsert(@NonNull RequestData reqData) {
+        return validate(reqData).flatMapSingle(b -> super.doInsert(reqData));
+    }
+
+    protected Maybe<Boolean> validate(@NonNull RequestData reqData) {
+        return queryExecutor().mustExists(reqData, ref().entityReferences().refMetadata());
+    }
+
+    protected RequestData recomputeRequestData(@NonNull RequestData requestData, JsonObject extra) {
         JsonObject body = Optional.ofNullable(requestData.body()).orElseGet(JsonObject::new);
-        Map<String, Object> f = body.stream()
-                                    .filter(e -> jsonFieldConverter().containsKey(e.getKey()))
-                                    .collect(HashMap::new,
-                                             (m, v) -> m.put(keyMapper().apply(v), valueMapper().apply(v)),
-                                             Map::putAll);
-        Optional.ofNullable(extra).ifPresent(e -> f.putAll(e.getMap()));
-        JsonObject filter = new JsonObject(f);
+        JsonObject filter = new JsonObject(entityReferences().computeRequest(body));
+        Optional.ofNullable(extra).ifPresent(e -> filter.getMap().putAll(e.getMap()));
         body = body.mergeIn(filter, true);
         final JsonObject combineFilter = Objects.isNull(requestData.getFilter())
                                          ? filter

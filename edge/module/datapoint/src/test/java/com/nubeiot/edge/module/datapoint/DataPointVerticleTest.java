@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.DeploymentOptions;
@@ -58,7 +59,8 @@ public class DataPointVerticleTest extends DynamicServiceTestBase {
 
     @Test
     public void test_get_measure_unit(TestContext context) {
-        assertRestByClient(context, HttpMethod.GET, "/api/s/measure-unit", 200, MockData.MEASURE_UNITS);
+        assertRestByClient(context, HttpMethod.GET, "/api/s/measure-unit", 200, MockData.MEASURE_UNITS,
+                           JSONCompareMode.LENIENT);
     }
 
     @Test

@@ -1,6 +1,5 @@
 package com.nubeiot.edge.module.scheduler.service;
 
-import java.util.Arrays;
 import java.util.List;
 
 import io.vertx.core.json.JsonObject;
@@ -35,15 +34,17 @@ import lombok.NonNull;
 @SuppressWarnings("unchecked")
 public interface SchedulerMetadata extends MetadataIndex {
 
+    List<EntityMetadata> INDEX = MetadataIndex.find(SchedulerMetadata.class);
+
     @Override
     default List<EntityMetadata> index() {
-        return Arrays.asList(JobEntityMetadata.INSTANCE, TriggerEntityMetadata.INSTANCE, JobTriggerMetadata.INSTANCE);
+        return INDEX;
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class JobEntityMetadata implements SerialKeyEntity<JobEntity, JobEntityRecord, JobEntityDao> {
 
-        static final JobEntityMetadata INSTANCE = new JobEntityMetadata();
+        public static final JobEntityMetadata INSTANCE = new JobEntityMetadata();
 
         @Override
         public @NonNull Class<JobEntity> modelClass() {
@@ -92,7 +93,7 @@ public interface SchedulerMetadata extends MetadataIndex {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class TriggerEntityMetadata implements SerialKeyEntity<TriggerEntity, TriggerEntityRecord, TriggerEntityDao> {
 
-        static final TriggerEntityMetadata INSTANCE = new TriggerEntityMetadata();
+        public static final TriggerEntityMetadata INSTANCE = new TriggerEntityMetadata();
 
         @Override
         public @NonNull Class<TriggerEntity> modelClass() {
@@ -145,8 +146,8 @@ public interface SchedulerMetadata extends MetadataIndex {
         extends AbstractCompositeMetadata<Integer, JobTrigger, JobTriggerRecord, JobTriggerDao, JobTriggerComposite>
         implements SerialKeyEntity<JobTrigger, JobTriggerRecord, JobTriggerDao> {
 
-        static final JobTriggerMetadata INSTANCE = new JobTriggerMetadata().addSubItem(JobEntityMetadata.INSTANCE,
-                                                                                       TriggerEntityMetadata.INSTANCE);
+        public static final JobTriggerMetadata INSTANCE = new JobTriggerMetadata().addSubItem(
+            JobEntityMetadata.INSTANCE, TriggerEntityMetadata.INSTANCE);
 
         @Override
         public final @NonNull Class<JobTriggerComposite> modelClass() { return JobTriggerComposite.class; }

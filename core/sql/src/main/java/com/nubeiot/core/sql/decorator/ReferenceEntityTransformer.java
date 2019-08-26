@@ -1,5 +1,6 @@
 package com.nubeiot.core.sql.decorator;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -19,10 +20,9 @@ public interface ReferenceEntityTransformer extends EntityTransformer {
     @Override
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
         JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElseGet(JsonObject::new);
-        return Stream.of(EntityTransformer.super.ignoreFields(requestData).stream(),
-                         ref().jsonFieldConverter().keySet().stream().filter(s -> filter.fieldNames().contains(s)),
-                         ref().jsonRefFields().values().stream().filter(s -> filter.fieldNames().contains(s)))
-                     .flatMap(s -> s)
+        return Stream.of(EntityTransformer.super.ignoreFields(requestData).stream().filter(Objects::nonNull),
+                         ref().ignoreFields().stream().filter(s -> filter.fieldNames().contains(s)))
+                     .flatMap(s -> s).map(String::toLowerCase)
                      .collect(Collectors.toSet());
     }
 

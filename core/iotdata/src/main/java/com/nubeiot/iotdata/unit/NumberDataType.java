@@ -1,6 +1,6 @@
 package com.nubeiot.iotdata.unit;
 
-import com.nubeiot.iotdata.unit.DataTypeCategory.All;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -24,7 +24,7 @@ public class NumberDataType implements InternalDataType {
     }
 
     NumberDataType(String type, String unit) {
-        this(type, unit, All.TYPE, null);
+        this(type, unit, Base.TYPE, null);
     }
 
     NumberDataType(String type, String unit, String category) {

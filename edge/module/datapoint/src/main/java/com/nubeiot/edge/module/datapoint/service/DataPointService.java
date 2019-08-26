@@ -7,9 +7,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.vertx.core.http.HttpMethod;
 
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -33,7 +36,10 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     default Set<EventMethodDefinition> definitions() {
-        return Collections.singleton(EventMethodDefinition.createDefault(servicePath(), context().requestKeyName()));
+        Map<EventAction, HttpMethod> crud = ActionMethodMapping.CRUD_MAP.get();
+        ActionMethodMapping map = ActionMethodMapping.create(
+            getAvailableEvents().stream().filter(crud::containsKey).collect(Collectors.toMap(e -> e, crud::get)));
+        return Collections.singleton(EventMethodDefinition.create(servicePath(), context().requestKeyName(), map));
     }
 
     default String servicePath() {

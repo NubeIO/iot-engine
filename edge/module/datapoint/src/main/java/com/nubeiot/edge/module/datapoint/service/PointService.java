@@ -1,25 +1,31 @@
 package com.nubeiot.edge.module.datapoint.service;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
-import com.nubeiot.core.utils.Functions;
+import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
+import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
+import com.nubeiot.iotdata.unit.DataType;
+import com.nubeiot.iotdata.unit.UnitLabel;
 
 import lombok.NonNull;
 
-public final class PointService extends AbstractOneToManyEntityService<Point, PointMetadata>
+public final class PointService
+    extends AbstractGroupEntityService<Point, PointMetadata, PointComposite, PointCompositeMetadata>
     implements DataPointService<Point, PointMetadata> {
 
     public PointService(@NonNull EntityHandler entityHandler) {
@@ -32,39 +38,62 @@ public final class PointService extends AbstractOneToManyEntityService<Point, Po
     }
 
     @Override
-    public RequestData recompute(RequestData requestData, JsonObject extra) {
+    public PointCompositeMetadata contextGroup() {
+        return PointCompositeMetadata.INSTANCE;
+    }
+
+    @Override
+    public RequestData recomputeRequestData(RequestData requestData, JsonObject extra) {
         DataPointIndex.NetworkMetadata.optimizeAlias(requestData.body());
         DataPointIndex.NetworkMetadata.optimizeAlias(requestData.getFilter());
-        return super.recompute(requestData, extra);
+        return super.recomputeRequestData(requestData, extra);
     }
 
     @Override
-    public Map<String, String> jsonRefFields() {
-        final Map<String, String> jsonRefFields = new HashMap<>();
-        jsonRefFields.put(DeviceMetadata.INSTANCE.requestKeyName(), context().table().DEVICE.getName());
-        jsonRefFields.put(NetworkMetadata.INSTANCE.requestKeyName(), context().table().NETWORK.getName());
-        return jsonRefFields;
+    public EntityReferences entityReferences() {
+        return new EntityReferences().add(DeviceMetadata.INSTANCE, context().table().DEVICE.getName())
+                                     .add(NetworkMetadata.INSTANCE, context().table().NETWORK.getName());
     }
 
     @Override
-    public Map<String, Function<String, ?>> jsonFieldConverter() {
-        final Map<String, Function<String, ?>> extensions = new HashMap<>();
-        extensions.put(context().requestKeyName(), Functions.toUUID());
-        extensions.put(DeviceMetadata.INSTANCE.requestKeyName(), Functions.toUUID());
-        extensions.put(NetworkMetadata.INSTANCE.requestKeyName(), Functions.toUUID());
-        return extensions;
+    public EntityReferences groupReferences() {
+        return new EntityReferences().add(MeasureUnitMetadata.INSTANCE, context().table().MEASURE_UNIT.getName());
+    }
+
+    @Override
+    protected Single<PointComposite> doGetOne(RequestData reqData) {
+        return groupQuery().findOneByKey(reqData);
+    }
+
+    @Override
+    public @NonNull JsonObject afterEachList(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return JsonPojo.from(pojo).toJson(showGroupFields(requestData));
+    }
+
+    @Override
+    public @NonNull JsonObject afterGet(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        PointComposite p = (PointComposite) pojo;
+        final UnitLabel unitLabel = p.getMeasureUnitLabel();
+        final JsonObject unit = p.safeGetOther(MeasureUnitMetadata.INSTANCE.singularKeyName(), MeasureUnit.class)
+                                 .toJson();
+        DataType dt = DataType.factory(unit, unitLabel);
+        return JsonPojo.from(pojo)
+                       .toJson(ignoreFields(requestData))
+                       .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), dt.toJson());
+    }
+
+    @Override
+    public Set<String> ignoreFields(@NonNull RequestData requestData) {
+        final Set<String> ignoreFields = super.ignoreFields(requestData);
+        ignoreFields.add(context().table().getJsonField(context().table().MEASURE_UNIT_LABEL));
+        return ignoreFields;
     }
 
     public interface PointExtension extends HasReferenceResource {
 
         @Override
-        default Map<String, String> jsonRefFields() {
-            return Collections.singletonMap(PointMetadata.INSTANCE.requestKeyName(), "point");
-        }
-
-        @Override
-        default Map<String, Function<String, ?>> jsonFieldConverter() {
-            return Collections.singletonMap(PointMetadata.INSTANCE.requestKeyName(), Functions.toUUID());
+        default EntityReferences entityReferences() {
+            return new EntityReferences().add(PointMetadata.INSTANCE, "point");
         }
 
     }

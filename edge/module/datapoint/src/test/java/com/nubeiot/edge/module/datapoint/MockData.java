@@ -21,6 +21,7 @@ import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistoryDataMetad
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointValueMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TagPointMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.ThingMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TransducerMetadata;
@@ -28,6 +29,7 @@ import com.nubeiot.iotdata.dto.EquipType;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointCategory;
 import com.nubeiot.iotdata.dto.PointKind;
+import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.dto.TransducerCategory;
 import com.nubeiot.iotdata.dto.TransducerType;
@@ -39,10 +41,11 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
-import com.nubeiot.iotdata.unit.DataTypeCategory.All;
 import com.nubeiot.iotdata.unit.DataTypeCategory.AngularVelocity;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
 public final class MockData {
@@ -61,8 +64,27 @@ public final class MockData {
     public static final List<Thing> THINGS = things();
     public static final List<Point> POINTS = points();
     public static final List<PointTag> TAGS = tags();
+    public static final List<PointValueData> POINT_DATA = pointData();
     public static final List<HistorySetting> HISTORY_SETTINGS = historySettings();
     public static final List<PointHistoryData> HISTORY_DATA = historyData();
+
+    private static List<PointValueData> pointData() {
+        return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY)
+                                                 .setPriority(8)
+                                                 .setValue(10d)
+                                                 .setPriorityValues(
+                                                     new PointPriorityValue().add(5, 10).add(6, 9).add(8, 10)),
+                             new PointValueData().setPoint(PrimaryKey.P_BACNET_TEMP)
+                                                 .setPriority(3)
+                                                 .setValue(24d)
+                                                 .setPriorityValues(
+                                                     new PointPriorityValue().add(3, 24d).add(9, 27.5).add(17, 25.5)),
+                             new PointValueData().setPoint(PrimaryKey.P_BACNET_FAN)
+                                                 .setPriority(7)
+                                                 .setValue(260d)
+                                                 .setPriorityValues(
+                                                     new PointPriorityValue().add(5, 240d).add(7, 260d).add(17, 250)));
+    }
 
     private static List<PointHistoryData> historyData() {
         return Arrays.asList(new PointHistoryData().setPoint(PrimaryKey.P_GPIO_HUMIDITY)
@@ -137,8 +159,7 @@ public final class MockData {
                                     .setCategory(PointCategory.GPIO)
                                     .setDevice(DEVICE.getId())
                                     .setKind(PointKind.INPUT)
-                                    .setType(PointType.DIGITAL)
-                                    .setMeasureUnit(All.PERCENTAGE.type())
+                                    .setType(PointType.DIGITAL).setMeasureUnit(Base.PERCENTAGE.type())
                                     .setTransducer(PrimaryKey.TRANS_HUMIDITY)
                                     .setEnabled(true)
                                     .setMaxScale((short) 100)
@@ -150,7 +171,8 @@ public final class MockData {
                                     .setCategory(PointCategory.GPIO)
                                     .setDevice(DEVICE.getId())
                                     .setKind(PointKind.INPUT)
-                                    .setType(PointType.DIGITAL).setMeasureUnit(Temperature.CELSIUS.type())
+                                    .setType(PointType.DIGITAL)
+                                    .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setTransducer(PrimaryKey.TRANS_TEMP)
                                     .setEnabled(true)
                                     .setOffset((short) 0)
@@ -161,7 +183,8 @@ public final class MockData {
                                     .setDevice(DEVICE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
-                                    .setType(PointType.DIGITAL).setMeasureUnit(Temperature.CELSIUS.type())
+                                    .setType(PointType.DIGITAL)
+                                    .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setTransducer(PrimaryKey.TRANS_TEMP)
                                     .setEnabled(true)
                                     .setOffset((short) 0)
@@ -172,7 +195,8 @@ public final class MockData {
                                     .setDevice(DEVICE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
-                                    .setType(PointType.DIGITAL).setMeasureUnit(AngularVelocity.RPM.type())
+                                    .setType(PointType.DIGITAL)
+                                    .setMeasureUnit(AngularVelocity.RPM.type())
                                     .setEnabled(true)
                                     .setOffset((short) 0)
                                     .setPrecision((short) 3);
@@ -182,7 +206,8 @@ public final class MockData {
                                     .setDevice(DEVICE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.OUTPUT)
-                                    .setType(PointType.DIGITAL).setMeasureUnit(All.BOOLEAN.type())
+                                    .setType(PointType.DIGITAL)
+                                    .setMeasureUnit(Base.BOOLEAN.type())
                                     .setTransducer(PrimaryKey.TRANS_SWITCH)
                                     .setEnabled(true);
         return Arrays.asList(p1, p2, p3, p4, p5);
@@ -235,23 +260,28 @@ public final class MockData {
 
     private static List<Thing> things() {
         final Thing t1 = new Thing().setEquip(PrimaryKey.EQUIP_DROPLET)
-                                    .setTransducer(PrimaryKey.TRANS_HUMIDITY).setMeasureUnit(All.PERCENTAGE.type())
+                                    .setTransducer(PrimaryKey.TRANS_HUMIDITY)
+                                    .setMeasureUnit(Base.PERCENTAGE.type())
                                     .setProductCode("DROPLET-2CB2B763-H")
                                     .setProductLabel(Label.builder().label("Droplet Humidity").build());
         final Thing t2 = new Thing().setEquip(PrimaryKey.EQUIP_DROPLET)
-                                    .setTransducer(PrimaryKey.TRANS_TEMP).setMeasureUnit(Temperature.CELSIUS.type())
+                                    .setTransducer(PrimaryKey.TRANS_TEMP)
+                                    .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("DROPLET-2CB2B763-T")
                                     .setProductLabel(Label.builder().label("Droplet Temp").build());
         final Thing t3 = new Thing().setEquip(PrimaryKey.EQUIP_HVAC)
-                                    .setTransducer(PrimaryKey.TRANS_TEMP).setMeasureUnit(Temperature.CELSIUS.type())
+                                    .setTransducer(PrimaryKey.TRANS_TEMP)
+                                    .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("HVAC-XYZ-TEMP")
                                     .setProductLabel(Label.builder().label("HVAC Temp").build());
         final Thing t4 = new Thing().setEquip(PrimaryKey.EQUIP_HVAC)
-                                    .setTransducer(PrimaryKey.TRANS_FAN).setMeasureUnit(AngularVelocity.RPM.type())
+                                    .setTransducer(PrimaryKey.TRANS_FAN)
+                                    .setMeasureUnit(AngularVelocity.RPM.type())
                                     .setProductCode("HVAC-XYZ-FAN")
                                     .setProductLabel(Label.builder().label("HVAC Fan").build());
         final Thing t5 = new Thing().setEquip(PrimaryKey.EQUIP_HVAC)
-                                    .setTransducer(PrimaryKey.TRANS_SWITCH).setMeasureUnit(All.BOOLEAN.type())
+                                    .setTransducer(PrimaryKey.TRANS_SWITCH)
+                                    .setMeasureUnit(Base.BOOLEAN.type())
                                     .setProductCode("HVAC-XYZ-FAN-CONTROL")
                                     .setProductLabel(Label.builder().label("HVAC Fan Control").build());
         return Arrays.asList(t1, t2, t3, t4, t5);
@@ -259,6 +289,10 @@ public final class MockData {
 
     public static Point search(UUID pointKey) {
         return POINTS.stream().filter(p -> p.getId().equals(pointKey)).findFirst().orElse(null);
+    }
+
+    public static PointValueData searchData(UUID pointKey) {
+        return POINT_DATA.stream().filter(p -> p.getPoint().equals(pointKey)).findFirst().orElse(null);
     }
 
     public static JsonObject data_Device_Network() {
@@ -278,6 +312,7 @@ public final class MockData {
     public static JsonObject data_Point_Setting_Tag() {
         return data_Equip_Thing().put(PointMetadata.INSTANCE.singularKeyName(), data(POINTS))
                                  .put(TagPointMetadata.INSTANCE.singularKeyName(), data(TAGS))
+                                 .put(PointValueMetadata.INSTANCE.singularKeyName(), data(POINT_DATA))
                                  .put(HistorySettingMetadata.INSTANCE.singularKeyName(), data(HISTORY_SETTINGS))
                                  .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA));
     }
