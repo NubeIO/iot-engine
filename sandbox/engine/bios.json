@@ -123,6 +123,12 @@
                   }
                 }
               }
+            },
+            "__deploy__": {
+              "isolatedClasses": [
+                "io.vertx.reactivex.servicediscovery.*",
+                "io.vertx.reactivex.circuitbreaker.*"
+              ]
             }
           }
         },
@@ -132,7 +138,14 @@
             "artifact_id": "gateway",
             "version": "1.0.0-SNAPSHOT",
             "service_name": "edge-gateway"
-          }
+          },
+          "appConfig": {
+          "__deploy__": {
+            "isolatedClasses": [
+              "io.vertx.reactivex.servicediscovery.*",
+              "io.vertx.reactivex.circuitbreaker.*"
+            ]
+          }}
         }
       ]
     }
