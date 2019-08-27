@@ -141,6 +141,22 @@
             "version": "1.0.0-SNAPSHOT",
             "service_name": "edge-monitor"
           }
+        },
+        {
+          "metadata": {
+            "group_id": "com.nubeiot.edge.module",
+            "artifact_id": "datapoint",
+            "version": "1.0.0-SNAPSHOT",
+            "service_name": "edge-datapoint"
+          }
+        },
+        {
+          "metadata": {
+            "group_id": "com.nubeiot.edge.module",
+            "artifact_id": "scheduler",
+            "version": "1.0.0-SNAPSHOT",
+            "service_name": "edge-scheduler"
+          }
         }
       ]
     }

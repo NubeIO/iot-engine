@@ -1,7 +1,7 @@
 package com.nubeiot.edge.module.datapoint;
 
-import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -14,16 +14,9 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
-import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.event.DeliveryEvent;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
-import com.nubeiot.edge.module.datapoint.policy.OldestCleanupPolicy;
+import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.edge.module.datapoint.scheduler.DataJobDefinition;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.service.HistoryDataService;
-import com.nubeiot.iotdata.edge.model.tables.interfaces.IMeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.unit.DataType;
 
@@ -42,20 +35,22 @@ import lombok.Setter;
 public final class DataPointConfig implements IConfig {
 
     static final String NAME = "__datapoint__";
+    @JsonProperty(LowdbMigration.NAME)
     private LowdbMigration lowdbMigration = new LowdbMigration();
-    @JsonProperty(PublisherConfig.NAME)
-    private PublisherConfig publisherConfig;
+    @JsonProperty(DataSyncConfig.NAME)
+    private DataSyncConfig dataSyncConfig;
+    @JsonProperty(BuiltinData.NAME)
     private BuiltinData builtinData;
-    @JsonProperty(CleanupPolicyConfig.NAME)
-    private CleanupPolicyConfig policyConfig;
+    @JsonProperty("__data_scheduler__")
+    private List<DataJobDefinition> jobs;
 
     static DataPointConfig def() {
-        return new DataPointConfig(new LowdbMigration(), new PublisherConfig(), BuiltinData.def(),
-                                   CleanupPolicyConfig.def());
+        return new DataPointConfig(new LowdbMigration(), new DataSyncConfig(), BuiltinData.def(),
+                                   DataJobDefinition.def());
     }
 
     static DataPointConfig def(@NonNull BuiltinData builtinData) {
-        return new DataPointConfig(new LowdbMigration(), new PublisherConfig(), builtinData, CleanupPolicyConfig.def());
+        return new DataPointConfig(new LowdbMigration(), new DataSyncConfig(), builtinData, DataJobDefinition.def());
     }
 
     @Override
@@ -70,31 +65,47 @@ public final class DataPointConfig implements IConfig {
 
     @Getter
     @Setter(value = AccessLevel.PACKAGE)
-    public static final class LowdbMigration implements JsonData, Shareable {
+    public static final class LowdbMigration implements IConfig, Shareable {
 
+        static final String NAME = "__lowdb_migration__";
         private boolean enabled = false;
         private String path;
+
+        @Override
+        public String name() {
+            return NAME;
+        }
+
+        @Override
+        public Class<? extends IConfig> parent() {
+            return DataPointConfig.class;
+        }
 
     }
 
 
     @Getter
     @Setter(value = AccessLevel.PACKAGE)
-    public static final class PublisherConfig extends AbstractEnumType implements IConfig {
+    public static final class DataSyncConfig extends AbstractEnumType implements IConfig {
 
-        static final String NAME = "__publisher__";
+        static final String NAME = "__data_sync__";
 
         private boolean enabled = false;
         private JsonObject location;
+        private JsonObject clientConfig;
 
-        PublisherConfig() {
-            super("");
+        DataSyncConfig() {
+            super("DITTO");
         }
 
         @JsonCreator
-        PublisherConfig(@JsonProperty("type") String type, @JsonProperty("location") JsonObject location) {
+        DataSyncConfig(@JsonProperty("type") String type, @JsonProperty("enabled") boolean enabled,
+                       @JsonProperty("location") JsonObject location,
+                       @JsonProperty("clientConfig") JsonObject clientConfig) {
             super(type);
+            this.enabled = enabled;
             this.location = location;
+            this.clientConfig = clientConfig;
         }
 
         @Override
@@ -109,50 +120,24 @@ public final class DataPointConfig implements IConfig {
 
 
     @Getter
-    public static final class BuiltinData extends HashMap<String, Object> implements JsonData {
+    public static final class BuiltinData extends HashMap<String, Object> implements IConfig {
+
+        static final String NAME = "__builtin_data__";
 
         public static BuiltinData def() {
             final BuiltinData bd = new BuiltinData();
             bd.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.available()
                                                                            .map(dt -> new MeasureUnit(dt.toJson()))
-                                                                           .map(IMeasureUnit::toJson)
+                                                                           .map(p -> JsonPojo.from(p).toJson())
                                                                            .collect(JsonArray::new, JsonArray::add,
                                                                                     JsonArray::addAll));
             return bd;
         }
 
-    }
-
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class CleanupPolicyConfig implements IConfig {
-
-        private static final String NAME = "__cleanup_policy__";
-        private boolean enabled = false;
-        private DeliveryEvent process;
-        private JsonObject triggerModel;
-        private CleanupPolicy policy;
-
-        static CleanupPolicyConfig def() {
-            final DeliveryEvent event = DeliveryEvent.builder()
-                                                     .address(HistoryDataService.class.getName())
-                                                     .pattern(EventPattern.REQUEST_RESPONSE)
-                                                     .action(EventAction.BATCH_DELETE)
-                                                     .build();
-            final JsonObject trigger = new JsonObject().put("type", "CRON")
-                                                       .put("expression", "0 0 0 ? * SUN *")
-                                                       .put("timezone", "Australia/Sydney")
-                                                       .put("name", "historyData")
-                                                       .put("group", "cleanup");
-            return new CleanupPolicyConfig(true, event, trigger,
-                                           new OldestCleanupPolicy(100, PointMetadata.INSTANCE.requestKeyName(),
-                                                                   Duration.ofDays(30)));
-        }
-
         @Override
-        public String name() { return NAME; }
+        public String name() {
+            return NAME;
+        }
 
         @Override
         public Class<? extends IConfig> parent() {

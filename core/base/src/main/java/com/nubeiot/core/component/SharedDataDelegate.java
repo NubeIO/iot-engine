@@ -52,6 +52,12 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
         vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).put(Strings.requireNotBlank(dataKey), data);
     }
 
+    static <D> D removeLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey) {
+        LOGGER.debug("POP | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
+        return SharedDataDelegate.getSharedDataValue(
+            k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).remove(k), dataKey);
+    }
+
     static EventController getEventController(@NonNull Vertx vertx, String sharedKey) {
         final EventController eventController = getLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS);
         if (Objects.nonNull(eventController)) {

@@ -21,6 +21,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.AbstractEntityHandler;
@@ -73,7 +74,8 @@ class DataPointEntityHandler extends AbstractEntityHandler
 
     private Single<EventMessage> initDataFromConfig() {
         Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
-        return Optional.ofNullable((JsonObject) sharedData(BUILTIN_DATA))
+        JsonObject builtinData = SharedDataDelegate.removeLocalDataValue(vertx(), getSharedKey(), BUILTIN_DATA);
+        return Optional.ofNullable(builtinData)
                        .map(data -> Single.merge(index().stream()
                                                         .filter(meta -> !(meta instanceof CompositeMetadata) &&
                                                                         data.containsKey(meta.singularKeyName()))

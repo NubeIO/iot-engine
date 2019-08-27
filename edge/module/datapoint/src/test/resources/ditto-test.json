@@ -76643,17 +76643,12 @@
       "settings": {
         "properties": {
           "edgeLoop": 200,
-          "dittoEnable": true,
-          "dittoHost": "https://rt.cba.nube-iot.com",
-          "dittoHttpBasic": "Basic Y2JhMDAwMDE6TmxgMlhHPDo0NA=="
+          "dittoEnable": true
         }
       },
       "users": {
         "properties": {
-          "admin": {
-            "role": "admin",
-            "password": "$2a$10$OVQoC2iRYoSQSQ6GLWLZl.Fp53tksVndoMwtY2Kal3TwPmWcgY3Di"
-          }
+          "admin": {}
         }
       },
       "sensorList": {

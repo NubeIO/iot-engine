@@ -12,48 +12,54 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.http.base.HostInfo;
+import com.nubeiot.core.http.client.HttpClientConfig;
+import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
+import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.NewestCleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.OldestCleanupPolicy;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
 
 public class DataPointConfigTest {
 
     @Test
+    public void serializeConfig() {
+        final JsonObject config = DataPointConfig.def().toJson();
+        config.remove(BuiltinData.NAME);
+        System.out.println(config.encodePrettily());
+    }
+
+    @Test
     public void serialize_default_config() throws JSONException {
         final JsonObject expected = new JsonObject(
-            "{\"lowdb_migration\":{\"enabled\":false},\"builtin_data\":{\"unit\":[{\"type\":\"number\"," +
-            "\"category\":\"ALL\"},{\"type\":\"percentage\",\"category\":\"ALL\",\"symbol\":\"%\"}," +
-            "{\"type\":\"bool\",\"category\":\"ALL\"},{\"type\":\"revolutions_per_minute\"," +
-            "\"category\":\"ANGULAR_VELOCITY\",\"symbol\":\"rpm\"},{\"type\":\"radians_per_second\"," +
-            "\"category\":\"ANGULAR_VELOCITY\",\"symbol\":\"rad/s\"},{\"type\":\"volt\"," +
-            "\"category\":\"ELECTRIC_POTENTIAL\",\"symbol\":\"V\"},{\"type\":\"lux\",\"category\":\"ILLUMINATION\"," +
-            "\"symbol\":\"lx\"},{\"type\":\"kilowatt_hour\",\"category\":\"POWER\",\"symbol\":\"kWh\"}," +
-            "{\"type\":\"dBm\",\"category\":\"POWER\",\"symbol\":\"dBm\"},{\"type\":\"hectopascal\"," +
-            "\"category\":\"PRESSURE\",\"symbol\":\"hPa\"},{\"type\":\"fahrenheit\",\"category\":\"TEMPERATURE\"," +
-            "\"symbol\":\"°F\"},{\"type\":\"celsius\",\"category\":\"TEMPERATURE\",\"symbol\":\"°C\"}," +
-            "{\"type\":\"meters_per_second\",\"category\":\"VELOCITY\",\"symbol\":\"m/s\"}," +
-            "{\"type\":\"kilometers_per_hour\",\"category\":\"VELOCITY\",\"symbol\":\"km/h\"}," +
-            "{\"type\":\"miles_per_hour\",\"category\":\"VELOCITY\",\"symbol\":\"mph\"}]}," +
-            "\"__publisher__\":{\"type\":\"\",\"enabled\":false},\"__cleanup_policy__\":{\"enabled\":true," +
-            "\"process\":{\"address\":\"com.nubeiot.edge.module.datapoint.service.HistoryDataService\"," +
-            "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"BATCH_DELETE\"},\"triggerModel\":{\"type\":\"CRON\"," +
-            "\"expression\":\"0 0 0 ? * SUN *\",\"timezone\":\"Australia/Sydney\",\"name\":\"historyData\"," +
-            "\"group\":\"cleanup\"},\"policy\":{\"type\":\"oldest\",\"max_item\":100,\"group_by\":\"point_id\"," +
-            "\"duration\":\"PT720H\"}}}");
-        JsonHelper.assertJson(expected, DataPointConfig.def().toJson(), JSONCompareMode.LENIENT);
+            "{\"__lowdb_migration__\":{\"enabled\":false},\"__data_sync__\":{\"type\":\"DITTO\",\"enabled\":false}," +
+            "\"__data_scheduler__\":[{\"type\":\"PURGE_HISTORY_DATA\",\"enabled\":false,\"label\":{\"label\":\"Purge " +
+            "point history data\"},\"trigger\":{\"type\":\"CRON\",\"expression\":\"0 0 0 1/1 * ? *\"," +
+            "\"timezone\":\"Australia/Sydney\"},\"policy\":{\"type\":\"oldest\",\"max_item\":100," +
+            "\"group_by\":\"point_id\",\"duration\":\"PT720H\"}},{\"type\":\"SYNC_DEVICE_INFO\"," +
+            "\"label\":{\"label\":\"Sync device information to cloud\"},\"enabled\":false," +
+            "\"trigger\":{\"type\":\"CRON\",\"expression\":\"0 0 0 1/1 * ? *\",\"timezone\":\"Australia/Sydney\"}}," +
+            "{\"type\":\"SYNC_POINT_DATA\",\"label\":{\"label\":\"Sync point data to cloud\"},\"enabled\":false," +
+            "\"trigger\":{\"type\":\"CRON\",\"expression\":\"0 0 0 1/1 * ? *\",\"timezone\":\"Australia/Sydney\"}}," +
+            "{\"type\":\"SYNC_POINT_SETTING\",\"label\":{\"label\":\"Sync point setting data to cloud\"}," +
+            "\"enabled\":false,\"trigger\":{\"type\":\"CRON\",\"expression\":\"0 0 0 1/1 * ? *\"," +
+            "\"timezone\":\"Australia/Sydney\"}}]}");
+        final JsonObject def = DataPointConfig.def().toJson();
+        JsonObject builtin = JsonData.tryParse(def.remove(BuiltinData.NAME)).toJson();
+        JsonHelper.assertJson(expected, def);
+        JsonHelper.assertJson(BuiltinData.def().toJson(), builtin, JSONCompareMode.LENIENT);
         final DataPointConfig from = IConfig.from(expected, DataPointConfig.class);
         JsonHelper.assertJson(expected, from.toJson());
+        final DataPointConfig cp = IConfig.fromClasspath("config.json", DataPointConfig.class);
+        expected.put(BuiltinData.NAME, BuiltinData.def().toJson());
+        JsonHelper.assertJson(expected, cp.toJson(), JSONCompareMode.LENIENT);
     }
 
     @Test
     public void deserialize_no_data() throws JSONException {
-        final JsonObject expected = new JsonObject("{\"lowdb_migration\":{\"enabled\":false}}");
-        JsonHelper.assertJson(expected, new DataPointConfig().toJson());
-    }
-
-    @Test
-    public void deserialize_has_data() throws JSONException {
-        final JsonObject expected = new JsonObject("{\"lowdb_migration\":{\"enabled\":false}}");
+        final JsonObject expected = new JsonObject("{\"__lowdb_migration__\":{\"enabled\":false}}");
         JsonHelper.assertJson(expected, new DataPointConfig().toJson());
     }
 
@@ -74,6 +80,29 @@ public class DataPointConfigTest {
         Assert.assertEquals(10, policy.getMaxItem());
         Assert.assertEquals("xx", policy.getGroupBy());
         Assert.assertEquals(Duration.ofHours(1), policy.getDuration());
+    }
+
+    @Test
+    public void deserialize_custom_config() throws JSONException {
+        JsonObject builtin = BuiltinData.def()
+                                        .toJson()
+                                        .put(DeviceMetadata.INSTANCE.singularKeyName(), MockData.DEVICE.toJson());
+        final HostInfo hostInfo = HostInfo.builder().host("xxx").port(80).build();
+        DataSyncConfig syncConfig = new DataSyncConfig("XXX", true, hostInfo.toJson(), new HttpClientConfig().toJson());
+        final DataPointConfig config = new DataPointConfig();
+        config.setBuiltinData(JsonData.from(builtin, BuiltinData.class));
+        config.setDataSyncConfig(syncConfig);
+        final DataPointConfig cp = IConfig.fromClasspath("config.json", DataPointConfig.class);
+        final DataPointConfig merge = IConfig.merge(cp, config, DataPointConfig.class);
+
+        Assert.assertFalse(merge.getLowdbMigration().isEnabled());
+        Assert.assertTrue(merge.getDataSyncConfig().isEnabled());
+        Assert.assertEquals("XXX", merge.getDataSyncConfig().type());
+        JsonHelper.assertJson(hostInfo.toJson(), merge.getDataSyncConfig().getLocation());
+        JsonHelper.assertJson(new HttpClientConfig().toJson(), merge.getDataSyncConfig().getClientConfig());
+        JsonHelper.assertJson(JsonPojo.from(MockData.DEVICE).toJson(), JsonData.tryParse(
+            merge.getBuiltinData().toJson().remove(DeviceMetadata.INSTANCE.singularKeyName())).toJson());
+        JsonHelper.assertJson(BuiltinData.def().toJson(), builtin, JSONCompareMode.LENIENT);
     }
 
 }

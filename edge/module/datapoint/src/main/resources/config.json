@@ -1,21 +1,8 @@
 {
   "__app__": {
     "__datapoint__": {
-      "lowdb_migration": {
-        "enabled": false
-      },
-      "builtin_data": {
+      "__builtin_data__": {
         "unit": [
-          {
-            "type": "kilowatt_hour",
-            "category": "ALL",
-            "symbol": "kWh"
-          },
-          {
-            "type": "dBm",
-            "category": "ALL",
-            "symbol": "dBm"
-          },
           {
             "type": "number",
             "category": "ALL"
@@ -31,12 +18,12 @@
           },
           {
             "type": "revolutions_per_minute",
-            "category": "VELOCITY",
+            "category": "ANGULAR_VELOCITY",
             "symbol": "rpm"
           },
           {
             "type": "radians_per_second",
-            "category": "VELOCITY",
+            "category": "ANGULAR_VELOCITY",
             "symbol": "rad/s"
           },
           {
@@ -91,31 +78,69 @@
           }
         ]
       },
-      "__publisher__": {
-        "type": "",
+      "__lowdb_migration__": {
         "enabled": false
       },
-      "__cleanup_policy__": {
-        "enabled": true,
-        "process": {
-          "address": "com.nubeiot.edge.module.datapoint.service.HistoryDataService",
-          "pattern": "REQUEST_RESPONSE",
-          "action": "BATCH_DELETE"
+      "__data_sync__": {
+        "type": "DITTO",
+        "enabled": false
+      },
+      "__data_scheduler__": [
+        {
+          "type": "PURGE_HISTORY_DATA",
+          "enabled": false,
+          "label": {
+            "label": "Purge point history data"
+          },
+          "trigger": {
+            "type": "CRON",
+            "expression": "0 0 0 1/1 * ? *",
+            "timezone": "Australia/Sydney"
+          },
+          "policy": {
+            "type": "oldest",
+            "max_item": 100,
+            "group_by": "point_id",
+            "duration": "PT720H"
+          }
         },
-        "triggerModel": {
-          "type": "CRON",
-          "expression": "0 0 0 ? * SUN *",
-          "timezone": "Australia/Sydney",
-          "name": "historyData",
-          "group": "cleanup"
+        {
+          "type": "SYNC_DEVICE_INFO",
+          "enabled": false,
+          "label": {
+            "label": "Sync device information to cloud"
+          },
+          "trigger": {
+            "type": "CRON",
+            "expression": "0 0 0 1/1 * ? *",
+            "timezone": "Australia/Sydney"
+          }
         },
-        "policy": {
-          "type": "oldest",
-          "max_item": 100,
-          "group_by": "point_id",
-          "duration": "PT720H"
+        {
+          "type": "SYNC_POINT_DATA",
+          "enabled": false,
+          "label": {
+            "label": "Sync point data to cloud"
+          },
+          "trigger": {
+            "type": "CRON",
+            "expression": "0 0 0 1/1 * ? *",
+            "timezone": "Australia/Sydney"
+          }
+        },
+        {
+          "type": "SYNC_POINT_SETTING",
+          "enabled": false,
+          "label": {
+            "label": "Sync point setting data to cloud"
+          },
+          "trigger": {
+            "type": "CRON",
+            "expression": "0 0 0 1/1 * ? *",
+            "timezone": "Australia/Sydney"
+          }
         }
-      }
+      ]
     },
     "__micro__": {
       "__gateway__": {
