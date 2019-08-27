@@ -1,4 +1,4 @@
-package com.nubeiot.eventbus.edge;
+package com.nubeiot.eventbus.edge.installer;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
@@ -8,7 +8,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class EdgeMonitorEventBus {
+public final class EdgeMonitorEventBus {
 
     public static EventModel getMonitorStatus(boolean local) {
         return EventModel.builder()

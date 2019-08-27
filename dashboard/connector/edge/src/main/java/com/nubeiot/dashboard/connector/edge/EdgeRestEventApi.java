@@ -1,8 +1,8 @@
 package com.nubeiot.dashboard.connector.edge;
 
 import com.nubeiot.core.http.rest.AbstractRestEventApi;
+import com.nubeiot.eventbus.edge.installer.EdgeMonitorEventBus;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
-import com.nubeiot.eventbus.edge.EdgeMonitorEventBus;
 
 import lombok.Getter;
 

@@ -15,7 +15,7 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.edge.module.monitor.handlers.MonitorNetworkStatusEventHandler;
 import com.nubeiot.edge.module.monitor.handlers.MonitorStatusEventHandler;
-import com.nubeiot.eventbus.edge.EdgeMonitorEventBus;
+import com.nubeiot.eventbus.edge.installer.EdgeMonitorEventBus;
 
 public final class MonitorVerticle extends ContainerVerticle {
 

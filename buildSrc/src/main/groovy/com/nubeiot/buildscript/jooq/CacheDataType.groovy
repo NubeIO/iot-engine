@@ -16,10 +16,11 @@ class CacheDataType {
         return instance == null ? instance = new CacheDataType() : instance
     }
 
+    //TODO: Fix cache for each gradle task
     private final Set<JsonDataType> dataTypes = new HashSet<>()
-    private final Map<String, Function<String, String>> converters = new HashMap<>()
-    private final Map<String, Function<String, String>> parsers = new HashMap<>()
-    private final Map<String, String> defaultValues = new HashMap<>()
+    private final Map<String, Function<String, String>> converters = new ConcurrentHashMap<>()
+    private final Map<String, Function<String, String>> parsers = new ConcurrentHashMap<>()
+    private final Map<String, String> defaultValues = new ConcurrentHashMap<>()
     private final Map<String, String> renameFields = new ConcurrentHashMap<>()
 
     Set<JsonDataType> getDataTypes() { return dataTypes }
