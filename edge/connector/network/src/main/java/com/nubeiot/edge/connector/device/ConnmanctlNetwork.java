@@ -3,12 +3,19 @@ package com.nubeiot.edge.connector.device;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.exceptions.NotFoundException;
 
-public class ConnmanctlNetwork implements NetworkCommand, UnixCommand {
+public class ConnmanctlNetwork extends NetworkCommand implements UnixCommand {
 
     private static final String REGEX_WHITE_SPACE = "\\s";
     private final static Logger logger = LoggerFactory.getLogger(ConnmanctlNetwork.class);
+
+    @JsonCreator
+    public ConnmanctlNetwork(@JsonProperty(value = "type", required = true) NetworkCommandType type) {
+        super(type);
+    }
 
     @Override
     public String configIp(NetworkInfo networkInfo) {

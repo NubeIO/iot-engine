@@ -20,13 +20,14 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class NetworkIPEventHandler implements EventListener {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final NetworkCommand networkCommand;
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData data) {
@@ -40,7 +41,6 @@ public class NetworkIPEventHandler implements EventListener {
         if (Strings.isNotBlank(invalidIps)) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid " + invalidIps);
         }
-        NetworkCommand networkCommand = NetworkManager.findNetworkCommand();
         return Single.just(new JsonObject().put("success", true)
                                            .put("message",
                                                 "Updated IP Address: " + networkCommand.configIp(networkInfo)));
@@ -48,7 +48,6 @@ public class NetworkIPEventHandler implements EventListener {
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData data) {
-        NetworkCommand networkCommand = NetworkManager.findNetworkCommand();
         networkCommand.configDhcp();
         return Single.just(new JsonObject());
     }

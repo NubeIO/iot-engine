@@ -23,6 +23,9 @@
       "__circuitBreaker__": {
         "enabled": false
       }
+    },
+    "__network_app__": {
+      "type": "CONNMANCTL"
     }
   }
 }
