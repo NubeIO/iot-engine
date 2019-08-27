@@ -1,5 +1,6 @@
 package com.nubeiot.core.sql.service;
 
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -42,30 +43,46 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
     }
 
     @Override
+    public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
+        return recomputeRequestData(requestData,
+                                    convertKey(requestData, ref().entityReferences().getFields().entrySet().stream()));
+    }
+
+    @Override
     @NonNull
-    public RequestData onHandlingManyResource(@NonNull RequestData requestData) {
+    public RequestData onModifyingOneResource(@NonNull RequestData requestData) {
+        final JsonObject extra = convertKey(requestData, context());
+        final JsonObject refExtra = convertKey(requestData, ref().entityReferences().getFields().entrySet().stream());
+        return recomputeRequestData(requestData, extra.mergeIn(refExtra, true));
+    }
+
+    @Override
+    @NonNull
+    public RequestData onReadingManyResource(@NonNull RequestData requestData) {
         return recomputeRequestData(requestData, null);
     }
 
     @Override
     @NonNull
-    public RequestData onHandlingOneResource(@NonNull RequestData requestData) {
+    public RequestData onReadingOneResource(@NonNull RequestData requestData) {
         return recomputeRequestData(requestData, convertKey(requestData, context()));
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected Single<?> doInsert(@NonNull RequestData reqData) {
-        return validate(reqData).flatMapSingle(b -> super.doInsert(reqData));
+        final P p = (P) validation().onCreating(reqData);
+        return validateReferenceEntity(reqData).flatMapSingle(b -> queryExecutor().insertReturningPrimary(p, reqData));
     }
 
-    protected Maybe<Boolean> validate(@NonNull RequestData reqData) {
-        return queryExecutor().mustExists(reqData, ref().entityReferences().refMetadata());
+    protected Maybe<Boolean> validateReferenceEntity(@NonNull RequestData reqData) {
+        return queryExecutor().mustExists(reqData, ref());
     }
 
     protected RequestData recomputeRequestData(@NonNull RequestData requestData, JsonObject extra) {
         JsonObject body = Optional.ofNullable(requestData.body()).orElseGet(JsonObject::new);
         JsonObject filter = new JsonObject(entityReferences().computeRequest(body));
-        Optional.ofNullable(extra).ifPresent(e -> filter.getMap().putAll(e.getMap()));
+        Optional.ofNullable(extra).ifPresent(e -> filter.mergeIn(e, true));
         body = body.mergeIn(filter, true);
         final JsonObject combineFilter = Objects.isNull(requestData.getFilter())
                                          ? filter
@@ -76,6 +93,16 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
                           .filter(combineFilter)
                           .pagination(requestData.getPagination())
                           .build();
+    }
+
+    JsonObject convertKey(@NonNull RequestData reqData, @NonNull Stream<Entry<EntityMetadata, String>> ref) {
+        JsonObject body = reqData.body();
+        JsonObject extra = new JsonObject();
+        ref.filter(entry -> !body.containsKey(entry.getKey().singularKeyName()) && body.containsKey(entry.getValue()))
+           .forEach(entry -> extra.put(entry.getKey().singularKeyName(),
+                                       new JsonObject().put(entry.getKey().jsonKeyName(),
+                                                            body.getValue(entry.getValue()))));
+        return extra;
     }
 
     JsonObject convertKey(@NonNull RequestData requestData, EntityMetadata... metadata) {

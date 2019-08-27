@@ -68,14 +68,7 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_create_point_data(TestContext context) throws InterruptedException {
         JsonObject req = new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString());
-        PointValueData pointValue = new PointValueData().setPoint(PrimaryKey.P_GPIO_TEMP).setPriority(5).setValue(24d);
-        JsonObject reqBody = JsonPojo.from(pointValue).toJson().mergeIn(req, true);
-        reqBody.remove("point");
-        DeliveryEvent event = DeliveryEvent.builder()
-                                           .address(PointValueService.class.getName())
-                                           .action(EventAction.CREATE)
-                                           .payload(RequestData.builder().body(reqBody).build().toJson())
-                                           .build();
+        DeliveryEvent event = createEvent(req, new PointValueData().setPriority(5).setValue(24d), EventAction.CREATE);
         CountDownLatch latch = new CountDownLatch(1);
         Async async = context.async(2);
         controller().request(event, EventbusHelper.replyAsserter(context, body -> {
@@ -104,9 +97,59 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
     }
 
     @Test
+    public void test_patch_point_data(TestContext context) throws InterruptedException {
+        JsonObject req = new JsonObject().put("point_id", PrimaryKey.P_BACNET_SWITCH.toString());
+        DeliveryEvent event = createEvent(req, new PointValueData().setPriority(5).setValue(24d), EventAction.CREATE);
+        CountDownLatch latch = new CountDownLatch(2);
+        Async async = context.async(3);
+        controller().request(event, EventbusHelper.replyAsserter(context, body -> {
+            latch.countDown();
+            JsonObject data = new JsonObject(
+                "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0,\"priority\":5,\"priority_values\":" +
+                "{\"5\":24.0},\"time_audit\":{\"created_by\":\"UNKNOWN\"},\"sync_audit\":{\"synced\":false}}");
+            JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
+                                                  .put("status", Status.SUCCESS)
+                                                  .put("resource", data);
+            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
+                                  new Customization("time_audit.created_time", (o1, o2) -> false));
+        }));
+        latch.await(TestHelper.TEST_TIMEOUT_SEC / 3, TimeUnit.SECONDS);
+        //FOR UPDATE HISTORY DATA
+        Thread.sleep(500);
+        DeliveryEvent event2 = createEvent(req, new PointValueData().setPriority(9).setValue(28d), EventAction.PATCH);
+        controller().request(event2, EventbusHelper.replyAsserter(context, body -> {
+            latch.countDown();
+            JsonObject data = new JsonObject(
+                "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":28.0,\"priority\":9," +
+                "\"priority_values\":{\"5\":24.0,\"9\":28.0}," + "\"time_audit\":{\"created_by\":\"UNKNOWN\"," +
+                "\"last_modified_by\":\"UNKNOWN\"}}");
+            JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
+                                                  .put("status", Status.SUCCESS)
+                                                  .put("resource", data);
+            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
+                                  new Customization("time_audit.created_time", (o1, o2) -> false),
+                                  new Customization("time_audit.last_modified_time", (o1, o2) -> false));
+        }));
+        latch.await(TestHelper.TEST_TIMEOUT_SEC / 3, TimeUnit.SECONDS);
+        //FOR UPDATE HISTORY DATA
+        Thread.sleep(500);
+        controller().request(DeliveryEvent.builder()
+                                          .address(HistoryDataService.class.getName())
+                                          .action(EventAction.GET_LIST)
+                                          .payload(RequestData.builder().body(req).build().toJson())
+                                          .build(), EventbusHelper.replyAsserter(context, body -> {
+            JsonObject expected = new JsonObject(
+                "{\"histories\":[{\"id\":9,\"value\":24.0,\"priority\":5},{\"id\":10,\"value\":28.0,\"priority\":9}]}");
+            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
+                                  new Customization("histories.[].time", (o1, o2) -> false));
+        }));
+    }
+
+    @Test
     public void test_get_point_data(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"priority\":8,\"value\":10.0,\"priority_values\":{\"5\":10.0,\"6\":9.0,\"8\":10.0}}");
+            "{\"point\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"priority\":8,\"value\":10.0," +
+            "\"priority_values\":{\"5\":10.0,\"6\":9.0,\"8\":10.0}}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
                                      .build();
@@ -151,6 +194,15 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
             "\"time\":\"2019-08-10T09:18:15Z\",\"value\":20.6}]}");
         RequestData req = RequestData.builder().build();
         asserter(context, true, expected, HistoryDataService.class.getName(), EventAction.GET_LIST, req);
+    }
+
+    private DeliveryEvent createEvent(JsonObject req, PointValueData pv1, EventAction action) {
+        JsonObject create = JsonPojo.from(pv1).toJson().mergeIn(req, true);
+        return DeliveryEvent.builder()
+                            .address(PointValueService.class.getName())
+                            .action(action)
+                            .payload(RequestData.builder().body(create).build().toJson())
+                            .build();
     }
 
 }

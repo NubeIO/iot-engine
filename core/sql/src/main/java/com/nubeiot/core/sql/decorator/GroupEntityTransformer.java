@@ -22,8 +22,11 @@ public interface GroupEntityTransformer extends ReferenceEntityTransformer {
      */
     @Override
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
-        return Stream.of(ReferenceEntityTransformer.super.ignoreFields(requestData).stream(),
-                         ref().ignoreFields().stream().filter(Objects::nonNull))
+        final Stream<String> groupStream = ref().ignoreFields()
+                                                .stream()
+                                                .filter(Objects::nonNull)
+                                                .filter(excludeResourceField());
+        return Stream.of(ReferenceEntityTransformer.super.ignoreFields(requestData).stream(), groupStream)
                      .flatMap(s -> s)
                      .map(String::toLowerCase)
                      .collect(Collectors.toSet());

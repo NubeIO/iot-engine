@@ -7,7 +7,9 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
@@ -43,21 +45,23 @@ public final class PointService
     }
 
     @Override
-    public RequestData recomputeRequestData(RequestData requestData, JsonObject extra) {
-        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.body());
-        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.getFilter());
-        return super.recomputeRequestData(requestData, extra);
+    public RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
+        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body());
+        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.getFilter());
+        return super.recomputeRequestData(reqData, extra);
     }
 
     @Override
     public EntityReferences entityReferences() {
-        return new EntityReferences().add(DeviceMetadata.INSTANCE, context().table().DEVICE.getName())
-                                     .add(NetworkMetadata.INSTANCE, context().table().NETWORK.getName());
+        final com.nubeiot.iotdata.edge.model.tables.@NonNull Point table = context().table();
+        return new EntityReferences().add(DeviceMetadata.INSTANCE, table.getJsonField(table.DEVICE))
+                                     .add(NetworkMetadata.INSTANCE, table.getJsonField(table.NETWORK));
     }
 
     @Override
     public EntityReferences groupReferences() {
-        return new EntityReferences().add(MeasureUnitMetadata.INSTANCE, context().table().MEASURE_UNIT.getName());
+        return new EntityReferences().add(MeasureUnitMetadata.INSTANCE,
+                                          context().table().getJsonField(context().table().MEASURE_UNIT));
     }
 
     @Override
@@ -72,14 +76,22 @@ public final class PointService
 
     @Override
     public @NonNull JsonObject afterGet(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        PointComposite p = (PointComposite) pojo;
-        final UnitLabel unitLabel = p.getMeasureUnitLabel();
-        final JsonObject unit = p.safeGetOther(MeasureUnitMetadata.INSTANCE.singularKeyName(), MeasureUnit.class)
-                                 .toJson();
-        DataType dt = DataType.factory(unit, unitLabel);
-        return JsonPojo.from(pojo)
-                       .toJson(ignoreFields(requestData))
-                       .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), dt.toJson());
+        return convertResource(pojo, requestData);
+    }
+
+    @Override
+    public @NonNull JsonObject afterCreate(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return EntityTransformer.fullResponse(EventAction.CREATE, convertResource(pojo, requestData));
+    }
+
+    @Override
+    public @NonNull JsonObject afterUpdate(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return EntityTransformer.fullResponse(EventAction.UPDATE, convertResource(pojo, requestData));
+    }
+
+    @Override
+    public @NonNull JsonObject afterPatch(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return EntityTransformer.fullResponse(EventAction.PATCH, convertResource(pojo, requestData));
     }
 
     @Override
@@ -87,6 +99,16 @@ public final class PointService
         final Set<String> ignoreFields = super.ignoreFields(requestData);
         ignoreFields.add(context().table().getJsonField(context().table().MEASURE_UNIT_LABEL));
         return ignoreFields;
+    }
+
+    private JsonObject convertResource(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        PointComposite p = (PointComposite) pojo;
+        final UnitLabel unitLabel = p.getMeasureUnitLabel();
+        final JsonObject unit = p.safeGetOther(MeasureUnitMetadata.INSTANCE.singularKeyName(), MeasureUnit.class)
+                                 .toJson();
+        return JsonPojo.from(pojo)
+                       .toJson(ignoreFields(requestData))
+                       .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.factory(unit, unitLabel).toJson());
     }
 
     public interface PointExtension extends HasReferenceResource {

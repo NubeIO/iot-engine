@@ -1,11 +1,13 @@
 package com.nubeiot.core.sql.service;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Map.Entry;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
+import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.CompositeMetadata;
@@ -35,11 +37,41 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
         return this;
     }
 
-    protected Maybe<Boolean> validate(@NonNull RequestData reqData) {
-        final Set<EntityMetadata> refs = Stream.concat(ref().entityReferences().refMetadata().stream(),
-                                                       ref().groupReferences().refMetadata().stream())
-                                               .collect(Collectors.toSet());
-        return queryExecutor().mustExists(reqData, refs);
+    @Override
+    public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
+        final Stream<Entry<EntityMetadata, String>> stream = Stream.of(
+            ref().entityReferences().getFields().entrySet().stream(),
+            ref().groupReferences().getFields().entrySet().stream()).flatMap(s -> s);
+        return recomputeRequestData(requestData, convertKey(requestData, stream));
+    }
+
+    @Override
+    public @NonNull RequestData onModifyingOneResource(@NonNull RequestData requestData) {
+        final JsonObject extra = convertKey(requestData, context());
+        final Stream<Entry<EntityMetadata, String>> stream = Stream.of(
+            ref().entityReferences().getFields().entrySet().stream(),
+            ref().groupReferences().getFields().entrySet().stream()).flatMap(s -> s);
+        return recomputeRequestData(requestData, extra.mergeIn(convertKey(requestData, stream), true));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected Single<?> doInsert(@NonNull RequestData reqData) {
+        final CP p = (CP) contextGroup().onCreating(reqData);
+        return validateReferenceEntity(reqData).flatMapSingle(b -> groupQuery().insertReturningPrimary(p, reqData));
+    }
+
+    @Override
+    protected Maybe<Boolean> validateReferenceEntity(@NonNull RequestData reqData) {
+        return groupQuery().mustExists(reqData, ref());
+    }
+
+    @Override
+    public Single<JsonObject> responseByLookupKey(@NonNull Object key, @NonNull RequestData reqData,
+                                                  @NonNull BiFunction<VertxPojo, RequestData, JsonObject> handler) {
+        final String keyName = context().requestKeyName();
+        return transformer().response(keyName, key,
+                                      k -> groupQuery().lookupByPrimaryKey(k).map(p -> handler.apply(p, reqData)));
     }
 
 }

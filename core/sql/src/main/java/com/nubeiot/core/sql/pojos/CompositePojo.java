@@ -29,6 +29,12 @@ public interface CompositePojo<P extends VertxPojo, CP extends CompositePojo> ex
         return (CP) this;
     }
 
+    @SuppressWarnings("unchecked")
+    default CP put(String otherKey, @NonNull VertxPojo other) {
+        other().put(Strings.requireNotBlank(otherKey), other);
+        return (CP) this;
+    }
+
     default Object prop(String key) {
         return this.toJson().getValue(Strings.requireNotBlank(key));
     }

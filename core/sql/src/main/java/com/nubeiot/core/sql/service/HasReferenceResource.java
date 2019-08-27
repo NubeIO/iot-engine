@@ -10,9 +10,11 @@ import java.util.stream.Stream;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -39,6 +41,7 @@ public interface HasReferenceResource {
         return entityReferences().ignoreFields();
     }
 
+    @Getter
     @RequiredArgsConstructor
     class EntityReferences {
 
@@ -52,10 +55,6 @@ public interface HasReferenceResource {
         public EntityReferences add(@NonNull EntityMetadata metadata, String fkField) {
             fields.put(metadata, Strings.isBlank(fkField) ? metadata.requestKeyName() : fkField);
             return this;
-        }
-
-        public Set<EntityMetadata> refMetadata() {
-            return fields.keySet();
         }
 
         Set<String> ignoreFields() {
@@ -76,7 +75,7 @@ public interface HasReferenceResource {
 
         private Object getValue(@NonNull JsonObject body, Entry<EntityMetadata, String> entry) {
             final Object value = body.getValue(entry.getKey().requestKeyName());
-            return Objects.isNull(value) ? null : entry.getKey().parseKey(value.toString());
+            return Objects.isNull(value) ? null : JsonData.checkAndConvert(entry.getKey().parseKey(value.toString()));
         }
 
     }

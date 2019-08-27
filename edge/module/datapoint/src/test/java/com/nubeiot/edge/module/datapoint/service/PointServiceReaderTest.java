@@ -15,7 +15,7 @@ import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
-public class PointServiceTest extends BaseDataPointServiceTest {
+public class PointServiceReaderTest extends BaseDataPointServiceTest {
 
     @Override
     protected JsonObject testData() {
@@ -162,7 +162,8 @@ public class PointServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_history_setting(TestContext context) {
-        JsonObject expected = new JsonObject("{\"schedule\":\"xxxx\",\"type\":\"PERIOD\"}");
+        JsonObject expected = new JsonObject(
+            "{\"schedule\":\"xxxx\",\"type\":\"PERIOD\",\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\"}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
                                      .build();
@@ -171,9 +172,9 @@ public class PointServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_history_setting_not_found(TestContext context) {
-        JsonObject expected = new JsonObject(
-            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with point_id=" + PrimaryKey.P_GPIO_HUMIDITY +
-            "\"}");
+        JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+                                              .put("message",
+                                                   "Not found resource with point_id=" + PrimaryKey.P_GPIO_HUMIDITY);
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
                                      .build();

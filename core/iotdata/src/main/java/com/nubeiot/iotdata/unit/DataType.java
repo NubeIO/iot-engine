@@ -122,4 +122,13 @@ public interface DataType extends EnumType, Cloneable {
 
     default Collection<String> aliases() { return null; }
 
+    @Override
+    default JsonObject toJson() {
+        final JsonObject json = EnumType.super.toJson();
+        if (Objects.nonNull(label())) {
+            json.put("label", label().toJson());
+        }
+        return json;
+    }
+
 }

@@ -98,7 +98,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @return one single data source if found else throw {@code not found exception}
      * @see EntityMetadata#notFound(Object)
      */
-    Maybe<P> lookupByPrimaryKey(@NonNull Object primaryKey);
+    Single<P> lookupByPrimaryKey(@NonNull Object primaryKey);
 
     /**
      * Create new resource then return {@code primary key}

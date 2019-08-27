@@ -32,11 +32,6 @@ abstract class JobTriggerCompositeService
     }
 
     @Override
-    public EntityReferences entityReferences() {
-        return new EntityReferences().add(reference()).add(resource());
-    }
-
-    @Override
     public final Set<EventMethodDefinition> definitions() {
         final String servicePath = Urls.combinePath(
             Urls.capturePath(reference().singularKeyName(), reference().requestKeyName()),

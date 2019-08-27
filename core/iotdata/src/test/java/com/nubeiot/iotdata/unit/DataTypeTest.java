@@ -39,9 +39,9 @@ public class DataTypeTest {
         JsonHelper.assertJson(
             new JsonObject("{\"type\":\"kilowatt_hour\", \"symbol\": \"kWh\", \"category\":\"POWER\"}"),
             Power.KWH.toJson());
-        JsonHelper.assertJson(
-            new JsonObject("{\"type\":\"revolutions_per_minute\", \"symbol\": \"rpm\", \"category\":\"VELOCITY\"}"),
-            AngularVelocity.RPM.toJson());
+        JsonHelper.assertJson(new JsonObject(
+                                  "{\"type\":\"revolutions_per_minute\", \"symbol\": \"rpm\", \"category\":\"ANGULAR_VELOCITY\"}"),
+                              AngularVelocity.RPM.toJson());
         JsonHelper.assertJson(new JsonObject("{\"type\":\"bool\",\"category\":\"ALL\"}"), Base.BOOLEAN.toJson());
     }
 

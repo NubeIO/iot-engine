@@ -7,17 +7,22 @@ import lombok.NonNull;
 public interface RequestDecorator {
 
     @NonNull
-    default RequestData onHandlingNewResource(@NonNull RequestData requestData) {
+    default RequestData onCreatingOneResource(@NonNull RequestData requestData) {
         return requestData;
     }
 
     @NonNull
-    default RequestData onHandlingManyResource(@NonNull RequestData requestData) {
+    default RequestData onModifyingOneResource(@NonNull RequestData requestData) {
         return requestData;
     }
 
     @NonNull
-    default RequestData onHandlingOneResource(@NonNull RequestData requestData) {
+    default RequestData onReadingManyResource(@NonNull RequestData requestData) {
+        return requestData;
+    }
+
+    @NonNull
+    default RequestData onReadingOneResource(@NonNull RequestData requestData) {
         return requestData;
     }
 

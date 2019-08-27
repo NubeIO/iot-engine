@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.query;
 
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.jooq.DSLContext;
@@ -20,7 +19,6 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -59,19 +57,10 @@ class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>
     }
 
     @Override
-    public Single<?> insertReturningPrimary(@NonNull CP pojo, @NonNull RequestData requestData) {
-        return null;
-    }
-
-    @Override
-    public Single<?> modifyReturningPrimary(@NonNull RequestData requestData, @NonNull EventAction action,
-                                            BiFunction<VertxPojo, RequestData, VertxPojo> validator) {
-        return null;
-    }
-
-    @Override
-    public Single<CP> deleteOneByKey(RequestData requestData) {
-        return null;
+    public Single<CP> lookupByPrimaryKey(@NonNull Object primaryKey) {
+        final JsonObject filter = new JsonObject().put(getMetadata().requestKeyName(), primaryKey.toString())
+                                                  .put(getMetadata().jsonKeyName(), primaryKey.toString());
+        return findOneByKey(RequestData.builder().body(filter).filter(filter).build());
     }
 
     @Override

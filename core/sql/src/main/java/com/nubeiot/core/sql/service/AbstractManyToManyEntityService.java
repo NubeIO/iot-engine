@@ -1,8 +1,11 @@
 package com.nubeiot.core.sql.service;
 
+import io.reactivex.Single;
+
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.ManyToManyEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
@@ -19,6 +22,12 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     }
 
     @Override
+    public abstract M context();
+
+    @Override
+    public @NonNull CompositeValidation validation() { return this.context(); }
+
+    @Override
     public @NonNull ComplexQueryExecutor<P> queryExecutor() {
         return ManyToManyReferenceEntityService.super.queryExecutor();
     }
@@ -27,32 +36,42 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     public @NonNull ManyToManyEntityTransformer transformer() { return this; }
 
     @Override
+    public @NonNull EntityMetadata resourceMetadata() {
+        return resource();
+    }
+
+    @Override
+    public EntityReferences entityReferences() {
+        return new EntityReferences().add(reference()).add(resource());
+    }
+
+    @Override
     @NonNull
-    public RequestData onHandlingManyResource(@NonNull RequestData requestData) {
+    public RequestData onCreatingOneResource(@NonNull RequestData requestData) {
         return recomputeRequestData(requestData, convertKey(requestData, reference()));
     }
 
     @Override
     @NonNull
-    public RequestData onHandlingOneResource(@NonNull RequestData requestData) {
+    public RequestData onModifyingOneResource(@NonNull RequestData requestData) {
         return recomputeRequestData(requestData, convertKey(requestData, reference(), resource()));
     }
 
     @Override
-    public abstract M context();
-
-    @Override
-    public @NonNull CompositeValidation validation() { return this.context(); }
-
-    @Override
-    public @NonNull String resourcePluralKey() {
-        return resource().pluralKeyName();
+    @NonNull
+    public RequestData onReadingManyResource(@NonNull RequestData requestData) {
+        return recomputeRequestData(requestData, convertKey(requestData, reference()));
     }
 
     @Override
-    @NonNull
-    public RequestData onHandlingNewResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, reference()));
+    public @NonNull RequestData onReadingOneResource(@NonNull RequestData requestData) {
+        return recomputeRequestData(requestData, convertKey(requestData, reference(), resource()));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected Single<?> doInsert(@NonNull RequestData reqData) {
+        return queryExecutor().insertReturningPrimary((P) validation().onCreating(reqData), reqData);
     }
 
 }

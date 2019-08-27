@@ -1,6 +1,7 @@
 package com.nubeiot.core.sql.decorator;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.nubeiot.core.dto.RequestData;
@@ -12,8 +13,11 @@ public interface ManyToManyEntityTransformer extends ReferenceEntityTransformer,
 
     @Override
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
-        return Stream.of(context().requestKeyName(), reference().requestKeyName(), resource().requestKeyName())
-                     .collect(() -> ReferenceEntityTransformer.super.ignoreFields(requestData), Set::add, Set::addAll);
+        final Stream<String> manyStream = Stream.of(context().requestKeyName(), reference().requestKeyName(),
+                                                    resource().requestKeyName());
+        return Stream.of(parent(requestData), refStream(requestData), manyStream)
+                     .flatMap(s -> s)
+                     .collect(Collectors.toSet());
     }
 
 }

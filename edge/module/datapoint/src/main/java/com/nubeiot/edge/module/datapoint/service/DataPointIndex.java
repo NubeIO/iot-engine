@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -20,8 +21,12 @@ import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.StringKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.UUIDKeyEntity;
 import com.nubeiot.core.sql.MetadataIndex;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.tables.JsonTable;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.module.datapoint.model.pojos.DeviceComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.ThingComposite;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
@@ -244,13 +249,23 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull String requestKeyName() {
-            return jsonKeyName();
+        public @NonNull String singularKeyName() {
+            return "unit";
         }
 
         @Override
-        public @NonNull String singularKeyName() {
-            return "unit";
+        public @NonNull String jsonKeyName() {
+            return "type";
+        }
+
+        @Override
+        @NonNull
+        public MeasureUnit onCreating(RequestData reqData) throws IllegalArgumentException {
+            final MeasureUnit measureUnit = StringKeyEntity.super.onCreating(reqData);
+            Strings.requireNotBlank(measureUnit.getSymbol(), "Missing unit symbol");
+            Strings.requireNotBlank(measureUnit.getType(), "Missing unit type");
+            Strings.requireNotBlank(measureUnit.getCategory(), "Missing unit category");
+            return measureUnit;
         }
 
     }
@@ -310,6 +325,14 @@ public interface DataPointIndex extends MetadataIndex {
             return Tables.POINT;
         }
 
+        @Override
+        public Point onCreating(RequestData reqData) throws IllegalArgumentException {
+            final Point point = UUIDKeyEntity.super.onCreating(reqData);
+            Objects.requireNonNull(point.getDevice(), "Missing device");
+            Strings.requireNotBlank(point.getMeasureUnit(), "Missing point measure unit");
+            return point.setId(Optional.ofNullable(point.getId()).orElseGet(UUID::randomUUID));
+        }
+
     }
 
 
@@ -333,6 +356,21 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<Point> rawClass() {
             return Point.class;
+        }
+
+        @Override
+        public PointComposite onCreating(RequestData reqData) throws IllegalArgumentException {
+            PointComposite point = parseFromRequest(reqData.body());
+            Objects.requireNonNull(point.getDevice(), "Missing device");
+            MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
+            if (Objects.isNull(other)) {
+                point.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), new MeasureUnit().setType(
+                    Strings.requireNotBlank(point.getMeasureUnit(), "Missing point measure unit")));
+            } else {
+                point.setMeasureUnit(other.getType());
+            }
+            point.setId(Optional.ofNullable(point.getId()).orElseGet(UUID::randomUUID));
+            return point;
         }
 
     }
@@ -369,7 +407,17 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull PointValueData onCreating(RequestData reqData) throws IllegalArgumentException {
-            final PointValueData pojo = parseFromRequest(reqData.body());
+            return optimizeValue(reqData);
+        }
+
+        @Override
+        public @NonNull PointValueData onPatching(@NonNull PointValueData dbData, @NonNull RequestData reqData)
+            throws IllegalArgumentException {
+            return parseFromRequest(JsonPojo.merge(dbData, optimizeValue(reqData)));
+        }
+
+        private PointValueData optimizeValue(@NonNull RequestData reqData) {
+            PointValueData pojo = parseFromRequest(reqData.body());
             pojo.setPriority(Optional.ofNullable(pojo.getPriority()).orElse(PointPriorityValue.DEFAULT_PRIORITY));
             pojo.setPriorityValues(Optional.ofNullable(pojo.getPriorityValues())
                                            .orElse(new PointPriorityValue())
@@ -587,6 +635,64 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<DeviceEquip> modelClass() {
             return DeviceEquip.class;
+        }
+
+        @Override
+        public @NonNull Class<DeviceEquipDao> daoClass() {
+            return DeviceEquipDao.class;
+        }
+
+    }
+
+
+    final class EquipThingMetadata
+        extends AbstractCompositeMetadata<Integer, Thing, ThingRecord, ThingDao, ThingComposite>
+        implements SerialKeyEntity<Thing, ThingRecord, ThingDao> {
+
+        public static final EquipThingMetadata INSTANCE = new EquipThingMetadata();
+
+        @Override
+        public @NonNull Class<Thing> rawClass() {
+            return Thing.class;
+        }
+
+        @Override
+        public @NonNull Class<ThingComposite> modelClass() {
+            return ThingComposite.class;
+        }
+
+        @Override
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.Thing table() {
+            return Tables.THING;
+        }
+
+        @Override
+        public @NonNull Class<ThingDao> daoClass() {
+            return ThingDao.class;
+        }
+
+    }
+
+
+    final class DeviceEquipCompositeMetadata
+        extends AbstractCompositeMetadata<Long, DeviceEquip, DeviceEquipRecord, DeviceEquipDao, DeviceComposite>
+        implements BigSerialKeyEntity<DeviceEquip, DeviceEquipRecord, DeviceEquipDao> {
+
+        public static final DeviceEquipCompositeMetadata INSTANCE = new DeviceEquipCompositeMetadata();
+
+        @Override
+        public @NonNull Class<DeviceEquip> rawClass() {
+            return DeviceEquip.class;
+        }
+
+        @Override
+        public @NonNull Class<DeviceComposite> modelClass() {
+            return DeviceComposite.class;
+        }
+
+        @Override
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.DeviceEquip table() {
+            return Tables.DEVICE_EQUIP;
         }
 
         @Override

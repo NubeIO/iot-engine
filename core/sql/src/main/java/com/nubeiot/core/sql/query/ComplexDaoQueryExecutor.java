@@ -107,12 +107,12 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
     }
 
     @Override
-    public Maybe<CP> lookupByPrimaryKey(@NonNull Object primaryKey) {
+    public Single<CP> lookupByPrimaryKey(@NonNull Object primaryKey) {
         return findOneById(base, primaryKey).filter(Optional::isPresent)
-                                            .switchIfEmpty(Maybe.error(base.notFound(primaryKey)))
+                                            .switchIfEmpty(Single.error(base.notFound(primaryKey)))
                                             .map(Optional::get)
                                             .map(p -> (CP) base.convert(p))
-                                            .flatMap(Maybe::just);
+                                            .flatMap(Single::just);
     }
 
     @Override

@@ -16,6 +16,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 
 import lombok.NonNull;
@@ -50,9 +51,9 @@ public interface EntityTransformer {
     }
 
     /**
-     * @return resource plural key name
+     * @return resource metadata
      */
-    @NonNull String resourcePluralKey();
+    @NonNull EntityMetadata resourceMetadata();
 
     /**
      * Enable {@code CUD} response includes full resource instead of simple resource with only response status and
@@ -103,7 +104,7 @@ public interface EntityTransformer {
      */
     @NonNull
     default JsonObject wrapListData(@NonNull JsonArray results) {
-        return new JsonObject().put(resourcePluralKey(), results);
+        return new JsonObject().put(resourceMetadata().pluralKeyName(), results);
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.nubeiot.edge.module.datapoint.sync;
 
+import java.time.OffsetDateTime;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
@@ -27,24 +29,25 @@ public final class PointValueSyncService extends DittoHttpSync {
 
     @Override
     public void onSuccess(EntityService service, EventAction action, JsonObject data) {
-        if (!(service instanceof PointValueService) || action != EventAction.CREATE) {
+        if (!(service instanceof PointValueService) || (action != EventAction.CREATE && action != EventAction.PATCH)) {
             return;
         }
         final PointValueService vService = (PointValueService) service;
         final PointValueData pointValue = vService.context().parseFromRequest(EntityTransformer.getData(data));
+        final OffsetDateTime createdTime = action == EventAction.CREATE
+                                           ? pointValue.getTimeAudit().getCreatedTime()
+                                           : pointValue.getTimeAudit().getLastModifiedTime();
         final PointHistoryData historyData = new PointHistoryData().setPoint(pointValue.getPoint())
                                                                    .setValue(pointValue.getValue())
                                                                    .setPriority(pointValue.getPriority())
-                                                                   .setTime(pointValue.getTimeAudit().getCreatedTime())
-                                                                   .setTimeAudit(pointValue.getTimeAudit())
-                                                                   .setSyncAudit(pointValue.getSyncAudit());
+                                                                   .setTime(createdTime);
         createHistory(historyData, SimpleQueryExecutor.create(vService.entityHandler(), HistoryDataMetadata.INSTANCE));
     }
 
     @SuppressWarnings("unchecked")
     private void createHistory(PointHistoryData historyData, SimpleQueryExecutor executor) {
         JsonObject filter = new JsonObject().put("point", historyData.getPoint().toString())
-                                            .put("time", DateTimes.format(historyData.getTimeAudit().getCreatedTime()));
+                                            .put("time", DateTimes.format(historyData.getTime()));
         final @NonNull JsonTable<PointHistoryDataRecord> table = HistoryDataMetadata.INSTANCE.table();
         executor.fetchExists(executor.existQuery(table, executor.condition(table, filter)))
                 .switchIfEmpty(executor.insertReturningPrimary(historyData, RequestData.builder().build()))

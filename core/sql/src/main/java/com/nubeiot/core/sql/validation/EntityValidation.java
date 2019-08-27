@@ -3,6 +3,7 @@ package com.nubeiot.core.sql.validation;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.exceptions.AlreadyExistException;
 import com.nubeiot.core.exceptions.NotFoundException;
@@ -50,7 +51,8 @@ public interface EntityValidation<P extends VertxPojo> {
     @NonNull
     default <PP extends P> PP onUpdating(@NonNull P dbData, RequestData reqData) throws IllegalArgumentException {
         final JsonObject body = reqData.body().copy();
-        return (PP) context().parseFromRequest(body.put(context().jsonKeyName(), context().parseKey(reqData)));
+        return (PP) context().parseFromRequest(
+            body.put(context().jsonKeyName(), JsonData.checkAndConvert(context().parseKey(reqData))));
     }
 
     /**

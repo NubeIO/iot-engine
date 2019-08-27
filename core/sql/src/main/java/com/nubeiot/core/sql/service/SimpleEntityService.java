@@ -21,9 +21,8 @@ interface SimpleEntityService<P extends VertxPojo, M extends EntityMetadata>
     default Single<JsonObject> responseByLookupKey(@NonNull Object key, @NonNull RequestData reqData,
                                                    @NonNull BiFunction<VertxPojo, RequestData, JsonObject> handler) {
         final String keyName = context().requestKeyName();
-        return transformer().response(keyName, key, k -> queryExecutor().lookupByPrimaryKey(k)
-                                                                        .map(p -> handler.apply(p, reqData))
-                                                                        .toSingle());
+        return transformer().response(keyName, key,
+                                      k -> queryExecutor().lookupByPrimaryKey(k).map(p -> handler.apply(p, reqData)));
     }
 
 }

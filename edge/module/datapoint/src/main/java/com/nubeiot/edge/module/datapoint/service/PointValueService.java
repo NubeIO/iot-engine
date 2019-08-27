@@ -33,7 +33,7 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.GET_ONE, EventAction.CREATE, EventAction.REMOVE);
+        return Arrays.asList(EventAction.GET_ONE, EventAction.CREATE, EventAction.PATCH, EventAction.REMOVE);
     }
 
     @Override
@@ -42,13 +42,20 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     }
 
     @Override
-    public @NonNull RequestData onHandlingNewResource(@NonNull RequestData reqData) {
-        JsonObject body = Optional.ofNullable(reqData.body()).orElse(new JsonObject());
-        body.put(context().jsonKeyName(), body.getValue(context().requestKeyName()));
+    public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
+        return recomputeRequestData(super.onCreatingOneResource(requestData));
+    }
+
+    @Override
+    public @NonNull RequestData onModifyingOneResource(@NonNull RequestData requestData) {
+        return recomputeRequestData(super.onModifyingOneResource(requestData));
+    }
+
+    @NonNull
+    private RequestData recomputeRequestData(RequestData reqData) {
         JsonObject filter = Optional.ofNullable(reqData.getFilter()).orElse(new JsonObject()).put(Filters.AUDIT, true);
         return RequestData.builder()
-                          .headers(reqData.headers())
-                          .body(body)
+                          .headers(reqData.headers()).body(reqData.body())
                           .filter(filter)
                           .pagination(reqData.getPagination())
                           .build();
