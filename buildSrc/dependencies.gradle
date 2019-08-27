@@ -1,6 +1,7 @@
 def versions = [
     vertx   : "3.6.0",
     lombok  : "1.18.8",
+    oshi    : "3.13.3",
     jackson : "2.9.8",
     logs    : [
         slf4j  : "1.7.25",
@@ -28,6 +29,7 @@ def genDir = "generated"
 
 ext.deps = [
     lombok  : "org.projectlombok:lombok:$versions.lombok",
+    oshi    : "com.github.oshi:oshi-core:$versions.oshi",
     plugin  : [
         "apt"   : "net.ltgt.gradle:gradle-apt-plugin:$versions.plugin.apt",
         "docker": "com.github.docker-java:docker-java:$versions.plugin.docker",

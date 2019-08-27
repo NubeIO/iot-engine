@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -41,6 +42,8 @@ public final class Networks {
     private static final Logger logger = LoggerFactory.getLogger(Networks.class);
     private static final List<String> BLACK_LIST_ADDRESS = Arrays.asList("0.0.0.0", "127.0.0.1", "localhost");
     private static final String DEFAULT_ADDRESS = "0.0.0.0";
+    private static final String IPV4_REGEX = "(([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}([0-1]?\\d{1," +
+                                             "2}|2[0-4]\\d|25[0-5])";
     private static String natHost = "";
     private static InetSocketAddress publicClusterAddr = null;
     private static InetSocketAddress publicClusterEventbusAddr = null;
@@ -205,6 +208,13 @@ public final class Networks {
             }
         }
         throw new NetworkException("Cannot find any IPv4 network interface");
+    }
+
+    public static boolean validIPv4(String ip) {
+        if (Strings.isBlank(ip)) {
+            throw new IllegalArgumentException("IP can't be blank");
+        }
+        return Pattern.compile(IPV4_REGEX).matcher(ip).matches();
     }
 
     public static int priorityOrder(int len) {

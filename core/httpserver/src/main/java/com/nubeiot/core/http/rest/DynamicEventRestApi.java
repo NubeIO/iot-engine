@@ -39,7 +39,9 @@ public interface DynamicEventRestApi extends DynamicRestApi {
             public boolean useRequestData() { return definition.isUseRequestData(); }
 
             @Override
-            public Optional<Set<String>> alternativePaths() { return Optional.of(paths); }
+            public Optional<Set<String>> alternativePaths() {
+                return paths.isEmpty() ? Optional.empty() : Optional.of(paths);
+            }
 
             @Override
             public @NonNull String name() { return record.getName(); }
