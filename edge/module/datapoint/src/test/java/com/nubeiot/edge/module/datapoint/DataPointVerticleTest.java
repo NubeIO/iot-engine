@@ -32,7 +32,7 @@ public class DataPointVerticleTest extends DynamicServiceTestBase {
     @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
-        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.INFO);
+        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.DEBUG);
     }
 
     @Override
@@ -53,8 +53,8 @@ public class DataPointVerticleTest extends DynamicServiceTestBase {
 
     @Test
     public void test_get_device(TestContext context) {
-        assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + MockData.DEVICE.getId(), 200,
-                           JsonPojo.from(MockData.DEVICE).toJson().put("data_version", "0.0.1"));
+        assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + PrimaryKey.DEVICE, 200,
+                           JsonPojo.from(MockData.DEVICE).toJson().put("data_version", "0.0.2"));
     }
 
     @Test

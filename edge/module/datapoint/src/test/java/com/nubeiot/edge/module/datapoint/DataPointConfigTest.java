@@ -25,20 +25,12 @@ import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
 public class DataPointConfigTest {
 
     @Test
-    public void serializeConfig() {
-        final JsonObject config = DataPointConfig.def().toJson();
-        config.remove(BuiltinData.NAME);
-        System.out.println(config.encodePrettily());
-    }
-
-    @Test
     public void serialize_default_config() throws JSONException {
         final JsonObject expected = new JsonObject(
-            "{\"__lowdb_migration__\":{\"enabled\":false},\"__data_sync__\":{\"type\":\"DITTO\",\"enabled\":false}," +
-            "\"__data_scheduler__\":[{\"type\":\"PURGE_HISTORY_DATA\",\"enabled\":false,\"label\":{\"label\":\"Purge " +
-            "point history data\"},\"trigger\":{\"type\":\"CRON\",\"expression\":\"0 0 0 1/1 * ? *\"," +
-            "\"timezone\":\"Australia/Sydney\"},\"policy\":{\"type\":\"oldest\",\"max_item\":100," +
-            "\"group_by\":\"point_id\",\"duration\":\"PT720H\"}},{\"type\":\"SYNC_DEVICE_INFO\"," +
+            "{\"__lowdb_migration__\":{\"enabled\":false},\"__data_scheduler__\":[{\"type\":\"PURGE_HISTORY_DATA\"," +
+            "\"enabled\":false,\"label\":{\"label\":\"Purge point history data\"},\"trigger\":{\"type\":\"CRON\"," +
+            "\"expression\":\"0 0 0 1/1 * ? *\",\"timezone\":\"Australia/Sydney\"},\"policy\":{\"type\":\"oldest\"," +
+            "\"max_item\":100,\"group_by\":\"point_id\",\"duration\":\"PT720H\"}},{\"type\":\"SYNC_DEVICE_INFO\"," +
             "\"label\":{\"label\":\"Sync device information to cloud\"},\"enabled\":false," +
             "\"trigger\":{\"type\":\"CRON\",\"expression\":\"0 0 0 1/1 * ? *\",\"timezone\":\"Australia/Sydney\"}}," +
             "{\"type\":\"SYNC_POINT_DATA\",\"label\":{\"label\":\"Sync point data to cloud\"},\"enabled\":false," +
@@ -48,12 +40,15 @@ public class DataPointConfigTest {
             "\"timezone\":\"Australia/Sydney\"}}]}");
         final JsonObject def = DataPointConfig.def().toJson();
         JsonObject builtin = JsonData.tryParse(def.remove(BuiltinData.NAME)).toJson();
+        JsonObject dataSync = JsonData.tryParse(def.remove(DataSyncConfig.NAME)).toJson();
         JsonHelper.assertJson(expected, def);
         JsonHelper.assertJson(BuiltinData.def().toJson(), builtin, JSONCompareMode.LENIENT);
+        JsonHelper.assertJson(DataSyncConfig.def().toJson(), dataSync);
         final DataPointConfig from = IConfig.from(expected, DataPointConfig.class);
         JsonHelper.assertJson(expected, from.toJson());
         final DataPointConfig cp = IConfig.fromClasspath("config.json", DataPointConfig.class);
-        expected.put(BuiltinData.NAME, BuiltinData.def().toJson());
+        expected.put(BuiltinData.NAME, builtin);
+        expected.put(DataSyncConfig.NAME, dataSync);
         JsonHelper.assertJson(expected, cp.toJson(), JSONCompareMode.LENIENT);
     }
 
@@ -87,8 +82,9 @@ public class DataPointConfigTest {
         JsonObject builtin = BuiltinData.def()
                                         .toJson()
                                         .put(DeviceMetadata.INSTANCE.singularKeyName(), MockData.DEVICE.toJson());
-        final HostInfo hostInfo = HostInfo.builder().host("xxx").port(80).build();
-        DataSyncConfig syncConfig = new DataSyncConfig("XXX", true, hostInfo.toJson(), new HttpClientConfig().toJson());
+        final HostInfo hostInfo = HostInfo.builder().host("abc").port(80).build();
+        final HttpClientConfig httpCfg = HttpClientConfig.create("edge.datapoint", hostInfo);
+        final DataSyncConfig syncConfig = new DataSyncConfig("XXX", true, httpCfg.toJson());
         final DataPointConfig config = new DataPointConfig();
         config.setBuiltinData(JsonData.from(builtin, BuiltinData.class));
         config.setDataSyncConfig(syncConfig);
@@ -97,12 +93,12 @@ public class DataPointConfigTest {
 
         Assert.assertFalse(merge.getLowdbMigration().isEnabled());
         Assert.assertTrue(merge.getDataSyncConfig().isEnabled());
-        Assert.assertEquals("XXX", merge.getDataSyncConfig().type());
-        JsonHelper.assertJson(hostInfo.toJson(), merge.getDataSyncConfig().getLocation());
-        JsonHelper.assertJson(new HttpClientConfig().toJson(), merge.getDataSyncConfig().getClientConfig());
+        Assert.assertEquals("XXX", merge.getDataSyncConfig().getType());
+        JsonHelper.assertJson(httpCfg.toJson(), merge.getDataSyncConfig().getClientConfig());
         JsonHelper.assertJson(JsonPojo.from(MockData.DEVICE).toJson(), JsonData.tryParse(
             merge.getBuiltinData().toJson().remove(DeviceMetadata.INSTANCE.singularKeyName())).toJson());
-        JsonHelper.assertJson(BuiltinData.def().toJson(), builtin, JSONCompareMode.LENIENT);
+        JsonHelper.assertJson(BuiltinData.def().toJson(), merge.getBuiltinData().toJson(), JSONCompareMode.LENIENT);
+        JsonHelper.assertJson(syncConfig.toJson(), merge.getDataSyncConfig().toJson(), JSONCompareMode.LENIENT);
     }
 
 }

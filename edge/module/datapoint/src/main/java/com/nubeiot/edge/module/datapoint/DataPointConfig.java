@@ -2,6 +2,7 @@ package com.nubeiot.edge.module.datapoint;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -13,7 +14,8 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.dto.EnumType.AbstractEnumType;
+import com.nubeiot.core.http.base.HostInfo;
+import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.scheduler.DataJobDefinition;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
@@ -45,12 +47,12 @@ public final class DataPointConfig implements IConfig {
     private List<DataJobDefinition> jobs;
 
     static DataPointConfig def() {
-        return new DataPointConfig(new LowdbMigration(), new DataSyncConfig(), BuiltinData.def(),
+        return new DataPointConfig(new LowdbMigration(), DataSyncConfig.def(), BuiltinData.def(),
                                    DataJobDefinition.def());
     }
 
     static DataPointConfig def(@NonNull BuiltinData builtinData) {
-        return new DataPointConfig(new LowdbMigration(), new DataSyncConfig(), builtinData, DataJobDefinition.def());
+        return new DataPointConfig(new LowdbMigration(), DataSyncConfig.def(), builtinData, DataJobDefinition.def());
     }
 
     @Override
@@ -85,27 +87,27 @@ public final class DataPointConfig implements IConfig {
 
 
     @Getter
+    @NoArgsConstructor
     @Setter(value = AccessLevel.PACKAGE)
-    public static final class DataSyncConfig extends AbstractEnumType implements IConfig {
+    public static final class DataSyncConfig implements IConfig {
 
         static final String NAME = "__data_sync__";
-
-        private boolean enabled = false;
-        private JsonObject location;
+        public static final String USER_AGENT = "nubeio.edge.datapoint";
+        private String type;
+        private boolean enabled;
         private JsonObject clientConfig;
-
-        DataSyncConfig() {
-            super("DITTO");
-        }
 
         @JsonCreator
         DataSyncConfig(@JsonProperty("type") String type, @JsonProperty("enabled") boolean enabled,
-                       @JsonProperty("location") JsonObject location,
                        @JsonProperty("clientConfig") JsonObject clientConfig) {
-            super(type);
+            this.type = type;
             this.enabled = enabled;
-            this.location = location;
             this.clientConfig = clientConfig;
+        }
+
+        public static DataSyncConfig def() {
+            JsonObject cfg = HttpClientConfig.create(USER_AGENT, HostInfo.builder().build()).toJson();
+            return new DataSyncConfig("DITTO", false, cfg);
         }
 
         @Override
@@ -114,6 +116,11 @@ public final class DataPointConfig implements IConfig {
         @Override
         public Class<? extends IConfig> parent() {
             return DataPointConfig.class;
+        }
+
+        static JsonObject update(@NonNull JsonObject cfg, @NonNull String version, @NonNull UUID deviceId) {
+            JsonObject userAgent = new JsonObject().put("userAgent", USER_AGENT + "/" + version + " " + deviceId);
+            return cfg.mergeIn(new JsonObject().put("clientConfig", userAgent), true);
         }
 
     }

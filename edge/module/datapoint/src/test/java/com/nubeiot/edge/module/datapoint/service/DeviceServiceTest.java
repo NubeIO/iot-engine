@@ -1,6 +1,7 @@
 package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Objects;
+import java.util.UUID;
 
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -11,6 +12,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper.EventbusHelper;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
@@ -21,6 +23,7 @@ import com.nubeiot.core.sql.type.SyncAudit;
 import com.nubeiot.core.sql.type.TimeAudit;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 public class DeviceServiceTest extends BaseDataPointServiceTest {
 
@@ -37,7 +40,13 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_device(TestContext context) {
-        JsonObject expected = JsonPojo.from(MockData.DEVICE).toJson();
+        JsonObject userAgent = new JsonObject(
+            "{\"__data_sync__\":{\"clientConfig\":{\"userAgent\":" + "\"nubeio.edge.datapoint/1.0.0 " +
+            PrimaryKey.DEVICE + "\"}}}");
+        JsonObject expected = JsonPojo.from(MockData.DEVICE)
+                                      .toJson()
+                                      .put("metadata", userAgent)
+                                      .put("data_version", "0.0.2");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString()))
                                      .build();
@@ -74,8 +83,13 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_list_network(TestContext context) {
+        Network def = new Network().setId(
+            UUID.fromString(SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.NETWORK_ID)))
+                                   .setDevice(PrimaryKey.DEVICE)
+                                   .setCode("DEFAULT");
         JsonObject expected = new JsonObject().put("networks",
-                                                   new JsonArray().add(JsonPojo.from(MockData.NETWORK).toJson()));
+                                                   new JsonArray().add(JsonPojo.from(MockData.NETWORK).toJson())
+                                                                  .add(JsonPojo.from(def).toJson()));
         asserter(context, true, expected, NetworkService.class.getName(), EventAction.GET_LIST,
                  RequestData.builder().build());
     }

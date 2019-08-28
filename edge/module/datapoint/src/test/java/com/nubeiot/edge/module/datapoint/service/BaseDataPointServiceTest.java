@@ -16,7 +16,7 @@ import com.nubeiot.iotdata.edge.model.DefaultCatalog;
 public abstract class BaseDataPointServiceTest extends BaseSqlServiceTest {
 
     protected void setup(TestContext context) {
-        SharedDataDelegate.addLocalDataValue(vertx, sharedKey, MockDataPointEntityHandler.BUILTIN_DATA, testData());
+        SharedDataDelegate.addLocalDataValue(vertx, sharedKey, DataPointIndex.BUILTIN_DATA, testData());
         MockDataPointEntityHandler entityHandler = startSQL(context, DefaultCatalog.DEFAULT_CATALOG,
                                                             MockDataPointEntityHandler.class);
         EventController controller = controller();

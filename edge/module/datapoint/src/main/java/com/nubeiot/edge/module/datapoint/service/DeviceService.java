@@ -26,7 +26,7 @@ public final class DeviceService extends AbstractEntityService<Device, DeviceMet
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.UPDATE, EventAction.PATCH);
+        return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.PATCH);
     }
 
     public interface DeviceExtension extends HasReferenceResource {

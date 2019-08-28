@@ -3,7 +3,6 @@ package com.nubeiot.edge.module.datapoint.model.ditto;
 import java.util.function.Supplier;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 
@@ -35,12 +34,6 @@ public interface IDittoModel<V extends VertxPojo> extends JsonData, Supplier<V> 
         public final V get() {
             return data;
         }
-
-        @Override
-        public JsonObject toJson() {
-            return null;
-        }
-
     }
 
 }

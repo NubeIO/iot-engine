@@ -22,8 +22,8 @@ public final class DittoDevice extends AbstractDittoModel<IDevice> {
     }
 
     @Override
-    public String endpoint(String thingId) {
-        return "/things/" + thingId + "/attributes";
+    public String endpoint(String deviceId) {
+        return "/things/" + deviceId + "/attributes";
     }
 
 }

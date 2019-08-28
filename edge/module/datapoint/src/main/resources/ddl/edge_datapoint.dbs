@@ -10,9 +10,8 @@
 			</column>
 			<column name="CUSTOMER_CODE" type="varchar" length="31" decimal="0" jt="12" mandatory="y" />
 			<column name="SITE_CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
-			<column name="POLICY_ID" type="varchar" length="127" decimal="0" jt="12" mandatory="y" />
 			<column name="DATA_VERSION" type="varchar" length="15" decimal="0" jt="12" mandatory="y" >
-				<defo>&#039;0.0.1&#039;</defo>
+				<defo>&#039;0.0.2&#039;</defo>
 				<comment><![CDATA[Legacy version: startswith 0.0.x. 0.0.1: default lowdb - 0.0.2: migrate point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` and `schedule`]]></comment>
 			</column>
 			<column name="METADATA_JSON" type="clob" length="2147483647" decimal="0" jt="2005" >
@@ -418,11 +417,10 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 		<sequence name="SYSTEM_SEQUENCE_80300AAB_0F06_4978_9ABB_E101C001FAB6" start="1" />
 		<sequence name="SYSTEM_SEQUENCE_8477E3AC_D540_4A25_891F_B44771BDA9AB" start="1" />
 	</schema>
-	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="-1" instance="C:/projects/nubeio/iot-engine/edge/connector/datapoint/src/main/resources/ddl/edge_datapoint" />
+	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="-1" instance="/data/projects/nubeio/iot-engine/edge/module/datapoint/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
 		<entity schema="PUBLIC" name="TRANSDUCER" color="EEF7EC" x="672" y="352" />
 		<entity schema="PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="240" />
-		<entity schema="PUBLIC" name="DEVICE" color="EEF7EC" x="688" y="560" />
 		<entity schema="PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="432" y="592" />
 		<entity schema="PUBLIC" name="POINT_TAG" color="FFCCE6" x="672" y="128" />
 		<entity schema="PUBLIC" name="NETWORK" color="FFCCE6" x="880" y="80" />
@@ -435,6 +433,7 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 		<entity schema="PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="1088" y="80" />
 		<entity schema="PUBLIC" name="THING" color="EEF7EC" x="1152" y="352" />
 		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="352" y="112" />
+		<entity schema="PUBLIC" name="DEVICE" color="EEF7EC" x="688" y="560" />
 		<group name="POINT" color="ECF0F7" >
 			<entity schema="PUBLIC" name="POINT" />
 			<entity schema="PUBLIC" name="HISTORY_SETTING" />
@@ -456,6 +455,20 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 			<entity schema="PUBLIC" name="MEASURE_UNIT" />
 			<entity schema="PUBLIC" name="POINT_TAG" />
 		</group>
+		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.DEVICE ( 
+	ID                   uuid(2147483647)  DEFAULT RANDOM_UUID() NOT NULL,
+	CODE                 varchar(63)   NOT NULL,
+	CUSTOMER_CODE        varchar(31)   NOT NULL,
+	SITE_CODE            varchar(63)   NOT NULL,
+	DATA_VERSION         varchar(15)  DEFAULT '0.0.2' NOT NULL,
+	METADATA_JSON        clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_DEVICE_ID PRIMARY KEY ( ID )
+ );
+]]></string>
+		</script>
 		<script name="POINT" id="Editor_37a712" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.POINT ( 
 	ID                   uuid(2147483647)   NOT NULL,
@@ -498,8 +511,7 @@ ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_MEASURE_UNIT FOREIGN KEY ( MEAS
 
 ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_NETWORK FOREIGN KEY ( NETWORK ) REFERENCES PUBLIC.NETWORK( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
-]]></string>
+ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;]]></string>
 		</script>
 		<script name="POINT_VALUE_DATA" id="Editor_3a1a87c" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.POINT_VALUE_DATA ( 
@@ -526,8 +538,7 @@ ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( 
 	CONSTRAINT PK_POINT_VALUE_DATA PRIMARY KEY ( POINT )
  );
 
-ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
-]]></string>
+ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;]]></string>
 		</script>
 		<script name="POINT_VALUE_DATA_002" id="Editor_502c922" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.POINT_VALUE_DATA ( 
@@ -540,8 +551,7 @@ ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( 
 	CONSTRAINT PK_POINT_VALUE_DATA PRIMARY KEY ( POINT )
  );
 
-ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
-]]></string>
+ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;]]></string>
 		</script>
 		<script name="SQL_Editor" id="Editor_20e3cad" language="SQL" >
 			<string><![CDATA[CREATE SCHEMA IF NOT EXISTS PUBLIC;

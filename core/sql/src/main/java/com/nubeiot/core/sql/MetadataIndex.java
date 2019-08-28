@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import org.jooq.Table;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
 
@@ -22,8 +24,14 @@ public interface MetadataIndex {
 
     List<EntityMetadata> index();
 
-    default Optional<EntityMetadata> findByTable(Table table) {
+    default Optional<EntityMetadata> findByTable(@NonNull Table table) {
         return index().stream().filter(metadata -> table.equals(metadata.table())).findFirst();
+    }
+
+    default Optional<EntityMetadata> findByPojo(@NonNull Class<? extends VertxPojo> pojoClass) {
+        return index().stream()
+                      .filter(metadata -> ReflectionClass.assertDataType(metadata.modelClass(), pojoClass))
+                      .findFirst();
     }
 
 }

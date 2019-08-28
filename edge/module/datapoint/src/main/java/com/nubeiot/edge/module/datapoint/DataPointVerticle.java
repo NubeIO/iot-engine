@@ -16,6 +16,7 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
 import com.nubeiot.iotdata.edge.model.DefaultCatalog;
 
@@ -29,9 +30,10 @@ public final class DataPointVerticle extends ContainerVerticle {
     @Override
     public void start() {
         super.start();
-        DataPointConfig pointCfg = IConfig.from(nubeConfig.getAppConfig(), DataPointConfig.class);
+        final DataPointConfig pointCfg = IConfig.from(nubeConfig.getAppConfig(), DataPointConfig.class);
         this.addSharedData(LOWDB_MIGRATION, pointCfg.getLowdbMigration())
-            .addSharedData(DataPointEntityHandler.BUILTIN_DATA, pointCfg.getBuiltinData().toJson())
+            .addSharedData(DataPointIndex.BUILTIN_DATA, pointCfg.getBuiltinData().toJson())
+            .addSharedData(DataPointIndex.DATA_SYNC_CFG, pointCfg.getDataSyncConfig().toJson())
             .addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
             .addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, DataPointEntityHandler.class),
                          ctx -> entityHandler = ((SqlContext<DataPointEntityHandler>) ctx).getEntityHandler())

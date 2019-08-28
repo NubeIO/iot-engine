@@ -83,6 +83,10 @@ import lombok.NonNull;
 public interface DataPointIndex extends MetadataIndex {
 
     List<EntityMetadata> INDEX = MetadataIndex.find(DataPointIndex.class);
+    String BUILTIN_DATA = "BUILTIN_DATA";
+    String DATA_SYNC_CFG = "DATA_SYNC_CFG";
+    String DEVICE_ID = "DEVICE_ID";
+    String NETWORK_ID = "NETWORK_ID";
 
     static Map<EntityMetadata, Integer> dependencies() {
         Map<EntityMetadata, Integer> map = new HashMap<>();
@@ -122,6 +126,12 @@ public interface DataPointIndex extends MetadataIndex {
             return Tables.EQUIPMENT;
         }
 
+        @Override
+        public @NonNull Equipment onCreating(RequestData reqData) throws IllegalArgumentException {
+            Equipment equip = parseFromRequest(reqData.body());
+            return equip.setId(Optional.ofNullable(equip.getId()).orElseGet(UUID::randomUUID));
+        }
+
     }
 
 
@@ -143,6 +153,16 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull JsonTable<DeviceRecord> table() {
             return Tables.DEVICE;
+        }
+
+        @Override
+        public @NonNull Device onCreating(RequestData reqData) throws IllegalArgumentException {
+            Device device = parseFromRequest(reqData.body());
+            device.setCustomerCode(
+                Strings.requireNotBlank(device.getCustomerCode(), "Customer code cannot be blank").toUpperCase());
+            device.setSiteCode(
+                Strings.requireNotBlank(device.getSiteCode(), "Site code cannot be blank").toUpperCase());
+            return device.setId(Optional.ofNullable(device.getId()).orElseGet(UUID::randomUUID));
         }
 
     }
@@ -262,7 +282,6 @@ public interface DataPointIndex extends MetadataIndex {
         @NonNull
         public MeasureUnit onCreating(RequestData reqData) throws IllegalArgumentException {
             final MeasureUnit measureUnit = StringKeyEntity.super.onCreating(reqData);
-            Strings.requireNotBlank(measureUnit.getSymbol(), "Missing unit symbol");
             Strings.requireNotBlank(measureUnit.getType(), "Missing unit type");
             Strings.requireNotBlank(measureUnit.getCategory(), "Missing unit category");
             return measureUnit;
@@ -279,10 +298,10 @@ public interface DataPointIndex extends MetadataIndex {
         private static Set<String> NULL_ALIASES = Collections.unmodifiableSet(
             new HashSet<>(Arrays.asList("default", "gpio")));
 
-        static void optimizeAlias(JsonObject req) {
+        static void optimizeAlias(JsonObject req, String cacheId) {
             Optional.ofNullable(req).ifPresent(r -> {
                 if (NULL_ALIASES.contains(r.getString(INSTANCE.requestKeyName(), "").toLowerCase())) {
-                    r.put(INSTANCE.requestKeyName(), (String) null);
+                    r.put(INSTANCE.requestKeyName(), cacheId);
                 }
             });
         }
@@ -300,6 +319,12 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull com.nubeiot.iotdata.edge.model.tables.Network table() {
             return Tables.NETWORK;
+        }
+
+        @Override
+        public @NonNull Network onCreating(RequestData reqData) throws IllegalArgumentException {
+            Network network = parseFromRequest(reqData.body());
+            return network.setId(Optional.ofNullable(network.getId()).orElseGet(UUID::randomUUID));
         }
 
     }
@@ -617,6 +642,12 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull JsonTable<TransducerRecord> table() {
             return Tables.TRANSDUCER;
+        }
+
+        @Override
+        public @NonNull Transducer onCreating(RequestData reqData) throws IllegalArgumentException {
+            Transducer transducer = parseFromRequest(reqData.body());
+            return transducer.setId(Optional.ofNullable(transducer.getId()).orElseGet(UUID::randomUUID));
         }
 
     }

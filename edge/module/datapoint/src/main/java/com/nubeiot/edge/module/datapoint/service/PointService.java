@@ -46,8 +46,9 @@ public final class PointService
 
     @Override
     public RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
-        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body());
-        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.getFilter());
+        final String networkId = entityHandler().sharedData(DataPointIndex.NETWORK_ID);
+        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body(), null);
+        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.getFilter(), null);
         return super.recomputeRequestData(reqData, extra);
     }
 

@@ -53,9 +53,7 @@ public final class MockData {
     public static final Device DEVICE = new Device().setId(PrimaryKey.DEVICE)
                                                     .setCode("NUBEIO_EDGE_28")
                                                     .setCustomerCode("XXX")
-                                                    .setSiteCode("XXX-00001")
-                                                    .setPolicyId("com.nubeio.xxx:XXX-00001")
-                                                    .setDataVersion("0.0.1");
+                                                    .setSiteCode("XXX-00001");
     public static final JsonObject MEASURE_UNITS = measures();
     public static final Network NETWORK = network();
     public static final List<Equipment> EQUIPS = equips();

@@ -1,8 +1,77 @@
 {
   "__app__": {
     "__datapoint__": {
+      "__lowdb_migration__": {
+        "enabled": false
+      },
+      "__data_scheduler__": [
+        {
+          "type": "PURGE_HISTORY_DATA",
+          "enabled": false,
+          "label": {
+            "label": "Purge point history data"
+          },
+          "trigger": {
+            "type": "CRON",
+            "expression": "0 0 0 1/1 * ? *",
+            "timezone": "Australia/Sydney"
+          },
+          "policy": {
+            "type": "oldest",
+            "max_item": 100,
+            "group_by": "point_id",
+            "duration": "PT720H"
+          }
+        },
+        {
+          "type": "SYNC_DEVICE_INFO",
+          "label": {
+            "label": "Sync device information to cloud"
+          },
+          "enabled": false,
+          "trigger": {
+            "type": "CRON",
+            "expression": "0 0 0 1/1 * ? *",
+            "timezone": "Australia/Sydney"
+          }
+        },
+        {
+          "type": "SYNC_POINT_DATA",
+          "label": {
+            "label": "Sync point data to cloud"
+          },
+          "enabled": false,
+          "trigger": {
+            "type": "CRON",
+            "expression": "0 0 0 1/1 * ? *",
+            "timezone": "Australia/Sydney"
+          }
+        },
+        {
+          "type": "SYNC_POINT_SETTING",
+          "label": {
+            "label": "Sync point setting data to cloud"
+          },
+          "enabled": false,
+          "trigger": {
+            "type": "CRON",
+            "expression": "0 0 0 1/1 * ? *",
+            "timezone": "Australia/Sydney"
+          }
+        }
+      ],
       "__builtin_data__": {
         "unit": [
+          {
+            "type": "revolutions_per_minute",
+            "category": "ANGULAR_VELOCITY",
+            "symbol": "rpm"
+          },
+          {
+            "type": "radians_per_second",
+            "category": "ANGULAR_VELOCITY",
+            "symbol": "rad/s"
+          },
           {
             "type": "number",
             "category": "ALL"
@@ -15,16 +84,6 @@
           {
             "type": "bool",
             "category": "ALL"
-          },
-          {
-            "type": "revolutions_per_minute",
-            "category": "ANGULAR_VELOCITY",
-            "symbol": "rpm"
-          },
-          {
-            "type": "radians_per_second",
-            "category": "ANGULAR_VELOCITY",
-            "symbol": "rad/s"
           },
           {
             "type": "volt",
@@ -78,69 +137,94 @@
           }
         ]
       },
-      "__lowdb_migration__": {
-        "enabled": false
-      },
       "__data_sync__": {
         "type": "DITTO",
-        "enabled": false
-      },
-      "__data_scheduler__": [
-        {
-          "type": "PURGE_HISTORY_DATA",
-          "enabled": false,
-          "label": {
-            "label": "Purge point history data"
+        "enabled": false,
+        "clientConfig": {
+          "userAgent": "nubeio.edge.datapoint",
+          "hostInfo": {
+            "port": 80,
+            "ssl": false
           },
-          "trigger": {
-            "type": "CRON",
-            "expression": "0 0 0 1/1 * ? *",
-            "timezone": "Australia/Sydney"
+          "options": {
+            "sendBufferSize": -1,
+            "receiveBufferSize": -1,
+            "trafficClass": -1,
+            "reuseAddress": true,
+            "logActivity": false,
+            "reusePort": false,
+            "tcpNoDelay": true,
+            "tcpKeepAlive": false,
+            "soLinger": -1,
+            "usePooledBuffers": false,
+            "idleTimeout": 0,
+            "idleTimeoutUnit": "SECONDS",
+            "ssl": false,
+            "enabledCipherSuites": [],
+            "crlPaths": [],
+            "crlValues": [],
+            "useAlpn": false,
+            "enabledSecureTransportProtocols": [
+              "TLSv1",
+              "TLSv1.1",
+              "TLSv1.2"
+            ],
+            "tcpFastOpen": false,
+            "tcpCork": false,
+            "tcpQuickAck": false,
+            "connectTimeout": 60000,
+            "trustAll": false,
+            "metricsName": "",
+            "verifyHost": true,
+            "maxPoolSize": 5,
+            "keepAlive": true,
+            "keepAliveTimeout": 60,
+            "pipeliningLimit": 10,
+            "pipelining": false,
+            "http2MaxPoolSize": 1,
+            "http2MultiplexingLimit": -1,
+            "http2ConnectionWindowSize": -1,
+            "http2KeepAliveTimeout": 60,
+            "poolCleanerPeriod": 1000,
+            "tryUseCompression": false,
+            "maxWebsocketFrameSize": 65536,
+            "maxWebsocketMessageSize": 262144,
+            "defaultHost": "localhost",
+            "defaultPort": 80,
+            "protocolVersion": "HTTP_1_1",
+            "maxChunkSize": 8192,
+            "maxInitialLineLength": 4096,
+            "maxHeaderSize": 8192,
+            "maxWaitQueueSize": -1,
+            "initialSettings": {
+              "headerTableSize": 4096,
+              "pushEnabled": true,
+              "maxConcurrentStreams": 4294967295,
+              "initialWindowSize": 65535,
+              "maxFrameSize": 16384,
+              "maxHeaderListSize": 2147483647
+            },
+            "alpnVersions": [],
+            "http2ClearTextUpgrade": true,
+            "sendUnmaskedFrames": false,
+            "maxRedirects": 16,
+            "forceSni": false,
+            "decoderInitialBufferSize": 128,
+            "websocketCompressionLevel": 6,
+            "websocketCompressionAllowClientNoContext": false,
+            "websocketCompressionRequestServerNoContext": false
           },
-          "policy": {
-            "type": "oldest",
-            "max_item": 100,
-            "group_by": "point_id",
-            "duration": "PT720H"
-          }
-        },
-        {
-          "type": "SYNC_DEVICE_INFO",
-          "enabled": false,
-          "label": {
-            "label": "Sync device information to cloud"
-          },
-          "trigger": {
-            "type": "CRON",
-            "expression": "0 0 0 1/1 * ? *",
-            "timezone": "Australia/Sydney"
-          }
-        },
-        {
-          "type": "SYNC_POINT_DATA",
-          "enabled": false,
-          "label": {
-            "label": "Sync point data to cloud"
-          },
-          "trigger": {
-            "type": "CRON",
-            "expression": "0 0 0 1/1 * ? *",
-            "timezone": "Australia/Sydney"
-          }
-        },
-        {
-          "type": "SYNC_POINT_SETTING",
-          "enabled": false,
-          "label": {
-            "label": "Sync point setting data to cloud"
-          },
-          "trigger": {
-            "type": "CRON",
-            "expression": "0 0 0 1/1 * ? *",
-            "timezone": "Australia/Sydney"
+          "handlerConfig": {
+            "httpClientWriterClass": "com.nubeiot.core.http.client.handler.HttpClientWriter",
+            "httpLightBodyHandlerClass": "com.nubeiot.core.http.client.handler.HttpLightResponseBodyHandler",
+            "httpHeavyBodyHandlerClass": "com.nubeiot.core.http.client.handler.HttpHeavyResponseHandler",
+            "httpErrorHandlerClass": "com.nubeiot.core.http.client.handler.HttpErrorHandler",
+            "wsConnectErrorHandlerClass": "com.nubeiot.core.http.client.handler.WsConnectErrorHandler",
+            "wsErrorHandlerClass": "com.nubeiot.core.http.client.handler.WsResponseErrorHandler",
+            "wsLightResponseHandlerClass": "com.nubeiot.core.http.client.handler.WsLightResponseDispatcher"
           }
         }
-      ]
+      }
     },
     "__micro__": {
       "__gateway__": {
