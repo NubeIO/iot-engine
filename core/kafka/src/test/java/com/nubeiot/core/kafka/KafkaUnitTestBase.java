@@ -103,7 +103,7 @@ public class KafkaUnitTestBase {
 
     KafkaUnit startKafkaUnit(TestContext context, KafkaRouter router) {
         return VertxHelper.deploy(vertx, context, new DeploymentOptions().setConfig(kafkaConfig.toJson()),
-                                  new KafkaUnit(router), TEST_TIMEOUT_SEC);
+                                  new KafkaUnit(router).registerSharedKey(this.getClass().getName()), TEST_TIMEOUT_SEC);
     }
 
 }

@@ -2,7 +2,6 @@ package com.nubeiot.core.kafka;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import io.reactivex.Completable;
 import io.vertx.core.AsyncResult;
@@ -24,9 +23,9 @@ public final class KafkaContext extends UnitContext {
     private KafkaConsumerService consumerService;
     private KafkaProducerService producerService;
 
-    void create(Vertx vertx, KafkaConfig config, KafkaRouter router, Function<String, Object> func) {
-        this.producerService = KafkaProducerService.create(vertx, config.getProducerConfig(), router, func);
-        this.consumerService = KafkaConsumerService.create(vertx, config.getConsumerConfig(), router, func);
+    void create(Vertx vertx, KafkaConfig config, KafkaRouter router, String sharedKey) {
+        this.producerService = KafkaProducerService.create(vertx, config.getProducerConfig(), router, sharedKey);
+        this.consumerService = KafkaConsumerService.create(vertx, config.getConsumerConfig(), router, sharedKey);
     }
 
     Completable stop() {

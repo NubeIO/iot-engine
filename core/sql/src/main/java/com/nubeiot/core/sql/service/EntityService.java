@@ -70,10 +70,10 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      * Async post-back service to publish response
      *
      * @return post service
-     * @see PostService
+     * @see EntityPostService
      */
-    default @NonNull PostService asyncPostService() {
-        return PostService.EMPTY;
+    default @NonNull EntityPostService asyncPostService() {
+        return EntityPostService.EMPTY;
     }
 
     /**

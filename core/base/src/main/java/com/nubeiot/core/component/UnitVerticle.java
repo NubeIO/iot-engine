@@ -74,7 +74,7 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
             return;
         }
         addSharedData(SharedDataDelegate.SHARED_DATADIR, testDir.toString());
-        addSharedData(SharedDataDelegate.SHARED_EVENTBUS, new DefaultEventController(vertx));
+        addSharedData(SharedDataDelegate.SHARED_EVENTBUS, new DefaultEventClient(vertx));
     }
 
 }

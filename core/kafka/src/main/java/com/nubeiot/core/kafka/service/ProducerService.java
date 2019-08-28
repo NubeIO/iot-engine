@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
@@ -25,6 +25,7 @@ import com.nubeiot.core.kafka.handler.producer.KafkaProducerHandler;
 import com.nubeiot.core.kafka.supplier.KafkaProducerSupplier;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @SuppressWarnings("unchecked")
@@ -33,6 +34,7 @@ final class ProducerService implements KafkaProducerService {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaProducerService.class);
 
+    @Getter
     private final Vertx vertx;
     private final ProducerCfg config;
     private final Map<String, ClientTechId> techIdMap;
@@ -79,13 +81,12 @@ final class ProducerService implements KafkaProducerService {
         return producers.get(topic);
     }
 
-    ProducerService create(Function<String, Object> sharedDataFunc, Set<KafkaEventMetadata> producerEvents) {
+    ProducerService create(String sharedKey, Set<KafkaEventMetadata> producerEvents) {
         Map<ClientTechId, KafkaProducer> temp = new HashMap<>();
         producerEvents.forEach(event -> {
-            KafkaProducerHandler handler = Objects.isNull(event.getProducerHandler())
-                                           ? KafkaProducerHandler.DEFAULT
-                                           : event.getProducerHandler();
-            handler.registerTransformer(event.getProducerTransformer()).registerSharedData(sharedDataFunc);
+            KafkaProducerHandler handler = Optional.ofNullable(event.getProducerHandler())
+                                                   .orElseGet(() -> KafkaProducerHandler.logHandler(vertx, sharedKey));
+            handler.register(event.getProducerTransformer(), sharedKey);
             this.producers.put(event.getTopic(), temp.computeIfAbsent(event.getTechId(), this::create));
             this.handlers.put(event.getTopic(), handler);
             logger.info("Registering Kafka Producer | Topic: {} | Kind: {} | Handler: {} | Transformer: {}",

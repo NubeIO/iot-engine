@@ -1,5 +1,7 @@
 package com.nubeiot.core.kafka.handler.consumer;
 
+import io.vertx.core.Vertx;
+
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
@@ -24,19 +26,20 @@ public final class KafkaBroadcaster<K, V, T extends KafkaBroadcasterTransformer<
     private final EventModel model;
 
     @SuppressWarnings("unchecked")
-    public KafkaBroadcaster(@NonNull EventModel model) {
+    KafkaBroadcaster(Vertx vertx, @NonNull EventModel model, String sharedKey) {
+        super(vertx);
         if (model.getPattern() == EventPattern.REQUEST_RESPONSE) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT,
                                     Strings.format("Does not supported {0} in {1}", EventPattern.REQUEST_RESPONSE,
                                                    KafkaBroadcaster.class.getSimpleName()));
         }
         this.model = model;
-        this.registerTransformer((T) KafkaBroadcasterTransformer.DEFAULT);
+        register((T) KafkaBroadcasterTransformer.DEFAULT, sharedKey);
     }
 
     @Override
     public void execute(EventMessage result) {
-        EventController controller = (EventController) this.getSharedDataValue(SharedDataDelegate.SHARED_EVENTBUS);
+        EventController controller = getSharedDataValue(SharedDataDelegate.SHARED_EVENTBUS);
         controller.fire(model.getAddress(), model.getPattern(), result, null);
     }
 

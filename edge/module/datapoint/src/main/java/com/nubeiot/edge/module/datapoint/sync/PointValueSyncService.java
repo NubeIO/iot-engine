@@ -2,12 +2,10 @@ package com.nubeiot.edge.module.datapoint.sync;
 
 import java.time.OffsetDateTime;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.SimpleQueryExecutor;
 import com.nubeiot.core.sql.service.EntityService;
@@ -22,10 +20,6 @@ import com.nubeiot.iotdata.edge.model.tables.records.PointHistoryDataRecord;
 import lombok.NonNull;
 
 public final class PointValueSyncService extends DittoHttpSync {
-
-    public PointValueSyncService(Vertx vertx) {
-        super(vertx, new HttpClientConfig());
-    }
 
     @Override
     public void onSuccess(EntityService service, EventAction action, JsonObject data) {

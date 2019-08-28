@@ -12,6 +12,8 @@ import io.vertx.core.logging.LoggerFactory;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 /**
@@ -64,7 +66,7 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
             return eventController;
         }
         synchronized (EventController.class) {
-            final EventController controller = new DefaultEventController(vertx);
+            final EventController controller = new DefaultEventClient(vertx);
             addLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS, controller);
             return controller;
         }
@@ -92,19 +94,36 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
      */
     T registerSharedData(@NonNull Function<String, Object> sharedDataFunc);
 
+    @Getter
+    @NoArgsConstructor
     abstract class AbstractSharedDataDelegate<T extends SharedDataDelegate> implements SharedDataDelegate<T> {
 
+        private Vertx vertx;
+        private String sharedKey;
         private Function<String, Object> sharedDataFunc;
+
+        public AbstractSharedDataDelegate(@NonNull Vertx vertx) {
+            this.vertx = vertx;
+        }
 
         @Override
         public final <D> D getSharedDataValue(String dataKey) {
-            return SharedDataDelegate.getSharedDataValue(this.sharedDataFunc, dataKey);
+            if (Objects.nonNull(vertx)) {
+                return SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
+            }
+            return SharedDataDelegate.getSharedDataValue(sharedDataFunc, dataKey);
         }
 
         @SuppressWarnings("unchecked")
         @Override
         public final T registerSharedData(@NonNull Function<String, Object> sharedDataFunc) {
             this.sharedDataFunc = sharedDataFunc;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        protected final T registerSharedKey(String sharedKey) {
+            this.sharedKey = Strings.requireNotBlank(sharedKey, "Shared key cannot be empty");
             return (T) this;
         }
 

@@ -11,7 +11,7 @@ import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
-import com.nubeiot.core.sql.service.PostService;
+import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointValueMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
 import com.nubeiot.edge.module.datapoint.sync.PointValueSyncService;
@@ -37,8 +37,8 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     }
 
     @Override
-    public @NonNull PostService asyncPostService() {
-        return new PointValueSyncService(entityHandler().vertx());
+    public @NonNull EntityPostService asyncPostService() {
+        return new PointValueSyncService();
     }
 
     @Override

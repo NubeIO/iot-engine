@@ -55,13 +55,11 @@ public final class KafkaEventMetadata<K, V> {
         this(topic, type, techId, null, null, null, producerHandler, producerTransformer);
     }
 
-    public static <K, V> ConsumerBuilder<K, V> consumer() {return new ConsumerBuilder<>();}
+    public static <K, V> ConsumerBuilder<K, V> consumer()  { return new ConsumerBuilder<>(); }
 
-    public static <K, V> ProducerBuilder<K, V> producer() {return new ProducerBuilder<>();}
+    public static <K, V> ProducerBuilder<K, V> producer()  { return new ProducerBuilder<>(); }
 
-    public KafkaConsumerRecordTransformer getTransformer() {
-        return null;
-    }
+    public KafkaConsumerRecordTransformer getTransformer() { return null; }
 
     public static class ConsumerBuilder<K, V> extends Builder<K, V, ConsumerBuilder> {
 

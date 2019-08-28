@@ -28,7 +28,7 @@ public interface KafkaConsumerProvider {
      *
      * @param <K>       type of key
      * @param <V>       type of value
-     * @param vertx     Vert.x instance serialize use
+     * @param vertx     Vertx instance serialize use
      * @param config    Kafka consumer configuration
      * @param keyType   class type for the key deserialization
      * @param valueType class type for the value deserialization
@@ -44,7 +44,7 @@ public interface KafkaConsumerProvider {
      *
      * @param <K>       type of key
      * @param <V>       type of value
-     * @param vertx     Vert.x instance serialize use
+     * @param vertx     Vertx instance serialize use
      * @param config    Kafka consumer configuration
      * @param keyType   class type for the key deserialization
      * @param valueType class type for the value deserialization
@@ -64,7 +64,7 @@ public interface KafkaConsumerProvider {
      *
      * @param <K>               type of key
      * @param <V>               type of value
-     * @param vertx             Vert.x instance serialize use
+     * @param vertx             Vertx instance serialize use
      * @param config            Kafka consumer configuration
      * @param keyDeserializer   The key deserialization
      * @param valueDeserializer The value deserialization
@@ -81,7 +81,7 @@ public interface KafkaConsumerProvider {
      *
      * @param <K>               type of key
      * @param <V>               type of value
-     * @param vertx             Vert.x instance serialize use
+     * @param vertx             Vertx instance serialize use
      * @param config            Kafka consumer configuration
      * @param keyDeserializer   The key deserialization
      * @param valueDeserializer The value deserialization
@@ -99,7 +99,7 @@ public interface KafkaConsumerProvider {
     /**
      * Create a new KafkaConsumer instance
      *
-     * @param vertx    Vert.x instance serialize use
+     * @param vertx    Vertx instance serialize use
      * @param consumer native Kafka consumer instance
      * @param <K>      type of key
      * @param <V>      type of value

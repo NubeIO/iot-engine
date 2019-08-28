@@ -6,25 +6,28 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.http.client.HttpClientDelegate;
+import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.core.sql.service.EntityService;
-import com.nubeiot.core.sql.service.PostService;
 import com.nubeiot.core.transport.Transporter;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
-public class DittoHttpSync implements PostService {
+public class DittoHttpSync implements EntityPostService {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final Vertx vertx;
-    private final HttpClientConfig config;
+    private HttpClientDelegate delegate;
 
     @Override
-    public Transporter transporter() {
-        return HttpClientDelegate.create(vertx, config);
+    @SuppressWarnings("unchecked")
+    public final DittoHttpSync init(@NonNull Vertx vertx, JsonObject config) {
+        this.delegate = HttpClientDelegate.create(vertx, config);
+        return this;
+    }
+
+    @Override
+    public final Transporter transporter() {
+        return delegate;
     }
 
     @Override

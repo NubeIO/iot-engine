@@ -1,6 +1,7 @@
 package com.nubeiot.core.component;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -26,17 +27,21 @@ import lombok.NonNull;
  * @see EventMessage
  * @see ErrorMessage
  */
-final class DefaultEventController implements EventController {
+final class DefaultEventClient implements EventController {
 
     @Getter
     private final Vertx vertx;
     private final DeliveryOptions deliveryOptions;
 
-    DefaultEventController(@NonNull Vertx vertx) {
-        this(vertx, null);
+    DefaultEventClient(@NonNull Vertx vertx) {
+        this(vertx, (DeliveryOptions) null);
     }
 
-    DefaultEventController(@NonNull Vertx vertx, DeliveryOptions deliveryOptions) {
+    DefaultEventClient(@NonNull Vertx vertx, JsonObject config) {
+        this(vertx, Optional.ofNullable(config).map(DeliveryOptions::new).orElse(null));
+    }
+
+    DefaultEventClient(@NonNull Vertx vertx, DeliveryOptions deliveryOptions) {
         this.vertx = vertx;
         this.deliveryOptions = Objects.nonNull(deliveryOptions) ? deliveryOptions : new DeliveryOptions();
     }
@@ -76,7 +81,7 @@ final class DefaultEventController implements EventController {
 
     @Override
     public Shareable copy() {
-        return new DefaultEventController(vertx, new DeliveryOptions(deliveryOptions.toJson()));
+        return new DefaultEventClient(vertx, new DeliveryOptions(deliveryOptions.toJson()));
     }
 
 }

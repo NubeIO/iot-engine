@@ -63,7 +63,7 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public @NonNull PostService asyncPostService() {
+    public @NonNull EntityPostService asyncPostService() {
         return unwrap().asyncPostService();
     }
 

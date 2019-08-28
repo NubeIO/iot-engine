@@ -28,7 +28,7 @@ public interface KafkaProducerSupplier {
      *
      * @param <K>       type of key
      * @param <V>       type of value
-     * @param vertx     Vert.x instance serialize use
+     * @param vertx     Vertx instance serialize use
      * @param config    Kafka producer configuration
      * @param keyType   class type for the key serialization
      * @param valueType class type for the value serialization
@@ -44,7 +44,7 @@ public interface KafkaProducerSupplier {
      *
      * @param <K>       type of key
      * @param <V>       type of value
-     * @param vertx     Vert.x instance serialize use
+     * @param vertx     Vertx instance serialize use
      * @param config    Kafka producer configuration
      * @param keyType   class type for the key serialization
      * @param valueType class type for the value serialization
@@ -63,7 +63,7 @@ public interface KafkaProducerSupplier {
      *
      * @param <K>             type of key
      * @param <V>             type of value
-     * @param vertx           Vert.x instance serialize use
+     * @param vertx           Vertx instance serialize use
      * @param config          Kafka producer configuration
      * @param keySerializer   class type for the key serialization
      * @param valueSerializer class type for the value serialization
@@ -80,7 +80,7 @@ public interface KafkaProducerSupplier {
      *
      * @param <K>             type of key
      * @param <V>             type of value
-     * @param vertx           Vert.x instance serialize use
+     * @param vertx           Vertx instance serialize use
      * @param config          Kafka producer configuration
      * @param keySerializer   class type for the key serialization
      * @param valueSerializer class type for the value serialization
@@ -98,7 +98,7 @@ public interface KafkaProducerSupplier {
      *
      * @param <K>      type of key
      * @param <V>      type of value
-     * @param vertx    Vert.x instance serialize use
+     * @param vertx    Vertx instance serialize use
      * @param producer native Kafka producer instance
      * @return an instance of the KafkaProducer
      * @see Producer

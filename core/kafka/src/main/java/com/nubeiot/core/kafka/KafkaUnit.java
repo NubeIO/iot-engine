@@ -26,7 +26,7 @@ public final class KafkaUnit extends UnitVerticle<KafkaConfig, KafkaContext> {
     public void start() {
         logger.info("Starting Kafka Unit...");
         super.start();
-        this.getContext().create(vertx, config, router, this::getSharedData);
+        this.getContext().create(vertx, config, router, this.getSharedKey());
     }
 
     @Override

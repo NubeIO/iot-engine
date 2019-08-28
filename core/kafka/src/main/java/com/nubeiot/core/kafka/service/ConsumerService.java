@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
@@ -44,18 +43,17 @@ final class ConsumerService implements KafkaConsumerService {
         return Collections.unmodifiableCollection(consumers.values());
     }
 
-    ConsumerService create(Function<String, Object> sharedDataFunc,
-                           Map<ClientTechId, Set<KafkaEventMetadata>> consumerEvents) {
+    ConsumerService create(String sharedKey, Map<ClientTechId, Set<KafkaEventMetadata>> consumerEvents) {
         Map<ClientTechId, KafkaConsumer> temp = new HashMap<>();
         techIdMap.forEach((topic, techId) -> consumers.put(topic, temp.computeIfAbsent(techId, this::create)));
-        consumerEvents.forEach((techId, metadata) -> registerHandler(temp.get(techId), sharedDataFunc, metadata));
+        consumerEvents.forEach((techId, metadata) -> registerHandler(temp.get(techId), sharedKey, metadata));
         logger.debug("Registered {} Kafka Consumer(s) successfully", temp.size());
         return this;
     }
 
-    private <K, V> void registerHandler(KafkaConsumer<K, V> consumer, Function<String, Object> sharedDataFunc,
+    private <K, V> void registerHandler(KafkaConsumer<K, V> consumer, String sharedKey,
                                         Set<KafkaEventMetadata> identicalTechIdEvents) {
-        ConsumerDispatcher<K, V> dispatcher = createDispatcher(sharedDataFunc, identicalTechIdEvents);
+        ConsumerDispatcher<K, V> dispatcher = createDispatcher(sharedKey, identicalTechIdEvents);
         consumer.handler(dispatcher::accept).subscribe(dispatcher.topics());
     }
 
@@ -67,11 +65,11 @@ final class ConsumerService implements KafkaConsumerService {
                               .accept(techId, config.getClientId(), (Throwable) t));
     }
 
-    private <K, V> ConsumerDispatcher<K, V> createDispatcher(Function<String, Object> sharedDataFunc,
+    private <K, V> ConsumerDispatcher<K, V> createDispatcher(String sharedKey,
                                                              Set<KafkaEventMetadata> identicalTechIdEvents) {
         ConsumerDispatcher.Builder<K, V> builder = ConsumerDispatcher.builder();
         identicalTechIdEvents.forEach(event -> {
-            KafkaConsumerHandler handler = createConsumerHandler(sharedDataFunc, event);
+            KafkaConsumerHandler handler = createConsumerHandler(sharedKey, event);
             builder.handler(event.getTopic(), handler);
             logger.info("Registering Kafka Consumer | Topic: {} | Kind: {} | Event: {} - {} | Handler: {} | " +
                         "Transformer: {}", event.getTopic(), event.getTechId().toString(),
@@ -81,15 +79,12 @@ final class ConsumerService implements KafkaConsumerService {
         return builder.build();
     }
 
-    private KafkaConsumerHandler createConsumerHandler(Function<String, Object> sharedFunc,
-                                                       KafkaEventMetadata metadata) {
+    private KafkaConsumerHandler createConsumerHandler(String sharedKey, KafkaEventMetadata metadata) {
         KafkaConsumerHandler consumerHandler = metadata.getConsumerHandler();
         if (Objects.isNull(consumerHandler)) {
-            consumerHandler = (KafkaConsumerHandler) KafkaConsumerHandler.createBroadcaster(metadata.getEventModel())
-                                                                         .registerSharedData(sharedFunc);
+            consumerHandler = KafkaConsumerHandler.createBroadcaster(vertx, sharedKey, metadata.getEventModel());
         }
-        return (KafkaConsumerHandler) consumerHandler.registerTransformer(metadata.getTransformer())
-                                                     .registerSharedData(sharedFunc);
+        return consumerHandler.register(metadata.getTransformer(), sharedKey);
     }
 
 }

@@ -36,7 +36,7 @@ public final class HttpClientConfig implements IConfig {
     private HttpClientOptions options;
     private HandlerConfig handlerConfig = new HandlerConfig();
 
-    public HttpClientConfig() {
+    HttpClientConfig() {
         this(new HttpClientOptions().setIdleTimeout(HTTP_IDLE_TIMEOUT_SECOND)
                                     .setIdleTimeoutUnit(TimeUnit.SECONDS)
                                     .setConnectTimeout(CONNECT_TIMEOUT_SECOND * 1000)
@@ -50,6 +50,13 @@ public final class HttpClientConfig implements IConfig {
 
     HttpClientConfig(@NonNull HttpClientOptions options) {
         this.options = options;
+    }
+
+    public static HttpClientConfig create(String userAgent, @NonNull HostInfo info) {
+        final HttpClientConfig config = new HttpClientConfig(new HttpClientOptions());
+        config.hostInfo = info;
+        config.userAgent = Strings.isBlank(userAgent) ? config.userAgent : userAgent;
+        return config;
     }
 
     @Override
