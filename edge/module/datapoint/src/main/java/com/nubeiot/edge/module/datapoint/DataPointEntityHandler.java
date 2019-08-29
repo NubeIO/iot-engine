@@ -57,7 +57,7 @@ class DataPointEntityHandler extends AbstractEntityHandler
 
     @Override
     public boolean isNew() {
-        return isNew(Tables.DEVICE) || !dsl().fetchExists(Tables.DEVICE);
+        return isNew(Tables.DEVICE);
     }
 
     @Override
@@ -69,15 +69,19 @@ class DataPointEntityHandler extends AbstractEntityHandler
         map.put(Tables.POINT, Tables.POINT.ID);
         map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
         createDefaultUUID(map);
-        return initDataFromConfig();
+        return initDataFromConfig(EventAction.INIT);
     }
 
     @Override
     public Single<EventMessage> migrate() {
-        return Single.just(EventMessage.initial(EventAction.MIGRATE));
+        if (dsl().fetchExists(Tables.DEVICE)) {
+            return Single.just(EventMessage.initial(EventAction.MIGRATE));
+        } else {
+            return initDataFromConfig(EventAction.MIGRATE);
+        }
     }
 
-    private Single<EventMessage> initDataFromConfig() {
+    private Single<EventMessage> initDataFromConfig(EventAction action) {
         Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
         JsonObject data = initBuiltinData();
         return Single.merge(index().stream()
@@ -88,7 +92,7 @@ class DataPointEntityHandler extends AbstractEntityHandler
                                    .collect(Collectors.toList()))
                      .buffer(5)
                      .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
-                     .map(r -> EventMessage.success(EventAction.INIT, new JsonObject().put("records", r)));
+                     .map(r -> EventMessage.success(action, new JsonObject().put("records", r)));
     }
 
     private JsonObject initBuiltinData() {
@@ -165,14 +169,14 @@ class DataPointEntityHandler extends AbstractEntityHandler
     }
 
     @SuppressWarnings("unchecked")
-    private Stream<Object> getArrayStream(@NonNull Object data) {
+    private Stream<Object> getArrayStream(Object data) {
         if (data instanceof JsonArray || data instanceof Collection) {
             return data instanceof JsonArray ? ((JsonArray) data).stream() : ((Collection) data).stream();
         }
         return null;
     }
 
-    private boolean parsable(@NonNull Class<? extends VertxPojo> pojoClass, @NonNull Object data) {
+    private boolean parsable(@NonNull Class<? extends VertxPojo> pojoClass, Object data) {
         return data instanceof JsonObject || data instanceof Map || pojoClass.isInstance(data);
     }
 
