@@ -21,16 +21,20 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HttpUtils;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.NonNull;
 
 @Builder(builderClassName = "Builder")
 public class ExpectedResponse {
 
+    @NonNull
     private final JsonObject expected;
     private final int code;
-    @lombok.Builder.Default
+    @Default
+    @NonNull
     private final List<Customization> customizations = new ArrayList<>();
-    @lombok.Builder.Default
+    @Default
+    @NonNull
     private final JSONCompareMode mode = JSONCompareMode.STRICT;
     private Consumer<ResponseData> after;
 
