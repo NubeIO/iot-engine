@@ -50,6 +50,7 @@ public class DataPointConfigTest {
         expected.put(BuiltinData.NAME, builtin);
         expected.put(DataSyncConfig.NAME, dataSync);
         JsonHelper.assertJson(expected, cp.toJson(), JSONCompareMode.LENIENT);
+        System.out.println(cp.toJson().encodePrettily());
     }
 
     @Test

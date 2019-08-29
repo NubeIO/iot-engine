@@ -1,5 +1,8 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import java.util.Set;
+
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
@@ -38,6 +41,11 @@ public final class TransducerByEquipment extends AbstractManyToManyEntityService
     @Override
     public @NonNull EntityMetadata resource() {
         return TransducerMetadata.INSTANCE;
+    }
+
+    @Override
+    public final Set<EventMethodDefinition> definitions() {
+        return DataPointService.definitionsForMany(getAvailableEvents(), reference(), resource());
     }
 
 }

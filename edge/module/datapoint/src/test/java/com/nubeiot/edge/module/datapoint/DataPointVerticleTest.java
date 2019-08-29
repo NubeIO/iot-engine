@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,7 @@ import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
+import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 
 import ch.qos.logback.classic.Level;
@@ -53,8 +55,16 @@ public class DataPointVerticleTest extends DynamicServiceTestBase {
 
     @Test
     public void test_get_device(TestContext context) {
-        assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + PrimaryKey.DEVICE, 200,
-                           JsonPojo.from(MockData.DEVICE).toJson().put("data_version", "0.0.2"));
+        final JsonObject syncConfig = new JsonObject("{\"type\":\"DITTO\",\"enabled\":false," +
+                                                     "\"clientConfig\":{\"userAgent\":\"nubeio.edge.datapoint/1.0.0 " +
+                                                     PrimaryKey.DEVICE + "\"}}");
+        final JsonObject expected = JsonPojo.from(MockData.DEVICE)
+                                            .toJson()
+                                            .put("data_version", "0.0.2")
+                                            .put("metadata", new JsonObject().put(DataSyncConfig.NAME, syncConfig));
+        assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + PrimaryKey.DEVICE, 200, expected,
+                           new Customization("metadata.__data_sync__.clientConfig.hostInfo", (o1, o2) -> true),
+                           new Customization("metadata.__data_sync__.clientConfig.options", (o1, o2) -> true));
     }
 
     @Test

@@ -148,6 +148,16 @@
             "artifact_id": "datapoint",
             "version": "1.0.0-SNAPSHOT",
             "service_name": "edge-datapoint"
+          },
+          "appConfig": {
+            "__datapoint__": {
+              "__builtin_data__": {
+                "device": {
+                  "customer_code": "NUBEIO",
+                  "site_code": "SYDNEY-01"
+                }
+              }
+            }
           }
         },
         {

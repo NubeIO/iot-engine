@@ -3,6 +3,7 @@ package com.nubeiot.edge.module.datapoint.service;
 import java.util.Set;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
@@ -48,6 +49,11 @@ public final class EquipmentByDevice
         final Set<String> ignores = super.ignoreFields(requestData);
         ignores.add(context().table().getJsonField(context().table().EQUIP));
         return ignores;
+    }
+
+    @Override
+    public final Set<EventMethodDefinition> definitions() {
+        return DataPointService.definitionsForMany(getAvailableEvents(), reference(), resource());
     }
 
 }
