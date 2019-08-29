@@ -23,7 +23,10 @@ public final class ClientEndHandler implements Handler<Void>, Action {
 
     @Override
     public void run() {
-        HttpClientRegistry.getInstance().remove(options, isWebsocket);
+        //FIXME temporary disabled to update code of HTTPClientRegistry
+        //ROOT CAUSE for #219: using multiple client in same host, but one of them finish it will close right away.
+        // not wait other
+        //        HttpClientRegistry.getInstance().remove(options, isWebsocket);
     }
 
 }

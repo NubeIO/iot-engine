@@ -1,5 +1,6 @@
 package com.nubeiot.core.http;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -27,8 +28,10 @@ public class ExpectedResponse {
 
     private final JsonObject expected;
     private final int code;
-    private final List<Customization> customizations;
-    private JSONCompareMode mode;
+    @lombok.Builder.Default
+    private final List<Customization> customizations = new ArrayList<>();
+    @lombok.Builder.Default
+    private final JSONCompareMode mode = JSONCompareMode.STRICT;
     private Consumer<ResponseData> after;
 
     public boolean hasAfter() {

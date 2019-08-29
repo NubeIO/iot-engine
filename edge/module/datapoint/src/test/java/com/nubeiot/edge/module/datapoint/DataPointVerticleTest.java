@@ -57,12 +57,13 @@ public class DataPointVerticleTest extends DynamicServiceTestBase {
     public void test_get_device(TestContext context) {
         final JsonObject syncConfig = new JsonObject("{\"type\":\"DITTO\",\"enabled\":false," +
                                                      "\"clientConfig\":{\"userAgent\":\"nubeio.edge.datapoint/1.0.0 " +
-                                                     PrimaryKey.DEVICE + "\"}}");
+                                                     PrimaryKey.DEVICE + "\",\"hostInfo\":{},\"options\":{}}}");
         final JsonObject expected = JsonPojo.from(MockData.DEVICE)
                                             .toJson()
                                             .put("data_version", "0.0.2")
                                             .put("metadata", new JsonObject().put(DataSyncConfig.NAME, syncConfig));
         assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + PrimaryKey.DEVICE, 200, expected,
+                           JSONCompareMode.LENIENT,
                            new Customization("metadata.__data_sync__.clientConfig.hostInfo", (o1, o2) -> true),
                            new Customization("metadata.__data_sync__.clientConfig.options", (o1, o2) -> true));
     }

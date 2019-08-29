@@ -162,7 +162,8 @@ public interface DataPointIndex extends MetadataIndex {
                 Strings.requireNotBlank(device.getCustomerCode(), "Customer code cannot be blank").toUpperCase());
             device.setSiteCode(
                 Strings.requireNotBlank(device.getSiteCode(), "Site code cannot be blank").toUpperCase());
-            return device.setId(Optional.ofNullable(device.getId()).orElseGet(UUID::randomUUID));
+            return device.setId(Optional.ofNullable(device.getId()).orElseGet(UUID::randomUUID))
+                         .setCode(Optional.ofNullable(device.getCode()).orElse(device.getId().toString()));
         }
 
     }
