@@ -21,7 +21,6 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HttpUtils;
 
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.NonNull;
 
 @Builder(builderClassName = "Builder")
@@ -30,13 +29,20 @@ public class ExpectedResponse {
     @NonNull
     private final JsonObject expected;
     private final int code;
-    @Default
     @NonNull
-    private final List<Customization> customizations = new ArrayList<>();
-    @Default
+    private final List<Customization> customizations;
     @NonNull
-    private final JSONCompareMode mode = JSONCompareMode.STRICT;
+    private final JSONCompareMode mode;
     private Consumer<ResponseData> after;
+
+    ExpectedResponse(JsonObject expected, int code, List<Customization> customizations, JSONCompareMode mode,
+                     Consumer<ResponseData> after) {
+        this.expected = expected;
+        this.code = code;
+        this.after = after;
+        this.mode = Optional.ofNullable(mode).orElse(JSONCompareMode.STRICT);
+        this.customizations = new ArrayList<>(Optional.ofNullable(customizations).orElseGet(ArrayList::new));
+    }
 
     public boolean hasAfter() {
         return Objects.nonNull(after);

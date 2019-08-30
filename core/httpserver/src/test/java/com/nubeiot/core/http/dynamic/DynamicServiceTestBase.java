@@ -22,7 +22,7 @@ import com.nubeiot.core.http.dynamic.mock.MockGatewayServer;
 
 public abstract class DynamicServiceTestBase extends HttpServerTestBase {
 
-    static final Customization IGNORE_URI = new Customization("message.uri", (o1, o2) -> false);
+    static final Customization IGNORE_URI = new Customization("message.uri", (o1, o2) -> true);
 
     @BeforeClass
     public static void beforeSuite() { TestHelper.setup(); }
