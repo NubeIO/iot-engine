@@ -20,7 +20,7 @@ public final class RequestDataConverter {
     public static RequestData convert(RoutingContext context) {
         return RequestData.builder()
                           .headers(HttpHeaderUtils.serializeHeaders(context.request()))
-                          .body(body(context))
+                          .body(body(context)).sort(HttpRequests.sort(context.request()))
                           .filter(HttpRequests.query(context.request()))
                           .pagination(HttpRequests.pagination(context.request()))
                           .build();

@@ -59,6 +59,10 @@ ext {
                          parser: "java.time.Period.parse((String)%s)"),
         new JsonDataType(className: UUID.class.getName(), converter: "%s.toString()",
                          parser: "java.util.UUID.fromString((String)%s)"),
+        //TODO Using base64 in url and json
+//        new JsonDataType(className: UUID.class.getName(),
+//                         converter: "com.nubeiot.core.utils.UUID64.uuidToBase64(%s)",
+//                         parser: "com.nubeiot.core.utils.UUID64.uuid64ToUuid((String)%s)"),
         new JsonDataType(className: JsonArray.class.getName(),
                          converter: "%s",
                          parser: "(io.vertx.core.json.JsonArray)%s"),

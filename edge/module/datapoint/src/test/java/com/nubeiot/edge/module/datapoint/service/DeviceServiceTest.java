@@ -21,6 +21,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.SyncAudit;
 import com.nubeiot.core.sql.type.TimeAudit;
+import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
@@ -41,14 +42,14 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_device(TestContext context) {
         JsonObject userAgent = new JsonObject(
-            "{\"__data_sync__\":{\"clientConfig\":{\"userAgent\":" + "\"nubeio.edge.datapoint/1.0.0 " +
-            PrimaryKey.DEVICE + "\"}}}");
+            "{\"__data_sync__\":{\"clientConfig\":{\"userAgent\":\"nubeio.edge.datapoint/1.0.0 " +
+            UUID64.uuidToBase64(PrimaryKey.DEVICE) + "\"}}}");
         JsonObject expected = JsonPojo.from(MockData.DEVICE)
                                       .toJson()
                                       .put("metadata", userAgent)
                                       .put("data_version", "0.0.2");
         RequestData req = RequestData.builder()
-                                     .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString()))
+                                     .body(new JsonObject().put("device_id", UUID64.uuidToBase64(PrimaryKey.DEVICE)))
                                      .build();
         asserter(context, true, expected, DeviceService.class.getName(), EventAction.GET_ONE, req);
     }
@@ -76,6 +77,7 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
             context.assertEquals("SYSTEM_INITIATOR", timeAudit.getCreatedBy());
             context.assertNull(timeAudit.getLastModifiedTime());
             context.assertNull(timeAudit.getLastModifiedBy());
+            context.assertEquals(1, timeAudit.getRecordVersion());
             context.assertFalse(syncAudit.isSynced());
             context.assertNull(syncAudit.getSyncedTime());
         };

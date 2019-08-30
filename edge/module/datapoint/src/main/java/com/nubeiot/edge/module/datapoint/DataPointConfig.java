@@ -17,6 +17,7 @@ import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.scheduler.DataJobDefinition;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
@@ -119,7 +120,8 @@ public final class DataPointConfig implements IConfig {
         }
 
         static JsonObject update(@NonNull JsonObject cfg, @NonNull String version, @NonNull UUID deviceId) {
-            JsonObject userAgent = new JsonObject().put("userAgent", USER_AGENT + "/" + version + " " + deviceId);
+            JsonObject userAgent = new JsonObject().put("userAgent", USER_AGENT + "/" + version + " " +
+                                                                     UUID64.uuidToBase64(deviceId));
             return cfg.mergeIn(new JsonObject().put("clientConfig", userAgent), true);
         }
 

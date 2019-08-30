@@ -250,7 +250,8 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
         extends EntityMetadata<UUID, P, R, D> {
 
         default UUID parseKey(String dataKey) throws IllegalArgumentException {
-            return Functions.toUUID().apply(dataKey);
+            return Functions.getOrThrow(() -> Functions.toUUID().apply(dataKey),
+                                        () -> new IllegalArgumentException("Invalid key"));
         }
 
     }

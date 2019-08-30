@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
@@ -122,6 +124,13 @@ public final class HttpUtils {
                                  .page(request.getParam(Filters.PAGE))
                                  .perPage(request.getParam(Filters.PER_PAGE))
                                  .build();
+            }
+            return null;
+        }
+
+        public static Sort sort(@NonNull HttpServerRequest request) {
+            if (request.method() == HttpMethod.GET) {
+                return Sort.from(Urls.decode(Optional.ofNullable(request.getParam(Filters.SORT)).orElse("")));
             }
             return null;
         }

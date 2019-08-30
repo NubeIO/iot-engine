@@ -27,15 +27,17 @@ public final class TimeAudit implements JsonData {
     private String createdBy;
     private OffsetDateTime lastModifiedTime;
     private String lastModifiedBy;
+    private int recordVersion;
 
     public static TimeAudit created(String createdBy) {
-        return new TimeAudit(DateTimes.now(), createdBy, null, null);
+        return new TimeAudit(DateTimes.now(), createdBy, null, null, 1);
     }
 
     public static TimeAudit modified(TimeAudit timeAudit, String lastModifiedBy) {
         if (Objects.isNull(timeAudit)) {
-            return new TimeAudit(null, null, DateTimes.now(), lastModifiedBy);
+            return new TimeAudit(null, null, DateTimes.now(), lastModifiedBy, 1);
         }
+        timeAudit.setRecordVersion(timeAudit.getRecordVersion() + 1);
         timeAudit.setLastModifiedBy(lastModifiedBy);
         timeAudit.setLastModifiedTime(DateTimes.now());
         return timeAudit;

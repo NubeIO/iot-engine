@@ -80,7 +80,7 @@ public final class Functions {
     }
 
     public static Function<String, UUID> toUUID() {
-        return UUID::fromString;
+        return UUID64::uuid64ToUuid;
     }
 
     public static class Silencer<T> implements BiConsumer<T, HiddenException>, Supplier<T> {

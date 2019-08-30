@@ -21,6 +21,7 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
@@ -57,7 +58,8 @@ public class DataPointVerticleTest extends DynamicServiceTestBase {
     public void test_get_device(TestContext context) {
         final JsonObject syncConfig = new JsonObject("{\"type\":\"DITTO\",\"enabled\":false," +
                                                      "\"clientConfig\":{\"userAgent\":\"nubeio.edge.datapoint/1.0.0 " +
-                                                     PrimaryKey.DEVICE + "\",\"hostInfo\":{},\"options\":{}}}");
+                                                     UUID64.uuidToBase64(PrimaryKey.DEVICE) + "\",\"hostInfo\":{}," +
+                                                     "\"options\":{}}}");
         final JsonObject expected = JsonPojo.from(MockData.DEVICE)
                                             .toJson()
                                             .put("data_version", "0.0.2")
