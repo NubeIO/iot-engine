@@ -1,23 +1,13 @@
 package com.nubeiot.core.sql.query;
 
-import java.util.Objects;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.JoinType;
-import org.jooq.Record;
-import org.jooq.ResultQuery;
-import org.jooq.SelectConditionStep;
-import org.jooq.SelectJoinStep;
-import org.jooq.SelectOptionStep;
 import org.jooq.Table;
 import org.jooq.UpdatableRecord;
 import org.jooq.exception.TooManyRowsException;
-import org.jooq.impl.DSL;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -28,6 +18,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
@@ -36,7 +27,6 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
-import com.nubeiot.core.sql.tables.JsonTable;
 
 import lombok.NonNull;
 
@@ -58,6 +48,8 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
     }
 
     EntityHandler entityHandler();
+
+    QueryBuilder queryBuilder();
 
     default <K, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(Class<D> daoClass) {
         return entityHandler().dao(daoClass);
@@ -84,8 +76,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      *
      * @param query Given query
      * @return empty if resource is not existed or {@code true}
-     * @see #existQuery(Table, Condition)
-     * @see #existQuery(EntityMetadata, Object)
+     * @see QueryBuilder#exist(Table, Condition)
      */
     default Maybe<Boolean> fetchExists(@NonNull Function<DSLContext, Boolean> query) {
         return executeAny(query).filter(b -> b).switchIfEmpty(Maybe.empty());
@@ -129,54 +120,14 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
     Single<P> deleteOneByKey(RequestData requestData);
 
     /**
-     * Execute any function
+     * Check resource is able to delete by scanning reference resource to this resource
      *
-     * @param function query function
-     * @param <X>      Result type
-     * @return single of result
-     * @apiNote Only using it in very complex case or special case
-     * @see #viewQuery(JsonObject, Pagination)
-     * @see #viewOneQuery(JsonObject)
-     * @see #existQuery(Table, Condition)
-     * @see #existQuery(Table, Condition)
+     * @param pojo        Resource
+     * @param metadata    Entity metadata
+     * @param keyProvider key provider to search
+     * @return single pojo or single existed error
+     * @see EntityMetadata#unableDeleteDueUsing(String)
      */
-    <X> Single<X> executeAny(@NonNull Function<DSLContext, X> function);
-
-    /**
-     * Create view query
-     *
-     * @param filter     Request filter
-     * @param pagination pagination
-     * @return query function
-     */
-    Function<DSLContext, ? extends ResultQuery<? extends Record>> viewQuery(JsonObject filter, Pagination pagination);
-
-    /**
-     * Create view query for one resource
-     *
-     * @param filter Request filter
-     * @return query function
-     */
-    default Function<DSLContext, ? extends ResultQuery<? extends Record>> viewOneQuery(JsonObject filter) {
-        return viewQuery(filter, Pagination.oneValue());
-    }
-
-    default Function<DSLContext, Boolean> existQuery(@NonNull Table table, @NonNull Condition condition) {
-        return dsl -> dsl.fetchExists(table, condition);
-    }
-
-    default Function<DSLContext, Boolean> existQuery(@NonNull EntityMetadata metadata, @NonNull Object key) {
-        return existQuery(metadata.table(), conditionByPrimary(metadata, key));
-    }
-
-    @SuppressWarnings("unchecked")
-    default SelectConditionStep<? extends Record> join(@NonNull SelectJoinStep<? extends Record> base,
-                                                       @NonNull EntityMetadata metadata, @NonNull JoinType joinType,
-                                                       @NonNull JsonObject filter) {
-        JsonObject f = filter.getJsonObject(metadata.singularKeyName());
-        return base.join(metadata.table(), joinType).onKey().where(condition(metadata.table(), f));
-    }
-
     @SuppressWarnings("unchecked")
     default Single<P> isAbleToDelete(@NonNull P pojo, @NonNull EntityMetadata metadata,
                                      Function<VertxPojo, String> keyProvider) {
@@ -186,7 +137,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
         final Object pk = pojo.toJson().getValue(metadata.jsonKeyName());
         final EntityConstraintHolder holder = (EntityConstraintHolder) entityHandler();
         return Observable.fromIterable(holder.referenceTableKeysTo(metadata.table()))
-                         .flatMapMaybe(e -> fetchExists(existQuery(e.getKey(), e.getValue().eq(pk))))
+                         .flatMapMaybe(e -> fetchExists(queryBuilder().exist(e.getKey(), e.getValue().eq(pk))))
                          .flatMap(b -> Observable.error(metadata.unableDeleteDueUsing(keyProvider.apply(pojo))))
                          .map(b -> pojo)
                          .switchIfEmpty(Observable.just(pojo))
@@ -194,53 +145,16 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
     }
 
     /**
-     * Create database condition by request filter
-     * <p>
-     * It is simple filter function by equal comparision. Any complex query should be override by each service.
+     * Execute any function
      *
-     * @param table  Resource table
-     * @param filter Filter request
-     * @return Database Select DSL
-     * @see Condition
+     * @param function query function
+     * @param <X>      Result type
+     * @return single of result
+     * @apiNote Only using it in very complex case or special case
+     * @see QueryBuilder#view(JsonObject, Sort, Pagination)
+     * @see QueryBuilder#viewOne(JsonObject)
+     * @see QueryBuilder#exist(Table, Condition)
      */
-    //TODO Rich query depends on RQL in future https://github.com/NubeIO/iot-engine/issues/128
-    default Condition condition(@NonNull JsonTable<? extends Record> table, JsonObject filter) {
-        return condition(table, filter, false);
-    }
-
-    @SuppressWarnings("unchecked")
-    default Condition condition(@NonNull JsonTable<? extends Record> table, JsonObject filter, boolean allowNullable) {
-        if (Objects.isNull(filter)) {
-            return DSL.trueCondition();
-        }
-        Condition[] c = new Condition[] {DSL.trueCondition()};
-        filter.stream().map(entry -> {
-            final Field field = table.getField(entry.getKey());
-            return Optional.ofNullable(field)
-                           .map(f -> Optional.ofNullable(entry.getValue())
-                                             .map(v -> allowNullable ? f.eq(v).or(f.isNull()) : f.eq(v))
-                                             .orElseGet(f::isNull))
-                           .orElse(null);
-        }).filter(Objects::nonNull).forEach(condition -> c[0] = c[0].and(condition));
-        return c[0];
-    }
-
-    @SuppressWarnings("unchecked")
-    default Condition conditionByPrimary(@NonNull EntityMetadata metadata, @NonNull Object key) {
-        return metadata.table().getField(metadata.jsonKeyName()).eq(key);
-    }
-
-    /**
-     * Do query paging
-     *
-     * @param sql        SQL select command
-     * @param pagination Given pagination
-     * @return Database Select DSL
-     */
-    default SelectOptionStep<? extends Record> paging(@NonNull SelectConditionStep<? extends Record> sql,
-                                                      Pagination pagination) {
-        Pagination paging = Optional.ofNullable(pagination).orElseGet(() -> Pagination.builder().build());
-        return sql.limit(paging.getPerPage()).offset((paging.getPage() - 1) * paging.getPerPage());
-    }
+    <X> Single<X> executeAny(@NonNull Function<DSLContext, X> function);
 
 }

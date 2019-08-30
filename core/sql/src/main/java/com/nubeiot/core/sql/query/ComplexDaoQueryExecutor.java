@@ -1,28 +1,14 @@
 package com.nubeiot.core.sql.query;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.jooq.Condition;
-import org.jooq.DSLContext;
-import org.jooq.JoinType;
 import org.jooq.Record;
 import org.jooq.RecordMapper;
-import org.jooq.ResultQuery;
-import org.jooq.SelectConditionStep;
-import org.jooq.SelectFieldOrAsterisk;
-import org.jooq.SelectJoinStep;
-import org.jooq.impl.DSL;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
@@ -34,7 +20,6 @@ import io.reactivex.SingleSource;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.CompositeMetadata;
@@ -42,8 +27,6 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.sql.tables.JsonTable;
-import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
@@ -61,6 +44,13 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
     ComplexDaoQueryExecutor(EntityHandler handler) {
         super(handler.dsl().configuration(), io.vertx.reactivex.core.Vertx.newInstance(handler.vertx()));
         this.handler = handler;
+    }
+
+    @Override
+    public QueryBuilder queryBuilder() {
+        return new QueryBuilder(base).references(references.values())
+                                     .predicate(meta -> Objects.nonNull(context) &&
+                                                        !meta.singularKeyName().equals(context.singularKeyName()));
     }
 
     @Override
@@ -91,19 +81,19 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
 
     @Override
     public Observable<CP> findMany(RequestData reqData) {
-        return executeAny(viewQuery(reqData.getFilter(), reqData.getPagination())).map(r -> r.fetch(toMapper()))
-                                                                                  .flattenAsObservable(s -> s);
+        return executeAny(queryBuilder().view(reqData.getFilter(), reqData.getSort(), reqData.getPagination())).map(
+            r -> r.fetch(toMapper())).flattenAsObservable(s -> s);
     }
 
     @Override
     public Single<CP> findOneByKey(RequestData reqData) {
         final JsonObject filter = reqData.getFilter();
-        return executeAny(viewOneQuery(filter)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
-                                               .filter(Optional::isPresent)
-                                               .switchIfEmpty(
-                                                   Single.error(base.notFound(base.msg(filter, references.values()))))
-                                               .map(Optional::get)
-                                               .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
+        return executeAny(queryBuilder().viewOne(filter)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
+                                                         .filter(Optional::isPresent)
+                                                         .switchIfEmpty(Single.error(
+                                                             base.notFound(base.msg(filter, references.values()))))
+                                                         .map(Optional::get)
+                                                         .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
     }
 
     @Override
@@ -119,34 +109,26 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
     public Single<?> insertReturningPrimary(CP pojo, RequestData reqData) {
         final JsonObject src = JsonData.safeGet(reqData.body(), resource.singularKeyName(), JsonObject.class);
         final Object sKey = Optional.ofNullable(src)
-                                    .map(r -> getKey(r, resource))
-                                    .orElse(Functions.getIfThrow(() -> resource.parseKey(reqData)).orElse(null));
+                                    .map(r -> getKey(r, resource)).orElse(resource.getKey(reqData).orElse(null));
         final Object cKey = context.parseKey(reqData);
-        JsonObject q = reqData.getFilter()
-                              .copy()
-                              .put(context.singularKeyName(), Collections.singletonMap(context.jsonKeyName(), cKey))
-                              .put(resource.singularKeyName(), Collections.singletonMap(resource.jsonKeyName(), sKey));
-        final String cKeyN = context.requestKeyName();
-        final String sKeyN = resource.requestKeyName();
         if (Objects.isNull(src)) {
-            return isExist(cKey, sKey, q).filter(p -> Objects.isNull(p.prop(cKeyN)))
-                                         .switchIfEmpty(Single.error(
-                                             base.alreadyExisted(base.msg(reqData.getFilter(), references.values()))))
-                                         .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError)
-                                         .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo))
-                                         .flatMap(p -> (Single) dao(base).insertReturningPrimary(pojo));
+            final JsonObject filter = reqData.getFilter();
+            return isExist(cKey, sKey, filter).filter(p -> Objects.isNull(p.prop(context.requestKeyName())))
+                                              .switchIfEmpty(Single.error(
+                                                  base.alreadyExisted(base.msg(filter, references.values()))))
+                                              .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError)
+                                              .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo))
+                                              .flatMap(p -> (Single) dao(base).insertReturningPrimary(pojo));
         }
-        return fetchExists(existQuery(context, cKey)).flatMapSingle(b -> findOneById(resource, sKey))
-                                                     .filter(Optional::isPresent)
-                                                     .flatMap(o -> Maybe.error(
-                                                         resource.alreadyExisted(Strings.kvMsg(sKeyN, sKey))))
-                                                     .switchIfEmpty((Single) dao(resource).insertReturningPrimary(
-                                                         AuditDecorator.addCreationAudit(reqData, resource,
-                                                                                         resource.parseFromRequest(
-                                                                                             src))))
-                                                     .map(k -> AuditDecorator.addCreationAudit(reqData, base,
-                                                                                               pojo.with(sKeyN, k)))
-                                                     .flatMap(p -> (Single) dao(base).insertReturningPrimary(p));
+        final Maybe<Boolean> isExist = fetchExists(queryBuilder().exist(context, cKey));
+        final String sKeyN = resource.requestKeyName();
+        return isExist.flatMapSingle(b -> findOneById(resource, sKey))
+                      .filter(Optional::isPresent)
+                      .flatMap(o -> Maybe.error(resource.alreadyExisted(Strings.kvMsg(sKeyN, sKey))))
+                      .switchIfEmpty((Single) dao(resource).insertReturningPrimary(
+                          AuditDecorator.addCreationAudit(reqData, resource, resource.parseFromRequest(src))))
+                      .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo.with(sKeyN, k)))
+                      .flatMap(p -> (Single) dao(base).insertReturningPrimary(p));
     }
 
     @Override
@@ -169,32 +151,19 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
                                     .flatMap(pojo -> doDelete(reqData, pojo));
     }
 
-    public Function<DSLContext, ResultQuery<? extends Record>> viewQuery(JsonObject filter, Pagination pagination) {
-        Predicate<Entry<String, EntityMetadata>> predicate = e -> Objects.nonNull(context) &&
-                                                                  !e.getKey().equals(context.singularKeyName());
-        return context -> paging(
-            join(base.table(), context, ReferenceFilterCreation.createFilter(references, filter), JoinType.JOIN,
-                 predicate, false), pagination);
-    }
-
     private Object getKey(JsonObject data, EntityMetadata metadata) {
         return data.getValue(metadata.jsonKeyName());
     }
 
-    private Single<CP> isExist(@NonNull Object ctxKey, @NonNull Object resourceKey, @NonNull JsonObject baseFilter) {
-        return fetchExists(existQuery(context, ctxKey)).switchIfEmpty(Single.error(context.notFound(ctxKey)))
-                                                       .flatMap(e -> executeAny(existQueryByJoin(baseFilter)).map(
-                                                           r -> Optional.ofNullable(r.fetchOne(toMapper()))))
-                                                       .filter(Optional::isPresent)
-                                                       .switchIfEmpty(Single.error(resource.notFound(resourceKey)))
-                                                       .map(Optional::get);
-    }
-
-    private Function<DSLContext, ResultQuery<? extends Record>> existQueryByJoin(JsonObject filter) {
-        Predicate<Entry<String, EntityMetadata>> predicate = e -> Objects.nonNull(context) &&
-                                                                  !e.getKey().equals(context.singularKeyName());
-        return dsl -> join(base.table(), dsl, ReferenceFilterCreation.createFilter(references, filter),
-                           JoinType.RIGHT_OUTER_JOIN, predicate, true).limit(1);
+    private Single<CP> isExist(@NonNull Object ctxKey, @NonNull Object resourceKey, @NonNull JsonObject filter) {
+        final QueryBuilder queryBuilder = queryBuilder();
+        final Maybe<Boolean> isExist = fetchExists(queryBuilder.exist(context, ctxKey));
+        return isExist.switchIfEmpty(Single.error(context.notFound(ctxKey)))
+                      .flatMap(e -> executeAny(queryBuilder.existQueryByJoin(filter)))
+                      .map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
+                      .filter(Optional::isPresent)
+                      .switchIfEmpty(Single.error(resource.notFound(resourceKey)))
+                      .map(Optional::get);
     }
 
     private RecordMapper<? super Record, CP> toMapper() {
@@ -211,39 +180,8 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
                : (Single<Optional<? extends VertxPojo>>) dao(metadata).findOneById(key);
     }
 
-    private SelectConditionStep<Record> join(@NonNull JsonTable<? extends Record> from, @NonNull DSLContext ctx,
-                                             @NonNull JsonObject filter, @NonNull JoinType joinType,
-                                             @NonNull Predicate<Entry<String, EntityMetadata>> predicate,
-                                             boolean checkExist) {
-        final SelectJoinStep<Record> baseQuery = ctx.select(joinFields(from, checkExist, predicate)).from(from);
-        final JsonObject baseFilter = checkExist ? new JsonObject() : filter.copy();
-        references.entrySet().forEach(entry -> {
-            if (predicate.test(entry)) {
-                join(baseQuery, entry.getValue(), joinType, filter);
-            } else {
-                baseFilter.put(entry.getValue().requestKeyName(), filter.getValue(entry.getValue().requestKeyName()));
-            }
-        });
-        return baseQuery.where(condition(from, baseFilter, checkExist));
-    }
-
-    private List<SelectFieldOrAsterisk> joinFields(@NonNull JsonTable<? extends Record> from, boolean showKeyOnly,
-                                                   @NonNull Predicate<Entry<String, EntityMetadata>> predicate) {
-        if (!showKeyOnly) {
-            return Collections.singletonList(DSL.asterisk());
-        }
-        return Stream.concat(Stream.of(from.asterisk()), references.entrySet()
-                                                                   .stream()
-                                                                   .filter(predicate)
-                                                                   .map(entry -> entry.getValue()
-                                                                                      .table()
-                                                                                      .getPrimaryKey()
-                                                                                      .getFieldsArray())
-                                                                   .flatMap(Stream::of)).collect(Collectors.toList());
-    }
-
     private SingleSource<? extends CP> doDelete(RequestData requestData, CP pojo) {
-        Condition c = conditionByPrimary(base, getKey(pojo.toJson(), base));
+        Condition c = queryBuilder().conditionByPrimary(base, getKey(pojo.toJson(), base));
         Single<Integer> result = (Single<Integer>) handler.dao(base.daoClass()).deleteByCondition(c);
         return result.filter(r -> r > 0)
                      .map(r -> pojo)

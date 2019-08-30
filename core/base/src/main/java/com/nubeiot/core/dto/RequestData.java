@@ -15,7 +15,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-//TODO Not yet supported `sort`
 @Getter
 public final class RequestData extends AbstractDTO {
 
@@ -38,6 +37,14 @@ public final class RequestData extends AbstractDTO {
 
     public boolean hasAudit() {
         return Optional.ofNullable(this.getFilter()).map(o -> o.containsKey(Filters.AUDIT)).orElse(false);
+    }
+
+    @Override
+    public JsonObject toJson() {
+        if (Objects.isNull(sort) || sort.isEmpty()) {
+            return JsonData.MAPPER.convertValue(this, JsonObject.class);
+        }
+        return JsonData.MAPPER.convertValue(this, JsonObject.class).put("sort", sort.toJson());
     }
 
     public static Builder builder() { return new Builder(); }

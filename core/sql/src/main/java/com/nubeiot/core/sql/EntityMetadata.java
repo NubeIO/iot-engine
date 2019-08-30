@@ -1,9 +1,12 @@
 package com.nubeiot.core.sql;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jooq.OrderField;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.UpdatableRecord;
@@ -194,6 +197,15 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      */
     default @NonNull String pluralKeyName() {
         return singularKeyName() + "s";
+    }
+
+    /**
+     * Default order fields
+     *
+     * @return order fields
+     */
+    default @NonNull List<OrderField<?>> orderFields() {
+        return Collections.singletonList((OrderField<?>) table().getField(jsonKeyName()).asc());
     }
 
     /**

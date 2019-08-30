@@ -1,6 +1,7 @@
 package com.nubeiot.edge.module.datapoint.service;
 
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -54,7 +55,8 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
         final JsonObject p2 = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
         final JsonObject expected = new JsonObject().put("points", new JsonArray().add(p1).add(p2));
         RequestData req = RequestData.builder().body(new JsonObject().put("network_id", "GPIO")).build();
-        asserter(context, true, expected, PointService.class.getName(), EventAction.GET_LIST, req);
+        asserter(context, true, expected, PointService.class.getName(), EventAction.GET_LIST, req,
+                 JSONCompareMode.LENIENT);
     }
 
     @Test
@@ -66,7 +68,8 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("network_id", PrimaryKey.NETWORK.toString()))
                                      .build();
-        asserter(context, true, expected, PointService.class.getName(), EventAction.GET_LIST, req);
+        asserter(context, true, expected, PointService.class.getName(), EventAction.GET_LIST, req,
+                 JSONCompareMode.LENIENT);
     }
 
     @Test

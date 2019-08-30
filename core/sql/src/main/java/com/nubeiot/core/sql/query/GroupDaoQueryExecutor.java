@@ -1,15 +1,8 @@
 package com.nubeiot.core.sql.query;
 
 import java.util.Optional;
-import java.util.function.Function;
 
-import org.jooq.DSLContext;
-import org.jooq.JoinType;
-import org.jooq.Record;
-import org.jooq.ResultQuery;
-import org.jooq.SelectJoinStep;
 import org.jooq.UpdatableRecord;
-import org.jooq.impl.DSL;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -17,13 +10,11 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.sql.tables.JsonTable;
 
 import lombok.NonNull;
 
@@ -40,6 +31,11 @@ class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>
     }
 
     @Override
+    public QueryBuilder queryBuilder() {
+        return new QueryBuilder(groupMetadata).references(groupMetadata.subItems());
+    }
+
+    @Override
     public Observable<CP> findMany(RequestData requestData) {
         return super.findMany(requestData)
                     .map(pojo -> CompositePojo.create(pojo, groupMetadata.rawClass(), groupMetadata.modelClass()));
@@ -47,8 +43,7 @@ class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>
 
     @Override
     public Single<CP> findOneByKey(RequestData requestData) {
-        return entityHandler().genericQuery()
-                              .executeAny(viewOneQuery(requestData.getFilter()))
+        return entityHandler().genericQuery().executeAny(queryBuilder().viewOne(requestData.getFilter()))
                               .map(r -> Optional.ofNullable(r.fetchOne(groupMetadata.mapper())))
                               .filter(Optional::isPresent)
                               .switchIfEmpty(Single.error(getMetadata().notFound(getMetadata().parseKey(requestData))))
@@ -61,23 +56,6 @@ class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>
         final JsonObject filter = new JsonObject().put(getMetadata().requestKeyName(), primaryKey.toString())
                                                   .put(getMetadata().jsonKeyName(), primaryKey.toString());
         return findOneByKey(RequestData.builder().body(filter).filter(filter).build());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public Function<DSLContext, ResultQuery<R>> viewQuery(JsonObject filter, Pagination pagination) {
-        final @NonNull JsonTable<R> table = groupMetadata.table();
-        return context -> {
-            final SelectJoinStep<Record> query = context.select(DSL.asterisk()).from(table);
-            for (EntityMetadata metadata : groupMetadata.subItems()) {
-                join(query, metadata, JoinType.JOIN, filter);
-            }
-            return (ResultQuery<R>) paging(query.where(condition(table, filter, false)), pagination);
-        };
-    }
-
-    public Function<DSLContext, ResultQuery<R>> viewOneQuery(JsonObject filter) {
-        return viewQuery(filter, Pagination.oneValue());
     }
 
 }

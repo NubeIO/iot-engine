@@ -10,6 +10,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
 import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointValueMetadata;
@@ -37,6 +38,11 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     }
 
     @Override
+    public @NonNull ReferenceQueryExecutor<PointValueData> queryExecutor() {
+        return super.queryExecutor();
+    }
+
+    @Override
     public @NonNull EntityPostService asyncPostService() {
         return new PointValueSyncService();
     }
@@ -54,9 +60,8 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     @NonNull
     private RequestData recomputeRequestData(RequestData reqData) {
         JsonObject filter = Optional.ofNullable(reqData.getFilter()).orElse(new JsonObject()).put(Filters.AUDIT, true);
-        return RequestData.builder()
-                          .headers(reqData.headers()).body(reqData.body())
-                          .filter(filter)
+        return RequestData.builder().headers(reqData.headers()).body(reqData.body())
+                          .filter(filter).sort(reqData.getSort())
                           .pagination(reqData.getPagination())
                           .build();
     }

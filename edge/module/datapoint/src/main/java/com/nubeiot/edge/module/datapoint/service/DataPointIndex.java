@@ -11,6 +11,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.jooq.OrderField;
+
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
@@ -204,6 +206,11 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull String pluralKeyName() {
             return "histories";
+        }
+
+        @Override
+        public @NonNull List<OrderField<?>> orderFields() {
+            return Arrays.asList(Tables.POINT_HISTORY_DATA.TIME.desc(), Tables.POINT_HISTORY_DATA.POINT.asc());
         }
 
     }
@@ -489,6 +496,11 @@ public interface DataPointIndex extends MetadataIndex {
         @NonNull
         public String pluralKeyName() {
             return "realtime_data";
+        }
+
+        @Override
+        public @NonNull List<OrderField<?>> orderFields() {
+            return Arrays.asList(Tables.POINT_REALTIME_DATA.TIME.desc(), Tables.POINT_REALTIME_DATA.POINT.asc());
         }
 
     }

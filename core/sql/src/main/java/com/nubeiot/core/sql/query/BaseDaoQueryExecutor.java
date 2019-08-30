@@ -6,6 +6,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.jooq.DSLContext;
+import org.jooq.Record;
+import org.jooq.ResultQuery;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -41,12 +43,17 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements EntityQueryE
     }
 
     @Override
+    public QueryBuilder queryBuilder() {
+        return new QueryBuilder(metadata);
+    }
+
+    @Override
     public Observable<P> findMany(RequestData reqData) {
         final Pagination paging = Optional.ofNullable(reqData.getPagination()).orElse(Pagination.builder().build());
+        final Function<DSLContext, ? extends ResultQuery<? extends Record>> query = queryBuilder().view(
+            reqData.getFilter(), reqData.getSort(), paging);
         return ((Single<List<P>>) entityHandler().dao(metadata.daoClass())
-                                                 .queryExecutor()
-                                                 .findMany(viewQuery(reqData.getFilter(), paging))).flattenAsObservable(
-            records -> records);
+                                                 .queryExecutor().findMany(query)).flattenAsObservable(rs -> rs);
     }
 
     @Override
@@ -61,7 +68,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements EntityQueryE
         final @NonNull Optional<?> opt = Optional.ofNullable(pojo.toJson().getValue(metadata.jsonKeyName()))
                                                  .map(k -> metadata.parseKey(k.toString()));
         final VertxDAO dao = entityHandler().dao(metadata.daoClass());
-        return opt.map(key -> fetchExists(existQuery(metadata, key)).map(b -> key))
+        return opt.map(key -> fetchExists(queryBuilder().exist(metadata, key)).map(b -> key))
                   .orElse(Maybe.empty())
                   .flatMap(k -> Maybe.error(metadata.alreadyExisted(Strings.kvMsg(metadata.requestKeyName(), k))))
                   .switchIfEmpty(Single.just((P) AuditDecorator.addCreationAudit(reqData, metadata, pojo)))

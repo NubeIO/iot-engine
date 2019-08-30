@@ -37,7 +37,7 @@ public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQuery
             if (Objects.isNull(key)) {
                 return Maybe.just(true);
             }
-            return fetchExists(existQuery(meta, key)).switchIfEmpty(Maybe.error(meta.notFound(key)));
+            return fetchExists(queryBuilder().exist(meta, key)).switchIfEmpty(Maybe.error(meta.notFound(key)));
         }).reduce((b1, b2) -> b1 && b2);
     }
 

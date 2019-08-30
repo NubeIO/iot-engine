@@ -1,10 +1,15 @@
 package com.nubeiot.core.sql.query;
 
+import java.util.function.Function;
+
+import org.jooq.DSLContext;
+import org.jooq.ResultQuery;
 import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
@@ -20,11 +25,13 @@ class ReferenceDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecor
     }
 
     @Override
-    public Single<P> findOneByKey(RequestData requestData) {
-        K pk = metadata().parseKey(requestData);
+    @SuppressWarnings("unchecked")
+    public Single<P> findOneByKey(RequestData reqData) {
+        K pk = metadata().parseKey(reqData);
+        final JsonObject filter = reqData.getFilter();
         return entityHandler().dao(metadata().daoClass())
                               .queryExecutor()
-                              .findOne(viewOneQuery(requestData.getFilter()))
+                              .findOne((Function<DSLContext, ResultQuery<R>>) queryBuilder().viewOne(filter))
                               .flatMap(o -> o.map(Single::just).orElse(Single.error(metadata().notFound(pk))))
                               .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
     }

@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
+import com.nubeiot.core.sql.query.QueryBuilder;
 import com.nubeiot.core.sql.query.SimpleQueryExecutor;
 import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.sql.tables.JsonTable;
@@ -43,7 +44,8 @@ public final class PointValueSyncService extends DittoHttpSync {
         JsonObject filter = new JsonObject().put("point", historyData.getPoint().toString())
                                             .put("time", DateTimes.format(historyData.getTime()));
         final @NonNull JsonTable<PointHistoryDataRecord> table = HistoryDataMetadata.INSTANCE.table();
-        executor.fetchExists(executor.existQuery(table, executor.condition(table, filter)))
+        final QueryBuilder queryBuilder = executor.queryBuilder();
+        executor.fetchExists(queryBuilder.exist(table, queryBuilder.condition(table, filter)))
                 .switchIfEmpty(executor.insertReturningPrimary(historyData, RequestData.builder().build()))
                 .subscribe();
     }

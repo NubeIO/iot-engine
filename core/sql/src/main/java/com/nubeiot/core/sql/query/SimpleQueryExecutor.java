@@ -12,7 +12,7 @@ import lombok.NonNull;
 
 public interface SimpleQueryExecutor<P extends VertxPojo> extends EntityQueryExecutor<P> {
 
-    static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> SimpleQueryExecutor create(
+    static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> SimpleQueryExecutor<P> create(
         @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata) {
         return new SimpleDaoQueryExecutor<>(handler, metadata);
     }

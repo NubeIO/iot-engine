@@ -50,7 +50,7 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
                                              if (!key.isPresent()) {
                                                  return Maybe.just(true);
                                              }
-                                             return fetchExists(existQuery(m, key.get())).switchIfEmpty(
+                                             return fetchExists(queryBuilder().exist(m, key.get())).switchIfEmpty(
                                                  Maybe.error(m.notFound(key.get())));
                                          })
                                          .reduce((b1, b2) -> b1 && b2);

@@ -93,7 +93,7 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
                                                    new JsonArray().add(JsonPojo.from(MockData.NETWORK).toJson())
                                                                   .add(JsonPojo.from(def).toJson()));
         asserter(context, true, expected, NetworkService.class.getName(), EventAction.GET_LIST,
-                 RequestData.builder().build());
+                 RequestData.builder().build(), JSONCompareMode.LENIENT);
     }
 
     @Test

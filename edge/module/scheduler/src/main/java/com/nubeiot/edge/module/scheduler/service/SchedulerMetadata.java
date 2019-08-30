@@ -1,6 +1,9 @@
 package com.nubeiot.edge.module.scheduler.service;
 
+import java.util.Arrays;
 import java.util.List;
+
+import org.jooq.OrderField;
 
 import io.vertx.core.json.JsonObject;
 
@@ -10,7 +13,6 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.edge.module.scheduler.pojos.JobTriggerComposite;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.JobConverter;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.TriggerConverter;
@@ -57,7 +59,7 @@ public interface SchedulerMetadata extends MetadataIndex {
         }
 
         @Override
-        public @NonNull JsonTable<JobEntityRecord> table() {
+        public @NonNull com.nubeiot.iotdata.scheduler.model.tables.JobEntity table() {
             return Tables.JOB_ENTITY;
         }
 
@@ -87,6 +89,11 @@ public interface SchedulerMetadata extends MetadataIndex {
             return parseFromEntity(JsonPojo.merge(dbData, JobConverter.convert(job.toJson().mergeIn(body))));
         }
 
+        @Override
+        public @NonNull List<OrderField<?>> orderFields() {
+            return Arrays.asList(table().GROUP.asc(), table().NAME.asc());
+        }
+
     }
 
 
@@ -106,7 +113,7 @@ public interface SchedulerMetadata extends MetadataIndex {
         }
 
         @Override
-        public @NonNull JsonTable<TriggerEntityRecord> table() {
+        public @NonNull com.nubeiot.iotdata.scheduler.model.tables.TriggerEntity table() {
             return Tables.TRIGGER_ENTITY;
         }
 
@@ -138,6 +145,11 @@ public interface SchedulerMetadata extends MetadataIndex {
             return parseFromEntity(JsonPojo.merge(dbData, TriggerConverter.convert(trigger.toJson().mergeIn(body))));
         }
 
+        @Override
+        public @NonNull List<OrderField<?>> orderFields() {
+            return Arrays.asList(table().GROUP.asc(), table().NAME.asc());
+        }
+
     }
 
 
@@ -156,7 +168,7 @@ public interface SchedulerMetadata extends MetadataIndex {
         public final @NonNull Class<JobTriggerDao> daoClass() { return JobTriggerDao.class; }
 
         @Override
-        public final @NonNull JsonTable<JobTriggerRecord> table() { return Tables.JOB_TRIGGER; }
+        public final @NonNull com.nubeiot.iotdata.scheduler.model.tables.JobTrigger table() { return Tables.JOB_TRIGGER; }
 
         @Override
         public @NonNull Class<JobTrigger> rawClass() {
@@ -166,6 +178,11 @@ public interface SchedulerMetadata extends MetadataIndex {
         @Override
         public @NonNull String singularKeyName() {
             return "job_trigger";
+        }
+
+        @Override
+        public @NonNull List<OrderField<?>> orderFields() {
+            return Arrays.asList(table().ENABLED.desc(), table().TRIGGER_ID.asc(), table().JOB_ID.asc());
         }
 
     }

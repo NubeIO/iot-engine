@@ -90,7 +90,7 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
         return RequestData.builder()
                           .body(body)
                           .headers(requestData.headers())
-                          .filter(combineFilter)
+                          .filter(combineFilter).sort(requestData.getSort())
                           .pagination(requestData.getPagination())
                           .build();
     }
