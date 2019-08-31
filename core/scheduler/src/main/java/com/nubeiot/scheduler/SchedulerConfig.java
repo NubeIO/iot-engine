@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 public final class SchedulerConfig implements IConfig {
 
     private static final String BASE_ADDRESS = "com.nubeiot.scheduler";
+    public static final String NAME = "__scheduler__";
     private String schedulerName;
     private String registerAddress;
     private String monitorAddress;
@@ -47,7 +48,7 @@ public final class SchedulerConfig implements IConfig {
 
     @Override
     public String name() {
-        return "__scheduler__";
+        return NAME;
     }
 
     @Override

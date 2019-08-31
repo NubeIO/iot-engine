@@ -36,7 +36,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     @Override
     public void start() {
         super.start();
-        this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, this.entityHandlerClass),
+        this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass),
                          ctx -> entityHandler = ((SqlContext<SchedulerEntityHandler>) ctx).getEntityHandler())
             .addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
             .addProvider(new SchedulerProvider(), ctx -> schedulerCtx = (QuartzSchedulerContext) ctx)

@@ -16,6 +16,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.ExpectedResponse;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.core.sql.SqlConfig;
+import com.nubeiot.scheduler.SchedulerConfig;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -32,7 +33,10 @@ public abstract class EdgeSchedulerVerticleTest extends DynamicServiceTestBase {
     protected DeploymentOptions getServiceOptions() {
         JsonObject sqlConfig = new JsonObject(
             "{\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString() + "\"}}");
-        final JsonObject appConfig = new JsonObject().put(SqlConfig.NAME, sqlConfig);
+        JsonObject appConfig = new JsonObject().put(SqlConfig.NAME, sqlConfig)
+                                               .put(SchedulerConfig.NAME, new JsonObject().put("schedulerName",
+                                                                                               UUID.randomUUID()
+                                                                                                   .toString()));
         return new DeploymentOptions().setConfig(new JsonObject().put(AppConfig.NAME, appConfig));
     }
 

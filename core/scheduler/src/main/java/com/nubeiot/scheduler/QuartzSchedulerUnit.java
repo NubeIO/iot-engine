@@ -23,8 +23,8 @@ public final class QuartzSchedulerUnit extends UnitVerticle<SchedulerConfig, Qua
 
     @Override
     public void stop() throws Exception {
-        super.stop();
         this.getContext().shutdown();
+        super.stop();
     }
 
     private void initRegisterListener(QuartzSchedulerContext ctx) {
