@@ -143,7 +143,7 @@ public final class HttpUtils {
         }
 
         public static String serializeQuery(JsonObject filter) {
-            return filter.fieldNames().isEmpty()
+            return Objects.isNull(filter)
                    ? null
                    : filter.fieldNames()
                            .stream()

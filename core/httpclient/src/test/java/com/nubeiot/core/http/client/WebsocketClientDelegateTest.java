@@ -46,7 +46,7 @@ public class WebsocketClientDelegateTest {
     private static final String PUBLISHER_ADDRESS = "ws.publisher";
 
     @Rule
-    public Timeout timeout = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
+    public Timeout timeout = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC * 2);
     private Vertx vertx;
     private HttpClientConfig config;
     private HostInfo hostInfo;
@@ -105,20 +105,30 @@ public class WebsocketClientDelegateTest {
     @Test
     public void test_cache(TestContext context) throws InterruptedException {
         context.assertTrue(HttpClientRegistry.getInstance().getWsRegistries().isEmpty());
-        WebsocketClientDelegate client = WebsocketClientDelegate.create(vertx, config, hostInfo);
+
+        final WebsocketClientDelegate client1 = WebsocketClientDelegate.create(vertx, config, hostInfo);
         context.assertEquals(1, HttpClientRegistry.getInstance().getWsRegistries().size());
-        WebsocketClientDelegate.create(vertx, config, hostInfo);
+        context.assertEquals(1, HttpClientRegistry.getInstance().getWsRegistries().get(hostInfo).current());
+
+        final WebsocketClientDelegate client2 = WebsocketClientDelegate.create(vertx, config, hostInfo);
         context.assertEquals(1, HttpClientRegistry.getInstance().getWsRegistries().size());
-        final HostInfo host2 = HostInfo.builder().host("echo.websocket.orgx").build();
-        WebsocketClientDelegate client2 = WebsocketClientDelegate.create(vertx, config, host2);
+        context.assertEquals(2, HttpClientRegistry.getInstance().getWsRegistries().get(hostInfo).current());
+
+        final HostInfo host2 = HostInfo.builder().host("echo.websocket.google").build();
+        final WebsocketClientDelegate client3 = WebsocketClientDelegate.create(vertx, config, host2);
         context.assertEquals(2, HttpClientRegistry.getInstance().getWsRegistries().size());
-        client.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
+        context.assertEquals(1, HttpClientRegistry.getInstance().getWsRegistries().get(host2).current());
+
+        client1.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
+        client2.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
         try {
-            client2.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
+            client3.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
         } catch (HttpException e) {
             context.assertEquals(1, HttpClientRegistry.getInstance().getWsRegistries().size());
         }
-        client.close();
+        client1.close();
+        client2.close();
+
         Thread.sleep(1000);
         context.assertTrue(HttpClientRegistry.getInstance().getWsRegistries().isEmpty());
     }

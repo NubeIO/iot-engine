@@ -44,7 +44,7 @@ class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketCli
             ws.handler(
                 WsLightResponseDispatcher.create(controller, listener, handler.getWsLightResponseHandlerClass()));
             ws.exceptionHandler(WsResponseErrorHandler.create(controller, listener, handler.getWsErrorHandlerClass()));
-            ws.endHandler(new ClientEndHandler(getHostInfo(), true));
+            ws.closeHandler(new ClientEndHandler(getHostInfo(), true));
         }, t -> {
             ref.set(t);
             latch.countDown();

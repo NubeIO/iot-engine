@@ -5,10 +5,12 @@ import static com.nubeiot.core.http.base.HttpUtils.HttpRequests;
 import java.util.Objects;
 
 import io.reactivex.Single;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -19,6 +21,7 @@ import io.vertx.core.streams.WriteStream;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
@@ -42,26 +45,24 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Single<ResponseData> execute(String path, HttpMethod method, RequestData requestData, boolean swallowError) {
-        RequestData reqData = decorator(requestData);
-        return Single.create(emitter -> {
-            HandlerConfig config = getHandlerConfig();
-            HttpLightResponseHandler responseHandler = new HttpLightResponseHandler<>(
-                config.getHttpLightBodyHandlerClass(), emitter, swallowError);
-            HttpErrorHandler exceptionHandler = HttpErrorHandler.create(emitter, getHostInfo(),
-                                                                        config.getHttpErrorHandlerClass());
+        final RequestData reqData = decorator(requestData);
+        final HostInfo hostInfo = getHostInfo();
+        final HandlerConfig cfg = getHandlerConfig();
+        return Single.<ResponseData>create(emitter -> {
+            Handler<HttpClientResponse> respHandler = HttpLightResponseHandler.create(emitter, swallowError,
+                                                                                      cfg.getHttpLightBodyHandlerClass());
+            HttpErrorHandler errHandler = HttpErrorHandler.create(emitter, hostInfo, cfg.getHttpErrorHandlerClass());
             String query = HttpRequests.serializeQuery(reqData.getFilter());
-            HttpClientRequest r = get().request(method, Urls.buildURL(path, query), responseHandler)
-                                       .exceptionHandler(exceptionHandler)
-                                       .endHandler(new ClientEndHandler(getHostInfo(), false));
+            HttpClientRequest req = get().request(method, Urls.buildURL(path, query), respHandler)
+                                         .exceptionHandler(errHandler);
             if (logger.isDebugEnabled()) {
-                logger.debug("Send HTTP request {}::{} | <{}>", r.method(), r.absoluteURI(), reqData.toJson());
+                logger.debug("Send HTTP request {}::{} | <{}>", req.method(), req.absoluteURI(), reqData.toJson());
             } else {
-                logger.info("Send HTTP request {}::{}", r.method(), r.absoluteURI());
+                logger.info("Send HTTP request {}::{}", req.method(), req.absoluteURI());
             }
-            HttpClientWriter.create(config.getHttpClientWriterClass()).apply(r, reqData).end();
-        });
+            HttpClientWriter.create(cfg.getHttpClientWriterClass()).apply(req, reqData).end();
+        }).doFinally(new ClientEndHandler(hostInfo, false));
     }
 
     @Override
