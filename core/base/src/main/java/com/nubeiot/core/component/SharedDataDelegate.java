@@ -49,9 +49,10 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
             k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).get(k), dataKey);
     }
 
-    static <D> void addLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey, D data) {
+    static <D> D addLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey, D data) {
         LOGGER.debug("ADD | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
         vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).put(Strings.requireNotBlank(dataKey), data);
+        return data;
     }
 
     static <D> D removeLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey) {

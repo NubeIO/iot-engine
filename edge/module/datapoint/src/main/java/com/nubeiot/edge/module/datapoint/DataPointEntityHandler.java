@@ -114,9 +114,8 @@ class DataPointEntityHandler extends AbstractEntityHandler
         final @NonNull Device device = DeviceMetadata.INSTANCE.onCreating(RequestData.builder().body(obj).build());
         JsonObject syncCfg = SharedDataDelegate.removeLocalDataValue(vertx(), getSharedKey(), DATA_SYNC_CFG);
         //TODO fix hard-code version
-        JsonObject m = new JsonObject().put(DataSyncConfig.NAME,
-                                            DataSyncConfig.update(Optional.ofNullable(syncCfg).orElse(new JsonObject()),
-                                                                  "1.0.0", device.getId()));
+        syncCfg = DataSyncConfig.update(Optional.ofNullable(syncCfg).orElse(new JsonObject()), "1.0.0", device.getId());
+        JsonObject m = new JsonObject().put(DataSyncConfig.NAME, sharedData(DATA_SYNC_CFG, syncCfg));
         return device.setMetadata(m.mergeIn(Optional.ofNullable(device.getMetadata()).orElse(new JsonObject()), true));
     }
 

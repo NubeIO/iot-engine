@@ -70,7 +70,7 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     public Single<JsonObject> responseByLookupKey(@NonNull Object key, @NonNull RequestData reqData,
                                                   @NonNull BiFunction<VertxPojo, RequestData, JsonObject> handler) {
         final String keyName = context().requestKeyName();
-        return transformer().response(keyName, key,
+        return transformer().cudResponse(keyName, key,
                                       k -> groupQuery().lookupByPrimaryKey(k).map(p -> handler.apply(p, reqData)));
     }
 

@@ -92,7 +92,7 @@ public final class DataPointConfig implements IConfig {
     @Setter(value = AccessLevel.PACKAGE)
     public static final class DataSyncConfig implements IConfig {
 
-        static final String NAME = "__data_sync__";
+        public static final String NAME = "__data_sync__";
         public static final String USER_AGENT = "nubeio.edge.datapoint";
         private String type;
         private boolean enabled;

@@ -17,8 +17,10 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.edge.module.datapoint.sync.SyncServiceFactory;
 
 import lombok.NonNull;
 
@@ -32,6 +34,12 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
                               .map(clazz -> ReflectionClass.createObject(clazz, inputs))
                               .filter(Objects::nonNull)
                               .collect(Collectors.toSet());
+    }
+
+    @Override
+    default @NonNull EntityPostService asyncPostService() {
+        return SyncServiceFactory.get(entityHandler().vertx(),
+                                      entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG));
     }
 
     default String api() {

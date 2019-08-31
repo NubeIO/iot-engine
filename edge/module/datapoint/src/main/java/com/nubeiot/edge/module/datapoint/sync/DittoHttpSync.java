@@ -12,22 +12,20 @@ import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.transport.Transporter;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class DittoHttpSync implements EntityPostService {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private HttpClientDelegate delegate;
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public final DittoHttpSync init(@NonNull Vertx vertx, JsonObject config) {
-        this.delegate = HttpClientDelegate.create(vertx, config);
-        return this;
-    }
+    @NonNull
+    private final Vertx vertx;
+    @NonNull
+    private final JsonObject syncConfig;
 
     @Override
     public final Transporter transporter() {
-        return delegate;
+        return HttpClientDelegate.create(vertx, syncConfig);
     }
 
     @Override

@@ -186,8 +186,8 @@ public interface EntityTransformer {
      * @param provider Response provider function
      * @return single json
      */
-    default Single<JsonObject> response(@NonNull String keyName, @NonNull Object key,
-                                        @NonNull Function<Object, Single<JsonObject>> provider) {
+    default Single<JsonObject> cudResponse(@NonNull String keyName, @NonNull Object key,
+                                           @NonNull Function<Object, Single<JsonObject>> provider) {
         return enableFullResourceInCUDResponse()
                ? provider.apply(key)
                : Single.just(EntityTransformer.keyResponse(keyName, key));

@@ -39,6 +39,8 @@ public interface EntityHandler {
 
     <D> D sharedData(String dataKey);
 
+    <D> D sharedData(String dataKey, D data);
+
     DSLContext dsl();
 
     <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(Class<D> daoClass);

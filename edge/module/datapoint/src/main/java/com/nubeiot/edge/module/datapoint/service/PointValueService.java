@@ -44,7 +44,7 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
 
     @Override
     public @NonNull EntityPostService asyncPostService() {
-        return new PointValueSyncService();
+        return new PointValueSyncService(DataPointService.super.asyncPostService());
     }
 
     @Override
@@ -60,8 +60,11 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     @NonNull
     private RequestData recomputeRequestData(RequestData reqData) {
         JsonObject filter = Optional.ofNullable(reqData.getFilter()).orElse(new JsonObject()).put(Filters.AUDIT, true);
-        return RequestData.builder().headers(reqData.headers()).body(reqData.body())
-                          .filter(filter).sort(reqData.getSort())
+        return RequestData.builder()
+                          .headers(reqData.headers())
+                          .body(reqData.body())
+                          .filter(filter)
+                          .sort(reqData.getSort())
                           .pagination(reqData.getPagination())
                           .build();
     }

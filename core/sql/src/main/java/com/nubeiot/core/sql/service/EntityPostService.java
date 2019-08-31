@@ -1,6 +1,5 @@
 package com.nubeiot.core.sql.service;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventAction;
@@ -12,9 +11,6 @@ import lombok.NonNull;
 public interface EntityPostService extends ProxyService {
 
     EntityPostService EMPTY = new EntityPostService() {
-        @Override
-        @SuppressWarnings("unchecked")
-        public EntityPostService init(@NonNull Vertx vertx, JsonObject config) { return null; }
 
         @Override
         public Transporter transporter() { return null; }
