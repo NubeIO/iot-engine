@@ -6,35 +6,34 @@ import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 @Getter
-@RequiredArgsConstructor
 @ToString
-public class ExternalServer {
+public class ExternalServer extends HostInfo {
 
     private final String url;
     @Setter
     private Credential credential;
 
+    public ExternalServer(String url) {
+        super(build(url));
+        this.url = url;
+    }
+
     @JsonCreator
-    public ExternalServer(@JsonProperty(value = "credential") Credential credential,
-                          @JsonProperty(value = "url", required = true) String url) {
+    public ExternalServer(@JsonProperty(value = "url", required = true) String url,
+                          @JsonProperty(value = "credential") Credential credential) {
+        this(url);
         this.credential = credential;
-        this.url = Strings.requireNotBlank(url);
     }
 
-    public String computeUrl() {
-        return this.credential.computeUrl(this.url);
-    }
-
-    public HostInfo toHost() {
-        final String fullHost = url.replaceAll("https?://", "");
-        final String[] hosts = fullHost.split(":");
-        final int port = hosts.length > 1 ? Strings.convertToInt(hosts[1], 0) : 0;
-        return HostInfo.builder().host(hosts[0]).port(port).ssl(url.matches("^https")).build();
+    private static HostInfo build(String url) {
+        String[] hosts = Strings.requireNotBlank(url).replaceAll("https?://", "").split(":");
+        boolean ssl = url.matches("^https");
+        int port = hosts.length > 1 ? Strings.convertToInt(hosts[1], ssl ? 443 : 80) : ssl ? 443 : 80;
+        return HostInfo.builder().host(hosts[0]).port(port).ssl(ssl).build();
     }
 
 }

@@ -8,9 +8,11 @@ import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel.AbstractDittoMo
 import com.nubeiot.iotdata.edge.model.tables.interfaces.IPoint;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
+import lombok.NonNull;
+
 public final class DittoPoint extends AbstractDittoModel<IPoint> {
 
-    public DittoPoint(IPoint data) {
+    public DittoPoint(@NonNull Point data) {
         super(data);
     }
 
@@ -20,8 +22,8 @@ public final class DittoPoint extends AbstractDittoModel<IPoint> {
     }
 
     @Override
-    public String endpoint(String thingId) {
-        return "/things/" + thingId + "/features/points/properties/" + get().getCode();
+    String endpointPattern() {
+        return "/things/{0}/features/points/properties/" + get().getCode();
     }
 
 }

@@ -33,6 +33,7 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
+import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
@@ -44,7 +45,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 import lombok.NonNull;
 
 class DataPointEntityHandler extends AbstractEntityHandler
-    implements AuditDecorator, EntityConstraintHolder, DataPointIndex {
+    implements AuditDecorator, EntityConstraintHolder, DataPointIndex, EntitySyncHandler {
 
     DataPointEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         super(jooqConfig, vertx);
@@ -100,8 +101,10 @@ class DataPointEntityHandler extends AbstractEntityHandler
         data = Optional.ofNullable(data).orElseGet(JsonObject::new);
         final Device device = initDevice(data);
         final UUID networkId = UUID.randomUUID();
-        SharedDataDelegate.addLocalDataValue(vertx(), getSharedKey(), DEVICE_ID, device.getId().toString());
-        SharedDataDelegate.addLocalDataValue(vertx(), getSharedKey(), NETWORK_ID, networkId.toString());
+        sharedData(DEVICE_ID, device.getId().toString());
+        sharedData(CUSTOMER_CODE, device.getCustomerCode());
+        sharedData(SITE_CODE, device.getSiteCode());
+        sharedData(NETWORK_ID, networkId.toString());
         return data.put(DeviceMetadata.INSTANCE.singularKeyName(), device.toJson())
                    .put(NetworkMetadata.INSTANCE.singularKeyName(), initNetwork(data, device.getId(), networkId));
     }

@@ -7,6 +7,7 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 
 public class EquipServiceTest extends BaseDataPointServiceTest {

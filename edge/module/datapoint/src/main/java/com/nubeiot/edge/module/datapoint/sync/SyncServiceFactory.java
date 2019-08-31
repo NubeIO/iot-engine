@@ -20,8 +20,8 @@ public final class SyncServiceFactory {
         if (!sync.isEnabled()) {
             return EntityPostService.EMPTY;
         }
-        if ("DITTO".equalsIgnoreCase(sync.getType())) {
-            return new DittoHttpSync(vertx, sync.getClientConfig());
+        if (DittoHttpSync.TYPE.equalsIgnoreCase(sync.getType())) {
+            return new DittoHttpSync(vertx, sync.getClientConfig(), sync.getCredential());
         }
         LOGGER.warn("Not yet supported sync service type {}", sync.getType());
         return EntityPostService.EMPTY;

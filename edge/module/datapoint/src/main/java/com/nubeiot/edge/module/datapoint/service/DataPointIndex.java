@@ -15,6 +15,7 @@ import org.jooq.OrderField;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.CompositeMetadata.AbstractCompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -87,6 +88,8 @@ public interface DataPointIndex extends MetadataIndex {
     List<EntityMetadata> INDEX = MetadataIndex.find(DataPointIndex.class);
     String BUILTIN_DATA = "BUILTIN_DATA";
     String DATA_SYNC_CFG = "DATA_SYNC_CFG";
+    String CUSTOMER_CODE = "CUSTOMER_CODE";
+    String SITE_CODE = "SITE_CODE";
     String DEVICE_ID = "DEVICE_ID";
     String NETWORK_ID = "NETWORK_ID";
 
@@ -114,6 +117,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final EquipmentMetadata INSTANCE = new EquipmentMetadata();
 
         @Override
+        public @NonNull JsonTable<EquipmentRecord> table() {
+            return Tables.EQUIPMENT;
+        }
+
+        @Override
         public @NonNull Class<Equipment> modelClass() {
             return Equipment.class;
         }
@@ -121,11 +129,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<EquipmentDao> daoClass() {
             return EquipmentDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<EquipmentRecord> table() {
-            return Tables.EQUIPMENT;
         }
 
         @Override
@@ -143,6 +146,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final DeviceMetadata INSTANCE = new DeviceMetadata();
 
         @Override
+        public @NonNull JsonTable<DeviceRecord> table() {
+            return Tables.DEVICE;
+        }
+
+        @Override
         public @NonNull Class<Device> modelClass() {
             return Device.class;
         }
@@ -150,11 +158,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<DeviceDao> daoClass() {
             return DeviceDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<DeviceRecord> table() {
-            return Tables.DEVICE;
         }
 
         @Override
@@ -168,6 +171,21 @@ public interface DataPointIndex extends MetadataIndex {
                          .setCode(Optional.ofNullable(device.getCode()).orElse(device.getId().toString()));
         }
 
+        @Override
+        public @NonNull Device onPatching(@NonNull Device dbData, RequestData reqData) throws IllegalArgumentException {
+            final JsonObject body = reqData.body().copy();
+            body.put(context().jsonKeyName(),
+                     JsonData.checkAndConvert(context().parseKey(body.remove(context().requestKeyName()).toString())));
+            Device device = parseFromRequest(JsonPojo.merge(dbData, body));
+            if (!device.getCustomerCode().equals(dbData.getCustomerCode())) {
+                throw new IllegalArgumentException("Customer code is read-only");
+            }
+            if (!device.getSiteCode().equals(dbData.getSiteCode())) {
+                throw new IllegalArgumentException("Site code is read-only");
+            }
+            return device;
+        }
+
     }
 
 
@@ -178,6 +196,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final HistoryDataMetadata INSTANCE = new HistoryDataMetadata();
 
         @Override
+        public @NonNull JsonTable<PointHistoryDataRecord> table() {
+            return Tables.POINT_HISTORY_DATA;
+        }
+
+        @Override
         public @NonNull Class<PointHistoryData> modelClass() {
             return PointHistoryData.class;
         }
@@ -185,11 +208,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<PointHistoryDataDao> daoClass() {
             return PointHistoryDataDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<PointHistoryDataRecord> table() {
-            return Tables.POINT_HISTORY_DATA;
         }
 
         @Override
@@ -223,6 +241,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final HistorySettingMetadata INSTANCE = new HistorySettingMetadata();
 
         @Override
+        public @NonNull JsonTable<HistorySettingRecord> table() {
+            return Tables.HISTORY_SETTING;
+        }
+
+        @Override
         public @NonNull Class<HistorySetting> modelClass() {
             return HistorySetting.class;
         }
@@ -230,11 +253,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<HistorySettingDao> daoClass() {
             return HistorySettingDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<HistorySettingRecord> table() {
-            return Tables.HISTORY_SETTING;
         }
 
         @Override
@@ -262,6 +280,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final MeasureUnitMetadata INSTANCE = new MeasureUnitMetadata();
 
         @Override
+        public @NonNull JsonTable<MeasureUnitRecord> table() {
+            return Tables.MEASURE_UNIT;
+        }
+
+        @Override
         public @NonNull Class<MeasureUnit> modelClass() {
             return MeasureUnit.class;
         }
@@ -272,18 +295,13 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull JsonTable<MeasureUnitRecord> table() {
-            return Tables.MEASURE_UNIT;
+        public @NonNull String jsonKeyName() {
+            return "type";
         }
 
         @Override
         public @NonNull String singularKeyName() {
             return "unit";
-        }
-
-        @Override
-        public @NonNull String jsonKeyName() {
-            return "type";
         }
 
         @Override
@@ -306,12 +324,17 @@ public interface DataPointIndex extends MetadataIndex {
         private static Set<String> NULL_ALIASES = Collections.unmodifiableSet(
             new HashSet<>(Arrays.asList("default", "gpio")));
 
-        static void optimizeAlias(JsonObject req, String cacheId) {
+        static void optimizeAlias(JsonObject req) {
             Optional.ofNullable(req).ifPresent(r -> {
                 if (NULL_ALIASES.contains(r.getString(INSTANCE.requestKeyName(), "").toLowerCase())) {
-                    r.put(INSTANCE.requestKeyName(), cacheId);
+                    r.put(INSTANCE.requestKeyName(), (String) null);
                 }
             });
+        }
+
+        @Override
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.Network table() {
+            return Tables.NETWORK;
         }
 
         @Override
@@ -322,11 +345,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<NetworkDao> daoClass() {
             return NetworkDao.class;
-        }
-
-        @Override
-        public @NonNull com.nubeiot.iotdata.edge.model.tables.Network table() {
-            return Tables.NETWORK;
         }
 
         @Override
@@ -344,6 +362,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final PointMetadata INSTANCE = new PointMetadata();
 
         @Override
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.Point table() {
+            return Tables.POINT;
+        }
+
+        @Override
         public @NonNull Class<Point> modelClass() {
             return Point.class;
         }
@@ -351,11 +374,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<PointDao> daoClass() {
             return PointDao.class;
-        }
-
-        @Override
-        public @NonNull com.nubeiot.iotdata.edge.model.tables.Point table() {
-            return Tables.POINT;
         }
 
         @Override
@@ -468,6 +486,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final RealtimeDataMetadata INSTANCE = new RealtimeDataMetadata();
 
         @Override
+        public @NonNull JsonTable<PointRealtimeDataRecord> table() {
+            return Tables.POINT_REALTIME_DATA;
+        }
+
+        @Override
         public @NonNull Class<PointRealtimeData> modelClass() {
             return PointRealtimeData.class;
         }
@@ -475,11 +498,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<PointRealtimeDataDao> daoClass() {
             return PointRealtimeDataDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<PointRealtimeDataRecord> table() {
-            return Tables.POINT_REALTIME_DATA;
         }
 
         @Override
@@ -513,6 +531,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final RealtimeSettingMetadata INSTANCE = new RealtimeSettingMetadata();
 
         @Override
+        public @NonNull JsonTable<RealtimeSettingRecord> table() {
+            return Tables.REALTIME_SETTING;
+        }
+
+        @Override
         public @NonNull Class<RealtimeSetting> modelClass() {
             return RealtimeSetting.class;
         }
@@ -520,11 +543,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<RealtimeSettingDao> daoClass() {
             return RealtimeSettingDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<RealtimeSettingRecord> table() {
-            return Tables.REALTIME_SETTING;
         }
 
         @Override
@@ -554,6 +572,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final SchedulerSettingMetadata INSTANCE = new SchedulerSettingMetadata();
 
         @Override
+        public @NonNull JsonTable<ScheduleSettingRecord> table() {
+            return Tables.SCHEDULE_SETTING;
+        }
+
+        @Override
         public @NonNull Class<ScheduleSetting> modelClass() {
             return ScheduleSetting.class;
         }
@@ -561,11 +584,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<ScheduleSettingDao> daoClass() {
             return ScheduleSettingDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<ScheduleSettingRecord> table() {
-            return Tables.SCHEDULE_SETTING;
         }
 
         @Override
@@ -587,6 +605,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final TagPointMetadata INSTANCE = new TagPointMetadata();
 
         @Override
+        public @NonNull JsonTable<PointTagRecord> table() {
+            return Tables.POINT_TAG;
+        }
+
+        @Override
         public @NonNull Class<PointTag> modelClass() {
             return PointTag.class;
         }
@@ -594,11 +617,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<PointTagDao> daoClass() {
             return PointTagDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<PointTagRecord> table() {
-            return Tables.POINT_TAG;
         }
 
         @Override
@@ -620,6 +638,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final ThingMetadata INSTANCE = new ThingMetadata();
 
         @Override
+        public @NonNull JsonTable<ThingRecord> table() {
+            return Tables.THING;
+        }
+
+        @Override
         public @NonNull Class<Thing> modelClass() {
             return Thing.class;
         }
@@ -627,11 +650,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<ThingDao> daoClass() {
             return ThingDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<ThingRecord> table() {
-            return Tables.THING;
         }
 
     }
@@ -643,6 +661,11 @@ public interface DataPointIndex extends MetadataIndex {
         public static final TransducerMetadata INSTANCE = new TransducerMetadata();
 
         @Override
+        public @NonNull JsonTable<TransducerRecord> table() {
+            return Tables.TRANSDUCER;
+        }
+
+        @Override
         public @NonNull Class<Transducer> modelClass() {
             return Transducer.class;
         }
@@ -650,11 +673,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<TransducerDao> daoClass() {
             return TransducerDao.class;
-        }
-
-        @Override
-        public @NonNull JsonTable<TransducerRecord> table() {
-            return Tables.TRANSDUCER;
         }
 
         @Override

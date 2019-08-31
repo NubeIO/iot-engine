@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.nubeiot.auth.Credential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.http.base.HostInfo;
@@ -56,6 +57,10 @@ public final class DataPointConfig implements IConfig {
         return new DataPointConfig(new LowdbMigration(), DataSyncConfig.def(), builtinData, DataJobDefinition.def());
     }
 
+    static DataPointConfig def(@NonNull BuiltinData builtinData, @NonNull DataSyncConfig config) {
+        return new DataPointConfig(new LowdbMigration(), config, builtinData, DataJobDefinition.def());
+    }
+
     @Override
     public String name() {
         return NAME;
@@ -96,19 +101,27 @@ public final class DataPointConfig implements IConfig {
         public static final String USER_AGENT = "nubeio.edge.datapoint";
         private String type;
         private boolean enabled;
+        private Credential credential;
         private JsonObject clientConfig;
 
         @JsonCreator
         DataSyncConfig(@JsonProperty("type") String type, @JsonProperty("enabled") boolean enabled,
+                       @JsonProperty("credential") Credential credential,
                        @JsonProperty("clientConfig") JsonObject clientConfig) {
             this.type = type;
             this.enabled = enabled;
+            this.credential = credential;
             this.clientConfig = clientConfig;
         }
 
         public static DataSyncConfig def() {
             JsonObject cfg = HttpClientConfig.create(USER_AGENT, HostInfo.builder().build()).toJson();
-            return new DataSyncConfig("DITTO", false, cfg);
+            return new DataSyncConfig("DITTO", false, null, cfg);
+        }
+
+        public static DataSyncConfig enabled(@NonNull Credential credential, @NonNull HostInfo hostInfo) {
+            JsonObject cfg = HttpClientConfig.create(USER_AGENT, hostInfo).toJson();
+            return new DataSyncConfig("DITTO", true, credential, cfg);
         }
 
         @Override

@@ -1,7 +1,7 @@
 package com.nubeiot.core.transport;
 
-public interface ProxyService {
+public interface ProxyService<T extends Transporter> {
 
-    Transporter transporter();
+    T transporter();
 
 }

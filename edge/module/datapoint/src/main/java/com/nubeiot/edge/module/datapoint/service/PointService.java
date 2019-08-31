@@ -1,6 +1,8 @@
 package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -8,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.pojos.JsonPojo;
@@ -46,15 +49,14 @@ public final class PointService
 
     @Override
     public RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
-        final String networkId = entityHandler().sharedData(DataPointIndex.NETWORK_ID);
-        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body(), null);
-        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.getFilter(), null);
+        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body());
+        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.getFilter());
         return super.recomputeRequestData(reqData, extra);
     }
 
     @Override
     public EntityReferences entityReferences() {
-        final com.nubeiot.iotdata.edge.model.tables.@NonNull Point table = context().table();
+        final com.nubeiot.iotdata.edge.model.tables.Point table = context().table();
         return new EntityReferences().add(DeviceMetadata.INSTANCE, table.getJsonField(table.DEVICE))
                                      .add(NetworkMetadata.INSTANCE, table.getJsonField(table.NETWORK));
     }
@@ -81,17 +83,17 @@ public final class PointService
     }
 
     @Override
-    public @NonNull JsonObject afterCreate(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    public @NonNull JsonObject afterCreate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return EntityTransformer.fullResponse(EventAction.CREATE, convertResource(pojo, requestData));
     }
 
     @Override
-    public @NonNull JsonObject afterUpdate(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    public @NonNull JsonObject afterUpdate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return EntityTransformer.fullResponse(EventAction.UPDATE, convertResource(pojo, requestData));
     }
 
     @Override
-    public @NonNull JsonObject afterPatch(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    public @NonNull JsonObject afterPatch(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return EntityTransformer.fullResponse(EventAction.PATCH, convertResource(pojo, requestData));
     }
 
@@ -110,6 +112,16 @@ public final class PointService
         return JsonPojo.from(pojo)
                        .toJson(ignoreFields(requestData))
                        .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.factory(unit, unitLabel).toJson());
+    }
+
+    @Override
+    public Set<EventMethodDefinition> definitions() {
+        return Stream.concat(DataPointService.super.definitions().stream(),
+                             Stream.of(EventMethodDefinition.createDefault("/network/:network_id/point", "/:point_id"),
+                                       EventMethodDefinition.createDefault("/device/:device_id/point", "/:point_id"),
+                                       EventMethodDefinition.createDefault(
+                                           "/device/:device_id/network/:network_id/point", "/:point_id")))
+                     .collect(Collectors.toSet());
     }
 
     public interface PointExtension extends HasReferenceResource {

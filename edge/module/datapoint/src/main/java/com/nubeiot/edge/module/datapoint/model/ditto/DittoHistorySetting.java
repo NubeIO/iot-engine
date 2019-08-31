@@ -17,22 +17,26 @@ import lombok.ToString;
 @ToString
 public final class DittoHistorySetting extends AbstractDittoModel<IHistorySetting> {
 
-    private final String pointCode;
+    private String pointCode;
 
-    public DittoHistorySetting(String pointCode, IHistorySetting setting) {
+    public DittoHistorySetting(HistorySetting setting) {
         super(setting);
-        this.pointCode = Strings.requireNotBlank(pointCode);
     }
 
     @JsonCreator
     public static DittoHistorySetting create(@JsonProperty("code") String pointCode,
                                              @JsonProperty("historySettings") Map<String, Object> settings) {
-        return new DittoHistorySetting(pointCode, new HistorySetting(JsonData.tryParse(settings).toJson()));
+        return new DittoHistorySetting(new HistorySetting(JsonData.tryParse(settings).toJson())).pointCode(pointCode);
+    }
+
+    private DittoHistorySetting pointCode(String pointCode) {
+        this.pointCode = Strings.requireNotBlank(pointCode);
+        return this;
     }
 
     @Override
-    public String endpoint(String thingId) {
-        return "/things/" + thingId + "/features/points/properties/" + pointCode + "/historySettings";
+    String endpointPattern() {
+        return "/things/{0}/features/points/properties/" + get().getPoint() + "/historySettings/properties";
     }
 
 }

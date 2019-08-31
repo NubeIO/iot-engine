@@ -11,6 +11,10 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class UUID64 {
 
+    public static String random() {
+        return uuidToBase64(UUID.randomUUID());
+    }
+
     public static String uuidToBase64(String uuidStr) {
         return uuidToBase64(UUID.fromString(Strings.requireNotBlank(uuidStr)));
     }

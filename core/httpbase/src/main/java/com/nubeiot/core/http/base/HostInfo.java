@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
+import lombok.NonNull;
 
 @Getter
 @Builder(builderClassName = "Builder")
@@ -19,16 +20,22 @@ import lombok.Getter;
 public class HostInfo implements JsonData, Shareable {
 
     @Include
-    private final String host;
+    protected final String host;
     @Include
-    private final int port;
+    protected final int port;
     @Include
-    private final boolean ssl;
+    protected final boolean ssl;
 
     protected HostInfo(String host, int port, boolean ssl) {
         this.host = host;
         this.port = port;
         this.ssl = ssl;
+    }
+
+    protected HostInfo(@NonNull HostInfo hostInfo) {
+        this.host = hostInfo.host;
+        this.port = hostInfo.port;
+        this.ssl = hostInfo.ssl;
     }
 
     public static HostInfo from(RequestOptions options) {

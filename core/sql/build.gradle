@@ -38,7 +38,7 @@ ext {
         new ForcedType(types: DB.TYPES.varchar, userType: "com.nubeiot.core.sql.type.Label",
                        expression: DB.COL_REGEX.label,
                        converter: "com.nubeiot.core.sql.converter.LabelConverter"),
-        new ForcedType(types: DB.TYPES.varchar, userType: "com.nubeiot.core.sql.type.SyncAudit",
+        new ForcedType(types: DB.TYPES.text, userType: "com.nubeiot.core.sql.type.SyncAudit",
                        expression: DB.COL_REGEX.syncAudit,
                        converter: "com.nubeiot.core.sql.converter.SyncAuditConverter"),
     ]

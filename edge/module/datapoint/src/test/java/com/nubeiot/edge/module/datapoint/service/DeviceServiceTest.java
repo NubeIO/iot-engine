@@ -16,12 +16,14 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.SyncAudit;
 import com.nubeiot.core.sql.type.TimeAudit;
 import com.nubeiot.core.utils.UUID64;
+import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
@@ -78,7 +80,7 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
             context.assertNull(timeAudit.getLastModifiedTime());
             context.assertNull(timeAudit.getLastModifiedBy());
             context.assertEquals(1, timeAudit.getRecordVersion());
-            context.assertFalse(syncAudit.isSynced());
+            context.assertEquals(Status.INITIAL, syncAudit.getStatus());
             context.assertNull(syncAudit.getSyncedTime());
         };
     }

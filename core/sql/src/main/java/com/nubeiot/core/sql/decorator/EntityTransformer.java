@@ -72,10 +72,10 @@ public interface EntityTransformer {
      *
      * @param requestData Request data
      * @return set of ignore fields when do customizing response data
-     * @see #afterCreate(VertxPojo, RequestData)
+     * @see #afterCreate(Object, VertxPojo, RequestData)
      * @see #afterDelete(VertxPojo, RequestData)
-     * @see #afterUpdate(VertxPojo, RequestData)
-     * @see #afterPatch(VertxPojo, RequestData)
+     * @see #afterUpdate(Object, VertxPojo, RequestData)
+     * @see #afterPatch(Object, VertxPojo, RequestData)
      * @see #afterGet(VertxPojo, RequestData)
      * @see #afterEachList(VertxPojo, RequestData)
      */
@@ -124,42 +124,52 @@ public interface EntityTransformer {
      * Do any transform resource after {@code CREATE} action successfully if {@link #enableFullResourceInCUDResponse()}
      * is {@code true}
      *
+     * @param key         pojo key
      * @param pojo        item
      * @param requestData request data
      * @return transformer item
      * @apiNote By default, result doesn't omits {@code null} fields
      */
     @NonNull
-    default JsonObject afterCreate(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return fullResponse(EventAction.CREATE, JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData)));
+    default JsonObject afterCreate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return enableFullResourceInCUDResponse()
+               ? fullResponse(EventAction.CREATE, JsonPojo.from(pojo)
+                                                          .toJson(JsonData.MAPPER, ignoreFields(requestData)))
+               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
     }
 
     /**
      * Do any transform resource after {@code UPDATE} action successfully if {@link #enableFullResourceInCUDResponse()}
      * is {@code true}
      *
+     * @param key         pojo key
      * @param pojo        item
      * @param requestData request data
      * @return transformer item
      * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
      */
     @NonNull
-    default JsonObject afterUpdate(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return fullResponse(EventAction.UPDATE, JsonPojo.from(pojo).toJson(ignoreFields(requestData)));
+    default JsonObject afterUpdate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return enableFullResourceInCUDResponse()
+               ? fullResponse(EventAction.UPDATE, JsonPojo.from(pojo).toJson(ignoreFields(requestData)))
+               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
     }
 
     /**
      * Do any transform resource after {@code PATCH} action successfully if {@link #enableFullResourceInCUDResponse()}
      * is {@code true}
      *
+     * @param key         pojo key
      * @param pojo        item
      * @param requestData request data
      * @return transformer item
      * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
      */
     @NonNull
-    default JsonObject afterPatch(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return fullResponse(EventAction.PATCH, JsonPojo.from(pojo).toJson(ignoreFields(requestData)));
+    default JsonObject afterPatch(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return enableFullResourceInCUDResponse()
+               ? fullResponse(EventAction.PATCH, JsonPojo.from(pojo).toJson(ignoreFields(requestData)))
+               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
     }
 
     /**

@@ -2,15 +2,20 @@ package com.nubeiot.core.sql.type;
 
 import java.time.OffsetDateTime;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.utils.DateTimes;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.ToString;
 
 @Getter
@@ -20,15 +25,40 @@ import lombok.ToString;
 @ToString
 public final class SyncAudit implements JsonData {
 
+    private OffsetDateTime lastSuccessTime;
+    private JsonObject lastSuccessMessage;
     private OffsetDateTime syncedTime;
-    private boolean synced;
+    private Status status;
+    private JsonObject data;
+    private String by;
 
-    public static SyncAudit notSynced() {
-        return new SyncAudit(null, false);
+    public static SyncAudit unknown() {
+        return new SyncAudit(null, null, null, Status.UNDEFINED,
+                             new JsonObject().put("error", "Unknown sync audit information"), null);
     }
 
-    public static SyncAudit synced() {
-        return new SyncAudit(DateTimes.now(), true);
+    public static SyncAudit notYetSynced(String message) {
+        return new SyncAudit(null, null, null, Status.INITIAL,
+                             new JsonObject().put("message", Strings.fallback(message, "Not yet synced")), null);
+    }
+
+    public static SyncAudit notYetSynced(@NonNull SyncAudit prevSync, String message) {
+        OffsetDateTime lastSuccess = Status.SUCCESS == prevSync.status ? prevSync.syncedTime : prevSync.lastSuccessTime;
+        JsonObject lastSuccessMsg = Status.SUCCESS == prevSync.status ? prevSync.data : prevSync.lastSuccessMessage;
+        return new SyncAudit(lastSuccess, lastSuccessMsg, null, Status.INITIAL,
+                             new JsonObject().put("message", Strings.fallback(message, "Not yet synced")), null);
+    }
+
+    public static SyncAudit success(@NonNull SyncAudit prevSync, @NonNull JsonObject response, @NonNull String by) {
+        OffsetDateTime lastSuccess = Status.SUCCESS == prevSync.status ? prevSync.syncedTime : prevSync.lastSuccessTime;
+        JsonObject lastSuccessMsg = Status.SUCCESS == prevSync.status ? prevSync.data : prevSync.lastSuccessMessage;
+        return new SyncAudit(lastSuccess, lastSuccessMsg, DateTimes.now(), Status.SUCCESS, response, by);
+    }
+
+    public static SyncAudit error(@NonNull SyncAudit prevSync, @NonNull JsonObject error, @NonNull String by) {
+        OffsetDateTime lastSuccess = Status.SUCCESS == prevSync.status ? prevSync.syncedTime : prevSync.lastSuccessTime;
+        JsonObject lastSuccessMsg = Status.SUCCESS == prevSync.status ? prevSync.data : prevSync.lastSuccessMessage;
+        return new SyncAudit(lastSuccess, lastSuccessMsg, DateTimes.now(), Status.FAILED, error, by);
     }
 
 }

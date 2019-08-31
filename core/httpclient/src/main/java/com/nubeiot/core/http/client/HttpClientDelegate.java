@@ -87,6 +87,8 @@ public interface HttpClientDelegate extends IClientDelegate {
      * @param method      Http Method
      * @param requestData Request data
      * @return single response data. Must be subscribe before using
+     * @apiNote It is equivalent to call {@link #execute(String, HttpMethod, RequestData, boolean)} with {@code
+     *     swallowError} is {@code true}
      */
     default Single<ResponseData> execute(String path, HttpMethod method, RequestData requestData) {
         return this.execute(path, method, requestData, true);

@@ -85,7 +85,7 @@ public class DataPointConfigTest {
                                         .put(DeviceMetadata.INSTANCE.singularKeyName(), MockData.DEVICE.toJson());
         final HostInfo hostInfo = HostInfo.builder().host("abc").port(80).build();
         final HttpClientConfig httpCfg = HttpClientConfig.create("edge.datapoint", hostInfo);
-        final DataSyncConfig syncConfig = new DataSyncConfig("XXX", true, httpCfg.toJson());
+        final DataSyncConfig syncConfig = new DataSyncConfig("XXX", true, null, httpCfg.toJson());
         final DataPointConfig config = new DataPointConfig();
         config.setBuiltinData(JsonData.from(builtin, BuiltinData.class));
         config.setDataSyncConfig(syncConfig);

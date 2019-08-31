@@ -12,6 +12,7 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.dto.PointCategory;

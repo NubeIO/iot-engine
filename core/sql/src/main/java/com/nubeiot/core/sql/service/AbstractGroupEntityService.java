@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.Map.Entry;
-import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -67,11 +66,8 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     }
 
     @Override
-    public Single<JsonObject> responseByLookupKey(@NonNull Object key, @NonNull RequestData reqData,
-                                                  @NonNull BiFunction<VertxPojo, RequestData, JsonObject> handler) {
-        final String keyName = context().requestKeyName();
-        return transformer().cudResponse(keyName, key,
-                                      k -> groupQuery().lookupByPrimaryKey(k).map(p -> handler.apply(p, reqData)));
+    public Single<? extends VertxPojo> lookupByKey(@NonNull Object key) {
+        return groupQuery().lookupByPrimaryKey(key);
     }
 
 }

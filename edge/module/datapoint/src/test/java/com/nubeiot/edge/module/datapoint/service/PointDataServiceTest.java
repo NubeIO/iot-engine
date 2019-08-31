@@ -22,6 +22,7 @@ import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
@@ -77,7 +78,8 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
             latch.countDown();
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"value\":24.0,\"priority\":5,\"priority_values\":" +
-                "{\"5\":24.0},\"time_audit\":{\"created_by\":\"UNKNOWN\"},\"sync_audit\":{\"synced\":false}}");
+                "{\"5\":24.0},\"time_audit\":{\"created_by\":\"UNDEFINED\"},\"sync_audit\":{\"status\":\"INITIAL\"," +
+                "\"data\":{\"message\":\"Not yet synced new resource\"}}}");
             JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", data);
@@ -108,7 +110,8 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
             latch.countDown();
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0,\"priority\":5,\"priority_values\":" +
-                "{\"5\":24.0},\"time_audit\":{\"created_by\":\"UNKNOWN\"},\"sync_audit\":{\"synced\":false}}");
+                "{\"5\":24.0},\"time_audit\":{\"created_by\":\"UNDEFINED\"},\"sync_audit\":{\"status\":\"INITIAL\"," +
+                "\"data\":{\"message\":\"Not yet synced new resource\"}}}");
             JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", data);
@@ -123,8 +126,8 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
             latch.countDown();
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":28.0,\"priority\":9," +
-                "\"priority_values\":{\"5\":24.0,\"9\":28.0}," + "\"time_audit\":{\"created_by\":\"UNKNOWN\"," +
-                "\"last_modified_by\":\"UNKNOWN\"}}");
+                "\"priority_values\":{\"5\":24.0,\"9\":28.0},\"time_audit\":{\"created_by\":\"UNDEFINED\"," +
+                "\"last_modified_by\":\"UNDEFINED\"}}");
             JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", data);

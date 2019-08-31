@@ -14,22 +14,26 @@ import lombok.NonNull;
 
 public final class DittoHistoryData extends AbstractDittoModel<IPointHistoryData> {
 
-    private final String pointCode;
+    private String pointCode;
 
-    public DittoHistoryData(String pointCode, @NonNull IPointHistoryData data) {
+    public DittoHistoryData(@NonNull PointHistoryData data) {
         super(data);
-        this.pointCode = Strings.requireNotBlank(pointCode);
     }
 
     @JsonCreator
     public static DittoHistoryData create(@JsonProperty("code") String pointCode,
                                           @JsonProperty("data") Map<String, Object> data) {
-        return new DittoHistoryData(pointCode, new PointHistoryData(JsonData.tryParse(data).toJson()));
+        return new DittoHistoryData(new PointHistoryData(JsonData.tryParse(data).toJson())).pointCode(pointCode);
+    }
+
+    private DittoHistoryData pointCode(String pointCode) {
+        this.pointCode = Strings.requireNotBlank(pointCode);
+        return this;
     }
 
     @Override
-    public String endpoint(String thingId) {
-        return "/things/" + thingId + "/features/histories/properties/" + pointCode;
+    String endpointPattern() {
+        return "/things/{0}/features/histories/properties/" + get().getPoint();
     }
 
 }

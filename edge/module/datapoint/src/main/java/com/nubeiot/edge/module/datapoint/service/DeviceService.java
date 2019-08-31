@@ -2,14 +2,16 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.Optional;
 
-import io.reactivex.Single;
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
@@ -36,20 +38,15 @@ public final class DeviceService extends AbstractEntityService<Device, DeviceMet
     }
 
     @Override
-    public Single<JsonObject> cudResponse(@NonNull String keyName, @NonNull Object key,
-                                          @NonNull Function<Object, Single<JsonObject>> provider) {
-        return provider.apply(key)
-                       .doOnSuccess(this::addSyncConfig)
-                       .map(device -> enableFullResourceInCUDResponse()
-                                      ? device
-                                      : EntityTransformer.keyResponse(keyName, key));
-    }
-
-    private void addSyncConfig(JsonObject device) {
-        final JsonObject syncConfig = EntityTransformer.getData(device)
-                                                       .getJsonObject("metadata", new JsonObject())
-                                                       .getJsonObject(DataSyncConfig.NAME, new JsonObject());
+    public @NonNull JsonObject afterPatch(Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
+        final JsonObject syncConfig = Optional.ofNullable(((Device) pojo).getMetadata())
+                                              .map(info -> info.getJsonObject(DataSyncConfig.NAME, new JsonObject()))
+                                              .orElse(new JsonObject());
         entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG, syncConfig);
+        return enableFullResourceInCUDResponse()
+               ? EntityTransformer.fullResponse(EventAction.PATCH, JsonPojo.from(pojo)
+                                                                           .toJson(ignoreFields(reqData)))
+               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
     }
 
     public interface DeviceExtension extends HasReferenceResource {

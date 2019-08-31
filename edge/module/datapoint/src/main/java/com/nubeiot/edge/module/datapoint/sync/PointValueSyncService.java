@@ -2,11 +2,11 @@ package com.nubeiot.edge.module.datapoint.sync;
 
 import java.time.OffsetDateTime;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.QueryBuilder;
 import com.nubeiot.core.sql.query.SimpleQueryExecutor;
 import com.nubeiot.core.sql.service.EntityPostService;
@@ -34,12 +34,12 @@ public final class PointValueSyncService implements EntityPostService {
     }
 
     @Override
-    public void onSuccess(EntityService service, EventAction action, JsonObject data) {
+    public void onSuccess(EntityService service, EventAction action, VertxPojo data) {
         if (!(service instanceof PointValueService) || (action != EventAction.CREATE && action != EventAction.PATCH)) {
             return;
         }
         final PointValueService vService = (PointValueService) service;
-        final PointValueData pointValue = vService.context().parseFromRequest(EntityTransformer.getData(data));
+        final PointValueData pointValue = (PointValueData) data;
         final OffsetDateTime createdTime = action == EventAction.CREATE
                                            ? pointValue.getTimeAudit().getCreatedTime()
                                            : pointValue.getTimeAudit().getLastModifiedTime();
