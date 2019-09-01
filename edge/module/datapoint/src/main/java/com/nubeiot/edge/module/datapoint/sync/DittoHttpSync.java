@@ -28,7 +28,8 @@ import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 
 import lombok.NonNull;
 
-public class DittoHttpSync extends AbstractEnumType implements EntityPostService<HttpClientDelegate> {
+public class DittoHttpSync extends AbstractEnumType
+    implements EntityPostService<HttpClientDelegate, IDittoModel<? extends VertxPojo>> {
 
     public static final String TYPE = "DITTO";
 
@@ -36,32 +37,43 @@ public class DittoHttpSync extends AbstractEnumType implements EntityPostService
     @NonNull
     private final Vertx vertx;
     @NonNull
-    private final JsonObject syncConfig;
+    private final JsonObject clientConfig;
     private final Credential credential;
 
-    public DittoHttpSync(Vertx vertx, JsonObject syncConfig, Credential credential) {
+    public DittoHttpSync(Vertx vertx, JsonObject clientConfig, Credential credential) {
         super(TYPE);
         this.vertx = vertx;
-        this.syncConfig = syncConfig;
+        this.clientConfig = clientConfig;
         this.credential = credential;
     }
 
     @Override
     public final HttpClientDelegate transporter() {
-        return HttpClientDelegate.create(vertx, syncConfig);
+        return HttpClientDelegate.create(vertx, clientConfig);
+    }
+
+    @Override
+    public IDittoModel<?> transform(@NonNull EntityService service, VertxPojo data) {
+        return IDittoModel.create(service.context(), data.toJson());
     }
 
     @Override
     public void onSuccess(EntityService service, EventAction action, VertxPojo data) {
-        if (action == EventAction.GET_LIST || action == EventAction.GET_ONE ||
-            !(service.entityHandler() instanceof EntitySyncHandler)) {
+        if (action == EventAction.GET_LIST || action == EventAction.GET_ONE || !(service.entityHandler() instanceof EntitySyncHandler)) {
             return;
         }
+        doSyncOnSuccess(service, action, transform(service, data));
+    }
+
+    @Override
+    public void doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action, IDittoModel<?> syncData) {
         final @NonNull EntitySyncHandler entityHandler = (EntitySyncHandler) service.entityHandler();
-        String thingId = Strings.format("com.nubeio.{0}:{1}", entityHandler.sharedData(DataPointIndex.CUSTOMER_CODE),
-                                        UUID64.uuid64ToUuidStr(entityHandler.sharedData(DataPointIndex.DEVICE_ID)));
-        IDittoModel<?> syncData = IDittoModel.create(service.context(), data.toJson());
-        JsonObject headers = new JsonObject().put(HttpHeaders.CONTENT_TYPE.toString(), HttpUtils.DEFAULT_CONTENT_TYPE);
+        final String thingId = Strings.format("com.nubeio.{0}:{1}",
+                                              entityHandler.sharedData(DataPointIndex.CUSTOMER_CODE),
+                                              UUID64.uuid64ToUuidStr(
+                                                  entityHandler.sharedData(DataPointIndex.DEVICE_ID)));
+        final JsonObject headers = new JsonObject().put(HttpHeaders.CONTENT_TYPE.toString(),
+                                                        HttpUtils.DEFAULT_CONTENT_TYPE);
         if (Objects.nonNull(credential)) {
             headers.put(HttpHeaders.AUTHORIZATION.toString(), credential.computeHeader());
         }

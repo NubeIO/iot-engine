@@ -10,7 +10,6 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.core.sql.CompositeMetadata;
@@ -44,10 +43,7 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     @Override
     default <PP extends P> @NonNull PP onPatching(@NonNull P dbData, RequestData reqData)
         throws IllegalArgumentException {
-        final JsonObject body = reqData.body().copy();
-        body.put(context().jsonKeyName(),
-                 JsonData.checkAndConvert(context().parseKey(body.remove(context().requestKeyName()).toString())));
-        C request = (C) context().parseFromEntity(JsonPojo.merge(dbData, context().parseFromRequest(body)));
+        C request = (C) context().parseFromEntity(JsonPojo.merge(dbData, context().parseFromRequest(reqData.body())));
         validateSubItems((C) dbData, request, (metadata, requestData, pojo) -> metadata.onPatching(pojo, requestData));
         return (PP) request;
     }

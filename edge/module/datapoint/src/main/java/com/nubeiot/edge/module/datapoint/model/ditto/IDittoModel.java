@@ -2,7 +2,6 @@ package com.nubeiot.edge.module.datapoint.model.ditto;
 
 import java.util.Collections;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassRefTypeSignature;
@@ -10,10 +9,10 @@ import io.github.classgraph.TypeArgument;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.HasSyncAudit;
 import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.core.sql.service.EntityPostService.EntitySyncData;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
@@ -25,7 +24,7 @@ import lombok.RequiredArgsConstructor;
  *
  * @param <V> Pojo class that represents for data entity
  */
-public interface IDittoModel<V extends VertxPojo> extends JsonData, Supplier<V> {
+public interface IDittoModel<V extends VertxPojo> extends EntitySyncData<V> {
 
     static IDittoModel create(@NonNull EntityMetadata metadata, @NonNull VertxPojo data) {
         return ReflectionClass.stream(IDittoModel.class.getPackage().getName(), IDittoModel.class,
@@ -47,15 +46,14 @@ public interface IDittoModel<V extends VertxPojo> extends JsonData, Supplier<V> 
     }
 
     static Predicate<ClassInfo> getClassInfoPredicate(@NonNull EntityMetadata metadata) {
-        return classInfo -> classInfo.getTypeSignature()
-                                     .getSuperclassSignature()
-                                     .getTypeArguments()
-                                     .stream()
-                                     .map(TypeArgument::getTypeSignature)
-                                     .filter(ClassRefTypeSignature.class::isInstance)
-                                     .map(ClassRefTypeSignature.class::cast)
-                                     .anyMatch(
-                                         s -> ReflectionClass.assertDataType(metadata.modelClass(), s.loadClass()));
+        return clazz -> clazz.getTypeSignature()
+                             .getSuperclassSignature()
+                             .getTypeArguments()
+                             .stream()
+                             .map(TypeArgument::getTypeSignature)
+                             .filter(ClassRefTypeSignature.class::isInstance)
+                             .map(ClassRefTypeSignature.class::cast)
+                             .anyMatch(s -> ReflectionClass.assertDataType(metadata.modelClass(), s.loadClass()));
     }
 
     /**
@@ -86,7 +84,7 @@ public interface IDittoModel<V extends VertxPojo> extends JsonData, Supplier<V> 
 
         @Override
         public final @NonNull String endpoint(String thingId) {
-            return Strings.format("/api/2/" + endpointPattern(), Strings.requireNotBlank(thingId)).toLowerCase();
+            return Strings.format("/api/2/" + endpointPattern(), Strings.requireNotBlank(thingId).toLowerCase());
         }
 
         @Override

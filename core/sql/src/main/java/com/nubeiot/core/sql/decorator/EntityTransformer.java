@@ -131,7 +131,7 @@ public interface EntityTransformer {
      * @apiNote By default, result doesn't omits {@code null} fields
      */
     @NonNull
-    default JsonObject afterCreate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    default JsonObject afterCreate(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return enableFullResourceInCUDResponse()
                ? fullResponse(EventAction.CREATE, JsonPojo.from(pojo)
                                                           .toJson(JsonData.MAPPER, ignoreFields(requestData)))
@@ -149,7 +149,7 @@ public interface EntityTransformer {
      * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
      */
     @NonNull
-    default JsonObject afterUpdate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    default JsonObject afterUpdate(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return enableFullResourceInCUDResponse()
                ? fullResponse(EventAction.UPDATE, JsonPojo.from(pojo).toJson(ignoreFields(requestData)))
                : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
@@ -166,7 +166,7 @@ public interface EntityTransformer {
      * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
      */
     @NonNull
-    default JsonObject afterPatch(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    default JsonObject afterPatch(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return enableFullResourceInCUDResponse()
                ? fullResponse(EventAction.PATCH, JsonPojo.from(pojo).toJson(ignoreFields(requestData)))
                : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);

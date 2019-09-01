@@ -10,9 +10,9 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.query.QueryBuilder;
 import com.nubeiot.core.sql.query.SimpleQueryExecutor;
 import com.nubeiot.core.sql.service.EntityPostService;
+import com.nubeiot.core.sql.service.EntityPostService.EntityPostServiceDelegate;
 import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.sql.tables.JsonTable;
-import com.nubeiot.core.transport.Transporter;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointValueService;
@@ -21,16 +21,12 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.edge.model.tables.records.PointHistoryDataRecord;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
-public final class PointValueSyncService implements EntityPostService {
+public final class PointValueSyncService extends EntityPostServiceDelegate {
 
-    private final EntityPostService syncService;
-
-    @Override
-    public Transporter transporter() {
-        return syncService.transporter();
+    @SuppressWarnings("unchecked")
+    public PointValueSyncService(@NonNull EntityPostService delegate) {
+        super(delegate);
     }
 
     @Override
@@ -48,12 +44,7 @@ public final class PointValueSyncService implements EntityPostService {
                                                                    .setPriority(pointValue.getPriority())
                                                                    .setTime(createdTime);
         createHistory(historyData, SimpleQueryExecutor.create(vService.entityHandler(), HistoryDataMetadata.INSTANCE));
-        syncService.onSuccess(service, action, data);
-    }
-
-    @Override
-    public void onError(@NonNull EntityService service, @NonNull EventAction action, @NonNull Throwable throwable) {
-        syncService.onError(service, action, throwable);
+        getDelegate().onSuccess(service, action, data);
     }
 
     @SuppressWarnings("unchecked")

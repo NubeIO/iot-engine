@@ -15,6 +15,7 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
+import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
@@ -22,6 +23,7 @@ import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetad
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.sync.PointSyncService;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.unit.DataType;
@@ -68,6 +70,11 @@ public final class PointService
     }
 
     @Override
+    public @NonNull EntityPostService asyncPostService() {
+        return new PointSyncService(DataPointService.super.asyncPostService());
+    }
+
+    @Override
     protected Single<PointComposite> doGetOne(RequestData reqData) {
         return groupQuery().findOneByKey(reqData);
     }
@@ -84,17 +91,23 @@ public final class PointService
 
     @Override
     public @NonNull JsonObject afterCreate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return EntityTransformer.fullResponse(EventAction.CREATE, convertResource(pojo, requestData));
+        return enableFullResourceInCUDResponse()
+               ? EntityTransformer.fullResponse(EventAction.CREATE, convertResource(pojo, requestData))
+               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
     }
 
     @Override
     public @NonNull JsonObject afterUpdate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return EntityTransformer.fullResponse(EventAction.UPDATE, convertResource(pojo, requestData));
+        return enableFullResourceInCUDResponse()
+               ? EntityTransformer.fullResponse(EventAction.UPDATE, convertResource(pojo, requestData))
+               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
     }
 
     @Override
     public @NonNull JsonObject afterPatch(Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return EntityTransformer.fullResponse(EventAction.PATCH, convertResource(pojo, requestData));
+        return enableFullResourceInCUDResponse()
+               ? EntityTransformer.fullResponse(EventAction.PATCH, convertResource(pojo, requestData))
+               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
     }
 
     @Override
