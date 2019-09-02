@@ -1,5 +1,7 @@
 package com.nubeiot.auth;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.http.base.HostInfo;
@@ -34,6 +36,11 @@ public class ExternalServer extends HostInfo {
         boolean ssl = url.matches("^https");
         int port = hosts.length > 1 ? Strings.convertToInt(hosts[1], ssl ? 443 : 80) : ssl ? 443 : 80;
         return HostInfo.builder().host(hosts[0]).port(port).ssl(ssl).build();
+    }
+
+    @Override
+    public JsonObject toJson() {
+        return new JsonObject().put("url", url).put("credential", credential.toJson());
     }
 
 }
