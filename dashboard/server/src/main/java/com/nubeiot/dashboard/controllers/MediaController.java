@@ -31,8 +31,9 @@ public class MediaController implements RestApi {
     @GET
     @Path("/:id")
     @RouteOrder(3)
-    public Future<ResponseData> get(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient) {
-        return handleGetMediaFile(ctx, mongoClient.getMongoClient());
+    public Future<ResponseData> get(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient,
+                                    @Context RestMediaDirProvider mediaDirProvider) {
+        return handleGetMediaFile(ctx, mongoClient.getMongoClient(), mediaDirProvider.getMediaDir());
     }
 
     @POST
@@ -40,27 +41,28 @@ public class MediaController implements RestApi {
     @RouteOrder(3)
     public Future<ResponseData> post(@Context RoutingContext ctx, @Context RestMongoClientProvider mongoClient,
                                      @Context RestMediaDirProvider mediaDirProvider) {
-        return handlePostMediaFiles(ctx, mongoClient.getMongoClient(), mediaDirProvider.getMediaAbsoluteDir());
+
+        return handlePostMediaFiles(ctx, mongoClient.getMongoClient(), mediaDirProvider);
     }
 
-    private Future<ResponseData> handleGetMediaFile(RoutingContext ctx, MongoClient mongoClient) {
+    private Future<ResponseData> handleGetMediaFile(RoutingContext ctx, MongoClient mongoClient, String mediaDir) {
         Future<ResponseData> future = Future.future();
         String id = ctx.request().getParam("id");
-        mongoClient.rxFindOne(MEDIA_FILES, MongoUtils.idQuery(id), null)
-            .subscribe(record -> {
-                if (record != null) {
-                    String body = new JsonObject().put("absolute_path", ResourceUtils
-                        .buildAbsolutePath(ctx.request().host(), record.getString("name"))).encode();
-                    future.complete(ResponseDataWriter.serializeResponseData(body));
-                } else {
-                    future.complete(new ResponseData().setStatus(HttpResponseStatus.NOT_FOUND.code()));
-                }
-            }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
+        mongoClient.rxFindOne(MEDIA_FILES, MongoUtils.idQuery(id), null).subscribe(record -> {
+            if (record != null) {
+                String file = record.getString("name");
+                JsonObject body = new JsonObject();
+                body.put("absolute_path", ResourceUtils.buildAbsolutePath(ctx.request().host(), mediaDir, file));
+                future.complete(ResponseDataWriter.serializeResponseData(body.encode()));
+            } else {
+                future.complete(new ResponseData().setStatus(HttpResponseStatus.NOT_FOUND.code()));
+            }
+        }, throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
         return future;
     }
 
     private Future<ResponseData> handlePostMediaFiles(RoutingContext ctx, MongoClient mongoClient,
-                                                      String mediaAbsoluteDir) {
+                                                      RestMediaDirProvider mediaDirProvider) {
         Future<ResponseData> future = Future.future();
         if (ctx.fileUploads().isEmpty()) {
             future.complete(new ResponseData().setStatus(HttpResponseStatus.BAD_REQUEST.code()));
@@ -70,16 +72,20 @@ public class MediaController implements RestApi {
         JsonObject output = new JsonObject();
         Observable.fromIterable(ctx.fileUploads())
                   .flatMapSingle(fileUpload -> {
-                String name = appendRealFileNameWithExtension(fileUpload).replace(mediaAbsoluteDir + "/", "");
-                String link = ResourceUtils.buildAbsolutePath(ctx.request().host(), name);
-                return mongoClient
-                    .rxInsert(MEDIA_FILES, new JsonObject().put("name", name).put("title", fileUpload.name()))
-                    .map(id -> output.put(fileUpload.name(), id).put(fileUpload.name() + "_path", link));
-            })
+                      String mediaAbsoluteDir = mediaDirProvider.getMediaAbsoluteDir();
+                      String mediaDir = mediaDirProvider.getMediaDir();
+                      String name = appendRealFileNameWithExtension(fileUpload).replace(mediaAbsoluteDir + "/", "");
+                      String link = ResourceUtils.buildAbsolutePath(ctx.request().host(), mediaDir, name);
+                      JsonObject mediaFile = new JsonObject().put("name", name).put("title", fileUpload.name());
+                      return mongoClient.rxInsert(MEDIA_FILES, mediaFile)
+                                        .map(id -> output.put(fileUpload.name(), id)
+                                                         .put(fileUpload.name() + "_path", link));
+                  })
                   .toList()
                   .subscribe(ignored -> future.complete(
                       ResponseDataWriter.serializeResponseData(output.encode()).setStatus(HttpResponseStatus.CREATED)),
-                       throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
+                             throwable -> future.complete(
+                                 ResponseDataHelper.internalServerError(throwable.getMessage())));
         return future;
     }
 

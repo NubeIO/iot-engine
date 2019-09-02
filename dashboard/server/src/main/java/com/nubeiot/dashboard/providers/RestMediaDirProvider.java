@@ -8,5 +8,7 @@ public class RestMediaDirProvider {
 
     @Getter
     private final String mediaAbsoluteDir;
+    @Getter
+    private final String mediaDir;
 
 }

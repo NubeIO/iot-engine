@@ -82,7 +82,8 @@ public class DashboardServerVerticle extends ContainerVerticle {
         RestRouter.addProvider(RestConfigProvider.class, ctx -> new RestConfigProvider(this.nubeConfig));
         RestRouter.addProvider(RestOAuth2AuthProvider.class, ctx -> new RestOAuth2AuthProvider(oAuth2Auth));
         RestRouter.addProvider(RestMongoClientProvider.class, ctx -> new RestMongoClientProvider(mongoClient));
-        RestRouter.addProvider(RestMediaDirProvider.class, ctx -> new RestMediaDirProvider(mediaAbsoluteDir));
+        RestRouter.addProvider(RestMediaDirProvider.class,
+                               ctx -> new RestMediaDirProvider(mediaAbsoluteDir, httpFilesConfig.getDir()));
     }
 
     private void registerHttpScheme(HttpScheme scheme) {

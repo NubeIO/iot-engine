@@ -11,8 +11,8 @@ public class ResourceUtilsTest {
     @Test
     public void test_absPath() {
         new RegisterScheme().register(HttpScheme.HTTPS);
-        String absolutePath = ResourceUtils.buildAbsolutePath("localhost:8085", "xyz.jpeg");
-        Assert.assertEquals(absolutePath, "https://localhost:8085/xyz.jpeg");
+        String absolutePath = ResourceUtils.buildAbsolutePath("localhost:8085", "media", "xyz.jpeg");
+        Assert.assertEquals(absolutePath, "https://localhost:8085/media/xyz.jpeg");
     }
 
 }
