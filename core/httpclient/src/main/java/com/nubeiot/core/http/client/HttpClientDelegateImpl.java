@@ -25,7 +25,6 @@ import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
-import com.nubeiot.core.http.client.handler.ClientEndHandler;
 import com.nubeiot.core.http.client.handler.HttpClientWriter;
 import com.nubeiot.core.http.client.handler.HttpErrorHandler;
 import com.nubeiot.core.http.client.handler.HttpLightResponseHandler;
@@ -62,7 +61,8 @@ class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegat
                 logger.info("Send HTTP request {}::{}", req.method(), req.absoluteURI());
             }
             HttpClientWriter.create(cfg.getHttpClientWriterClass()).apply(req, reqData).end();
-        }).doFinally(new ClientEndHandler(hostInfo, false));
+        }).doOnSuccess(res -> HttpClientRegistry.getInstance().remove(hostInfo, false))
+          .doOnError(err -> HttpClientRegistry.getInstance().remove(hostInfo, false));
     }
 
     @Override

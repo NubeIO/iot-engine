@@ -133,7 +133,6 @@ public class HttpClientDelegateTest {
         final boolean await = latch.await(TestHelper.TEST_TIMEOUT_SEC * 2, TimeUnit.SECONDS);
         if (await) {
             TestHelper.testComplete(async);
-            Thread.sleep(100);
             context.assertNull(HttpClientRegistry.getInstance().getHttpRegistries().get(hostInfo));
             context.assertNull(HttpClientRegistry.getInstance().getHttpRegistries().get(host2));
             context.assertTrue(HttpClientRegistry.getInstance().getHttpRegistries().isEmpty());
