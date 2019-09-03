@@ -15,10 +15,10 @@ import com.nubeiot.core.http.HttpConfig;
 import com.nubeiot.core.http.HttpConfig.FileStorageConfig.DownloadConfig;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 import com.nubeiot.core.http.rest.provider.RestDownloadConfigProvider;
 import com.nubeiot.core.http.rest.provider.RestHttpConfigProvider;
 import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
+import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
@@ -75,7 +75,7 @@ public class DashboardServerVerticle extends ContainerVerticle {
         mongoClient = MongoClient.createNonShared(vertx, appConfig.getJsonObject("mongo"));
         oAuth2Auth = KeycloakAuth.create(vertx, OAuth2FlowType.PASSWORD, appConfig.getJsonObject("keycloak"));
 
-        RestRouter.addProvider(RestConfigProvider.class, ctx -> new RestConfigProvider(this.nubeConfig));
+        RestRouter.addProvider(RestNubeConfigProvider.class, ctx -> new RestNubeConfigProvider(this.nubeConfig));
         RestRouter.addProvider(RestOAuth2AuthProvider.class, ctx -> new RestOAuth2AuthProvider(oAuth2Auth));
         RestRouter.addProvider(RestMongoClientProvider.class, ctx -> new RestMongoClientProvider(mongoClient));
         RestRouter.addProvider(RestDownloadConfigProvider.class, ctx -> new RestDownloadConfigProvider(downloadConfig));

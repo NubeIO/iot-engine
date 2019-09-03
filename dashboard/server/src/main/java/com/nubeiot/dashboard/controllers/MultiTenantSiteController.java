@@ -41,8 +41,8 @@ import com.nubeiot.core.http.converter.RequestDataConverter;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
+import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.dashboard.DashboardServerConfig;
@@ -66,10 +66,9 @@ public class MultiTenantSiteController implements RestApi {
     @Path("/site")
     @RouteOrder(3)
     public Future<ResponseData> post(@Context RestMicroContextProvider microContextProvider,
-                                     @Context RoutingContext ctx,
-                                     @Context RestConfigProvider configProvider,
+                                     @Context RoutingContext ctx, @Context RestNubeConfigProvider configProvider,
                                      @Context RestMongoClientProvider mongoClient) {
-        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getConfig().getAppConfig(),
+        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getNubeConfig().getAppConfig(),
                                                                    DashboardServerConfig.class);
         return handlePostSite(microContextProvider.getMicroContext(), ctx, mongoClient.getMongoClient(),
                               dashboardServerConfig);
@@ -79,10 +78,9 @@ public class MultiTenantSiteController implements RestApi {
     @Path("/site")
     @RouteOrder(3)
     public Future<ResponseData> put(@Context RestMicroContextProvider microContextProvider,
-                                    @Context RoutingContext ctx,
-                                    @Context RestConfigProvider configProvider,
+                                    @Context RoutingContext ctx, @Context RestNubeConfigProvider configProvider,
                                     @Context RestMongoClientProvider mongoClient) {
-        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getConfig().getAppConfig(),
+        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getNubeConfig().getAppConfig(),
                                                                    DashboardServerConfig.class);
         return handlePutSite(microContextProvider.getMicroContext(), ctx, mongoClient.getMongoClient(),
                              dashboardServerConfig);
@@ -99,10 +97,9 @@ public class MultiTenantSiteController implements RestApi {
     @Path("/delete_sites")
     @RouteOrder(3)
     public Future<ResponseData> delete(@Context RestMicroContextProvider microContextProvider,
-                                       @Context RoutingContext ctx,
-                                       @Context RestConfigProvider configProvider,
+                                       @Context RoutingContext ctx, @Context RestNubeConfigProvider configProvider,
                                        @Context RestMongoClientProvider mongoClient) {
-        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getConfig().getAppConfig(),
+        DashboardServerConfig dashboardServerConfig = IConfig.from(configProvider.getNubeConfig().getAppConfig(),
                                                                    DashboardServerConfig.class);
         return handleDeleteSites(microContextProvider.getMicroContext(), ctx, mongoClient.getMongoClient(),
                                  dashboardServerConfig);

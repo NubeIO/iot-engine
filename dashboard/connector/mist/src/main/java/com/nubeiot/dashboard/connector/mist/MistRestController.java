@@ -26,7 +26,7 @@ import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 import com.nubeiot.core.utils.Strings;
 
 public class MistRestController implements RestApi {
@@ -36,15 +36,15 @@ public class MistRestController implements RestApi {
     @GET
     @Path("/v2/api/functions/*")
     public Future<ResponseData> getFunction(@Context Vertx vertx, @Context RoutingContext ctx,
-                                            @Context RestConfigProvider config) {
-        return mistRequestDispatcher(vertx, ctx, config.getConfig());
+                                            @Context RestNubeConfigProvider config) {
+        return mistRequestDispatcher(vertx, ctx, config.getNubeConfig());
     }
 
     @POST
     @Path("/v2/api/functions/*")
     public Future<ResponseData> postFunction(@Context Vertx vertx, @Context RoutingContext ctx,
-                                             @Context RestConfigProvider config) {
-        return mistRequestDispatcher(vertx, ctx, config.getConfig());
+                                             @Context RestNubeConfigProvider config) {
+        return mistRequestDispatcher(vertx, ctx, config.getNubeConfig());
     }
 
     private Future<ResponseData> mistRequestDispatcher(Vertx vertx, RoutingContext ctx, NubeConfig config) {

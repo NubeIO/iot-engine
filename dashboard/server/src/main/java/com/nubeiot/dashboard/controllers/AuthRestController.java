@@ -40,7 +40,7 @@ import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
@@ -63,7 +63,7 @@ public class AuthRestController implements RestApi {
     @Path("/refreshToken")
     @RouteOrder(1)
     public Future<ResponseData> refreshToken(@Context Vertx vertx, @Context RoutingContext ctx,
-                                             @Context RestConfigProvider configProvider) {
+                                             @Context RestNubeConfigProvider configProvider) {
         return handleRefreshToken(vertx, ctx, configProvider);
     }
 
@@ -79,7 +79,7 @@ public class AuthRestController implements RestApi {
     @Path("/logout")
     @RouteOrder(3)
     public Future<ResponseData> redirectLogout(@Context Vertx vertx, @Context RoutingContext ctx,
-                                               @Context RestConfigProvider configProvider) {
+                                               @Context RestNubeConfigProvider configProvider) {
         return redirectLogoutHandler(vertx, ctx, configProvider);
     }
 
@@ -129,13 +129,13 @@ public class AuthRestController implements RestApi {
     }
 
     private Future<ResponseData> redirectLogoutHandler(Vertx vertx, RoutingContext ctx,
-                                                       RestConfigProvider configProvider) {
+                                                       RestNubeConfigProvider configProvider) {
         Future<ResponseData> future = Future.future();
         JsonObject body = ctx.getBodyAsJson();
         User user = ctx.user();
         String access_token = user.principal().getString("access_token");
         String refresh_token = body.getString("refresh_token");
-        JsonObject keycloakConfig = configProvider.getConfig().getAppConfig().toJson().getJsonObject("keycloak");
+        JsonObject keycloakConfig = configProvider.getNubeConfig().getAppConfig().toJson().getJsonObject("keycloak");
         String client_id = keycloakConfig.getString("resource");
         String client_secret = keycloakConfig.getJsonObject("credentials").getString("secret");
         String realmName = keycloakConfig.getString("realm");
@@ -242,14 +242,14 @@ public class AuthRestController implements RestApi {
     }
 
     private Future<ResponseData> handleRefreshToken(Vertx vertx, RoutingContext ctx,
-                                                    RestConfigProvider configProvider) {
+                                                    RestNubeConfigProvider configProvider) {
         Future<ResponseData> future = Future.future();
         ResponseData responseData = new ResponseData();
 
         JsonObject body = ctx.getBodyAsJson();
         String refresh_token = body.getString("refresh_token");
         String access_token = ctx.request().getHeader("Authorization"); // Bearer {{token}}
-        JsonObject keycloakConfig = configProvider.getConfig().getAppConfig().toJson().getJsonObject("keycloak");
+        JsonObject keycloakConfig = configProvider.getNubeConfig().getAppConfig().toJson().getJsonObject("keycloak");
         String client_id = keycloakConfig.getString("resource");
         String client_secret = keycloakConfig.getJsonObject("credentials").getString("secret");
         String realmName = keycloakConfig.getString("realm");

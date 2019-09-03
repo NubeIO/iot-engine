@@ -8,7 +8,7 @@ import com.nubeiot.core.http.HttpServerContext;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.ServerInfo;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.zandero.rest.RestRouter;
@@ -34,7 +34,7 @@ public class PostgreSqlVerticle extends ContainerVerticle {
                         .subscribe();
         });
 
-        RestRouter.addProvider(RestConfigProvider.class, ctx -> new RestConfigProvider(this.nubeConfig));
+        RestRouter.addProvider(RestNubeConfigProvider.class, ctx -> new RestNubeConfigProvider(this.nubeConfig));
     }
 
 }

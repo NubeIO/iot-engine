@@ -27,7 +27,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 import com.nubeiot.core.utils.Strings;
 
 public class PostgreSqlRestController implements RestApi {
@@ -47,8 +47,8 @@ public class PostgreSqlRestController implements RestApi {
     @POST
     @Path("/engine")
     public Future<ResponseData> engine(@Context io.vertx.core.Vertx vertx, @Context RoutingContext ctx,
-                                       @Context RestConfigProvider config) {
-        PostgreSqlConfig pgConfig = IConfig.from(config.getConfig().getAppConfig(), PostgreSqlConfig.class);
+                                       @Context RestNubeConfigProvider config) {
+        PostgreSqlConfig pgConfig = IConfig.from(config.getNubeConfig().getAppConfig(), PostgreSqlConfig.class);
         return postgreSqlQuery(new Vertx(vertx), pgConfig, ctx);
     }
 

@@ -23,7 +23,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 
 public class ZeppelinRestController implements RestApi {
 
@@ -41,9 +41,9 @@ public class ZeppelinRestController implements RestApi {
     @POST
     @Path("/api/*")
     public Future<ResponseData> engine(@Context io.vertx.core.Vertx vertx, @Context RoutingContext ctx,
-                                       @Context RestConfigProvider config) {
+                                       @Context RestNubeConfigProvider config) {
 
-        ZeppelinConfig zeppelinConfig = IConfig.from(config.getConfig().getAppConfig(), ZeppelinConfig.class);
+        ZeppelinConfig zeppelinConfig = IConfig.from(config.getNubeConfig().getAppConfig(), ZeppelinConfig.class);
         return dispatchRequests(new Vertx(vertx), zeppelinConfig, ctx);
     }
 
