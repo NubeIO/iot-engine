@@ -1,5 +1,7 @@
 package com.nubeiot.core.sql.query;
 
+import java.util.function.Predicate;
+
 import io.github.jklingsporn.vertx.jooq.rx.RXQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.jdbc.JDBCQueryExecutor;
 import io.reactivex.Single;
@@ -44,5 +46,7 @@ public interface ComplexQueryExecutor<CP extends CompositePojo>
      * @return a reference to this, so the API can be used fluently
      */
     ComplexQueryExecutor context(@NonNull EntityMetadata contextMetadata);
+
+    ComplexQueryExecutor viewPredicate(@NonNull Predicate<EntityMetadata> predicate);
 
 }

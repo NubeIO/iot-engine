@@ -1,5 +1,8 @@
 package com.nubeiot.edge.module.scheduler;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.jooq.Configuration;
 
 import io.reactivex.Single;
@@ -8,6 +11,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.JobConverter;
@@ -64,7 +69,8 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
                                                                  .build();
     public static final TriggerModel TRIGGER_2 = CronTriggerModel.builder()
                                                                  .group("group1")
-                                                                 .name("trigger2").expr("1 1 1 ? * MON *")
+                                                                 .name("trigger2")
+                                                                 .expr("1 1 1 ? * MON *")
                                                                  .tz("Australia/Sydney")
                                                                  .build();
     public static final TriggerModel TRIGGER_3 = PeriodicTriggerModel.builder()
@@ -73,6 +79,12 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
                                                                      .intervalInSeconds(120)
                                                                      .repeat(10)
                                                                      .build();
+    public static final TriggerModel TRIGGER_4 = CronTriggerModel.builder()
+                                                                 .group("group2")
+                                                                 .name("trigger4")
+                                                                 .expr("0 0 0 ? * TUE *")
+                                                                 .tz("Australia/Sydney")
+                                                                 .build();
 
     public MockSchedulerEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         super(jooqConfig, vertx);
@@ -80,6 +92,7 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
 
     @Override
     public Single<EventMessage> initData() {
+        eventClient().register("scheduler.1", new MockSchedulerListener());
         final JobEntityDao jobDao = dao(JobEntityDao.class);
         final TriggerEntityDao triggerDao = dao(TriggerEntityDao.class);
         final JobTriggerDao jobTriggerDao = dao(JobTriggerDao.class);
@@ -87,10 +100,25 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
                                   jobDao.insert(JobConverter.convert(JOB_3).setId(2)),
                                   triggerDao.insert(TriggerConverter.convert(TRIGGER_1).setId(1)),
                                   triggerDao.insert(TriggerConverter.convert(TRIGGER_3).setId(2)),
+                                  triggerDao.insert(TriggerConverter.convert(TRIGGER_4).setId(4)),
                                   jobTriggerDao.insert(new JobTrigger().setJobId(1).setTriggerId(1)),
                                   jobTriggerDao.insert(new JobTrigger().setJobId(1).setTriggerId(2).setEnabled(false)))
                      .reduce(0, Integer::sum)
                      .map(r -> EventMessage.success(EventAction.INIT, new JsonObject().put("records", r)));
+    }
+
+    public static class MockSchedulerListener implements EventListener {
+
+        @Override
+        public @NonNull Collection<EventAction> getAvailableEvents() {
+            return Collections.singleton(EVENT_1.getAction());
+        }
+
+        @EventContractor(action = EventAction.CREATE)
+        public JsonObject create() {
+            return new JsonObject();
+        }
+
     }
 
 }

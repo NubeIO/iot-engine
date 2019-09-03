@@ -34,6 +34,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void start() {
         super.start();
         this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass),
@@ -53,6 +54,8 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
                   .flatMap(s -> Observable.fromIterable(s.definitions())
                                           .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e)))
                   .subscribe();
+        //TODO Need to merge with above
+        entityHandler.register(schedulerCtx).subscribe();
     }
 
 }

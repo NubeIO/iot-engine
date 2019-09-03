@@ -53,8 +53,9 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(RequestData requestData) {
         RequestData reqData = onReadingManyResource(requestData);
-        return doGetMany(reqData).map(m -> transformer().afterEachList(m, reqData))
-                                 .collect(JsonArray::new, JsonArray::add).map(transformer()::wrapListData);
+        return doGetMany(reqData).flatMapSingle(m -> transformer().afterEachList(m, reqData))
+                                 .collect(JsonArray::new, JsonArray::add)
+                                 .map(transformer()::wrapListData);
     }
 
     /**
@@ -63,7 +64,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> get(RequestData requestData) {
         RequestData reqData = onReadingOneResource(requestData);
-        return doGetOne(reqData).map(pojo -> transformer().afterGet(pojo, reqData));
+        return doGetOne(reqData).flatMap(pojo -> transformer().afterGet(pojo, reqData));
     }
 
     /**
@@ -72,10 +73,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData requestData) {
         RequestData reqData = onCreatingOneResource(requestData);
-        return doInsert(reqData).flatMap(pk -> lookupByKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
+        return doInsert(reqData).flatMap(pk -> doLookupByPrimaryKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
                                 .doOnSuccess(j -> asyncPostService().onSuccess(this, EventAction.CREATE, j.getValue()))
                                 .doOnError(t -> asyncPostService().onError(this, EventAction.CREATE, t))
-                                .map(resp -> transformer().afterCreate(resp.getKey(), resp.getValue(), reqData));
+                                .flatMap(resp -> transformer().afterCreate(resp.getKey(), resp.getValue(), reqData));
     }
 
     /**
@@ -84,10 +85,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData requestData) {
         RequestData reqData = onModifyingOneResource(requestData);
-        return doUpdate(reqData).flatMap(pk -> lookupByKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
+        return doUpdate(reqData).flatMap(pk -> doLookupByPrimaryKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
                                 .doOnSuccess(j -> asyncPostService().onSuccess(this, EventAction.UPDATE, j.getValue()))
                                 .doOnError(t -> asyncPostService().onError(this, EventAction.UPDATE, t))
-                                .map(resp -> transformer().afterUpdate(resp.getKey(), resp.getValue(), reqData));
+                                .flatMap(resp -> transformer().afterUpdate(resp.getKey(), resp.getValue(), reqData));
     }
 
     /**
@@ -96,10 +97,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData requestData) {
         RequestData reqData = onModifyingOneResource(requestData);
-        return doPatch(reqData).flatMap(pk -> lookupByKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
+        return doPatch(reqData).flatMap(pk -> doLookupByPrimaryKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
                                .doOnSuccess(j -> asyncPostService().onSuccess(this, EventAction.PATCH, j.getValue()))
                                .doOnError(t -> asyncPostService().onError(this, EventAction.PATCH, t))
-                               .map(resp -> transformer().afterPatch(resp.getKey(), resp.getValue(), reqData));
+                               .flatMap(resp -> transformer().afterPatch(resp.getKey(), resp.getValue(), reqData));
     }
 
     /**
@@ -110,7 +111,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         RequestData reqData = onModifyingOneResource(requestData);
         return doDelete(reqData).doOnSuccess(p -> asyncPostService().onSuccess(this, EventAction.REMOVE, p))
                                 .doOnError(t -> asyncPostService().onError(this, EventAction.REMOVE, t))
-                                .map(p -> transformer().afterDelete(p, reqData));
+                                .flatMap(p -> transformer().afterDelete(p, reqData));
     }
 
     @Override
@@ -124,6 +125,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
 
     protected Single<? extends VertxPojo> doGetOne(RequestData reqData) {
         return queryExecutor().findOneByKey(reqData);
+    }
+
+    protected Single<? extends VertxPojo> doLookupByPrimaryKey(@NonNull Object key) {
+        return queryExecutor().lookupByPrimaryKey(key);
     }
 
     @SuppressWarnings("unchecked")

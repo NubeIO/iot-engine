@@ -1,8 +1,10 @@
 package com.nubeiot.edge.module.scheduler;
 
 import java.util.UUID;
+import java.util.function.Function;
 
 import org.junit.BeforeClass;
+import org.skyscreamer.jsonassert.Customization;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.DeploymentOptions;
@@ -22,6 +24,11 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
 public abstract class EdgeSchedulerVerticleTest extends DynamicServiceTestBase {
+
+    static final Function<String, Customization> UTC_DATE = timeKey -> new Customization(timeKey + ".utc",
+                                                                                         (o1, o2) -> true);
+    static final Function<String, Customization> LOCAL_DATE = timeKey -> new Customization(timeKey + ".local",
+                                                                                           (o1, o2) -> true);
 
     @BeforeClass
     public static void beforeSuite() {

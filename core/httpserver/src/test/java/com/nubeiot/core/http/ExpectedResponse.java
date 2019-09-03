@@ -69,7 +69,7 @@ public class ExpectedResponse {
 
     public static class Builder {
 
-        Builder customizations(Customization... customizations) {
+        public Builder customizations(Customization... customizations) {
             this.customizations = Arrays.asList(customizations);
             return this;
         }

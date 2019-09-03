@@ -29,12 +29,12 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@Getter(value = AccessLevel.PACKAGE)
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @SuppressWarnings("unchecked")
-abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements EntityQueryExecutor<P> {
+abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQueryExecutor<P> {
 
     private final EntityHandler handler;
+    @Getter(value = AccessLevel.PUBLIC)
     private final EntityMetadata metadata;
 
     @Override
@@ -53,14 +53,8 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements EntityQueryE
         final Function<DSLContext, ? extends ResultQuery<? extends Record>> query = queryBuilder().view(
             reqData.getFilter(), reqData.getSort(), paging);
         return ((Single<List<P>>) entityHandler().dao(metadata.daoClass())
-                                                 .queryExecutor().findMany(query)).flattenAsObservable(rs -> rs);
-    }
-
-    @Override
-    public Single<P> lookupByPrimaryKey(@NonNull Object primaryKey) {
-        final Single<Optional<P>> oneById = (Single<Optional<P>>) handler.dao(metadata.daoClass())
-                                                                         .findOneById(primaryKey);
-        return oneById.flatMap(o -> o.map(Single::just).orElse(Single.error(metadata.notFound(primaryKey))));
+                                                 .queryExecutor()
+                                                 .findMany(query)).flattenAsObservable(rs -> rs);
     }
 
     @Override

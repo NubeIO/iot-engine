@@ -5,13 +5,12 @@ import java.util.Collection;
 import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.decorator.EntityTransformer;
-import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
@@ -38,15 +37,12 @@ public final class DeviceService extends AbstractEntityService<Device, DeviceMet
     }
 
     @Override
-    public @NonNull JsonObject afterPatch(Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
+    public Single<JsonObject> afterPatch(Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
         final JsonObject syncConfig = Optional.ofNullable(((Device) pojo).getMetadata())
                                               .map(info -> info.getJsonObject(DataSyncConfig.NAME, new JsonObject()))
                                               .orElse(new JsonObject());
         entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG, syncConfig);
-        return enableFullResourceInCUDResponse()
-               ? EntityTransformer.fullResponse(EventAction.PATCH, JsonPojo.from(pojo)
-                                                                           .toJson(ignoreFields(reqData)))
-               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
+        return super.afterPatch(key, pojo, reqData);
     }
 
     public interface DeviceExtension extends HasReferenceResource {

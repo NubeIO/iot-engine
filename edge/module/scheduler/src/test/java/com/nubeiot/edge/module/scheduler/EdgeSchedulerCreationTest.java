@@ -27,7 +27,7 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
         System.out.println(body);
         final RequestData reqData = RequestData.builder().body(body).build();
         final JsonObject expected = new JsonObject(
-            "{\"action\":\"CREATE\",\"resource\":{\"id\":3,\"group\":\"group1\",\"name\":\"trigger2\"," +
+            "{\"action\":\"CREATE\",\"resource\":{\"id\":5,\"group\":\"group1\",\"name\":\"trigger2\"," +
             "\"type\":\"CRON\",\"detail\":{\"expression\":\"1 1 1 ? * MON *\",\"timezone\":\"Australia/Sydney\"}," +
             "\"thread\":\"1 1 1 ? * MON *::Australia/Sydney\"},\"status\":\"SUCCESS\"}");
         assertRestByClient(context, HttpMethod.POST, "/api/s/trigger", reqData, 201, expected);
@@ -122,9 +122,21 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
             final JobTrigger composite = new JobTrigger().setEnabled(true).setJobId(jobId);
             final RequestData reqData = RequestData.builder().body(JsonPojo.from(composite).toJson()).build();
             JsonObject expected = new JsonObject(
-                "{\"action\":\"CREATE\",\"resource\":{\"id\":3,\"enabled\":true},\"status\":\"SUCCESS\"}");
-            assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/1/job", reqData,
-                               ExpectedResponse.builder().expected(expected).code(201).build());
+                "{\"action\":\"CREATE\",\"resource\":{\"id\":3,\"enabled\":true,\"trigger\":{\"id\":4," +
+                "\"group\":\"group2\",\"name\":\"trigger4\",\"type\":\"CRON\",\"detail\":{\"expression\":\"0 0 0 ? * " +
+                "TUE *\",\"timezone\":\"Australia/Sydney\"},\"thread\":\"0 0 0 ? * TUE *::Australia/Sydney\"}," +
+                "\"job\":{\"id\":3,\"group\":\"group1\",\"name\":\"job2\",\"type\":\"EVENT_JOB\"," +
+                "\"forward_if_failure\":true,\"detail\":{\"process\":{\"address\":\"scheduler.1\"," +
+                "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"CREATE\"},\"callback\":{\"address\":\"scheduler.2\"," +
+                "\"pattern\":\"POINT_2_POINT\",\"action\":\"PUBLISH\"}}}," +
+                "\"first_fire_time\":{\"local\":\"\",\"utc\":\"\"}},\"status\":\"SUCCESS\"}");
+            final ExpectedResponse resp = ExpectedResponse.builder()
+                                                          .expected(expected)
+                                                          .code(201)
+                                                          .customizations(UTC_DATE.apply("resource.first_fire_time"),
+                                                                          LOCAL_DATE.apply("resource.first_fire_time"))
+                                                          .build();
+            assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/4/job", reqData, resp);
         };
         final JsonObject expected = new JsonObject(
             "{\"action\":\"CREATE\",\"resource\":{\"id\":3,\"group\":\"group1\",\"name\":\"job2\"," +
@@ -138,12 +150,25 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
     @Test
     public void test_create_job_by_trigger(TestContext context) {
         final JsonObject expected = new JsonObject(
-            "{\"action\":\"CREATE\",\"resource\":{\"id\":3,\"enabled\":true},\"status\":\"SUCCESS\"}");
+            "{\"action\":\"CREATE\",\"resource\":{\"id\":3,\"enabled\":true,\"trigger\":{\"id\":4,\"group\":" +
+            "\"group2\",\"name\":\"trigger4\",\"type\":\"CRON\",\"detail\":{\"expression\":\"0 0 0 ? * TUE *\"," +
+            "\"timezone\":\"Australia/Sydney\"},\"thread\":\"0 0 0 ? * TUE *::Australia/Sydney\"}," +
+            "\"job\":{\"id\":3,\"group\":\"group1\",\"name\":\"job2\",\"type\":\"EVENT_JOB\"," +
+            "\"forward_if_failure\":true,\"detail\":{\"process\":{\"address\":\"scheduler.1\"," +
+            "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"CREATE\"},\"callback\":{\"address\":\"scheduler.2\"," +
+            "\"pattern\":\"POINT_2_POINT\",\"action\":\"PUBLISH\"}}},\"first_fire_time\":{\"local\":\"\"," +
+            "\"utc\":\"\"}},\"status\":\"SUCCESS\"}");
         final JsonObject job = MockSchedulerEntityHandler.JOB_2.toJson();
         final JsonObject body = JsonPojo.from(new JobTriggerComposite().setEnabled(true)).toJson().put("job", job);
         final RequestData reqData = RequestData.builder().body(body).build();
-        assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/1/job", reqData,
-                           ExpectedResponse.builder().expected(expected).code(201).build());
+        final ExpectedResponse expectedResp = ExpectedResponse.builder()
+                                                              .expected(expected)
+                                                              .code(201)
+                                                              .customizations(
+                                                                  UTC_DATE.apply("resource.first_fire_time"),
+                                                                  LOCAL_DATE.apply("resource.first_fire_time"))
+                                                              .build();
+        assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/4/job", reqData, expectedResp);
     }
 
     @Test

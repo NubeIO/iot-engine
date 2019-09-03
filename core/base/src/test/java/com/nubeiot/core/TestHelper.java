@@ -247,6 +247,7 @@ public interface TestHelper {
                                JSONCompareMode mode) {
             try {
                 JSONAssert.assertEquals(expected.encode(), actual.encode(), mode);
+                System.out.println("Actual: " + actual.encode());
             } catch (JSONException | AssertionError e) {
                 System.out.println("Actual: " + actual.encode());
                 System.out.println("Expected: " + expected.encode());

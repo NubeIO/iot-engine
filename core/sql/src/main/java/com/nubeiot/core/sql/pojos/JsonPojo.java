@@ -29,8 +29,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JsonPojo<T extends VertxPojo> implements JsonData {
 
+    public static final ObjectMapper MAPPER = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
     private static final Logger LOGGER = LoggerFactory.getLogger(JsonPojo.class);
-    private static final ObjectMapper MAPPER = JsonData.MAPPER.copy().setSerializationInclusion(Include.NON_NULL);
     @Getter
     @JsonIgnore
     private final T pojo;

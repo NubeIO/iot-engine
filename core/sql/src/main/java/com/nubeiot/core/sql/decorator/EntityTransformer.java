@@ -4,7 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -92,8 +93,8 @@ public interface EntityTransformer {
      * @apiNote By default, result omits {@code null} fields
      */
     @NonNull
-    default JsonObject afterEachList(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return afterGet(pojo, requestData);
+    default Single<JsonObject> afterEachList(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return Single.just(JsonPojo.from(pojo).toJson(ignoreFields(requestData)));
     }
 
     /**
@@ -116,91 +117,88 @@ public interface EntityTransformer {
      * @apiNote By default, result omits {@code null} fields
      */
     @NonNull
-    default JsonObject afterGet(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return JsonPojo.from(pojo).toJson(ignoreFields(requestData));
+    default Single<JsonObject> afterGet(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return Single.just(JsonPojo.from(pojo).toJson(ignoreFields(requestData)));
     }
 
     /**
      * Do any transform resource after {@code CREATE} action successfully if {@link #enableFullResourceInCUDResponse()}
      * is {@code true}
      *
-     * @param key         pojo key
-     * @param pojo        item
-     * @param requestData request data
+     * @param key     pojo key
+     * @param pojo    item
+     * @param reqData request data
      * @return transformer item
      * @apiNote By default, result doesn't omits {@code null} fields
      */
     @NonNull
-    default JsonObject afterCreate(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return enableFullResourceInCUDResponse()
-               ? fullResponse(EventAction.CREATE, JsonPojo.from(pojo)
-                                                          .toJson(JsonData.MAPPER, ignoreFields(requestData)))
-               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
+    default Single<JsonObject> afterCreate(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
+        return Single.just(doTransform(EventAction.CREATE, key, pojo, reqData,
+                                       (p, r) -> JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(reqData))));
     }
 
     /**
      * Do any transform resource after {@code UPDATE} action successfully if {@link #enableFullResourceInCUDResponse()}
      * is {@code true}
      *
-     * @param key         pojo key
-     * @param pojo        item
-     * @param requestData request data
+     * @param key     pojo key
+     * @param pojo    item
+     * @param reqData request data
      * @return transformer item
      * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
      */
-    @NonNull
-    default JsonObject afterUpdate(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return enableFullResourceInCUDResponse()
-               ? fullResponse(EventAction.UPDATE, JsonPojo.from(pojo).toJson(ignoreFields(requestData)))
-               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
+    default @NonNull Single<JsonObject> afterUpdate(@NonNull Object key, @NonNull VertxPojo pojo,
+                                                    @NonNull RequestData reqData) {
+        return Single.just(doTransform(EventAction.UPDATE, key, pojo, reqData,
+                                       (p, r) -> JsonPojo.from(pojo).toJson(JsonPojo.MAPPER, ignoreFields(reqData))));
     }
 
     /**
      * Do any transform resource after {@code PATCH} action successfully if {@link #enableFullResourceInCUDResponse()}
      * is {@code true}
      *
-     * @param key         pojo key
-     * @param pojo        item
-     * @param requestData request data
+     * @param key     pojo key
+     * @param pojo    item
+     * @param reqData request data
      * @return transformer item
      * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
      */
     @NonNull
-    default JsonObject afterPatch(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return enableFullResourceInCUDResponse()
-               ? fullResponse(EventAction.PATCH, JsonPojo.from(pojo).toJson(ignoreFields(requestData)))
-               : EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key);
+    default Single<JsonObject> afterPatch(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
+        return Single.just(doTransform(EventAction.PATCH, key, pojo, reqData,
+                                       (p, r) -> JsonPojo.from(pojo).toJson(JsonPojo.MAPPER, ignoreFields(reqData))));
     }
 
     /**
      * Do any transform resource after {@code DELETE} action successfully if {@link #enableFullResourceInCUDResponse()}
      * is {@code true}
      *
-     * @param pojo        item
-     * @param requestData request data
+     * @param pojo    item
+     * @param reqData request data
      * @return transformer item
      * @apiNote By default, result doesn't omits {@code null} fields
      */
     @NonNull
-    default JsonObject afterDelete(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return enableFullResourceInCUDResponse()
-               ? fullResponse(EventAction.REMOVE, JsonPojo.from(pojo)
-                                                          .toJson(JsonData.MAPPER, ignoreFields(requestData)))
-               : new JsonObject();
+    default Single<JsonObject> afterDelete(@NonNull VertxPojo pojo, @NonNull RequestData reqData) {
+        return Single.just(doTransform(EventAction.REMOVE, pojo, reqData,
+                                       (p, r) -> JsonPojo.from(p).toJson(JsonData.MAPPER, ignoreFields(reqData)),
+                                       JsonObject::new));
     }
 
-    /**
-     * Construct {@code CUD Response}
-     *
-     * @param key      Primary key
-     * @param provider Response provider function
-     * @return single json
-     */
-    default Single<JsonObject> cudResponse(@NonNull String keyName, @NonNull Object key,
-                                           @NonNull Function<Object, Single<JsonObject>> provider) {
-        return enableFullResourceInCUDResponse()
-               ? provider.apply(key)
-               : Single.just(EntityTransformer.keyResponse(keyName, key));
+    default JsonObject doTransform(EventAction action, Object key, VertxPojo pojo, RequestData reqData,
+                                   BiFunction<VertxPojo, RequestData, JsonObject> converter) {
+        return doTransform(action, pojo, reqData, converter,
+                           () -> keyResponse(resourceMetadata().requestKeyName(), key));
+    }
+
+    default JsonObject doTransform(EventAction action, VertxPojo pojo, RequestData reqData,
+                                   BiFunction<VertxPojo, RequestData, JsonObject> converter,
+                                   Supplier<JsonObject> ifNotFull) {
+        if (enableFullResourceInCUDResponse()) {
+            return fullResponse(action, converter.apply(pojo, reqData));
+        } else {
+            return ifNotFull.get();
+        }
     }
 
 }

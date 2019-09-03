@@ -66,7 +66,7 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     }
 
     @Override
-    public Single<? extends VertxPojo> lookupByKey(@NonNull Object key) {
+    public Single<? extends VertxPojo> doLookupByPrimaryKey(@NonNull Object key) {
         return groupQuery().lookupByPrimaryKey(key);
     }
 

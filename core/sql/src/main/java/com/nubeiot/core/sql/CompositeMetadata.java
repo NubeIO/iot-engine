@@ -72,10 +72,6 @@ public interface CompositeMetadata<K, P extends VertxPojo, R extends UpdatableRe
         return CompositeValidation.super.onCreating(reqData);
     }
 
-    default @NonNull C convert(@NonNull P pojo) {
-        return CompositePojo.create(pojo, rawClass(), modelClass());
-    }
-
     default <REC extends Record> RecordMapper<REC, C> mapper() {
         return mapper(subItems().toArray(new EntityMetadata[] {}));
     }
