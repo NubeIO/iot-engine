@@ -35,8 +35,10 @@ import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.utils.Functions;
+import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.edge.model.Keys;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
@@ -82,9 +84,18 @@ class DataPointEntityHandler extends AbstractEntityHandler
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Single<EventMessage> initDataFromConfig(EventAction action) {
         Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
-        JsonObject data = initBuiltinData();
+        JsonObject cfgData = configData();
+        final Device device = initDevice(cfgData);
+        sharedData(DEVICE_ID, device.getId().toString());
+        sharedData(CUSTOMER_CODE, device.getCustomerCode());
+        sharedData(SITE_CODE, device.getSiteCode());
+        sharedData(NETWORK_ID, UUID64.random());
+        final JsonObject data = cfgData.put(DeviceMetadata.INSTANCE.singularKeyName(), device.toJson())
+                                       .put(NetworkMetadata.INSTANCE.singularKeyName(),
+                                            initNetwork(cfgData, device.getId()));
         return Single.merge(index().stream()
                                    .filter(meta -> !(meta instanceof CompositeMetadata) &&
                                                    data.containsKey(meta.singularKeyName()))
@@ -93,20 +104,15 @@ class DataPointEntityHandler extends AbstractEntityHandler
                                    .collect(Collectors.toList()))
                      .buffer(5)
                      .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
-                     .map(r -> EventMessage.success(action, new JsonObject().put("records", r)));
+                     .flatMap(r -> SyncServiceFactory.getInitialSync(this, sharedData(DATA_SYNC_CFG))
+                                                     .sync(device)
+                                                     .map(sync -> msg(action, r, sync))
+                                                     .switchIfEmpty(Single.just(msg(action, r, null))));
     }
 
-    private JsonObject initBuiltinData() {
+    private JsonObject configData() {
         JsonObject data = SharedDataDelegate.removeLocalDataValue(vertx(), getSharedKey(), BUILTIN_DATA);
-        data = Optional.ofNullable(data).orElseGet(JsonObject::new);
-        final Device device = initDevice(data);
-        final UUID networkId = UUID.randomUUID();
-        sharedData(DEVICE_ID, device.getId().toString());
-        sharedData(CUSTOMER_CODE, device.getCustomerCode());
-        sharedData(SITE_CODE, device.getSiteCode());
-        sharedData(NETWORK_ID, networkId.toString());
-        return data.put(DeviceMetadata.INSTANCE.singularKeyName(), device.toJson())
-                   .put(NetworkMetadata.INSTANCE.singularKeyName(), initNetwork(data, device.getId(), networkId));
+        return Optional.ofNullable(data).orElseGet(JsonObject::new);
     }
 
     private Device initDevice(JsonObject builtinData) {
@@ -122,7 +128,8 @@ class DataPointEntityHandler extends AbstractEntityHandler
         return device.setMetadata(m.mergeIn(Optional.ofNullable(device.getMetadata()).orElse(new JsonObject()), true));
     }
 
-    private JsonArray initNetwork(@NonNull JsonObject builtinData, @NonNull UUID deviceId, @NonNull UUID networkId) {
+    private JsonArray initNetwork(@NonNull JsonObject builtinData, @NonNull UUID deviceId) {
+        final UUID networkId = UUID64.uuid64ToUuid(sharedData(NETWORK_ID));
         final Object value = builtinData.getValue(NetworkMetadata.INSTANCE.singularKeyName());
         final JsonObject defaultNetwork = new Network().setId(networkId)
                                                        .setCode("DEFAULT")
@@ -184,6 +191,10 @@ class DataPointEntityHandler extends AbstractEntityHandler
 
     private Consumer<Integer> initLog(@NonNull Class<? extends VertxPojo> pojoClass) {
         return r -> logger.info("Inserted {} record(s) in {}", r, pojoClass.getSimpleName());
+    }
+
+    private EventMessage msg(EventAction action, Integer r, Object sync) {
+        return EventMessage.success(action, new JsonObject().put("records", r).put("synced", sync));
     }
 
 }

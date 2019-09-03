@@ -14,7 +14,7 @@ public final class DittoPointData extends AbstractDittoModel<IPointValueData> {
 
     @Override
     String endpointPattern() {
-        return "/things/{0}/features/points/properties/" + get().getPoint() + "/data/properties";
+        return "/things/{0}/features/points/properties/" + get().getPoint() + "/data";
     }
 
 }

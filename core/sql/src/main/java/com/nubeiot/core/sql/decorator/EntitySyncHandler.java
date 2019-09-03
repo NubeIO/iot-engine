@@ -85,8 +85,8 @@ public interface EntitySyncHandler extends EntityHandler {
         if (!(pojo instanceof HasSyncAudit)) {
             return Maybe.empty();
         }
-        final SyncAudit syncAudit = SyncAudit.error(((HasSyncAudit) pojo).getSyncAudit(),
-                                                    ErrorMessage.parse(t).toJson(), by);
+        final SyncAudit audit = Optional.ofNullable(((HasSyncAudit) pojo).getSyncAudit()).orElse(SyncAudit.unknown());
+        final SyncAudit syncAudit = SyncAudit.error(audit, ErrorMessage.parse(t).toJson(), by);
         return updateSyncedStatus(metadata, pojo, syncAudit);
     }
 

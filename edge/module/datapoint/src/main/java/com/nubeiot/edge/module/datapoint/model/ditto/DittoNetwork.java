@@ -14,7 +14,7 @@ public final class DittoNetwork extends AbstractDittoModel<INetwork> {
 
     @Override
     String endpointPattern() {
-        return "/things/{0}/features/networks/properties";
+        return "/things/{0}/features/networks/properties" + get().getId();
     }
 
 }

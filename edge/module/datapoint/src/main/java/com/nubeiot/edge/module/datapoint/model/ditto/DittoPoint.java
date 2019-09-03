@@ -27,7 +27,7 @@ public final class DittoPoint extends AbstractDittoModel<PointComposite> {
 
     @Override
     String endpointPattern() {
-        return "/things/{0}/features/points/properties/" + get().getCode();
+        return "/things/{0}/features/points/properties/" + get().getId();
     }
 
     @Override

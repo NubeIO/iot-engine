@@ -1,9 +1,11 @@
 package com.nubeiot.edge.module.datapoint;
 
 import java.util.UUID;
+import java.util.function.Function;
 
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
+import org.skyscreamer.jsonassert.Customization;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.DeploymentOptions;
@@ -23,6 +25,9 @@ import ch.qos.logback.classic.Logger;
 
 @RunWith(VertxUnitRunner.class)
 public abstract class BaseDataPointVerticleTest extends DynamicServiceTestBase {
+
+    protected static final Function<String, Customization> IGNORE = path -> Customization.customization(path,
+                                                                                                        (o1, o2) -> true);
 
     @BeforeClass
     public static void beforeSuite() {

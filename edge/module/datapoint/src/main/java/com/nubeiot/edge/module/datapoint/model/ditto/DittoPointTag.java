@@ -14,7 +14,7 @@ public final class DittoPointTag extends AbstractDittoModel<IPointTag> {
 
     @Override
     String endpointPattern() {
-        return "/things/{0}/features/points/properties/" + get().getPoint() + "/tags/properties";
+        return "/things/{0}/features/points/properties/" + get().getPoint() + "/tags";
     }
 
 }

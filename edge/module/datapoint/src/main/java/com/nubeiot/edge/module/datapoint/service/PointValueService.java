@@ -2,15 +2,21 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.http.base.event.ActionMethodMapping;
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
 import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointValueMetadata;
@@ -38,11 +44,6 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     }
 
     @Override
-    public @NonNull ReferenceQueryExecutor<PointValueData> queryExecutor() {
-        return super.queryExecutor();
-    }
-
-    @Override
     public @NonNull EntityPostService asyncPostService() {
         return new PointValueSyncService(DataPointService.super.asyncPostService());
     }
@@ -67,6 +68,16 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
                           .sort(reqData.getSort())
                           .pagination(reqData.getPagination())
                           .build();
+    }
+
+    @Override
+    public Set<EventMethodDefinition> definitions() {
+        Map<EventAction, HttpMethod> crud = ActionMethodMapping.CRUD_MAP.get();
+        ActionMethodMapping map = ActionMethodMapping.create(
+            getAvailableEvents().stream().filter(crud::containsKey).collect(Collectors.toMap(e -> e, crud::get)));
+        return Stream.concat(DataPointService.super.definitions().stream(),
+                             Stream.of(EventMethodDefinition.create("/point/:point_id/data", map)))
+                     .collect(Collectors.toSet());
     }
 
 }

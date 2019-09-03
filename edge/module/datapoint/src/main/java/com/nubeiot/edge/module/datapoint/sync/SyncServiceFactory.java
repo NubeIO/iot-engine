@@ -6,6 +6,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
+import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 
@@ -20,11 +21,23 @@ public final class SyncServiceFactory {
         if (!sync.isEnabled()) {
             return EntityPostService.EMPTY;
         }
-        if (DittoHttpSync.TYPE.equalsIgnoreCase(sync.getType())) {
+        if (AbstractDittoHttpSync.TYPE.equalsIgnoreCase(sync.getType())) {
             return new DittoHttpSync(vertx, sync.getClientConfig(), sync.getCredential());
         }
         LOGGER.warn("Not yet supported sync service type {}", sync.getType());
         return EntityPostService.EMPTY;
+    }
+
+    public static InitialSync getInitialSync(@NonNull EntitySyncHandler syncHandler, JsonObject syncConfig) {
+        final DataSyncConfig sync = IConfig.from(syncConfig, DataSyncConfig.class);
+        if (!sync.isEnabled()) {
+            return InitialSync.EMPTY;
+        }
+        if (AbstractDittoHttpSync.TYPE.equalsIgnoreCase(sync.getType())) {
+            return new DittoInitialSync(syncHandler, sync.getClientConfig(), sync.getCredential());
+        }
+        LOGGER.warn("Not yet supported sync service type {}", sync.getType());
+        return InitialSync.EMPTY;
     }
 
 }

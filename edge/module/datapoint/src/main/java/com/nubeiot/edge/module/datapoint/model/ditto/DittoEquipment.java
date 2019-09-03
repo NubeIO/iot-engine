@@ -14,7 +14,7 @@ public final class DittoEquipment extends AbstractDittoModel<IEquipment> {
 
     @Override
     String endpointPattern() {
-        return "/things/{0}/features/equipments/properties";
+        return "/things/{0}/features/equipments/properties" + get().getId();
     }
 
 }

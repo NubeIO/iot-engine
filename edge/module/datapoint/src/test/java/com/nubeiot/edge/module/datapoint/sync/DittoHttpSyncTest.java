@@ -1,6 +1,8 @@
 package com.nubeiot.edge.module.datapoint.sync;
 
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.junit.Test;
@@ -30,6 +32,7 @@ import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
 public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
@@ -101,6 +104,69 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
         assertRestByClient(context, HttpMethod.POST,
                            "/api/s/device/" + UUID64.uuidToBase64(PrimaryKey.DEVICE) + "/point", req,
                            ExpectedResponse.builder().code(201).expected(expected).after(after).build());
+    }
+
+    @Test
+    public void test_create_point_data(TestContext context) throws InterruptedException {
+        Async async = context.async(2);
+        CountDownLatch latch = new CountDownLatch(2);
+        RequestData req = RequestData.builder()
+                                     .body(JsonPojo.from(new PointValueData().setPriority(5).setValue(24d)).toJson())
+                                     .build();
+        JsonObject data = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0," +
+                                         "\"priority\":5,\"priority_values\":{\"5\":24.0}," +
+                                         "\"time_audit\":{\"created_time\":\"\",\"created_by\":\"UNDEFINED\"," +
+                                         "\"record_version\":1},\"sync_audit\":{\"status\":\"INITIAL\"," +
+                                         "\"data\":{\"message\":\"Not yet synced new resource\"}}}");
+        final Consumer<ResponseData> after = r -> {
+            try {
+                latch.countDown();
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                TestHelper.testComplete(async);
+            }
+        };
+        final ExpectedResponse resp = ExpectedResponse.builder()
+                                                      .code(201)
+                                                      .expected(new JsonObject().put("action", EventAction.CREATE)
+                                                                                .put("status", Status.SUCCESS)
+                                                                                .put("resource", data))
+                                                      .customizations(IGNORE.apply("resource.time_audit.created_time"))
+                                                      .after(after)
+                                                      .build();
+        assertRestByClient(context, HttpMethod.POST, "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data", req, resp);
+
+        latch.await(2500, TimeUnit.MILLISECONDS);
+        RequestData req1 = RequestData.builder()
+                                      .body(JsonPojo.from(new PointValueData().setPriority(8).setValue(29d)).toJson())
+                                      .build();
+        JsonObject data1 = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":29.0," +
+                                          "\"priority\":8,\"priority_values\":{\"5\":24.0,\"8\":29.0}," +
+                                          "\"time_audit\":{\"created_time\":\"\"," +
+                                          "\"created_by\":\"UNDEFINED\",\"last_modified_time\":\"\"," +
+                                          "\"last_modified_by\":\"UNDEFINED\",\"record_version\":2}," +
+                                          "\"sync_audit\":{\"last_success_time\":\"\"," +
+                                          "\"last_success_message\":{\"time_audit\":{\"created_time\":\"\"," +
+                                          "\"created_by\":\"UNDEFINED\",\"record_version\":1}," +
+                                          "\"priority\":5,\"value\":24,\"point\":\"" + PrimaryKey.P_BACNET_SWITCH +
+                                          "\",\"priority_values\":{\"5\":24}},\"status\":\"INITIAL\"," +
+                                          "\"data\":{\"message\":\"Not yet synced modified resource with record " +
+                                          "version 2\"}}}");
+        assertRestByClient(context, HttpMethod.PATCH, "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data", req1,
+                           ExpectedResponse.builder()
+                                           .code(200)
+                                           .expected(new JsonObject().put("action", EventAction.PATCH)
+                                                                     .put("status", Status.SUCCESS)
+                                                                     .put("resource", data1))
+                                           .customizations(IGNORE.apply("resource.time_audit.created_time"),
+                                                           IGNORE.apply("resource.time_audit.last_modified_time"),
+                                                           IGNORE.apply("resource.sync_audit.last_success_time"),
+                                                           IGNORE.apply("resource.sync_audit.last_success_message" +
+                                                                        ".time_audit.created_time"))
+                                           .after(after)
+                                           .build());
     }
 
 }

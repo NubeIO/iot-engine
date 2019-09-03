@@ -53,10 +53,6 @@ public final class DataPointConfig implements IConfig {
                                    DataJobDefinition.def());
     }
 
-    static DataPointConfig def(@NonNull BuiltinData builtinData) {
-        return new DataPointConfig(new LowdbMigration(), DataSyncConfig.def(), builtinData, DataJobDefinition.def());
-    }
-
     static DataPointConfig def(@NonNull BuiltinData builtinData, @NonNull DataSyncConfig config) {
         return new DataPointConfig(new LowdbMigration(), config, builtinData, DataJobDefinition.def());
     }

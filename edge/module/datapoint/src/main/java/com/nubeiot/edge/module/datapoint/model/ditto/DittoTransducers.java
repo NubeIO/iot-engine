@@ -14,7 +14,7 @@ public final class DittoTransducers extends AbstractDittoModel<ITransducer> {
 
     @Override
     @NonNull String endpointPattern() {
-        return "/things/{0}/features/transducers/properties";
+        return "/things/{0}/features/transducers/properties" + get().getId();
     }
 
 }

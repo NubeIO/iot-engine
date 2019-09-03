@@ -36,7 +36,7 @@ public final class DittoHistorySetting extends AbstractDittoModel<IHistorySettin
 
     @Override
     String endpointPattern() {
-        return "/things/{0}/features/points/properties/" + get().getPoint() + "/historySettings/properties";
+        return "/things/{0}/features/points/properties/" + get().getPoint() + "/historySettings";
     }
 
 }

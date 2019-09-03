@@ -1,7 +1,6 @@
 package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Objects;
-import java.util.UUID;
 
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -88,7 +87,7 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_list_network(TestContext context) {
         Network def = new Network().setId(
-            UUID.fromString(SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.NETWORK_ID)))
+            UUID64.uuid64ToUuid(SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.NETWORK_ID)))
                                    .setDevice(PrimaryKey.DEVICE)
                                    .setCode("DEFAULT");
         JsonObject expected = new JsonObject().put("networks",

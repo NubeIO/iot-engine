@@ -14,7 +14,7 @@ public final class SyncDeviceJob extends AbstractDataJobDefinition implements Da
 
     @Override
     public JsonObject toSchedule(@NonNull JsonObject config) {
-        return null;
+        return new JsonObject();
     }
 
 }

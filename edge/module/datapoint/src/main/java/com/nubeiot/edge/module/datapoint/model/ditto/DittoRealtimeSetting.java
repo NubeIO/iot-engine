@@ -14,7 +14,7 @@ public final class DittoRealtimeSetting extends AbstractDittoModel<IRealtimeSett
 
     @Override
     @NonNull String endpointPattern() {
-        return "/things/{0}/features/points/properties/" + get().getPoint() + "/realtimeSettings/properties";
+        return "/things/{0}/features/points/properties/" + get().getPoint() + "/realtimeSettings";
     }
 
 }
