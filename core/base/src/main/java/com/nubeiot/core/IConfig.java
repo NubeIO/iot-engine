@@ -74,6 +74,9 @@ public interface IConfig extends JsonData {
         if (clazz.isInstance(from) && clazz.isInstance(to)) {
             return ((T) from).merge((T) to);
         }
+        if (clazz.isInstance(from) && to instanceof JsonObject) {
+            return merge(((T) from).toJson(), to, clazz);
+        }
         if (clazz.isInstance(from)) {
             return ((T) from).merge(from(to, clazz));
         }

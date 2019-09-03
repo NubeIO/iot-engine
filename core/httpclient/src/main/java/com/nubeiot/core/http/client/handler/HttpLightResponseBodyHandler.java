@@ -71,7 +71,7 @@ public abstract class HttpLightResponseBodyHandler implements Handler<Buffer> {
                               .put(HttpHeaders.CONTENT_TYPE.toString(), HttpUtils.DEFAULT_CONTENT_TYPE);
     }
 
-    private JsonObject tryParse(Buffer buffer) {
+    protected JsonObject tryParse(Buffer buffer) {
         String contentType = response.getHeader(HttpHeaders.CONTENT_TYPE);
         final HttpMethod method = response.request().method();
         final String uri = response.request().absoluteURI();

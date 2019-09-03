@@ -26,6 +26,7 @@ import com.nubeiot.core.dto.RequestData.Builder;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.HttpConfig;
 import com.nubeiot.core.http.base.HostInfo;
+import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
@@ -82,7 +83,9 @@ public class ServerDittoRestController implements RestApi {
                                                             .setPort(port)
                                                             .setSsl(port == 443);
 
-        HttpClientDelegate client = HttpClientDelegate.create(vertx, HostInfo.from(requestOptions));
+        HttpClientConfig httpClientConfig = IConfig.from(config.getAppConfig(), HttpClientConfig.class);
+        logger.info("Http Client config: {}", httpClientConfig.toJson());
+        HttpClientDelegate client = HttpClientDelegate.create(vertx, httpClientConfig, HostInfo.from(requestOptions));
         Builder requestDataBuilder = RequestData.builder();
 
         if (dittoConfig.getPolicy()) {
