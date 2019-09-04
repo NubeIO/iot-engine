@@ -21,7 +21,8 @@ def versions = [
         "sonar" : "2.7",
     ],
     tests   : [
-        junit: "4.12"
+        junit: "4.12",
+        jacoco: "0.8.4"
     ],
 ]
 

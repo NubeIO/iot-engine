@@ -4,19 +4,24 @@ import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.ToString.Include;
 
 @Getter
-@ToString
+@JsonDeserialize
+@ToString(onlyExplicitlyIncluded = true)
 public class ExternalServer extends HostInfo {
 
+    @Include
     private final String url;
     @Setter
+    @Include
     private Credential credential;
 
     public ExternalServer(String url) {

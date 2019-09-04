@@ -5,7 +5,7 @@ def testFailures = []
 def numProc = (Runtime.runtime.availableProcessors().intdiv(2) ?: 1).intValue()
 
 jacoco {
-    toolVersion = "0.8.2"
+    toolVersion = versions.tests.jacoco
 }
 
 task copyTestResult(type: Copy, group: "verification") {
