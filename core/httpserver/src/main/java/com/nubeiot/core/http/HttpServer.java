@@ -97,6 +97,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         final FileStorageConfig storageCfg = config.getFileStorageConfig();
         final DownloadConfig downCfg = storageCfg.getDownloadConfig();
         final UploadConfig uploadCfg = storageCfg.getUploadConfig();
+        final StaticWebConfig staticWebConfig = config.getStaticWebConfig();
         return ServerInfo.siBuilder()
                          .host(config.getHost())
                          .port(port)
@@ -106,6 +107,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                          .servicePath(restCfg.isEnabled() && dynamicCfg.isEnabled() ? dynamicCfg.getPath() : null)
                          .downloadPath(storageCfg.isEnabled() && downCfg.isEnabled() ? downCfg.getPath() : null)
                          .uploadPath(storageCfg.isEnabled() && uploadCfg.isEnabled() ? uploadCfg.getPath() : null)
+                         .webPath(staticWebConfig.isEnabled() ? staticWebConfig.getWebPath() : null)
                          .router(handler)
                          .build();
     }
@@ -201,7 +203,8 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                         .setSendVaryHeader(true)
                                         .setFilesReadOnly(true)
                                         .setAllowRootFileSystemAccess(true)
-                                        .setIncludeHidden(false).setWebRoot(dataDir));
+                                        .setIncludeHidden(false)
+                                        .setWebRoot(dataDir));
             router.get(Urls.combinePath(storageConfig.getDownloadConfig().getPath(), ApiConstants.WILDCARDS_ANY_PATH));
             return router;
         }

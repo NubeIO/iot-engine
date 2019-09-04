@@ -20,11 +20,12 @@ public class ServerInfo extends HostInfo implements JsonData, Shareable {
     private String downloadPath;
     private String uploadPath;
     private String servicePath;
+    private String webPath;
     private Router router;
 
     @lombok.Builder(builderMethodName = "siBuilder")
     ServerInfo(String host, int port, boolean ssl, String publicHost, String apiPath, String wsPath,
-               String downloadPath, String uploadPath, String servicePath, Router router) {
+               String downloadPath, String uploadPath, String servicePath, String webPath, Router router) {
         super(host, port, ssl);
         this.publicHost = publicHost;
         this.apiPath = apiPath;
@@ -32,6 +33,7 @@ public class ServerInfo extends HostInfo implements JsonData, Shareable {
         this.downloadPath = downloadPath;
         this.uploadPath = uploadPath;
         this.servicePath = servicePath;
+        this.webPath = webPath;
         this.router = router;
     }
 
