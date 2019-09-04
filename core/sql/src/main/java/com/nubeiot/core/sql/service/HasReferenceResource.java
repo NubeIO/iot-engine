@@ -1,6 +1,7 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -45,7 +46,7 @@ public interface HasReferenceResource {
     @RequiredArgsConstructor
     class EntityReferences {
 
-        private final Map<EntityMetadata, String> fields = new HashMap<>();
+        private final Map<EntityMetadata, String> fields = new LinkedHashMap<>();
 
         public EntityReferences add(@NonNull EntityMetadata metadata) {
             fields.put(metadata, metadata.requestKeyName());

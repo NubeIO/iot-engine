@@ -57,7 +57,11 @@ public interface ManyToManyReferenceEntityService<P extends CompositePojo, M ext
     @Override
     @SuppressWarnings("unchecked")
     default @NonNull ComplexQueryExecutor<P> queryExecutor() {
-        return entityHandler().complexQuery().from(context()).context(reference()).with(resource());
+        return entityHandler().complexQuery()
+                              .from(context())
+                              .context(reference())
+                              .with(resource())
+                              .references(transformer().ref().entityReferences());
     }
 
     @Override

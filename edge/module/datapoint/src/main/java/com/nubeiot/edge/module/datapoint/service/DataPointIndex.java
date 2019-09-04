@@ -134,6 +134,8 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Equipment onCreating(RequestData reqData) throws IllegalArgumentException {
             Equipment equip = parseFromRequest(reqData.body());
+            Strings.requireNotBlank(equip.getCode(), "Equipment code is mandatory");
+            Strings.requireNotBlank(equip.getType(), "Equipment type is mandatory");
             return equip.setId(Optional.ofNullable(equip.getId()).orElseGet(UUID::randomUUID));
         }
 
@@ -300,6 +302,11 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
+        public @NonNull String requestKeyName() {
+            return "unit_type";
+        }
+
+        @Override
         public @NonNull String singularKeyName() {
             return "unit";
         }
@@ -350,6 +357,8 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Network onCreating(RequestData reqData) throws IllegalArgumentException {
             Network network = parseFromRequest(reqData.body());
+            Objects.requireNonNull(network.getDevice(), "Device is mandatory");
+            Strings.requireNotBlank(network.getCode(), "Network code is mandatory");
             return network.setId(Optional.ofNullable(network.getId()).orElseGet(UUID::randomUUID));
         }
 
@@ -546,8 +555,7 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        @NonNull
-        public String requestKeyName() {
+        public @NonNull String requestKeyName() {
             return PointMetadata.INSTANCE.requestKeyName();
         }
 
@@ -557,8 +565,7 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        @NonNull
-        public String pluralKeyName() {
+        public @NonNull String pluralKeyName() {
             return "realtime_setting";
         }
 
@@ -678,6 +685,8 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Transducer onCreating(RequestData reqData) throws IllegalArgumentException {
             Transducer transducer = parseFromRequest(reqData.body());
+            Strings.requireNotBlank(transducer.getCode(), "Transducer code is mandatory");
+            Strings.requireNotBlank(transducer.getCategory(), "Transducer category is mandatory");
             return transducer.setId(Optional.ofNullable(transducer.getId()).orElseGet(UUID::randomUUID));
         }
 
@@ -711,7 +720,8 @@ public interface DataPointIndex extends MetadataIndex {
         extends AbstractCompositeMetadata<Integer, Thing, ThingRecord, ThingDao, ThingComposite>
         implements SerialKeyEntity<Thing, ThingRecord, ThingDao> {
 
-        public static final EquipThingMetadata INSTANCE = new EquipThingMetadata();
+        public static final EquipThingMetadata INSTANCE = new EquipThingMetadata().addSubItem(
+            EquipmentMetadata.INSTANCE, TransducerMetadata.INSTANCE);
 
         @Override
         public @NonNull Class<Thing> rawClass() {
@@ -740,7 +750,8 @@ public interface DataPointIndex extends MetadataIndex {
         extends AbstractCompositeMetadata<Long, DeviceEquip, DeviceEquipRecord, DeviceEquipDao, DeviceComposite>
         implements BigSerialKeyEntity<DeviceEquip, DeviceEquipRecord, DeviceEquipDao> {
 
-        public static final DeviceEquipCompositeMetadata INSTANCE = new DeviceEquipCompositeMetadata();
+        public static final DeviceEquipCompositeMetadata INSTANCE = new DeviceEquipCompositeMetadata().addSubItem(
+            EquipmentMetadata.INSTANCE, DeviceMetadata.INSTANCE);
 
         @Override
         public @NonNull Class<DeviceEquip> rawClass() {

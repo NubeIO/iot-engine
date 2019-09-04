@@ -16,6 +16,7 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
@@ -29,7 +30,18 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     @Override
     @NonNull
     default C onCreating(RequestData reqData) throws IllegalArgumentException {
-        return (C) context().parseFromRequest(reqData.body());
+        final C request = (C) context().parseFromRequest(reqData.body());
+        for (EntityMetadata metadata : ((List<EntityMetadata>) context().subItems())) {
+            String key = metadata.singularKeyName();
+            final VertxPojo sub = request.getOther(key);
+            if (Objects.isNull(sub)) {
+                continue;
+            }
+            request.put(key, Functions.getOrThrow(
+                () -> metadata.onCreating(RequestData.builder().body(reqData.body().getJsonObject(key)).build()),
+                NubeExceptionConverter::from));
+        }
+        return request;
     }
 
     @Override

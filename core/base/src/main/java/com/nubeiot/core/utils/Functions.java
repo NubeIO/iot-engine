@@ -46,6 +46,15 @@ public final class Functions {
         }
     }
 
+    public static <T> T getOrThrow(@NonNull Supplier<T> provider,
+                                   @NonNull Function<Throwable, ? extends RuntimeException> override) {
+        try {
+            return provider.get();
+        } catch (Throwable t) {
+            throw override.apply(t);
+        }
+    }
+
     public static <T> T getOrDefault(@NonNull Supplier<T> provider, @NonNull Supplier<T> def) {
         try {
             return provider.get();

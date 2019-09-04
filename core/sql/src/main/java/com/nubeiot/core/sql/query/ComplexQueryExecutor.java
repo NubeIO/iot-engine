@@ -10,6 +10,7 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
+import com.nubeiot.core.sql.service.HasReferenceResource;
 
 import lombok.NonNull;
 
@@ -46,6 +47,8 @@ public interface ComplexQueryExecutor<CP extends CompositePojo>
      * @return a reference to this, so the API can be used fluently
      */
     ComplexQueryExecutor context(@NonNull EntityMetadata contextMetadata);
+
+    ComplexQueryExecutor references(@NonNull HasReferenceResource.EntityReferences references);
 
     ComplexQueryExecutor viewPredicate(@NonNull Predicate<EntityMetadata> predicate);
 

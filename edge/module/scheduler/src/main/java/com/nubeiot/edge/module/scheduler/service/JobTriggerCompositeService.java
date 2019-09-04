@@ -112,7 +112,7 @@ abstract class JobTriggerCompositeService
     @Override
     public @NonNull Single<JsonObject> afterPatch(@NonNull Object key, @NonNull VertxPojo pojo,
                                                   @NonNull RequestData reqData) {
-        return null;
+        return super.afterPatch(key, pojo, reqData);
     }
 
     @Override

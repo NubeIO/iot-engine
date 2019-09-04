@@ -1,12 +1,16 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import java.util.UUID;
+
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
@@ -29,6 +33,39 @@ public class DeviceEquipServiceTest extends BaseDataPointServiceTest {
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString()))
                                      .build();
         asserter(context, true, expected, EquipmentByDevice.class.getName(), EventAction.GET_LIST, req);
+    }
+
+    @Test
+    public void test_create_equip_by_device_invalid_request(TestContext context) {
+        JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
+                                              .put("message", "Missing equipment data");
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("code", "DROPLET_02")
+                                                           .put("type", "DROPLET")
+                                                           .put("manufacturer", "NubeIO")
+                                                           .put("device_id", PrimaryKey.DEVICE.toString()))
+                                     .build();
+        asserter(context, false, expected, EquipmentByDevice.class.getName(), EventAction.CREATE, req);
+    }
+
+    @Test
+    public void test_create_equip_by_device(TestContext context) {
+        final String id = UUID.randomUUID().toString();
+        final JsonObject data = new JsonObject(
+            "{\"id\":3,\"network\":null,\"equipment\":{\"id\":\"" + id + "\",\"code\":\"DROPLET_02\"," +
+            "\"label\":null,\"type\":\"DROPLET\",\"manufacturer\":\"NubeIO\",\"metadata\":null}}");
+        JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
+                                              .put("status", Status.SUCCESS)
+                                              .put("resource", data);
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("equipment", new JsonObject().put("id", id)
+                                                                                             .put("code", "DROPLET_02")
+                                                                                             .put("type", "DROPLET")
+                                                                                             .put("manufacturer",
+                                                                                                  "NubeIO"))
+                                                           .put("device_id", PrimaryKey.DEVICE.toString()))
+                                     .build();
+        asserter(context, true, expected, EquipmentByDevice.class.getName(), EventAction.CREATE, req);
     }
 
 }
