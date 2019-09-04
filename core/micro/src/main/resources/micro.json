@@ -3,6 +3,7 @@
     "__micro__": {
       "__gateway__": {
         "enabled": false,
+        "indexAddress": "nubeio.service.gateway.index",
         "clusterAnnounceMonitorClass": "com.nubeiot.core.micro.ServiceGatewayAnnounceMonitor",
         "clusterUsageMonitorClass": "com.nubeiot.core.micro.ServiceGatewayUsageMonitor",
         "localAnnounceMonitorClass": "com.nubeiot.core.micro.ServiceGatewayAnnounceMonitor",
