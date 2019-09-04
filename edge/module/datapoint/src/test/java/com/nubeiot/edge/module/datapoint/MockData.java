@@ -12,6 +12,8 @@ import java.util.stream.IntStream;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.Label;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceEquipMetadata;
@@ -52,8 +54,8 @@ public final class MockData {
 
     public static final Device DEVICE = new Device().setId(PrimaryKey.DEVICE)
                                                     .setCode("NUBEIO_EDGE_28")
-                                                    .setCustomerCode("XXX")
-                                                    .setSiteCode("XXX-00001");
+                                                    .setCustomerCode("NUBEIO")
+                                                    .setSiteCode("SYDNEY-00001");
     public static final JsonObject MEASURE_UNITS = measures();
     public static final Network NETWORK = network();
     public static final List<Equipment> EQUIPS = equips();
@@ -322,6 +324,7 @@ public final class MockData {
     public static void main(String[] args) {
         IntStream.range(0, 10).forEach(i -> System.out.println(UUID.randomUUID()));
         System.out.println(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+        System.out.println(JsonData.tryParse(data_Equip_Thing()).toJson(JsonPojo.MAPPER).encodePrettily());
     }
 
     public static final class PrimaryKey {

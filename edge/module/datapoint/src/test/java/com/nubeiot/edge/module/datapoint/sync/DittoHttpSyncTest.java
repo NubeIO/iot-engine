@@ -52,8 +52,8 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
     public void test_patch_device(TestContext context) {
         Async async = context.async();
         JsonObject data = new JsonObject("{\"id\":\"" + PrimaryKey.DEVICE + "\",\"code\":\"TET_01\"," +
-                                         "\"customer_code\":\"XXX\",\"site_code\":\"XXX-00001\",\"data_version\":\"0" +
-                                         ".0.3\",\"metadata\":{\"hostname\":\"abc\"}}");
+                                         "\"customer_code\":\"NUBEIO\",\"site_code\":\"SYDNEY-00001\"," +
+                                         "\"data_version\":\"0.0.3\",\"metadata\":{\"hostname\":\"abc\"}}");
         JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", data);
@@ -147,11 +147,7 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                                           "\"time_audit\":{\"created_time\":\"\"," +
                                           "\"created_by\":\"UNDEFINED\",\"last_modified_time\":\"\"," +
                                           "\"last_modified_by\":\"UNDEFINED\",\"record_version\":2}," +
-                                          "\"sync_audit\":{\"last_success_time\":\"\"," +
-                                          "\"last_success_message\":{\"time_audit\":{\"created_time\":\"\"," +
-                                          "\"created_by\":\"UNDEFINED\",\"record_version\":1}," +
-                                          "\"priority\":5,\"value\":24,\"point\":\"" + PrimaryKey.P_BACNET_SWITCH +
-                                          "\",\"priority_values\":{\"5\":24}},\"status\":\"INITIAL\"," +
+                                          "\"sync_audit\":{\"status\":\"INITIAL\"," +
                                           "\"data\":{\"message\":\"Not yet synced modified resource with record " +
                                           "version 2\"}}}");
         assertRestByClient(context, HttpMethod.PATCH, "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data", req1,
