@@ -151,6 +151,23 @@
           },
           "appConfig": {
             "__datapoint__": {
+              "__data_sync__": {
+                "type": "DITTO",
+                "enabled": true,
+                "credential": {
+                  "type": "BASIC",
+                  "user": "sandbox",
+                  "password": "111"
+                },
+                "clientConfig": {
+                  "userAgent": "nubeio.edge.datapoint",
+                  "hostInfo": {
+                    "host": "ditto",
+                    "port": 80,
+                    "ssl": false
+                  }
+                }
+              },
               "__builtin_data__": {
                 "transducer": [
                   {
@@ -521,23 +538,6 @@
                     "tolerance": 10.0
                   }
                 ]
-              }
-            },
-            "__data_sync__": {
-              "type": "DITTO",
-              "enabled": true,
-              "credential": {
-                "type": "BASIC",
-                "user": "sandbox",
-                "password": "111"
-              },
-              "clientConfig": {
-                "userAgent": "nubeio.edge.datapoint",
-                "hostInfo": {
-                  "host": "ditto",
-                  "port": 80,
-                  "ssl": false
-                }
               }
             }
           }

@@ -44,6 +44,16 @@ public class DittoHttpSync extends AbstractDittoHttpSync
     }
 
     @Override
+    public void onError(@NonNull EntityService service, EventAction action, Throwable throwable) {
+        if (action == EventAction.GET_LIST || action == EventAction.GET_ONE) {
+            return;
+        }
+        if (logger.isDebugEnabled()) {
+            logger.error("Not sync due to previous error", throwable);
+        }
+    }
+
+    @Override
     public Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action,
                                              IDittoModel<?> syncData) {
         final @NonNull EntitySyncHandler entityHandler = (EntitySyncHandler) service.entityHandler();
@@ -53,16 +63,6 @@ public class DittoHttpSync extends AbstractDittoHttpSync
                                                   entityHandler.sharedData(DataPointIndex.DEVICE_ID)));
         final RequestData reqData = RequestData.builder().headers(createRequestHeader()).body(syncData.body()).build();
         return doSyncOnSuccess(entityHandler, service.context(), syncData.endpoint(thingId), syncData.get(), reqData);
-    }
-
-    @Override
-    public void onError(@NonNull EntityService service, EventAction action, Throwable throwable) {
-        if (action == EventAction.GET_LIST || action == EventAction.GET_ONE) {
-            return;
-        }
-        if (logger.isDebugEnabled()) {
-            logger.error("Not sync due to previous error", throwable);
-        }
     }
 
 }

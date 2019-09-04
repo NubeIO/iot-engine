@@ -37,7 +37,8 @@ pipeline {
 
         stage("Test") {
             steps {
-                sh "gradle -PexcludeTests=**/Postgres*Test* test jacocoTestReport --stacktrace"
+//                 sh "gradle -PexcludeTests=**/Postgres*Test* test jacocoTestReport --stacktrace"
+                sh "gradle -PexcludeTests=**/Postgres*Test* test --stacktrace"
             }
             post {
                 always {
