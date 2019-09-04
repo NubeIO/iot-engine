@@ -75,6 +75,12 @@
           "enabled": true,
           "path": "/media"
         }
+      },
+      "__static__": {
+        "enabled": true,
+        "inResource": false,
+        "webPath": "",
+        "webRoot": "webroot"
       }
     },
     "__dashboardServer__": {
