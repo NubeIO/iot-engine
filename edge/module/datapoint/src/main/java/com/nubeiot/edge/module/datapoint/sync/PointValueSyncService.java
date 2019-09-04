@@ -34,22 +34,6 @@ public final class PointValueSyncService extends EntityPostServiceDelegate {
         super(delegate);
     }
 
-    @SuppressWarnings("unchecked")
-    private Single<PointHistoryData> createHistory(PointHistoryData historyData, SimpleQueryExecutor executor) {
-        JsonObject filter = new JsonObject().put("point", historyData.getPoint().toString())
-                                            .put("time", DateTimes.format(historyData.getTime()));
-        final @NonNull JsonTable<PointHistoryDataRecord> table = HistoryDataMetadata.INSTANCE.table();
-        final QueryBuilder queryBuilder = executor.queryBuilder();
-        return executor.fetchExists(queryBuilder.exist(table, queryBuilder.condition(table, filter)))
-                       .switchIfEmpty(executor.insertReturningPrimary(historyData, RequestData.builder().build()))
-                       .flatMap(executor::lookupByPrimaryKey);
-    }
-
-    @Override
-    public EntitySyncData transform(@NonNull EntityService service, @NonNull VertxPojo data) {
-        return super.transform(service, data);
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public void onSuccess(EntityService service, EventAction action, VertxPojo data) {
@@ -74,6 +58,17 @@ public final class PointValueSyncService extends EntityPostServiceDelegate {
                                        getDelegate().doSyncOnSuccess(new HistoryDataService(service.entityHandler()),
                                                                      action, new DittoHistoryData(his))))
                .subscribe();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Single<PointHistoryData> createHistory(PointHistoryData historyData, SimpleQueryExecutor executor) {
+        JsonObject filter = new JsonObject().put("point", historyData.getPoint().toString())
+                                            .put("time", DateTimes.format(historyData.getTime()));
+        final @NonNull JsonTable<PointHistoryDataRecord> table = HistoryDataMetadata.INSTANCE.table();
+        final QueryBuilder queryBuilder = executor.queryBuilder();
+        return executor.fetchExists(queryBuilder.exist(table, queryBuilder.condition(table, filter)))
+                       .switchIfEmpty(executor.insertReturningPrimary(historyData, RequestData.builder().build()))
+                       .flatMap(executor::lookupByPrimaryKey);
     }
 
 }

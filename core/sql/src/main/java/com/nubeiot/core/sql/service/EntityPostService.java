@@ -42,11 +42,11 @@ public interface EntityPostService<T extends Transporter, D extends EntitySyncDa
 
     @NonNull D transform(@NonNull EntityService service, @NonNull VertxPojo data);
 
-    default void onSuccess(@NonNull EntityService service, @NonNull EventAction action, VertxPojo data) {
+    default void onSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull VertxPojo data) {
         doSyncOnSuccess(service, action, transform(service, data)).subscribe();
     }
 
-    Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action, D data);
+    Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull D data);
 
     void onError(@NonNull EntityService service, @NonNull EventAction action, @NonNull Throwable throwable);
 
@@ -71,12 +71,13 @@ public interface EntityPostService<T extends Transporter, D extends EntitySyncDa
         }
 
         @Override
-        public void onSuccess(@NonNull EntityService service, @NonNull EventAction action, VertxPojo data) {
+        public void onSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull VertxPojo data) {
             delegate.onSuccess(service, action, data);
         }
 
         @Override
-        public Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action, D data) {
+        public Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action,
+                                                 @NonNull D data) {
             return delegate.doSyncOnSuccess(service, action, data);
         }
 

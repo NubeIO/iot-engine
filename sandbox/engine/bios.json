@@ -152,6 +152,202 @@
           "appConfig": {
             "__datapoint__": {
               "__builtin_data__": {
+                "transducer": [
+                  {
+                    "id": "08d66e92-f15d-4fdb-9ed5-fd165b212591",
+                    "code": "TEMP_01",
+                    "type": "SENSOR",
+                    "category": "TEMP"
+                  },
+                  {
+                    "id": "5eb7da66-8013-4cc4-9608-ead768eca665",
+                    "code": "HUMIDITY_01",
+                    "type": "SENSOR",
+                    "category": "HUMIDITY"
+                  },
+                  {
+                    "id": "76d34f4e-3b20-4776-99c7-d93d79d5b4a6",
+                    "code": "FAN_SWITCH_01",
+                    "type": "ACTUATOR",
+                    "category": "SWITCH"
+                  },
+                  {
+                    "id": "388519ef-797f-49ca-a613-204b4587ef28",
+                    "code": "FAN_SWITCH_01",
+                    "type": "SENSOR",
+                    "category": "SWITCH"
+                  }
+                ],
+                "data": [
+                  {
+                    "point": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
+                    "value": 10.0,
+                    "priority": 8,
+                    "priority_values": {
+                      "5": 10.0,
+                      "6": 9.0,
+                      "8": 10.0
+                    }
+                  },
+                  {
+                    "point": "edbe3acf-5fca-4672-b633-72aa73004917",
+                    "value": 24.0,
+                    "priority": 3,
+                    "priority_values": {
+                      "3": 24.0,
+                      "9": 27.5,
+                      "17": 25.5
+                    }
+                  },
+                  {
+                    "point": "6997056d-4c1b-4d30-b205-969432f72a93",
+                    "value": 260.0,
+                    "priority": 7,
+                    "priority_values": {
+                      "5": 240.0,
+                      "7": 260.0,
+                      "17": 250.0
+                    }
+                  }
+                ],
+                "equipment": [
+                  {
+                    "id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "code": "DROPLET_01",
+                    "type": "DROPLET",
+                    "manufacturer": "NubeIO"
+                  },
+                  {
+                    "id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
+                    "code": "HVAC_XYZ",
+                    "type": "HVAC",
+                    "manufacturer": "Lennox"
+                  }
+                ],
+                "history": [
+                  {
+                    "point": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
+                    "time": "2019-08-10T09:15Z",
+                    "value": 30.0
+                  },
+                  {
+                    "point": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
+                    "time": "2019-08-10T09:18Z",
+                    "value": 35.0
+                  },
+                  {
+                    "point": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
+                    "time": "2019-08-10T09:20Z",
+                    "value": 32.0
+                  },
+                  {
+                    "point": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
+                    "time": "2019-08-10T09:22Z",
+                    "value": 42.0
+                  },
+                  {
+                    "point": "edbe3acf-5fca-4672-b633-72aa73004917",
+                    "time": "2019-08-10T09:15:15Z",
+                    "value": 20.5
+                  },
+                  {
+                    "point": "edbe3acf-5fca-4672-b633-72aa73004917",
+                    "time": "2019-08-10T09:16:15Z",
+                    "value": 20.8
+                  },
+                  {
+                    "point": "edbe3acf-5fca-4672-b633-72aa73004917",
+                    "time": "2019-08-10T09:17:15Z",
+                    "value": 20.8
+                  },
+                  {
+                    "point": "edbe3acf-5fca-4672-b633-72aa73004917",
+                    "time": "2019-08-10T09:18:15Z",
+                    "value": 20.6
+                  }
+                ],
+                "point": [
+                  {
+                    "id": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
+                    "code": "2CB2B763_HUMIDITY",
+                    "device": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "transducer": "5eb7da66-8013-4cc4-9608-ead768eca665",
+                    "enabled": true,
+                    "category": "GPIO",
+                    "kind": "INPUT",
+                    "type": "DIGITAL",
+                    "measure_unit": "percentage",
+                    "min_scale": 0,
+                    "max_scale": 100,
+                    "precision": 3,
+                    "offset": 0
+                  },
+                  {
+                    "id": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
+                    "code": "2CB2B763_TEMP",
+                    "device": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "transducer": "08d66e92-f15d-4fdb-9ed5-fd165b212591",
+                    "enabled": true,
+                    "category": "GPIO",
+                    "kind": "INPUT",
+                    "type": "DIGITAL",
+                    "measure_unit": "celsius",
+                    "precision": 3,
+                    "offset": 0
+                  },
+                  {
+                    "id": "edbe3acf-5fca-4672-b633-72aa73004917",
+                    "code": "HVAC_01_TEMP",
+                    "device": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "transducer": "08d66e92-f15d-4fdb-9ed5-fd165b212591",
+                    "network": "01fbb11e-45a6-479b-91a4-003534770c1c",
+                    "enabled": true,
+                    "category": "BACNET",
+                    "kind": "INPUT",
+                    "type": "DIGITAL",
+                    "measure_unit": "celsius",
+                    "precision": 3,
+                    "offset": 0
+                  },
+                  {
+                    "id": "6997056d-4c1b-4d30-b205-969432f72a93",
+                    "code": "HVAC_01_FAN",
+                    "device": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "network": "01fbb11e-45a6-479b-91a4-003534770c1c",
+                    "enabled": true,
+                    "category": "BACNET",
+                    "kind": "INPUT",
+                    "type": "DIGITAL",
+                    "measure_unit": "revolutions_per_minute",
+                    "precision": 3,
+                    "offset": 0
+                  },
+                  {
+                    "id": "463fbdf0-388d-447e-baef-96dbb8232dd7",
+                    "code": "HVAC_01_FAN_CONTROL",
+                    "device": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "transducer": "76d34f4e-3b20-4776-99c7-d93d79d5b4a6",
+                    "network": "01fbb11e-45a6-479b-91a4-003534770c1c",
+                    "enabled": true,
+                    "category": "BACNET",
+                    "kind": "OUTPUT",
+                    "type": "DIGITAL",
+                    "measure_unit": "bool"
+                  }
+                ],
+                "network": {
+                  "id": "01fbb11e-45a6-479b-91a4-003534770c1c",
+                  "code": "network-1",
+                  "device": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                  "metadata": {
+                    "subnet_name": "subnet-A",
+                    "networkInterface": "docker0",
+                    "subnet": "172.17.0.1/16",
+                    "broadcast": "172.17.255.255",
+                    "mac": "02:42:50:e1:cf:2b",
+                    "port": 47808
+                  }
+                },
                 "unit": [
                   {
                     "type": "revolutions_per_minute",
@@ -238,44 +434,26 @@
                     "network": "01fbb11e-45a6-479b-91a4-003534770c1c"
                   }
                 ],
-                "transducer": [
+                "tag": [
                   {
-                    "id": "08d66e92-f15d-4fdb-9ed5-fd165b212591",
-                    "code": "TEMP_01",
-                    "type": "SENSOR",
-                    "category": "TEMP"
+                    "tag_name": "sensor",
+                    "point": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
+                    "tag_value": "temp"
                   },
                   {
-                    "id": "5eb7da66-8013-4cc4-9608-ead768eca665",
-                    "code": "HUMIDITY_01",
-                    "type": "SENSOR",
-                    "category": "HUMIDITY"
+                    "tag_name": "source",
+                    "point": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
+                    "tag_value": "droplet"
                   },
                   {
-                    "id": "76d34f4e-3b20-4776-99c7-d93d79d5b4a6",
-                    "code": "FAN_SWITCH_01",
-                    "type": "ACTUATOR",
-                    "category": "SWITCH"
+                    "tag_name": "sensor",
+                    "point": "edbe3acf-5fca-4672-b633-72aa73004917",
+                    "tag_value": "temp"
                   },
                   {
-                    "id": "388519ef-797f-49ca-a613-204b4587ef28",
-                    "code": "FAN_SWITCH_01",
-                    "type": "SENSOR",
-                    "category": "SWITCH"
-                  }
-                ],
-                "equipment": [
-                  {
-                    "id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
-                    "code": "DROPLET_01",
-                    "type": "DROPLET",
-                    "manufacturer": "NubeIO"
-                  },
-                  {
-                    "id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
-                    "code": "HVAC_XYZ",
-                    "type": "HVAC",
-                    "manufacturer": "Lennox"
+                    "tag_name": "source",
+                    "point": "edbe3acf-5fca-4672-b633-72aa73004917",
+                    "tag_value": "hvac"
                   }
                 ],
                 "device": {
@@ -331,27 +509,32 @@
                     "measure_unit": "bool"
                   }
                 ],
-                "network": {
-                  "id": "01fbb11e-45a6-479b-91a4-003534770c1c",
-                  "code": "network-1",
-                  "device": "d7cd3f57-a188-4462-b959-df7a23994c92",
-                  "metadata": {
-                    "subnet_name": "subnet-A",
-                    "networkInterface": "docker0",
-                    "subnet": "172.17.0.1/16",
-                    "broadcast": "172.17.255.255",
-                    "mac": "02:42:50:e1:cf:2b",
-                    "port": 47808
+                "history_setting": [
+                  {
+                    "point": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
+                    "type": "PERIOD",
+                    "schedule": "xxxx"
+                  },
+                  {
+                    "point": "6997056d-4c1b-4d30-b205-969432f72a93",
+                    "type": "COV",
+                    "tolerance": 10.0
                   }
-                }
+                ]
               }
             },
             "__data_sync__": {
               "type": "DITTO",
               "enabled": true,
+              "credential": {
+                "type": "BASIC",
+                "user": "sandbox",
+                "password": "111"
+              },
               "clientConfig": {
                 "userAgent": "nubeio.edge.datapoint",
                 "hostInfo": {
+                  "host": "ditto",
                   "port": 80,
                   "ssl": false
                 }

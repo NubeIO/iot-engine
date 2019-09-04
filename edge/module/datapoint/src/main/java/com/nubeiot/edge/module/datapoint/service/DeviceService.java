@@ -1,7 +1,9 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -10,6 +12,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
@@ -36,13 +39,22 @@ public final class DeviceService extends AbstractEntityService<Device, DeviceMet
         return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.PATCH);
     }
 
-    @Override
-    public Single<JsonObject> afterPatch(Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
-        final JsonObject syncConfig = Optional.ofNullable(((Device) pojo).getMetadata())
+    @EventContractor(action = EventAction.PATCH, returnType = Single.class)
+    public Single<JsonObject> patch(RequestData requestData) {
+        RequestData reqData = onModifyingOneResource(requestData);
+        return doPatch(reqData).flatMap(pk -> doLookupByPrimaryKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
+                               .map(this::cacheConfig)
+                               .doOnSuccess(j -> asyncPostService().onSuccess(this, EventAction.PATCH, j.getValue()))
+                               .doOnError(t -> asyncPostService().onError(this, EventAction.PATCH, t))
+                               .flatMap(resp -> transformer().afterPatch(resp.getKey(), resp.getValue(), reqData));
+    }
+
+    private Entry<?, ? extends VertxPojo> cacheConfig(Entry<?, ? extends VertxPojo> entry) {
+        final JsonObject syncConfig = Optional.ofNullable(((Device) entry.getValue()).getMetadata())
                                               .map(info -> info.getJsonObject(DataSyncConfig.NAME, new JsonObject()))
                                               .orElse(new JsonObject());
         entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG, syncConfig);
-        return super.afterPatch(key, pojo, reqData);
+        return entry;
     }
 
     public interface DeviceExtension extends HasReferenceResource {

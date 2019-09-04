@@ -324,7 +324,7 @@ public final class MockData {
     public static void main(String[] args) {
         IntStream.range(0, 10).forEach(i -> System.out.println(UUID.randomUUID()));
         System.out.println(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
-        System.out.println(JsonData.tryParse(data_Equip_Thing()).toJson(JsonPojo.MAPPER).encodePrettily());
+        System.out.println(JsonData.tryParse(data_Point_Setting_Tag()).toJson(JsonPojo.MAPPER).encodePrettily());
     }
 
     public static final class PrimaryKey {
