@@ -191,23 +191,6 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         Path storageDir = Paths.get(FileUtils.createFolder(dataDir, storageConfig.getDir()));
-
-        //FIXME: Need to address in backend and frontend in parallel
-        if (storageConfig.isExternalHandler()) {
-            router.route()
-                  .handler(BodyHandler.create(storageDir.toString())
-                                      .setBodyLimit(storageConfig.getUploadConfig().getMaxBodySizeMB() * MB));
-            router.route()
-                  .handler(StaticHandler.create()
-                                        .setEnableRangeSupport(true)
-                                        .setSendVaryHeader(true)
-                                        .setFilesReadOnly(true)
-                                        .setAllowRootFileSystemAccess(true)
-                                        .setIncludeHidden(false)
-                                        .setWebRoot(dataDir));
-            router.get(Urls.combinePath(storageConfig.getDownloadConfig().getPath(), ApiConstants.WILDCARDS_ANY_PATH));
-            return router;
-        }
         initUploadRouter(router, storageDir, storageConfig.getUploadConfig(), publicUrl);
         initDownloadRouter(router, storageDir, storageConfig.getDownloadConfig());
         return router;
@@ -232,7 +215,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                             UploadListener.create(listenerClass, new ArrayList<>(listenerEvent.getEvents())));
         router.post(uploadCfg.getPath())
               .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB))
-              .handler(UploadFileHandler.create(handlerClass, controller, listenerEvent, storageDir, publicUrl))
+              .handler(UploadFileHandler.create(vertx, handlerClass, controller, listenerEvent, storageDir, publicUrl))
               .handler(new RestEventResponseHandler())
               .produces(HttpUtils.DEFAULT_CONTENT_TYPE);
         return router;

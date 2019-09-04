@@ -64,16 +64,16 @@
       },
       "__files__": {
         "enabled": true,
-        "externalHandler": true,
         "dir": "media",
         "__upload__": {
           "enabled": true,
-          "path": "/u",
-          "maxBodySizeMB": 5
+          "path": "/api/media_file",
+          "maxBodySizeMB": 5,
+          "handlerClass": "com.nubeiot.dashboard.DashboardUploadFileHandler"
         },
         "__download__": {
           "enabled": true,
-          "path": "/f"
+          "path": "/media"
         }
       }
     },

@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
@@ -28,21 +29,23 @@ import lombok.RequiredArgsConstructor;
 /**
  * Only override it if any performance issue
  */
+@Getter
 @RequiredArgsConstructor
 public class UploadFileHandler implements RestEventRequestDispatcher {
 
-    @Getter
+    private final Vertx vertx;
     private final EventController controller;
     private final EventModel eventModel;
     private final Path uploadDir;
     private final String publicUrl;
 
-    public static UploadFileHandler create(String handlerClass, @NonNull EventController controller,
+    public static UploadFileHandler create(Vertx vertx, String handlerClass, @NonNull EventController controller,
                                            @NonNull EventModel eventModel, @NonNull Path uploadDir, String publicUrl) {
         if (Strings.isBlank(handlerClass) || UploadFileHandler.class.getName().equals(handlerClass)) {
-            return new UploadFileHandler(controller, eventModel, uploadDir, publicUrl);
+            return new UploadFileHandler(vertx, controller, eventModel, uploadDir, publicUrl);
         }
         Map<Class, Object> inputs = new LinkedHashMap<>();
+        inputs.put(Vertx.class, vertx);
         inputs.put(EventController.class, controller);
         inputs.put(EventModel.class, eventModel);
         inputs.put(Path.class, uploadDir);

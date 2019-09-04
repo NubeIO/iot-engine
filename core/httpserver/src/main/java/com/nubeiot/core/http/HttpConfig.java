@@ -219,7 +219,6 @@ public final class HttpConfig implements IConfig {
         public static final String NAME = "__files__";
 
         private boolean enabled = false;
-        private boolean externalHandler = false;
         private String dir = "files";
         @JsonProperty(value = UploadConfig.NAME)
         private UploadConfig uploadConfig = new UploadConfig();
