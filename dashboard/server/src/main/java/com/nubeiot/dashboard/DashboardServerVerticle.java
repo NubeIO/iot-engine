@@ -1,7 +1,6 @@
 package com.nubeiot.dashboard;
 
 import static com.nubeiot.dashboard.ShareableMongoClient.SHARABLE_MONGO_CLIENT_DATA_KEY;
-import static com.nubeiot.dashboard.ShareableMongoClient.SHARABLE_MONGO_CLIENT_SHARED_KEY;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.oauth2.OAuth2FlowType;
@@ -82,8 +81,8 @@ public class DashboardServerVerticle extends ContainerVerticle {
         RestRouter.addProvider(RestDownloadConfigProvider.class, ctx -> new RestDownloadConfigProvider(downloadConfig));
         RestRouter.addProvider(RestHttpConfigProvider.class, ctx -> new RestHttpConfigProvider(httpConfig));
 
-        SharedDataDelegate.addLocalDataValue(vertx.getDelegate(), SHARABLE_MONGO_CLIENT_SHARED_KEY,
-                                             SHARABLE_MONGO_CLIENT_DATA_KEY, new ShareableMongoClient(mongoClient));
+        SharedDataDelegate.addLocalDataValue(vertx.getDelegate(), getSharedKey(), SHARABLE_MONGO_CLIENT_DATA_KEY,
+                                             new ShareableMongoClient(mongoClient));
     }
 
 }

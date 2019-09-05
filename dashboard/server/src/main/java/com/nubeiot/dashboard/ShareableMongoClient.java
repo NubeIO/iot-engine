@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class ShareableMongoClient implements Shareable {
 
-    final static String SHARABLE_MONGO_CLIENT_SHARED_KEY = ShareableMongoClient.class.getName();
     final static String SHARABLE_MONGO_CLIENT_DATA_KEY = "SHARABLE_MONGO_CLIENT";
 
     @Getter

@@ -168,7 +168,6 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             }
             mainRouter.route(Urls.combinePath(webConfig.getWebPath(), ApiConstants.WILDCARDS_ANY_PATH))
                       .handler(staticHandler);
-            mainRouter.route("/*").handler(ctx -> ctx.response().sendFile(Urls.combinePath(webDir, "index.html")));
         }
     }
 
@@ -211,11 +210,11 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                              .build();
         String handlerClass = uploadCfg.getHandlerClass();
         String listenerClass = uploadCfg.getListenerClass();
-        controller.register(listenerEvent,
-                            UploadListener.create(listenerClass, new ArrayList<>(listenerEvent.getEvents())));
+        controller.register(listenerEvent, UploadListener.create(vertx, listenerClass, getSharedKey(),
+                                                                 new ArrayList<>(listenerEvent.getEvents())));
         router.post(uploadCfg.getPath())
               .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB))
-              .handler(UploadFileHandler.create(vertx, handlerClass, controller, listenerEvent, storageDir, publicUrl))
+              .handler(UploadFileHandler.create(handlerClass, controller, listenerEvent, storageDir, publicUrl))
               .handler(new RestEventResponseHandler())
               .produces(HttpUtils.DEFAULT_CONTENT_TYPE);
         return router;

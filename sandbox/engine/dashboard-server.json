@@ -69,18 +69,12 @@
           "enabled": true,
           "path": "/api/media_file",
           "maxBodySizeMB": 5,
-          "handlerClass": "com.nubeiot.dashboard.DashboardUploadFileHandler"
+          "listenerClass": "com.nubeiot.dashboard.DashboardUploadListener"
         },
         "__download__": {
           "enabled": true,
           "path": "/media"
         }
-      },
-      "__static__": {
-        "enabled": true,
-        "inResource": false,
-        "webPath": "",
-        "webRoot": "webroot"
       }
     },
     "__dashboardServer__": {
