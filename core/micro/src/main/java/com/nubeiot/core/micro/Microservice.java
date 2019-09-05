@@ -2,9 +2,7 @@ package com.nubeiot.core.micro;
 
 import io.vertx.core.Future;
 
-import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.component.UnitVerticle;
-import com.nubeiot.core.event.EventController;
 
 public final class Microservice extends UnitVerticle<MicroConfig, MicroContext> {
 
@@ -16,9 +14,7 @@ public final class Microservice extends UnitVerticle<MicroConfig, MicroContext> 
     public void start() {
         super.start();
         logger.info("Setup micro-service...");
-        getContext().create(vertx, config, getSharedKey());
-        final EventController eventClient = getSharedData(SharedDataDelegate.SHARED_EVENTBUS);
-        eventClient.register(config.getGatewayConfig().getIndexAddress(), new ServiceGatewayIndex(getContext()));
+        getContext().setup(vertx, config, getSharedKey());
     }
 
     @Override

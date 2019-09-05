@@ -8,6 +8,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.component.UnitContext;
 import com.nubeiot.core.micro.MicroConfig.GatewayConfig;
 
@@ -27,22 +28,25 @@ public final class MicroContext extends UnitContext {
     @Getter
     private ServiceDiscoveryController localController;
 
-    MicroContext create(Vertx vertx, MicroConfig config) {
-        return create(vertx, config, null);
+    /**
+     * For test only
+     */
+    MicroContext setup(Vertx vertx, MicroConfig config) {
+        return setup(vertx, config, MicroContext.class.getName());
     }
 
-    MicroContext create(Vertx vertx, MicroConfig config, String sharedKey) {
+    MicroContext setup(Vertx vertx, MicroConfig config, String sharedKey) {
         this.breakerController = CircuitBreakerController.create(vertx, config.getCircuitConfig());
         this.clusterController = new ClusterSDController(vertx, config.getDiscoveryConfig(), sharedKey,
                                                          this.breakerController);
         this.localController = new LocalSDController(vertx, config.getLocalDiscoveryConfig(), sharedKey,
                                                      this.breakerController);
-        setupGateway(vertx, config.getGatewayConfig(), clusterController, localController);
+        setupGateway(vertx, config.getGatewayConfig(), clusterController, localController, sharedKey);
         return this;
     }
 
     private void setupGateway(Vertx vertx, GatewayConfig config, ServiceDiscoveryController clusterController,
-                              ServiceDiscoveryController localController) {
+                              ServiceDiscoveryController localController, String sharedKey) {
         if (!config.isEnabled()) {
             logger.info("Skip setup service discovery gateway");
             return;
@@ -53,6 +57,8 @@ public final class MicroContext extends UnitContext {
                                         config.getClusterUsageMonitorClass());
         }
         localController.subscribe(vertx, config.getLocalAnnounceMonitorClass(), config.getLocalUsageMonitorClass());
+        SharedDataDelegate.getEventController(vertx, sharedKey)
+                          .register(config.getIndexAddress(), new ServiceGatewayIndex(this));
     }
 
     void unregister(Future future) {

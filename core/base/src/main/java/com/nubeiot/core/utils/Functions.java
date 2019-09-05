@@ -2,7 +2,9 @@ package com.nubeiot.core.utils;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -13,11 +15,25 @@ import com.nubeiot.core.exceptions.HiddenException;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Functions {
 
     private static final Logger logger = LoggerFactory.getLogger(Functions.class);
+
+    public static <T> Optional<T> getIfThrow(@NonNull Supplier<T> provider) {
+        return getIfThrow(provider, logger::trace);
+    }
+
+    public static <T> Optional<T> getIfThrow(@NonNull Supplier<T> provider, Consumer<Throwable> consumer) {
+        try {
+            return Optional.ofNullable(provider.get());
+        } catch (Throwable t) {
+            consumer.accept(t);
+            return Optional.empty();
+        }
+    }
 
     @SafeVarargs
     public static <T> Predicate<T> and(Predicate<T>... predicates) {

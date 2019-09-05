@@ -1,6 +1,9 @@
 {
   "__app__": {
     "__micro__": {
+      "__gateway__": {
+        "enabled": true
+      },
       "__serviceDiscovery__": {
         "announceAddress": "nubeio.service.discovery.announce",
         "autoRegistrationOfImporters": true,

@@ -197,12 +197,17 @@ public interface TestHelper {
         }
 
         static Consumer<Object> asserter(TestContext context, Async async, JsonObject expected) {
-            return resp -> JsonHelper.assertJson(context, async, expected, (JsonObject) resp);
+            return resp -> JsonHelper.assertJson(context, async, expected, (JsonObject) resp, JSONCompareMode.STRICT);
         }
 
-        static void assertJson(TestContext context, Async async, JsonObject expected, JsonObject actual) {
+        static Consumer<Object> asserter(TestContext context, Async async, JsonObject expected, JSONCompareMode mode) {
+            return resp -> JsonHelper.assertJson(context, async, expected, (JsonObject) resp, mode);
+        }
+
+        static void assertJson(TestContext context, Async async, JsonObject expected, JsonObject actual,
+                               JSONCompareMode mode) {
             try {
-                JSONAssert.assertEquals(expected.encode(), actual.encode(), JSONCompareMode.STRICT);
+                JSONAssert.assertEquals(expected.encode(), actual.encode(), mode);
             } catch (JSONException | AssertionError e) {
                 System.out.println("Actual: " + actual.encode());
                 context.fail(e);

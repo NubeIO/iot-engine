@@ -54,8 +54,8 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     private final CircuitBreakerController circuitController;
     private final Map<String, Record> registrationMap = new ConcurrentHashMap<>();
 
-    static ServiceDiscovery createServiceDiscovery(Vertx vertx, ServiceDiscoveryConfig config, String kind,
-                                                   Predicate<Vertx> predicate) {
+    static ServiceDiscovery createServiceDiscovery(Vertx vertx, ServiceDiscoveryConfig config,
+                                                   ServiceDiscoveryKind kind, Predicate<Vertx> predicate) {
         if (!config.isEnabled() || !predicate.test(vertx)) {
             logger.info("Skip setup {} Service Discovery", kind);
             return null;
@@ -71,7 +71,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     abstract <T extends ServiceGatewayUsageMonitor> void subscribe(EventBus eventBus, @NonNull T usageMonitor);
 
-    abstract String kind();
+    abstract ServiceDiscoveryKind kind();
 
     abstract String computeINet(String host);
 
@@ -86,18 +86,18 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     }
 
     public boolean isEnabled() {
-        return this.config.isEnabled();
+        return config.isEnabled();
     }
 
     @Override
     public ServiceDiscovery get() {
-        return Objects.requireNonNull(this.serviceDiscovery, kind() + " Service Discovery is not enabled");
+        return Objects.requireNonNull(serviceDiscovery, kind() + " Service Discovery is not enabled");
     }
 
     void unregister(Future future) {
         if (Objects.nonNull(serviceDiscovery)) {
             io.vertx.reactivex.servicediscovery.ServiceDiscovery serviceDiscovery = getRx();
-            serviceDiscovery.rxGetRecords(r -> registrationMap.keySet().contains(r.getRegistration()), true)
+            serviceDiscovery.rxGetRecords(r -> registrationMap.containsKey(r.getRegistration()), true)
                             .flattenAsObservable(rs -> rs)
                             .flatMapCompletable(r -> serviceDiscovery.rxUnpublish(r.getRegistration()))
                             .subscribe(future::complete, err -> {
@@ -211,7 +211,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return record.setLocation(location.toJson());
     }
 
-    private io.vertx.reactivex.servicediscovery.ServiceDiscovery getRx() {
+    io.vertx.reactivex.servicediscovery.ServiceDiscovery getRx() {
         return io.vertx.reactivex.servicediscovery.ServiceDiscovery.newInstance(get());
     }
 
