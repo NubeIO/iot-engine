@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.reactivex.Single;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventAction;
@@ -13,6 +15,7 @@ import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -22,13 +25,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UploadListener implements EventListener {
 
+    @Getter
+    private final Vertx vertx;
+    @Getter
+    private final String sharedKey;
     private final List<EventAction> actions;
 
-    public static UploadListener create(String listenerClass, @NonNull List<EventAction> actions) {
+    public static UploadListener create(Vertx vertx, String listenerClass, String sharedKey,
+                                        @NonNull List<EventAction> actions) {
         if (Strings.isBlank(listenerClass) || UploadListener.class.getName().equals(listenerClass)) {
-            return new UploadListener(actions);
+            return new UploadListener(vertx, sharedKey, actions);
         }
         Map<Class, Object> inputs = new LinkedHashMap<>();
+        inputs.put(Vertx.class, vertx);
+        inputs.put(String.class, sharedKey);
         inputs.put(List.class, actions);
         return ReflectionClass.createObject(listenerClass, inputs);
     }
@@ -36,7 +46,7 @@ public class UploadListener implements EventListener {
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() { return actions; }
 
-    @EventContractor(action = EventAction.CREATE)
-    public JsonObject create(JsonObject data) { return data; }
+    @EventContractor(action = EventAction.CREATE, returnType = Single.class)
+    public Single<JsonObject> create(JsonObject data) { return Single.just(data); }
 
 }

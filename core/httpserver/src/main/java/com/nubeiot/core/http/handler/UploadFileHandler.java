@@ -28,10 +28,10 @@ import lombok.RequiredArgsConstructor;
 /**
  * Only override it if any performance issue
  */
+@Getter
 @RequiredArgsConstructor
 public class UploadFileHandler implements RestEventRequestDispatcher {
 
-    @Getter
     private final EventController controller;
     private final EventModel eventModel;
     private final Path uploadDir;

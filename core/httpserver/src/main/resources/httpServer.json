@@ -127,7 +127,8 @@
   },
   "__static__": {
     "enabled": false,
-    "webRoot": "webroot",
-    "webPath": "/web"
+    "inResource": true,
+    "webPath": "/web",
+    "webRoot": "webroot"
   }
 }

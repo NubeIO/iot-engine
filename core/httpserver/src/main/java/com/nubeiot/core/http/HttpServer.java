@@ -97,6 +97,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         final FileStorageConfig storageCfg = config.getFileStorageConfig();
         final DownloadConfig downCfg = storageCfg.getDownloadConfig();
         final UploadConfig uploadCfg = storageCfg.getUploadConfig();
+        final StaticWebConfig staticWebConfig = config.getStaticWebConfig();
         return ServerInfo.siBuilder()
                          .host(config.getHost())
                          .port(port)
@@ -106,6 +107,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                          .servicePath(restCfg.isEnabled() && dynamicCfg.isEnabled() ? dynamicCfg.getPath() : null)
                          .downloadPath(storageCfg.isEnabled() && downCfg.isEnabled() ? downCfg.getPath() : null)
                          .uploadPath(storageCfg.isEnabled() && uploadCfg.isEnabled() ? uploadCfg.getPath() : null)
+                         .webPath(staticWebConfig.isEnabled() ? staticWebConfig.getWebPath() : null)
                          .router(handler)
                          .build();
     }
@@ -150,10 +152,12 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
     private void initStaticWebRouter(Router mainRouter, StaticWebConfig webConfig) {
         if (webConfig.isEnabled()) {
             final StaticHandler staticHandler = StaticHandler.create();
+            String webDir;
             if (webConfig.isInResource()) {
-                staticHandler.setWebRoot(webConfig.getWebRoot());
+                webDir = webConfig.getWebRoot();
+                staticHandler.setWebRoot(webDir);
             } else {
-                String webDir = FileUtils.createFolder(dataDir, webConfig.getWebRoot());
+                webDir = FileUtils.createFolder(dataDir, webConfig.getWebRoot());
                 logger.info("Static web dir {}", webDir);
                 staticHandler.setEnableRangeSupport(true)
                              .setSendVaryHeader(true)
@@ -186,23 +190,6 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         Path storageDir = Paths.get(FileUtils.createFolder(dataDir, storageConfig.getDir()));
-
-        //FIXME: Need to address in backend and frontend in parallel
-        if (storageConfig.isExternalHandler()) {
-            router.route()
-                  .handler(BodyHandler.create(storageDir.toString())
-                                      .setBodyLimit(storageConfig.getUploadConfig().getMaxBodySizeMB() * MB));
-            router.route()
-                  .handler(StaticHandler.create()
-                                        .setEnableRangeSupport(true)
-                                        .setSendVaryHeader(true)
-                                        .setFilesReadOnly(true)
-                                        .setAllowRootFileSystemAccess(true)
-                                        .setIncludeHidden(false)
-                                        .setWebRoot(storageDir.toString()));
-            router.get(Urls.combinePath(storageConfig.getDownloadConfig().getPath(), ApiConstants.WILDCARDS_ANY_PATH));
-            return router;
-        }
         initUploadRouter(router, storageDir, storageConfig.getUploadConfig(), publicUrl);
         initDownloadRouter(router, storageDir, storageConfig.getDownloadConfig());
         return router;
@@ -223,8 +210,8 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                              .build();
         String handlerClass = uploadCfg.getHandlerClass();
         String listenerClass = uploadCfg.getListenerClass();
-        controller.register(listenerEvent,
-                            UploadListener.create(listenerClass, new ArrayList<>(listenerEvent.getEvents())));
+        controller.register(listenerEvent, UploadListener.create(vertx, listenerClass, getSharedKey(),
+                                                                 new ArrayList<>(listenerEvent.getEvents())));
         router.post(uploadCfg.getPath())
               .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB))
               .handler(UploadFileHandler.create(handlerClass, controller, listenerEvent, storageDir, publicUrl))
