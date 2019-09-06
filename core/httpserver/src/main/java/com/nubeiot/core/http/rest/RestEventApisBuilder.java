@@ -5,12 +5,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.base.HttpUtils;
@@ -28,7 +30,7 @@ public final class RestEventApisBuilder {
     private final Logger logger = LoggerFactory.getLogger(RestEventApisBuilder.class);
     private final Router router;
     private final Set<Class<? extends RestEventApi>> apis = new HashSet<>();
-    private EventController eventController;
+    private Function<String, Object> sharedDataFunc;
 
     /**
      * For test
@@ -53,6 +55,11 @@ public final class RestEventApisBuilder {
         this(router.getDelegate());
     }
 
+    public RestEventApisBuilder addSharedDataFunc(@NonNull Function<String, Object> func) {
+        this.sharedDataFunc = func;
+        return this;
+    }
+
     public RestEventApisBuilder register(@NonNull Class<? extends RestEventApi> restApi) {
         apis.add(restApi);
         return this;
@@ -65,11 +72,6 @@ public final class RestEventApisBuilder {
 
     public RestEventApisBuilder register(@NonNull Collection<Class<? extends RestEventApi>> restApis) {
         restApis.stream().filter(Objects::nonNull).forEach(apis::add);
-        return this;
-    }
-
-    public RestEventApisBuilder addEventController(EventController eventController) {
-        this.eventController = eventController;
         return this;
     }
 
@@ -86,13 +88,17 @@ public final class RestEventApisBuilder {
     }
 
     private void createRouter(RestEventApi restApi) {
-        restApi.getRestMetadata().forEach(metadata -> this.createRouter(metadata, restApi));
+        restApi.registerSharedData(sharedDataFunc)
+               .initRouter()
+               .getRestMetadata()
+               .forEach(metadata -> this.createRouter(metadata, restApi));
     }
 
     private void createRouter(RestEventApiMetadata metadata, RestEventApi api) {
         final EventMethodDefinition definition = metadata.getDefinition();
+        EventController controller = (EventController) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
         for (EventMethodMapping mapping : definition.getMapping()) {
-            RestEventApiDispatcher restHandler = RestEventApiDispatcher.create(api.dispatcher(), eventController,
+            RestEventApiDispatcher restHandler = RestEventApiDispatcher.create(api.dispatcher(), controller,
                                                                                metadata.getAddress(),
                                                                                mapping.getAction(),
                                                                                metadata.getPattern(),

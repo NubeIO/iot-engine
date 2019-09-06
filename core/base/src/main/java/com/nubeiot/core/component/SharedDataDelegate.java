@@ -16,8 +16,10 @@ import lombok.NonNull;
 
 /**
  * SharedData delegate
+ *
+ * @param <T> Type of instance that inherited from {@link SharedDataDelegate}
  */
-public interface SharedDataDelegate {
+public interface SharedDataDelegate<T extends SharedDataDelegate> {
 
     Logger LOGGER = LoggerFactory.getLogger(SharedDataDelegate.class);
 
@@ -79,13 +81,12 @@ public interface SharedDataDelegate {
     /**
      * System will register it automatically. You don't need call it directly
      *
-     * @param <T>            Type of instance that inherited from {@link SharedDataDelegate}
      * @param sharedDataFunc Given shared data function from {@code Vertx Verticle}
      * @return a reference to this, so the API can be used fluently
      */
-    <T extends SharedDataDelegate> T registerSharedData(@NonNull Function<String, Object> sharedDataFunc);
+    T registerSharedData(@NonNull Function<String, Object> sharedDataFunc);
 
-    abstract class AbstractSharedDataDelegate implements SharedDataDelegate {
+    abstract class AbstractSharedDataDelegate<T extends SharedDataDelegate> implements SharedDataDelegate<T> {
 
         private Function<String, Object> sharedDataFunc;
 
@@ -96,8 +97,7 @@ public interface SharedDataDelegate {
 
         @SuppressWarnings("unchecked")
         @Override
-        public final <T extends SharedDataDelegate> T registerSharedData(
-            @NonNull Function<String, Object> sharedDataFunc) {
+        public final T registerSharedData(@NonNull Function<String, Object> sharedDataFunc) {
             this.sharedDataFunc = sharedDataFunc;
             return (T) this;
         }

@@ -11,15 +11,17 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.core.component.SharedDataDelegate.AbstractSharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
 
 import lombok.NonNull;
 
-public abstract class AbstractRestEventApi implements RestEventApi {
+public abstract class AbstractRestEventApi extends AbstractSharedDataDelegate<RestEventApi> implements RestEventApi {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final SortedMap<String, RestEventApiMetadata> restMetadata = new TreeMap<>(
@@ -28,10 +30,7 @@ public abstract class AbstractRestEventApi implements RestEventApi {
 
     protected AbstractRestEventApi() {
         this.mapping = initHttpEventMap();
-        initRoute();
     }
-
-    protected abstract void initRoute();
 
     protected ActionMethodMapping initHttpEventMap() {
         return ActionMethodMapping.CRUD_MAP;
@@ -46,13 +45,18 @@ public abstract class AbstractRestEventApi implements RestEventApi {
     }
 
     protected void addRouter(@NonNull EventModel eventModel, @NonNull EventMethodDefinition definition) {
+        addRouter(eventModel.getAddress(), eventModel.getPattern(), definition);
+    }
+
+    protected void addRouter(@NonNull String address, @NonNull EventPattern pattern,
+                             @NonNull EventMethodDefinition definition) {
         if (restMetadata.containsKey(definition.getServicePath())) {
             logger.warn("HTTP path '{}' is already registered, but might different Event address '{}'",
                         definition.getServicePath(), restMetadata.get(definition.getServicePath()).getAddress());
         }
         restMetadata.putIfAbsent(definition.getServicePath(), RestEventApiMetadata.builder()
-                                                                                  .address(eventModel.getAddress())
-                                                                                  .pattern(eventModel.getPattern())
+                                                                                  .address(address)
+                                                                                  .pattern(pattern)
                                                                                   .definition(definition)
                                                                                   .build());
     }

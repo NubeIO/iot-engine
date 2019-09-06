@@ -36,12 +36,12 @@ final class ConsumerService implements KafkaConsumerService {
     private final Map<ClientTechId, KafkaErrorHandler> errorHandlers;
     private final Map<String, KafkaConsumer> consumers = new HashMap<>();
 
-    public Collection<KafkaConsumer> consumers() {
-        return Collections.unmodifiableCollection(consumers.values());
-    }
-
     public KafkaConsumer consumer(String topic) {
         return consumers.get(topic);
+    }
+
+    public Collection<KafkaConsumer> consumers() {
+        return Collections.unmodifiableCollection(consumers.values());
     }
 
     ConsumerService create(Function<String, Object> sharedDataFunc,
@@ -85,9 +85,11 @@ final class ConsumerService implements KafkaConsumerService {
                                                        KafkaEventMetadata metadata) {
         KafkaConsumerHandler consumerHandler = metadata.getConsumerHandler();
         if (Objects.isNull(consumerHandler)) {
-            consumerHandler = KafkaConsumerHandler.createBroadcaster(metadata.getEventModel());
+            consumerHandler = (KafkaConsumerHandler) KafkaConsumerHandler.createBroadcaster(metadata.getEventModel())
+                                                                         .registerSharedData(sharedFunc);
         }
-        return consumerHandler.registerTransformer(metadata.getTransformer()).registerSharedData(sharedFunc);
+        return (KafkaConsumerHandler) consumerHandler.registerTransformer(metadata.getTransformer())
+                                                     .registerSharedData(sharedFunc);
     }
 
 }

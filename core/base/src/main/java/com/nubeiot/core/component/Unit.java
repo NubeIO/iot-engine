@@ -37,12 +37,12 @@ public interface Unit<C extends IConfig, T extends UnitContext> extends HasConfi
     /**
      * Retrieve {@code Vertx} shared data value by key data
      *
-     * @param <R>     T type of data value
+     * @param <D>     Data value type
      * @param dataKey given data key
      * @return Data value. {@code nullable} if no data value by key or data value type doesn't match type with expected
      *     value
      */
-    default <R> R getSharedData(String dataKey) {
+    default <D> D getSharedData(String dataKey) {
         return getSharedData(dataKey, null);
     }
 
@@ -50,11 +50,22 @@ public interface Unit<C extends IConfig, T extends UnitContext> extends HasConfi
      * Retrieve {@code Vertx} shared data value by key data. If no data value by key or data value type doesn't match
      * type with expected value, it will fallback to given value.
      *
-     * @param <R>      T type of data value
+     * @param <D>      T type of data value
      * @param dataKey  given data key
      * @param fallback Fallback value
      * @return Data value.
      */
-    <R> R getSharedData(String dataKey, R fallback);
+    <D> D getSharedData(String dataKey, D fallback);
+
+    /**
+     * Add {@code Vertx} shared data value by key data. If no data value by key or data value type doesn't match type
+     * with expected value, it will fallback to given value.
+     *
+     * @param <D>     T type of data value
+     * @param dataKey given data key
+     * @param data    Data value
+     * @return Data value.
+     */
+    <D> D addSharedData(String dataKey, D data);
 
 }

@@ -9,7 +9,7 @@ import com.nubeiot.core.event.EventListener;
 
 import lombok.NonNull;
 
-public class EnableKafkaEventListener implements EventListener {
+public final class EnableKafkaEventListener implements EventListener {
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {

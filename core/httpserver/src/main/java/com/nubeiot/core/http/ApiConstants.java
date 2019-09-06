@@ -8,6 +8,7 @@ public final class ApiConstants {
 
     public static final String WEB_PATH = "/web";
     public static final String ROOT_API_PATH = "/api";
+    public static final String ROOT_GATEWAY_PATH = "/gw";
     public static final String ROOT_WS_PATH = "/ws";
     public static final String DYNAMIC_API_PATH = "/s";
     public static final String DYNAMIC_WS_PATH = "/s/ws";

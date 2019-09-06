@@ -15,11 +15,14 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.dynamic.mock.HttpServiceServer;
 
 @RunWith(VertxUnitRunner.class)
 public class DynamicHttpServerTest extends DynamicServiceTestBase {
+
+    private int port;
 
     @BeforeClass
     public static void beforeSuite() { TestHelper.setup(); }
@@ -27,8 +30,8 @@ public class DynamicHttpServerTest extends DynamicServiceTestBase {
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
-        startGatewayAndService(context, new HttpServiceServer(),
-                               new DeploymentOptions().setConfig(deployConfig(TestHelper.getRandomPort())));
+        port = TestHelper.getRandomPort();
+        startGatewayAndService(context, new HttpServiceServer(), new DeploymentOptions().setConfig(deployConfig(port)));
     }
 
     @After
@@ -51,7 +54,16 @@ public class DynamicHttpServerTest extends DynamicServiceTestBase {
     public void test_not_found(TestContext context) {
         JsonObject m = new JsonObject().put("message", "Resource not found");
         assertRestByClient(context, HttpMethod.GET, "/api/s/rest/xxx", 404,
-                           new JsonObject().put("code", ErrorCode.NOT_FOUND).put("message", m), IGNORE_URI);
+                           new JsonObject().put("code", ErrorCode.NOT_FOUND).put("message", m),
+                           JsonHelper.ignore("message.uri"));
+    }
+
+    @Test
+    public void test_get_gateway_index(TestContext context) {
+        final JsonObject expected = new JsonObject(
+            "{\"apis\":[{\"name\":\"httpService\",\"type\":\"http-endpoint\",\"status\":\"UP\"," +
+            "\"location\":\"http://0.0.0.0:" + port + "/rest\"}]}");
+        assertRestByClient(context, HttpMethod.GET, "/gw/index", 200, expected);
     }
 
 }

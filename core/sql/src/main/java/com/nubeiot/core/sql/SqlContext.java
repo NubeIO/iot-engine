@@ -20,7 +20,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class SqlContext<T extends EntityHandler> extends UnitContext {
+public final class SqlContext<T extends EntityHandler> extends UnitContext {
 
     @NonNull
     @Getter(value = AccessLevel.PACKAGE)

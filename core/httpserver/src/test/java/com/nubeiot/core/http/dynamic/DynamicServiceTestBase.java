@@ -4,8 +4,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import org.skyscreamer.jsonassert.Customization;
-
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
@@ -17,8 +15,6 @@ import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.dynamic.mock.GatewayServer;
 
 public class DynamicServiceTestBase extends HttpServerTestBase {
-
-    static final Customization IGNORE_URI = new Customization("message.uri", (o1, o2) -> false);
 
     protected void startGatewayAndService(TestContext context, ContainerVerticle service,
                                           DeploymentOptions serviceOptions) {

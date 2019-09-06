@@ -40,13 +40,14 @@ public class MockApiDefinition {
     public static class MockRestEventApi extends AbstractRestEventApi {
 
         @Override
-        protected void initRoute() {
+        public MockRestEventApi initRouter() {
             EventModel model = EventModel.builder()
                                          .address("http.server.test")
                                          .addEvents(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE,
                                                     EventAction.UPDATE, EventAction.PATCH)
                                          .build();
             this.addRouter(model, "/test/events", "/:event_id");
+            return this;
         }
 
     }

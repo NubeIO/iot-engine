@@ -4,6 +4,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerOptions;
@@ -23,6 +26,7 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
+import com.nubeiot.core.http.HttpConfig.ApiGatewayConfig;
 import com.nubeiot.core.http.HttpConfig.CorsOptions;
 import com.nubeiot.core.http.HttpConfig.FileStorageConfig;
 import com.nubeiot.core.http.HttpConfig.FileStorageConfig.DownloadConfig;
@@ -33,6 +37,7 @@ import com.nubeiot.core.http.HttpConfig.StaticWebConfig;
 import com.nubeiot.core.http.HttpConfig.WebsocketConfig;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
+import com.nubeiot.core.http.gateway.GatewayIndexApi;
 import com.nubeiot.core.http.handler.DownloadFileHandler;
 import com.nubeiot.core.http.handler.FailureContextHandler;
 import com.nubeiot.core.http.handler.NotFoundContextHandler;
@@ -41,6 +46,8 @@ import com.nubeiot.core.http.handler.UploadFileHandler;
 import com.nubeiot.core.http.handler.UploadListener;
 import com.nubeiot.core.http.handler.WebsocketBridgeEventHandler;
 import com.nubeiot.core.http.rest.RestApisBuilder;
+import com.nubeiot.core.http.rest.RestEventApi;
+import com.nubeiot.core.http.rest.RestEventApisBuilder;
 import com.nubeiot.core.http.ws.WebsocketEventBuilder;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
@@ -50,6 +57,7 @@ import lombok.NonNull;
 public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext> {
 
     public final static String SERVER_INFO_DATA_KEY = "SERVER_INFO";
+    public final static String SERVER_GATEWAY_ADDRESS_DATA_KEY = "SERVER_GATEWAY_ADDRESS";
     private static final int MB = 1024 * 1024;
     @NonNull
     private final HttpServerRouter httpRouter;
@@ -73,9 +81,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             if (event.succeeded()) {
                 int port = event.result().actualPort();
                 logger.info("Web Server started at {}", port);
-                ServerInfo info = createServerInfo(handler, port);
-                SharedDataDelegate.addLocalDataValue(vertx, getSharedKey(), SERVER_INFO_DATA_KEY, info);
-                this.getContext().create(info);
+                this.getContext().setup(addSharedData(SERVER_INFO_DATA_KEY, createServerInfo(handler, port)));
                 future.complete();
                 return;
             }
@@ -98,6 +104,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         final DownloadConfig downCfg = storageCfg.getDownloadConfig();
         final UploadConfig uploadCfg = storageCfg.getUploadConfig();
         final StaticWebConfig staticWebConfig = config.getStaticWebConfig();
+        final ApiGatewayConfig gatewayConfig = config.getApiGatewayConfig();
         return ServerInfo.siBuilder()
                          .host(config.getHost())
                          .port(port)
@@ -108,6 +115,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                          .downloadPath(storageCfg.isEnabled() && downCfg.isEnabled() ? downCfg.getPath() : null)
                          .uploadPath(storageCfg.isEnabled() && uploadCfg.isEnabled() ? uploadCfg.getPath() : null)
                          .webPath(staticWebConfig.isEnabled() ? staticWebConfig.getWebPath() : null)
+                         .gatewayPath(gatewayConfig.isEnabled() ? gatewayConfig.getPath() : null)
                          .router(handler)
                          .build();
     }
@@ -141,6 +149,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             initWebSocketRouter(mainRouter, config.getWebsocketConfig());
             initHttp2Router(mainRouter);
             initRestRouter(mainRouter, config.getRestConfig());
+            initGatewayRouter(mainRouter, config.getApiGatewayConfig());
             initStaticWebRouter(mainRouter, config.getStaticWebConfig());
             mainRouter.route().last().handler(new NotFoundContextHandler());
             return mainRouter;
@@ -149,40 +158,56 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         }
     }
 
-    private void initStaticWebRouter(Router mainRouter, StaticWebConfig webConfig) {
-        if (webConfig.isEnabled()) {
-            final StaticHandler staticHandler = StaticHandler.create();
-            String webDir;
-            if (webConfig.isInResource()) {
-                webDir = webConfig.getWebRoot();
-                staticHandler.setWebRoot(webDir);
-            } else {
-                webDir = FileUtils.createFolder(dataDir, webConfig.getWebRoot());
-                logger.info("Static web dir {}", webDir);
-                staticHandler.setEnableRangeSupport(true)
-                             .setSendVaryHeader(true)
-                             .setFilesReadOnly(false)
-                             .setAllowRootFileSystemAccess(true)
-                             .setIncludeHidden(false)
-                             .setWebRoot(webDir);
-            }
-            mainRouter.route(Urls.combinePath(webConfig.getWebPath(), ApiConstants.WILDCARDS_ANY_PATH))
-                      .handler(staticHandler);
+    private void initGatewayRouter(Router mainRouter, ApiGatewayConfig apiGatewayConfig) {
+        if (!apiGatewayConfig.isEnabled()) {
+            return;
         }
+        addSharedData(SERVER_GATEWAY_ADDRESS_DATA_KEY,
+                      Strings.requireNotBlank(apiGatewayConfig.getAddress(), "Gateway address cannot be blank"));
+        final Set<Class<? extends RestEventApi>> gatewayApis = Stream.concat(httpRouter.getGatewayApiClasses().stream(),
+                                                                             Stream.of(GatewayIndexApi.class))
+                                                                     .collect(Collectors.toSet());
+        logger.info("Registering sub routers in Gateway API: '{}'...", apiGatewayConfig.getPath());
+        final Router gatewayRouter = new RestEventApisBuilder(vertx).register(gatewayApis)
+                                                                    .addSharedDataFunc(this::getSharedData)
+                                                                    .build();
+        mainRouter.mountSubRouter(apiGatewayConfig.getPath(), gatewayRouter);
+        mainRouter.route(Urls.combinePath(apiGatewayConfig.getPath(), ApiConstants.WILDCARDS_ANY_PATH))
+                  .handler(new RestEventResponseHandler())
+                  .produces(HttpUtils.DEFAULT_CONTENT_TYPE);
     }
 
-    private Router initRestRouter(Router router, RestConfig restConfig) {
-        if (!restConfig.isEnabled()) {
-            return router;
+    private void initStaticWebRouter(Router mainRouter, StaticWebConfig webConfig) {
+        if (!webConfig.isEnabled()) {
+            return;
         }
-        this.dataDir = this.getSharedData(SharedDataDelegate.SHARED_DATADIR, FileUtils.DEFAULT_DATADIR.toString());
-        return new RestApisBuilder(vertx, router).rootApi(restConfig.getRootApi())
-                                                 .registerApi(httpRouter.getRestApiClass())
-                                                 .registerEventBusApi(httpRouter.getRestEventApiClass())
-                                                 .dynamicRouteConfig(restConfig.getDynamicConfig())
-                                                 .addEventController(
-                                                     SharedDataDelegate.getEventController(vertx, this.getSharedKey()))
-                                                 .build();
+        final StaticHandler staticHandler = StaticHandler.create();
+        if (webConfig.isInResource()) {
+            staticHandler.setWebRoot(webConfig.getWebRoot());
+        } else {
+            String webDir = FileUtils.createFolder(dataDir, webConfig.getWebRoot());
+            logger.info("Static web dir {}", webDir);
+            staticHandler.setEnableRangeSupport(true)
+                         .setSendVaryHeader(true)
+                         .setFilesReadOnly(false)
+                         .setAllowRootFileSystemAccess(true)
+                         .setIncludeHidden(false)
+                         .setWebRoot(webDir);
+        }
+        mainRouter.route(Urls.combinePath(webConfig.getWebPath(), ApiConstants.WILDCARDS_ANY_PATH))
+                  .handler(staticHandler);
+    }
+
+    private Router initRestRouter(Router mainRouter, RestConfig restConfig) {
+        if (!restConfig.isEnabled()) {
+            return mainRouter;
+        }
+        return new RestApisBuilder(vertx, mainRouter).rootApi(restConfig.getRootApi())
+                                                     .registerApi(httpRouter.getRestApiClasses())
+                                                     .registerEventBusApi(httpRouter.getRestEventApiClasses())
+                                                     .dynamicRouteConfig(restConfig.getDynamicConfig())
+                                                     .addSharedDataFunc(this::getSharedData)
+                                                     .build();
     }
 
     private Router initFileStorageRouter(Router router, FileStorageConfig storageConfig, String publicUrl) {
@@ -200,7 +225,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return router;
         }
         logger.info("Init Upload router: '{}'...", uploadCfg.getPath());
-        EventController controller = SharedDataDelegate.getEventController(vertx, this.getSharedKey());
+        EventController controller = SharedDataDelegate.getEventController(vertx, getSharedKey());
         EventModel listenerEvent = EventModel.builder()
                                              .address(Strings.fallback(uploadCfg.getListenerAddress(),
                                                                        getSharedKey() + ".upload"))

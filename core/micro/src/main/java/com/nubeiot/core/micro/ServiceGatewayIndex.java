@@ -55,7 +55,7 @@ public final class ServiceGatewayIndex implements EventListener {
         return controller.getRx()
                          .rxGetRecords(record -> predicate(filter).test(record))
                          .flatMap(records -> Observable.fromIterable(records).map(transformer::transform).toList())
-                         .map(records -> new JsonObject().put("records", new JsonArray(records)));
+                         .map(records -> new JsonObject().put("apis", new JsonArray(records)));
     }
 
     private ServiceDiscoveryController getController(JsonObject filter) {

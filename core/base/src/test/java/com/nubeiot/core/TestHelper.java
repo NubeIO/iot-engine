@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.json.JSONException;
+import org.skyscreamer.jsonassert.ArrayValueMatcher;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -191,6 +192,16 @@ public interface TestHelper {
 
 
     interface JsonHelper {
+
+        static Customization ignore(@NonNull String path) {
+            return new Customization(path, (o1, o2) -> true);
+        }
+
+        static Customization ignoreInArray(@NonNull String path, @NonNull String arrayPath) {
+            ArrayValueMatcher<Object> arrValMatch = new ArrayValueMatcher<>(
+                new CustomComparator(JSONCompareMode.NON_EXTENSIBLE, new Customization(path, (o1, o2) -> true)));
+            return new Customization(arrayPath, arrValMatch);
+        }
 
         static CustomComparator comparator(Customization... customizations) {
             return new CustomComparator(JSONCompareMode.LENIENT, customizations);
