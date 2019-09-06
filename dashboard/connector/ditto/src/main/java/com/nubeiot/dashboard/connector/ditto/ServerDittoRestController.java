@@ -19,18 +19,18 @@ import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.auth.BasicCredential;
 import com.nubeiot.auth.Credential.CredentialType;
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Builder;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.HttpConfig;
 import com.nubeiot.core.http.base.HostInfo;
+import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestHttpClientConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestHttpConfigProvider;
 import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.annotation.ResponseWriter;
 
@@ -42,35 +42,50 @@ public class ServerDittoRestController implements RestApi {
     @Path("/api/*")
     @ResponseWriter(ResponseDataWriter.class)
     public Future<ResponseData> dittoGet(@Context Vertx vertx, @Context RoutingContext ctx,
-                                         @Context RestConfigProvider config) {
-        return dittoRequestDispatcher(vertx, ctx, config.getConfig());
+                                         @Context RestHttpConfigProvider httpConfigProvider,
+                                         @Context RestHttpClientConfigProvider httpClientConfigProvider,
+                                         @Context RestDittoConfigProvider dittoConfigProvider) {
+        return dittoRequestDispatcher(vertx, ctx, httpConfigProvider.getHttpConfig(),
+                                      dittoConfigProvider.getDittoConfig(),
+                                      httpClientConfigProvider.getHttpClientConfig());
     }
 
     @POST
     @Path("/api/*")
     public Future<ResponseData> dittoPost(@Context Vertx vertx, @Context RoutingContext ctx,
-                                          @Context RestConfigProvider config) {
-        return dittoRequestDispatcher(vertx, ctx, config.getConfig());
+                                          @Context RestHttpConfigProvider httpConfigProvider,
+                                          @Context RestHttpClientConfigProvider httpClientConfigProvider,
+                                          @Context RestDittoConfigProvider dittoConfigProvider) {
+        return dittoRequestDispatcher(vertx, ctx, httpConfigProvider.getHttpConfig(),
+                                      dittoConfigProvider.getDittoConfig(),
+                                      httpClientConfigProvider.getHttpClientConfig());
     }
 
     @PUT
     @Path("/api/*")
     public Future<ResponseData> dittoPut(@Context Vertx vertx, @Context RoutingContext ctx,
-                                         @Context RestConfigProvider config) {
-        return dittoRequestDispatcher(vertx, ctx, config.getConfig());
+                                         @Context RestHttpConfigProvider httpConfigProvider,
+                                         @Context RestHttpClientConfigProvider httpClientConfigProvider,
+                                         @Context RestDittoConfigProvider dittoConfigProvider) {
+        return dittoRequestDispatcher(vertx, ctx, httpConfigProvider.getHttpConfig(),
+                                      dittoConfigProvider.getDittoConfig(),
+                                      httpClientConfigProvider.getHttpClientConfig());
     }
 
     @DELETE
     @Path("/api/*")
     public Future<ResponseData> dittoDelete(@Context Vertx vertx, @Context RoutingContext ctx,
-                                            @Context RestConfigProvider config) {
-        return dittoRequestDispatcher(vertx, ctx, config.getConfig());
+                                            @Context RestHttpConfigProvider httpConfigProvider,
+                                            @Context RestHttpClientConfigProvider httpClientConfigProvider,
+                                            @Context RestDittoConfigProvider dittoConfigProvider) {
+        return dittoRequestDispatcher(vertx, ctx, httpConfigProvider.getHttpConfig(),
+                                      dittoConfigProvider.getDittoConfig(),
+                                      httpClientConfigProvider.getHttpClientConfig());
     }
 
-    private Future<ResponseData> dittoRequestDispatcher(Vertx vertx, RoutingContext ctx, NubeConfig config) {
+    private Future<ResponseData> dittoRequestDispatcher(Vertx vertx, RoutingContext ctx, HttpConfig httpConfig,
+                                                        DittoConfig dittoConfig, HttpClientConfig httpClientConfig) {
         Future<ResponseData> future = Future.future();
-        DittoConfig dittoConfig = IConfig.from(config.getAppConfig(), DittoConfig.class);
-        HttpConfig httpConfig = IConfig.from(config.getAppConfig(), HttpConfig.class);
 
         // Getting actual Ditto call API
         String uri = ctx.request().uri().replaceFirst(httpConfig.getRestConfig().getRootApi(), "");
@@ -82,7 +97,7 @@ public class ServerDittoRestController implements RestApi {
                                                             .setPort(port)
                                                             .setSsl(port == 443);
 
-        HttpClientDelegate client = HttpClientDelegate.create(vertx, HostInfo.from(requestOptions));
+        HttpClientDelegate client = HttpClientDelegate.create(vertx, httpClientConfig, HostInfo.from(requestOptions));
         Builder requestDataBuilder = RequestData.builder();
 
         if (dittoConfig.getPolicy()) {

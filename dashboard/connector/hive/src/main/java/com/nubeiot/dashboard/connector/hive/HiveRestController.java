@@ -23,7 +23,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
+import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 
 public class HiveRestController implements RestApi {
 
@@ -41,8 +41,8 @@ public class HiveRestController implements RestApi {
     @POST
     @Path("/engine")
     public Future<ResponseData> engine(@Context io.vertx.core.Vertx vertx, @Context RoutingContext ctx,
-                                       @Context RestConfigProvider config) {
-        HiveConfig hiveConfig = IConfig.from(config.getConfig().getAppConfig(), HiveConfig.class);
+                                       @Context RestNubeConfigProvider config) {
+        HiveConfig hiveConfig = IConfig.from(config.getNubeConfig().getAppConfig(), HiveConfig.class);
         return hiveQuery(new Vertx(vertx), hiveConfig, ctx);
     }
 

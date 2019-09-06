@@ -48,8 +48,8 @@ import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
-import com.nubeiot.core.http.rest.provider.RestConfigProvider;
 import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
+import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
@@ -80,8 +80,8 @@ public class MultiTenantUserController implements RestApi {
     public Future<ResponseData> post(@Context Vertx vertx, @Context RoutingContext ctx,
                                      @Context RestMicroContextProvider microContextProvider,
                                      @Context RestMongoClientProvider mongoClientProvider,
-                                     @Context RestConfigProvider configProvider) {
-        JsonObject appConfig = configProvider.getConfig().getAppConfig().toJson();
+                                     @Context RestNubeConfigProvider configProvider) {
+        JsonObject appConfig = configProvider.getNubeConfig().getAppConfig().toJson();
         JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         return handlePostUser(vertx, ctx, microContextProvider.getMicroContext(), mongoClientProvider.getMongoClient(),
                               keycloakConfig, appConfig);
@@ -92,10 +92,9 @@ public class MultiTenantUserController implements RestApi {
     @RouteOrder(3)
     public Future<ResponseData> patch(@Context Vertx vertx, @Context RoutingContext ctx,
                                       @Context RestMongoClientProvider mongoClientProvider,
-                                      @Context RestConfigProvider configProvider) {
-        JsonObject keycloakConfig = configProvider.getConfig().getAppConfig().toJson().getJsonObject("keycloak");
-        return handlePatchUser(vertx, ctx, mongoClientProvider.getMongoClient(),
-                               keycloakConfig);
+                                      @Context RestNubeConfigProvider configProvider) {
+        JsonObject keycloakConfig = configProvider.getNubeConfig().getAppConfig().toJson().getJsonObject("keycloak");
+        return handlePatchUser(vertx, ctx, mongoClientProvider.getMongoClient(), keycloakConfig);
     }
 
     @POST
@@ -104,8 +103,8 @@ public class MultiTenantUserController implements RestApi {
     public Future<ResponseData> delete(@Context Vertx vertx, @Context RoutingContext ctx,
                                        @Context RestMicroContextProvider microContextProvider,
                                        @Context RestMongoClientProvider mongoClientProvider,
-                                       @Context RestConfigProvider configProvider) {
-        JsonObject appConfig = configProvider.getConfig().getAppConfig().toJson();
+                                       @Context RestNubeConfigProvider configProvider) {
+        JsonObject appConfig = configProvider.getNubeConfig().getAppConfig().toJson();
         JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         return handleDeleteUsers(vertx, ctx, microContextProvider.getMicroContext(),
                                  mongoClientProvider.getMongoClient(), keycloakConfig, appConfig);
@@ -116,8 +115,8 @@ public class MultiTenantUserController implements RestApi {
     @RouteOrder(3)
     public Future<ResponseData> updatePassword(@Context Vertx vertx, @Context RoutingContext ctx,
                                                @Context RestMongoClientProvider mongoClientProvider,
-                                               @Context RestConfigProvider configProvider) {
-        JsonObject appConfig = configProvider.getConfig().getAppConfig().toJson();
+                                               @Context RestNubeConfigProvider configProvider) {
+        JsonObject appConfig = configProvider.getNubeConfig().getAppConfig().toJson();
         JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         return handleUpdatePassword(vertx, ctx, mongoClientProvider.getMongoClient(), keycloakConfig);
     }
@@ -126,8 +125,8 @@ public class MultiTenantUserController implements RestApi {
     @Path("/check_user")
     @RouteOrder(3)
     public Future<ResponseData> checkUser(@Context Vertx vertx, @Context RoutingContext ctx,
-                                          @Context RestConfigProvider configProvider) {
-        JsonObject appConfig = configProvider.getConfig().getAppConfig().toJson();
+                                          @Context RestNubeConfigProvider configProvider) {
+        JsonObject appConfig = configProvider.getNubeConfig().getAppConfig().toJson();
         JsonObject keycloakConfig = appConfig.getJsonObject("keycloak");
         return handleCheckUser(vertx, ctx, keycloakConfig);
     }
@@ -138,13 +137,13 @@ public class MultiTenantUserController implements RestApi {
         JsonObject body = ctx.getBodyAsJson();
 
         UserProps userProps = UserProps.builder()
-            .httpClient(vertx.createHttpClient())
-            .authServerUrl(keycloakConfig.getString("auth-server-url"))
-            .realmName(keycloakConfig.getString("realm"))
-            .accessToken(user.getString("access_token"))
-            .body(body)
-            .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
-            .build();
+                                       .httpClient(vertx.createHttpClient())
+                                       .authServerUrl(keycloakConfig.getString("auth-server-url"))
+                                       .realmName(keycloakConfig.getString("realm"))
+                                       .accessToken(user.getString("access_token"))
+                                       .body(body)
+                                       .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
+                                       .build();
 
         String username = body.getString("username", "");
         String email = body.getString("email", "");
@@ -181,74 +180,81 @@ public class MultiTenantUserController implements RestApi {
         JsonObject body = ctx.getBodyAsJson();
 
         UserProps userProps = UserProps.builder()
-            .mongoClient(mongoClient)
-            .httpClient(vertx.createHttpClient())
-            .authServerUrl(keycloakConfig.getString("auth-server-url"))
-            .realmName(keycloakConfig.getString("realm"))
-            .accessToken(user.getString("access_token"))
-            .user(user)
-            .role(role)
-            .body(body)
-            .paramsUserId(ctx.request().getParam("id"))
-            .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
-            .build();
+                                       .mongoClient(mongoClient)
+                                       .httpClient(vertx.createHttpClient())
+                                       .authServerUrl(keycloakConfig.getString("auth-server-url"))
+                                       .realmName(keycloakConfig.getString("realm"))
+                                       .accessToken(user.getString("access_token"))
+                                       .user(user)
+                                       .role(role)
+                                       .body(body)
+                                       .paramsUserId(ctx.request().getParam("id"))
+                                       .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
+                                       .build();
 
-        Single.just(userProps.getBodyPassword("")).flatMap(password -> {
-            if (Strings.isNotBlank(password)) {
-                return userProps.getMongoClient().rxFindOne(USER, idQuery(userProps.getParamsUserId()), null)
-                    .map(response -> {
-                        if (response == null) {
-                            throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found");
-                        } else {
-                            return response;
-                        }
-                    })
-                    .flatMap(usr -> {
-                        // Own password can be changed or those users passwords which is associated with some company
-                        if (userProps.getUser().getString("user_id").equals(userProps.getParamsUserId())) {
-                            return Single.just(true);
-                        } else {
-                            return objectLevelPermission(userProps.getMongoClient(),
-                                                         usr.getString("associated_company_id"), userProps.getRole(),
-                                                         userProps.getUser().getString("company_id"));
-                        }
-                    }).flatMap(isAuthorized -> {
-                        if (isAuthorized) {
-                            return UserUtils.resetPassword(userProps);
-                        } else {
-                            throw HttpException.forbidden();
-                        }
-                    });
-            } else {
-                throw HttpException.badRequest("Password can't be NULL.");
-            }
-        }).subscribe(
-            ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT)),
-            throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+        Single.just(userProps.getBodyPassword(""))
+              .flatMap(password -> {
+                  if (Strings.isNotBlank(password)) {
+                      return userProps.getMongoClient()
+                                      .rxFindOne(USER, idQuery(userProps.getParamsUserId()), null)
+                                      .map(response -> {
+                                          if (response == null) {
+                                              throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Not found");
+                                          } else {
+                                              return response;
+                                          }
+                                      })
+                                      .flatMap(usr -> {
+                                          // Own password can be changed or those users passwords which is associated
+                                          // with some company
+                                          if (userProps.getUser()
+                                                       .getString("user_id")
+                                                       .equals(userProps.getParamsUserId())) {
+                                              return Single.just(true);
+                                          } else {
+                                              return objectLevelPermission(userProps.getMongoClient(),
+                                                                           usr.getString("associated_company_id"),
+                                                                           userProps.getRole(),
+                                                                           userProps.getUser().getString("company_id"));
+                                          }
+                                      })
+                                      .flatMap(isAuthorized -> {
+                                          if (isAuthorized) {
+                                              return UserUtils.resetPassword(userProps);
+                                          } else {
+                                              throw HttpException.forbidden();
+                                          }
+                                      });
+                  } else {
+                      throw HttpException.badRequest("Password can't be NULL.");
+                  }
+              })
+              .subscribe(ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT)),
+                         throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
 
-    private Future<ResponseData> handleDeleteUsers(Vertx vertx, RoutingContext ctx,
-                                                   MicroContext microContext, MongoClient mongoClient,
-                                                   JsonObject keycloakConfig, JsonObject appConfig) {
+    private Future<ResponseData> handleDeleteUsers(Vertx vertx, RoutingContext ctx, MicroContext microContext,
+                                                   MongoClient mongoClient, JsonObject keycloakConfig,
+                                                   JsonObject appConfig) {
         Future<ResponseData> future = Future.future();
         JsonObject user = ctx.user().principal();
         Role role = getRole(user);
         JsonArray arrayBody = ctx.getBodyAsJsonArray();
 
         UserProps userProps = UserProps.builder()
-            .mongoClient(mongoClient)
-            .httpClient(vertx.createHttpClient())
-            .microContext(microContext)
-            .authServerUrl(keycloakConfig.getString("auth-server-url"))
-            .realmName(keycloakConfig.getString("realm"))
-            .accessToken(user.getString("access_token"))
-            .companyId(getCompanyId(user))
-            .user(user)
-            .role(role)
-            .appConfig(appConfig)
-            .arrayBody(arrayBody)
-            .build();
+                                       .mongoClient(mongoClient)
+                                       .httpClient(vertx.createHttpClient())
+                                       .microContext(microContext)
+                                       .authServerUrl(keycloakConfig.getString("auth-server-url"))
+                                       .realmName(keycloakConfig.getString("realm"))
+                                       .accessToken(user.getString("access_token"))
+                                       .companyId(getCompanyId(user))
+                                       .user(user)
+                                       .role(role)
+                                       .appConfig(appConfig)
+                                       .arrayBody(arrayBody)
+                                       .build();
 
         // Model level permission; this is limited to SUPER_ADMIN, ADMIN and MANAGER
         if (Strings.in(role.toString(), Role.SUPER_ADMIN.toString(), Role.ADMIN.toString(), Role.MANAGER.toString())) {
@@ -256,19 +262,20 @@ public class MultiTenantUserController implements RestApi {
             JsonObject query = new JsonObject().put("_id", new JsonObject().put("$in", userProps.getArrayBody()));
 
             mongoClient.rxFind(USER, query)
-                .flatMap(users -> {
-                    if (users.size() == userProps.getArrayBody().size()) {
-                        return checkPermissionAndReturnValue(userProps.getMongoClient(), userProps.getCompanyId(),
-                                                             userProps.getRole(), users).map(ignored -> users);
-                    }
-                    throw HttpException.badRequest("Database doesn't have those Users.");
-                })
-                .flatMap(users -> Observable.fromIterable(users)
-                    .flatMapSingle(usr -> deleteUser(userProps, usr))
-                    .toList())
-                .subscribe(
-                    ignored -> future.complete(new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT.code())),
-                    throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+                       .flatMap(users -> {
+                           if (users.size() == userProps.getArrayBody().size()) {
+                               return checkPermissionAndReturnValue(userProps.getMongoClient(),
+                                                                    userProps.getCompanyId(), userProps.getRole(),
+                                                                    users).map(ignored -> users);
+                           }
+                           throw HttpException.badRequest("Database doesn't have those Users.");
+                       })
+                       .flatMap(users -> Observable.fromIterable(users)
+                                                   .flatMapSingle(usr -> deleteUser(userProps, usr))
+                                                   .toList())
+                       .subscribe(ignored -> future.complete(
+                           new ResponseData().setStatus(HttpResponseStatus.NO_CONTENT.code())),
+                                  throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         } else {
             throw HttpException.forbidden();
         }
@@ -282,8 +289,8 @@ public class MultiTenantUserController implements RestApi {
             if (deleteUserKeycloakResponse.getInteger("statusCode") == HttpResponseStatus.NO_CONTENT.code()) {
                 JsonArray $in = new JsonArray().add(user.getString("_id"));
                 JsonObject deleteOneQuery = new JsonObject().put("_id", new JsonObject().put("$in", $in));
-                DashboardServerConfig dashboardServerConfig =
-                    IConfig.from(userProps.getAppConfig(), DashboardServerConfig.class);
+                DashboardServerConfig dashboardServerConfig = IConfig.from(userProps.getAppConfig(),
+                                                                           DashboardServerConfig.class);
 
                 return userProps.getMongoClient().rxRemoveDocuments(USER, deleteOneQuery).flatMap(ignored -> {
                     if (dashboardServerConfig.getDittoPolicy()) {
@@ -302,15 +309,32 @@ public class MultiTenantUserController implements RestApi {
     // TODO: to make dispatchRequests working
     private SingleSource<?> removeUserOnDittoPolicy(UserProps userProps, JsonObject user) {
         if (Role.ADMIN == getRole(user)) {
-            return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(), getCompanyId(user))
-                .flatMap(query -> userProps.getMongoClient().rxFind(SITE, query))
-                .flatMap(sites -> Observable.fromIterable(sites)
-                    .flatMapSingle(site -> {
-                        String path = Services.POLICY_PREFIX + site.getString("_id")
-                                      + "/entries/admin/subjects/nginx:" + user.getString("username");
-                        return dispatchRequests(userProps.getMicroContext(), HttpMethod.DELETE, path,
-                                                userProps.getRequestData());
-                    }).toList());
+            return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(),
+                                                                       getCompanyId(user)).flatMap(
+                query -> userProps.getMongoClient().rxFind(SITE, query))
+                                                                                          .flatMap(
+                                                                                              sites -> Observable.fromIterable(
+                                                                                                  sites)
+                                                                                                                 .flatMapSingle(
+                                                                                                                     site -> {
+                                                                                                                         String
+                                                                                                                             path
+                                                                                                                             =
+                                                                                                                             Services.POLICY_PREFIX +
+                                                                                                                             site.getString(
+                                                                                                                                 "_id") +
+                                                                                                                             "/entries/admin/subjects/nginx:" +
+                                                                                                                             user.getString(
+                                                                                                                                 "username");
+                                                                                                                         return dispatchRequests(
+                                                                                                                             userProps
+                                                                                                                                 .getMicroContext(),
+                                                                                                                             HttpMethod.DELETE,
+                                                                                                                             path,
+                                                                                                                             userProps
+                                                                                                                                 .getRequestData());
+                                                                                                                     })
+                                                                                                                 .toList());
         } else {
             String entry = user.getString("role").toLowerCase();
             if (entry.equals(Role.GUEST.toString().toLowerCase())) {
@@ -331,37 +355,37 @@ public class MultiTenantUserController implements RestApi {
         JsonObject body = ctx.getBodyAsJson();
 
         UserProps userProps = UserProps.builder()
-            .mongoClient(mongoClient)
-            .httpClient(vertx.createHttpClient())
-            .authServerUrl(keycloakConfig.getString("auth-server-url"))
-            .realmName(keycloakConfig.getString("realm"))
-            .accessToken(user.getString("access_token"))
-            .companyId(getCompanyId(user))
-            .user(user)
-            .role(role)
-            .body(body)
-            .paramsUserId(ctx.request().getParam("id"))
-            .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
-            .build();
+                                       .mongoClient(mongoClient)
+                                       .httpClient(vertx.createHttpClient())
+                                       .authServerUrl(keycloakConfig.getString("auth-server-url"))
+                                       .realmName(keycloakConfig.getString("realm"))
+                                       .accessToken(user.getString("access_token"))
+                                       .companyId(getCompanyId(user))
+                                       .user(user)
+                                       .role(role)
+                                       .body(body)
+                                       .paramsUserId(ctx.request().getParam("id"))
+                                       .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
+                                       .build();
 
-        getUserFromParams(mongoClient, userProps)
-            .flatMap(usr -> updateKeycloakUser(role, userProps, usr))
-            .flatMap(ignored -> UserUtils.getUser(userProps))
-            .flatMap(keycloakUser -> patchMongoUser(userProps, keycloakUser))
-            .subscribe(statusCode -> future.complete(new ResponseData().setStatus(statusCode)),
-                       throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+        getUserFromParams(mongoClient, userProps).flatMap(usr -> updateKeycloakUser(role, userProps, usr))
+                                                 .flatMap(ignored -> UserUtils.getUser(userProps))
+                                                 .flatMap(keycloakUser -> patchMongoUser(userProps, keycloakUser))
+                                                 .subscribe(statusCode -> future.complete(
+                                                     new ResponseData().setStatus(statusCode)),
+                                                            throwable -> future.complete(
+                                                                ResponseDataConverter.convert(throwable)));
         return future;
     }
 
     private Single<JsonObject> getUserFromParams(MongoClient mongoClient, UserProps userProps) {
-        return mongoClient.rxFindOne(USER, idQuery(userProps.getParamsUserId()), null)
-            .map(response -> {
-                if (response == null) {
-                    throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Invalid user_id.");
-                } else {
-                    return response;
-                }
-            });
+        return mongoClient.rxFindOne(USER, idQuery(userProps.getParamsUserId()), null).map(response -> {
+            if (response == null) {
+                throw new HttpException(HttpResponseStatus.BAD_REQUEST, "Invalid user_id.");
+            } else {
+                return response;
+            }
+        });
     }
 
     private Single<Integer> patchMongoUser(UserProps userProps, JsonObject keycloakUser) {
@@ -386,65 +410,67 @@ public class MultiTenantUserController implements RestApi {
             .put("role", userProps.getUser().getString("role"));
         MongoUser mongoUser = new MongoUser(body, userProps.getUser(), userProps.getKeycloakUser());
         JsonObject mongoUserObject = mongoUser.toJsonObject()
-            .put("role", userProps.getUser().getString("role")); // Role shouldn't be overridden
-        return userProps.getMongoClient().rxSave(USER, mongoUserObject)
-            .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
+                                              .put("role", userProps.getUser()
+                                                                    .getString("role")); // Role shouldn't be overridden
+        return userProps.getMongoClient()
+                        .rxSave(USER, mongoUserObject)
+                        .map(buffer -> HttpResponseStatus.NO_CONTENT.code());
     }
 
     private Single<Integer> patchOtherMongoUser(UserProps userProps) {
         if (userProps.getRole() == Role.SUPER_ADMIN) {
-            JsonObject query = new JsonObject()
-                .put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString())));
+            JsonObject query = new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq",
+                                                                                                              Role.SUPER_ADMIN
+                                                                                                                  .toString())));
 
             logger.info("Going to patch user with body: {}", userProps.getBody());
-            return validateMongoUser(userProps, query)
-                .flatMap(editedBody -> {
-                    userProps.setBody(editedBody);
-                    return updateMongoUser(userProps);
-                });
+            return validateMongoUser(userProps, query).flatMap(editedBody -> {
+                userProps.setBody(editedBody);
+                return updateMongoUser(userProps);
+            });
         } else if (userProps.getRole() == Role.ADMIN) {
             return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(),
-                                                                       userProps.getCompanyId())
-                .flatMap(query -> validateMongoUser(userProps, query)
-                    .flatMap(editedBody -> {
-                        userProps.setBody(editedBody);
-                        return updateMongoUser(userProps);
-                    }));
-        } else {
-            return validateMongoUserForManager(userProps)
-                .flatMap(editedBody -> {
+                                                                       userProps.getCompanyId()).flatMap(
+                query -> validateMongoUser(userProps, query).flatMap(editedBody -> {
                     userProps.setBody(editedBody);
                     return updateMongoUser(userProps);
-                });
+                }));
+        } else {
+            return validateMongoUserForManager(userProps).flatMap(editedBody -> {
+                userProps.setBody(editedBody);
+                return updateMongoUser(userProps);
+            });
         }
     }
 
-    private SingleSource<? extends Buffer> updateKeycloakUser(Role role, UserProps userProps,
-                                                              JsonObject usr) {
+    private SingleSource<? extends Buffer> updateKeycloakUser(Role role, UserProps userProps, JsonObject usr) {
         // Own user_profile can be changed or those users_profiles which is associated with same company
-        if (userProps.getUser().getString("user_id").equals(userProps.getParamsUserId())
-            || (role == Role.MANAGER) &&
-               userProps.getUser().getString("company_id").equals(usr.getString("associated_company_id"))
-            || role == Role.SUPER_ADMIN) {
+        if (userProps.getUser().getString("user_id").equals(userProps.getParamsUserId()) || (role == Role.MANAGER) &&
+                                                                                            userProps.getUser()
+                                                                                                     .getString(
+                                                                                                         "company_id")
+                                                                                                     .equals(
+                                                                                                         usr.getString(
+                                                                                                             "associated_company_id")) ||
+            role == Role.SUPER_ADMIN) {
             return UserUtils.updateUser(userProps);
         } else if (role == Role.ADMIN) {
-            return byAdminCompanyGetAdminWithManagerSelectionList(userProps.getMongoClient(), usr.getString(
-                "company_id"))
-                .flatMap(response -> {
-                    if (response.contains(usr.getString("company_id"))) {
-                        return UserUtils.updateUser(userProps);
-                    } else {
-                        throw HttpException.forbidden();
-                    }
-                });
+            return byAdminCompanyGetAdminWithManagerSelectionList(userProps.getMongoClient(),
+                                                                  usr.getString("company_id")).flatMap(response -> {
+                if (response.contains(usr.getString("company_id"))) {
+                    return UserUtils.updateUser(userProps);
+                } else {
+                    throw HttpException.forbidden();
+                }
+            });
         } else {
             throw HttpException.forbidden();
         }
     }
 
     private Future<ResponseData> handlePostUser(Vertx vertx, RoutingContext ctx, MicroContext microContext,
-                                                MongoClient mongoClient,
-                                                JsonObject keycloakConfig, JsonObject appConfig) {
+                                                MongoClient mongoClient, JsonObject keycloakConfig,
+                                                JsonObject appConfig) {
         Future<ResponseData> future = Future.future();
 
         JsonObject user = ctx.user().principal();
@@ -454,38 +480,38 @@ public class MultiTenantUserController implements RestApi {
             JsonObject body = ctx.getBodyAsJson();
 
             UserProps userProps = UserProps.builder()
-                .mongoClient(mongoClient)
-                .httpClient(vertx.createHttpClient())
-                .microContext(microContext)
-                .authServerUrl(keycloakConfig.getString("auth-server-url"))
-                .realmName(keycloakConfig.getString("realm"))
-                .accessToken(user.getString("access_token"))
-                .companyId(getCompanyId(user))
-                .user(user)
-                .role(role)
-                .body(body)
-                .appConfig(appConfig)
-                .requestData(RequestDataConverter.convert(ctx))
-                .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
-                .build();
+                                           .mongoClient(mongoClient)
+                                           .httpClient(vertx.createHttpClient())
+                                           .microContext(microContext)
+                                           .authServerUrl(keycloakConfig.getString("auth-server-url"))
+                                           .realmName(keycloakConfig.getString("realm"))
+                                           .accessToken(user.getString("access_token"))
+                                           .companyId(getCompanyId(user))
+                                           .user(user)
+                                           .role(role)
+                                           .body(body)
+                                           .appConfig(appConfig)
+                                           .requestData(RequestDataConverter.convert(ctx))
+                                           .keycloakUser(new KeycloakUserRepresentation(body).toJsonObject())
+                                           .build();
 
             // 1. Create User on Keycloak
             UserUtils.createUser(userProps)
-                // 2. GET recently created user details from Keycloak
-                .flatMap(ignored -> UserUtils.getUserFromUsername(userProps))
-                // 3. Resetting password
-                .flatMap(keycloakUser -> {
-                    userProps.setKeycloakUser(keycloakUser);
-                    userProps.setParamsUserId(keycloakUser.getString("id"));
-                    return UserUtils.resetPassword(userProps)
-                        .flatMap(ignored -> createMongoUser(userProps))
-                        .doOnError(t -> {
-                            // 5.2 Remove user from Keycloak
-                            UserUtils.deleteUser(userProps).subscribe();
-                        });
-                })
-                .subscribe(statusCode -> future.complete(new ResponseData().setStatus(statusCode)),
-                           throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+                     // 2. GET recently created user details from Keycloak
+                     .flatMap(ignored -> UserUtils.getUserFromUsername(userProps))
+                     // 3. Resetting password
+                     .flatMap(keycloakUser -> {
+                         userProps.setKeycloakUser(keycloakUser);
+                         userProps.setParamsUserId(keycloakUser.getString("id"));
+                         return UserUtils.resetPassword(userProps)
+                                         .flatMap(ignored -> createMongoUser(userProps))
+                                         .doOnError(t -> {
+                                             // 5.2 Remove user from Keycloak
+                                             UserUtils.deleteUser(userProps).subscribe();
+                                         });
+                     })
+                     .subscribe(statusCode -> future.complete(new ResponseData().setStatus(statusCode)),
+                                throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         }
         return future;
     }
@@ -493,8 +519,9 @@ public class MultiTenantUserController implements RestApi {
     private SingleSource<Integer> createMongoUser(UserProps userProps) {
         if (userProps.getRole() == Role.SUPER_ADMIN) {
             // 4.1 any user can be created
-            JsonObject query = new JsonObject()
-                .put("role", new JsonObject().put("$not", new JsonObject().put("$eq", Role.SUPER_ADMIN.toString())));
+            JsonObject query = new JsonObject().put("role", new JsonObject().put("$not", new JsonObject().put("$eq",
+                                                                                                              Role.SUPER_ADMIN
+                                                                                                                  .toString())));
 
             return validateMongoUser(userProps, query).flatMap(editedBody -> {
                 userProps.setBody(editedBody);
@@ -503,8 +530,8 @@ public class MultiTenantUserController implements RestApi {
         } else if (userProps.getRole() == Role.ADMIN) {
             // 4.2 only child companies can make associate with it's users
             return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(),
-                                                                       userProps.getCompanyId())
-                .flatMap(query -> validateMongoUser(userProps, query).flatMap(editedBody -> {
+                                                                       userProps.getCompanyId()).flatMap(
+                query -> validateMongoUser(userProps, query).flatMap(editedBody -> {
                     userProps.setBody(editedBody);
                     return saveMongoUser(userProps);
                 }));
@@ -523,8 +550,8 @@ public class MultiTenantUserController implements RestApi {
                 // 5.1 Proceed for creating MongoDB user
                 String[] childCompaniesIds = MongoUtils.getIds(childCompanies);
                 // If company doesn't match with user request, a random company will be assigned
-                String companyId = Strings
-                    .getMatchValueOrFirstOne(userProps.getBody().getString("company_id", ""), childCompaniesIds);
+                String companyId = Strings.getMatchValueOrFirstOne(userProps.getBody().getString("company_id", ""),
+                                                                   childCompaniesIds);
                 JsonObject company = MongoUtils.getMatchValueOrFirstOne(childCompanies, companyId);
 
                 JsonObject body = userProps.getBody();
@@ -536,11 +563,10 @@ public class MultiTenantUserController implements RestApi {
                     hasClientLevelRole(userProps.getBodyRole())) {
                     return validateClientLevelMongoUser(userProps, company);
                 } else if (company.getString("role").equals(Role.ADMIN.toString())) {
-                    return Single.just(
-                        body.put("associated_company_id", company.getString("associated_company_id"))
-                            .put("role", company.getString("role"))
-                            .put("site_id", "")
-                            .put("group_id", ""));
+                    return Single.just(body.put("associated_company_id", company.getString("associated_company_id"))
+                                           .put("role", company.getString("role"))
+                                           .put("site_id", "")
+                                           .put("group_id", ""));
                 } else {
                     throw HttpException.badRequest("Condition doesn't match up.");
                 }
@@ -559,8 +585,8 @@ public class MultiTenantUserController implements RestApi {
                 body.put("company_id", userProps.getCompanyId())
                     .put("associated_company_id", userProps.getCompanyId())
                     .put("site_id", userProps.getUser().getString("site_id"))
-                    .put("group_id", Strings.getMatchValueOrFirstOne(userProps.getBodyGroupId(),
-                                                                      MongoUtils.getIds(childGroups)));
+                    .put("group_id",
+                         Strings.getMatchValueOrFirstOne(userProps.getBodyGroupId(), MongoUtils.getIds(childGroups)));
                 return Single.just(body);
             } else {
                 // 5.2 Remove user from Keycloak
@@ -570,10 +596,10 @@ public class MultiTenantUserController implements RestApi {
     }
 
     private Single<Integer> saveMongoUser(UserProps userProps) {
-        DashboardServerConfig dashboardServerConfig =
-            IConfig.from(userProps.getAppConfig(), DashboardServerConfig.class);
-        JsonObject mongoUser = new MongoUser(userProps.getBody(), userProps.getUser(), userProps.getKeycloakUser())
-            .toJsonObject();
+        DashboardServerConfig dashboardServerConfig = IConfig.from(userProps.getAppConfig(),
+                                                                   DashboardServerConfig.class);
+        JsonObject mongoUser = new MongoUser(userProps.getBody(), userProps.getUser(),
+                                             userProps.getKeycloakUser()).toJsonObject();
         return userProps.getMongoClient().rxSave(USER, mongoUser).flatMap(ignored -> {
             if (dashboardServerConfig.getDittoPolicy()) {
                 return addUserOnDittoPolicy(userProps, mongoUser);
@@ -586,26 +612,31 @@ public class MultiTenantUserController implements RestApi {
     private SingleSource<?> addUserOnDittoPolicy(UserProps userProps, JsonObject mongoUser) {
         if (Role.ADMIN == getRole(mongoUser)) {
             return byAdminCompanyGetAdminWithManagerSelectionListQuery(userProps.getMongoClient(),
-                                                                       getCompanyId(mongoUser))
-                .flatMap(subQuery -> userProps.getMongoClient().rxFind(SITE, subQuery))
-                .flatMap(sites -> Observable.fromIterable(sites)
-                    .flatMapSingle(site -> putSubjectOnPolicy(userProps, mongoUser, site.getString("_id")))
-                    .toList());
+                                                                       getCompanyId(mongoUser)).flatMap(
+                subQuery -> userProps.getMongoClient().rxFind(SITE, subQuery))
+                                                                                               .flatMap(
+                                                                                                   sites -> Observable.fromIterable(
+                                                                                                       sites)
+                                                                                                                      .flatMapSingle(
+                                                                                                                          site -> putSubjectOnPolicy(
+                                                                                                                              userProps,
+                                                                                                                              mongoUser,
+                                                                                                                              site.getString(
+                                                                                                                                  "_id")))
+                                                                                                                      .toList());
         } else {
             return putSubjectOnPolicy(userProps, mongoUser);
         }
     }
 
     private Single<Integer> updateMongoUser(UserProps userProps) {
-        JsonObject mongoUser = new MongoUser(userProps.getBody(), userProps.getUser(), userProps.getKeycloakUser())
-            .toJsonObject();
-        return userProps.getMongoClient().rxSave(USER, mongoUser)
-            .map(ignored -> HttpResponseStatus.NO_CONTENT.code());
+        JsonObject mongoUser = new MongoUser(userProps.getBody(), userProps.getUser(),
+                                             userProps.getKeycloakUser()).toJsonObject();
+        return userProps.getMongoClient().rxSave(USER, mongoUser).map(ignored -> HttpResponseStatus.NO_CONTENT.code());
     }
 
     // TODO: to make dispatchRequests working
-    private Single<ResponseData> putSubjectOnPolicy(UserProps userProps, JsonObject mongoUser,
-                                                    String siteId) {
+    private Single<ResponseData> putSubjectOnPolicy(UserProps userProps, JsonObject mongoUser, String siteId) {
         String path = Services.POLICY_PREFIX + siteId + "/entries/admin/subjects/nginx:" +
                       mongoUser.getString("username");
         RequestData requestData = userProps.getRequestData();
@@ -627,20 +658,29 @@ public class MultiTenantUserController implements RestApi {
     }
 
     private SingleSource<JsonObject> validateClientLevelMongoUser(UserProps userProps, JsonObject company) {
-        return validateSitesIdsBody(userProps)
-            .flatMap(sitesIds -> userProps.getMongoClient()
-                .rxFind(SITE, new JsonObject().put("_id", new JsonObject().put("$in", sitesIds)))
-                .flatMap(sites -> validateSitesAssociation(userProps, company, sitesIds, sites))
-                .flatMap(ignored -> {
-                    if (hasUserLevelRole(userProps.getBodyRole())) {
-                        return validateUserLevelMongoUser(userProps, company);
-                    } else {
-                        JsonObject body = userProps.getBody();
-                        body.put("group_id", "")
-                            .put("associated_company_id", company.getString("associated_company_id"));
-                        return Single.just(body);
-                    }
-                }));
+        return validateSitesIdsBody(userProps).flatMap(sitesIds -> userProps.getMongoClient()
+                                                                            .rxFind(SITE, new JsonObject().put("_id",
+                                                                                                               new JsonObject()
+                                                                                                                   .put(
+                                                                                                                       "$in",
+                                                                                                                       sitesIds)))
+                                                                            .flatMap(sites -> validateSitesAssociation(
+                                                                                userProps, company, sitesIds, sites))
+                                                                            .flatMap(ignored -> {
+                                                                                if (hasUserLevelRole(
+                                                                                    userProps.getBodyRole())) {
+                                                                                    return validateUserLevelMongoUser(
+                                                                                        userProps, company);
+                                                                                } else {
+                                                                                    JsonObject body
+                                                                                        = userProps.getBody();
+                                                                                    body.put("group_id", "")
+                                                                                        .put("associated_company_id",
+                                                                                             company.getString(
+                                                                                                 "associated_company_id"));
+                                                                                    return Single.just(body);
+                                                                                }
+                                                                            }));
     }
 
     private SingleSource<JsonObject> validateUserLevelMongoUser(UserProps userProps, JsonObject company) {
@@ -649,25 +689,26 @@ public class MultiTenantUserController implements RestApi {
             throw HttpException.badRequest("You must include group_id on the request data.");
         }
 
-        return userProps.getMongoClient().rxFind(USER_GROUP, new JsonObject().put("site_id", userProps.getBodySiteId()))
-            .flatMap(userGroups -> {
-                if (userGroups != null) {
-                    if (MongoUtils.getIdsOnList(userGroups).contains(groupId)) {
-                        // For USER and GUEST company_id and associated_company_id be same
-                        JsonObject body = userProps.getBody();
-                        body.put("group_id", groupId).put("associated_company_id", company.getString("_id"));
-                        return Single.just(body);
-                    } else {
-                        throw HttpException.badRequest("<UserGroup> doesn't exist on that <Site>.");
-                    }
-                } else {
-                    throw HttpException.badRequest("<Site> doesn't have any <UserGroup>");
-                }
-            });
+        return userProps.getMongoClient()
+                        .rxFind(USER_GROUP, new JsonObject().put("site_id", userProps.getBodySiteId()))
+                        .flatMap(userGroups -> {
+                            if (userGroups != null) {
+                                if (MongoUtils.getIdsOnList(userGroups).contains(groupId)) {
+                                    // For USER and GUEST company_id and associated_company_id be same
+                                    JsonObject body = userProps.getBody();
+                                    body.put("group_id", groupId)
+                                        .put("associated_company_id", company.getString("_id"));
+                                    return Single.just(body);
+                                } else {
+                                    throw HttpException.badRequest("<UserGroup> doesn't exist on that <Site>.");
+                                }
+                            } else {
+                                throw HttpException.badRequest("<Site> doesn't have any <UserGroup>");
+                            }
+                        });
     }
 
-    private SingleSource<Boolean> validateSitesAssociation(UserProps userProps,
-                                                           JsonObject company, JsonArray sitesIds,
+    private SingleSource<Boolean> validateSitesAssociation(UserProps userProps, JsonObject company, JsonArray sitesIds,
                                                            List<JsonObject> sites) {
         String siteId = userProps.getBody().getString("site_id", "");
         if (sites.size() != 0 && sites.size() == sitesIds.size()) {
@@ -709,16 +750,14 @@ public class MultiTenantUserController implements RestApi {
             JsonObject getUserQuery = new JsonObject().put("role", new JsonObject().put("$not", eqToSupperAdmin));
             userRepresentation(mongoClient, getUserQuery, future);
         } else if (role == Role.ADMIN) {
-            JsonObject getChildManagerCompanyQuery =
-                new JsonObject().put("associated_company_id", companyId).put("role", Role.MANAGER.toString());
-            mongoClient
-                .rxFind(COMPANY, getChildManagerCompanyQuery)
-                .subscribe(companies -> {
-                    JsonArray accessibleCompany = MongoUtils.getIdsOnJsonArray(companies).add(companyId);
-                    JsonObject getUserQuery = new JsonObject()
-                        .put("associated_company_id", new JsonObject().put("$in", accessibleCompany));
-                    userRepresentation(mongoClient, getUserQuery, future);
-                }, throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+            JsonObject getChildManagerCompanyQuery = new JsonObject().put("associated_company_id", companyId)
+                                                                     .put("role", Role.MANAGER.toString());
+            mongoClient.rxFind(COMPANY, getChildManagerCompanyQuery).subscribe(companies -> {
+                JsonArray accessibleCompany = MongoUtils.getIdsOnJsonArray(companies).add(companyId);
+                JsonObject getUserQuery = new JsonObject().put("associated_company_id",
+                                                               new JsonObject().put("$in", accessibleCompany));
+                userRepresentation(mongoClient, getUserQuery, future);
+            }, throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         } else if (role == Role.MANAGER) {
             userRepresentation(mongoClient, new JsonObject().put("associated_company_id", companyId), future);
         } else {

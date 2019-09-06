@@ -6,9 +6,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class RestConfigProvider {
+public class RestNubeConfigProvider {
 
     @Getter
-    private final NubeConfig config;
+    private final NubeConfig nubeConfig;
 
 }

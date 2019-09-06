@@ -23,6 +23,11 @@
         }
       }
     },
+    "__httpClient__": {
+      "handlerConfig": {
+        "httpLightBodyHandlerClass": "com.nubeiot.dashboard.connector.ditto.HttpDittoResponseBodyHandler"
+      }
+    },
     "__ditto__": {
       "port": 80,
       "host": "ditto",
