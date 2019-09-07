@@ -1,6 +1,7 @@
 package com.nubeiot.core.micro;
 
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpEndpoint;
@@ -19,13 +20,10 @@ public enum ServiceScope {
     private final Predicate<Record> predicate;
 
     public static ServiceScope parse(String scope) {
-        if (INTERNAL.name().equalsIgnoreCase(scope)) {
-            return INTERNAL;
-        }
-        if (ALL.name().equalsIgnoreCase(scope)) {
-            return ALL;
-        }
-        return PUBLIC;
+        return Stream.of(ServiceScope.values())
+                     .filter(serviceScope -> serviceScope.name().equalsIgnoreCase(scope))
+                     .findFirst()
+                     .orElse(PUBLIC);
     }
 
     private static boolean isPublic(Record record) {

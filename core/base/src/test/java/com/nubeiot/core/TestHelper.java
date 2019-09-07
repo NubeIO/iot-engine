@@ -128,8 +128,13 @@ public interface TestHelper {
 
         static Handler<AsyncResult<Message<Object>>> replyAsserter(TestContext context, Async async,
                                                                    JsonObject expected) {
+            return replyAsserter(context, async, expected, JSONCompareMode.STRICT);
+        }
+
+        static Handler<AsyncResult<Message<Object>>> replyAsserter(TestContext context, Async async,
+                                                                   JsonObject expected, JSONCompareMode mode) {
             return context.asyncAssertSuccess(
-                result -> JsonHelper.assertJson(context, async, expected, (JsonObject) result.body()));
+                result -> JsonHelper.assertJson(context, async, expected, (JsonObject) result.body(), mode));
         }
 
         static Handler<AsyncResult<Message<Object>>> replyAsserter(TestContext context, Async async,

@@ -21,7 +21,10 @@ class EventServiceRecordTransformer implements RecordTransformer {
                                           .map(map -> new JsonObject().put("method", map.getMethod())
                                                                       .put("path", map.getCapturePath()))
                                           .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
-        return new JsonObject().put("name", record.getName()).put("status", record.getStatus()).put("location", paths);
+        return new JsonObject().put("name", record.getName())
+                               .put("status", record.getStatus())
+                               .put("location", record.getLocation().getString(Record.ENDPOINT))
+                               .put("endpoints", paths);
     }
 
 }

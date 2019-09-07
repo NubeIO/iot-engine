@@ -24,7 +24,6 @@ import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
@@ -100,7 +99,7 @@ public class MicroContextTest {
              .addRecord(EventBusService.createRecord("test", "address1", MockEventbusService.class))
              .subscribe(record -> {
                  final JsonObject indexExpected = new JsonObject(
-                     "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"records\":[{\"name\":\"test\"," +
+                     "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"apis\":[{\"name\":\"test\"," +
                      "\"type\":\"eventbus-service-proxy\",\"status\":\"UP\"," +
                      "\"location\":{\"endpoint\":\"address1\"}}]}}");
                  final JsonObject payload = RequestData.builder()
@@ -131,7 +130,7 @@ public class MicroContextTest {
              .addHttpRecord("http.test", new HttpLocation().setHost("123.456.0.1").setPort(1234).setRoot("/api"),
                             new JsonObject().put("meta", "test")).subscribe(record -> {
             final JsonObject indexExpected = new JsonObject(
-                "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"records\":[{\"name\":\"http.test\"," +
+                "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"apis\":[{\"name\":\"http.test\"," +
                 "\"status\":\"UP\",\"type\":\"http-endpoint\",\"location\":\"http://123.456.0.1:1234/api\"}]}}");
             controller.request(DeliveryEvent.builder()
                                             .address(config.getGatewayConfig().getIndexAddress())
@@ -163,20 +162,22 @@ public class MicroContextTest {
              .addRecord(EventMessageService.createRecord("event-message", "address.1",
                                                          EventMethodDefinition.createDefault("/path", "/:param")))
              .subscribe(record -> {
-                 final JsonObject value = new JsonObject(
-                     "{\"records\":[{\"name\":\"event-message\",\"status\":\"UP\",\"location\":[{\"method\":\"GET\"," +
-                     "\"path\":\"/path/:param\"},{\"method\":\"PATCH\",\"path\":\"/path/:param\"}," +
-                     "{\"method\":\"GET\",\"path\":\"/path\"},{\"method\":\"POST\",\"path\":\"/path\"}," +
-                     "{\"method\":\"DELETE\",\"path\":\"/path/:param\"},{\"method\":\"PUT\"," +
-                     "\"path\":\"/path/:param\"}]}]}");
-                 final JsonObject indexExpected = new JsonObject().put("status", Status.SUCCESS)
-                                                                  .put("action", EventAction.GET_LIST)
-                                                                  .put("data", value);
+                 final JsonObject indexExpected = new JsonObject("{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\"," +
+                                                                 "\"data\":{\"apis\":[{\"name\":\"event-message\"," +
+                                                                 "\"status\":\"UP\",\"location\":\"address.1\"," +
+                                                                 "\"endpoints\":[{\"method\":\"GET\"," +
+                                                                 "\"path\":\"/path\"},{\"method\":\"PATCH\"," +
+                                                                 "\"path\":\"/path/:param\"},{\"method\":\"PUT\"," +
+                                                                 "\"path\":\"/path/:param\"},{\"method\":\"POST\"," +
+                                                                 "\"path\":\"/path\"},{\"method\":\"DELETE\"," +
+                                                                 "\"path\":\"/path/:param\"},{\"method\":\"GET\"," +
+                                                                 "\"path\":\"/path/:param\"}]}]}}");
                  controller.request(DeliveryEvent.builder()
                                                  .address(config.getGatewayConfig().getIndexAddress())
                                                  .payload(RequestData.builder().build().toJson())
-                                                 .action(EventAction.GET_LIST)
-                                                 .build(), EventbusHelper.replyAsserter(context, async, indexExpected));
+                                                 .action(EventAction.GET_LIST).build(),
+                                    EventbusHelper.replyAsserter(context, async, indexExpected,
+                                                                 JSONCompareMode.LENIENT));
              });
     }
 
