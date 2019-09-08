@@ -63,10 +63,8 @@ public class ServiceGatewayIndexTest {
         final Single<Record> record3 = discovery.addEventMessageRecord("event.message.2", "address.2",
                                                                        EventMethodDefinition.createDefault("/xy",
                                                                                                            "/:z"));
-        Single.concatArray(record1, record2, record3).subscribe(totalRecord -> {
-            //            context.assertEquals(3, totalRecord);
-            TestHelper.testComplete(async);
-        }, context::fail);
+        Single.concatArray(record1, record2, record3)
+              .subscribe(record -> TestHelper.testComplete(async), context::fail);
     }
 
     @After
@@ -138,8 +136,8 @@ public class ServiceGatewayIndexTest {
         eventClient.request(DeliveryEvent.builder()
                                          .address(config.getGatewayConfig().getIndexAddress())
                                          .payload(payload)
-                                         .action(EventAction.GET_ONE)
-                                         .build(), EventbusHelper.replyAsserter(context, async, expected));
+                                         .action(EventAction.GET_ONE).build(),
+                            EventbusHelper.replyAsserter(context, async, expected, JSONCompareMode.LENIENT));
     }
 
     @Test
