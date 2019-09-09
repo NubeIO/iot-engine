@@ -85,17 +85,16 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
 
     private void create(TestContext context, String serviceName, int port, @NonNull Consumer<ResponseData> asserter) {
         JsonObject data = new HttpLocation().setHost(DEFAULT_HOST)
-                                            .setPort(port)
-                                            .setRoot("/drivers/gpio")
+                                            .setPort(port).setRoot("/gpio")
                                             .toJson()
                                             .put("name", serviceName);
-        restRequest(context, HttpMethod.POST, "/api/drivers",
+        restRequest(context, HttpMethod.POST, "/gw/register",
                     RequestData.builder().body(data).build()).subscribe(asserter::accept, context::fail);
     }
 
     @Test
     public void test_getRecords(TestContext context) {
-        restRequest(context, HttpMethod.GET, "/api/drivers", RequestData.builder().build()).subscribe(resp -> {
+        restRequest(context, HttpMethod.GET, "/gw/index", RequestData.builder().build()).subscribe(resp -> {
             context.assertEquals(200, resp.getStatus().code());
             context.assertEquals(resp.body().getJsonArray("records").size(), 2);
         }, context::fail);
@@ -103,26 +102,26 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
 
     @Test
     public void test_call_service_fromGateway(TestContext context) {
-        assertRestByClient(context, HttpMethod.GET, "/api/drivers/gpio/test", RequestData.builder().build(), 200,
+        assertRestByClient(context, HttpMethod.GET, "/gw/gpio/test", RequestData.builder().build(), 200,
                            new JsonObject().put("hello", "test"));
     }
 
     @Test
     public void test_post_value_on_service_fromGateway(TestContext context) {
         JsonObject body = new JsonObject().put("hello", "test");
-        assertRestByClient(context, HttpMethod.POST, "/api/drivers/gpio/test", RequestData.builder().body(body).build(),
+        assertRestByClient(context, HttpMethod.POST, "/gw/gpio/test", RequestData.builder().body(body).build(),
                            201, body);
     }
 
     @Test
     public void test_unregisterDriver_notFound(TestContext context) {
-        restRequest(context, HttpMethod.DELETE, "/api/drivers/d", RequestData.builder().build()).subscribe(
+        restRequest(context, HttpMethod.DELETE, "/gw/register/d", RequestData.builder().build()).subscribe(
             resp -> context.assertEquals(410, resp.getStatus().code()));
     }
 
     @Test
     public void test_unregisterDriver_success(TestContext context) {
-        restRequest(context, HttpMethod.DELETE, "/api/drivers/" + registration,
+        restRequest(context, HttpMethod.DELETE, "/gw/register/" + registration,
                     RequestData.builder().body(new JsonObject().put("port", httpServicePort)).build()).subscribe(
             resp -> context.assertEquals(204, resp.getStatus().code()), context::fail);
     }
@@ -130,11 +129,10 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     @Test
     public void test_register_alreadyExist(TestContext context) {
         JsonObject body = new HttpLocation().setHost(DEFAULT_HOST)
-                                            .setPort(httpServicePort)
-                                            .setRoot("/drivers/gpio")
+                                            .setPort(httpServicePort).setRoot("/gpio")
                                             .toJson()
                                             .put("name", "xyz");
-        restRequest(context, HttpMethod.POST, "/api/drivers",
+        restRequest(context, HttpMethod.POST, "/gw/register",
                     RequestData.builder().body(body).build()).subscribe(resp -> {
             context.assertEquals(409, resp.getStatus().code());
             context.assertEquals(ErrorCode.ALREADY_EXIST.name(), resp.body().getString("code"));

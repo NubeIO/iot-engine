@@ -9,7 +9,7 @@ import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
-import com.nubeiot.edge.module.gateway.handlers.DriverRegistrationEventListener;
+import com.nubeiot.edge.module.gateway.handlers.RouteRegistrationEventListener;
 import com.nubeiot.eventbus.edge.gateway.GatewayEventBus;
 import com.zandero.rest.RestRouter;
 
@@ -36,13 +36,13 @@ public class EdgeGatewayVerticle extends ContainerVerticle {
     @Override
     public void registerEventbus(EventController controller) {
         controller.register(GatewayEventBus.DRIVER_REGISTRATION,
-                            new DriverRegistrationEventListener(this, GatewayEventBus.DRIVER_REGISTRATION));
+                            new RouteRegistrationEventListener(this, GatewayEventBus.DRIVER_REGISTRATION));
     }
 
     private void publishService() {
         final ServiceDiscoveryController localController = microContext.getLocalController();
-        localController.addEventMessageRecord("drivers_registration", GatewayEventBus.DRIVER_REGISTRATION.getAddress(),
-                                              EventMethodDefinition.createDefault("/drivers", "/:registration", false))
+        localController.addEventMessageRecord("route_registration", GatewayEventBus.DRIVER_REGISTRATION.getAddress(),
+                                              EventMethodDefinition.createDefault("/register", "/:registration", false))
                        .subscribe();
     }
 
