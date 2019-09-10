@@ -8,11 +8,12 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.rest.AbstractRestEventApi;
 
-public class EnableKafkaProducerApi extends AbstractRestEventApi {
+public final class EnableKafkaProducerApi extends AbstractRestEventApi {
 
     @Override
-    protected void initRoute() {
+    public EnableKafkaProducerApi initRouter() {
         addRouter(DashboardKafkaDemo.KAFKA_ENABLED, "/kafka/enable");
+        return this;
     }
 
     @Override

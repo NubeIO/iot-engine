@@ -111,6 +111,11 @@
     "allowCredentials": false,
     "maxAgeSeconds": 3600
   },
+  "__api_gateway__": {
+    "enabled": false,
+    "path": "/gw",
+    "address": null
+  },
   "__files__": {
     "enabled": false,
     "dir": "files",

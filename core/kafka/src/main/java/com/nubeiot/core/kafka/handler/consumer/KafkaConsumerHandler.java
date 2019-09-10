@@ -21,7 +21,7 @@ import com.nubeiot.core.event.EventModel;
  * @see SharedDataDelegate
  */
 public interface KafkaConsumerHandler<K, V, T extends KafkaConsumerRecordTransformer<K, V, R>, R>
-    extends Consumer<KafkaConsumerRecord<K, V>>, SharedDataDelegate {
+    extends Consumer<KafkaConsumerRecord<K, V>>, SharedDataDelegate<KafkaConsumerHandler> {
 
     /**
      * Create {@code Kafka Broadcaster} that linked to a specified {@code Eventbus model}

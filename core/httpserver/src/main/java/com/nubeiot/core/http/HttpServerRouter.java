@@ -16,19 +16,27 @@ import lombok.Getter;
 @Getter
 public final class HttpServerRouter {
 
-    private final Set<Class<? extends RestApi>> restApiClass = new HashSet<>();
-    private final Set<Class<? extends RestEventApi>> restEventApiClass = new HashSet<>();
+    private final Set<Class<? extends RestApi>> restApiClasses = new HashSet<>();
+    private final Set<Class<? extends RestEventApi>> restEventApiClasses = new HashSet<>();
     private final Set<WebsocketServerEventMetadata> websocketEvents = new HashSet<>();
+    private final Set<Class<? extends RestEventApi>> gatewayApiClasses = new HashSet<>();
 
     @SafeVarargs
     public final HttpServerRouter registerApi(Class<? extends RestApi>... apiClass) {
-        restApiClass.addAll(Arrays.stream(apiClass).filter(Objects::nonNull).collect(Collectors.toList()));
+        restApiClasses.addAll(Arrays.stream(apiClass).filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
     }
 
     @SafeVarargs
     public final HttpServerRouter registerEventBusApi(Class<? extends RestEventApi>... eventBusApiClass) {
-        restEventApiClass.addAll(Arrays.stream(eventBusApiClass).filter(Objects::nonNull).collect(Collectors.toList()));
+        restEventApiClasses.addAll(
+            Arrays.stream(eventBusApiClass).filter(Objects::nonNull).collect(Collectors.toList()));
+        return this;
+    }
+
+    @SafeVarargs
+    public final HttpServerRouter registerGatewayApi(Class<? extends RestEventApi>... gatewayApiClass) {
+        gatewayApiClasses.addAll(Arrays.stream(gatewayApiClass).filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
     }
 

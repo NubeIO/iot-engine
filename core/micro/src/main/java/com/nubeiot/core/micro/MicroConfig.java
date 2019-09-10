@@ -187,6 +187,7 @@ public final class MicroConfig implements IConfig {
         static final String NAME = "__gateway__";
 
         private boolean enabled = false;
+        private String indexAddress = "nubeio.service.gateway.index";
         private String clusterAnnounceMonitorClass = ServiceGatewayAnnounceMonitor.class.getName();
         private String clusterUsageMonitorClass = ServiceGatewayUsageMonitor.class.getName();
         private String localAnnounceMonitorClass = ServiceGatewayAnnounceMonitor.class.getName();

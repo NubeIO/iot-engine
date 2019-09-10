@@ -3,6 +3,7 @@
     "__micro__": {
       "__gateway__": {
         "enabled": true,
+        "indexAddress": "test.nubeio.service.gateway.index",
         "localAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
       },
       "__serviceDiscovery__": {
@@ -21,6 +22,11 @@
           "enabled": true,
           "path": "/s"
         }
+      },
+      "__api_gateway__": {
+        "enabled": true,
+        "path": "/gw",
+        "address": "test.nubeio.service.gateway.index"
       }
     }
   }

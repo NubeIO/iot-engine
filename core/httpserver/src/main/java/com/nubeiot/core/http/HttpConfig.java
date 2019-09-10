@@ -51,6 +51,8 @@ public final class HttpConfig implements IConfig {
     private Http2Config http2Cfg = new Http2Config();
     @JsonProperty(value = CorsOptions.NAME)
     private CorsOptions corsOptions = new CorsOptions();
+    @JsonProperty(value = ApiGatewayConfig.NAME)
+    private ApiGatewayConfig apiGatewayConfig = new ApiGatewayConfig();
     @JsonProperty(value = FileStorageConfig.NAME)
     private FileStorageConfig fileStorageConfig = new FileStorageConfig();
     @JsonProperty(value = StaticWebConfig.NAME)
@@ -279,6 +281,26 @@ public final class HttpConfig implements IConfig {
     @Getter
     @Setter(value = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PACKAGE)
+    public static class ApiGatewayConfig implements IConfig {
+
+        public static final String NAME = "__api_gateway__";
+
+        private boolean enabled = false;
+        private String path = ApiConstants.ROOT_GATEWAY_PATH;
+        private String address;
+
+        @Override
+        public String name() { return NAME; }
+
+        @Override
+        public Class<? extends IConfig> parent() { return HttpConfig.class; }
+
+    }
+
+
+    @Getter
+    @Setter(value = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PACKAGE)
     public static class StaticWebConfig implements IConfig {
 
         public static final String NAME = "__static__";
@@ -291,7 +313,7 @@ public final class HttpConfig implements IConfig {
         public String name() { return NAME; }
 
         @Override
-        public Class<? extends IConfig> parent() { return StaticWebConfig.class; }
+        public Class<? extends IConfig> parent() { return HttpConfig.class; }
 
     }
 

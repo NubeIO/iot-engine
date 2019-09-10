@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.ws.rs.core.MediaType;
 
@@ -13,7 +14,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 
 import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.HttpConfig.RestConfig.DynamicRouteConfig;
@@ -47,7 +47,7 @@ public final class RestApisBuilder {
     @NonNull
     private final Set<Class<? extends RestEventApi>> restEventApiClass = new HashSet<>();
     private String rootApi = ApiConstants.ROOT_API_PATH;
-    private EventController eventController;
+    private Function<String, Object> sharedDataFunc;
     private DynamicRouteConfig dynamicRouteConfig;
 
     public RestApisBuilder registerApi(Collection<Class<? extends RestApi>> apiClass) {
@@ -71,8 +71,8 @@ public final class RestApisBuilder {
         return this;
     }
 
-    public RestApisBuilder addEventController(@NonNull EventController controller) {
-        this.eventController = controller;
+    public RestApisBuilder addSharedDataFunc(@NonNull Function<String, Object> func) {
+        this.sharedDataFunc = func;
         return this;
     }
 
@@ -122,7 +122,7 @@ public final class RestApisBuilder {
             return null;
         }
         logger.info("Registering sub router REST Event API...");
-        return new RestEventApisBuilder(vertx).addEventController(eventController).register(restEventApiClass).build();
+        return new RestEventApisBuilder(vertx).addSharedDataFunc(sharedDataFunc).register(restEventApiClass).build();
     }
 
     private Router initDynamicRouter() {

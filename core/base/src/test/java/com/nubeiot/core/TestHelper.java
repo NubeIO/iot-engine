@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.json.JSONException;
+import org.skyscreamer.jsonassert.ArrayValueMatcher;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -127,8 +128,13 @@ public interface TestHelper {
 
         static Handler<AsyncResult<Message<Object>>> replyAsserter(TestContext context, Async async,
                                                                    JsonObject expected) {
+            return replyAsserter(context, async, expected, JSONCompareMode.STRICT);
+        }
+
+        static Handler<AsyncResult<Message<Object>>> replyAsserter(TestContext context, Async async,
+                                                                   JsonObject expected, JSONCompareMode mode) {
             return context.asyncAssertSuccess(
-                result -> JsonHelper.assertJson(context, async, expected, (JsonObject) result.body()));
+                result -> JsonHelper.assertJson(context, async, expected, (JsonObject) result.body(), mode));
         }
 
         static Handler<AsyncResult<Message<Object>>> replyAsserter(TestContext context, Async async,
@@ -192,17 +198,32 @@ public interface TestHelper {
 
     interface JsonHelper {
 
+        static Customization ignore(@NonNull String path) {
+            return new Customization(path, (o1, o2) -> true);
+        }
+
+        static Customization ignoreInArray(@NonNull String path, @NonNull String arrayPath) {
+            ArrayValueMatcher<Object> arrValMatch = new ArrayValueMatcher<>(
+                new CustomComparator(JSONCompareMode.NON_EXTENSIBLE, new Customization(path, (o1, o2) -> true)));
+            return new Customization(arrayPath, arrValMatch);
+        }
+
         static CustomComparator comparator(Customization... customizations) {
             return new CustomComparator(JSONCompareMode.LENIENT, customizations);
         }
 
         static Consumer<Object> asserter(TestContext context, Async async, JsonObject expected) {
-            return resp -> JsonHelper.assertJson(context, async, expected, (JsonObject) resp);
+            return resp -> JsonHelper.assertJson(context, async, expected, (JsonObject) resp, JSONCompareMode.STRICT);
         }
 
-        static void assertJson(TestContext context, Async async, JsonObject expected, JsonObject actual) {
+        static Consumer<Object> asserter(TestContext context, Async async, JsonObject expected, JSONCompareMode mode) {
+            return resp -> JsonHelper.assertJson(context, async, expected, (JsonObject) resp, mode);
+        }
+
+        static void assertJson(TestContext context, Async async, JsonObject expected, JsonObject actual,
+                               JSONCompareMode mode) {
             try {
-                JSONAssert.assertEquals(expected.encode(), actual.encode(), JSONCompareMode.STRICT);
+                JSONAssert.assertEquals(expected.encode(), actual.encode(), mode);
             } catch (JSONException | AssertionError e) {
                 System.out.println("Actual: " + actual.encode());
                 context.fail(e);

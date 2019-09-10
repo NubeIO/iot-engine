@@ -16,7 +16,7 @@ import com.nubeiot.core.kafka.KafkaRouter;
 import com.nubeiot.core.kafka.KafkaUnitProvider;
 import com.nubeiot.core.kafka.service.KafkaConsumerService;
 
-public class DashboardKafkaDemo extends ContainerVerticle {
+public final class DashboardKafkaDemo extends ContainerVerticle {
 
     public static final EventModel KAFKA_EB_PUBLISHER = EventModel.builder()
                                                                   .address("edge.kafka.data")

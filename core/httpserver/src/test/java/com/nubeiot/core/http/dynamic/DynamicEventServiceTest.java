@@ -84,4 +84,23 @@ public class DynamicEventServiceTest extends DynamicServiceTestBase {
                            new JsonObject("{\"xId\":\"123\",\"yId\":\"456\"}"));
     }
 
+    @Test
+    public void test_get_gateway_index(TestContext context) {
+        final JsonObject expected = new JsonObject(
+            "{\"apis\":[{\"name\":\"test-ems-3\",\"status\":\"UP\",\"location\":\"test.MockEventMessageService.3\"," +
+            "\"endpoints\":[{\"method\":\"PATCH\",\"path\":\"/x/:xId/y/:yId\"},{\"method\":\"GET\"," +
+            "\"path\":\"/x/:xId/y/:yId\"},{\"method\":\"POST\",\"path\":\"/x/:xId/y\"},{\"method\":\"DELETE\"," +
+            "\"path\":\"/x/:xId/y/:yId\"},{\"method\":\"PUT\",\"path\":\"/x/:xId/y/:yId\"},{\"method\":\"GET\"," +
+            "\"path\":\"/x/:xId/y\"}]},{\"name\":\"test-ems-1\",\"status\":\"UP\",\"location\":\"test" +
+            ".MockEventMessageService.1\",\"endpoints\":[{\"method\":\"PATCH\",\"path\":\"/hey/:id\"}," +
+            "{\"method\":\"GET\",\"path\":\"/hey/:id\"},{\"method\":\"POST\",\"path\":\"/hey\"}," +
+            "{\"method\":\"DELETE\",\"path\":\"/hey/:id\"},{\"method\":\"PUT\",\"path\":\"/hey/:id\"}," +
+            "{\"method\":\"GET\",\"path\":\"/hey\"}]},{\"name\":\"test-ems-2\",\"status\":\"UP\",\"location\":\"test" +
+            ".MockEventMessageService.2\",\"endpoints\":[{\"method\":\"PATCH\",\"path\":\"/c/:cId/p/:pId\"}," +
+            "{\"method\":\"GET\",\"path\":\"/c/:cId/p/:pId\"},{\"method\":\"POST\",\"path\":\"/c/:cId/p\"}," +
+            "{\"method\":\"DELETE\",\"path\":\"/c/:cId/p/:pId\"},{\"method\":\"PUT\",\"path\":\"/c/:cId/p/:pId\"}," +
+            "{\"method\":\"GET\",\"path\":\"/c/:cId/p\"}]}]}");
+        assertRestByClient(context, HttpMethod.GET, "/gw/index", 200, expected);
+    }
+
 }

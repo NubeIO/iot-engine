@@ -66,11 +66,11 @@ public class MicroConfigTest {
         MicroConfig fromMicro = IConfig.fromClasspath("micro.json", MicroConfig.class);
         Assert.assertFalse(fromMicro.getDiscoveryConfig().isLocal());
         fromMicro.getDiscoveryConfig().reloadProperty();
-        Assert.assertFalse(Boolean.valueOf(System.getProperty(BackendConfig.DEFAULT_SERVICE_DISCOVERY_BACKEND)));
+        Assert.assertFalse(Boolean.parseBoolean(System.getProperty(BackendConfig.DEFAULT_SERVICE_DISCOVERY_BACKEND)));
 
         Assert.assertTrue(fromMicro.getLocalDiscoveryConfig().isLocal());
         fromMicro.getLocalDiscoveryConfig().reloadProperty();
-        Assert.assertTrue(Boolean.valueOf(System.getProperty(BackendConfig.DEFAULT_SERVICE_DISCOVERY_BACKEND)));
+        Assert.assertTrue(Boolean.parseBoolean(System.getProperty(BackendConfig.DEFAULT_SERVICE_DISCOVERY_BACKEND)));
     }
 
     @Test

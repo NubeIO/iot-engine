@@ -57,19 +57,23 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
     }
 
     @Override
-    public final <R> R getSharedData(String dataKey, R fallback) {
-        logger.debug("Retrieve SharedData by SharedKey {}", sharedKey);
-        final R dataValue = SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
+    public final <D> D getSharedData(String dataKey, D fallback) {
+        final D dataValue = SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
         return Objects.isNull(dataValue) ? fallback : dataValue;
+    }
+
+    @Override
+    public final <D> D addSharedData(String dataKey, D data) {
+        SharedDataDelegate.addLocalDataValue(vertx, sharedKey, dataKey, data);
+        return data;
     }
 
     private void initTestSharedData(Path testDir) {
         if (Objects.isNull(testDir)) {
             return;
         }
-        SharedDataDelegate.addLocalDataValue(vertx, sharedKey, SharedDataDelegate.SHARED_DATADIR, testDir.toString());
-        SharedDataDelegate.addLocalDataValue(vertx, sharedKey, SharedDataDelegate.SHARED_EVENTBUS,
-                                             new DefaultEventController(vertx));
+        addSharedData(SharedDataDelegate.SHARED_DATADIR, testDir.toString());
+        addSharedData(SharedDataDelegate.SHARED_EVENTBUS, new DefaultEventController(vertx));
     }
 
 }

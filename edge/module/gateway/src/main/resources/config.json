@@ -13,6 +13,7 @@
     "__micro__": {
       "__gateway__": {
         "enabled": true,
+        "indexAddress": "com.nubeio.edge.module.gateway.index",
         "localAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
       },
       "__serviceDiscovery__": {
@@ -31,6 +32,7 @@
     "__http__": {
       "port": 8080,
       "__rest__": {
+        "enabled": true,
         "rootApi": "/api",
         "__dynamic__": {
           "enabled": true,
@@ -49,6 +51,11 @@
           "accept",
           "Authorization"
         ]
+      },
+      "__api_gateway__": {
+        "enabled": true,
+        "path": "/gw",
+        "address": "com.nubeio.edge.module.gateway.index"
       }
     }
   }

@@ -27,6 +27,12 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
      * @see #defaultCUDMap()
      */
     ActionMethodMapping CUD_MAP = ActionMethodMapping.create(defaultCUDMap());
+    /**
+     * Default mapping for reading {@code GET | GET_LIST} operations
+     *
+     * @see #defaultReadMap()
+     */
+    ActionMethodMapping READ_MAP = ActionMethodMapping.create(defaultReadMap());
 
     static ActionMethodMapping create(@NonNull Map<EventAction, HttpMethod> map) {
         return () -> Collections.unmodifiableMap(map);
@@ -49,6 +55,13 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
         map.put(EventAction.UPDATE, HttpMethod.PUT);
         map.put(EventAction.PATCH, HttpMethod.PATCH);
         map.put(EventAction.REMOVE, HttpMethod.DELETE);
+        return map;
+    }
+
+    static Map<EventAction, HttpMethod> defaultReadMap() {
+        Map<EventAction, HttpMethod> map = new HashMap<>();
+        map.put(EventAction.GET_LIST, HttpMethod.GET);
+        map.put(EventAction.GET_ONE, HttpMethod.GET);
         return map;
     }
 

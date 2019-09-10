@@ -14,7 +14,7 @@ public final class Microservice extends UnitVerticle<MicroConfig, MicroContext> 
     public void start() {
         super.start();
         logger.info("Setup micro-service...");
-        getContext().create(vertx, config, getSharedKey());
+        getContext().setup(vertx, config, getSharedKey());
     }
 
     @Override

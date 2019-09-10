@@ -13,7 +13,8 @@ class ClusterSDController extends ServiceDiscoveryController {
 
     ClusterSDController(Vertx vertx, ServiceDiscoveryConfig config, String sharedKey,
                         CircuitBreakerController circuitController) {
-        super(config, sharedKey, createServiceDiscovery(vertx, config, "Cluster", Vertx::isClustered),
+        super(config, sharedKey,
+              createServiceDiscovery(vertx, config, ServiceDiscoveryKind.CLUSTER, Vertx::isClustered),
               circuitController);
     }
 
@@ -30,8 +31,8 @@ class ClusterSDController extends ServiceDiscoveryController {
     }
 
     @Override
-    String kind() {
-        return "Cluster";
+    ServiceDiscoveryKind kind() {
+        return ServiceDiscoveryKind.CLUSTER;
     }
 
     @Override
