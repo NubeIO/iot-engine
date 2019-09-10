@@ -11,8 +11,7 @@ public class GatewayEventBus {
                                                                             ".registration")
                                                                    .pattern(EventPattern.REQUEST_RESPONSE)
                                                                    .local(true)
-                                                                   .addEvents(EventAction.GET_LIST, EventAction.CREATE,
-                                                                              EventAction.REMOVE)
+                                                                   .addEvents(EventAction.CREATE, EventAction.REMOVE)
                                                                    .build();
 
 }

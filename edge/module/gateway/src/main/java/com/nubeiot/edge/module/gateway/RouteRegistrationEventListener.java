@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.gateway.handlers;
+package com.nubeiot.edge.module.gateway;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,9 +12,9 @@ import io.vertx.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.AlreadyExistException;
@@ -24,7 +24,6 @@ import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.module.gateway.EdgeGatewayVerticle;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -52,7 +51,8 @@ public class RouteRegistrationEventListener implements EventListener {
     }
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
-    public Single<JsonObject> create(@Param("data") JsonObject data) {
+    public Single<JsonObject> create(RequestData requestData) {
+        JsonObject data = requestData.body();
         HttpLocation location = JsonData.convertLenient(data, HttpLocation.class);
         String serviceName = data.getString("name");
         JsonObject metadata = data.getJsonObject("metadata");
@@ -76,7 +76,8 @@ public class RouteRegistrationEventListener implements EventListener {
     }
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
-    public Single<JsonObject> remove(@Param("registration") String registration) {
+    public Single<JsonObject> remove(RequestData requestData) {
+        String registration = requestData.body().getString("registration");
         return verticle.getMicroContext()
                        .getLocalController()
                        .removeRecord(registration)
