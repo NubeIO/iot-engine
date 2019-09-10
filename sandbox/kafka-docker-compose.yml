@@ -22,7 +22,7 @@ services:
       - kafka-log:/kafka
 
   connector-kafka:
-    image: ${PREFIX_IMG}/nube-dashboard-connector-sample-kafka:${IOT_VERSION}
+    image: ${PREFIX_IMG}/dashboard-connector-sample-kafka:${IOT_VERSION}
     ports:
       - ${CONNECTOR_KAFKA_PORT}:8080
     volumes:
