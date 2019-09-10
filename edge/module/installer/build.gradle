@@ -4,5 +4,5 @@ ext {
 
 dependencies {
     compile project(':core:micro')
-    compile project(':edge:core')
+    compile project(':core:installer')
 }

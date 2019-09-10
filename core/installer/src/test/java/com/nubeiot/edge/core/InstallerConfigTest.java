@@ -62,7 +62,7 @@ public class InstallerConfigTest {
         Credential credential = installerConfig.getRepoConfig().getRemoteConfig().getCredential();
         Assert.assertNotNull(credential);
         Assert.assertEquals(CredentialType.BASIC, credential.getType());
-        Assert.assertEquals("user", ((BasicCredential) credential).getUser());
+        Assert.assertEquals("user", credential.getUser());
         Assert.assertEquals("password", ((BasicCredential) credential).getPassword());
 
         Map<ModuleType, List<RemoteUrl>> urls = installerConfig.getRepoConfig().getRemoteConfig().getUrls();
@@ -72,7 +72,7 @@ public class InstallerConfigTest {
         Assert.assertNull(remoteUrls.get(0).getCredential());
         Assert.assertEquals("xyz", remoteUrls.get(1).getUrl());
         Assert.assertEquals(CredentialType.BASIC, remoteUrls.get(1).getCredential().getType());
-        Assert.assertEquals("u1", ((BasicCredential) remoteUrls.get(1).getCredential()).getUser());
+        Assert.assertEquals("u1", remoteUrls.get(1).getCredential().getUser());
         Assert.assertEquals("p1", ((BasicCredential) remoteUrls.get(1).getCredential()).getPassword());
 
         Assert.assertEquals(1, installerConfig.getBuiltinApps().size());
