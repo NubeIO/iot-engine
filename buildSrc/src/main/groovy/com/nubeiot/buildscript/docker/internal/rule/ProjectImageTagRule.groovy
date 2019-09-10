@@ -10,16 +10,23 @@ import groovy.transform.CompileStatic
 class ProjectImageTagRule implements DockerImageTagRule {
 
     final Project project
+    final String artifact
     final String repository
 
     ProjectImageTagRule(Project project) {
         this.project = project
-        this.repository = ProjectUtils.computeBaseName(project)
+        this.artifact = ProjectUtils.computeBaseName(project)
+        this.repository = ProjectUtils.computeDockerName(project)
     }
 
     @Override
     String repository() {
         return repository
+    }
+
+    @Override
+    String artifact() {
+        return artifact
     }
 
     @Override

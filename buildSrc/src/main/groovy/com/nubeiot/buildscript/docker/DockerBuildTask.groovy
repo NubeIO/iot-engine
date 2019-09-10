@@ -100,7 +100,7 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
         ProjectImageTagRule tagRule = new ProjectImageTagRule(project)
         List<DockerImageTagRule> rules = rules(tagRule)
         baseImages.each { it ->
-            def dockerfile = createDockerFile(it, tagRule.repository() + "-" + project.version)
+            def dockerfile = createDockerFile(it, tagRule.artifact() + "-" + project.version)
             def tags = computeTags(it, rules)
             String imageId = client.buildImageCmd()
                                    .withBaseDirectory(buildDir.asFile.get())

@@ -13,7 +13,7 @@ plugins {
 apply from: "buildSrc/dependencies.gradle"
 
 ext {
-    baseName = "nube"
+    baseName = "nubeio"
 }
 
 defaultTasks 'clean', 'jooq', 'build', 'uberJar'

@@ -20,10 +20,11 @@ class ProjectUtils {
     }
 
     static String computeBaseName(Project project) {
-        if (project.parent == null) {
-            return extraProp(project, "baseName", project.name)
-        }
-        return computeBaseName(project.parent) + "-" + project.name
+        return computeProjectName(project, "-")
+    }
+
+    static String computeDockerName(Project project) {
+        return computeProjectName(project, "-", "/")
     }
 
     def static loadSecretProps(Project project, secretFile) {
@@ -43,5 +44,13 @@ class ProjectUtils {
     static String extraProp(Project project, String key, String fallback) {
         return project.ext.has(key) && !Strings.isBlank((String) project.ext.get(key)) ? (String) project.ext.get(key) :
                fallback
+    }
+
+    private static String computeProjectName(Project project, String sep, String firstSep = null) {
+        if (project.parent == null) {
+            return extraProp(project, "baseName", project.name)
+        }
+        final def s = project.parent.parent == null && firstSep ? firstSep : sep
+        return computeProjectName(project.parent, sep, firstSep) + s + project.name
     }
 }
