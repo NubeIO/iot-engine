@@ -1,0 +1,11 @@
+apply plugin: "org.sonarqube"
+
+loadSecretProps("$rootDir/nexus.secret.properties")
+
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.projectKey", project.name
+        property "sonar.exclusions", "**/${project.genProps.genDir}/**"
+    }
+}

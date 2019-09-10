@@ -16,13 +16,6 @@ ext {
     baseName = "nube"
 }
 
-sonarqube {
-    properties {
-        property "sonar.sourceEncoding", "UTF-8"
-        property "sonar.projectKey", project.name
-    }
-}
-
 defaultTasks 'clean', 'jooq', 'build', 'uberJar'
 group = 'com.nubeiot'
 
@@ -89,3 +82,4 @@ subprojects {
 }
 
 apply from: "buildSrc/global.gradle"
+apply from: "buildSrc/sonar.gradle"
