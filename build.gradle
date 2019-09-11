@@ -6,7 +6,7 @@ import com.nubeiot.buildscript.docker.internal.JavaType
 plugins {
     id "eclipse"
     id "idea"
-    id "org.sonarqube"
+    id "org.sonarqube" apply false
     id "net.ltgt.apt" apply false
 }
 
