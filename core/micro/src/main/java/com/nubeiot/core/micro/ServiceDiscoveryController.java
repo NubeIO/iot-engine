@@ -35,6 +35,8 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.micro.MicroConfig.BackendConfig;
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
+import com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor;
+import com.nubeiot.core.micro.monitor.ServiceGatewayUsageMonitor;
 import com.nubeiot.core.micro.type.EventMessagePusher;
 import com.nubeiot.core.micro.type.EventMessageService;
 
@@ -157,7 +159,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
                                                            HttpMethod method, JsonObject requestData,
                                                            DeliveryOptions options) {
         return findRecord(filter, EventMessageService.TYPE).flatMap(record -> {
-            JsonObject config = new JsonObject().put(EventMessageService.SHARED_KEY_CONFIG, this.sharedKey)
+            JsonObject config = new JsonObject().put(EventMessageService.SHARED_KEY_CONFIG, sharedKey)
                                                 .put(EventMessageService.DELIVERY_OPTIONS_CONFIG,
                                                      Objects.isNull(options) ? new JsonObject() : options.toJson());
             ServiceReference ref = get().getReferenceWithConfiguration(record, config);
@@ -168,7 +170,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
-    public Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
+    private Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
         return getRx().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r))
                       .switchIfEmpty(Single.error(
                           new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));

@@ -15,7 +15,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class CircuitBreakerController implements Supplier<CircuitBreaker> {
+public final class CircuitBreakerController implements Supplier<CircuitBreaker> {
 
     private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerController.class);
 

@@ -82,6 +82,9 @@ public abstract class BaseEdgeVerticleTest {
 
         AppConfig appConfig = new AppConfig();
         appConfig.put("__sql__", sqlConfig.toJson());
+        appConfig.put("__micro__", new JsonObject(
+            "{\"__gateway__\":{\"enabled\":false}," + "\"__serviceDiscovery__\":{\"enabled\":false}," +
+            "\"__localServiceDiscovery__\":{\"enabled\":false}," + "\"__circuitBreaker__\":{\"enabled\":false}}"));
 
         nubeConfig.setAppConfig(appConfig);
         return nubeConfig;
@@ -101,7 +104,7 @@ public abstract class BaseEdgeVerticleTest {
     }
 
     protected void after(TestContext context) {
-        this.vertx.close(context.asyncAssertSuccess());
+        this.vertx.close();
     }
 
     protected @NonNull String getJdbcUrl() {

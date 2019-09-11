@@ -3,8 +3,8 @@
   "__system__": {
     "__eventBus__": {
       "ssl": true,
+      "clustered": false,
       "clientAuth": "REQUIRED",
-      "clustered": true,
       "keyStoreOptions": {
         "path": "eventBusKeystore.jks",
         "password": "nubesparkEventBus"
@@ -18,8 +18,8 @@
       }
     },
     "__cluster__": {
-      "active": true,
-      "ha": true
+      "active": false,
+      "ha": false
     }
   },
   "__app__": {

@@ -1,24 +1,14 @@
 package com.nubeiot.core.http.gateway;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.Router;
+import io.vertx.core.logging.Logger;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.Status;
 
-import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.HttpServer;
-import com.nubeiot.core.http.ServerInfo;
-import com.nubeiot.core.http.base.Urls;
-import com.nubeiot.core.http.handler.DynamicContextDispatcher;
-import com.nubeiot.core.http.rest.DynamicRestApi;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
-import com.nubeiot.core.micro.ServiceGatewayAnnounceMonitor;
+import com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor;
+
+import lombok.NonNull;
 
 /**
  * Represents listener for event after any service up/down automatically
@@ -57,7 +47,7 @@ import com.nubeiot.core.micro.ServiceGatewayAnnounceMonitor;
  * </li>
  * </ul>
  */
-public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
+public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor implements DynamicRouterRegister {
 
     public RouterAnnounceListener(Vertx vertx, ServiceDiscoveryController controller, String sharedKey) {
         super(vertx, controller, sharedKey);
@@ -68,45 +58,19 @@ public class RouterAnnounceListener extends ServiceGatewayAnnounceMonitor {
         if (record.getStatus() == Status.UNKNOWN) {
             rescanService();
         } else {
-            registerService(record);
+            register(record);
         }
     }
 
-    private void registerService(Record record) {
-        try {
-            DynamicRestApi api = DynamicRestApi.create(record);
-            ServerInfo serverInfo = SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(),
-                                                                         HttpServer.SERVER_INFO_DATA_KEY);
-            Router router = serverInfo.getRouter();
-            String gatewayPath = Urls.combinePath(serverInfo.getApiPath(), serverInfo.getServicePath());
-            List<String> paths = api.alternativePaths()
-                                    .orElse(Collections.singleton(api.path()))
-                                    .stream()
-                                    .map(p -> Urls.combinePath(gatewayPath, p))
-                                    .sorted(Comparator.reverseOrder())
-                                    .collect(Collectors.toList());
-            if (record.getStatus() == Status.UP) {
-                DynamicContextDispatcher<DynamicRestApi> handler = DynamicContextDispatcher.create(api, gatewayPath,
-                                                                                                   getController());
-                paths.forEach(path -> {
-                    logger.info("Enable dynamic route | API: {} | Order: {} | Path: {}", api.name(), api.order(), path);
-                    router.route(path).order(api.order()).handler(handler).enable();
-                });
-            } else {
-                paths.forEach(path -> {
-                    logger.info("Disable dynamic route | API: {} | Path: {}", api.name(), path);
-                    router.route(path).disable();
-                });
-            }
-        } catch (NubeException e) {
-            logger.warn("Cannot register Dynamic service", e);
-        }
+    @Override
+    public @NonNull Logger logger() {
+        return logger;
     }
 
     // TODO: find better way instead force rescan in every register call
     // TODO: for checking in cluster mode
     private void rescanService() {
-        getController().getRecords().subscribe(records -> records.forEach(this::registerService));
+        getController().getRecords().subscribe(records -> records.forEach(this::register));
     }
 
 }

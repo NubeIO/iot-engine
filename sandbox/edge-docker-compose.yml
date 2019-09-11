@@ -1,17 +1,17 @@
 version: "2.4"
 services:
 
-  connector-edge:
-    image: ${PREFIX_IMG}/dashboard-connector-edge:${IOT_VERSION}
-    ports:
-      - ${CONNECTOR_EDGE_PORT}:8080
-      - ${CONNECTOR_EDGE_EVENTBUS_PORT}:5000
-      - ${CONNECTOR_EDGE_CLUSTER_PORT}:5701
-    volumes:
-      - connector-edge-data:/data
-      - ./engine/connector-edge.json:/app/conf/config.json
-      - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
-      - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
+  #  connector-edge:
+  #    image: ${PREFIX_IMG}/dashboard-connector-edge:${IOT_VERSION}
+  #    ports:
+  #      - ${CONNECTOR_EDGE_PORT}:8080
+  #      - ${CONNECTOR_EDGE_EVENTBUS_PORT}:5000
+  #      - ${CONNECTOR_EDGE_CLUSTER_PORT}:5701
+  #    volumes:
+  #      - connector-edge-data:/data
+  #      - ./engine/connector-edge.json:/app/conf/config.json
+  #      - ./engine/hazelcast.xml:/app/conf/hazelcast.xml
+  #      - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
 
   bios:
     image: ${PREFIX_IMG}/edge-bios:${IOT_VERSION}
@@ -32,7 +32,7 @@ services:
       - ./engine/eventBusKeystore.jks:/app/conf/eventBusKeystore.jks
 
 volumes:
-  connector-edge-data:
-    driver: local
+  #  connector-edge-data:
+  #    driver: local
   bios-data:
     driver: local

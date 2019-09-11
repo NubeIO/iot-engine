@@ -1,18 +1,19 @@
 package com.nubeiot.edge.module.gateway;
 
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.DeliveryEvent;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
-import com.nubeiot.core.http.rest.provider.RestMicroContextProvider;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.eventbus.edge.gateway.GatewayEventBus;
-import com.zandero.rest.RestRouter;
 
 import lombok.Getter;
 
-public class EdgeGatewayVerticle extends ContainerVerticle {
+public final class EdgeGatewayVerticle extends ContainerVerticle {
 
     @Getter
     private MicroContext microContext;
@@ -21,22 +22,27 @@ public class EdgeGatewayVerticle extends ContainerVerticle {
     public void start() {
         super.start();
         this.addProvider(new HttpServerProvider(initHttpRouter()))
-            .addProvider(new MicroserviceProvider(), microContext -> this.microContext = (MicroContext) microContext);
-
-        this.registerSuccessHandler(event -> {
-            this.microContext.rescanService(vertx.eventBus().getDelegate());
-            RestRouter.addProvider(RestMicroContextProvider.class, ctx -> new RestMicroContextProvider(microContext));
-        });
+            .addProvider(new MicroserviceProvider(), microContext -> this.microContext = (MicroContext) microContext)
+            .registerSuccessHandler(event -> successHandler());
     }
 
     private HttpServerRouter initHttpRouter() {
-        return new HttpServerRouter().registerGatewayApi(RouteRegistrationApi.class);
+        return new HttpServerRouter().registerGatewayApi(RouterRegistrationApi.class);
     }
 
-    @Override
-    public void registerEventbus(EventController controller) {
-        controller.register(GatewayEventBus.DRIVER_REGISTRATION,
-                            new RouteRegistrationEventListener(this, GatewayEventBus.DRIVER_REGISTRATION));
+    private void successHandler() {
+        final EventController client = getEventController();
+        client.register(GatewayEventBus.ROUTER_REGISTRATION,
+                        new RouterRegistrationListener(microContext, GatewayEventBus.ROUTER_REGISTRATION.getEvents()))
+              .register(GatewayEventBus.ROUTER_ANNOUNCEMENT,
+                        new BiosRouterAnnounceHandler(getVertx(), getSharedKey(), microContext,
+                                                      GatewayEventBus.ROUTER_ANNOUNCEMENT.getEvents()));
+        microContext.getLocalController()
+                    .getRecords()
+                    .flattenAsObservable(records -> records)
+                    .forEach(record -> client.request(
+                        DeliveryEvent.from(GatewayEventBus.ROUTER_ANNOUNCEMENT, EventAction.MONITOR,
+                                           RequestData.builder().body(record.toJson()).build().toJson())));
     }
 
 }

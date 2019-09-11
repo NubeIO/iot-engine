@@ -4,10 +4,10 @@
       "__gateway__": {
         "enabled": false,
         "indexAddress": "nubeio.service.gateway.index",
-        "clusterAnnounceMonitorClass": "com.nubeiot.core.micro.ServiceGatewayAnnounceMonitor",
-        "clusterUsageMonitorClass": "com.nubeiot.core.micro.ServiceGatewayUsageMonitor",
-        "localAnnounceMonitorClass": "com.nubeiot.core.micro.ServiceGatewayAnnounceMonitor",
-        "localUsageMonitorClass": "com.nubeiot.core.micro.ServiceGatewayUsageMonitor"
+        "clusterAnnounceMonitorClass": "com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor",
+        "clusterUsageMonitorClass": "com.nubeiot.core.micro.monitor.ServiceGatewayUsageMonitor",
+        "localAnnounceMonitorClass": "com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor",
+        "localUsageMonitorClass": "com.nubeiot.core.micro.monitor.ServiceGatewayUsageMonitor"
       },
       "__serviceDiscovery__": {
         "announceAddress": "nubeio.service.discovery.announce",

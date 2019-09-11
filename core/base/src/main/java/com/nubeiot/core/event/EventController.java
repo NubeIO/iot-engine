@@ -297,10 +297,11 @@ public interface EventController extends Shareable {
      *
      * @param eventModel Event model
      * @param handler    Handler when receiving message
+     * @return a reference to this, so the API can be used fluently
      * @see EventModel
      */
-    default void register(@NonNull EventModel eventModel, @NonNull EventListener handler) {
-        this.register(eventModel.getAddress(), eventModel.isLocal(), handler);
+    default EventController register(@NonNull EventModel eventModel, @NonNull EventListener handler) {
+        return this.register(eventModel.getAddress(), eventModel.isLocal(), handler);
     }
 
     /**
@@ -310,10 +311,11 @@ public interface EventController extends Shareable {
      *
      * @param address Event bus address
      * @param handler Handler when receiving message
+     * @return a reference to this, so the API can be used fluently
      * @see EventListener
      */
-    default void register(String address, @NonNull EventListener handler) {
-        this.register(address, true, handler);
+    default EventController register(String address, @NonNull EventListener handler) {
+        return this.register(address, true, handler);
     }
 
     /**
@@ -322,9 +324,10 @@ public interface EventController extends Shareable {
      * @param address Event bus address
      * @param local   If {@code true}, only register for local event address
      * @param handler Message handler when receive
+     * @return a reference to this, so the API can be used fluently
      * @see EventListener
      * @see #register(String, EventListener)
      */
-    void register(String address, boolean local, @NonNull EventListener handler);
+    EventController register(String address, boolean local, @NonNull EventListener handler);
 
 }

@@ -66,13 +66,14 @@ final class DefaultEventController implements EventController {
     /**
      * {@inheritDoc}
      */
-    public void register(String address, boolean local, @NonNull EventListener handler) {
+    public EventController register(String address, boolean local, @NonNull EventListener handler) {
         Strings.requireNotBlank(address);
         if (local) {
             this.eventBus.localConsumer(address, handler::accept);
         } else {
             this.eventBus.consumer(address, handler::accept);
         }
+        return this;
     }
 
     @Override

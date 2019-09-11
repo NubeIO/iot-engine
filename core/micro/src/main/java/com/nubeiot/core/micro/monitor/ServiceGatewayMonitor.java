@@ -1,4 +1,4 @@
-package com.nubeiot.core.micro;
+package com.nubeiot.core.micro.monitor;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,9 +10,11 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +42,7 @@ public interface ServiceGatewayMonitor extends Handler<Message<Object>> {
     String getSharedKey();
 
     @Getter
-    @RequiredArgsConstructor
+    @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
     abstract class AbstractServiceGatewayMonitor implements ServiceGatewayMonitor {
 
         protected final Logger logger = LoggerFactory.getLogger(this.getClass());

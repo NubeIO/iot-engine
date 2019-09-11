@@ -3,8 +3,9 @@ ext {
 }
 
 dependencies {
-    compile project(':core:micro') //todo: remove this one, related to issue #141
+    compile project(':core:micro')
     compile project(':core:installer')
-    compile project(':core:cluster:hazelcast')
+    compile project(':eventbus:edge:gateway')
+
     testCompile project(":core:base").sourceSets.test.output
 }

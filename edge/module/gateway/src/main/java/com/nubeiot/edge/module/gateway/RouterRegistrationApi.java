@@ -10,9 +10,9 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.rest.AbstractRestEventApi;
 import com.nubeiot.eventbus.edge.gateway.GatewayEventBus;
 
-final public class RouteRegistrationApi extends AbstractRestEventApi {
+public final class RouterRegistrationApi extends AbstractRestEventApi {
 
-    static Map<EventAction, HttpMethod> map() {
+    private static Map<EventAction, HttpMethod> map() {
         Map<EventAction, HttpMethod> map = new HashMap<>();
         map.put(EventAction.CREATE, HttpMethod.POST);
         map.put(EventAction.REMOVE, HttpMethod.DELETE);
@@ -20,8 +20,8 @@ final public class RouteRegistrationApi extends AbstractRestEventApi {
     }
 
     @Override
-    public RouteRegistrationApi initRouter() {
-        addRouter(GatewayEventBus.DRIVER_REGISTRATION, "/register", "/:registration");
+    public RouterRegistrationApi initRouter() {
+        addRouter(GatewayEventBus.ROUTER_REGISTRATION, "/register", "/:registration");
         return this;
     }
 

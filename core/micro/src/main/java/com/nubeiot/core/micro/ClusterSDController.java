@@ -4,12 +4,14 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 
 import com.nubeiot.core.micro.MicroConfig.ServiceDiscoveryConfig;
+import com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor;
+import com.nubeiot.core.micro.monitor.ServiceGatewayUsageMonitor;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
-class ClusterSDController extends ServiceDiscoveryController {
+final class ClusterSDController extends ServiceDiscoveryController {
 
     ClusterSDController(Vertx vertx, ServiceDiscoveryConfig config, String sharedKey,
                         CircuitBreakerController circuitController) {
