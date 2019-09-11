@@ -6,21 +6,14 @@ import com.nubeiot.buildscript.docker.internal.JavaType
 plugins {
     id "eclipse"
     id "idea"
-    id "org.sonarqube"
+    id "org.sonarqube" apply false
     id "net.ltgt.apt" apply false
 }
 
 apply from: "buildSrc/dependencies.gradle"
 
 ext {
-    baseName = "nube"
-}
-
-sonarqube {
-    properties {
-        property "sonar.sourceEncoding", "UTF-8"
-        property "sonar.projectKey", project.name
-    }
+    baseName = "nubeio"
 }
 
 defaultTasks 'clean', 'jooq', 'build', 'uberJar'
@@ -89,3 +82,4 @@ subprojects {
 }
 
 apply from: "buildSrc/global.gradle"
+apply from: "buildSrc/sonar.gradle"

@@ -17,6 +17,11 @@ public interface DockerImageTagRuleDecorator extends DockerImageTagRule {
     }
 
     @Override
+    default String artifact() {
+        return getRule().artifact();
+    }
+
+    @Override
     default String tag() {
         return check(suffixImage(getRule().tag()));
     }

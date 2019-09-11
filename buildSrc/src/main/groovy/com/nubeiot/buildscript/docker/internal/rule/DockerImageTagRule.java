@@ -13,6 +13,21 @@ public interface DockerImageTagRule {
 
     String repository();
 
+    static DockerImageTagRule parse(String image) {
+        final String repository = image.substring(0, image.lastIndexOf(":"));
+        final String tag = image.substring(image.lastIndexOf(":") + 1);
+        return new DockerImageTagRule() {
+            @Override
+            public String repository() { return repository; }
+
+            @Override
+            public String artifact() { return repository; }
+
+            @Override
+            public String tag() { return tag; }
+        };
+    }
+
     String tag();
 
     default boolean autoCorrect() {
@@ -47,18 +62,6 @@ public interface DockerImageTagRule {
         return Collections.singleton(Strings.requireNotBlank(repository()) + ":" + tag);
     }
 
-    static DockerImageTagRule parse(String image) {
-        return new DockerImageTagRule() {
-            @Override
-            public String repository() {
-                return image.substring(0, image.lastIndexOf(":"));
-            }
-
-            @Override
-            public String tag() {
-                return image.substring(image.lastIndexOf(":") + 1);
-            }
-        };
-    }
+    String artifact();
 
 }

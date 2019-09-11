@@ -5,7 +5,7 @@ services:
   ditto-policies:
     init: true
     image: eclipse/ditto-policies:${DITTO_VERSION:-latest}
-    mem_limit: 256m
+    mem_limit: 384m
     networks:
       default:
         aliases:
@@ -21,7 +21,7 @@ services:
   ditto-things:
     init: true
     image: eclipse/ditto-things:${DITTO_VERSION:-latest}
-    mem_limit: 256m
+    mem_limit: 512m
     networks:
       default:
         aliases:
@@ -39,7 +39,7 @@ services:
   ditto-things-search:
     init: true
     image: eclipse/ditto-things-search:${DITTO_VERSION:-latest}
-    mem_limit: 384m
+    mem_limit: 512m
     networks:
       default:
         aliases:
@@ -57,7 +57,7 @@ services:
   ditto-concierge:
     init: true
     image: eclipse/ditto-concierge:${DITTO_VERSION:-latest}
-    mem_limit: 256m
+    mem_limit: 384m
     networks:
       default:
         aliases:
@@ -75,7 +75,7 @@ services:
   ditto-connectivity:
     init: true
     image: eclipse/ditto-connectivity:${DITTO_VERSION:-latest}
-    mem_limit: 256m
+    mem_limit: 384m
     networks:
       default:
         aliases:
@@ -94,7 +94,7 @@ services:
   ditto-gateway:
     init: true
     image: eclipse/ditto-gateway:${DITTO_VERSION:-latest}
-    mem_limit: 256m
+    mem_limit: 384m
     networks:
       default:
         aliases:
