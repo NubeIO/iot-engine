@@ -2,6 +2,8 @@ package com.nubeiot.edge.module.gateway;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -19,12 +21,14 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.edge.module.gateway.mock.ExternalHttpServer;
+import com.nubeiot.edge.module.gateway.mock.MockGatewayForwarder;
 
 import lombok.NonNull;
 
@@ -34,20 +38,28 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     private int httpServicePort;
     private String registration;
 
-    @SuppressWarnings("unchecked")
-    protected <T extends ContainerVerticle> Supplier<T> gateway() {
-        return () -> (T) new EdgeGatewayVerticle();
-    }
-
     @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T extends ContainerVerticle> Supplier<T> gateway() {
+        return () -> (T) new EdgeGatewayVerticle();
     }
 
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
         httpServicePort = TestHelper.getRandomPort();
+        CountDownLatch latch = new CountDownLatch(1);
+        VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions(), new MockGatewayForwarder(),
+                           deployId -> latch.countDown());
+        try {
+            latch.await(TestHelper.TEST_TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            context.fail(e);
+        }
         startGatewayAndService(context, new ExternalHttpServer(),
                                new DeploymentOptions().setConfig(deployConfig(httpServicePort)));
         create(context, "xyz", httpServicePort, successAsserter(context, "xyz", id -> registration = id));

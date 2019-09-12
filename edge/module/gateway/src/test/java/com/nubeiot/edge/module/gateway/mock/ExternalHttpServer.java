@@ -16,7 +16,7 @@ import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.rest.RestApi;
 
-public class ExternalHttpServer extends ContainerVerticle {
+public final class ExternalHttpServer extends ContainerVerticle {
 
     @Override
     public void start() {
