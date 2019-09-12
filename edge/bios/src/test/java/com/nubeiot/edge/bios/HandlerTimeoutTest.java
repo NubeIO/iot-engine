@@ -69,11 +69,9 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                         context.asyncAssertSuccess(handle -> {
                             System.out.println(handle.body());
                             TestHelper.testComplete(async);
-                            async.awaitSuccess();
                         }));
 
         this.testingDBUpdated(context, State.ENABLED, Status.SUCCESS, APP_CONFIG);
-        async.awaitSuccess();
     }
 
     @Test
@@ -84,14 +82,12 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
 
         EventMessage eventMessage = EventMessage.success(EventAction.PATCH, RequestData.builder().body(body).build());
-        Async async = context.async();
+        Async async = context.async(1);
         //loading patch takes 3 seconds when timeout is 5 seconds
         this.edgeVerticle.getEventController()
                          .request(EdgeInstallerEventBus.BIOS_DEPLOYMENT.getAddress(),
                                   EdgeInstallerEventBus.BIOS_DEPLOYMENT.getPattern(), eventMessage,
                                   context.asyncAssertSuccess(response -> TestHelper.testComplete(async)));
-
-        async.awaitSuccess();
     }
 
     //    @Test
@@ -139,8 +135,6 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                                       context.assertEquals(((ReplyException) response).failureCode(), -1);
                                       TestHelper.testComplete(async);
                                   }));
-
-        async.awaitSuccess();
     }
 
 }

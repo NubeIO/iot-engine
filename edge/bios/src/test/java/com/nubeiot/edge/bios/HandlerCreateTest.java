@@ -30,9 +30,7 @@ public class HandlerCreateTest extends BaseEdgeVerticleTest {
         executeThenAssert(EventAction.CREATE, context, body, (response, async) -> {
             System.out.println(response);
             TestHelper.testComplete(async);
-            async.awaitSuccess();
         });
-
         //Checking module state and transaction status
         testingDBUpdated(context, State.ENABLED, Status.SUCCESS, APP_CONFIG);
     }
