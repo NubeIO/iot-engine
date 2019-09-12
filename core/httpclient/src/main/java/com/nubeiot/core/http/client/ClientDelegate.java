@@ -62,7 +62,7 @@ abstract class ClientDelegate implements IClientDelegate {
                                                                                  .setDefaultHost(info.getHost())
                                                                                  .setDefaultPort(info.getPort());
         return IConfig.merge(config,
-                             new JsonObject().put("hostInfo", hostInfo.toJson()).put("options", clientOpts.toJson()),
+                             new JsonObject().put("hostInfo", info.toJson()).put("options", clientOpts.toJson()),
                              HttpClientConfig.class);
     }
 
