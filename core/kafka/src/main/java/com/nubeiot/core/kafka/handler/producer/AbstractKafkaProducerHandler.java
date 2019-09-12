@@ -17,7 +17,7 @@ import lombok.NonNull;
  * @see KafkaProducerHandler
  */
 public abstract class AbstractKafkaProducerHandler<T extends KafkaProducerRecordTransformer>
-    extends AbstractSharedDataDelegate implements KafkaProducerHandler<T> {
+    extends AbstractSharedDataDelegate<KafkaProducerHandler> implements KafkaProducerHandler<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private T transformer;

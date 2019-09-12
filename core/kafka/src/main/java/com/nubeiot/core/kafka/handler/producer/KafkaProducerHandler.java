@@ -24,7 +24,7 @@ import lombok.NonNull;
  * @see RecordMetadata
  */
 public interface KafkaProducerHandler<T extends KafkaProducerRecordTransformer>
-    extends Handler<AsyncResult<RecordMetadata>> {
+    extends Handler<AsyncResult<RecordMetadata>>, SharedDataDelegate<KafkaProducerHandler> {
 
     static KafkaProducerHandler logHandler(@NonNull Vertx vertx, String sharedKey) {
         return new LogKafkaProducerHandler(vertx, sharedKey);

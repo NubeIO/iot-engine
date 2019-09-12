@@ -266,7 +266,7 @@ public interface TestHelper {
         static void assertJson(TestContext context, Async async, JsonObject expected, JsonObject actual,
                                Customization... customizations) {
             if (customizations.length == 0) {
-                assertJson(context, async, expected, actual);
+                assertJson(context, async, expected, actual, JSONCompareMode.STRICT);
                 return;
             }
             try {

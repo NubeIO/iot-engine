@@ -5,4 +5,5 @@ ext {
 dependencies {
     compile project(':core:micro')
     compile project(':core:installer')
+    compile project(':eventbus:edge:installer')
 }
