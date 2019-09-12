@@ -1,6 +1,7 @@
 package com.nubeiot.edge.module.scheduler.service;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.jooq.OrderField;
@@ -36,7 +37,7 @@ import lombok.NonNull;
 @SuppressWarnings("unchecked")
 public interface SchedulerMetadata extends MetadataIndex {
 
-    List<EntityMetadata> INDEX = MetadataIndex.find(SchedulerMetadata.class);
+    List<EntityMetadata> INDEX = Collections.unmodifiableList(MetadataIndex.find(SchedulerMetadata.class));
 
     @Override
     default List<EntityMetadata> index() {

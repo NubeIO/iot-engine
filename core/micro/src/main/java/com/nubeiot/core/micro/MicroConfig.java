@@ -41,7 +41,7 @@ public final class MicroConfig implements IConfig {
     private CircuitBreakerConfig circuitConfig = new CircuitBreakerConfig();
 
     @Override
-    public String name() { return NAME; }
+    public String key() { return NAME; }
 
     @Override
     public Class<? extends IConfig> parent() { return AppConfig.class; }
@@ -66,7 +66,7 @@ public final class MicroConfig implements IConfig {
         }
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return MicroConfig.class; }
@@ -115,7 +115,7 @@ public final class MicroConfig implements IConfig {
         LocalServiceDiscoveryConfig() { super(false, new BackendConfig(true)); }
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @JsonIgnore
         boolean isLocal() { return true; }
@@ -166,7 +166,7 @@ public final class MicroConfig implements IConfig {
     public static class CircuitBreakerConfig implements IConfig {
 
         public static final String NAME = "__circuitBreaker__";
-        public static String DEFAULT_NOTIFICATION_ADDRESS = "nubeio.circuit.breaker";
+        public static final String DEFAULT_NOTIFICATION_ADDRESS = "nubeio.circuit.breaker";
 
         @JsonProperty(value = "name")
         private String circuitName = "nubeio-circuit-breaker";
@@ -175,7 +175,7 @@ public final class MicroConfig implements IConfig {
             DEFAULT_NOTIFICATION_ADDRESS);
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return MicroConfig.class; }
@@ -196,7 +196,7 @@ public final class MicroConfig implements IConfig {
         private String localUsageMonitorClass = ServiceGatewayUsageMonitor.class.getName();
 
         @Override
-        public String name() {
+        public String key() {
             return NAME;
         }
 

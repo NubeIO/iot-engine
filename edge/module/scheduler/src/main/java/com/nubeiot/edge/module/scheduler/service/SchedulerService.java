@@ -18,8 +18,8 @@ public interface SchedulerService<P extends VertxPojo, M extends EntityMetadata>
     extends EntityService<P, M>, EventHttpService {
 
     @SuppressWarnings("unchecked")
-    static Set<? extends SchedulerService> createServices(@NonNull EntityHandler entityHandler,
-                                                          @NonNull QuartzSchedulerContext schedulerCtx) {
+    static Set<SchedulerService> createServices(@NonNull EntityHandler entityHandler,
+                                                @NonNull QuartzSchedulerContext schedulerCtx) {
         return ReflectionClass.stream(SchedulerService.class.getPackage().getName(), SchedulerService.class,
                                       ReflectionClass.publicClass())
                               .map(clazz -> new SchedulerDelegate(entityHandler, clazz, schedulerCtx))

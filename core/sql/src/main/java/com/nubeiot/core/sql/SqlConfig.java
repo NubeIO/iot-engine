@@ -41,7 +41,7 @@ public final class SqlConfig implements IConfig {
     }
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 
@@ -65,7 +65,7 @@ public final class SqlConfig implements IConfig {
         }
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return SqlConfig.class; }

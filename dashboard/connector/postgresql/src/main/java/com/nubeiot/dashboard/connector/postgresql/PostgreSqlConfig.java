@@ -25,7 +25,7 @@ public class PostgreSqlConfig implements IConfig {
     private int queryTimeout = 10000;
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 

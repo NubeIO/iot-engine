@@ -14,7 +14,7 @@ import lombok.Getter;
 public class BACnetConfig implements IConfig {
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 
@@ -38,7 +38,7 @@ public class BACnetConfig implements IConfig {
         private String name;
 
         @Override
-        public String name() { return "BLANK_NETWORK"; }
+        public String key() { return "BLANK_NETWORK"; }
 
         @Override
         public Class<? extends IConfig> parent() { return BACnetConfig.class; }
@@ -55,7 +55,7 @@ public class BACnetConfig implements IConfig {
         private int port = IpNetwork.DEFAULT_PORT;
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
     }
 
@@ -70,7 +70,7 @@ public class BACnetConfig implements IConfig {
         private int buffer;
 
         @Override
-        public String name() {
+        public String key() {
             return NAME;
         }
 

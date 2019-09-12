@@ -20,7 +20,7 @@ public final class BooleanDataType extends NumberDataType {
             return Boolean.TRUE == data ? 1d : 0d;
         }
         if (data instanceof String) {
-            return Boolean.TRUE == Boolean.valueOf((String) data) ? 1d : 0d;
+            return Boolean.TRUE.equals(Boolean.valueOf((String) data)) ? 1d : 0d;
         }
         return 0d;
     }

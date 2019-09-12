@@ -18,7 +18,7 @@ public class NetworkAppConfig implements IConfig {
     private String type = "CONNMANCTL";
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 

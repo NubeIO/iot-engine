@@ -1,7 +1,6 @@
 package com.nubeiot.core.dto;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +20,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +40,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public interface JsonData extends Serializable {
+public interface JsonData {
 
     ObjectMapper MAPPER = Json.mapper.copy().registerModule(new JavaTimeModule()).registerModule(JsonModule.BASIC)
                                      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -124,10 +124,10 @@ public interface JsonData extends Serializable {
     /**
      * Try parse {@code buffer} to {@code json data}
      *
-     * @param buffer     Buffer data
-     * @param isJson     Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
+     * @param buffer    Buffer data
+     * @param isJson    Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
      * @param backupKey Fallback key if given {@code buffer} is not {@link JsonObject}
-     * @param isWrapped  Whether output is needed to be wrapped or not
+     * @param isWrapped Whether output is needed to be wrapped or not
      * @return default {@code json data} instance
      */
     static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, @NonNull String backupKey, boolean isWrapped) {
@@ -207,11 +207,11 @@ public interface JsonData extends Serializable {
     }
 
     default JsonObject toJson() {
-        return toJson(mapper());
+        return toJson(getMapper());
     }
 
     default JsonObject toJson(@NonNull Set<String> ignoreFields) {
-        return toJson(mapper(), ignoreFields);
+        return toJson(getMapper(), ignoreFields);
     }
 
     default JsonObject toJson(@NonNull ObjectMapper mapper) {
@@ -228,7 +228,8 @@ public interface JsonData extends Serializable {
                      .convertValue(this, JsonObject.class);
     }
 
-    default ObjectMapper mapper() { return MAPPER; }
+    @JsonIgnore
+    default ObjectMapper getMapper() { return MAPPER; }
 
     @JsonFilter(FILTER_PROP_BY_NAME)
     class PropertyFilterMixIn {}

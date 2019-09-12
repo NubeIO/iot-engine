@@ -92,7 +92,7 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
         if (Objects.isNull(cause)) {
             return new NubeException(code, message);
         }
-        if (cause instanceof IllegalArgumentException | cause instanceof NullPointerException) {
+        if (cause instanceof IllegalArgumentException || cause instanceof NullPointerException) {
             final String msg = Strings.isBlank(cause.getMessage()) ? message : cause.getMessage();
             final Throwable rootCause = Objects.isNull(cause.getCause()) ? cause : cause.getCause();
             return new NubeException(ErrorCode.INVALID_ARGUMENT, msg, rootCause);

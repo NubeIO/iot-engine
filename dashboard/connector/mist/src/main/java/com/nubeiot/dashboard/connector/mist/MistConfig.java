@@ -20,7 +20,7 @@ public class MistConfig implements IConfig {
     private int port = 2004;
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 

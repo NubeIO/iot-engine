@@ -58,7 +58,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
 
     public final static String SERVER_INFO_DATA_KEY = "SERVER_INFO";
     public final static String SERVER_GATEWAY_ADDRESS_DATA_KEY = "SERVER_GATEWAY_ADDRESS";
-    private static final int MB = 1024 * 1024;
+    private static final long MB = 1024L * 1024L;
     @NonNull
     private final HttpServerRouter httpRouter;
     private io.vertx.core.http.HttpServer httpServer;

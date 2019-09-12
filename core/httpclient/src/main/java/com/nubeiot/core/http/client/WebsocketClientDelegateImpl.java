@@ -20,7 +20,7 @@ import com.nubeiot.core.http.client.handler.WsConnectErrorHandler;
 import com.nubeiot.core.http.client.handler.WsLightResponseDispatcher;
 import com.nubeiot.core.http.client.handler.WsResponseErrorHandler;
 
-class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketClientDelegate {
+final class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketClientDelegate {
 
     private final int connTimeout;
     private final EventController controller;
@@ -50,7 +50,7 @@ class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketCli
             latch.countDown();
         });
         try {
-            boolean r = latch.await(connTimeout + 100, TimeUnit.MILLISECONDS);
+            boolean r = latch.await(connTimeout + 100L, TimeUnit.MILLISECONDS);
             final Throwable error = ref.get();
             if (r && Objects.isNull(error)) {
                 return;
@@ -58,6 +58,7 @@ class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketCli
             WsConnectErrorHandler.create(getHostInfo(), controller, handler.getWsConnectErrorHandlerClass())
                                  .handle(error);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new InitializerError("Interrupted thread when open websocket connection", e);
         }
     }

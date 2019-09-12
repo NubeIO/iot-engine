@@ -21,7 +21,7 @@ public class HiveConfig implements IConfig {
     private String password = "root";
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 

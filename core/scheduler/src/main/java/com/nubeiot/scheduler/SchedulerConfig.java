@@ -47,7 +47,7 @@ public final class SchedulerConfig implements IConfig {
     }
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 
@@ -67,7 +67,7 @@ public final class SchedulerConfig implements IConfig {
         private TimeUnit maxExecuteTimeUnit = TimeUnit.SECONDS;
 
         @Override
-        public String name() {
+        public String key() {
             return NAME;
         }
 

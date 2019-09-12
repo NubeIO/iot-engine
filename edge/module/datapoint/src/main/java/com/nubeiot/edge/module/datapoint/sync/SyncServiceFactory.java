@@ -10,8 +10,11 @@ import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SyncServiceFactory {
 
     private static Logger LOGGER = LoggerFactory.getLogger(SyncServiceFactory.class);

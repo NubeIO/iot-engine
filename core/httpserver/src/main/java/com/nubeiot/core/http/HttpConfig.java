@@ -59,7 +59,7 @@ public final class HttpConfig implements IConfig {
     private StaticWebConfig staticWebConfig = new StaticWebConfig();
 
     @Override
-    public String name() { return NAME; }
+    public String key() { return NAME; }
 
     @Override
     public Class<? extends IConfig> parent() { return NubeConfig.AppConfig.class; }
@@ -75,7 +75,7 @@ public final class HttpConfig implements IConfig {
         public static final String NAME = "__options__";
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return HttpConfig.class; }
@@ -99,7 +99,7 @@ public final class HttpConfig implements IConfig {
         private DynamicRouteConfig dynamicConfig = new DynamicRouteConfig();
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return HttpConfig.class; }
@@ -115,7 +115,7 @@ public final class HttpConfig implements IConfig {
             private String path = ApiConstants.DYNAMIC_API_PATH;
 
             @Override
-            public String name() { return NAME; }
+            public String key() { return NAME; }
 
             @Override
             public Class<? extends IConfig> parent() { return RestConfig.class; }
@@ -139,7 +139,7 @@ public final class HttpConfig implements IConfig {
         private SocketBridgeConfig bridgeOptions = new SocketBridgeConfig();
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return HttpConfig.class; }
@@ -149,7 +149,7 @@ public final class HttpConfig implements IConfig {
             public static final String NAME = "__sockjs__";
 
             @Override
-            public String name() { return NAME; }
+            public String key() { return NAME; }
 
             @Override
             public Class<? extends IConfig> parent() { return WebsocketConfig.class; }
@@ -162,7 +162,7 @@ public final class HttpConfig implements IConfig {
             public static final String NAME = "__bridge__";
 
             @Override
-            public String name() { return NAME; }
+            public String key() { return NAME; }
 
             @Override
             public Class<? extends IConfig> parent() { return WebsocketConfig.class; }
@@ -182,7 +182,7 @@ public final class HttpConfig implements IConfig {
         private boolean enabled = false;
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return HttpConfig.class; }
@@ -205,7 +205,7 @@ public final class HttpConfig implements IConfig {
         private int maxAgeSeconds = 3600;
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return HttpConfig.class; }
@@ -228,7 +228,7 @@ public final class HttpConfig implements IConfig {
         private DownloadConfig downloadConfig = new DownloadConfig();
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return HttpConfig.class; }
@@ -248,7 +248,7 @@ public final class HttpConfig implements IConfig {
             private String listenerClass = UploadListener.class.getName();
 
             @Override
-            public String name() { return NAME; }
+            public String key() { return NAME; }
 
             @Override
             public Class<? extends IConfig> parent() { return FileStorageConfig.class; }
@@ -268,7 +268,7 @@ public final class HttpConfig implements IConfig {
             private String handlerClass = DownloadFileHandler.class.getName();
 
             @Override
-            public String name() { return NAME; }
+            public String key() { return NAME; }
 
             @Override
             public Class<? extends IConfig> parent() { return FileStorageConfig.class; }
@@ -290,7 +290,7 @@ public final class HttpConfig implements IConfig {
         private String address;
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return HttpConfig.class; }
@@ -310,7 +310,7 @@ public final class HttpConfig implements IConfig {
         private String webRoot = "webroot";
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return HttpConfig.class; }

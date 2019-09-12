@@ -36,7 +36,7 @@ public final class InstallerConfig implements IConfig {
     private List<RequestedServiceData> builtinApps = new ArrayList<>();
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 
@@ -66,7 +66,7 @@ public final class InstallerConfig implements IConfig {
         }
 
         @Override
-        public String name() {
+        public String key() {
             return NAME;
         }
 
@@ -85,7 +85,7 @@ public final class InstallerConfig implements IConfig {
             private Credential credential;
 
             @Override
-            public String name() {
+            public String key() {
                 return NAME;
             }
 

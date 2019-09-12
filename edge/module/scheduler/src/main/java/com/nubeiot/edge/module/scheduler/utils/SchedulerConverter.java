@@ -27,16 +27,16 @@ public interface SchedulerConverter {
     static <T> T convert(String objType, JsonObject request, Function<JsonObject, T> converter) {
         try {
             return converter.apply(request);
-        } catch (Exception e) {
-            if (e instanceof IllegalArgumentException) {
-                if (e.getCause() instanceof InvalidDefinitionException) {
-                    throw NubeExceptionConverter.friendly(e.getCause().getCause());
-                }
-                if (e.getCause() instanceof InvalidTypeIdException) {
-                    throw new IllegalArgumentException(
-                        "Not yet supported " + objType + " type: " + request.getString("type"));
-                }
+        } catch (IllegalArgumentException e) {
+            if (e.getCause() instanceof InvalidDefinitionException) {
+                throw NubeExceptionConverter.friendly(e.getCause().getCause());
             }
+            if (e.getCause() instanceof InvalidTypeIdException) {
+                throw new IllegalArgumentException(
+                    "Not yet supported " + objType + " type: " + request.getString("type"));
+            }
+            throw NubeExceptionConverter.friendly(e);
+        } catch (Exception e) {
             throw NubeExceptionConverter.friendly(e);
         }
     }

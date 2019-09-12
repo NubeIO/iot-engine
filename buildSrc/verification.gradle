@@ -59,7 +59,7 @@ test {
 }
 
 task jacocoMerge(type: JacocoMerge, group: "verification") {
-    dependsOn subprojects.tasks.jacocoTestReport
+    dependsOn(subprojects.tasks.test, subprojects.tasks.jacocoTestReport)
     mustRunAfter subprojects.tasks.jacocoTestReport
     destinationFile = file("${buildDir}/jacoco/test.exec")
     executionData = files(subprojects.tasks.jacocoTestReport.executionData).filter { f -> f.exists() }
@@ -75,4 +75,3 @@ jacocoTestReport {
     sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories = files(subprojects.sourceSets.main.output)
 }
-

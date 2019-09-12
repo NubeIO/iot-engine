@@ -54,7 +54,7 @@ final class AnnotationHandler<T extends EventListener> {
                                           Strings.format("Missing implementation for action {0}", action));
         }
         List<Method> methods = ReflectionMethod.find(clazz, filterMethod(action));
-        if (methods.size() == 0) {
+        if (methods.isEmpty()) {
             logger.debug("Try to lookup super class...");
             return getMethodByAnnotation(clazz.getSuperclass(), action);
         }

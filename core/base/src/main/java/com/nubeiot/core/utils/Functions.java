@@ -31,7 +31,7 @@ public final class Functions {
     public static <T> Optional<T> getIfThrow(@NonNull Supplier<T> provider, Consumer<Throwable> consumer) {
         try {
             return Optional.ofNullable(provider.get());
-        } catch (Throwable t) {
+        } catch (Exception t) {
             consumer.accept(t);
             return Optional.empty();
         }
@@ -41,7 +41,7 @@ public final class Functions {
                                    @NonNull Supplier<? extends RuntimeException> override) {
         try {
             return provider.get();
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throw (RuntimeException) override.get().initCause(t);
         }
     }
@@ -50,7 +50,7 @@ public final class Functions {
                                    @NonNull Function<Throwable, ? extends RuntimeException> override) {
         try {
             return provider.get();
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throw override.apply(t);
         }
     }
@@ -58,7 +58,7 @@ public final class Functions {
     public static <T> T getOrDefault(@NonNull Supplier<T> provider, @NonNull Supplier<T> def) {
         try {
             return provider.get();
-        } catch (Throwable t) {
+        } catch (Exception t) {
             if (logger.isTraceEnabled()) {
                 logger.trace("Fallback default", t);
             }

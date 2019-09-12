@@ -60,7 +60,7 @@ public final class HttpClientConfig implements IConfig {
     }
 
     @Override
-    public String name() { return "__httpClient__"; }
+    public String key() { return "__httpClient__"; }
 
     @Override
     public Class<? extends IConfig> parent() { return AppConfig.class; }

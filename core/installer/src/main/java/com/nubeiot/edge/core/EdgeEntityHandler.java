@@ -24,8 +24,6 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
 
@@ -66,8 +64,6 @@ import com.nubeiot.edge.core.model.tables.records.TblTransactionRecord;
 import lombok.NonNull;
 
 public abstract class EdgeEntityHandler extends AbstractEntityHandler {
-
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final Supplier<TblModuleDao> moduleDao;
     private final Supplier<TblTransactionDao> transDao;

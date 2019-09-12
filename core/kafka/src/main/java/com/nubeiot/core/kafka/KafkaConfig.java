@@ -100,7 +100,7 @@ public final class KafkaConfig implements IConfig {
     }
 
     @Override
-    public String name() { return "__kafka__"; }
+    public String key() { return "__kafka__"; }
 
     @Override
     public Class<? extends IConfig> parent() { return AppConfig.class; }
@@ -162,7 +162,7 @@ public final class KafkaConfig implements IConfig {
         }
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return KafkaConfig.class; }
@@ -176,7 +176,7 @@ public final class KafkaConfig implements IConfig {
         private static final Set<String> KEYS = filterConfig(TopicConfig.class, CONFIG_PREDICATE);
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return KafkaConfig.class; }
@@ -254,7 +254,7 @@ public final class KafkaConfig implements IConfig {
         ConsumerCfg() { this.putAll(DEFAULT); }
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return KafkaConfig.class; }
@@ -295,7 +295,7 @@ public final class KafkaConfig implements IConfig {
         ProducerCfg() { this.putAll(DEFAULT); }
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return KafkaConfig.class; }
@@ -323,7 +323,7 @@ public final class KafkaConfig implements IConfig {
         SecurityConfig() { this.putAll(DEFAULT); }
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return KafkaConfig.class; }

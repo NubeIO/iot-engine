@@ -72,7 +72,7 @@ public final class NubeConfig implements IConfig {
     }
 
     @Override
-    public String name() { return null; }
+    public String key() { return null; }
 
     @Override
     public Class<? extends IConfig> parent() { return null; }
@@ -91,13 +91,13 @@ public final class NubeConfig implements IConfig {
 
         public static final String NAME = "__system__";
 
-        @JsonProperty(value = ClusterConfig.NAME)
+        @JsonProperty(value = ClusterConfig.KEY_NAME)
         private ClusterConfig clusterConfig = new ClusterConfig();
         @JsonProperty(value = EventBusConfig.NAME)
         private EventBusConfig eventBusConfig = new EventBusConfig();
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return NubeConfig.class; }
@@ -107,7 +107,7 @@ public final class NubeConfig implements IConfig {
         @AllArgsConstructor
         public static final class ClusterConfig implements IConfig {
 
-            public static final String NAME = "__cluster__";
+            public static final String KEY_NAME = "__cluster__";
 
             private boolean active = false;
             private boolean ha = false;
@@ -125,7 +125,7 @@ public final class NubeConfig implements IConfig {
             private Map<String, Object> options = new HashMap<>();
 
             @Override
-            public String name() { return NAME; }
+            public String key() { return KEY_NAME; }
 
             @Override
             public Class<? extends IConfig> parent() { return SystemConfig.class; }
@@ -172,7 +172,7 @@ public final class NubeConfig implements IConfig {
             }
 
             @Override
-            public String name() { return NAME; }
+            public String key() { return NAME; }
 
             @Override
             public Class<? extends IConfig> parent() { return SystemConfig.class; }
@@ -199,7 +199,7 @@ public final class NubeConfig implements IConfig {
         public static final String NAME = "__deploy__";
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return NubeConfig.class; }
@@ -212,7 +212,7 @@ public final class NubeConfig implements IConfig {
         public static final String NAME = "__app__";
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() { return NubeConfig.class; }

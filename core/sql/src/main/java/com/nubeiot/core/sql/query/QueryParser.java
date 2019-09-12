@@ -23,7 +23,7 @@ public interface QueryParser {
     }
 
     static Entry<String, String> refKeyEntryWithRoot(String s) {
-        return new SimpleEntry<>(s.substring(0, s.indexOf(".")), s);
+        return new SimpleEntry<>(s.substring(0, s.indexOf('.')), s);
     }
 
     static Entry<String, Object> findRef(@NonNull JsonObject filter, Entry<String, String> entry) {
@@ -35,7 +35,7 @@ public interface QueryParser {
         return root.fieldNames()
                    .stream()
                    .filter(s -> s.contains("."))
-                   .filter(s -> reference.singularKeyName().equals(s.substring(0, s.indexOf("."))))
+                   .filter(s -> reference.singularKeyName().equals(s.substring(0, s.indexOf('.'))))
                    .map(QueryParser::refKeyEntryWithRoot)
                    .map(entry -> findRef(root, entry));
     }

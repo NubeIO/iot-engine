@@ -82,7 +82,7 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
         if (String.format("%s:%s", "com.nubeiot.edge.module", "installer").equals(tblModule.getServiceId())) {
             InstallerConfig installerConfig = new InstallerConfig();
             installerConfig.setRepoConfig(repoConfig);
-            appConfig = IConfig.merge(new JsonObject().put(installerConfig.name(), installerConfig.toJson()),
+            appConfig = IConfig.merge(new JsonObject().put(installerConfig.key(), installerConfig.toJson()),
                                       serviceData.getAppConfig(), AppConfig.class);
         }
         return rule.parse(dataDir, tblModule, appConfig).setPublishedBy("NubeIO");

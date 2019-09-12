@@ -18,7 +18,7 @@ public final class DashboardServerConfig implements IConfig {
     private Boolean dittoPolicy = false;
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 

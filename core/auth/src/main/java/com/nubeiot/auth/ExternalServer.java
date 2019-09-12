@@ -39,7 +39,10 @@ public class ExternalServer extends HostInfo {
     private static HostInfo build(String url) {
         String[] hosts = Strings.requireNotBlank(url).replaceAll("https?://", "").split(":");
         boolean ssl = url.matches("^https");
-        int port = hosts.length > 1 ? Strings.convertToInt(hosts[1], ssl ? 443 : 80) : ssl ? 443 : 80;
+        int port = ssl ? 443 : 80;
+        if (hosts.length > 1) {
+            port = Strings.convertToInt(hosts[1], port);
+        }
         return HostInfo.builder().host(hosts[0]).port(port).ssl(ssl).build();
     }
 

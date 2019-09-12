@@ -16,7 +16,6 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.SingleSource;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
@@ -51,11 +50,6 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
     }
 
     @Override
-    public QueryBuilder queryBuilder() {
-        return new QueryBuilder(base).references(Arrays.asList(resource, context)).predicate(viewPredicate);
-    }
-
-    @Override
     public ComplexQueryExecutor from(@NonNull CompositeMetadata metadata) {
         this.base = metadata;
         this.context = Optional.ofNullable(context).orElse(metadata);
@@ -87,6 +81,22 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
     }
 
     @Override
+    public EntityHandler entityHandler() {
+        return handler;
+    }
+
+    @Override
+    public QueryBuilder queryBuilder() {
+        return new QueryBuilder(base).references(Arrays.asList(resource, context)).predicate(viewPredicate);
+    }
+
+    @Override
+    public Observable<CP> findMany(RequestData reqData) {
+        return executeAny(queryBuilder().view(reqData.getFilter(), reqData.getSort(), reqData.getPagination())).map(
+            r -> r.fetch(toMapper())).flattenAsObservable(s -> s);
+    }
+
+    @Override
     public Single<CP> findOneByKey(RequestData reqData) {
         final JsonObject filter = reqData.getFilter();
         return executeAny(queryBuilder().viewOne(filter)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
@@ -98,11 +108,6 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
     }
 
     @Override
-    public EntityHandler entityHandler() {
-        return handler;
-    }
-
-    @Override
     public Single<CP> lookupByPrimaryKey(@NonNull Object primaryKey) {
         final JsonObject filter = new JsonObject().put(base.jsonKeyName(), JsonData.checkAndConvert(primaryKey));
         return executeAny(queryBuilder().viewOne(filter)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
@@ -110,12 +115,6 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
                                                          .switchIfEmpty(Single.error(base.notFound(primaryKey)))
                                                          .map(Optional::get)
                                                          .flatMap(Single::just);
-    }
-
-    @Override
-    public Observable<CP> findMany(RequestData reqData) {
-        return executeAny(queryBuilder().view(reqData.getFilter(), reqData.getSort(), reqData.getPagination())).map(
-            r -> r.fetch(toMapper())).flattenAsObservable(s -> s);
     }
 
     @Override
@@ -153,11 +152,6 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
     }
 
     @Override
-    public EntityMetadata getMetadata() {
-        return base;
-    }
-
-    @Override
     public Single<?> modifyReturningPrimary(RequestData req, EventAction action,
                                             BiFunction<VertxPojo, RequestData, VertxPojo> validator) {
         return findOneByKey(req).map(db -> (CP) validator.apply(db, req))
@@ -175,6 +169,11 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
         return findOneByKey(reqData).flatMap(
             dbPojo -> isAbleToDelete(dbPojo, base, pojo -> base.msg(pojo.toJson(), references.getFields().keySet())))
                                     .flatMap(pojo -> doDelete(reqData, pojo));
+    }
+
+    @Override
+    public EntityMetadata getMetadata() {
+        return base;
     }
 
     private Object getKey(JsonObject data, @NonNull EntityMetadata metadata) {
@@ -200,8 +199,12 @@ class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQue
         return handler.dao(metadata.daoClass());
     }
 
-    private SingleSource<? extends CP> doDelete(RequestData requestData, CP pojo) {
-        Condition c = queryBuilder().conditionByPrimary(base, getKey(pojo.toJson(), base));
+    private Single<? extends CP> doDelete(RequestData requestData, CP pojo) {
+        final Object key = getKey(pojo.toJson(), base);
+        if (Objects.isNull(key)) {
+            return Single.error(new IllegalArgumentException("Missing " + base.jsonKeyName()));
+        }
+        Condition c = queryBuilder().conditionByPrimary(base, key);
         Single<Integer> result = (Single<Integer>) handler.dao(base.daoClass()).deleteByCondition(c);
         return result.filter(r -> r > 0)
                      .map(r -> pojo)

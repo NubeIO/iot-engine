@@ -97,7 +97,8 @@ public final class Reflections {
 
     public static class ReflectionField {
 
-        public static Predicate<Field> CONSTANT_FILTER = hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+        public final static Predicate<Field> CONSTANT_FILTER = hasModifiers(Modifier.PUBLIC, Modifier.STATIC,
+                                                                            Modifier.FINAL);
 
         /**
          * Find declared fields in given {@code class} that matches with filter
@@ -336,7 +337,7 @@ public final class Reflections {
         }
 
         public static boolean isJavaLangObject(@NonNull Class<?> clazz) {
-            return clazz.isPrimitive() || clazz.isEnum() || "java.lang" .equals(clazz.getPackage().getName());
+            return clazz.isPrimitive() || clazz.isEnum() || "java.lang".equals(clazz.getPackage().getName());
         }
 
         private static <T> Class<?> getPrimitiveClass(@NonNull Class<T> findClazz) {

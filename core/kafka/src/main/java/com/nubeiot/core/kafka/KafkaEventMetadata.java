@@ -1,5 +1,7 @@
 package com.nubeiot.core.kafka;
 
+import java.util.Objects;
+
 import org.apache.kafka.common.serialization.Serde;
 
 import com.nubeiot.core.event.EventMessage;
@@ -35,7 +37,6 @@ public final class KafkaEventMetadata<K, V> {
     private final KafkaClientType type;
     @NonNull
     private final ClientTechId<K, V> techId;
-
     private final EventModel eventModel;
     private final KafkaConsumerHandler consumerHandler;
     private final KafkaConsumerRecordTransformer consumerTransformer;
@@ -63,7 +64,6 @@ public final class KafkaEventMetadata<K, V> {
 
     public static class ConsumerBuilder<K, V> extends Builder<K, V, ConsumerBuilder> {
 
-        @NonNull
         private EventModel eventModel;
         private KafkaConsumerHandler handler;
         private KafkaConsumerRecordTransformer<K, V, EventMessage> transformer;
@@ -89,7 +89,9 @@ public final class KafkaEventMetadata<K, V> {
 
         @Override
         public KafkaEventMetadata<K, V> build() {
-            return new KafkaEventMetadata<>(topic, type, getTechId(), eventModel, handler, transformer);
+            return new KafkaEventMetadata<>(topic, type, getTechId(),
+                                            Objects.requireNonNull(eventModel, "Consumer event cannot be null"),
+                                            handler, transformer);
         }
 
     }
@@ -126,7 +128,7 @@ public final class KafkaEventMetadata<K, V> {
     public static abstract class Builder<K, V, T extends Builder> {
 
         protected final @NonNull KafkaClientType type;
-        protected @NonNull String topic;
+        protected String topic;
         private Class<K> keyClass;
         private Class<V> valueClass;
         private Serde<K> keySerdes;

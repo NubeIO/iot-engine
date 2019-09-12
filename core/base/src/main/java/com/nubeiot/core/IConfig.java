@@ -110,7 +110,7 @@ public interface IConfig extends JsonData, Shareable {
     }
 
     @JsonIgnore
-    String name();
+    String key();
 
     @JsonIgnore
     Class<? extends IConfig> parent();
@@ -132,12 +132,12 @@ public interface IConfig extends JsonData, Shareable {
     @Override
     default JsonObject toJson() {
         List<? extends IConfig> fieldValues = ReflectionField.getFieldValuesByType(this, IConfig.class);
-        JsonObject jsonObject = mapper().convertValue(this, JsonObject.class);
-        fieldValues.forEach(val -> jsonObject.put(val.name(), val.toJson()));
+        JsonObject jsonObject = getMapper().convertValue(this, JsonObject.class);
+        fieldValues.forEach(val -> jsonObject.put(val.key(), val.toJson()));
         return jsonObject;
     }
 
-    default ObjectMapper mapper() {
+    default ObjectMapper getMapper() {
         return MAPPER;
     }
 
@@ -159,16 +159,16 @@ public interface IConfig extends JsonData, Shareable {
                 throw throwable;
             }
             try {
-                object = create(temp.name(), entries, clazz);
+                object = create(temp.key(), entries, clazz);
             } catch (HiddenException ex) {
                 if (temp.isRoot()) {
                     throw ex;
                 }
                 IConfig parent = from(entries, temp.parent(), ex);
-                JsonObject parentValue = parent instanceof Map && ((Map) parent).containsKey(parent.name())
-                                         ? parent.toJson().getJsonObject(parent.name(), new JsonObject())
+                JsonObject parentValue = parent instanceof Map && ((Map) parent).containsKey(parent.key())
+                                         ? parent.toJson().getJsonObject(parent.key(), new JsonObject())
                                          : parent.toJson();
-                Object currentValue = parentValue.getValue(temp.name());
+                Object currentValue = parentValue.getValue(temp.key());
                 if (Objects.isNull(currentValue)) {
                     throw ex;
                 }

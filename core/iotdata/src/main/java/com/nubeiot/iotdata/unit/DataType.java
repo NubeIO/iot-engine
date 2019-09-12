@@ -96,7 +96,7 @@ public interface DataType extends EnumType, Cloneable {
 
     default @NonNull String label(Double value) {
         if (Objects.isNull(value)) {
-            return null;
+            return "";
         }
         if (Objects.nonNull(label())) {
             String label = label().eval(value);

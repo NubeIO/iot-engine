@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class KafkaContext extends UnitContext {
 
-    private static final long DEFAULT_CLOSE_TIMEOUT_MS = 30 * 1000;
+    private static final long DEFAULT_CLOSE_TIMEOUT_MS = 30 * 1000L;
     private KafkaConsumerService consumerService;
     private KafkaProducerService producerService;
 

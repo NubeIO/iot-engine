@@ -14,8 +14,6 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 
@@ -31,9 +29,7 @@ import com.nubeiot.core.http.client.handler.HttpLightResponseHandler;
 
 import lombok.NonNull;
 
-class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegate {
-
-    private static final Logger logger = LoggerFactory.getLogger(HttpClientDelegate.class);
+final class HttpClientDelegateImpl extends ClientDelegate implements HttpClientDelegate {
 
     HttpClientDelegateImpl(@NonNull HttpClient client) {
         super(client);

@@ -58,7 +58,7 @@ public final class DataPointConfig implements IConfig {
     }
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 
@@ -76,7 +76,7 @@ public final class DataPointConfig implements IConfig {
         private String path;
 
         @Override
-        public String name() {
+        public String key() {
             return NAME;
         }
 
@@ -121,7 +121,7 @@ public final class DataPointConfig implements IConfig {
         }
 
         @Override
-        public String name() { return NAME; }
+        public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() {
@@ -153,7 +153,7 @@ public final class DataPointConfig implements IConfig {
         }
 
         @Override
-        public String name() {
+        public String key() {
             return NAME;
         }
 

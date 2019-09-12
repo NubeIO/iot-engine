@@ -85,7 +85,7 @@ import lombok.NonNull;
 @SuppressWarnings("unchecked")
 public interface DataPointIndex extends MetadataIndex {
 
-    List<EntityMetadata> INDEX = MetadataIndex.find(DataPointIndex.class);
+    List<EntityMetadata> INDEX = Collections.unmodifiableList(MetadataIndex.find(DataPointIndex.class));
     String BUILTIN_DATA = "BUILTIN_DATA";
     String DATA_SYNC_CFG = "DATA_SYNC_CFG";
     String CUSTOMER_CODE = "CUSTOMER_CODE";
