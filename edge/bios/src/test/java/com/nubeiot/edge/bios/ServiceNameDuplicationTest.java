@@ -1,8 +1,6 @@
 package com.nubeiot.edge.bios;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -22,11 +20,6 @@ import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 @RunWith(VertxUnitRunner.class)
 public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
 
-    @BeforeClass
-    public static void beforeSuite() {
-        BaseEdgeVerticleTest.beforeSuite();
-    }
-
     @Before
     public void before(TestContext context) {
         super.before(context);
@@ -38,11 +31,6 @@ public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
                                                   .setSystemConfig(APP_SYSTEM_CONFIG)
                                                   .setAppConfig(APP_CONFIG)
                                                   .setModifiedAt(DateTimes.nowUTC()));
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
     }
 
     @Override

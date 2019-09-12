@@ -36,12 +36,12 @@ public interface Container extends HasConfig<NubeConfig> {
     /**
      * Register eventbus consumer
      *
-     * @param controller EventController
+     * @param eventClient EventController
      * @see EventController#register(EventModel, EventListener)
      * @see EventController#register(String, EventListener)
      * @see EventController#register(String, boolean, EventListener)
      */
-    void registerEventbus(EventController controller);
+    void registerEventbus(EventController eventClient);
 
     /**
      * Add local shared data to between different verticles

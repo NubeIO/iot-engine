@@ -70,7 +70,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     }
 
     @Override
-    public void registerEventbus(EventController controller) { }
+    public void registerEventbus(EventController eventClient) { }
 
     @Override
     public final Container addSharedData(String key, Object data) {

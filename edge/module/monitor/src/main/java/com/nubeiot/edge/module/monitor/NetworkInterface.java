@@ -14,7 +14,7 @@ import oshi.util.FormatUtil;
 @RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class NetworkInterface implements JsonData {
+public final class NetworkInterface implements JsonData {
 
     final String name;
     final String displayName;

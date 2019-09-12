@@ -5,14 +5,19 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import org.jooq.SQLDialect;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
@@ -32,6 +37,11 @@ import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 
 import lombok.NonNull;
 
+/**
+ * {@link HandlerCreateTest#test_create_should_success(TestContext)}
+ */
+@RunWith(VertxUnitRunner.class)
+//FIXME: MUST REWRITE/REFACTOR SHIT CODE. IT IS ASSERTING SUCCESS EVENT RAISE EXCEPTION
 public abstract class BaseEdgeVerticleTest {
 
     static final String GROUP_ID = "com.nubeiot.edge.module";
@@ -48,13 +58,14 @@ public abstract class BaseEdgeVerticleTest {
         "{\"__deploy__\":{\"ha\":false,\"instances\":1,\"maxWorkerExecuteTime\":60000000000," +
         "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\",\"multiThreaded\":false,\"worker\":false," +
         "\"workerPoolSize\":20},\"dataDir\":\"file:///root/.nubeio/com.nubeiot.edge.module_installer\"}");
-    private static boolean isAvailable;
+    private static volatile boolean isAvailable;
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
     protected Vertx vertx;
     protected EdgeVerticle edgeVerticle;
 
-    protected static void beforeSuite() {
+    @BeforeClass
+    public static void beforeSuite() {
         TestHelper.setup();
         if (!isAvailable) {
             StateMachine.init();
@@ -62,7 +73,8 @@ public abstract class BaseEdgeVerticleTest {
         }
     }
 
-    protected void before(TestContext context) {
+    @Before
+    public void before(TestContext context) {
         DeploymentOptions options = new DeploymentOptions().setConfig(getNubeConfig().toJson());
         Async async = context.async();
         this.vertx = Vertx.vertx();
@@ -70,6 +82,11 @@ public abstract class BaseEdgeVerticleTest {
         this.vertx.deployVerticle(this.edgeVerticle, options,
                                   context.asyncAssertSuccess(result -> TestHelper.testComplete(async)));
         async.awaitSuccess();
+    }
+
+    @After
+    public void after(TestContext context) {
+        this.vertx.close();
     }
 
     protected NubeConfig getNubeConfig() {
@@ -101,10 +118,6 @@ public abstract class BaseEdgeVerticleTest {
         });
 
         async.awaitSuccess();
-    }
-
-    protected void after(TestContext context) {
-        this.vertx.close();
     }
 
     protected @NonNull String getJdbcUrl() {
@@ -158,9 +171,7 @@ public abstract class BaseEdgeVerticleTest {
             if (tblModule.getState() != State.PENDING) {
                 System.out.println("Ready. Testing module");
                 context.assertEquals(tblModule.getState(), expectedModuleState);
-                JsonObject actualConfig = IConfig.from(tblModule.getAppConfig(), NubeConfig.class)
-                                                 .getAppConfig()
-                                                 .toJson();
+                JsonObject actualConfig = IConfig.from(tblModule.getAppConfig(), NubeConfig.class).getAppConfig().toJson();
                 context.assertEquals(actualConfig.toString(), expectedConfig);
                 TestHelper.testComplete(async);
             }

@@ -1,8 +1,6 @@
 package com.nubeiot.edge.bios;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -30,11 +28,6 @@ import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
 @RunWith(VertxUnitRunner.class)
 public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
 
-    @BeforeClass
-    public static void beforeSuite() {
-        BaseEdgeVerticleTest.beforeSuite();
-    }
-
     @Before
     public void before(TestContext context) {
         super.before(context);
@@ -54,11 +47,6 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         config.setSystemConfig(new SystemConfig());
         config.getSystemConfig().getEventBusConfig().getDeliveryOptions().setSendTimeout(5000);
         return config;
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
     }
 
     @Override

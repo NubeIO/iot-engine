@@ -4,7 +4,11 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 
-public class GatewayEventBus {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class GatewayEventBus {
 
     public static final EventModel ROUTER_REGISTRATION = EventModel.builder()
                                                                    .pattern(EventPattern.REQUEST_RESPONSE)

@@ -26,9 +26,9 @@ public final class EdgeConnectorVerticle extends ContainerVerticle {
     }
 
     @Override
-    public void registerEventbus(EventController controller) {
+    public void registerEventbus(EventController eventClient) {
         ClusterType clusterType = this.nubeConfig.getSystemConfig().getClusterConfig().getType();
-        controller.register(CLUSTER_INFO, new ClusterController(clusterType));
+        eventClient.register(CLUSTER_INFO, new ClusterController(clusterType));
     }
 
     private HttpServerRouter initHttpRouter() {

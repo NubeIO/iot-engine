@@ -48,11 +48,11 @@ public class MockEventMessageService extends ContainerVerticle {
     }
 
     @Override
-    public void registerEventbus(EventController controller) {
-        controller.register(TEST_EVENT_MODEL_1, new EventBusTestListener(TEST_EVENT_MODEL_1.getEvents()));
-        controller.register(TEST_EVENT_MODEL_2, new EventBusMultiParamTestListener(TEST_EVENT_MODEL_2.getEvents()));
-        controller.register(TEST_EVENT_MODEL_3,
-                            new EventBusNotUseRequestDataTestListener(TEST_EVENT_MODEL_3.getEvents()));
+    public void registerEventbus(EventController eventClient) {
+        eventClient.register(TEST_EVENT_MODEL_1, new EventBusTestListener(TEST_EVENT_MODEL_1.getEvents()));
+        eventClient.register(TEST_EVENT_MODEL_2, new EventBusMultiParamTestListener(TEST_EVENT_MODEL_2.getEvents()));
+        eventClient.register(TEST_EVENT_MODEL_3,
+                             new EventBusNotUseRequestDataTestListener(TEST_EVENT_MODEL_3.getEvents()));
     }
 
     private void publishService(MicroContext microContext) {
