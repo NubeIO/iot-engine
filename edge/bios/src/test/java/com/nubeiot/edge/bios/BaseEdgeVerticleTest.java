@@ -3,6 +3,8 @@ package com.nubeiot.edge.bios;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.jooq.SQLDialect;
 import org.junit.After;
@@ -127,21 +129,18 @@ public abstract class BaseEdgeVerticleTest {
 
     void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus,
                           JsonObject expectedConfig) {
+        CountDownLatch latch = new CountDownLatch(2);
         Async async = context.async(2);
         //Event module is deployed/updated successfully, we still have a gap for DB update.
         long timer = this.vertx.setPeriodic(1000, event -> {
-            assertModule(context, expectedModuleState, expectedConfig, async);
-            assertTransaction(context, expectedTransactionStatus, async);
+            assertModule(context, expectedModuleState, expectedConfig, async, latch);
+            assertTransaction(context, expectedTransactionStatus, async, latch);
         });
-
-        this.vertx.setTimer(20000, event -> {
-            vertx.cancelTimer(timer);
-            context.fail("Testing failed");
-            TestHelper.testComplete(async);
-        });
+        stopTimer(context, latch, timer);
     }
 
-    private void assertTransaction(TestContext context, Status expectedTransactionStatus, Async async) {
+    private void assertTransaction(TestContext context, Status expectedTransactionStatus, Async async,
+                                   CountDownLatch latch) {
         edgeVerticle.getEntityHandler()
                     .getTransDao()
                     .findManyByModuleId(Collections.singletonList(BaseEdgeVerticleTest.MODULE_ID))
@@ -150,21 +149,25 @@ public abstract class BaseEdgeVerticleTest {
                         context.assertFalse(result.isEmpty());
                         context.assertEquals(result.size(), 1);
                         if (result.get(0).getStatus() != Status.WIP) {
+                            latch.countDown();
                             System.out.println("Ready. Testing transaction");
                             context.assertEquals(result.get(0).getStatus(), expectedTransactionStatus);
                             TestHelper.testComplete(async);
                         }
                     }, error -> {
+                        latch.countDown();
                         context.fail(error);
                         TestHelper.testComplete(async);
                     });
     }
 
-    private void assertModule(TestContext context, State expectedModuleState, JsonObject expectedConfig, Async async) {
+    private void assertModule(TestContext context, State expectedModuleState, JsonObject expectedConfig, Async async,
+                              CountDownLatch latch) {
         edgeVerticle.getEntityHandler().getModuleDao().findOneById(BaseEdgeVerticleTest.MODULE_ID).subscribe(result -> {
             TblModule tblModule = result.orElse(null);
             context.assertNotNull(tblModule);
             if (tblModule.getState() != State.PENDING) {
+                latch.countDown();
                 System.out.println("Ready. Testing module");
                 context.assertEquals(tblModule.getState(), expectedModuleState);
                 JsonObject actualConfig = IConfig.from(tblModule.getAppConfig(), AppConfig.class).toJson();
@@ -172,6 +175,7 @@ public abstract class BaseEdgeVerticleTest {
                 TestHelper.testComplete(async);
             }
         }, error -> {
+            latch.countDown();
             context.fail(error);
             TestHelper.testComplete(async);
         });
@@ -184,9 +188,10 @@ public abstract class BaseEdgeVerticleTest {
                              EventbusHelper.replyAsserter(context, handler));
     }
 
-    protected void assertModuleState(TestContext context, Async async1, TblModuleDao moduleDao, State expectedState,
-                                     String moduleId) {
-        moduleDao.findOneById(moduleId).subscribe(result -> {
+    protected void assertModuleState(TestContext context, Async async, State expectedState, String moduleId) {
+        final TblModuleDao moduleDao = this.edgeVerticle.getEntityHandler().getModuleDao();
+        CountDownLatch latch = new CountDownLatch(1);
+        long timer = this.vertx.setPeriodic(1000, event -> moduleDao.findOneById(moduleId).subscribe(result -> {
             TblModule tblModule = result.orElse(null);
             context.assertNotNull(tblModule);
             if (tblModule.getState() != State.PENDING) {
@@ -194,12 +199,24 @@ public abstract class BaseEdgeVerticleTest {
                 if (Objects.nonNull(expectedState)) {
                     context.assertEquals(tblModule.getState(), expectedState);
                 }
-                TestHelper.testComplete(async1);
+                latch.countDown();
+                TestHelper.testComplete(async);
             }
         }, error -> {
+            latch.countDown();
             context.fail(error);
-            TestHelper.testComplete(async1);
-        });
+            TestHelper.testComplete(async);
+        }));
+        stopTimer(context, latch, timer);
+    }
+
+    void stopTimer(TestContext context, CountDownLatch latch, long timer) {
+        try {
+            context.assertTrue(latch.await(TestHelper.TEST_TIMEOUT_SEC, TimeUnit.SECONDS), "Timeout");
+            vertx.cancelTimer(timer);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 }

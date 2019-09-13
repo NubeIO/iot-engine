@@ -42,7 +42,7 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
     @Test
     public void test_update_when_deploy_failed(TestContext context) {
         createService(context);
-
+        //TODO what the fuck with appConfig
         JsonObject appConfig = new JsonObject().put("", "");
         JsonObject metadata = new JsonObject().put("state", State.ENABLED)
                                               .put("version", VERSION)
@@ -51,7 +51,7 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
         executeThenAssert(EventAction.UPDATE, context, body, response -> {
-            //TODO
+            //TODO assert
             System.out.println(response);
         });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, appConfig);
@@ -63,7 +63,7 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
         JsonObject metadata = new JsonObject().put("state", State.ENABLED).put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID).put("metadata", metadata);
         executeThenAssert(EventAction.PATCH, context, body, response -> {
-            //TODO
+            //TODO assert
             System.out.println(response);
         });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, APP_CONFIG);
@@ -74,7 +74,7 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
         createService(context);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID);
         executeThenAssert(EventAction.REMOVE, context, body, response -> {
-            //TODO
+            //TODO assert
             System.out.println(response);
         });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, APP_CONFIG);

@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
@@ -47,6 +48,10 @@ public final class DeliveryEvent implements JsonData {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Action must match one of EventModel Actions");
         }
         return new DeliveryEvent(model.getAddress(), model.getPattern(), action, null);
+    }
+
+    public static DeliveryEvent from(EventModel model, EventAction action, RequestData payload) {
+        return from(model, action, payload.toJson());
     }
 
     public static DeliveryEvent from(EventModel model, EventAction action, JsonObject payload) {

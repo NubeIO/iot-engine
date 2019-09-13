@@ -114,7 +114,7 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
     @Test
     public void test_patch_should_success(TestContext context) {
         JsonObject appConfig = new JsonObject(
-            "{\"__kafka__\":{\"__client__\":{\"bootstrap" + ".servers\":[\"localhost:9094\"]}}}");
+            "{\"__kafka__\":{\"__client__\":{\"bootstrap.servers\":[\"localhost:9094\"]}}}");
         JsonObject metadata = new JsonObject().put("state", State.DISABLED).put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID)
                                           .put("metadata", metadata)
