@@ -8,7 +8,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
@@ -48,9 +47,8 @@ public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
 
-        executeThenAssert(EventAction.CREATE, context, body, (response, async) -> {
+        executeThenAssert(EventAction.CREATE, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
-            TestHelper.testComplete(async);
         });
     }
 

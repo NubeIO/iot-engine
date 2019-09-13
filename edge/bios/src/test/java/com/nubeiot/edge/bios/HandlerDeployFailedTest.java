@@ -7,7 +7,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
@@ -33,7 +32,10 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
                                               .put("version", VERSION)
                                               .put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", appConfig);
-        executeThenAssert(EventAction.CREATE, context, body, (response, async) -> TestHelper.testComplete(async));
+        executeThenAssert(EventAction.CREATE, context, body, response -> {
+            //TODO add asserter
+            System.out.println(response);
+        });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, appConfig);
     }
 
@@ -48,7 +50,10 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
         JsonObject body = new JsonObject().put("service_id", MODULE_ID)
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
-        executeThenAssert(EventAction.UPDATE, context, body, (response, async) -> TestHelper.testComplete(async));
+        executeThenAssert(EventAction.UPDATE, context, body, response -> {
+            //TODO
+            System.out.println(response);
+        });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, appConfig);
     }
 
@@ -57,7 +62,10 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
         createService(context);
         JsonObject metadata = new JsonObject().put("state", State.ENABLED).put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID).put("metadata", metadata);
-        executeThenAssert(EventAction.PATCH, context, body, (response, async) -> TestHelper.testComplete(async));
+        executeThenAssert(EventAction.PATCH, context, body, response -> {
+            //TODO
+            System.out.println(response);
+        });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, APP_CONFIG);
     }
 
@@ -65,7 +73,10 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
     public void test_delete_when_deploy_failed(TestContext context) {
         createService(context);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID);
-        executeThenAssert(EventAction.REMOVE, context, body, (response, async) -> TestHelper.testComplete(async));
+        executeThenAssert(EventAction.REMOVE, context, body, response -> {
+            //TODO
+            System.out.println(response);
+        });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, APP_CONFIG);
     }
 

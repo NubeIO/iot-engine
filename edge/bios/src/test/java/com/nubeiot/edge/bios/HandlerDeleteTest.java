@@ -95,10 +95,9 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
     @Test
     public void test_delete_invalid_module_should_failed(TestContext context) {
         JsonObject body = new JsonObject().put("service_id", "abc");
-        executeThenAssert(EventAction.REMOVE, context, body, (response, async) -> {
+        executeThenAssert(EventAction.REMOVE, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
             context.assertEquals(response.getJsonObject("error").getString("code"), ErrorCode.NOT_FOUND.name());
-            TestHelper.testComplete(async);
         });
     }
 

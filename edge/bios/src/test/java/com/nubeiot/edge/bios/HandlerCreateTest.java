@@ -7,7 +7,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
@@ -27,9 +26,9 @@ public class HandlerCreateTest extends BaseEdgeVerticleTest {
                                               .put("group_id", GROUP_ID)
                                               .put("version", VERSION);
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
-        executeThenAssert(EventAction.CREATE, context, body, (response, async) -> {
+        executeThenAssert(EventAction.CREATE, context, body, response -> {
+            //TODO add asserter
             System.out.println(response);
-            TestHelper.testComplete(async);
         });
         //Checking module state and transaction status
         testingDBUpdated(context, State.ENABLED, Status.SUCCESS, APP_CONFIG);
@@ -41,10 +40,9 @@ public class HandlerCreateTest extends BaseEdgeVerticleTest {
                                               .put("group_id", GROUP_ID)
                                               .put("version", VERSION);
         JsonObject body = new JsonObject().put("metadata", metadata);
-        executeThenAssert(EventAction.CREATE, context, body, (response, async) -> {
+        executeThenAssert(EventAction.CREATE, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
             context.assertEquals(response.getJsonObject("error").getString("message"), "App config is required!");
-            TestHelper.testComplete(async);
         });
     }
 

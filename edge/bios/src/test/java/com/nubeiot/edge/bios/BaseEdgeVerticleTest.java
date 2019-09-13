@@ -3,7 +3,6 @@ package com.nubeiot.edge.bios;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 
 import org.jooq.SQLDialect;
 import org.junit.After;
@@ -13,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -24,12 +24,13 @@ import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.NubeConfig.DeployConfig;
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.edge.core.EdgeVerticle;
@@ -110,13 +111,14 @@ public abstract class BaseEdgeVerticleTest {
 
     void insertModule(TestContext context, TblModule module) {
         Async async = context.async(1);
-        this.edgeVerticle.getEntityHandler().getModuleDao().insert(module).subscribe(result -> {
+        edgeVerticle.getEntityHandler().getModuleDao().insert(module).subscribe(result -> {
             System.out.println("Insert module successfully!");
             TestHelper.testComplete(async);
         }, error -> {
             context.fail(error);
             TestHelper.testComplete(async);
         });
+        async.awaitSuccess();
     }
 
     @NonNull String getJdbcUrl() {
@@ -175,13 +177,11 @@ public abstract class BaseEdgeVerticleTest {
         });
     }
 
-    protected void executeThenAssert(EventAction eventAction, TestContext context, JsonObject body,
-                                     BiConsumer<JsonObject, Async> handler) {
-        EventMessage eventMessage = EventMessage.success(eventAction, RequestData.builder().body(body).build());
-        Async async = context.async();
-        this.vertx.eventBus()
-                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                        context.asyncAssertSuccess(handle -> handler.accept((JsonObject) handle.body(), async)));
+    void executeThenAssert(EventAction action, TestContext context, JsonObject body, Handler<JsonObject> handler) {
+        edgeVerticle.getEventController()
+                    .request(DeliveryEvent.from(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER, action,
+                                                RequestData.builder().body(body).build().toJson()),
+                             EventbusHelper.replyAsserter(context, handler));
     }
 
     protected void assertModuleState(TestContext context, Async async1, TblModuleDao moduleDao, State expectedState,
