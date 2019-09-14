@@ -42,6 +42,7 @@ test {
     ignoreFailures = true
     dependsOn subprojects.tasks.test
     finalizedBy testReport
+    systemProperty 'vertx.logger-delegate-factory-class-name', 'io.vertx.core.logging.SLF4JLogDelegateFactory'
     subprojects {
         test {
             if (project.hasProperty('excludeTests')) {

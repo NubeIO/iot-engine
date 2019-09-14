@@ -19,10 +19,10 @@ abstract class BaseSqlConverterTest extends BaseSqlTest {
         this.initData(context);
     }
 
-    <T> void queryAndAssert(TestContext context, Async async, int id, @NonNull String field, @NonNull T data) {
+    <T> void queryAndAssert(TestContext context, Async async, int id, @NonNull String field, @NonNull T expected) {
         this.entityHandler.getSample01Dao()
                           .findOneById(id)
-                          .subscribe(result -> assertValue(context, async, result.orElse(null), field, data));
+                          .subscribe(result -> assertValue(context, async, result.orElse(null), field, expected));
     }
 
 }

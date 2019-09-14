@@ -6,6 +6,8 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.ZoneOffset;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.junit.Test;
@@ -20,7 +22,7 @@ import com.nubeiot.core.sql.mock.manyschema.mock1.tables.pojos.TblSample_01;
 
 abstract class BaseSqlDaoConverterTest extends BaseSqlConverterTest {
 
-    protected abstract Function<TblSample_01, Single<Integer>> function();
+    protected abstract Function<TblSample_01, Single<Integer>> manipulatePojo();
 
     @Override
     protected void initData(TestContext context) {
@@ -42,11 +44,21 @@ abstract class BaseSqlDaoConverterTest extends BaseSqlConverterTest {
                                                .setFTime(LocalTime.of(0, 0, 1))
                                                .setFDuration(Duration.ofHours(50).plusMinutes(30).plusSeconds(20))
                                                .setFPeriod(Period.ofYears(2).plusMonths(3).plusDays(33));
-        Async async = context.async(1);
-        Observable.fromArray(pojo1, pojo2).flatMapSingle(function()::apply).subscribe(r -> {
-            System.out.print("Insert successfully!");
-            TestHelper.testComplete(async);
-        });
+        CountDownLatch latch = new CountDownLatch(1);
+        Observable.fromArray(pojo1, pojo2)
+                  .flatMapSingle(manipulatePojo()::apply)
+                  .reduce(0, Integer::sum)
+                  .subscribe(r -> {
+                      System.out.print(
+                          "Insert successfully: " + r + " records in table " + TblSample_01.class.getSimpleName());
+                      latch.countDown();
+                  });
+        try {
+            latch.await(TestHelper.TEST_TIMEOUT_SEC / 2, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            context.fail(e);
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Test

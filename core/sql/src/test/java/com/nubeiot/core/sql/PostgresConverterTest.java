@@ -39,7 +39,7 @@ public class PostgresConverterTest extends BaseSqlDaoConverterTest {
     }
 
     @Override
-    protected Function<TblSample_01, Single<Integer>> function() {
+    protected Function<TblSample_01, Single<Integer>> manipulatePojo() {
         return p -> entityHandler.getSample01Dao().insert(p);
     }
 

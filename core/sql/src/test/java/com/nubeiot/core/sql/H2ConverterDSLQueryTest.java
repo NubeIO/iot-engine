@@ -9,9 +9,7 @@ import java.time.ZoneOffset;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -20,13 +18,8 @@ import com.nubeiot.core.sql.MockManyEntityHandler.MockManyNoData;
 import com.nubeiot.core.sql.mock.manyschema.mock1.Tables;
 import com.nubeiot.core.sql.mock.manyschema.mock1.tables.records.TblSample_01Record;
 
-import lombok.NonNull;
-
 @RunWith(VertxUnitRunner.class)
 public class H2ConverterDSLQueryTest extends BaseSqlDslConverterTest {
-
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
 
     @BeforeClass
     public static void beforeSuite() {
@@ -35,12 +28,6 @@ public class H2ConverterDSLQueryTest extends BaseSqlDslConverterTest {
 
     @Override
     protected Class<? extends MockManyEntityHandler> handler() { return MockManyNoData.class; }
-
-    @Override
-    @NonNull
-    public String getJdbcUrl() {
-        return "jdbc:h2:file:" + folder.getRoot().toPath().resolve("dbh2local").toString();
-    }
 
     @Test
     public void test_date_converter() {

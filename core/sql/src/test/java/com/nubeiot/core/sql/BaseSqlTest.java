@@ -47,7 +47,7 @@ public abstract class BaseSqlTest {
         ((Logger) LoggerFactory.getLogger("com.zaxxer.hikari")).setLevel(Level.DEBUG);
     }
 
-    static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, @NonNull VertxPojo pojo,
+    static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, VertxPojo pojo,
                                 @NonNull String field, @NonNull T expect) {
         try {
             context.assertNotNull(pojo);

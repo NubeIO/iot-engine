@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import org.skyscreamer.jsonassert.Customization;
@@ -23,16 +22,11 @@ import com.nubeiot.core.sql.SchemaTest;
 import com.nubeiot.core.sql.service.MockEntityService.AuthorService;
 import com.nubeiot.core.sql.service.MockEntityService.BookService;
 
-import lombok.NonNull;
-
 public abstract class BaseSqlServiceTest extends BaseSqlTest {
 
     static final String AUTHOR_ADDRESS = "com.nubeiot.core.sql.author";
     static final String BOOK_ADDRESS = "com.nubeiot.core.sql.book";
     protected MockOneEntityHandler entityHandler;
-
-    @NonNull
-    protected String getJdbcUrl() { return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString(); }
 
     protected void setup(TestContext context) {
         entityHandler = startSQL(context, SchemaTest.OneSchema.CATALOG, MockOneEntityHandler.class);
