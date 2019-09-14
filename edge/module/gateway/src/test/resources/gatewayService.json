@@ -1,0 +1,23 @@
+{
+  "__app__": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": true,
+        "indexAddress": "com.nubeio.edge.module.gateway.index",
+        "localAnnounceMonitorClass": "com.nubeiot.edge.module.gateway.mock.MockAnnounceForwarder"
+      },
+      "__serviceDiscovery__": {
+        "enabled": false
+      },
+      "__localServiceDiscovery__": {
+        "enabled": true
+      },
+      "__circuitBreaker__": {
+        "enabled": true,
+        "options": {
+          "timeout": 60000
+        }
+      }
+    }
+  }
+}

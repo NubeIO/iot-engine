@@ -1,8 +1,5 @@
 package com.nubeiot.edge.bios;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -10,7 +7,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
@@ -21,21 +17,6 @@ import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 
 @RunWith(VertxUnitRunner.class)
 public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
-
-    @BeforeClass
-    public static void beforeSuite() {
-        BaseEdgeVerticleTest.beforeSuite();
-    }
-
-    @Before
-    public void before(TestContext context) {
-        super.before(context);
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
-    }
 
     @Override
     protected EdgeVerticle initMockupVerticle(TestContext context) {
@@ -51,9 +32,9 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
                                               .put("version", VERSION)
                                               .put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", appConfig);
-        executeThenAssert(EventAction.CREATE, context, body, (response, async) -> {
-            TestHelper.testComplete(async);
-            async.awaitSuccess();
+        executeThenAssert(EventAction.CREATE, context, body, response -> {
+            //TODO add asserter
+            System.out.println(response);
         });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, appConfig);
     }
@@ -61,7 +42,7 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
     @Test
     public void test_update_when_deploy_failed(TestContext context) {
         createService(context);
-
+        //TODO what the fuck with appConfig
         JsonObject appConfig = new JsonObject().put("", "");
         JsonObject metadata = new JsonObject().put("state", State.ENABLED)
                                               .put("version", VERSION)
@@ -69,9 +50,9 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
         JsonObject body = new JsonObject().put("service_id", MODULE_ID)
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
-        executeThenAssert(EventAction.UPDATE, context, body, (response, async) -> {
-            TestHelper.testComplete(async);
-            async.awaitSuccess();
+        executeThenAssert(EventAction.UPDATE, context, body, response -> {
+            //TODO assert
+            System.out.println(response);
         });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, appConfig);
     }
@@ -81,9 +62,9 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
         createService(context);
         JsonObject metadata = new JsonObject().put("state", State.ENABLED).put("service_name", SERVICE_NAME);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID).put("metadata", metadata);
-        executeThenAssert(EventAction.PATCH, context, body, (response, async) -> {
-            TestHelper.testComplete(async);
-            async.awaitSuccess();
+        executeThenAssert(EventAction.PATCH, context, body, response -> {
+            //TODO assert
+            System.out.println(response);
         });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, APP_CONFIG);
     }
@@ -92,9 +73,9 @@ public class HandlerDeployFailedTest extends BaseEdgeVerticleTest {
     public void test_delete_when_deploy_failed(TestContext context) {
         createService(context);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID);
-        executeThenAssert(EventAction.REMOVE, context, body, (response, async) -> {
-            TestHelper.testComplete(async);
-            async.awaitSuccess();
+        executeThenAssert(EventAction.REMOVE, context, body, response -> {
+            //TODO assert
+            System.out.println(response);
         });
         testingDBUpdated(context, State.DISABLED, Status.FAILED, APP_CONFIG);
     }

@@ -1,8 +1,6 @@
 package com.nubeiot.edge.bios;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -10,7 +8,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
@@ -21,11 +18,6 @@ import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 
 @RunWith(VertxUnitRunner.class)
 public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
-
-    @BeforeClass
-    public static void beforeSuite() {
-        BaseEdgeVerticleTest.beforeSuite();
-    }
 
     @Before
     public void before(TestContext context) {
@@ -38,11 +30,6 @@ public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
                                                   .setSystemConfig(APP_SYSTEM_CONFIG)
                                                   .setAppConfig(APP_CONFIG)
                                                   .setModifiedAt(DateTimes.nowUTC()));
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
     }
 
     @Override
@@ -60,9 +47,8 @@ public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
                                           .put("metadata", metadata)
                                           .put("appConfig", appConfig);
 
-        executeThenAssert(EventAction.CREATE, context, body, (response, async) -> {
+        executeThenAssert(EventAction.CREATE, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
-            TestHelper.testComplete(async);
         });
     }
 

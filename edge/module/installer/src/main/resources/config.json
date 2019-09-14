@@ -19,7 +19,6 @@
       "__hikari__": {
         "jdbcUrl": "jdbc:h2:file:./bios-installer"
       }
-    },
-    "deviceLocal": true
+    }
   }
 }

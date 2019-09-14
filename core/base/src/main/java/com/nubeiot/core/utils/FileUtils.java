@@ -130,7 +130,9 @@ public final class FileUtils {
         } catch (IllegalArgumentException | FileSystemNotFoundException | SecurityException ex) {
             String strPath = Strings.requireNotBlank(filePath);
             strPath = strPath.replaceFirst("^(?:file:/)([^/])", "/".equals(File.separator) ? "/$1" : "$1");
-            logger.debug("Invalid parse URI: {}. Try to parse plain text", ex, strPath);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Invalid parse URI: {}. Try to parse plain text", ex, strPath);
+            }
             try {
                 return Paths.get(strPath);
             } catch (InvalidPathException ex1) {

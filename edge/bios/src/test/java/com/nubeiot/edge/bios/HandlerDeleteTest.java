@@ -2,10 +2,10 @@ package com.nubeiot.edge.bios;
 
 import java.util.Collections;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -15,11 +15,13 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.EventbusHelper;
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.core.EdgeVerticle;
@@ -28,11 +30,6 @@ import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 
 @RunWith(VertxUnitRunner.class)
 public class HandlerDeleteTest extends BaseEdgeVerticleTest {
-
-    @BeforeClass
-    public static void beforeSuite() {
-        BaseEdgeVerticleTest.beforeSuite();
-    }
 
     @Before
     public void before(TestContext context) {
@@ -47,11 +44,6 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
                                                   .setModifiedAt(DateTimes.nowUTC()));
     }
 
-    @After
-    public void after(TestContext context) {
-        super.after(context);
-    }
-
     @Override
     protected EdgeVerticle initMockupVerticle(TestContext context) {
         return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context));
@@ -60,15 +52,16 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
     @Test
     public void test_delete_should_success(TestContext context) {
         JsonObject body = new JsonObject().put("service_id", MODULE_ID);
-        EventMessage eventMessage = EventMessage.success(EventAction.REMOVE, RequestData.builder().body(body).build());
         Async async = context.async();
-        this.vertx.eventBus()
-                  .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), eventMessage.toJson(),
-                        context.asyncAssertSuccess(handle -> {
-                            JsonObject response = (JsonObject) handle.body();
-                            context.assertEquals(response.getString("status"), Status.SUCCESS.name());
-                            TestHelper.testComplete(async);
-                        }));
+        edgeVerticle.getEventController()
+                    .request(DeliveryEvent.from(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER, EventAction.REMOVE,
+                                                RequestData.builder().body(body).build()),
+                             EventbusHelper.replyAsserter(context, resp -> {
+                                 System.out.println(resp);
+                                 context.assertEquals(resp.getString("status"), Status.SUCCESS.name());
+                                 TestHelper.testComplete(async);
+                             }));
+        CountDownLatch latch = new CountDownLatch(2);
         Async async2 = context.async(2);
         //Event module is deployed/updated successfully, we still have a gap for DB update.
         long timer = this.vertx.setPeriodic(1000, event -> {
@@ -79,7 +72,9 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
                 }
                 context.assertNull(tblModule);
                 TestHelper.testComplete(async2);
+                latch.countDown();
             }, error -> {
+                latch.countDown();
                 context.fail(error);
                 TestHelper.testComplete(async2);
             });
@@ -90,28 +85,28 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
                             if (!Objects.nonNull(result) || result.isEmpty() ||
                                 result.get(0).getStatus() != Status.WIP) {
                                 TestHelper.testComplete(async2);
+                                latch.countDown();
                             }
                         }, error -> {
+                            latch.countDown();
                             context.fail(error);
                             TestHelper.testComplete(async2);
                         });
         });
-
-        this.vertx.setTimer(20000, event -> {
-            vertx.cancelTimer(timer);
-            context.fail("Testing failed");
-            TestHelper.testComplete(async);
-        });
+        stopTimer(context, latch, timer);
     }
 
     @Test
     public void test_delete_invalid_module_should_failed(TestContext context) {
         JsonObject body = new JsonObject().put("service_id", "abc");
-        executeThenAssert(EventAction.REMOVE, context, body, (response, async) -> {
-            context.assertEquals(response.getString("status"), Status.FAILED.name());
-            context.assertEquals(response.getJsonObject("error").getString("code"), ErrorCode.NOT_FOUND.name());
-            TestHelper.testComplete(async);
-        });
+        JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+                                              .put("message",
+                                                   "Event REMOVE is not suitable in case of service is non-exist");
+        Consumer<Object> asserter = JsonHelper.asserter(context, context.async(),
+                                                        new JsonObject().put("status", Status.FAILED)
+                                                                        .put("action", EventAction.REMOVE)
+                                                                        .put("error", expected));
+        executeThenAssert(EventAction.REMOVE, context, body, asserter::accept);
     }
 
 }

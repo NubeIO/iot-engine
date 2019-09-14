@@ -4,14 +4,26 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 
-public class GatewayEventBus {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-    public static final EventModel DRIVER_REGISTRATION = EventModel.builder()
-                                                                   .address("nubeiot.eventbus.edge.gateway.driver" +
-                                                                            ".registration")
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class GatewayEventBus {
+
+    public static final EventModel ROUTER_REGISTRATION = EventModel.builder()
                                                                    .pattern(EventPattern.REQUEST_RESPONSE)
-                                                                   .local(true)
                                                                    .addEvents(EventAction.CREATE, EventAction.REMOVE)
+                                                                   .address(GatewayEventBus.class.getName() +
+                                                                            ".registration")
+                                                                   .local(true)
+                                                                   .build();
+
+    public static final EventModel ROUTER_ANNOUNCEMENT = EventModel.builder()
+                                                                   .pattern(EventPattern.PUBLISH_SUBSCRIBE)
+                                                                   .event(EventAction.MONITOR)
+                                                                   .address(GatewayEventBus.class.getName() +
+                                                                            ".announcement")
+                                                                   .local(true)
                                                                    .build();
 
 }

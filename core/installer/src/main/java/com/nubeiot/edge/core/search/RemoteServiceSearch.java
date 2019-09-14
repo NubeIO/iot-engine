@@ -1,11 +1,11 @@
 package com.nubeiot.edge.core.search;
 
+import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.edge.core.EdgeVerticle;
 
-import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
 
 public class RemoteServiceSearch implements IServiceSearch {

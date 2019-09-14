@@ -4,10 +4,12 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 
 import com.nubeiot.core.micro.MicroConfig.LocalServiceDiscoveryConfig;
+import com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor;
+import com.nubeiot.core.micro.monitor.ServiceGatewayUsageMonitor;
 
 import lombok.NonNull;
 
-class LocalSDController extends ServiceDiscoveryController {
+final class LocalSDController extends ServiceDiscoveryController {
 
     LocalSDController(Vertx vertx, LocalServiceDiscoveryConfig config, String sharedKey,
                       CircuitBreakerController circuitController) {

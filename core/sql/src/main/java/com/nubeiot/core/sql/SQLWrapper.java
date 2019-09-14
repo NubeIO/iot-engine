@@ -115,11 +115,12 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     }
 
     private Schema createSchema(Configuration jooqConfig, Schema schema) {
-        CreateSchemaFinalStep step = jooqConfig.dsl().createSchemaIfNotExists(schema);
-        logger.debug(step.getSQL());
-        step.execute();
-        logger.info("Created schema {} successfully", schema.getName());
-        return schema;
+        try (CreateSchemaFinalStep step = jooqConfig.dsl().createSchemaIfNotExists(schema)) {
+            logger.debug(step.getSQL());
+            step.execute();
+            logger.info("Created schema {} successfully", schema.getName());
+            return schema;
+        }
     }
 
     private Map<Table, Set<Constraint>> listConstraint(Table<?> table) {

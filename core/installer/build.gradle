@@ -1,0 +1,35 @@
+import org.jooq.meta.jaxb.ForcedType
+
+import com.nubeiot.buildscript.Strings
+import com.nubeiot.buildscript.jooq.DB
+import com.nubeiot.buildscript.jooq.JooqGenerateTask
+import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
+
+dependencies {
+    compile project(':core:base')
+    compile project(':core:auth')
+    compile project(':core:sql')
+    compile project(':eventbus:edge')
+    compile project.deps.database.h2
+    compile "io.vertx:vertx-maven-service-factory:$project.versions.vertx"
+    testCompile project(":core:base").sourceSets.test.output
+}
+
+task jooqGen(type: JooqGenerateTask) {
+    packageName = "com.nubeiot.edge.core.model"
+    doFirst {
+        enumTypes = project(':core:sql').ext.enumTypes
+        dbTypes = project(':core:sql').ext.dbTypes + [
+            new ForcedType(userType: "com.nubeiot.edge.core.loader.ModuleType", types: DB.TYPES.varchar,
+                           expression: Strings.toRegexIgnoreCase("service_type"),
+                           converter: "com.nubeiot.edge.core.model.converter.ModuleTypeConverter")
+        ]
+        javaTypes = project(':core:sql').ext.javaTypes + [
+            new JsonDataType(className: "com.nubeiot.edge.core.loader.ModuleType",
+                             converter: "%s.name()",
+                             parser: "com.nubeiot.edge.core.loader.ModuleType.factory((String)%s)",
+                             defVal: "com.nubeiot.edge.core.loader.ModuleType.getDefault()")
+        ]
+    }
+
+}

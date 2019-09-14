@@ -1,10 +1,9 @@
 package com.nubeiot.edge.connector.device;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
@@ -18,36 +17,31 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 
 public class NetworkVerticle extends ContainerVerticle {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     @Override
     public void start() {
-        logger.info("Starting Network App Verticle");
         super.start();
         addProvider(new MicroserviceProvider(), this::publishServices);
     }
 
     @Override
-    public void registerEventbus(EventController controller) {
+    public void registerEventbus(EventController eventClient) {
         NetworkAppConfig networkAppConfig = IConfig.from(this.nubeConfig.getAppConfig(), NetworkAppConfig.class);
         NetworkCommand networkCommand = JsonData.convert(networkAppConfig.toJson(), NetworkCommand.class);
-        controller.register(NetworkEventModels.NETWORK_IP, new NetworkIPEventHandler(networkCommand));
+        eventClient.register(NetworkEventModels.NETWORK_IP, new NetworkIPEventHandler(networkCommand));
     }
 
     private void publishServices(MicroContext microContext) {
         microContext.getLocalController()
-                    .addEventMessageRecord("network-ip", NetworkEventModels.NETWORK_IP.getAddress(),
+                    .addEventMessageRecord("bios.monitor.network-updater", NetworkEventModels.NETWORK_IP.getAddress(),
                                            EventMethodDefinition.create("/network/ip", networkIpActionMethodMapping()))
                     .subscribe();
     }
 
     private ActionMethodMapping networkIpActionMethodMapping() {
-        return () -> new HashMap<EventAction, HttpMethod>() {
-            {
-                put(EventAction.UPDATE, HttpMethod.PUT);
-                put(EventAction.REMOVE, HttpMethod.DELETE);
-            }
-        };
+        Map<EventAction, HttpMethod> map = new HashMap<>();
+        map.put(EventAction.UPDATE, HttpMethod.PUT);
+        map.put(EventAction.REMOVE, HttpMethod.DELETE);
+        return () -> map;
     }
 
 }

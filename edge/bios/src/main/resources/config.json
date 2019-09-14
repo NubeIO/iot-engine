@@ -1,5 +1,33 @@
 {
+  "__system__": {
+    "__eventBus__": {
+      "clustered": false
+    },
+    "__cluster__": {
+      "active": false,
+      "ha": false
+    }
+  },
   "__app__": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": true,
+        "indexAddress": "com.nubeio.edge.module.gateway.index",
+        "localAnnounceMonitorClass": "com.nubeiot.edge.bios.ServiceAnnounceForwarder"
+      },
+      "__serviceDiscovery__": {
+        "enabled": false
+      },
+      "__localServiceDiscovery__": {
+        "enabled": true
+      },
+      "__circuitBreaker__": {
+        "enabled": true,
+        "options": {
+          "timeout": 60000
+        }
+      }
+    },
     "__sql__": {
       "dialect": "H2",
       "__hikari__": {

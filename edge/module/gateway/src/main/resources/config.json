@@ -12,9 +12,7 @@
   "__app__": {
     "__micro__": {
       "__gateway__": {
-        "enabled": true,
-        "indexAddress": "com.nubeio.edge.module.gateway.index",
-        "localAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
+        "enabled": false
       },
       "__serviceDiscovery__": {
         "enabled": false

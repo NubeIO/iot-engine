@@ -50,14 +50,14 @@ public class BACnetVerticle extends ContainerVerticle {
     }
 
     @Override
-    public void registerEventbus(EventController controller) {
+    public void registerEventbus(EventController eventClient) {
         if (bacnetInstances.isEmpty()) {
             return; //Prevents super.start() from registering before BACnetInstance is started
         }
-        controller.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
-        controller.register(BACnetEventModels.DEVICES, new DeviceEventHandler(bacnetInstances));
-        controller.register(BACnetEventModels.POINTS, new PointsEventHandler(bacnetInstances));
-        this.eventController = controller;
+        eventClient.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
+        eventClient.register(BACnetEventModels.DEVICES, new DeviceEventHandler(bacnetInstances));
+        eventClient.register(BACnetEventModels.POINTS, new PointsEventHandler(bacnetInstances));
+        this.eventController = eventClient;
     }
 
     @Override

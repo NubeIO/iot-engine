@@ -9,7 +9,7 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.edge.module.monitor.info.CpuInfo;
 import com.nubeiot.edge.module.monitor.info.FileSystemInfo;
 import com.nubeiot.edge.module.monitor.info.MemoryInfo;
-import com.nubeiot.edge.module.monitor.info.ProcessesInfo;
+import com.nubeiot.edge.module.monitor.info.ProcessesUsage;
 import com.nubeiot.edge.module.monitor.info.ProcessorInfo;
 
 import lombok.Builder;
@@ -25,13 +25,13 @@ import oshi.software.os.OperatingSystem;
 @RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class MonitorStatus implements JsonData {
+public final class MonitorStatus implements JsonData {
 
     final String os;
     final ProcessorInfo processor;
     final MemoryInfo memory;
     final CpuInfo cpu;
-    final ProcessesInfo processes;
+    final ProcessesUsage processes;
     final List<FileSystemInfo> fileSystems;
 
     public static MonitorStatus from(SystemInfo si) {
@@ -42,8 +42,7 @@ public class MonitorStatus implements JsonData {
                             .os(os.toString())
                             .processor(ProcessorInfo.from(hal.getProcessor()))
                             .memory(MemoryInfo.from(hal.getMemory()))
-                            .cpu(CpuInfo.from(hal.getProcessor()))
-                            .processes(ProcessesInfo.from(os, hal.getMemory()))
+                            .cpu(CpuInfo.from(hal.getProcessor())).processes(ProcessesUsage.from(os, hal.getMemory()))
                             .fileSystems(getFileSystem(os.getFileSystem()))
                             .build();
     }

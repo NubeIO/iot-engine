@@ -34,7 +34,7 @@ public final class EdgeInstallerEventBus {
                                                                .pattern(EventPattern.REQUEST_RESPONSE)
                                                                .local(true)
                                                                .addEvents(EventAction.INIT, EventAction.CREATE,
-                                                                          EventAction.UPDATE, EventAction.HALT,
+                                                                          EventAction.UPDATE, EventAction.PATCH,
                                                                           EventAction.REMOVE)
                                                                .build();
     public static final EventModel BIOS_STATUS = EventModel.builder()
