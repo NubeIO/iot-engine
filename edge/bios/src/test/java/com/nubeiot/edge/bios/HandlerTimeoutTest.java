@@ -52,7 +52,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
     protected NubeConfig getNubeConfig() {
         NubeConfig config = super.getNubeConfig();
         config.setSystemConfig(new SystemConfig());
-        config.getSystemConfig().getEventBusConfig().getDeliveryOptions().setSendTimeout(5000);
+        config.getSystemConfig().getEventBusConfig().getDeliveryOptions().setSendTimeout(3000);
         return config;
     }
 
@@ -64,7 +64,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
 
         Async async = context.async();
-        //loading patch takes 3 seconds when timeout is 5 seconds
+        //loading patch takes 1 seconds when timeout is 3 seconds
         final JsonObject expectedBody = new JsonObject(
             "{\"action\":\"PATCH\",\"message\":\"Work in progress\",\"prev_state\":\"ENABLED\"," +
             "\"service_fqn\":\"maven:com.nubeiot.edge.module:mytest:1.0.0::bios-mytest\",\"status\":\"WIP\",\"silent" +
@@ -89,7 +89,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
 
         Async async = context.async();
-        //loading patch takes 3 seconds when timeout is 5 seconds
+        //loading patch takes 1 seconds when timeout is 3 seconds
         final JsonObject expected = new JsonObject().put("status", Status.SUCCESS)
                                                     .put("action", EventAction.PATCH)
                                                     .put("data", new JsonObject("{\"abc\":\"123\"}"));
@@ -109,7 +109,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         final DeliveryEvent deliveryEvent = DeliveryEvent.from(EdgeInstallerEventBus.BIOS_DEPLOYMENT,
                                                                EventAction.CREATE,
                                                                RequestData.builder().body(body).build().toJson());
-        //create loading takes 7 seconds when timeout is 5 seconds
+        //create loading takes 9 seconds when timeout is 3 seconds
         this.edgeVerticle.getEventController().request(deliveryEvent, context.asyncAssertFailure(response -> {
             response.printStackTrace();
             context.assertTrue(response instanceof ReplyException);
