@@ -511,18 +511,18 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String requestKeyName() {
-            return "realtime_id";
+            return "rt_id";
         }
 
         @Override
         public @NonNull String singularKeyName() {
-            return "realtime_data";
+            return "rt_data";
         }
 
         @Override
         @NonNull
         public String pluralKeyName() {
-            return "realtime_data";
+            return "rt_data";
         }
 
         @Override
@@ -561,12 +561,12 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String singularKeyName() {
-            return "realtime_setting";
+            return "rt_setting";
         }
 
         @Override
         public @NonNull String pluralKeyName() {
-            return "realtime_setting";
+            return "rt_setting";
         }
 
     }

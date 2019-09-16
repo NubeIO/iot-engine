@@ -278,7 +278,7 @@ public final class Urls {
     }
 
     public static String toPathWithLC(@NonNull String text) {
-        return Strings.transform(text, false, "-");
+        return Strings.transform(text, false, "-").replaceAll("_", "-");
     }
 
     public static String toCapture(String param) {
