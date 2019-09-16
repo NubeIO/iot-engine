@@ -26,7 +26,7 @@ import com.nubeiot.edge.module.datapoint.sync.PointSyncService;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.unit.DataType;
-import com.nubeiot.iotdata.unit.UnitLabel;
+import com.nubeiot.iotdata.unit.UnitAlias;
 
 import lombok.NonNull;
 
@@ -106,18 +106,18 @@ public final class PointService
     @Override
     public Set<String> ignoreFields(@NonNull RequestData requestData) {
         final Set<String> ignoreFields = super.ignoreFields(requestData);
-        ignoreFields.add(context().table().getJsonField(context().table().MEASURE_UNIT_LABEL));
+        ignoreFields.add(context().table().getJsonField(context().table().UNIT_ALIAS));
         return ignoreFields;
     }
 
     private JsonObject convertResource(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         PointComposite p = (PointComposite) pojo;
-        final UnitLabel unitLabel = p.getMeasureUnitLabel();
+        final UnitAlias unitAlias = p.getUnitAlias();
         final JsonObject unit = p.safeGetOther(MeasureUnitMetadata.INSTANCE.singularKeyName(), MeasureUnit.class)
                                  .toJson();
         return JsonPojo.from(pojo)
                        .toJson(ignoreFields(requestData))
-                       .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.factory(unit, unitLabel).toJson());
+                       .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.factory(unit, unitAlias).toJson());
     }
 
     @Override

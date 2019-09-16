@@ -17,7 +17,7 @@ public class NumberDataType implements InternalDataType {
     private final String type;
     private final String unit;
     private String category;
-    private UnitLabel display;
+    private UnitAlias alias;
 
     NumberDataType() {
         this("number", null);
@@ -35,7 +35,7 @@ public class NumberDataType implements InternalDataType {
         this.type = dt.type();
         this.unit = dt.unit();
         this.category = dt.category();
-        this.display = dt.label();
+        this.alias = dt.alias();
     }
 
     @Override
@@ -48,11 +48,11 @@ public class NumberDataType implements InternalDataType {
     public @NonNull String category() { return category; }
 
     @Override
-    public UnitLabel label() { return display; }
+    public UnitAlias alias() { return alias; }
 
     @Override
-    public DataType setLabel(UnitLabel label) {
-        this.display = label;
+    public DataType setAlias(UnitAlias alias) {
+        this.alias = alias;
         return this;
     }
 

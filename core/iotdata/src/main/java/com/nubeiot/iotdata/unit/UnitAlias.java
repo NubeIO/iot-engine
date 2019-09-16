@@ -25,22 +25,22 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @NoArgsConstructor
-public final class UnitLabel implements JsonData {
+public final class UnitAlias implements JsonData {
 
     private static final Comparator<Node> COMPARATOR = Comparator.comparingInt((Node n) -> n.op.priority)
                                                                  .thenComparingDouble((Node n) -> n.with);
     private final SortedSet<Node> nodes = new TreeSet<>(COMPARATOR);
 
     @JsonCreator
-    private UnitLabel(Map<String, String> map) {
+    private UnitAlias(Map<String, String> map) {
         nodes.addAll(map.entrySet()
                         .stream()
                         .map(entry -> new Node(entry.getKey(), entry.getValue()))
                         .collect(Collectors.toSet()));
     }
 
-    static UnitLabel create(Map<String, String> map) {
-        return Objects.isNull(map) ? null : new UnitLabel(map);
+    static UnitAlias create(Map<String, String> map) {
+        return Objects.isNull(map) ? null : new UnitAlias(map);
     }
 
     private static String validateAndGetKey(String expression) {
@@ -67,7 +67,7 @@ public final class UnitLabel implements JsonData {
         }
     }
 
-    public UnitLabel add(String expr, String display) {
+    public UnitAlias add(String expr, String display) {
         this.nodes.add(new Node(expr, display));
         return this;
     }
@@ -122,10 +122,10 @@ public final class UnitLabel implements JsonData {
         if (o == this) {
             return true;
         }
-        if (!(o instanceof UnitLabel)) {
+        if (!(o instanceof UnitAlias)) {
             return false;
         }
-        final UnitLabel other = (UnitLabel) o;
+        final UnitAlias other = (UnitAlias) o;
         return nodes.stream()
                     .map(Node::toString)
                     .collect(Collectors.joining("-"))

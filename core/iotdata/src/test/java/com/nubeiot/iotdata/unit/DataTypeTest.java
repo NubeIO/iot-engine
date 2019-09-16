@@ -63,7 +63,7 @@ public class DataTypeTest {
         Assert.assertTrue(dt instanceof NumberDataType);
         Assert.assertEquals(type, dt.type());
         Assert.assertEquals(unit, dt.unit());
-        Assert.assertNull(dt.label());
+        Assert.assertNull(dt.alias());
     }
 
     @Test

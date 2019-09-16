@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS POINT (
 	POINT_KIND           varchar(15)  DEFAULT 'UNKNOWN' NOT NULL,
 	POINT_TYPE           varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
 	MEASURE_UNIT         varchar(63)  NOT NULL,
-	MEASURE_UNIT_LABEL   varchar(500)   ,
+	MEASURE_UNIT_ALIAS   varchar(500)   ,
 	MIN_SCALE            smallint,
 	MAX_SCALE            smallint,
 	PRECISION            smallint,

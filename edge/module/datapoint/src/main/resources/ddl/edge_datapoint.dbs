@@ -165,7 +165,7 @@
 				<comment><![CDATA[ANALOG | DIGITAL | DC_10 | DC_12 | MA_20 | THERMISTOR_10K]]></comment>
 			</column>
 			<column name="MEASURE_UNIT" type="varchar" length="63" jt="12" mandatory="y" />
-			<column name="MEASURE_UNIT_LABEL" type="varchar" length="500" jt="12" />
+			<column name="MEASURE_UNIT_ALIAS" type="varchar" length="500" jt="12" />
 			<column name="MIN_SCALE" type="smallint" jt="5" />
 			<column name="MAX_SCALE" type="smallint" jt="5" />
 			<column name="PRECISION" type="smallint" jt="5" />

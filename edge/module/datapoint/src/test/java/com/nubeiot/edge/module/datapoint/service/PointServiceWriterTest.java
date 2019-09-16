@@ -23,7 +23,7 @@ import com.nubeiot.iotdata.unit.DataTypeCategory.AngularVelocity;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Velocity;
-import com.nubeiot.iotdata.unit.UnitLabel;
+import com.nubeiot.iotdata.unit.UnitAlias;
 
 public class PointServiceWriterTest extends BaseDataPointServiceTest {
 
@@ -86,7 +86,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         JsonObject data = new JsonObject(
             "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"category" +
             "\":\"GPIO\",\"unit\":{\"type\":\"meters_per_second\",\"symbol\":\"m/s\",\"category\":\"VELOCITY\"," +
-            "\"label\":{\"= 10.0\":\"hah\",\"> 10.0\":\"xyz\"}},\"device\":\"" + PrimaryKey.DEVICE +
+            "\"alias\":{\"= 10.0\":\"hah\",\"> 10.0\":\"xyz\"}},\"device\":\"" + PrimaryKey.DEVICE +
             "\",\"enabled\":true}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                               .put("status", Status.SUCCESS)
@@ -98,7 +98,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                               .setType(PointType.DIGITAL)
                               .setCategory(PointCategory.GPIO)
                               .setMeasureUnit(Velocity.M_PER_SECOND.type())
-                              .setMeasureUnitLabel(new UnitLabel().add("10", "hah").add(">10", "xyz"));
+                              .setUnitAlias(new UnitAlias().add("10", "hah").add(">10", "xyz"));
         RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.CREATE, req);
     }
@@ -155,8 +155,8 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         JsonObject body = new JsonObject(
             "{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"code\":\"NUBE_HUMIDITY\",\"device\":\"" +
             PrimaryKey.DEVICE + "\",\"network\":\"" + PrimaryKey.NETWORK +
-            "\",\"enabled\":false,\"category\":\"BACNET\"," + "\"kind\":\"OUTPUT\",\"type\":\"10K-THERMISTOR\"," +
-            "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\",\"label\":{\"= 0.0\":\"OFF\",\"= 1.0\":\"ON\"}}}");
+            "\",\"enabled\":false,\"category\":\"BACNET\",\"kind\":\"OUTPUT\",\"type\":\"10K-THERMISTOR\"," +
+            "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\",\"alias\":{\"= 0.0\":\"OFF\",\"= 1.0\":\"ON\"}}}");
         JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", body);
@@ -167,7 +167,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                                     .setKind(PointKind.OUTPUT)
                                     .setType(PointType.THERMISTOR_10K)
                                     .setMeasureUnit(Base.BOOLEAN.type())
-                                    .setMeasureUnitLabel(new UnitLabel().add("=1", "ON").add("=0", "OFF"))
+                                    .setUnitAlias(new UnitAlias().add("=1", "ON").add("=0", "OFF"))
                                     .setTransducer(null)
                                     .setEnabled(false);
         RequestData req = RequestData.builder()

@@ -59,13 +59,13 @@ public interface DataType extends EnumType, Cloneable {
         final DataType dt = available().filter(t -> t.type().equalsIgnoreCase(type))
                                        .findAny()
                                        .orElseGet(() -> new NumberDataType(type, unit));
-        return new NumberDataType(dt).setCategory(category).setLabel(UnitLabel.create(display));
+        return new NumberDataType(dt).setCategory(category).setAlias(UnitAlias.create(display));
     }
 
     @NonNull
-    static DataType factory(@NonNull JsonObject dataType, UnitLabel label) {
+    static DataType factory(@NonNull JsonObject dataType, UnitAlias label) {
         return factory(dataType.getString("type"), dataType.getString("symbol"), dataType.getString("category"),
-                       null).setLabel(label);
+                       null).setAlias(label);
     }
 
     @NonNull
@@ -76,10 +76,10 @@ public interface DataType extends EnumType, Cloneable {
     @JsonProperty(value = "category")
     String category();
 
-    @JsonProperty(value = "label")
-    UnitLabel label();
+    @JsonProperty(value = "alias")
+    UnitAlias alias();
 
-    DataType setLabel(UnitLabel label);
+    DataType setAlias(UnitAlias alias);
 
     default Double parse(Object data) {
         if (Objects.isNull(data)) {
@@ -94,12 +94,12 @@ public interface DataType extends EnumType, Cloneable {
         return 0d;
     }
 
-    default @NonNull String label(Double value) {
+    default @NonNull String alias(Double value) {
         if (Objects.isNull(value)) {
             return "";
         }
-        if (Objects.nonNull(label())) {
-            String label = label().eval(value);
+        if (Objects.nonNull(alias())) {
+            String label = alias().eval(value);
             if (Strings.isBlank(label)) {
                 return label;
             }
@@ -120,13 +120,13 @@ public interface DataType extends EnumType, Cloneable {
         return this.type() + (Strings.isBlank(this.unit()) ? "" : SEP + this.unit());
     }
 
-    default Collection<String> aliases() { return null; }
+    default Collection<String> alternatives() { return null; }
 
     @Override
     default JsonObject toJson() {
         final JsonObject json = EnumType.super.toJson();
-        if (Objects.nonNull(label())) {
-            json.put("label", label().toJson());
+        if (Objects.nonNull(alias())) {
+            json.put("alias", alias().toJson());
         }
         return json;
     }

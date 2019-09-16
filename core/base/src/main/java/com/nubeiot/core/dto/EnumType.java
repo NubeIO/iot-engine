@@ -30,7 +30,8 @@ public interface EnumType extends JsonData {
         String t = Strings.optimizeMultipleSpace(type).toUpperCase(Locale.ENGLISH);
         return ReflectionField.streamConstants(clazz, clazz)
                               .filter(enumType -> enumType.type().equals(t) ||
-                                                  Objects.nonNull(enumType.aliases()) && enumType.aliases().contains(t))
+                                                  Objects.nonNull(enumType.alternatives()) &&
+                                                  enumType.alternatives().contains(t))
                               .findAny()
                               .orElseGet(
                                   () -> ReflectionClass.createObject(clazz, Collections.singletonMap(String.class, t)));
@@ -39,8 +40,8 @@ public interface EnumType extends JsonData {
     @JsonProperty(value = "type")
     @NonNull String type();
 
-    @JsonProperty(value = "aliases")
-    Collection<String> aliases();
+    @JsonProperty(value = "alternatives")
+    Collection<String> alternatives();
 
     @EqualsAndHashCode
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -63,7 +64,7 @@ public interface EnumType extends JsonData {
         }
 
         @Override
-        public final @NonNull Collection<String> aliases() {
+        public final @NonNull Collection<String> alternatives() {
             return aliases;
         }
 

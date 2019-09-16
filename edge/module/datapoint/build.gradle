@@ -28,6 +28,7 @@ task jooqGen(type: JooqGenerateTask) {
     enumTypes = project(':core:sql').ext.enumTypes
     renameFields = ["history_setting_type|point_type|equip_type|transducer_type|measure_type": "type",
                     "point_category|measure_category|transducer_category"                    : "category",
+                    "measure_unit_alias"                                                     : "unit_alias",
                     "point_kind"                                                             : "kind",
                     "offset_val"                                                             : "offset"]
     dbTypes = project(':core:sql').ext.dbTypes + [
@@ -51,10 +52,10 @@ task jooqGen(type: JooqGenerateTask) {
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("priority_values"),
                        converter: "com.nubeiot.iotdata.converter.PointPriorityValueConverter"),
-        new ForcedType(userType: "com.nubeiot.iotdata.unit.UnitLabel",
+        new ForcedType(userType: "com.nubeiot.iotdata.unit.UnitAlias",
                        types: DB.TYPES.varchar,
-                       expression: Strings.toRegexIgnoreCase("measure_unit_label"),
-                       converter: "com.nubeiot.iotdata.converter.UnitLabelConverter"),
+                       expression: Strings.toRegexIgnoreCase("measure_unit_alias"),
+                       converter: "com.nubeiot.iotdata.converter.UnitAliasConverter"),
         new ForcedType(userType: "io.vertx.core.json.JsonArray",
                        types: DB.TYPES.array,
                        expression: Strings.toRegexIgnoreCase("weekdays"),
@@ -106,8 +107,8 @@ task jooqGen(type: JooqGenerateTask) {
         new JsonDataType(className: "com.nubeiot.iotdata.dto.PointPriorityValue",
                          converter: "%s.toJson()",
                          parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.dto.PointPriorityValue.class)"),
-        new JsonDataType(className: "com.nubeiot.iotdata.unit.UnitLabel",
+        new JsonDataType(className: "com.nubeiot.iotdata.unit.UnitAlias",
                          converter: "%s.toJson()",
-                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.unit.UnitLabel.class)")
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.unit.UnitAlias.class)")
     ]
 }

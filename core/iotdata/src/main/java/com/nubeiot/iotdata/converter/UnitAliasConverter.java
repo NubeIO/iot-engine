@@ -6,17 +6,17 @@ import org.jooq.Converter;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.iotdata.unit.UnitLabel;
+import com.nubeiot.iotdata.unit.UnitAlias;
 
-public class UnitLabelConverter implements Converter<String, UnitLabel> {
+public class UnitAliasConverter implements Converter<String, UnitAlias> {
 
     @Override
-    public UnitLabel from(String databaseObject) {
-        return Strings.isBlank(databaseObject) ? null : JsonData.from(databaseObject, UnitLabel.class);
+    public UnitAlias from(String databaseObject) {
+        return Strings.isBlank(databaseObject) ? null : JsonData.from(databaseObject, UnitAlias.class);
     }
 
     @Override
-    public String to(UnitLabel userObject) {
+    public String to(UnitAlias userObject) {
         return Objects.isNull(userObject) ? null : userObject.toJson().encode();
     }
 
@@ -26,8 +26,8 @@ public class UnitLabelConverter implements Converter<String, UnitLabel> {
     }
 
     @Override
-    public Class<UnitLabel> toType() {
-        return UnitLabel.class;
+    public Class<UnitAlias> toType() {
+        return UnitAlias.class;
     }
 
 }
