@@ -211,8 +211,8 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
             registrationMap.put(rec.getRegistration(), rec);
             logger.info("Published {} Service | Registration: {} | API: {} | Type: {} | Endpoint: {}", kind(),
                         rec.getRegistration(), rec.getName(), rec.getType(), rec.getLocation().getString("endpoint"));
-            if (logger.isDebugEnabled()) {
-                logger.debug("Published {} Service: {}", kind(), rec.toJson());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Published {} Service: {}", kind(), rec.toJson());
             }
         }).doOnError(t -> logger.error("Cannot publish {} record: {}", t, kind(), record.toJson()));
     }

@@ -34,7 +34,8 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class HttpUtils {
 
-    public static final String DEFAULT_CONTENT_TYPE = "application/json;charset=utf-8";
+    public static final String JSON_CONTENT_TYPE = "application/json";
+    public static final String JSON_UTF8_CONTENT_TYPE = "application/json;charset=utf-8";
     public static final Set<HttpMethod> DEFAULT_CORS_HTTP_METHOD = Collections.unmodifiableSet(new HashSet<>(
         Arrays.asList(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH, HttpMethod.DELETE,
                       HttpMethod.HEAD, HttpMethod.OPTIONS)));
@@ -144,10 +145,15 @@ public final class HttpUtils {
             Map<String, Object> map = new HashMap<>();
             for (String property : query.split("\\" + SEPARATE)) {
                 String[] keyValues = property.split("\\" + EQUAL);
+                String propKey = Urls.decode(keyValues[0]);
+                if (Filters.AUDIT.equals(propKey) || Filters.PRETTY.equals(propKey)) {
+                    map.put(propKey, true);
+                    continue;
+                }
                 if (keyValues.length != 2) {
                     throw new InvalidUrlException("Property doesn't conform the syntax: `key`" + EQUAL + "`value`");
                 }
-                map.put(Urls.decode(keyValues[0]), Urls.decode(keyValues[1]));
+                map.put(propKey, Urls.decode(keyValues[1]));
             }
             return map;
         }

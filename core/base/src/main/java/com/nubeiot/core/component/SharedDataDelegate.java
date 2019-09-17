@@ -30,7 +30,7 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
      *
      * @see EventController
      */
-    String SHARED_EVENTBUS = "EVENTBUS_CONTROLLER";
+    String SHARED_EVENTBUS = "EVENTBUS_CLIENT";
     String SHARED_DATADIR = "DATADIR";
 
     @SuppressWarnings("unchecked")
@@ -44,19 +44,19 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
     }
 
     static <D> D getLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey) {
-        LOGGER.debug("GET | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
+        LOGGER.trace("GET | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
         return SharedDataDelegate.getSharedDataValue(
             k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).get(k), dataKey);
     }
 
     static <D> D addLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey, D data) {
-        LOGGER.debug("ADD | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
+        LOGGER.trace("ADD | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
         vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).put(Strings.requireNotBlank(dataKey), data);
         return data;
     }
 
     static <D> D removeLocalDataValue(@NonNull Vertx vertx, String sharedKey, String dataKey) {
-        LOGGER.debug("POP | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
+        LOGGER.trace("POP | Shared Key: \"{}\" | Shared Data Key: \"{}\"", sharedKey, dataKey);
         return SharedDataDelegate.getSharedDataValue(
             k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).remove(k), dataKey);
     }
@@ -99,6 +99,7 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
     @NoArgsConstructor
     abstract class AbstractSharedDataDelegate<T extends SharedDataDelegate> implements SharedDataDelegate<T> {
 
+        protected final Logger logger = LoggerFactory.getLogger(this.getClass());
         private Vertx vertx;
         private String sharedKey;
         private Function<String, Object> sharedDataFunc;

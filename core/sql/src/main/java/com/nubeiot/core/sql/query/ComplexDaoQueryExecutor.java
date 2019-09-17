@@ -32,7 +32,7 @@ import com.nubeiot.core.utils.Strings;
 import lombok.NonNull;
 
 @SuppressWarnings("unchecked")
-class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQueryExecutor
+final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQueryExecutor
     implements ComplexQueryExecutor<CP>, InternalQueryExecutor<CP> {
 
     private final EntityHandler handler;

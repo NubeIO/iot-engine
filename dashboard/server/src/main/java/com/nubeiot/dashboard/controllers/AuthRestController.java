@@ -316,7 +316,7 @@ public class AuthRestController implements RestApi {
                         loginAuth.rxGetToken(
                             new JsonObject().put("username", credentials[0]).put("password", credentials[1]))
                             .subscribe(token -> {
-                                ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE)
+                                ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.JSON_UTF8_CONTENT_TYPE)
                                    .putHeader("username", credentials[0])
                                    .end(Json.encodePrettily(token.principal()));
                             }, throwable -> future.complete(ResponseDataHelper.unauthorized()));

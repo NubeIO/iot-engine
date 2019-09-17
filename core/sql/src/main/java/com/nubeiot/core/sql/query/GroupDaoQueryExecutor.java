@@ -18,7 +18,7 @@ import com.nubeiot.core.sql.pojos.CompositePojo;
 
 import lombok.NonNull;
 
-class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
+final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
                                CP extends CompositePojo<P, CP>>
     extends BaseDaoQueryExecutor<CP> implements GroupQueryExecutor<P, CP> {
 

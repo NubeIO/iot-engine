@@ -17,7 +17,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 
 import lombok.NonNull;
 
-class ReferenceDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>>
+final class ReferenceDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>>
     extends SimpleDaoQueryExecutor<K, P, R, D> implements ReferenceQueryExecutor<P> {
 
     ReferenceDaoQueryExecutor(EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata) {

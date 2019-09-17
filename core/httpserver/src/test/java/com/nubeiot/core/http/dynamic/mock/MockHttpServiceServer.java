@@ -44,14 +44,14 @@ public class MockHttpServiceServer extends ContainerVerticle {
     public static class MockAPI implements RestApi {
 
         @GET
-        @Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
+        @Produces(HttpUtils.JSON_UTF8_CONTENT_TYPE)
         public JsonObject get() {
             return new JsonObject().put("hello", "dynamic");
         }
 
         @GET
         @Path("/error")
-        @Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
+        @Produces(HttpUtils.JSON_UTF8_CONTENT_TYPE)
         public JsonObject error() {
             throw new NubeException("error");
         }

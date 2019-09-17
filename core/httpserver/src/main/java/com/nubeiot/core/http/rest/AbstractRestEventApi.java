@@ -8,8 +8,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate.AbstractSharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
@@ -23,7 +21,6 @@ import lombok.NonNull;
 
 public abstract class AbstractRestEventApi extends AbstractSharedDataDelegate<RestEventApi> implements RestEventApi {
 
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final SortedMap<String, RestEventApiMetadata> restMetadata = new TreeMap<>(
         Comparator.comparingInt(String::length));
     private final ActionMethodMapping mapping;

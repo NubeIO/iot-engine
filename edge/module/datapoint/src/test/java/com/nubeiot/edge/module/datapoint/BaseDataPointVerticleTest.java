@@ -14,6 +14,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.core.sql.SqlConfig;
@@ -26,13 +27,13 @@ import ch.qos.logback.classic.Logger;
 @RunWith(VertxUnitRunner.class)
 public abstract class BaseDataPointVerticleTest extends DynamicServiceTestBase {
 
-    protected static final Function<String, Customization> IGNORE = path -> Customization.customization(path,
-                                                                                                        (o1, o2) -> true);
+    protected static final Function<String, Customization> IGNORE = JsonHelper::ignore;
 
     @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
-        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.DEBUG);
+        ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.INFO);
+        ((Logger) LoggerFactory.getLogger("com.zaxxer.hikari")).setLevel(Level.INFO);
     }
 
     @Override

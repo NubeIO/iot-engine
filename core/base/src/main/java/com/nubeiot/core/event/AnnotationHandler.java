@@ -55,7 +55,7 @@ final class AnnotationHandler<T extends EventListener> {
         }
         List<Method> methods = ReflectionMethod.find(clazz, filterMethod(action));
         if (methods.isEmpty()) {
-            logger.debug("Try to lookup super class...");
+            logger.trace("Try to lookup super class...");
             return getMethodByAnnotation(clazz.getSuperclass(), action);
         }
         if (methods.size() > 1) {

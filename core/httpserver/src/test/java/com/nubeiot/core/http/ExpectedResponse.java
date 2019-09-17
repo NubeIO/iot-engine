@@ -52,7 +52,7 @@ public class ExpectedResponse {
         System.out.println("Response asserting...");
         System.out.println(actual.getStatus());
         try {
-            context.assertEquals(HttpUtils.DEFAULT_CONTENT_TYPE,
+            context.assertEquals(HttpUtils.JSON_UTF8_CONTENT_TYPE,
                                  actual.headers().getString(HttpHeaders.CONTENT_TYPE.toString()));
             context.assertNotNull(actual.headers().getString("x-response-time"));
             context.assertEquals(code, actual.getStatus().code());
