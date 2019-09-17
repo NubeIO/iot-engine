@@ -106,15 +106,13 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                                               .put("version", VERSION);
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
         Async async = context.async();
-        final DeliveryEvent deliveryEvent = DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT,
-                                                               EventAction.CREATE,
+        final DeliveryEvent deliveryEvent = DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.CREATE,
                                                                RequestData.builder().body(body).build().toJson());
         //create loading takes 9 seconds when timeout is 3 seconds
-        this.edgeVerticle.getEventController().request(deliveryEvent, context.asyncAssertFailure(response -> {
-            response.printStackTrace();
-            context.assertTrue(response instanceof ReplyException);
-            context.assertEquals(((ReplyException) response).failureType(), ReplyFailure.TIMEOUT);
-            context.assertEquals(((ReplyException) response).failureCode(), -1);
+        this.edgeVerticle.getEventController().request(deliveryEvent, context.asyncAssertFailure(throwable -> {
+            context.assertTrue(throwable instanceof ReplyException);
+            context.assertEquals(((ReplyException) throwable).failureType(), ReplyFailure.TIMEOUT);
+            context.assertEquals(((ReplyException) throwable).failureCode(), -1);
             TestHelper.testComplete(async);
         }));
     }
