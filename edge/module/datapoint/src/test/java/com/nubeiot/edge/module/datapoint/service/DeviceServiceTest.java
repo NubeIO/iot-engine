@@ -63,8 +63,7 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
                                      .build();
         DeliveryEvent event = DeliveryEvent.builder()
                                            .action(EventAction.GET_ONE)
-                                           .address(DeviceService.class.getName())
-                                           .payload(req.toJson())
+                                           .address(DeviceService.class.getName()).addPayload(req)
                                            .build();
         controller().request(event, EventbusHelper.replyAsserter(context, registerAsserter(context)));
     }
@@ -78,7 +77,7 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
             context.assertEquals("SYSTEM_INITIATOR", timeAudit.getCreatedBy());
             context.assertNull(timeAudit.getLastModifiedTime());
             context.assertNull(timeAudit.getLastModifiedBy());
-            context.assertEquals(1, timeAudit.getRecordVersion());
+            context.assertEquals(1, timeAudit.getRevision());
             context.assertEquals(Status.INITIAL, syncAudit.getStatus());
             context.assertNull(syncAudit.getSyncedTime());
         };

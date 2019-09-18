@@ -5,7 +5,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -35,7 +37,16 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+
 public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
+
+    @BeforeClass
+    public static void beforeSuite() {
+        TestHelper.setup();
+        ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);
+    }
 
     @Override
     protected JsonObject builtinData() {
@@ -114,10 +125,7 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                                      .body(JsonPojo.from(new PointValueData().setPriority(5).setValue(24d)).toJson())
                                      .build();
         JsonObject data = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0," +
-                                         "\"priority\":5,\"priority_values\":{\"5\":24.0}," +
-                                         "\"time_audit\":{\"created_time\":\"\",\"created_by\":\"UNDEFINED\"," +
-                                         "\"record_version\":1},\"sync_audit\":{\"status\":\"INITIAL\"," +
-                                         "\"data\":{\"message\":\"Not yet synced new resource\"}}}");
+                                         "\"priority\":5,\"priority_values\":{\"5\":24.0}}");
         final Consumer<ResponseData> after = r -> {
             try {
                 latch.countDown();
@@ -133,24 +141,24 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                                                       .expected(new JsonObject().put("action", EventAction.CREATE)
                                                                                 .put("status", Status.SUCCESS)
                                                                                 .put("resource", data))
-                                                      .customizations(IGNORE.apply("resource.time_audit.created_time"))
                                                       .after(after)
                                                       .build();
         assertRestByClient(context, HttpMethod.POST, "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data", req, resp);
 
         latch.await(2500, TimeUnit.MILLISECONDS);
         RequestData req1 = RequestData.builder()
-                                      .body(JsonPojo.from(new PointValueData().setPriority(8).setValue(29d)).toJson())
+                                      .body(JsonPojo.from(new PointValueData().setPriority(9).setValue(29d)).toJson())
                                       .build();
-        JsonObject data1 = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":29.0," +
-                                          "\"priority\":8,\"priority_values\":{\"5\":24.0,\"8\":29.0}," +
+        JsonObject data1 = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0," +
+                                          "\"priority\":5,\"priority_values\":{\"5\":24.0,\"9\":29.0}," +
                                           "\"time_audit\":{\"created_time\":\"\"," +
                                           "\"created_by\":\"UNDEFINED\",\"last_modified_time\":\"\"," +
-                                          "\"last_modified_by\":\"UNDEFINED\",\"record_version\":2}," +
+                                          "\"last_modified_by\":\"UNDEFINED\",\"revision\":2}," +
                                           "\"sync_audit\":{\"status\":\"INITIAL\"," +
                                           "\"data\":{\"message\":\"Not yet synced modified resource with record " +
-                                          "version 2\"}}}");
-        assertRestByClient(context, HttpMethod.PATCH, "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data", req1,
+                                          "revision 2\"}}}");
+        assertRestByClient(context, HttpMethod.PATCH, "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data?_audit",
+                           req1,
                            ExpectedResponse.builder()
                                            .code(200)
                                            .expected(new JsonObject().put("action", EventAction.PATCH)

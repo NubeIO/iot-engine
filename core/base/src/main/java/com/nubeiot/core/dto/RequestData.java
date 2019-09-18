@@ -122,6 +122,11 @@ public final class RequestData extends AbstractDTO {
         public static final String AUDIT = "_audit";
 
         /**
+         * For {@code audit} in temporary
+         */
+        public static final String TEMP_AUDIT = "_temp_audit";
+
+        /**
          * For {@code sort}
          */
         public static final String SORT = "_sort";

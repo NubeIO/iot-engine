@@ -1,5 +1,6 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
-        return ActionMethodMapping.READ_MAP.get().keySet();
+        return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE);
     }
 
     @Override
@@ -38,8 +39,7 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
         final EventMethodDefinition definition = EventMethodDefinition.create("/point/:point_id/rt-data",
                                                                               "/:" + context().requestKeyName(),
                                                                               ActionMethodMapping.READ_MAP);
-        return Stream.concat(Stream.of(definition), DataPointService.super.definitions().stream())
-                     .collect(Collectors.toSet());
+        return Stream.of(definition).collect(Collectors.toSet());
     }
 
 }

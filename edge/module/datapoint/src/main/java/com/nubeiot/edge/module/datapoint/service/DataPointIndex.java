@@ -26,11 +26,13 @@ import com.nubeiot.core.sql.EntityMetadata.UUIDKeyEntity;
 import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.tables.JsonTable;
+import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.module.datapoint.model.pojos.DeviceComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.ThingComposite;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
+import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceEquipDao;
@@ -198,7 +200,7 @@ public interface DataPointIndex extends MetadataIndex {
         public static final HistoryDataMetadata INSTANCE = new HistoryDataMetadata();
 
         @Override
-        public @NonNull JsonTable<PointHistoryDataRecord> table() {
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.PointHistoryData table() {
             return Tables.POINT_HISTORY_DATA;
         }
 
@@ -233,6 +235,16 @@ public interface DataPointIndex extends MetadataIndex {
             return Arrays.asList(Tables.POINT_HISTORY_DATA.TIME.desc(), Tables.POINT_HISTORY_DATA.POINT.asc());
         }
 
+        @Override
+        public @NonNull PointHistoryData onCreating(RequestData reqData) throws IllegalArgumentException {
+            final PointHistoryData historyData = parseFromRequest(reqData.body());
+            Objects.requireNonNull(historyData.getPoint(), "History data point is mandatory");
+            Objects.requireNonNull(historyData.getValue(), "History data value is mandatory");
+            return historyData.setTime(Optional.ofNullable(historyData.getTime()).orElse(DateTimes.now()))
+                              .setPriority(Optional.ofNullable(historyData.getPriority())
+                                                   .orElse(PointPriorityValue.DEFAULT_PRIORITY));
+        }
+
     }
 
 
@@ -243,7 +255,7 @@ public interface DataPointIndex extends MetadataIndex {
         public static final HistorySettingMetadata INSTANCE = new HistorySettingMetadata();
 
         @Override
-        public @NonNull JsonTable<HistorySettingRecord> table() {
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.HistorySetting table() {
             return Tables.HISTORY_SETTING;
         }
 
@@ -466,18 +478,17 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull PointValueData onCreating(RequestData reqData) throws IllegalArgumentException {
-            return optimizeValue(reqData);
+        public @NonNull PointValueData onPatching(@NonNull PointValueData dbData, @NonNull RequestData reqData)
+            throws IllegalArgumentException {
+            final PointValueData pvData = parseFromRequest(JsonPojo.merge(dbData, parseFromRequest(reqData.body())));
+            final PointValue highestValue = pvData.getPriorityValues().findHighestValue();
+            pvData.setPriority(highestValue.getPriority()).setValue(highestValue.getValue());
+            return pvData;
         }
 
         @Override
-        public @NonNull PointValueData onPatching(@NonNull PointValueData dbData, @NonNull RequestData reqData)
-            throws IllegalArgumentException {
-            return parseFromRequest(JsonPojo.merge(dbData, optimizeValue(reqData)));
-        }
-
-        private PointValueData optimizeValue(@NonNull RequestData reqData) {
-            PointValueData pojo = parseFromRequest(reqData.body());
+        public @NonNull PointValueData parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
+            PointValueData pojo = UUIDKeyEntity.super.parseFromRequest(request);
             pojo.setPriority(Optional.ofNullable(pojo.getPriority()).orElse(PointPriorityValue.DEFAULT_PRIORITY));
             pojo.setPriorityValues(Optional.ofNullable(pojo.getPriorityValues())
                                            .orElse(new PointPriorityValue())

@@ -44,7 +44,8 @@ public final class DeviceService extends AbstractEntityService<Device, DeviceMet
         RequestData reqData = onModifyingOneResource(requestData);
         return doPatch(reqData).flatMap(pk -> doLookupByPrimaryKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
                                .map(this::cacheConfig)
-                               .doOnSuccess(j -> asyncPostService().onSuccess(this, EventAction.PATCH, j.getValue()))
+                               .doOnSuccess(
+                                   j -> asyncPostService().onSuccess(this, EventAction.PATCH, j.getValue(), reqData))
                                .doOnError(t -> asyncPostService().onError(this, EventAction.PATCH, t))
                                .flatMap(resp -> transformer().afterPatch(resp.getKey(), resp.getValue(), reqData));
     }

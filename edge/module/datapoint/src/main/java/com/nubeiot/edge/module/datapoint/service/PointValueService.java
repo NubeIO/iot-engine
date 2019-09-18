@@ -3,11 +3,14 @@ package com.nubeiot.edge.module.datapoint.service;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
@@ -60,7 +63,11 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
 
     @NonNull
     private RequestData recomputeRequestData(RequestData reqData) {
-        JsonObject filter = Optional.ofNullable(reqData.getFilter()).orElse(new JsonObject()).put(Filters.AUDIT, true);
+        JsonObject filter = Optional.ofNullable(reqData.getFilter()).orElse(new JsonObject());
+        if (!filter.getBoolean(Filters.AUDIT, false)) {
+            filter.put(Filters.TEMP_AUDIT, true);
+        }
+        filter.put(Filters.AUDIT, true);
         return RequestData.builder()
                           .headers(reqData.headers())
                           .body(reqData.body())
@@ -78,6 +85,15 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
         return Stream.concat(DataPointService.super.definitions().stream(),
                              Stream.of(EventMethodDefinition.create("/point/:point_id/data", map)))
                      .collect(Collectors.toSet());
+    }
+
+    @Override
+    public JsonObject doTransform(EventAction action, Object key, VertxPojo pojo, RequestData reqData,
+                                  BiFunction<VertxPojo, RequestData, JsonObject> converter) {
+        if (Objects.nonNull(reqData.getFilter()) && reqData.getFilter().getBoolean(Filters.TEMP_AUDIT, false)) {
+            reqData.getFilter().remove(Filters.AUDIT);
+        }
+        return super.doTransform(action, key, pojo, reqData, converter);
     }
 
 }

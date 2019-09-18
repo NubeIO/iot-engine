@@ -152,7 +152,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @return single of result
      * @apiNote Only using it in very complex case or special case
      * @see QueryBuilder#view(JsonObject, Sort, Pagination)
-     * @see QueryBuilder#viewOne(JsonObject)
+     * @see QueryBuilder#viewOne(JsonObject, Sort)
      * @see QueryBuilder#exist(Table, Condition)
      */
     <X> Single<X> executeAny(@NonNull Function<DSLContext, X> function);

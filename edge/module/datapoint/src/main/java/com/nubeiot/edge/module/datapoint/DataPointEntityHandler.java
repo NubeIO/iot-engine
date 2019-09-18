@@ -46,7 +46,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 import lombok.NonNull;
 
-class DataPointEntityHandler extends AbstractEntityHandler
+final class DataPointEntityHandler extends AbstractEntityHandler
     implements AuditDecorator, EntityConstraintHolder, DataPointIndex, EntitySyncHandler {
 
     DataPointEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {

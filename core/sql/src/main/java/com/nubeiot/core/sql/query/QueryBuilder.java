@@ -2,7 +2,9 @@ package com.nubeiot.core.sql.query;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,6 +41,7 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
+//TODO join part is still in beta mode, with limited supported for many joins
 public final class QueryBuilder {
 
     private final EntityMetadata base;
@@ -46,10 +49,11 @@ public final class QueryBuilder {
     private Collection<EntityMetadata> references;
     private Predicate<EntityMetadata> predicate = metadata -> true;
     private JoinType joinType = JoinType.JOIN;
+    private final Map<EntityMetadata, Condition> joinBy = new HashMap<>();
     private Supplier<List<SelectFieldOrAsterisk>> fields = () -> Collections.singletonList(DSL.asterisk());
 
     @SuppressWarnings("unchecked")
-    QueryBuilder(@NonNull EntityMetadata base) {
+    public QueryBuilder(@NonNull EntityMetadata base) {
         this.base = base;
         this.orderFields = base.orderFields();
     }
@@ -69,6 +73,11 @@ public final class QueryBuilder {
         return this;
     }
 
+    public QueryBuilder joinBy(@NonNull EntityMetadata metadata, @NonNull Condition condition) {
+        joinBy.put(metadata, condition);
+        return this;
+    }
+
     public QueryBuilder joinFields(@NonNull Supplier<List<SelectFieldOrAsterisk>> selectFields) {
         this.fields = selectFields;
         return this;
@@ -83,8 +92,8 @@ public final class QueryBuilder {
      * @return query function
      */
     @SuppressWarnings("unchecked")
-    Function<DSLContext, ? extends ResultQuery<? extends Record>> view(JsonObject filter, Sort sort,
-                                                                       Pagination pagination) {
+    public Function<DSLContext, ? extends ResultQuery<? extends Record>> view(JsonObject filter, Sort sort,
+                                                                              Pagination pagination) {
         final @NonNull JsonTable<? extends Record> table = base.table();
         return context -> {
             final SelectJoinStep<Record> query = context.select(fields.get()).from(table);
@@ -102,22 +111,19 @@ public final class QueryBuilder {
      * Create view query for one resource
      *
      * @param filter Request filter
+     * @param sort   Sort
      * @return query function
      */
-    Function<DSLContext, ? extends ResultQuery<? extends Record>> viewOne(JsonObject filter) {
-        return view(filter, null, Pagination.oneValue());
+    public Function<DSLContext, ? extends ResultQuery<? extends Record>> viewOne(JsonObject filter, Sort sort) {
+        return view(filter, sort, Pagination.oneValue());
     }
 
-    Function<DSLContext, Boolean> exist(@NonNull EntityMetadata metadata, @NonNull Object key) {
+    public Function<DSLContext, Boolean> exist(@NonNull EntityMetadata metadata, @NonNull Object key) {
         return exist(metadata.table(), conditionByPrimary(metadata, key));
     }
 
-    public Function<DSLContext, Boolean> exist(@NonNull Table table, @NonNull Condition condition) {
-        return dsl -> dsl.fetchExists(table, condition);
-    }
-
     @SuppressWarnings("unchecked")
-    Function<DSLContext, ? extends ResultQuery<? extends Record>> existQueryByJoin(JsonObject filter) {
+    public Function<DSLContext, ? extends ResultQuery<? extends Record>> existQueryByJoin(JsonObject filter) {
         final @NonNull JsonTable<? extends Record> table = base.table();
         final JsonObject nullable = new JsonObject();
         return context -> {
@@ -142,14 +148,23 @@ public final class QueryBuilder {
      * <p>
      * It is simple filter function by equal comparision. Any complex query should be override by each service.
      *
-     * @param table  Resource table
-     * @param filter Filter request
+     * @param metadata Entity metadata
+     * @param filter   Filter request
      * @return Database Select DSL
      * @see Condition
      */
     //TODO Rich query depends on RQL in future https://github.com/NubeIO/iot-engine/issues/128
-    public Condition condition(@NonNull JsonTable<? extends Record> table, JsonObject filter) {
-        return condition(table, filter, false);
+    public Condition condition(@NonNull EntityMetadata metadata, JsonObject filter) {
+        return condition(metadata, filter, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Condition condition(@NonNull EntityMetadata metadata, JsonObject filter, boolean allowNullable) {
+        return condition(metadata.table(), filter, allowNullable);
+    }
+
+    Function<DSLContext, Boolean> exist(@NonNull Table table, @NonNull Condition condition) {
+        return dsl -> dsl.fetchExists(table, condition);
     }
 
     @SuppressWarnings("unchecked")
@@ -223,9 +238,13 @@ public final class QueryBuilder {
                      .collect(Collectors.toList());
     }
 
-    @SuppressWarnings("unchecked")
     private void doJoin(SelectJoinStep<Record> query, EntityMetadata meta, JsonObject filter, JoinType joinType) {
-        query.join(meta.table(), joinType).onKey().where(condition(meta.table(), filter));
+        final Condition joinCondition = joinBy.get(meta);
+        if (Objects.isNull(joinCondition)) {
+            query.join(meta.table(), joinType).onKey().where(condition(meta, filter));
+            return;
+        }
+        query.join(meta.table(), joinType).on(joinCondition).where(condition(meta, filter));
     }
 
 }

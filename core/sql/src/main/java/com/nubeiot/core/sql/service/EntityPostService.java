@@ -7,6 +7,7 @@ import io.reactivex.Maybe;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.service.EntityPostService.EntitySyncData;
 import com.nubeiot.core.transport.ProxyService;
@@ -28,11 +29,12 @@ public interface EntityPostService<T extends Transporter, D extends EntitySyncDa
         public EntitySyncData transform(@NonNull EntityService service, VertxPojo data) { return null; }
 
         @Override
-        public void onSuccess(@NonNull EntityService service, @NonNull EventAction action, VertxPojo data) { }
+        public void onSuccess(@NonNull EntityService service, @NonNull EventAction action, VertxPojo data,
+                              @NonNull RequestData requestData) { }
 
         @Override
         public Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action,
-                                                 @NonNull EntitySyncData data) {
+                                                 @NonNull EntitySyncData data, @NonNull RequestData requestData) {
             return Maybe.empty();
         }
 
@@ -42,11 +44,13 @@ public interface EntityPostService<T extends Transporter, D extends EntitySyncDa
 
     @NonNull D transform(@NonNull EntityService service, @NonNull VertxPojo data);
 
-    default void onSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull VertxPojo data) {
-        doSyncOnSuccess(service, action, transform(service, data)).subscribe();
+    default void onSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull VertxPojo data,
+                           @NonNull RequestData requestData) {
+        doSyncOnSuccess(service, action, transform(service, data), requestData).subscribe();
     }
 
-    Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull D data);
+    Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull D data,
+                                      @NonNull RequestData requestData);
 
     void onError(@NonNull EntityService service, @NonNull EventAction action, @NonNull Throwable throwable);
 
@@ -71,14 +75,15 @@ public interface EntityPostService<T extends Transporter, D extends EntitySyncDa
         }
 
         @Override
-        public void onSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull VertxPojo data) {
-            delegate.onSuccess(service, action, data);
+        public void onSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull VertxPojo data,
+                              @NonNull RequestData requestData) {
+            delegate.onSuccess(service, action, data, requestData);
         }
 
         @Override
         public Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action,
-                                                 @NonNull D data) {
-            return delegate.doSyncOnSuccess(service, action, data);
+                                                 @NonNull D data, @NonNull RequestData requestData) {
+            return delegate.doSyncOnSuccess(service, action, data, requestData);
         }
 
         @Override

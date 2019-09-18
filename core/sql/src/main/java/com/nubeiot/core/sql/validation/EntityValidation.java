@@ -35,8 +35,7 @@ public interface EntityValidation<P extends VertxPojo> {
      * @throws IllegalArgumentException if any invalid parameter
      */
     @NonNull
-
-    default <PP extends P> PP onCreating(RequestData reqData) throws IllegalArgumentException {
+    default <PP extends P> PP onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
         return (PP) context().parseFromRequest(reqData.body());
     }
 
@@ -49,7 +48,8 @@ public interface EntityValidation<P extends VertxPojo> {
      * @throws IllegalArgumentException if any invalid parameter
      */
     @NonNull
-    default <PP extends P> PP onUpdating(@NonNull P dbData, RequestData reqData) throws IllegalArgumentException {
+    default <PP extends P> PP onUpdating(@NonNull P dbData, @NonNull RequestData reqData)
+        throws IllegalArgumentException {
         final JsonObject body = reqData.body().copy();
         return (PP) context().parseFromRequest(
             body.put(context().jsonKeyName(), JsonData.checkAndConvert(context().parseKey(reqData))));
@@ -64,7 +64,8 @@ public interface EntityValidation<P extends VertxPojo> {
      * @throws IllegalArgumentException if any invalid parameter
      */
     @NonNull
-    default <PP extends P> PP onPatching(@NonNull P dbData, RequestData reqData) throws IllegalArgumentException {
+    default <PP extends P> PP onPatching(@NonNull P dbData, @NonNull RequestData reqData)
+        throws IllegalArgumentException {
         final JsonObject body = reqData.body().copy();
         body.put(context().jsonKeyName(),
                  JsonData.checkAndConvert(context().parseKey(body.remove(context().requestKeyName()).toString())));

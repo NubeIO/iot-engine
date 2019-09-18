@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 
 public class PointPriorityValueTest {
 
@@ -17,12 +18,12 @@ public class PointPriorityValueTest {
 
     @Before
     public void setup() {
-        pv = new PointPriorityValue().add(8).add(9, 9.0).add(1, 3.5).add(10, 10.5);
+        pv = new PointPriorityValue().add(8).add(9, 9.0).add(2, 3.5).add(10, 10.5);
     }
 
     @Test
     public void test_serialize() throws JSONException {
-        JsonHelper.assertJson(new JsonObject("{\"1\":3.5,\"8\":8.0,\"9\":9.0,\"10\":10.5}"), pv.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"8\":8.0,\"9\":9.0,\"10\":10.5}"), pv.toJson());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -32,13 +33,27 @@ public class PointPriorityValueTest {
 
     @Test
     public void test_deserialize() throws JSONException {
-        PointPriorityValue from = JsonData.from("{\"1\":3.5,\"8\":8.0,\"9\":9.0,\"10\":10.5}",
+        PointPriorityValue from = JsonData.from("{\"2\":3.5,\"8\":8.0,\"9\":9.0,\"10\":10.5}",
                                                 PointPriorityValue.class);
-        JsonHelper.assertJson(new JsonObject("{\"1\":3.5,\"8\":8.0,\"9\":9.0,\"10\":10.5}"), from.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"8\":8.0,\"9\":9.0,\"10\":10.5}"), from.toJson());
         Assert.assertEquals(pv, from);
         Double aDouble = from.get(9);
         Double expected = 9.0d;
         Assert.assertEquals(aDouble, expected);
+    }
+
+    @Test
+    public void test_get_highest_value() {
+        final PointValue highestValue = pv.findHighestValue();
+        Assert.assertEquals(2, highestValue.getPriority());
+        Assert.assertEquals(3.5d, highestValue.getValue(), 0.0);
+    }
+
+    @Test
+    public void test_get_next_highest_value_with_highest_is_null() {
+        final PointValue highestValue = pv.add(1, null).findHighestValue();
+        Assert.assertEquals(2, highestValue.getPriority());
+        Assert.assertEquals(3.5d, highestValue.getValue(), 0.0);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -67,7 +82,7 @@ public class PointPriorityValueTest {
     public void test_merge() throws Throwable {
         final PointPriorityValue merge = JsonData.merge(pv.toJson(), new JsonObject(
             "{\"9\":55,\"10\":14, \"11\":null,\"12\":\"444.5\"}"), PointPriorityValue.class);
-        JsonHelper.assertJson(new JsonObject("{\"1\":3.5,\"8\":8.0,\"9\":55.0,\"10\":14.0,\"11\":null,\"12\":444.5}"),
+        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"8\":8.0,\"9\":55.0,\"10\":14.0,\"11\":null,\"12\":444.5}"),
                               merge.toJson());
     }
 

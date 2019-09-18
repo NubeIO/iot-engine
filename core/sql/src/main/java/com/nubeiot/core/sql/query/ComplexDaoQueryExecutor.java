@@ -9,6 +9,7 @@ import java.util.function.Predicate;
 import org.jooq.Condition;
 import org.jooq.Record;
 import org.jooq.RecordMapper;
+import org.jooq.ResultQuery;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
@@ -99,22 +100,23 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     @Override
     public Single<CP> findOneByKey(RequestData reqData) {
         final JsonObject filter = reqData.getFilter();
-        return executeAny(queryBuilder().viewOne(filter)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
-                                                         .filter(Optional::isPresent)
-                                                         .switchIfEmpty(Single.error(base.notFound(
-                                                             base.msg(filter, references.getFields().keySet()))))
-                                                         .map(Optional::get)
-                                                         .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
+        final Single<? extends ResultQuery<? extends Record>> result = executeAny(
+            queryBuilder().viewOne(filter, reqData.getSort()));
+        return result.map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
+                     .filter(Optional::isPresent)
+                     .switchIfEmpty(Single.error(base.notFound(base.msg(filter, references.getFields().keySet()))))
+                     .map(Optional::get)
+                     .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
     }
 
     @Override
     public Single<CP> lookupByPrimaryKey(@NonNull Object primaryKey) {
         final JsonObject filter = new JsonObject().put(base.jsonKeyName(), JsonData.checkAndConvert(primaryKey));
-        return executeAny(queryBuilder().viewOne(filter)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
-                                                         .filter(Optional::isPresent)
-                                                         .switchIfEmpty(Single.error(base.notFound(primaryKey)))
-                                                         .map(Optional::get)
-                                                         .flatMap(Single::just);
+        return executeAny(queryBuilder().viewOne(filter, null)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
+                                                               .filter(Optional::isPresent)
+                                                               .switchIfEmpty(Single.error(base.notFound(primaryKey)))
+                                                               .map(Optional::get)
+                                                               .flatMap(Single::just);
     }
 
     @Override

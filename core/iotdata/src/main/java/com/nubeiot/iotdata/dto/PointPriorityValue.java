@@ -5,17 +5,22 @@ import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Functions;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 /**
- * https://project-haystack.org/tag/writeLevel
+ * Point Priority Value
+ *
+ * @see <a href="https://project-haystack.org/tag/writeLevel">HayStack Write Level</a>
+ * @see <a href="https://store.chipkin.com/articles/bacnet-what-is-a-bacnet-priority-array/">BACNet priority array</a>
  */
 @NoArgsConstructor
 public final class PointPriorityValue implements JsonData {
@@ -60,7 +65,7 @@ public final class PointPriorityValue implements JsonData {
         return val.get(validateAndGet(priority));
     }
 
-    private boolean isValid(int priority) {
+    private static boolean isValid(int priority) {
         return priority <= MAX_PRIORITY && priority >= MIN_PRIORITY;
     }
 
@@ -77,16 +82,30 @@ public final class PointPriorityValue implements JsonData {
                                     () -> new IllegalArgumentException(INVALID_VALUE));
     }
 
-    private int validateAndGet(int priority) {
+    private static int validateAndGet(int priority) {
         if (isValid(priority)) {
             return priority;
         }
         throw new IllegalArgumentException(INVALID_PRIORITY);
     }
 
+    public PointValue findHighestValue() {
+        return val.entrySet()
+                  .stream()
+                  .filter(entry -> Objects.nonNull(entry.getValue()))
+                  .findFirst()
+                  .map(entry -> new PointValue(entry.getKey(), entry.getValue()))
+                  .orElse(new PointValue(DEFAULT_PRIORITY, null));
+    }
+
     @Override
     public JsonObject toJson() {
         return JsonData.MAPPER.convertValue(val, JsonObject.class);
+    }
+
+    @Override
+    public String toString() {
+        return toJson().encode();
     }
 
     public int hashCode() {
@@ -113,6 +132,29 @@ public final class PointPriorityValue implements JsonData {
             final Double v2 = other.val.get(entry.getKey());
             return v1 == null && v2 == null || (v1 != null && v1.equals(v2));
         });
+    }
+
+    @Getter
+    public static class PointValue implements VertxPojo, JsonData {
+
+        private final int priority;
+        private final Double value;
+
+        public PointValue(int priority, Double value) {
+            this.priority = validateAndGet(priority);
+            this.value = value;
+        }
+
+        @Override
+        public PointValue fromJson(JsonObject json) {
+            return new PointValue(json.getInteger("priority", DEFAULT_PRIORITY), json.getDouble("value"));
+        }
+
+        @Override
+        public JsonObject toJson() {
+            return JsonData.super.toJson();
+        }
+
     }
 
 }

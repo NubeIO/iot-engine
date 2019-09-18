@@ -18,8 +18,7 @@ import com.nubeiot.core.sql.pojos.CompositePojo;
 
 import lombok.NonNull;
 
-final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
-                               CP extends CompositePojo<P, CP>>
+final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>, CP extends CompositePojo<P, CP>>
     extends BaseDaoQueryExecutor<CP> implements GroupQueryExecutor<P, CP> {
 
     private final CompositeMetadata<K, P, R, D, CP> groupMetadata;
@@ -43,7 +42,8 @@ final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRec
 
     @Override
     public Single<CP> findOneByKey(RequestData requestData) {
-        return entityHandler().genericQuery().executeAny(queryBuilder().viewOne(requestData.getFilter()))
+        return entityHandler().genericQuery()
+                              .executeAny(queryBuilder().viewOne(requestData.getFilter(), requestData.getSort()))
                               .map(r -> Optional.ofNullable(r.fetchOne(groupMetadata.mapper())))
                               .filter(Optional::isPresent)
                               .switchIfEmpty(Single.error(getMetadata().notFound(getMetadata().parseKey(requestData))))

@@ -45,7 +45,7 @@ public final class DeliveryEvent implements JsonData {
 
     private final JsonObject payload;
 
-    public static DeliveryEvent from(@NonNull JsonObject data) {
+    public static DeliveryEvent from(JsonObject data) {
         return Optional.ofNullable(data).map(d -> JsonData.convert(d, DeliveryEvent.class)).orElse(null);
     }
 
@@ -75,12 +75,7 @@ public final class DeliveryEvent implements JsonData {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
-        public Builder payload(JsonObject payload) {
-            this.payload = payload;
-            return this;
-        }
-
-        public Builder payload(@NonNull RequestData payload) {
+        public Builder addPayload(@NonNull RequestData payload) {
             return payload(payload.toJson());
         }
 

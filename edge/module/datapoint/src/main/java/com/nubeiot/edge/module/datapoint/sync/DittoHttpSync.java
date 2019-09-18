@@ -19,7 +19,7 @@ import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 
 import lombok.NonNull;
 
-public class DittoHttpSync extends AbstractDittoHttpSync
+public final class DittoHttpSync extends AbstractDittoHttpSync
     implements EntityPostService<HttpClientDelegate, IDittoModel<? extends VertxPojo>> {
 
     DittoHttpSync(Vertx vertx, JsonObject clientConfig, Credential credential) {
@@ -32,15 +32,15 @@ public class DittoHttpSync extends AbstractDittoHttpSync
     }
 
     @Override
-    public void onSuccess(EntityService service, EventAction action, VertxPojo data) {
+    public void onSuccess(EntityService service, EventAction action, VertxPojo data, @NonNull RequestData requestData) {
         if (action == EventAction.GET_LIST || action == EventAction.GET_ONE ||
             !(service.entityHandler() instanceof EntitySyncHandler)) {
             return;
         }
         if (action == EventAction.REMOVE) {
-            logger.error("Not yet supported sync with action = REMOVE");
+            logger.error("Not yet supported sync with action = " + EventAction.REMOVE);
         }
-        doSyncOnSuccess(service, action, transform(service, data)).subscribe();
+        doSyncOnSuccess(service, action, transform(service, data), requestData).subscribe();
     }
 
     @Override
@@ -55,7 +55,7 @@ public class DittoHttpSync extends AbstractDittoHttpSync
 
     @Override
     public Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action,
-                                             IDittoModel<?> syncData) {
+                                             IDittoModel<?> syncData, @NonNull RequestData requestData) {
         final @NonNull EntitySyncHandler entityHandler = (EntitySyncHandler) service.entityHandler();
         final String thingId = Strings.format("com.nubeio.{0}:{1}",
                                               entityHandler.sharedData(DataPointIndex.CUSTOMER_CODE),

@@ -23,15 +23,28 @@ public interface CompositePojo<P extends VertxPojo, CP extends CompositePojo> ex
 
     CP wrap(@NonNull P pojo);
 
+    /**
+     * Wrap external properties
+     *
+     * @param other Map external properties
+     * @return a reference to this, so the API can be used fluently
+     */
     @SuppressWarnings("unchecked")
     default CP wrap(@NonNull Map<String, VertxPojo> other) {
         other().putAll(other);
         return (CP) this;
     }
 
+    /**
+     * Put external property
+     *
+     * @param otherKey External key
+     * @param pojo     External pojo
+     * @return a reference to this, so the API can be used fluently
+     */
     @SuppressWarnings("unchecked")
-    default CP put(String otherKey, @NonNull VertxPojo other) {
-        other().put(Strings.requireNotBlank(otherKey), other);
+    default CP put(String otherKey, @NonNull VertxPojo pojo) {
+        other().put(Strings.requireNotBlank(otherKey), pojo);
         return (CP) this;
     }
 
@@ -39,6 +52,13 @@ public interface CompositePojo<P extends VertxPojo, CP extends CompositePojo> ex
         return this.toJson().getValue(Strings.requireNotBlank(key));
     }
 
+    /**
+     * Update raw property
+     *
+     * @param key   Raw key
+     * @param value Value
+     * @return a reference to this, so the API can be used fluently
+     */
     @SuppressWarnings("unchecked")
     default CP with(String key, Object value) {
         return (CP) fromJson(this.toJson().put(Strings.requireNotBlank(key), value));

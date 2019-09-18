@@ -61,10 +61,11 @@ public interface EntitySyncHandler extends EntityHandler {
         if (pojo instanceof HasSyncAudit) {
             final HasSyncAudit syncPojo = (HasSyncAudit) pojo;
             final SyncAudit prevSync = Optional.ofNullable(syncPojo.getSyncAudit()).orElse(SyncAudit.unknown());
-            final Integer recVer = pojo instanceof HasTimeAudit ? ((HasTimeAudit) pojo).getTimeAudit()
-                                                                                       .getRecordVersion() : null;
+            final Integer revision = pojo instanceof HasTimeAudit
+                                     ? ((HasTimeAudit) pojo).getTimeAudit().getRevision()
+                                     : null;
             final String message = Strings.format("Not yet synced modified resource{0}",
-                                                  Objects.isNull(recVer) ? "" : " with record version " + recVer);
+                                                  Objects.isNull(revision) ? "" : " with record revision " + revision);
             syncPojo.setSyncAudit(SyncAudit.notYetSynced(prevSync, message));
         }
         return pojo;
@@ -95,7 +96,7 @@ public interface EntitySyncHandler extends EntityHandler {
                                                                        @NonNull P pojo, @NonNull SyncAudit syncAudit) {
         final Object key = pojo.toJson().getValue(metadata.jsonKeyName());
         final Condition condition = metadata.table().getField(metadata.jsonKeyName()).eq(key);
-        final HasSyncAudit updated = (HasSyncAudit) metadata.parseFromRequest(new JsonObject());
+        final HasSyncAudit updated = (HasSyncAudit) metadata.parseFromEntity(new JsonObject());
         final Map<Field, Object> sync = JsonPojo.from(updated.setSyncAudit(syncAudit))
                                                 .toJson()
                                                 .stream()
