@@ -68,6 +68,11 @@ public interface EnumType extends JsonData {
             return aliases;
         }
 
+        @Override
+        public String toString() {
+            return type();
+        }
+
     }
 
 }

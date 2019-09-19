@@ -5,7 +5,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
-import org.skyscreamer.jsonassert.Customization;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -69,15 +68,26 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
         asserter(context, false, expected, PointValueService.class.getName(), EventAction.UPDATE, req);
     }
 
+    static DeliveryEvent createPointEvent(EventAction action, PointValueData pv, boolean hasAudit) {
+        JsonObject data = JsonPojo.from(pv).toJson().put("point_id", pv.getPoint().toString());
+        final RequestData reqData = RequestData.builder()
+                                               .body(data)
+                                               .filter(hasAudit ? new JsonObject().put(Filters.AUDIT, true) : null)
+                                               .build();
+        return DeliveryEvent.builder()
+                            .address(PointValueService.class.getName())
+                            .action(action)
+                            .addPayload(reqData)
+                            .build();
+    }
+
     @Test
-    public void test_create_point_data(TestContext context) throws InterruptedException {
-        JsonObject req = new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString());
-        DeliveryEvent event = createEvent(req, EventAction.CREATE, new PointValueData().setPriority(5).setValue(24d),
-                                          false);
-        CountDownLatch latch = new CountDownLatch(1);
-        Async async = context.async(2);
+    public void test_create_point_data(TestContext context) {
+        DeliveryEvent event = createPointEvent(EventAction.CREATE, new PointValueData().setPoint(PrimaryKey.P_GPIO_TEMP)
+                                                                                       .setPriority(5)
+                                                                                       .setValue(24d), false);
+        Async async = context.async(1);
         controller().request(event, EventbusHelper.replyAsserter(context, body -> {
-            latch.countDown();
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"value\":24.0,\"priority\":5,\"priority_values\":" +
                 "{\"5\":24.0}}");
@@ -85,71 +95,7 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", data);
             JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
-                                  new Customization("time_audit.created_time", (o1, o2) -> false));
-        }));
-        latch.await(TestHelper.TEST_TIMEOUT_SEC / 2, TimeUnit.SECONDS);
-        //FOR UPDATE HISTORY DATA
-        Thread.sleep(500);
-        controller().request(DeliveryEvent.builder()
-                                          .address(HistoryDataService.class.getName())
-                                          .action(EventAction.GET_LIST)
-                                          .payload(RequestData.builder().body(req).build().toJson())
-                                          .build(), EventbusHelper.replyAsserter(context, body -> {
-            JsonObject expected = new JsonObject("{\"histories\":[{\"id\":9,\"value\":24.0,\"priority\":5}]}");
-            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
-                                  new Customization("histories.[].time", (o1, o2) -> false));
-        }));
-    }
-
-    @Test
-    public void test_patch_point_data(TestContext context) throws InterruptedException {
-        JsonObject req = new JsonObject().put("point_id", PrimaryKey.P_BACNET_SWITCH.toString());
-        DeliveryEvent event = createEvent(req, EventAction.CREATE, new PointValueData().setPriority(5).setValue(24d),
-                                          true);
-        CountDownLatch latch = new CountDownLatch(2);
-        Async async = context.async(3);
-        controller().request(event, EventbusHelper.replyAsserter(context, body -> {
-            latch.countDown();
-            JsonObject data = new JsonObject(
-                "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0,\"priority\":5,\"priority_values\":" +
-                "{\"5\":24.0},\"time_audit\":{\"created_by\":\"UNDEFINED\"},\"sync_audit\":{\"status\":\"INITIAL\"," +
-                "\"data\":{\"message\":\"Not yet synced new resource\"}}}");
-            JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
-                                                  .put("status", Status.SUCCESS)
-                                                  .put("resource", data);
-            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
-                                  new Customization("time_audit.created_time", (o1, o2) -> false));
-        }));
-        latch.await(TestHelper.TEST_TIMEOUT_SEC / 3, TimeUnit.SECONDS);
-        //FOR UPDATE HISTORY DATA
-        Thread.sleep(500);
-        DeliveryEvent event2 = createEvent(req, EventAction.PATCH, new PointValueData().setPriority(9).setValue(28d),
-                                           true);
-        controller().request(event2, EventbusHelper.replyAsserter(context, body -> {
-            latch.countDown();
-            JsonObject data = new JsonObject(
-                "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0,\"priority\":5," +
-                "\"priority_values\":{\"5\":24.0,\"9\":28.0},\"time_audit\":{\"created_by\":\"UNDEFINED\"," +
-                "\"last_modified_by\":\"UNDEFINED\"}}");
-            JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
-                                                  .put("status", Status.SUCCESS)
-                                                  .put("resource", data);
-            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
-                                  new Customization("time_audit.created_time", (o1, o2) -> false),
-                                  new Customization("time_audit.last_modified_time", (o1, o2) -> false));
-        }));
-        latch.await(TestHelper.TEST_TIMEOUT_SEC / 3, TimeUnit.SECONDS);
-        //FOR UPDATE HISTORY DATA
-        Thread.sleep(500);
-        controller().request(DeliveryEvent.builder()
-                                          .address(HistoryDataService.class.getName())
-                                          .action(EventAction.GET_LIST)
-                                          .payload(RequestData.builder().body(req).build().toJson())
-                                          .build(), EventbusHelper.replyAsserter(context, body -> {
-            JsonObject expected = new JsonObject(
-                "{\"histories\":[{\"id\":9,\"value\":24.0,\"priority\":5},{\"id\":10,\"value\":28.0,\"priority\":9}]}");
-            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
-                                  new Customization("histories.[].time", (o1, o2) -> false));
+                                  JsonHelper.ignore("time_audit.created_time"));
         }));
     }
 
@@ -219,16 +165,46 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
         asserter(context, true, expected, HistoryDataService.class.getName(), EventAction.GET_LIST, req);
     }
 
-    private DeliveryEvent createEvent(JsonObject req, EventAction action, PointValueData pv1, boolean hasAudit) {
-        JsonObject create = JsonPojo.from(pv1).toJson().mergeIn(req, true);
-        final RequestData reqData = RequestData.builder()
-                                               .body(create)
-                                               .filter(hasAudit ? new JsonObject().put(Filters.AUDIT, true) : null)
-                                               .build();
-        return DeliveryEvent.builder()
-                            .address(PointValueService.class.getName())
-                            .action(action).addPayload(reqData)
-                            .build();
+    @Test
+    public void test_patch_point_data(TestContext context) throws InterruptedException {
+        DeliveryEvent event = createPointEvent(EventAction.CREATE,
+                                               new PointValueData().setPoint(PrimaryKey.P_BACNET_SWITCH)
+                                                                   .setPriority(5)
+                                                                   .setValue(24d), true);
+        CountDownLatch latch = new CountDownLatch(2);
+        Async async = context.async(2);
+        controller().request(event, EventbusHelper.replyAsserter(context, body -> {
+            latch.countDown();
+            JsonObject data = new JsonObject(
+                "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0,\"priority\":5,\"priority_values\":" +
+                "{\"5\":24.0},\"time_audit\":{\"created_by\":\"UNDEFINED\"},\"sync_audit\":{\"status\":\"INITIAL\"," +
+                "\"data\":{\"message\":\"Not yet synced new resource\"}}}");
+            JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
+                                                  .put("status", Status.SUCCESS)
+                                                  .put("resource", data);
+            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
+                                  JsonHelper.ignore("time_audit.created_time"));
+        }));
+        latch.await(TestHelper.TEST_TIMEOUT_SEC / 3, TimeUnit.SECONDS);
+        DeliveryEvent event2 = createPointEvent(EventAction.PATCH,
+                                                new PointValueData().setPoint(PrimaryKey.P_BACNET_SWITCH)
+                                                                    .setPriority(9)
+                                                                    .setValue(28d), true);
+        controller().request(event2, EventbusHelper.replyAsserter(context, body -> {
+            latch.countDown();
+            JsonObject data = new JsonObject(
+                "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0,\"priority\":5," +
+                "\"priority_values\":{\"5\":24.0,\"9\":28.0},\"time_audit\":{\"created_by\":\"UNDEFINED\"," +
+                "\"last_modified_by\":\"UNDEFINED\"}}");
+            JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
+                                                  .put("status", Status.SUCCESS)
+                                                  .put("resource", data);
+            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
+                                  JsonHelper.ignore("time_audit.created_time"),
+                                  JsonHelper.ignore("time_audit.last_modified_time"));
+        }));
+        Thread.sleep(500);
+        latch.await(TestHelper.TEST_TIMEOUT_SEC / 3, TimeUnit.SECONDS);
     }
 
 }

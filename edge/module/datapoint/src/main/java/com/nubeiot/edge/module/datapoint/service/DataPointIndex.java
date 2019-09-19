@@ -79,6 +79,7 @@ import com.nubeiot.iotdata.edge.model.tables.records.RealtimeSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ScheduleSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ThingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.TransducerRecord;
+import com.nubeiot.iotdata.unit.DataType;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -433,11 +434,11 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public PointComposite onCreating(RequestData reqData) throws IllegalArgumentException {
             PointComposite point = parseFromRequest(reqData.body());
-            Objects.requireNonNull(point.getDevice(), "Missing device");
+            Objects.requireNonNull(point.getDevice(), "Point must be assigned to Device");
             MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
             if (Objects.isNull(other)) {
                 point.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), new MeasureUnit().setType(
-                    Strings.requireNotBlank(point.getMeasureUnit(), "Missing point measure unit")));
+                    Strings.requireNotBlank(point.getMeasureUnit(), "Point measure unit is mandatory")));
             } else {
                 point.setMeasureUnit(other.getType());
             }
@@ -539,6 +540,16 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull List<OrderField<?>> orderFields() {
             return Arrays.asList(Tables.POINT_REALTIME_DATA.TIME.desc(), Tables.POINT_REALTIME_DATA.POINT.asc());
+        }
+
+        public static JsonObject simpleValue(Double val, Integer priority) {
+            return new JsonObject().put("val", val)
+                                   .put("priority",
+                                        Optional.ofNullable(priority).orElse(PointPriorityValue.DEFAULT_PRIORITY));
+        }
+
+        public static JsonObject fullValue(@NonNull JsonObject value, @NonNull DataType dataType) {
+            return value.put("display", dataType.display(dataType.parse(value.getValue("val"))));
         }
 
     }

@@ -9,7 +9,6 @@ import io.github.classgraph.ClassInfo;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -55,11 +54,14 @@ public interface DataType extends EnumType, Cloneable {
     @JsonCreator
     static DataType factory(@JsonProperty(value = "type") String type, @JsonProperty(value = "symbol") String unit,
                             @JsonProperty(value = "category") String category,
-                            @JsonProperty(value = "display") Map<String, String> display) {
+                            @JsonProperty(value = "alias") Map<String, String> alias) {
         final DataType dt = available().filter(t -> t.type().equalsIgnoreCase(type))
                                        .findAny()
                                        .orElseGet(() -> new NumberDataType(type, unit));
-        return new NumberDataType(dt).setCategory(category).setAlias(UnitAlias.create(display));
+        if (dt instanceof BooleanDataType) {
+            return new BooleanDataType((BooleanDataType) dt, UnitAlias.create(alias));
+        }
+        return new NumberDataType(dt).setCategory(category).setAlias(UnitAlias.create(alias));
     }
 
     @NonNull
@@ -81,6 +83,12 @@ public interface DataType extends EnumType, Cloneable {
 
     DataType setAlias(UnitAlias alias);
 
+    /**
+     * Try parse given data to double value
+     *
+     * @param data given data
+     * @return double value
+     */
     default Double parse(Object data) {
         if (Objects.isNull(data)) {
             return 0d;
@@ -94,13 +102,19 @@ public interface DataType extends EnumType, Cloneable {
         return 0d;
     }
 
-    default @NonNull String alias(Double value) {
+    /**
+     * Decor value by alias or unit type
+     *
+     * @param value given value
+     * @return display value in string
+     */
+    default @NonNull String display(Double value) {
         if (Objects.isNull(value)) {
             return "";
         }
         if (Objects.nonNull(alias())) {
             String label = alias().eval(value);
-            if (Strings.isBlank(label)) {
+            if (Strings.isNotBlank(label)) {
                 return label;
             }
         }
@@ -108,16 +122,6 @@ public interface DataType extends EnumType, Cloneable {
             return String.valueOf(value);
         }
         return value + " " + unit();
-    }
-
-    /**
-     * Presents persist value
-     *
-     * @return persist value
-     */
-    @JsonIgnore
-    default String value() {
-        return this.type() + (Strings.isBlank(this.unit()) ? "" : SEP + this.unit());
     }
 
     default Collection<String> alternatives() { return null; }

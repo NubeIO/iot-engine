@@ -40,7 +40,8 @@ public class DataTypeTest {
             new JsonObject("{\"type\":\"kilowatt_hour\", \"symbol\": \"kWh\", \"category\":\"POWER\"}"),
             Power.KWH.toJson());
         JsonHelper.assertJson(new JsonObject(
-                                  "{\"type\":\"revolutions_per_minute\", \"symbol\": \"rpm\", \"category\":\"ANGULAR_VELOCITY\"}"),
+                                  "{\"type\":\"revolutions_per_minute\", \"symbol\": \"rpm\", " + "\"category" +
+                                  "\":\"ANGULAR_VELOCITY\"}"),
                               AngularVelocity.RPM.toJson());
         JsonHelper.assertJson(new JsonObject("{\"type\":\"bool\",\"category\":\"ALL\"}"), Base.BOOLEAN.toJson());
     }
@@ -69,9 +70,27 @@ public class DataTypeTest {
     @Test
     public void test_deserialize_booleanType() {
         final DataType dt = JsonData.from("{\"type\":\"bool\"}", DataType.class);
-        Assert.assertTrue(dt instanceof NumberDataType);
+        Assert.assertTrue(dt instanceof BooleanDataType);
         Assert.assertEquals("bool", dt.type());
         Assert.assertNull(dt.unit());
+        Assert.assertEquals(1d, dt.parse("true"), 0.0);
+        Assert.assertEquals(1d, dt.parse(10), 0.0);
+        Assert.assertEquals(1d, dt.parse(0.5), 0.0);
+        Assert.assertEquals(0d, dt.parse(false), 0.0);
+        Assert.assertEquals("FALSE", dt.display(dt.parse(false)));
+    }
+
+    @Test
+    public void test_deserialize_with_display() {
+        final UnitAlias alias = new UnitAlias().add(">0", "ON").add("<=0", "OFF");
+        final DataType dt = JsonData.from("{\"type\":\"bool\", \"alias\":" + alias.toJson().encode() + "}",
+                                          DataType.class);
+        Assert.assertTrue(dt instanceof BooleanDataType);
+        Assert.assertEquals("bool", dt.type());
+        Assert.assertNull(dt.unit());
+        Assert.assertEquals("ON", dt.display(dt.parse(1)));
+        Assert.assertEquals("ON", dt.display(dt.parse(0.5)));
+        Assert.assertEquals("OFF", dt.display(dt.parse(0)));
     }
 
 }

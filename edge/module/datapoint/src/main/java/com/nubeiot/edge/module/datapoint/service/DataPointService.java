@@ -43,7 +43,7 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     default String api() {
-        return "datapoint." + this.getClass().getSimpleName();
+        return "bios.datapoint." + this.getClass().getSimpleName();
     }
 
     default Set<EventMethodDefinition> definitions() {

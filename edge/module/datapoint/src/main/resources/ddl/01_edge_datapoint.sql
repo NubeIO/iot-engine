@@ -220,7 +220,6 @@ CREATE TABLE IF NOT EXISTS POINT_VALUE_DATA (
 CREATE TABLE IF NOT EXISTS REALTIME_SETTING ( 
 	POINT                uuid   NOT NULL,
 	ENABLED              boolean  DEFAULT FALSE NOT NULL,
-	TOLERANCE            double   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
 	CONSTRAINT PK_REALTIME_SETTING PRIMARY KEY ( POINT )
@@ -248,7 +247,6 @@ CREATE TABLE IF NOT EXISTS HISTORY_SETTING (
 	HISTORY_SETTING_TYPE varchar(15)   ,
 	SCHEDULE             varchar(127)   ,
 	TOLERANCE            double   ,
-	SIZE                 integer   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
     CONSTRAINT PK_HISTORY_SETTING PRIMARY KEY ( POINT )

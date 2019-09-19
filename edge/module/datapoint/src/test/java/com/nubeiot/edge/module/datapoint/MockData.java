@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistorySettingMe
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointValueMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TagPointMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.ThingMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TransducerMetadata;
@@ -44,6 +46,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
+import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 import com.nubeiot.iotdata.unit.DataTypeCategory.AngularVelocity;
@@ -67,6 +70,11 @@ public final class MockData {
     public static final List<PointValueData> POINT_DATA = pointData();
     public static final List<HistorySetting> HISTORY_SETTINGS = historySettings();
     public static final List<PointHistoryData> HISTORY_DATA = historyData();
+    public static final List<RealtimeSetting> RT_SETTINGS = rtSettings();
+
+    private static List<RealtimeSetting> rtSettings() {
+        return Collections.singletonList(new RealtimeSetting().setPoint(PrimaryKey.P_GPIO_TEMP).setEnabled(true));
+    }
 
     private static List<PointValueData> pointData() {
         return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY)
@@ -114,12 +122,11 @@ public final class MockData {
     }
 
     private static List<HistorySetting> historySettings() {
-        return Arrays.asList(new HistorySetting().setPoint(PrimaryKey.P_GPIO_TEMP)
-                                                 .setType(HistorySettingType.PERIOD)
-                                                 .setSchedule("xxxx"),
-                             new HistorySetting().setPoint(PrimaryKey.P_BACNET_FAN)
-                                                 .setType(HistorySettingType.COV)
-                                                 .setTolerance(10.0));
+        return Arrays.asList(
+            new HistorySetting().setPoint(PrimaryKey.P_GPIO_TEMP).setType(HistorySettingType.COV).setTolerance(1d),
+            new HistorySetting().setPoint(PrimaryKey.P_BACNET_FAN)
+                                .setType(HistorySettingType.PERIOD)
+                                .setSchedule("xyz"));
     }
 
     private static List<PointTag> tags() {
@@ -315,7 +322,8 @@ public final class MockData {
                                  .put(TagPointMetadata.INSTANCE.singularKeyName(), data(TAGS))
                                  .put(PointValueMetadata.INSTANCE.singularKeyName(), data(POINT_DATA))
                                  .put(HistorySettingMetadata.INSTANCE.singularKeyName(), data(HISTORY_SETTINGS))
-                                 .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA));
+                                 .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA))
+                                 .put(RealtimeSettingMetadata.INSTANCE.singularKeyName(), data(RT_SETTINGS));
     }
 
     public static <T extends VertxPojo> List<JsonObject> data(List<T> list) {

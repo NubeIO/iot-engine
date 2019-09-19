@@ -30,7 +30,7 @@ public interface SchedulerService<P extends VertxPojo, M extends EntityMetadata>
 
     @Override
     default String api() {
-        return "scheduler." + this.getClass().getSimpleName();
+        return "bios.scheduler." + this.getClass().getSimpleName();
     }
 
 }

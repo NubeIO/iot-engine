@@ -13,6 +13,7 @@ import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.core.sql.service.EntityPostService.EntityPostServiceDelegate;
 import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointValueMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.RealtimeDataMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
 import com.nubeiot.edge.module.datapoint.service.HistoryDataService;
 import com.nubeiot.edge.module.datapoint.service.PointValueService;
@@ -51,12 +52,10 @@ public final class PointValueSyncService extends EntityPostServiceDelegate {
 
     private void createRealtimeData(@NonNull EntityService service, @NonNull PointValueData pv,
                                     @NonNull PointValue requestValue, @NonNull OffsetDateTime createdTime) {
-        final JsonObject rtValue = new JsonObject().put("value", requestValue.getValue());
-        send(service, RealtimeDataService.class, new PointRealtimeData().setPoint(pv.getPoint())
-                                                                        .setValue(rtValue)
-                                                                        .setPriority(requestValue.getPriority())
-                                                                        .setTime(createdTime)
-                                                                        .toJson());
+        final JsonObject rtValue = RealtimeDataMetadata.simpleValue(requestValue.getValue(),
+                                                                    requestValue.getPriority());
+        send(service, RealtimeDataService.class,
+             new PointRealtimeData().setPoint(pv.getPoint()).setValue(rtValue).setTime(createdTime).toJson());
     }
 
     private void createHistoryData(@NonNull EntityService service, @NonNull PointValueData pv,

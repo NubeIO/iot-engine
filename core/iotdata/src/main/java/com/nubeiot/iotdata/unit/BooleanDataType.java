@@ -1,11 +1,21 @@
 package com.nubeiot.iotdata.unit;
 
 import java.util.Objects;
+import java.util.Optional;
+
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
+
+import lombok.NonNull;
 
 public final class BooleanDataType extends NumberDataType {
 
     BooleanDataType() {
-        super("bool", null);
+        super("bool", null, Base.TYPE);
+    }
+
+    BooleanDataType(@NonNull BooleanDataType dt, UnitAlias unitAlias) {
+        super(dt.type(), dt.unit(), dt.category(), Optional.ofNullable(unitAlias).orElse(dt.alias()));
     }
 
     @Override
@@ -23,6 +33,18 @@ public final class BooleanDataType extends NumberDataType {
             return Boolean.TRUE.equals(Boolean.valueOf((String) data)) ? 1d : 0d;
         }
         return 0d;
+    }
+
+    @Override
+    public @NonNull String display(Double value) {
+        Double val = Optional.ofNullable(value).orElse(0d);
+        if (Objects.nonNull(alias())) {
+            String label = alias().eval(val);
+            if (Strings.isNotBlank(label)) {
+                return label;
+            }
+        }
+        return val > 0 ? "TRUE" : "FALSE";
     }
 
 }
