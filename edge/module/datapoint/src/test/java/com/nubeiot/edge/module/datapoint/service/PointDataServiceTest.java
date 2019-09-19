@@ -123,9 +123,10 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_history_data_by_point(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"histories\":[{\"id\":4,\"time\":\"2019-08-10T09:22Z\",\"value\":42.0,\"priority\":8},{\"id\":3," +
-            "\"time\":\"2019-08-10T09:20Z\",\"value\":32.0,\"priority\":8},{\"id\":2,\"time\":\"2019-08-10T09:18Z\"," +
-            "\"value\":35.0,\"priority\":8},{\"id\":1,\"time\":\"2019-08-10T09:15Z\",\"value\":30.0,\"priority\":8}]}");
+            "{\"histories\":[{\"id\":4,\"time\":\"2019-08-10T09:22Z\",\"value\":42.0,\"priority\":16},{\"id\":3," +
+            "\"time\":\"2019-08-10T09:20Z\",\"value\":32.0,\"priority\":16},{\"id\":2,\"time\":\"2019-08-10T09:18Z\"," +
+            "\"value\":35.0,\"priority\":16},{\"id\":1,\"time\":\"2019-08-10T09:15Z\",\"value\":30.0," +
+            "\"priority\":16}]}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
                                      .build();
@@ -135,9 +136,10 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_history_data_by_point_sort_by_acs(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"histories\":[{\"id\":1,\"time\":\"2019-08-10T09:15Z\",\"value\":30.0,\"priority\":8},{\"id\":2," +
-            "\"time\":\"2019-08-10T09:18Z\",\"value\":35.0,\"priority\":8},{\"id\":3,\"time\":\"2019-08-10T09:20Z\"," +
-            "\"value\":32.0,\"priority\":8},{\"id\":4,\"time\":\"2019-08-10T09:22Z\",\"value\":42.0,\"priority\":8}]}");
+            "{\"histories\":[{\"id\":1,\"time\":\"2019-08-10T09:15Z\",\"value\":30.0,\"priority\":16},{\"id\":2," +
+            "\"time\":\"2019-08-10T09:18Z\",\"value\":35.0,\"priority\":16},{\"id\":3,\"time\":\"2019-08-10T09:20Z\"," +
+            "\"value\":32.0,\"priority\":16},{\"id\":4,\"time\":\"2019-08-10T09:22Z\",\"value\":42.0," +
+            "\"priority\":16}]}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
                                      .sort(Sort.builder().item("time", SortType.ASC).build())
@@ -149,18 +151,18 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
     public void test_get_history_data(TestContext context) {
         JsonObject expected = new JsonObject(
             "{\"histories\":[{\"id\":4,\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\"," +
-            "\"time\":\"2019-08-10T09:22Z\",\"value\":42.0,\"priority\":8},{\"id\":3," +
+            "\"time\":\"2019-08-10T09:22Z\",\"value\":42.0,\"priority\":16},{\"id\":3," +
             "\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"time\":\"2019-08-10T09:20Z\",\"value\":32.0," +
-            "\"priority\":8},{\"id\":8,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
-            "\"time\":\"2019-08-10T09:18:15Z\",\"value\":20.6,\"priority\":8},{\"id\":2," +
+            "\"priority\":16},{\"id\":8,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
+            "\"time\":\"2019-08-10T09:18:15Z\",\"value\":20.6,\"priority\":16},{\"id\":2," +
             "\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"time\":\"2019-08-10T09:18Z\",\"value\":35.0," +
-            "\"priority\":8},{\"id\":7,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
-            "\"time\":\"2019-08-10T09:17:15Z\",\"value\":20.8,\"priority\":8},{\"id\":6," +
+            "\"priority\":16},{\"id\":7,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
+            "\"time\":\"2019-08-10T09:17:15Z\",\"value\":20.8,\"priority\":16},{\"id\":6," +
             "\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\",\"time\":\"2019-08-10T09:16:15Z\",\"value\":20.8," +
-            "\"priority\":8},{\"id\":5,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
-            "\"time\":\"2019-08-10T09:15:15Z\",\"value\":20.5,\"priority\":8},{\"id\":1," +
+            "\"priority\":16},{\"id\":5,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
+            "\"time\":\"2019-08-10T09:15:15Z\",\"value\":20.5,\"priority\":16},{\"id\":1," +
             "\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"time\":\"2019-08-10T09:15Z\",\"value\":30.0," +
-            "\"priority\":8}]}");
+            "\"priority\":16}]}");
         RequestData req = RequestData.builder().build();
         asserter(context, true, expected, HistoryDataService.class.getName(), EventAction.GET_LIST, req);
     }

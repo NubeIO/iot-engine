@@ -25,7 +25,7 @@ import lombok.NonNull;
 @NoArgsConstructor
 public final class PointPriorityValue implements JsonData {
 
-    public static final int DEFAULT_PRIORITY = 8;
+    public static final int DEFAULT_PRIORITY = 16;
     private static final String INVALID_PRIORITY = "Priority is only in range [1, 17]";
     private static final int MIN_PRIORITY = 1;
     private static final int MAX_PRIORITY = 17;

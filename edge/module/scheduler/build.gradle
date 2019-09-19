@@ -46,3 +46,7 @@ task jooqGen(type: JooqGenerateTask) {
                          parser: "com.nubeiot.scheduler.trigger.TriggerType.factory((String)%s)"),
     ]
 }
+
+test {
+    mustRunAfter(":edge:module:datapoint:test")
+}

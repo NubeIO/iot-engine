@@ -23,7 +23,7 @@ public class PointPriorityValueTest {
 
     @Test
     public void test_serialize() throws JSONException {
-        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"8\":8.0,\"9\":9.0,\"10\":10.5}"), pv.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"16\":8.0,\"9\":9.0,\"10\":10.5}"), pv.toJson());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -33,9 +33,9 @@ public class PointPriorityValueTest {
 
     @Test
     public void test_deserialize() throws JSONException {
-        PointPriorityValue from = JsonData.from("{\"2\":3.5,\"8\":8.0,\"9\":9.0,\"10\":10.5}",
+        PointPriorityValue from = JsonData.from("{\"2\":3.5,\"16\":8.0,\"9\":9.0,\"10\":10.5}",
                                                 PointPriorityValue.class);
-        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"8\":8.0,\"9\":9.0,\"10\":10.5}"), from.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"16\":8.0,\"9\":9.0,\"10\":10.5}"), from.toJson());
         Assert.assertEquals(pv, from);
         Double aDouble = from.get(9);
         Double expected = 9.0d;
@@ -82,7 +82,7 @@ public class PointPriorityValueTest {
     public void test_merge() throws Throwable {
         final PointPriorityValue merge = JsonData.merge(pv.toJson(), new JsonObject(
             "{\"9\":55,\"10\":14, \"11\":null,\"12\":\"444.5\"}"), PointPriorityValue.class);
-        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"8\":8.0,\"9\":55.0,\"10\":14.0,\"11\":null,\"12\":444.5}"),
+        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"16\":8.0,\"9\":55.0,\"10\":14.0,\"11\":null,\"12\":444.5}"),
                               merge.toJson());
     }
 

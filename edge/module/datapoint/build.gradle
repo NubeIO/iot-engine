@@ -112,3 +112,7 @@ task jooqGen(type: JooqGenerateTask) {
                          parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.unit.UnitAlias.class)")
     ]
 }
+
+test {
+    mustRunAfter(":edge:bios:test")
+}
