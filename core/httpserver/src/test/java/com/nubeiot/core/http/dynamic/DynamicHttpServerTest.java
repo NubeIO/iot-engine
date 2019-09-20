@@ -2,7 +2,6 @@ package com.nubeiot.core.http.dynamic;
 
 import java.io.IOException;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -22,9 +21,6 @@ import com.nubeiot.core.http.dynamic.mock.MockHttpServiceServer;
 public class DynamicHttpServerTest extends DynamicServiceTestBase {
 
     private int port;
-
-    @BeforeClass
-    public static void beforeSuite() { TestHelper.setup(); }
 
     protected DeploymentOptions getServiceOptions() throws IOException {
         port = TestHelper.getRandomPort();

@@ -159,11 +159,17 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         }
     }
 
+    /**
+     * Decorator route with produce and consume
+     * <p>
+     * TODO: Need to check again Route#consumes(String)
+     *
+     * @param route route
+     * @see Route#produces(String)
+     * @see Route#consumes(String)
+     */
     public static void restrictJsonRoute(Route route) {
-        route.produces(HttpUtils.JSON_CONTENT_TYPE)
-             .produces(HttpUtils.JSON_UTF8_CONTENT_TYPE)
-             .consumes(HttpUtils.JSON_CONTENT_TYPE)
-             .consumes(HttpUtils.JSON_UTF8_CONTENT_TYPE);
+        route.produces(HttpUtils.JSON_CONTENT_TYPE).produces(HttpUtils.JSON_UTF8_CONTENT_TYPE);
     }
 
     private void initStaticWebRouter(Router mainRouter, StaticWebConfig webConfig) {

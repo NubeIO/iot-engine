@@ -7,6 +7,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
@@ -22,6 +26,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.core.http.HttpClient;
 
@@ -39,7 +44,8 @@ import com.nubeiot.core.http.ws.WebsocketEventMessage;
 import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.RestRouter;
 
-public class HttpServerTestBase {
+@RunWith(VertxUnitRunner.class)
+public abstract class HttpServerTestBase {
 
     protected static final String DEFAULT_HOST = "127.0.0.1";
     protected Vertx vertx;
@@ -47,7 +53,11 @@ public class HttpServerTestBase {
     protected HttpClient client;
     protected RequestOptions requestOptions;
 
-    protected void before(TestContext context) throws IOException {
+    @BeforeClass
+    public static void beforeSuite() throws Exception { TestHelper.setup(); }
+
+    @Before
+    public void before(TestContext context) throws IOException {
         vertx = Vertx.vertx();
         httpConfig = IConfig.fromClasspath(httpConfigFile(), HttpConfig.class);
         httpConfig.setHost(DEFAULT_HOST);
@@ -56,7 +66,8 @@ public class HttpServerTestBase {
         requestOptions = new RequestOptions().setHost(DEFAULT_HOST).setPort(httpConfig.getPort());
     }
 
-    protected void after(TestContext context) {
+    @After
+    public void after(TestContext context) {
         RestRouter.getWriters().clear();
         RestRouter.getReaders().clear();
         RestRouter.getContextProviders().clear();
@@ -77,7 +88,8 @@ public class HttpServerTestBase {
         return new HttpClientOptions().setConnectTimeout(TestHelper.TEST_TIMEOUT_SEC);
     }
 
-    protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected, JsonObject bodyExpected, Customization... customizations) {
+    protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected,
+                                      JsonObject bodyExpected, Customization... customizations) {
         assertRestByClient(context, method, path, codeExpected, bodyExpected, JSONCompareMode.STRICT, customizations);
     }
 

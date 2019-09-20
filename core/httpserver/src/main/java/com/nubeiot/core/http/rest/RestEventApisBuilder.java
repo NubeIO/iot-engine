@@ -43,18 +43,6 @@ public final class RestEventApisBuilder {
         this.router = Router.router(vertx);
     }
 
-    public RestEventApisBuilder(io.vertx.reactivex.core.Vertx vertx) {
-        this(vertx.getDelegate());
-    }
-
-    public RestEventApisBuilder(Router router) {
-        this.router = router;
-    }
-
-    public RestEventApisBuilder(io.vertx.reactivex.ext.web.Router router) {
-        this(router.getDelegate());
-    }
-
     public RestEventApisBuilder addSharedDataFunc(@NonNull Function<String, Object> func) {
         this.sharedDataFunc = func;
         return this;

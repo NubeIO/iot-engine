@@ -5,9 +5,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.skyscreamer.jsonassert.Customization;
 
 import io.vertx.core.DeploymentOptions;
@@ -24,18 +22,10 @@ public abstract class DynamicServiceTestBase extends HttpServerTestBase {
 
     static final Customization IGNORE_URI = new Customization("message.uri", (o1, o2) -> true);
 
-    @BeforeClass
-    public static void beforeSuite() { TestHelper.setup(); }
-
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
         startGatewayAndService(context, service(), getServiceOptions());
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
     }
 
     protected void startGatewayAndService(TestContext context, ContainerVerticle service,

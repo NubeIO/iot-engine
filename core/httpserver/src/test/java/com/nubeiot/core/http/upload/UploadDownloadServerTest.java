@@ -1,10 +1,5 @@
 package com.nubeiot.core.http.upload;
 
-import java.io.IOException;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,15 +19,6 @@ public class UploadDownloadServerTest extends HttpServerTestBase {
 
     @Rule
     public Timeout timeout = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
-
-    @BeforeClass
-    public static void beforeSuite() { TestHelper.setup(); }
-
-    @Before
-    public void before(TestContext context) throws IOException { super.before(context); }
-
-    @After
-    public void after(TestContext context) { super.after(context); }
 
     @Override
     protected String httpConfigFile() { return "uploadDownload.json"; }

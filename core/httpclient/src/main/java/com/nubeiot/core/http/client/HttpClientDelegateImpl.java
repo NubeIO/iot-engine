@@ -84,9 +84,11 @@ final class HttpClientDelegateImpl extends ClientDelegate implements HttpClientD
     private RequestData decorator(RequestData requestData) {
         RequestData reqData = Objects.isNull(requestData) ? RequestData.builder().build() : requestData;
         final JsonObject headers = reqData.headers();
-        if (!headers.containsKey(HttpHeaders.CONTENT_TYPE.toString())) {
-            headers.put(HttpHeaders.CONTENT_TYPE.toString(), HttpUtils.JSON_UTF8_CONTENT_TYPE);
+        if (!headers.containsKey(HttpUtils.NONE_CONTENT_TYPE) &&
+            !headers.containsKey(HttpHeaders.CONTENT_TYPE.toString())) {
+            headers.put(HttpHeaders.CONTENT_TYPE.toString(), HttpUtils.JSON_CONTENT_TYPE);
         }
+        headers.remove(HttpUtils.NONE_CONTENT_TYPE);
         if (!headers.containsKey(HttpHeaders.USER_AGENT.toString())) {
             headers.put(HttpHeaders.USER_AGENT.toString(), this.getUserAgent());
         }

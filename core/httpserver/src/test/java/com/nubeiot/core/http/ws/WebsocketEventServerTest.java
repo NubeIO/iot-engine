@@ -3,9 +3,7 @@ package com.nubeiot.core.http.ws;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,11 +38,6 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
     @Rule
     public Timeout timeout = Timeout.seconds(TestHelper.TEST_TIMEOUT_SEC);
 
-    @BeforeClass
-    public static void beforeSuite() {
-        TestHelper.setup();
-    }
-
     @Before
     public void before(TestContext context) throws IOException {
         super.before(context);
@@ -54,11 +47,6 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         } catch (Exception e) {
             context.fail(e);
         }
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
     }
 
     @Test

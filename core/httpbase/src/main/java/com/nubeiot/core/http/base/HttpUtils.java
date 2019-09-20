@@ -36,6 +36,7 @@ public final class HttpUtils {
 
     public static final String JSON_CONTENT_TYPE = "application/json";
     public static final String JSON_UTF8_CONTENT_TYPE = "application/json;charset=utf-8";
+    public static final String NONE_CONTENT_TYPE = "no-content-type";
     public static final Set<HttpMethod> DEFAULT_CORS_HTTP_METHOD = Collections.unmodifiableSet(new HashSet<>(
         Arrays.asList(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH, HttpMethod.DELETE,
                       HttpMethod.HEAD, HttpMethod.OPTIONS)));
