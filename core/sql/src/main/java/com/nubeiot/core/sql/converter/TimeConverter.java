@@ -6,10 +6,10 @@ import java.util.Objects;
 
 import org.jooq.Converter;
 
-public final class TimeConverter implements Converter<java.sql.Time, LocalTime> {
+public final class TimeConverter implements Converter<Time, LocalTime> {
 
     @Override
-    public LocalTime from(java.sql.Time databaseObject) {
+    public LocalTime from(Time databaseObject) {
         if (Objects.isNull(databaseObject)) {
             return null;
         }
@@ -17,13 +17,13 @@ public final class TimeConverter implements Converter<java.sql.Time, LocalTime> 
     }
 
     @Override
-    public java.sql.Time to(LocalTime userObject) {
+    public Time to(LocalTime userObject) {
         return Objects.isNull(userObject) ? null : Time.valueOf(userObject);
     }
 
     @Override
-    public Class<java.sql.Time> fromType() {
-        return java.sql.Time.class;
+    public Class<Time> fromType() {
+        return Time.class;
     }
 
     @Override

@@ -5,8 +5,6 @@ import java.util.Objects;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.component.UnitContext;
@@ -18,8 +16,6 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class MicroContext extends UnitContext {
-
-    private static final Logger logger = LoggerFactory.getLogger(MicroContext.class);
 
     @Getter
     private CircuitBreakerController breakerController;

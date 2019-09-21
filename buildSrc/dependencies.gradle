@@ -8,11 +8,11 @@ def versions = [
         logback: "1.2.3"
     ],
     database: [
-        jooq     : "3.11.8",
-        jooqVertx: "4.0.0",
+        jooq     : "3.11.11",
+        jooqVertx: "4.1.0",
         hikari   : "3.2.0",
         jpa      : "2.2",
-        h2       : "1.4.197",
+        h2       : "1.4.199",
         pgsql    : "42.2.5",
     ],
     plugin  : [
@@ -21,7 +21,8 @@ def versions = [
         "sonar" : "2.7",
     ],
     tests   : [
-        junit: "4.12"
+        junit: "4.12",
+        jacoco: "0.8.4"
     ],
 ]
 
@@ -47,6 +48,8 @@ ext.deps = [
     jackson : [
         core    : "com.fasterxml.jackson.core:jackson-core:$versions.jackson",
         databind: "com.fasterxml.jackson.core:jackson-databind:$versions.jackson",
+        datatype: "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$versions.jackson",
+        datetime: "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$versions.jackson",
     ],
     database: [
         h2              : "com.h2database:h2:$versions.database.h2",

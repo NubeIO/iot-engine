@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
@@ -58,7 +59,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
 
     public final static String SERVER_INFO_DATA_KEY = "SERVER_INFO";
     public final static String SERVER_GATEWAY_ADDRESS_DATA_KEY = "SERVER_GATEWAY_ADDRESS";
-    private static final int MB = 1024 * 1024;
+    private static final long MB = 1024L * 1024L;
     @NonNull
     private final HttpServerRouter httpRouter;
     private io.vertx.core.http.HttpServer httpServer;
@@ -158,23 +159,17 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         }
     }
 
-    private void initGatewayRouter(Router mainRouter, ApiGatewayConfig apiGatewayConfig) {
-        if (!apiGatewayConfig.isEnabled()) {
-            return;
-        }
-        addSharedData(SERVER_GATEWAY_ADDRESS_DATA_KEY,
-                      Strings.requireNotBlank(apiGatewayConfig.getAddress(), "Gateway address cannot be blank"));
-        final Set<Class<? extends RestEventApi>> gatewayApis = Stream.concat(httpRouter.getGatewayApiClasses().stream(),
-                                                                             Stream.of(GatewayIndexApi.class))
-                                                                     .collect(Collectors.toSet());
-        logger.info("Registering sub routers in Gateway API: '{}'...", apiGatewayConfig.getPath());
-        final Router gatewayRouter = new RestEventApisBuilder(vertx).register(gatewayApis)
-                                                                    .addSharedDataFunc(this::getSharedData)
-                                                                    .build();
-        mainRouter.mountSubRouter(apiGatewayConfig.getPath(), gatewayRouter);
-        mainRouter.route(Urls.combinePath(apiGatewayConfig.getPath(), ApiConstants.WILDCARDS_ANY_PATH))
-                  .handler(new RestEventResponseHandler())
-                  .produces(HttpUtils.DEFAULT_CONTENT_TYPE);
+    /**
+     * Decorator route with produce and consume
+     * <p>
+     * TODO: Need to check again Route#consumes(String)
+     *
+     * @param route route
+     * @see Route#produces(String)
+     * @see Route#consumes(String)
+     */
+    public static void restrictJsonRoute(Route route) {
+        route.produces(HttpUtils.JSON_CONTENT_TYPE).produces(HttpUtils.JSON_UTF8_CONTENT_TYPE);
     }
 
     private void initStaticWebRouter(Router mainRouter, StaticWebConfig webConfig) {
@@ -220,29 +215,22 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         return router;
     }
 
-    private Router initUploadRouter(Router router, Path storageDir, UploadConfig uploadCfg, String publicUrl) {
-        if (!uploadCfg.isEnabled()) {
-            return router;
+    private void initGatewayRouter(Router mainRouter, ApiGatewayConfig apiGatewayConfig) {
+        if (!apiGatewayConfig.isEnabled()) {
+            return;
         }
-        logger.info("Init Upload router: '{}'...", uploadCfg.getPath());
-        EventController controller = SharedDataDelegate.getEventController(vertx, getSharedKey());
-        EventModel listenerEvent = EventModel.builder()
-                                             .address(Strings.fallback(uploadCfg.getListenerAddress(),
-                                                                       getSharedKey() + ".upload"))
-                                             .event(EventAction.CREATE)
-                                             .pattern(EventPattern.REQUEST_RESPONSE)
-                                             .local(true)
-                                             .build();
-        String handlerClass = uploadCfg.getHandlerClass();
-        String listenerClass = uploadCfg.getListenerClass();
-        controller.register(listenerEvent, UploadListener.create(vertx, listenerClass, getSharedKey(),
-                                                                 new ArrayList<>(listenerEvent.getEvents())));
-        router.post(uploadCfg.getPath())
-              .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB))
-              .handler(UploadFileHandler.create(handlerClass, controller, listenerEvent, storageDir, publicUrl))
-              .handler(new RestEventResponseHandler())
-              .produces(HttpUtils.DEFAULT_CONTENT_TYPE);
-        return router;
+        addSharedData(SERVER_GATEWAY_ADDRESS_DATA_KEY,
+                      Strings.requireNotBlank(apiGatewayConfig.getAddress(), "Gateway address cannot be blank"));
+        final Set<Class<? extends RestEventApi>> gatewayApis = Stream.concat(httpRouter.getGatewayApiClasses().stream(),
+                                                                             Stream.of(GatewayIndexApi.class))
+                                                                     .collect(Collectors.toSet());
+        logger.info("Registering sub routers in Gateway API: '{}'...", apiGatewayConfig.getPath());
+        final Router gatewayRouter = new RestEventApisBuilder(vertx).register(gatewayApis)
+                                                                    .addSharedDataFunc(this::getSharedData)
+                                                                    .build();
+        final String wildcardsPath = Urls.combinePath(apiGatewayConfig.getPath(), ApiConstants.WILDCARDS_ANY_PATH);
+        mainRouter.mountSubRouter(apiGatewayConfig.getPath(), gatewayRouter);
+        restrictJsonRoute(mainRouter.route(wildcardsPath).handler(new RestEventResponseHandler()));
     }
 
     private Router initDownloadRouter(Router router, Path storageDir, DownloadConfig downloadCfg) {
@@ -275,5 +263,31 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
     }
 
     private Router initHttp2Router(Router router) { return router; }
+
+    private Router initUploadRouter(Router router, Path storageDir, UploadConfig uploadCfg, String publicUrl) {
+        if (!uploadCfg.isEnabled()) {
+            return router;
+        }
+        logger.info("Init Upload router: '{}'...", uploadCfg.getPath());
+        EventController controller = SharedDataDelegate.getEventController(vertx, getSharedKey());
+        EventModel listenerEvent = EventModel.builder()
+                                             .address(Strings.fallback(uploadCfg.getListenerAddress(),
+                                                                       getSharedKey() + ".upload"))
+                                             .event(EventAction.CREATE)
+                                             .pattern(EventPattern.REQUEST_RESPONSE)
+                                             .local(true)
+                                             .build();
+        String handlerClass = uploadCfg.getHandlerClass();
+        String listenerClass = uploadCfg.getListenerClass();
+        controller.register(listenerEvent, UploadListener.create(vertx, listenerClass, getSharedKey(),
+                                                                 new ArrayList<>(listenerEvent.getEvents())));
+        router.post(uploadCfg.getPath())
+              .handler(BodyHandler.create(storageDir.toString()).setBodyLimit(uploadCfg.getMaxBodySizeMB() * MB))
+              .handler(UploadFileHandler.create(handlerClass, controller, listenerEvent, storageDir, publicUrl))
+              .handler(new RestEventResponseHandler())
+              .produces(HttpUtils.JSON_CONTENT_TYPE)
+              .produces(HttpUtils.JSON_UTF8_CONTENT_TYPE);
+        return router;
+    }
 
 }

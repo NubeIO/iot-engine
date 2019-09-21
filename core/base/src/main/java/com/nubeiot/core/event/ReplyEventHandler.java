@@ -49,12 +49,13 @@ public final class ReplyEventHandler implements Handler<AsyncResult<Message<Obje
             HiddenException hidden = new HiddenException(ErrorCode.EVENT_ERROR, msg, reply.cause());
             return Single.error(new ServiceException("Service unavailable", hidden));
         }
-        return Single.just(EventMessage.tryParse(result.body()));
+        final EventMessage msg = EventMessage.tryParse(result.body());
+        logger.info("{}::Backend eventbus response | Action: {} | Status: {}", system, msg.getAction(),
+                    msg.getStatus());
+        return Single.just(msg);
     }
 
     private void handleReplySuccess(EventMessage eventMessage) {
-        logger.info("{}::Backend eventbus response | Status: {} | Action: {}", system, eventMessage.getStatus(),
-                    eventMessage.getAction());
         if (logger.isTraceEnabled()) {
             logger.trace("{}::Backend eventbus response | {}", eventMessage.toJson());
         }

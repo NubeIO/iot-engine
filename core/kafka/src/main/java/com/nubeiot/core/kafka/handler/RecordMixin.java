@@ -55,7 +55,7 @@ interface RecordMixin extends JsonData {
     }
 
     @Override
-    default ObjectMapper mapper() {
+    default ObjectMapper getMapper() {
         return MAPPER;
     }
 

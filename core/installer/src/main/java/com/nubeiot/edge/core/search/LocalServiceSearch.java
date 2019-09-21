@@ -9,12 +9,10 @@ import java.util.stream.Collectors;
 
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Record;
 import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 
 import io.reactivex.Single;
-import io.reactivex.SingleSource;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -46,31 +44,24 @@ public final class LocalServiceSearch implements IServiceSearch {
 
     @Override
     public Single<JsonObject> search(RequestData requestData) throws NubeException {
-        logger.info("Start executing local service searching  {}", requestData.getFilter());
-        return this.entityHandler.getQueryExecutor()
+        logger.info("Start executing local service searching {}", requestData.getFilter());
+        return this.entityHandler.genericQuery()
                                  .executeAny(context -> filter(validateFilter(requestData.getFilter()),
                                                                requestData.getPagination(), context))
                                  .flattenAsObservable(records -> records)
-                                 .flatMapSingle(this::removeCredentialsInAppConfig)
-                                 .collect(JsonArray::new, JsonArray::add)
-                                 .flattenAsObservable(results -> results)
-                                 .flatMapSingle(record -> removeSystemConfig((JsonObject) record))
+                                 .flatMapSingle(this::excludeData)
                                  .collect(JsonArray::new, JsonArray::add)
                                  .map(results -> new JsonObject().put("services", results));
     }
 
-    public SingleSource<? extends JsonObject> removeCredentialsInAppConfig(TblModuleRecord record) {
-        record.setAppConfig(this.entityHandler.getSecureAppConfig(record.getServiceId(), record.getAppConfig()));
-        return Single.just(record.toJson());
+    private Single<JsonObject> excludeData(TblModuleRecord record) {
+        return Single.just(
+            record.setAppConfig(this.entityHandler.getSecureAppConfig(record.getServiceId(), record.getAppConfig()))
+                  .setSystemConfig(null)
+                  .toJson());
     }
 
-    private SingleSource<? extends JsonObject> removeSystemConfig(JsonObject record) {
-        // TODO: replace with POJO constant later
-        record.remove("system_config");
-        return Single.just(record);
-    }
-
-    JsonObject validateFilter(JsonObject filter) {
+    private JsonObject validateFilter(JsonObject filter) {
         //TODO fields name, depends object -> validate method
         JsonObject sqlData = new JsonObject(filter.getMap());
         String state = filter.getString(Tables.TBL_MODULE.STATE.getName().toLowerCase());
@@ -96,9 +87,9 @@ public final class LocalServiceSearch implements IServiceSearch {
 
     @SuppressWarnings( {"unchecked", "rawtypes"})
     private List<TblModuleRecord> filter(JsonObject filter, Pagination pagination, DSLContext context) {
-        SelectConditionStep<Record> sql = context.select()
-                                                 .from(Tables.TBL_MODULE)
-                                                 .where(DSL.field(Tables.TBL_MODULE.SERVICE_TYPE).eq(ModuleType.JAVA));
+        SelectConditionStep<TblModuleRecord> sql = context.selectFrom(Tables.TBL_MODULE)
+                                                          .where(DSL.field(Tables.TBL_MODULE.SERVICE_TYPE)
+                                                                    .eq(ModuleType.JAVA));
         Set<String> fieldNames = Arrays.stream(Tables.TBL_MODULE.fields())
                                        .map(Field::getName)
                                        .collect(Collectors.toSet());
@@ -112,12 +103,12 @@ public final class LocalServiceSearch implements IServiceSearch {
               });
         final Instant from = filter.getInstant("from");
         if (Objects.nonNull(from)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(DateTimes.fromUTC(from)));
+            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(DateTimes.from(from)));
         }
 
         final Instant to = filter.getInstant("to");
         if (Objects.nonNull(to)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(DateTimes.fromUTC(to)));
+            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(DateTimes.from(to)));
         }
 
         return sql.limit(pagination.getPerPage())

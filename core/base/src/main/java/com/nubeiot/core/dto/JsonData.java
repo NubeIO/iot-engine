@@ -1,10 +1,14 @@
 package com.nubeiot.core.dto;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 
 import io.vertx.core.buffer.Buffer;
@@ -15,12 +19,20 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -30,10 +42,50 @@ import lombok.NonNull;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public interface JsonData {
 
-    ObjectMapper MAPPER = Json.mapper.copy().registerModule(Deserializer.SIMPLE_MODULE);
+    ObjectMapper MAPPER = Json.mapper.copy().registerModule(new JavaTimeModule()).registerModule(JsonModule.BASIC)
+                                     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     ObjectMapper LENIENT_MAPPER = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     String SUCCESS_KEY = "data";
     String ERROR_KEY = "error";
+    String FILTER_PROP_BY_NAME = "filter_by_name";
+
+    /**
+     * Check if given class is able to added in json
+     *
+     * @param clazz Given class
+     * @return {@code true} if able to added
+     * @see Json
+     */
+    static boolean isAbleHandler(@NonNull Class<?> clazz) {
+        return ReflectionClass.isJavaLangObject(clazz) || ReflectionClass.assertDataType(clazz, Instant.class) ||
+               ReflectionClass.assertDataType(clazz, Map.class) || ReflectionClass.assertDataType(clazz, List.class) ||
+               ReflectionClass.assertDataType(clazz, JsonObject.class) ||
+               ReflectionClass.assertDataType(clazz, JsonArray.class);
+    }
+
+    static Object checkAndConvert(@NonNull Object val) {
+        return isAbleHandler(val.getClass()) ? val : val.toString();
+    }
+
+    static <D> D safeGet(@NonNull JsonObject jsonObject, @NonNull String key, @NonNull Class<D> clazz) {
+        return safeGet(jsonObject, key, clazz, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    static <D> D safeGet(@NonNull JsonObject jsonObject, @NonNull String key, @NonNull Class<D> clazz, D defValue) {
+        final Object value = jsonObject.getValue(key);
+        if (Objects.isNull(value)) {
+            return defValue;
+        }
+        if (ReflectionClass.assertDataType(value.getClass(), clazz)) {
+            return clazz.cast(value);
+        }
+        if (ReflectionClass.assertDataType(clazz, JsonObject.class) &&
+            ReflectionClass.assertDataType(value.getClass(), Map.class)) {
+            return (D) JsonData.tryParse(clazz).toJson();
+        }
+        return defValue;
+    }
 
     static <T> T convert(@NonNull JsonObject jsonObject, @NonNull Class<T> clazz) {
         return convert(jsonObject, clazz, MAPPER);
@@ -72,10 +124,10 @@ public interface JsonData {
     /**
      * Try parse {@code buffer} to {@code json data}
      *
-     * @param buffer     Buffer data
-     * @param isJson     Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
+     * @param buffer    Buffer data
+     * @param isJson    Identify given {@code buffer} data is strictly {@code json object} or {@code json array}
      * @param backupKey Fallback key if given {@code buffer} is not {@link JsonObject}
-     * @param isWrapped  Whether output is needed to be wrapped or not
+     * @param isWrapped Whether output is needed to be wrapped or not
      * @return default {@code json data} instance
      */
     static JsonData tryParse(@NonNull Buffer buffer, boolean isJson, @NonNull String backupKey, boolean isWrapped) {
@@ -145,16 +197,43 @@ public interface JsonData {
         }
     }
 
+    static FilterProvider ignoreFields(Set<String> ignoreFields) {
+        return new SimpleFilterProvider().addFilter(FILTER_PROP_BY_NAME,
+                                                    SimpleBeanPropertyFilter.serializeAllExcept(ignoreFields));
+    }
+
+    static <T extends JsonData> T merge(@NonNull JsonObject from, @NonNull JsonObject to, @NonNull Class<T> clazz) {
+        return from(from.mergeIn(to, true), clazz);
+    }
+
     default JsonObject toJson() {
-        return toJson(mapper());
+        return toJson(getMapper());
     }
 
-    @SuppressWarnings("unchecked")
-    default JsonObject toJson(ObjectMapper mapper) {
-        return new JsonObject((Map<String, Object>) mapper.convertValue(this, Map.class));
+    default JsonObject toJson(@NonNull Set<String> ignoreFields) {
+        return toJson(getMapper(), ignoreFields);
     }
 
-    default ObjectMapper mapper() { return MAPPER; }
+    default JsonObject toJson(@NonNull ObjectMapper mapper) {
+        return mapper.convertValue(this, JsonObject.class);
+    }
+
+    default JsonObject toJson(@NonNull ObjectMapper mapper, @NonNull Set<String> ignoreFields) {
+        if (ignoreFields.isEmpty()) {
+            return toJson(mapper);
+        }
+        return mapper.copy()
+                     .addMixIn(JsonData.class, PropertyFilterMixIn.class)
+                     .setFilterProvider(ignoreFields(ignoreFields))
+                     .convertValue(this, JsonObject.class);
+    }
+
+    @JsonIgnore
+    default ObjectMapper getMapper() { return MAPPER; }
+
+    @JsonFilter(FILTER_PROP_BY_NAME)
+    class PropertyFilterMixIn {}
+
 
     @NoArgsConstructor
     class DefaultJsonData extends HashMap<String, Object> implements JsonData {

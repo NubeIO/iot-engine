@@ -6,6 +6,8 @@ import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.utils.Key;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -14,6 +16,8 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -33,12 +37,15 @@ public interface JobModel<T extends VertxJob> extends JsonData {
     JobKey getKey();
 
     @JsonProperty(value = "type", required = true)
+    @JsonUnwrapped
     JobType type();
 
     Class<T> implementation();
 
     @JsonProperty(value = "forwardIfFailure")
     boolean forwardIfFailure();
+
+    JsonObject toDetail();
 
     String toString();
 
@@ -48,17 +55,16 @@ public interface JobModel<T extends VertxJob> extends JsonData {
         return JobBuilder.newJob(implementation()).withIdentity(getKey()).setJobData(jobDataMap).build();
     }
 
-    enum JobType {
-        EVENT_JOB
-    }
-
-
     @RequiredArgsConstructor
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     abstract class AbstractJobModel implements JobModel {
 
         @Getter
+        @Include
         private final JobKey key;
+        @Include
         private final JobType type;
+        @Include
         private final boolean forwardIfFailure;
 
         @Override

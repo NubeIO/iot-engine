@@ -51,9 +51,9 @@ abstract class JooqProvider {
 
     static Database createDatabase(String ddlDir, Set<ForcedType> forcedTypes) {
         def jsonType = new ForcedType(userType: JsonObject.class.getName(), converter:
-            JsonObjectConverter.class.getName(), expression: DB.COL_REGEX.json, types: DB.TYPES.text)
+            JsonObjectConverter.class.getName(), expression: DB.COL_REGEX.json)
         def jsonArrayType = new ForcedType(userType: JsonArray.class.getName(), converter:
-            JsonArrayConverter.class.getName(), expression: DB.COL_REGEX.jsonArray, types: DB.TYPES.text)
+            JsonArrayConverter.class.getName(), expression: DB.COL_REGEX.jsonArray)
 
         forcedTypes += [jsonType, jsonArrayType]
         logger.info("-" * 58)

@@ -2,6 +2,7 @@ package com.nubeiot.core.kafka.handler.consumer;
 
 import java.util.function.Consumer;
 
+import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 import com.nubeiot.core.component.SharedDataDelegate;
@@ -26,21 +27,26 @@ public interface KafkaConsumerHandler<K, V, T extends KafkaConsumerRecordTransfo
     /**
      * Create {@code Kafka Broadcaster} that linked to a specified {@code Eventbus model}
      *
+     * @param vertx      Vertx
+     * @param sharedKey  Shared key
      * @param eventModel Given event model
      * @return a reference to this, so the API can be used fluently
      * @see EventModel
      */
-    static KafkaConsumerHandler createBroadcaster(EventModel eventModel) {
-        return new KafkaBroadcaster(eventModel);
+    static KafkaConsumerHandler createBroadcaster(Vertx vertx, String sharedKey, EventModel eventModel) {
+        return new KafkaBroadcaster(vertx, eventModel, sharedKey);
     }
+
+    Vertx getVertx();
 
     /**
      * System will register it automatically. You don't need call it directly
      *
      * @param transformer Given transformer
+     * @param sharedKey   Shared key to access local data
      * @return a reference to this, so the API can be used fluently
      */
-    KafkaConsumerHandler registerTransformer(T transformer);
+    KafkaConsumerHandler register(T transformer, String sharedKey);
 
     /**
      * Handler data after transforming from {@code KafkaConsumerRecord}

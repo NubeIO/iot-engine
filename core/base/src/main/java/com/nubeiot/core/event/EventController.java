@@ -10,10 +10,13 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.shareddata.Shareable;
 
 import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.transport.Transporter;
 
 import lombok.NonNull;
 
-public interface EventController extends Shareable {
+//TODO: Rename to EventbusClient
+//TODO: Rename `response` -> `publish`
+public interface EventController extends Shareable, Transporter {
 
     Logger LOGGER = LoggerFactory.getLogger(EventController.class);
 

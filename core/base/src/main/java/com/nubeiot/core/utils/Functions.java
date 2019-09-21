@@ -3,8 +3,10 @@ package com.nubeiot.core.utils;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -29,9 +31,38 @@ public final class Functions {
     public static <T> Optional<T> getIfThrow(@NonNull Supplier<T> provider, Consumer<Throwable> consumer) {
         try {
             return Optional.ofNullable(provider.get());
-        } catch (Throwable t) {
+        } catch (Exception t) {
             consumer.accept(t);
             return Optional.empty();
+        }
+    }
+
+    public static <T> T getOrThrow(@NonNull Supplier<T> provider,
+                                   @NonNull Supplier<? extends RuntimeException> override) {
+        try {
+            return provider.get();
+        } catch (Exception t) {
+            throw (RuntimeException) override.get().initCause(t);
+        }
+    }
+
+    public static <T> T getOrThrow(@NonNull Supplier<T> provider,
+                                   @NonNull Function<Throwable, ? extends RuntimeException> override) {
+        try {
+            return provider.get();
+        } catch (Exception t) {
+            throw override.apply(t);
+        }
+    }
+
+    public static <T> T getOrDefault(@NonNull Supplier<T> provider, @NonNull Supplier<T> def) {
+        try {
+            return provider.get();
+        } catch (Exception t) {
+            if (logger.isTraceEnabled()) {
+                logger.trace("Fallback default", t);
+            }
+            return def.get();
         }
     }
 
@@ -43,6 +74,22 @@ public final class Functions {
     @SafeVarargs
     public static <T> Predicate<T> or(Predicate<T>... predicates) {
         return Arrays.stream(predicates).reduce(Predicate::or).orElse(x -> false);
+    }
+
+    public static <T> Function<T, Boolean> to(Predicate<T> predicate) {
+        return predicate::test;
+    }
+
+    public static Function<String, Integer> toInt() {
+        return Integer::valueOf;
+    }
+
+    public static Function<String, Long> toLong() {
+        return Long::parseLong;
+    }
+
+    public static Function<String, UUID> toUUID() {
+        return UUID64::uuid64ToUuid;
     }
 
     public static class Silencer<T> implements BiConsumer<T, HiddenException>, Supplier<T> {

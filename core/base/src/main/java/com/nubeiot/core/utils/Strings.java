@@ -5,7 +5,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import io.vertx.core.logging.Logger;
@@ -13,6 +15,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 /**
  * Strings Utilities.
@@ -58,7 +61,7 @@ public final class Strings {
      * @return {@code True} if blank, else otherwise
      */
     public static boolean isBlank(String text) {
-        return text == null || "".equals(text.trim());
+        return text == null || "" .equals(text.trim());
     }
 
     /**
@@ -110,6 +113,40 @@ public final class Strings {
     }
 
     /**
+     * Checks that the specified string reference is not {@code blank}. This method is designed primarily for doing
+     * parameter validation in methods and constructors, as demonstrated below:
+     * <blockquote><pre>
+     * public Foo(Bar bar) {
+     *     this.bar = Strings.requireNotBlank(bar, "String cannot blank");
+     * }
+     * </pre></blockquote>
+     *
+     * @param text    the text to check for blank
+     * @param message the error message will be included in exception
+     * @return Trimmed {@code text} if not {@code blank}
+     * @throws IllegalArgumentException if {@code obj} is {@code blank}
+     */
+    public static String requireNotBlank(Object text, String message) {
+        if (Objects.isNull(text) || isBlank(text.toString())) {
+            throw new IllegalArgumentException(message);
+        }
+        return text.toString().trim();
+    }
+
+    /**
+     * Checks that the specified string reference is not {@code blank} then remove multiple space characters to one
+     * space.
+     *
+     * @param text Given input
+     * @return Optimization text
+     * @throws IllegalArgumentException if {@code text} is {@code blank}
+     */
+    public static String optimizeMultipleSpace(String text) {
+        String t = requireNotBlank(text);
+        return t.replaceAll("\\s+", "");
+    }
+
+    /**
      * Checks that the specified string reference is not {@code blank} then remove all space characters.
      *
      * @param text Given input
@@ -135,6 +172,29 @@ public final class Strings {
             throw new IllegalArgumentException("Text " + text + " length must be greater than " + minLength);
         }
         return t;
+    }
+
+    public static String toSnakeCaseLC(@NonNull String text) {
+        return toSnakeCase(text, false);
+    }
+
+    public static String toSnakeCaseUC(@NonNull String text) {
+        return toSnakeCase(text, true);
+    }
+
+    public static String toSnakeCase(@NonNull String text, boolean upper) {
+        return transform(text, upper, "_");
+    }
+
+    public static String transform(@NonNull String text, boolean upper, String separate) {
+        if (upper && text.equals(text.toUpperCase())) {
+            return text;
+        }
+        if (!upper && text.equals(text.toLowerCase())) {
+            return text;
+        }
+        String t = text.replaceAll("([A-Z])", separate + "$1").replaceAll("^" + separate, "");
+        return upper ? t.toUpperCase() : t.toLowerCase();
     }
 
     /**
@@ -169,7 +229,7 @@ public final class Strings {
 
     public static String format(String msgPattern, Object... params) {
         String[] args = Arrays.stream(params).map(String::valueOf).toArray(String[]::new);
-        return MessageFormat.format(msgPattern, (Object[]) args);
+        return MessageFormat.format(msgPattern, args);
     }
 
     /**
@@ -234,6 +294,14 @@ public final class Strings {
             }
         }
         return null;
+    }
+
+    public static String kvMsg(Object key, Object value) {
+        return key + "=" + value;
+    }
+
+    public static Function<Entry, String> kvMsg() {
+        return entry -> kvMsg(entry.getKey(), entry.getValue());
     }
 
 }

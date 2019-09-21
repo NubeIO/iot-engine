@@ -10,7 +10,7 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.rest.RestApi;
 
-@Produces(HttpUtils.DEFAULT_CONTENT_TYPE)
+@Produces(HttpUtils.JSON_UTF8_CONTENT_TYPE)
 public final class EdgeRestController implements RestApi {
 
     @GET

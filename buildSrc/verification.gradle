@@ -5,7 +5,7 @@ def testFailures = []
 def numProc = (Runtime.runtime.availableProcessors().intdiv(2) ?: 1).intValue()
 
 jacoco {
-    toolVersion = "0.8.2"
+    toolVersion = versions.tests.jacoco
 }
 
 task copyTestResult(type: Copy, group: "verification") {
@@ -42,6 +42,7 @@ test {
     ignoreFailures = true
     dependsOn subprojects.tasks.test
     finalizedBy testReport
+    systemProperty 'vertx.logger-delegate-factory-class-name', 'io.vertx.core.logging.SLF4JLogDelegateFactory'
     subprojects {
         test {
             if (project.hasProperty('excludeTests')) {
@@ -59,7 +60,7 @@ test {
 }
 
 task jacocoMerge(type: JacocoMerge, group: "verification") {
-    dependsOn subprojects.tasks.jacocoTestReport
+    dependsOn(subprojects.tasks.test, subprojects.tasks.jacocoTestReport)
     mustRunAfter subprojects.tasks.jacocoTestReport
     destinationFile = file("${buildDir}/jacoco/test.exec")
     executionData = files(subprojects.tasks.jacocoTestReport.executionData).filter { f -> f.exists() }
@@ -75,4 +76,3 @@ jacocoTestReport {
     sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories = files(subprojects.sourceSets.main.output)
 }
-

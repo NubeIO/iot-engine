@@ -17,7 +17,7 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.HttpConfig.RestConfig.DynamicRouteConfig;
-import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.HttpServer;
 import com.nubeiot.core.http.base.InvalidUrlException;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.ApiExceptionHandler;
@@ -89,9 +89,8 @@ public final class RestApisBuilder {
         this.addSubRouter(this::initRestApiRouter)
             .addSubRouter(this::initEventBusApiRouter)
             .addSubRouter(this::initDynamicRouter);
-        mainRouter.route(Urls.combinePath(rootApi, ApiConstants.WILDCARDS_ANY_PATH))
-                  .handler(new RestEventResponseHandler())
-                  .produces(HttpUtils.DEFAULT_CONTENT_TYPE);
+        HttpServer.restrictJsonRoute(mainRouter.route(Urls.combinePath(rootApi, ApiConstants.WILDCARDS_ANY_PATH))
+                                               .handler(new RestEventResponseHandler()));
         return mainRouter;
     }
 
@@ -113,7 +112,7 @@ public final class RestApisBuilder {
         return new RestBuilder(vertx).errorHandler(ApiExceptionHandler.class)
                                      .writer(MediaType.APPLICATION_JSON_TYPE, ApiJsonWriter.class)
                                      .writer(ResponseData.class, ResponseDataWriter.class)
-                                     .register((Object[]) classes)
+                                     .register(classes)
                                      .build();
     }
 

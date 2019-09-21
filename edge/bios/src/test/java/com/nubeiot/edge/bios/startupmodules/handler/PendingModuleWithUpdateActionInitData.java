@@ -30,8 +30,8 @@ public class PendingModuleWithUpdateActionInitData extends MockInitDataEntityHan
                            .setServiceType(ModuleType.JAVA)
                            .setVersion("1.0.0")
                            .setState(State.PENDING)
-                           .setCreatedAt(DateTimes.nowUTC())
-                           .setModifiedAt(DateTimes.nowUTC())
+                           .setCreatedAt(DateTimes.now())
+                           .setModifiedAt(DateTimes.now())
                            .setSystemConfig(new JsonObject())
                            .setAppConfig(new JsonObject()));
 
@@ -40,15 +40,16 @@ public class PendingModuleWithUpdateActionInitData extends MockInitDataEntityHan
                                 .setModuleId("pending-service-with-transaction-is-wip-prestate-action-is-update")
                                 .setStatus(Status.WIP)
                                 .setEvent(EventAction.UPDATE)
-                                .setModifiedAt(DateTimes.nowUTC()).setPrevMetadata(new JsonObject(
+                                .setModifiedAt(DateTimes.now())
+                                .setPrevMetadata(new JsonObject(
                                     "{\"service_id\":\"pending-service-with-transaction-is-wip" +
                                     "-prestate-action-is-update\"," +
                                     "\"service_name\":\"service3\",\"service_type\":\"JAVA\"," +
                                     "\"version\":\"1.0.0\",\"published_by\":null," + "\"state\":\"PENDING\"," +
-                                    "\"created_at\":\"2019-05-02T09:15:37.230\"," +
-                                    "\"modified_at\":\"2019-05-02T09:15:37.230\"," +
+                                    "\"created_at\":\"2019-05-02T09:15:37.230Z\"," +
+                                    "\"modified_at\":\"2019-05-02T09:15:37.230Z\"," +
                                     "\"deploy_id\":null,\"deploy_config\":{}," + "\"deploy_location\":null}\t")));
-        return Single.zip(insert03, insertTransaction03, (r1, r2) -> r1 + r2);
+        return Single.zip(insert03, insertTransaction03, Integer::sum);
     }
 
 }

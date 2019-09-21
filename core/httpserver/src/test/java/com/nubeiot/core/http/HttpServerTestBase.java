@@ -7,13 +7,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.Customization;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.http.WebSocket;
@@ -22,39 +26,38 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.core.http.HttpClient;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
-import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.base.HostInfo;
-import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.http.ws.WebsocketEventMessage;
 import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.RestRouter;
 
-public class HttpServerTestBase {
+@RunWith(VertxUnitRunner.class)
+public abstract class HttpServerTestBase {
 
-    public static final String DEFAULT_HOST = "127.0.0.1";
+    protected static final String DEFAULT_HOST = "127.0.0.1";
     protected Vertx vertx;
     protected HttpConfig httpConfig;
     protected HttpClient client;
     protected RequestOptions requestOptions;
 
-    protected static void assertResponse(TestContext context, Async async, JsonObject expected,
-                                         io.vertx.core.buffer.Buffer actual) {
-        JsonHelper.assertJson(context, async, expected, actual.toJsonObject());
-    }
+    @BeforeClass
+    public static void beforeSuite() throws Exception { TestHelper.setup(); }
 
-    protected void before(TestContext context) throws IOException {
+    @Before
+    public void before(TestContext context) throws IOException {
         vertx = Vertx.vertx();
         httpConfig = IConfig.fromClasspath(httpConfigFile(), HttpConfig.class);
         httpConfig.setHost(DEFAULT_HOST);
@@ -63,7 +66,8 @@ public class HttpServerTestBase {
         requestOptions = new RequestOptions().setHost(DEFAULT_HOST).setPort(httpConfig.getPort());
     }
 
-    protected void after(TestContext context) {
+    @After
+    public void after(TestContext context) {
         RestRouter.getWriters().clear();
         RestRouter.getReaders().clear();
         RestRouter.getContextProviders().clear();
@@ -80,30 +84,42 @@ public class HttpServerTestBase {
         this.httpConfig.getWebsocketConfig().setEnabled(true);
     }
 
-    private HttpClientOptions createClientOptions() {
+    protected HttpClientOptions createClientOptions() {
         return new HttpClientOptions().setConnectTimeout(TestHelper.TEST_TIMEOUT_SEC);
     }
 
     protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected,
                                       JsonObject bodyExpected, Customization... customizations) {
-        assertRestByClient(context, method, path, null, codeExpected, bodyExpected, customizations);
+        assertRestByClient(context, method, path, codeExpected, bodyExpected, JSONCompareMode.STRICT, customizations);
+    }
+
+    protected void assertRestByClient(TestContext context, HttpMethod method, String path, int codeExpected,
+                                      JsonObject bodyExpected, JSONCompareMode mode, Customization... customizations) {
+        assertRestByClient(context, method, path, null, ExpectedResponse.builder()
+                                                                        .expected(bodyExpected)
+                                                                        .code(codeExpected)
+                                                                        .customizations(customizations)
+                                                                        .mode(mode)
+                                                                        .build());
     }
 
     protected void assertRestByClient(TestContext context, HttpMethod method, String path, RequestData requestData,
                                       int codeExpected, JsonObject bodyExpected, Customization... customizations) {
-        Async async = context.async();
+        assertRestByClient(context, method, path, requestData, ExpectedResponse.builder()
+                                                                               .expected(bodyExpected)
+                                                                               .code(codeExpected)
+                                                                               .customizations(customizations)
+                                                                               .mode(JSONCompareMode.STRICT)
+                                                                               .build());
+    }
+
+    protected void assertRestByClient(TestContext context, HttpMethod method, String path, RequestData requestData,
+                                      ExpectedResponse expected) {
+        Async async = context.async(expected.hasAfter() ? 2 : 1);
         HttpClientDelegate.create(vertx.getDelegate(), HostInfo.from(requestOptions))
                           .execute(path, method, requestData)
                           .doFinally(() -> TestHelper.testComplete(async))
-                          .subscribe(resp -> {
-                              System.out.println("Client asserting...");
-                              System.out.println(resp.getStatus());
-                              context.assertEquals(HttpUtils.DEFAULT_CONTENT_TYPE,
-                                                   resp.headers().getString(HttpHeaders.CONTENT_TYPE.toString()));
-                              context.assertNotNull(resp.headers().getString("x-response-time"));
-                              context.assertEquals(codeExpected, resp.getStatus().code());
-                              JsonHelper.assertJson(context, async, bodyExpected, resp.body(), customizations);
-                          }, context::fail);
+                          .subscribe(resp -> expected._assert(context, async, resp), context::fail);
     }
 
     protected Single<ResponseData> restRequest(TestContext context, HttpMethod method, String path,

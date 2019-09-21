@@ -17,6 +17,7 @@ public interface VertxJob<J extends JobModel> extends Job {
 
     Job init(Vertx vertx, String sharedKey, SchedulerConfig config);
 
+    @SuppressWarnings("unchecked")
     default J getJobModel(JobDataMap jobDataMap) {
         return (J) jobDataMap.get(JobModel.JOB_DATA_KEY);
     }

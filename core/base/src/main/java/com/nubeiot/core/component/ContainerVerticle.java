@@ -48,9 +48,9 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     public void start() {
         final NubeConfig fileConfig = computeConfig(config());
         this.nubeConfig = new ConfigProcessor(vertx).override(fileConfig.toJson(), true, false).orElse(fileConfig);
-        this.eventController = new DefaultEventController(this.vertx.getDelegate(), this.nubeConfig.getSystemConfig()
-                                                                                                   .getEventBusConfig()
-                                                                                                   .getDeliveryOptions());
+        this.eventController = new DefaultEventClient(this.vertx.getDelegate(), this.nubeConfig.getSystemConfig()
+                                                                                               .getEventBusConfig()
+                                                                                               .getDeliveryOptions());
         this.registerEventbus(eventController);
         this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController)
             .addSharedData(SharedDataDelegate.SHARED_DATADIR, this.nubeConfig.getDataDir().toAbsolutePath().toString());

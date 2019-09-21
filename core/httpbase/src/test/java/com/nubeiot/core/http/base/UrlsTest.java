@@ -153,4 +153,19 @@ public class UrlsTest {
         assertEquals("/api/test", Urls.combinePath("//api/", "//test"));
     }
 
+    @Test
+    public void test_capturePath() {
+        assertEquals("/api/:test", Urls.capturePath("api", "test"));
+        assertEquals("/api/:test", Urls.capturePath("api", "/:test"));
+        assertEquals("/api/:test/:xy", Urls.capturePath("/api", "test", "xy"));
+        assertEquals("/api/:test/:xy", Urls.capturePath("/api", "/:test", "/:xy"));
+        assertEquals("/api/:test/:xy", Urls.capturePath("/api/", "test", "/:xy"));
+        assertEquals("/api/:test/:xy", Urls.capturePath("/api/", "/:test", "xy"));
+    }
+
+    @Test(expected = InvalidUrlException.class)
+    public void test_capturePath_Failed() {
+        assertEquals("/api/:test", Urls.capturePath("api", "/test"));
+    }
+
 }

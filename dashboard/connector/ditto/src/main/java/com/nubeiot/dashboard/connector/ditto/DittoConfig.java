@@ -23,7 +23,7 @@ public class DittoConfig implements IConfig {
     private String prefix = "io.nubeio";
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 

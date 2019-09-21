@@ -1,8 +1,12 @@
 package com.nubeiot.core.http.dynamic;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import org.junit.Before;
+import org.skyscreamer.jsonassert.Customization;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.json.JsonObject;
@@ -12,9 +16,17 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.http.HttpServerTestBase;
-import com.nubeiot.core.http.dynamic.mock.GatewayServer;
+import com.nubeiot.core.http.dynamic.mock.MockGatewayServer;
 
-public class DynamicServiceTestBase extends HttpServerTestBase {
+public abstract class DynamicServiceTestBase extends HttpServerTestBase {
+
+    static final Customization IGNORE_URI = new Customization("message.uri", (o1, o2) -> true);
+
+    @Before
+    public void before(TestContext context) throws IOException {
+        super.before(context);
+        startGatewayAndService(context, service(), getServiceOptions());
+    }
 
     protected void startGatewayAndService(TestContext context, ContainerVerticle service,
                                           DeploymentOptions serviceOptions) {
@@ -48,7 +60,13 @@ public class DynamicServiceTestBase extends HttpServerTestBase {
 
     @SuppressWarnings("unchecked")
     protected <T extends ContainerVerticle> Supplier<T> gateway() {
-        return () -> (T) new GatewayServer();
+        return () -> (T) new MockGatewayServer();
     }
+
+    protected DeploymentOptions getServiceOptions() throws IOException {
+        return new DeploymentOptions();
+    }
+
+    protected abstract <T extends ContainerVerticle> T service();
 
 }

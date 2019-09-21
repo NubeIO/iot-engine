@@ -26,6 +26,7 @@ import org.jooq.impl.DefaultConfiguration;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
@@ -50,7 +51,12 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     public void start() {
         super.start();
         logger.info("Creating Hikari datasource from application configuration...");
-        logger.debug(config.getHikariConfig().toJson());
+        config.getHikariConfig()
+              .setJdbcUrl(config.computeJdbcUrl(() -> SharedDataDelegate.getLocalDataValue(vertx, getSharedKey(),
+                                                                                           SharedDataDelegate.SHARED_DATADIR)));
+        if (logger.isDebugEnabled()) {
+            logger.debug(config.getHikariConfig().toJson());
+        }
         this.dataSource = new HikariDataSource(config.getHikariConfig());
     }
 
@@ -85,7 +91,8 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
 
     private Single<EventMessage> createDatabase(Configuration jooqConfig) {
         try {
-            EntityHandler handler = getContext().createHandler(jooqConfig, vertx).registerFunc(this::getSharedData);
+            final T handle = getContext().createHandler(jooqConfig, vertx);
+            EntityHandler handler = ((AbstractEntityHandler) handle).registerSharedKey(this.getSharedKey());
             if (handler.isNew()) {
                 createNewDatabase(jooqConfig);
                 logger.info("Initializing data...");
@@ -124,14 +131,14 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     }
 
     private Map<Table, Set<Constraint>> listConstraint(Table<?> table) {
-        Set<Constraint> constraints = table.getKeys().stream().map(Key::constraint).collect(Collectors.toSet());
+        Stream<Constraint> constraints = table.getKeys().stream().map(Key::constraint);
         if (Objects.nonNull(table.getPrimaryKey())) {
-            constraints.add(table.getPrimaryKey().constraint());
+            constraints = Stream.concat(constraints, Stream.of(table.getPrimaryKey().constraint()));
         }
         if (Objects.nonNull(table.getReferences())) {
-            constraints.addAll(table.getReferences().stream().map(ForeignKey::constraint).collect(Collectors.toSet()));
+            constraints = Stream.concat(constraints, table.getReferences().stream().map(ForeignKey::constraint));
         }
-        return Collections.singletonMap(table, constraints);
+        return Collections.singletonMap(table, constraints.collect(Collectors.toSet()));
     }
 
     private Table<?> createTableAndIndex(Configuration jooqConfig, Table<?> table) {

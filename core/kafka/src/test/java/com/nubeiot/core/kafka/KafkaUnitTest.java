@@ -62,23 +62,23 @@ public class KafkaUnitTest extends KafkaUnitTestBase {
         JsonObject expected = KafkaRecord.serialize(
             new ConsumerRecord<>(topic, 0, 0, DateTimes.nowMilli(), TimestampType.CREATE_TIME, -1, -1, -1, "test",
                                  topic)).toJson(KafkaRecord.NO_HEADERS_MAPPER);
-        setupConsumer(async, KAFKA_PUBLISHER.getAddress(), o -> {
+        setupEventConsumer(async, KAFKA_PUBLISHER.getAddress(), o -> {
             EventMessage message = EventMessage.initial(EventAction.CREATE, expected);
             assertResponse(context, async, message.toJson(), (JsonObject) o);
         });
-        KafkaEventMetadata consumerEvent = KafkaEventMetadata.consumer()
-                                                             .model(KAFKA_PUBLISHER)
-                                                             .topic(topic)
-                                                             .keyClass(String.class)
-                                                             .valueClass(String.class)
-                                                             .build();
-        KafkaRouter router = createProducerRouter(context, async, topic, 0).registerKafkaEvent(consumerEvent);
-        router.addConsumerErrorHandler(consumerEvent.getTechId(), errorHandler(context, async));
+        KafkaEventMetadata kafkaConsumerEvent = KafkaEventMetadata.consumer()
+                                                                  .model(KAFKA_PUBLISHER)
+                                                                  .topic(topic)
+                                                                  .keyClass(String.class)
+                                                                  .valueClass(String.class)
+                                                                  .build();
+        KafkaRouter router = createProducerRouter(context, async, topic, 0).registerKafkaEvent(kafkaConsumerEvent);
+        router.addConsumerErrorHandler(kafkaConsumerEvent.getTechId(), errorHandler(context, async));
         KafkaUnit unit = startKafkaUnit(context, router);
         unit.getContext().getProducerService().publish(topic, 0, "test", topic);
     }
 
-    protected void setupConsumer(Async async, String address, Consumer<Object> assertOut) {
+    protected void setupEventConsumer(Async async, String address, Consumer<Object> assertOut) {
         MessageConsumer<Object> consumer = vertx.eventBus().consumer(address);
         consumer.handler(event -> {
             System.out.println("Received message from address: " + address);
@@ -105,8 +105,7 @@ public class KafkaUnitTest extends KafkaUnitTestBase {
                                                           .async(async)
                                                           .countdown(TestHelper::testComplete)
                                                           .topic(topic)
-                                                          .partition(partition)
-                                                          .build();
+                                                          .partition(partition).build(vertx);
         KafkaEventMetadata metadata = KafkaEventMetadata.producer()
                                                         .handler(handler)
                                                         .topic(topic)

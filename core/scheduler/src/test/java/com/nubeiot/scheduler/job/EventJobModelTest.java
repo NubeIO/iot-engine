@@ -14,7 +14,6 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.scheduler.MockEventScheduler.MockJobModel;
-import com.nubeiot.scheduler.job.JobModel.JobType;
 
 public class EventJobModelTest {
 

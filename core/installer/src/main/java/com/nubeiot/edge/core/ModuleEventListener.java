@@ -68,7 +68,7 @@ public final class ModuleEventListener implements EventListener {
     }
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
-    public Single<JsonObject> updatePartly(RequestData data) {
+    public Single<JsonObject> patch(RequestData data) {
         ITblModule module = createTblModule(data.body());
         if (Strings.isBlank(module.getServiceId())) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");

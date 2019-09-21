@@ -11,7 +11,6 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.scheduler.trigger.TriggerModel.TriggerType;
 
 public class CronTriggerModelTest {
 
@@ -32,9 +31,9 @@ public class CronTriggerModelTest {
 
     @Test
     public void test_deserialize() {
-        CronTriggerModel from = JsonData.from(
+        CronTriggerModel from = (CronTriggerModel) JsonData.from(
             "{\"type\":\"CRON\",\"name\":\"test\",\"group\":\"DEFAULT\",\"expression\":\"0 0 12 1/1 * ? *\"," +
-            "\"timezone\":\"UTC\"}", CronTriggerModel.class);
+            "\"timezone\":\"UTC\"}", TriggerModel.class);
         Assert.assertEquals(TriggerType.CRON, from.type());
         Assert.assertEquals(TriggerKey.triggerKey("test"), from.getKey());
         Assert.assertEquals("UTC", from.getTimezone().getID());

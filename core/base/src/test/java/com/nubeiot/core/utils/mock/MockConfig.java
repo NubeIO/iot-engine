@@ -13,7 +13,7 @@ public class MockConfig implements IConfig {
     private String name;
 
     @Override
-    public String name() {
+    public String key() {
         return "mock";
     }
 

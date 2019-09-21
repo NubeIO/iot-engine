@@ -10,6 +10,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
+import java.util.Objects;
+import java.util.TimeZone;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -75,11 +77,23 @@ public final class DateTimes {
         return Instant.from(parseFromISO8601(datetime));
     }
 
+    public static String format(@NonNull ZonedDateTime zonedDateTime) {
+        return zonedDateTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
+    }
+
+    public static String format(@NonNull OffsetDateTime offsetDateTime) {
+        return offsetDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
+
     public static JsonObject format(@NonNull Date date) {
-        final ZonedDateTime zonedDateTime = date.toInstant().atZone(ZoneId.systemDefault());
+        return format(date, null);
+    }
+
+    public static JsonObject format(@NonNull Date date, TimeZone timeZone) {
+        final ZoneId zoneId = Objects.isNull(timeZone) ? ZoneId.systemDefault() : timeZone.toZoneId();
+        final ZonedDateTime zonedDateTime = date.toInstant().atZone(zoneId);
         final ZonedDateTime utcTime = toUTC(zonedDateTime);
-        return new JsonObject().put("local", zonedDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-                               .put("utc", utcTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        return new JsonObject().put("local", format(zonedDateTime)).put("utc", format(utcTime));
     }
 
     private static TemporalAccessor parseFromISO8601(String datetime) {

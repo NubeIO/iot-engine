@@ -1,7 +1,7 @@
 dependencies {
     compile project(':core:base')
     compile project(':core:micro')
-    compile project(':eventbus:edge')
+    compile project(':eventbus:edge:installer')
 
     compile project.deps.oshi
 }

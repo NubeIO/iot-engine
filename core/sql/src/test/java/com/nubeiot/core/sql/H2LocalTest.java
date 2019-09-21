@@ -1,7 +1,5 @@
 package com.nubeiot.core.sql;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,39 +27,30 @@ public class H2LocalTest extends BaseSqlTest {
         BaseSqlTest.beforeSuite();
     }
 
-    @Before
-    public void before(TestContext context) {
-        super.before(context);
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
-    }
-
     @Override
-    @NonNull String getJdbcUrl() {
+    @NonNull
+    public String getJdbcUrl() {
         return "jdbc:h2:file:" + folder.getRoot().toPath().resolve("dbh2local").toString();
     }
 
     @Test
     public void test_restart_app(TestContext context) {
-        startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
+        startSQL(context, SchemaTest.ManySchema.CATALOG, MockManyNoData.class);
         stopSQL(context);
-        startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
+        startSQL(context, SchemaTest.ManySchema.CATALOG, MockManyNoData.class);
     }
 
     @Test
     public void test_init_failed(TestContext context) {
-        startSQLFailed(context, ManySchema.CATALOG, MockManyErrorData.class,
+        startSQLFailed(context, SchemaTest.ManySchema.CATALOG, MockManyErrorData.class,
                        t -> context.assertTrue(t instanceof InitializerError));
     }
 
     @Test
     public void test_migrate_failed(TestContext context) {
-        startSQL(context, ManySchema.CATALOG, MockManyNoData.class);
+        startSQL(context, SchemaTest.ManySchema.CATALOG, MockManyNoData.class);
         stopSQL(context);
-        startSQLFailed(context, ManySchema.CATALOG, MockManyErrorData.class,
+        startSQLFailed(context, SchemaTest.ManySchema.CATALOG, MockManyErrorData.class,
                        t -> context.assertTrue(t instanceof MigrationError));
     }
 

@@ -50,6 +50,11 @@ public final class Urls {
      * @see <a href="https://tools.ietf.org/html/rfc3986#section-3">URL syntax</a>
      */
     public static final String URL_PATTERN = HttpScheme.SCHEME_REGEX + AUTHORITY_PATTERN + PATH_PATTERN;
+
+    /**
+     * URL Path separator character.
+     */
+    public static final String PATH_SEP_CHAR = "/";
     /**
      * URL Query separator character.
      */
@@ -58,6 +63,12 @@ public final class Urls {
      * URL Fragment separator character.
      */
     public static final String FRAGMENT_SEP_CHAR = "#";
+
+    /**
+     * Prefix capture param
+     */
+    public static final String CAPTURE_PARAM = "/:";
+
     private static final Map<String, String> ENCODING_RULES;
 
     static {
@@ -129,11 +140,12 @@ public final class Urls {
     }
 
     public static String combinePath(@NonNull String... path) {
-        return normalize("/" + Arrays.stream(path).filter(Strings::isNotBlank).collect(Collectors.joining("/")));
+        return normalize(
+            PATH_SEP_CHAR + Arrays.stream(path).filter(Strings::isNotBlank).collect(Collectors.joining(PATH_SEP_CHAR)));
     }
 
     public static String normalize(@NonNull String url) {
-        return url.replaceAll("/+", "/").replaceAll("^(https?:)/", "$1//");
+        return url.replaceAll("/+", PATH_SEP_CHAR).replaceAll("^(https?:)/", "$1//");
     }
 
     private static boolean validate(String s, String pattern) {
@@ -238,9 +250,12 @@ public final class Urls {
      * @see #capturePatternPath(String, String...)
      */
     public static String capturePath(@NonNull String path, String... params) {
-        String p = normalize("/" + path);
-        String pns = Arrays.stream(params).filter(Strings::isNotBlank).collect(Collectors.joining("/:"));
-        return Strings.isNotBlank(pns) ? normalize(p + "/:" + pns) : p;
+        String p = normalize(PATH_SEP_CHAR + path);
+        String pns = Arrays.stream(params)
+                           .filter(Strings::isNotBlank)
+                           .map(Urls::toCapture)
+                           .collect(Collectors.joining());
+        return Strings.isNotBlank(pns) ? normalize(p + pns) : p;
     }
 
     /**
@@ -253,13 +268,28 @@ public final class Urls {
      * @return capture path
      */
     public static String capturePatternPath(@NonNull String path, String... params) {
-        String p = normalize("/" + path);
-        String[] pns = Arrays.stream(params).filter(Strings::isNotBlank).map(s -> "/:" + s).toArray(String[]::new);
-        return normalize(Strings.format(p, (Object[]) pns));
+        String p = normalize(PATH_SEP_CHAR + path);
+        String[] pns = Arrays.stream(params).filter(Strings::isNotBlank).map(Urls::toCapture).toArray(String[]::new);
+        return normalize(Strings.format(p, pns));
     }
 
     private static String applyRule(String encoded, String toReplace, String replacement) {
         return encoded.replaceAll(Pattern.quote(toReplace), replacement);
+    }
+
+    public static String toPathWithLC(@NonNull String text) {
+        return Strings.transform(text, false, "-").replaceAll("_", "-");
+    }
+
+    public static String toCapture(String param) {
+        final String s = Strings.requireNotBlank(param);
+        if (s.startsWith(CAPTURE_PARAM)) {
+            return s;
+        }
+        if (s.startsWith(PATH_SEP_CHAR)) {
+            throw new InvalidUrlException("Invalid param path because of starting with /");
+        }
+        return CAPTURE_PARAM + s;
     }
 
 }

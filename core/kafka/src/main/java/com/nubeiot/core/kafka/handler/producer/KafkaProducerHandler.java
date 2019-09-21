@@ -2,12 +2,15 @@ package com.nubeiot.core.kafka.handler.producer;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.kafka.client.producer.RecordMetadata;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.kafka.service.KafkaProducerService;
+
+import lombok.NonNull;
 
 /**
  * Kafka Producer Handler is represented for
@@ -21,9 +24,11 @@ import com.nubeiot.core.kafka.service.KafkaProducerService;
  * @see RecordMetadata
  */
 public interface KafkaProducerHandler<T extends KafkaProducerRecordTransformer>
-    extends Handler<AsyncResult<RecordMetadata>>, SharedDataDelegate {
+    extends Handler<AsyncResult<RecordMetadata>>, SharedDataDelegate<KafkaProducerHandler> {
 
-    KafkaProducerHandler DEFAULT = new LogKafkaProducerHandler();
+    static KafkaProducerHandler logHandler(@NonNull Vertx vertx, String sharedKey) {
+        return new LogKafkaProducerHandler(vertx, sharedKey);
+    }
 
     void handleSuccess(RecordMetadata metadata);
 
@@ -42,8 +47,9 @@ public interface KafkaProducerHandler<T extends KafkaProducerRecordTransformer>
      * System will register it automatically. You don't need call it directly
      *
      * @param transformer Given transformer
+     * @param sharedKey   Shared key to access local data
      * @return a reference to this, so the API can be used fluently
      */
-    KafkaProducerHandler registerTransformer(T transformer);
+    KafkaProducerHandler register(T transformer, String sharedKey);
 
 }

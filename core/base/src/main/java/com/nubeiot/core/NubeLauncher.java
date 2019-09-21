@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.util.Objects;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Launcher;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.eventbus.EventBusOptions;
@@ -25,7 +26,7 @@ import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 
-public final class NubeLauncher extends io.vertx.core.Launcher {
+public final class NubeLauncher extends Launcher {
 
     private static final Logger logger;
 

@@ -11,7 +11,7 @@ public class ZeppelinConfig implements IConfig {
     private int port = 18080;
 
     @Override
-    public String name() {
+    public String key() {
         return NAME;
     }
 

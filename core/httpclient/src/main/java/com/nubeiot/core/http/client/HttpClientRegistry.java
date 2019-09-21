@@ -91,7 +91,7 @@ public final class HttpClientRegistry {
             return client;
         }
 
-        public T tickAndGet() {
+        T tickAndGet() {
             final int i = counter.incrementAndGet();
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Increase connection to {} to {}", hostInfo.toJson(), i);

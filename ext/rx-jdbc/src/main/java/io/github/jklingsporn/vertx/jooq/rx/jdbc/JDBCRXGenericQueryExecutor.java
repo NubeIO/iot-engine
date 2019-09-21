@@ -15,6 +15,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.AbstractQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.QueryResult;
 import io.github.jklingsporn.vertx.jooq.shared.internal.jdbc.JDBCQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.jdbc.JDBCQueryResult;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Handler;
 import io.vertx.reactivex.core.Future;
@@ -23,12 +24,15 @@ import io.vertx.reactivex.core.Vertx;
 import com.nubeiot.core.exceptions.DatabaseException;
 import com.nubeiot.core.exceptions.HiddenException;
 
+import lombok.Getter;
+
 /**
  * Created by jensklingsporn on 05.02.18.
  */
 public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
     implements JDBCQueryExecutor<Single<?>>, RXQueryExecutor {
 
+    @Getter
     protected final Vertx vertx;
 
     public JDBCRXGenericQueryExecutor(Configuration configuration, Vertx vertx) {
@@ -41,6 +45,7 @@ public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
         return executeBlocking(h -> h.complete(function.apply(DSL.using(configuration()))));
     }
 
+    @SuppressWarnings("unchecked")
     <X> Single<X> executeBlocking(Handler<Future<X>> blockingCodeHandler) {
         return (Single<X>) vertx.rxExecuteBlocking(event -> {
             try {
@@ -48,7 +53,7 @@ public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
             } catch (DataAccessException e) {
                 throw new DatabaseException("Database error. Code: " + e.sqlStateClass(), new HiddenException(e));
             }
-        }).toSingle();
+        }).switchIfEmpty(Observable.empty().singleOrError());
     }
 
     @Override

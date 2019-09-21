@@ -2,7 +2,6 @@ package com.nubeiot.core.kafka.service;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Function;
 
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.producer.KafkaProducer;
@@ -11,14 +10,13 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.kafka.KafkaConfig.ProducerCfg;
 import com.nubeiot.core.kafka.KafkaRouter;
+import com.nubeiot.core.transport.Transporter;
 
-public interface KafkaProducerService {
+public interface KafkaProducerService extends Transporter {
 
-    static KafkaProducerService create(Vertx vertx, ProducerCfg config, KafkaRouter router,
-                                       Function<String, Object> sharedDataFunc) {
+    static KafkaProducerService create(Vertx vertx, ProducerCfg config, KafkaRouter router, String sharedKey) {
         return new ProducerService(vertx, config, router.getProducerTechId(),
-                                   router.getProducerExceptionHandler()).create(sharedDataFunc,
-                                                                                router.getProducerEvents());
+                                   router.getProducerExceptionHandler()).create(sharedKey, router.getProducerEvents());
     }
 
     <K, V> KafkaProducer<K, V> producer(String topic);

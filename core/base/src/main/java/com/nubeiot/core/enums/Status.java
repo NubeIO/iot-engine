@@ -4,6 +4,5 @@ import java.io.Serializable;
 
 public enum Status implements Serializable {
 
-    SUCCESS, FAILED, WARN, WIP, INITIAL
-
+    SUCCESS, FAILED, WARN, WIP, INITIAL, UNDEFINED
 }

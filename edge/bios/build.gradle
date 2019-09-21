@@ -6,6 +6,7 @@ dependencies {
     compile project(':core:micro')
     compile project(':core:installer')
     compile project(':eventbus:edge:gateway')
+    compile project(':eventbus:edge:installer')
 
     testCompile project(":core:base").sourceSets.test.output
 }

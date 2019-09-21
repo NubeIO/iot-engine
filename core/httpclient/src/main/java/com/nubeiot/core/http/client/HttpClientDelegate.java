@@ -5,9 +5,11 @@ import io.vertx.core.Vertx;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 
+import com.nubeiot.core.IConfig;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HostInfo;
@@ -28,6 +30,17 @@ public interface HttpClientDelegate extends IClientDelegate {
      */
     static HttpClientDelegate create(@NonNull HttpClient client) {
         return new HttpClientDelegateImpl(client);
+    }
+
+    /**
+     * Create new {@code HTTP client}
+     *
+     * @param vertx  Vertx
+     * @param config HTTP Client config
+     * @return {@code HTTP client delegate}
+     */
+    static HttpClientDelegate create(@NonNull Vertx vertx, JsonObject config) {
+        return create(vertx, IConfig.parseConfig(config, HttpClientConfig.class, HttpClientConfig::new));
     }
 
     /**
@@ -74,6 +87,8 @@ public interface HttpClientDelegate extends IClientDelegate {
      * @param method      Http Method
      * @param requestData Request data
      * @return single response data. Must be subscribe before using
+     * @apiNote It is equivalent to call {@link #execute(String, HttpMethod, RequestData, boolean)} with {@code
+     *     swallowError} is {@code true}
      */
     default Single<ResponseData> execute(String path, HttpMethod method, RequestData requestData) {
         return this.execute(path, method, requestData, true);

@@ -3,9 +3,7 @@ package com.nubeiot.core.sql.converter;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.TimeZone;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,7 +15,6 @@ public class DateConverterTest {
 
     @Before
     public void before() {
-        TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC));
         this.converter = new DateConverter();
     }
 
@@ -27,19 +24,10 @@ public class DateConverterTest {
     }
 
     @Test
-    public void test_from_end_date() {
-        long currentTime = Long.valueOf("1549063220000"); // milliseconds of 01/02/2019 23:20:20 UTC
-        LocalDate convertedDate = this.converter.from(new Date(currentTime));
-        LocalDate localDate = LocalDate.parse("2019-02-01", DateTimeFormatter.ISO_LOCAL_DATE);
-        Assert.assertEquals(localDate, convertedDate);
-    }
-
-    @Test
-    public void test_from_start_date() {
-        long currentTime = Long.valueOf("1548980420000"); // milliseconds of 01/02/2019 0:20:20 UTC
-        LocalDate convertedDate = this.converter.from(new Date(currentTime));
-        LocalDate localDate = LocalDate.parse("2019-02-01", DateTimeFormatter.ISO_LOCAL_DATE);
-        Assert.assertEquals(localDate, convertedDate);
+    public void test_from_date() {
+        LocalDate expected = LocalDate.parse("2019-02-01", DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate convertedDate = this.converter.from(Date.valueOf("2019-02-01"));
+        Assert.assertEquals(expected, convertedDate);
     }
 
     @Test
@@ -49,16 +37,16 @@ public class DateConverterTest {
 
     @Test
     public void test_to_date() {
-        long currentTime = Long.valueOf("1549015393580"); // milliseconds of 01/02/2019
+        final Date expected = Date.valueOf("2019-02-01");
 
         LocalDate localDate = LocalDate.parse("2019-02-01", DateTimeFormatter.ISO_LOCAL_DATE);
         Date convertedDate = this.converter.to(localDate);
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy");
-        Assert.assertEquals(simpleDateFormat.format(convertedDate), simpleDateFormat.format(new Date(currentTime)));
+        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
+        Assert.assertEquals(df.format(expected), df.format(convertedDate));
 
-        SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
-        Assert.assertEquals(simpleDateFormat1.format(convertedDate), simpleDateFormat1.format(new Date(currentTime)));
+        SimpleDateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
+        Assert.assertEquals(df2.format(expected), df2.format(convertedDate));
     }
 
     @Test

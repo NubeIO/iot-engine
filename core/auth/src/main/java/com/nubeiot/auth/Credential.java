@@ -3,6 +3,7 @@ package com.nubeiot.auth;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.nubeiot.core.dto.JsonData;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,7 @@ import lombok.RequiredArgsConstructor;
     @JsonSubTypes.Type(value = BasicCredential.class, name = "BASIC"),
     @JsonSubTypes.Type(value = TokenCredential.class, name = "TOKEN"),
 })
-public abstract class Credential {
+public abstract class Credential implements JsonData {
 
     @Getter
     private final CredentialType type;

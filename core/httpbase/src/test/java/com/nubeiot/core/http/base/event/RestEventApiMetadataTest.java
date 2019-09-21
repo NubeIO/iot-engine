@@ -29,8 +29,10 @@ public class RestEventApiMetadataTest {
         return RestEventApiMetadata.builder()
                                    .pattern(EventPattern.PUBLISH_SUBSCRIBE)
                                    .address("address.1")
-                                   .definition(
-                                       EventMethodDefinition.create(path, Urls.capturePath("/", params), mapping));
+                                   .definition(EventMethodDefinition.create(path,
+                                                                            params.length > 0
+                                                                            ? Urls.capturePath("", params)
+                                                                            : "", mapping));
     }
 
     private ActionMethodMapping createMapping(EventAction action, HttpMethod method) {

@@ -68,15 +68,14 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
             t = exceptions.get(exceptions.size() - 1);
         }
         if (t instanceof NubeException) {
-            return overrideMsg(friendly ? convertFriendly((NubeException) t, true) : (NubeException) t);
+            return overrideMsg(friendly ? convert((NubeException) t, true) : (NubeException) t);
         }
         if (t.getCause() instanceof NubeException) {
             // Rarely case
             logger.debug("Wrapper Exception: ", t);
-            return overrideMsg(
-                friendly ? convertFriendly((NubeException) t.getCause(), false) : (NubeException) t.getCause());
+            return overrideMsg(friendly ? convert((NubeException) t.getCause(), false) : (NubeException) t.getCause());
         }
-        return convertFriendly(new NubeException(ErrorCode.UNKNOWN_ERROR, overrideMsg, t), false);
+        return convert(new NubeException(ErrorCode.UNKNOWN_ERROR, overrideMsg, t), false);
     }
 
     private NubeException overrideMsg(NubeException t) {
@@ -86,12 +85,17 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
         return new NubeException(t.getErrorCode(), overrideMsg, t.getCause());
     }
 
-    private NubeException convertFriendly(NubeException t, boolean wrapperIsNube) {
+    private NubeException convert(NubeException t, boolean wrapperIsNube) {
         final Throwable cause = t.getCause();
         final ErrorCode code = t.getErrorCode();
         final String message = originMessage(code, t.getMessage());
         if (Objects.isNull(cause)) {
             return new NubeException(code, message);
+        }
+        if (cause instanceof IllegalArgumentException || cause instanceof NullPointerException) {
+            final String msg = Strings.isBlank(cause.getMessage()) ? message : cause.getMessage();
+            final Throwable rootCause = Objects.isNull(cause.getCause()) ? cause : cause.getCause();
+            return new NubeException(ErrorCode.INVALID_ARGUMENT, msg, rootCause);
         }
         if (cause instanceof NubeException) {
             if (!wrapperIsNube) {

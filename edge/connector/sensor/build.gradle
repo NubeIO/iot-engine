@@ -1,4 +1,0 @@
-dependencies {
-    compile project(":core:kafka")
-    compile project(":eventbus:sensor")
-}

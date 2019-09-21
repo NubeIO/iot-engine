@@ -14,7 +14,7 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.edge.core.PreDeploymentResult;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 interface DeploymentAsserter extends Consumer<PreDeploymentResult> {
 
@@ -44,7 +44,7 @@ interface DeploymentAsserter extends Consumer<PreDeploymentResult> {
                  });
 
             vertx.eventBus()
-                 .send(EdgeInstallerEventBus.BIOS_TRANSACTION.getAddress(), transactionMessage.toJson(), result -> {
+                 .send(InstallerEventModel.BIOS_TRANSACTION.getAddress(), transactionMessage.toJson(), result -> {
                      System.out.println("Asserting transaction");
                      JsonObject body = (JsonObject) result.result().body();
                      context.assertEquals(body.getString("status"), Status.SUCCESS.name());

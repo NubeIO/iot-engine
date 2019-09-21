@@ -24,8 +24,8 @@ public class EnabledModuleInitData extends MockInitDataEntityHandler {
                                                   .setServiceType(ModuleType.JAVA)
                                                   .setVersion("1.0.0")
                                                   .setState(State.ENABLED)
-                                                  .setCreatedAt(DateTimes.nowUTC())
-                                                  .setModifiedAt(DateTimes.nowUTC())
+                                                  .setCreatedAt(DateTimes.now())
+                                                  .setModifiedAt(DateTimes.now())
                                                   .setSystemConfig(new JsonObject())
                                                   .setAppConfig(new JsonObject()));
     }

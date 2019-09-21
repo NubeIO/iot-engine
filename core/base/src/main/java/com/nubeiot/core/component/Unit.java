@@ -24,15 +24,16 @@ public interface Unit<C extends IConfig, T extends UnitContext> extends HasConfi
     T getContext();
 
     /**
-     * Register {@code Vertx} local shared data between {@code Container} and {@code unit}
+     * Register {@code Vertx} local shared data key between {@code Container} and {@code unit}
      * <p>
      * This method will be called automatically by system before deploying verticle.
      *
-     * @param sharedKey shared data key map
+     * @param sharedKey shared data key
+     * @param <U>       Type of Unit Verticle
      * @return a reference to this, so the API can be used fluently
      * @see Container
      */
-    Unit<C, T> registerSharedKey(String sharedKey);
+    <U extends Unit<C, T>> U registerSharedKey(String sharedKey);
 
     /**
      * Retrieve {@code Vertx} shared data value by key data

@@ -17,7 +17,7 @@ import com.nubeiot.edge.core.ModuleEventListener;
 import com.nubeiot.edge.core.TransactionEventListener;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public class EdgeBiosVerticle extends EdgeVerticle {
 
@@ -42,11 +42,11 @@ public class EdgeBiosVerticle extends EdgeVerticle {
 
     @Override
     public void registerEventbus(EventController eventClient) {
-        eventClient.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, new ModuleLoader(vertx))
-                   .register(EdgeInstallerEventBus.BIOS_INSTALLER,
-                            new ModuleEventListener(this, EdgeInstallerEventBus.BIOS_INSTALLER))
-                   .register(EdgeInstallerEventBus.BIOS_TRANSACTION,
-                             new TransactionEventListener(this, EdgeInstallerEventBus.BIOS_TRANSACTION));
+        eventClient.register(InstallerEventModel.BIOS_DEPLOYMENT, new ModuleLoader(vertx))
+                   .register(InstallerEventModel.BIOS_INSTALLER,
+                            new ModuleEventListener(this, InstallerEventModel.BIOS_INSTALLER))
+                   .register(InstallerEventModel.BIOS_TRANSACTION,
+                             new TransactionEventListener(this, InstallerEventModel.BIOS_TRANSACTION));
     }
 
     @SuppressWarnings("unchecked")
@@ -56,11 +56,11 @@ public class EdgeBiosVerticle extends EdgeVerticle {
             return;
         }
         final Record r1 = EventMessageService.createRecord("bios.installer",
-                                                           EdgeInstallerEventBus.BIOS_INSTALLER.getAddress(),
+                                                           InstallerEventModel.BIOS_INSTALLER.getAddress(),
                                                            EventMethodDefinition.createDefault("/modules",
                                                                                                "/:module_id"));
         final Record r2 = EventMessageService.createRecord("bios.installer.transaction",
-                                                           EdgeInstallerEventBus.BIOS_TRANSACTION.getAddress(),
+                                                           InstallerEventModel.BIOS_TRANSACTION.getAddress(),
                                                            EventMethodDefinition.createDefault("/modules/transactions",
                                                                                                "/:transaction_id"));
         Single.concatArray(discovery.addRecord(r1), discovery.addRecord(r2)).subscribe();

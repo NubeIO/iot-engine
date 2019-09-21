@@ -6,6 +6,8 @@ import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.quartz.utils.Key;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -14,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -33,22 +36,23 @@ public interface TriggerModel extends JsonData {
     TriggerKey getKey();
 
     @JsonProperty(value = "type", required = true)
+    @JsonUnwrapped
     TriggerType type();
 
     Trigger toTrigger();
 
-    String toString();
+    JsonObject toDetail();
 
-    enum TriggerType {
-        CRON, PERIODIC
-    }
-
+    String logicalThread();
 
     @RequiredArgsConstructor
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     abstract class AbstractTriggerModel implements TriggerModel {
 
         @Getter
+        @EqualsAndHashCode.Include
         private final TriggerKey key;
+        @EqualsAndHashCode.Include
         private final TriggerType type;
 
         @NonNull
@@ -63,8 +67,8 @@ public interface TriggerModel extends JsonData {
         }
 
         @SuppressWarnings("unchecked")
-        public static abstract class AbstractTriggerModelBuilder<T extends TriggerModel,
-                                                                            B extends AbstractTriggerModelBuilder> {
+        static abstract class AbstractTriggerModelBuilder<T extends TriggerModel,
+                                                                     B extends AbstractTriggerModelBuilder> {
 
             String name;
             String group;

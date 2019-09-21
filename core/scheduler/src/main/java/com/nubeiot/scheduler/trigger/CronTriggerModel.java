@@ -13,6 +13,8 @@ import org.quartz.TriggerKey;
 
 import io.vertx.core.json.JsonObject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.exceptions.HiddenException;
@@ -22,17 +24,21 @@ import com.nubeiot.core.utils.Strings;
 import com.nubeiot.scheduler.trigger.TriggerModel.AbstractTriggerModel;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 
 @Getter
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = CronTriggerModel.Builder.class)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public final class CronTriggerModel extends AbstractTriggerModel {
 
     @NonNull
+    @JsonIgnore
     private final CronExpression expression;
     @NonNull
+    @EqualsAndHashCode.Include
     private final TimeZone timezone;
 
     private CronTriggerModel(TriggerType type, TriggerKey key, CronExpression expression, TimeZone timezone) {
@@ -46,20 +52,33 @@ public final class CronTriggerModel extends AbstractTriggerModel {
         return CronScheduleBuilder.cronSchedule(expression).inTimeZone(timezone);
     }
 
-    @Override
-    public JsonObject toJson() {
-        return super.toJson().put("timezone", timezone.getID()).put("expression", expression.getCronExpression());
+    @JsonProperty("expression")
+    @EqualsAndHashCode.Include
+    private String expr() {
+        return expression.getCronExpression();
+    }
+
+    @JsonProperty("timezone")
+    private String tz() {
+        return timezone.getID();
     }
 
     @Override
-    public String toString() {
-        return Strings.format("Expr: \"{0}\" - TimeZone: \"{1}\"", expression, timezone.getID());
+    public JsonObject toDetail() {
+        return new JsonObject().put("expression", expr()).put("timezone", tz());
+    }
+
+    @Override
+    public String logicalThread() {
+        return expr() + "::" + tz();
     }
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder extends AbstractTriggerModelBuilder<CronTriggerModel, Builder> {
 
+        @JsonProperty("expression")
         private String expr;
+        @JsonProperty("timezone")
         private String tz;
 
         static CronExpression toCronExpr(String expression) {

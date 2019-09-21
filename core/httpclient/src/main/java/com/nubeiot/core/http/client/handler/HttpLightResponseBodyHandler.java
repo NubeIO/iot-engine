@@ -68,7 +68,7 @@ public abstract class HttpLightResponseBodyHandler implements Handler<Buffer> {
 
     private JsonObject overrideHeader(HttpClientResponse response) {
         return HttpHeaderUtils.serializeHeaders(response.headers())
-                              .put(HttpHeaders.CONTENT_TYPE.toString(), HttpUtils.DEFAULT_CONTENT_TYPE);
+                              .put(HttpHeaders.CONTENT_TYPE.toString(), HttpUtils.JSON_UTF8_CONTENT_TYPE);
     }
 
     protected JsonObject tryParse(Buffer buffer) {

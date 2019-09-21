@@ -18,7 +18,7 @@ import com.nubeiot.edge.core.ModuleEventListener;
 import com.nubeiot.edge.core.TransactionEventListener;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
 
@@ -45,14 +45,14 @@ public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
             return;
         }
         Record r1 = EventMessageService.createRecord("bios.installer.service",
-                                                     EdgeInstallerEventBus.getServiceInstaller(true).getAddress(),
+                                                     InstallerEventModel.getServiceInstaller(true).getAddress(),
                                                      EventMethodDefinition.createDefault("/services", "/:service_id"));
         Record r2 = EventMessageService.createRecord("bios.installer.service.transaction",
-                                                     EdgeInstallerEventBus.getServiceTransaction(true).getAddress(),
+                                                     InstallerEventModel.getServiceTransaction(true).getAddress(),
                                                      EventMethodDefinition.createDefault("/services/transactions",
                                                                                          "/:transaction_id"));
         Record r3 = EventMessageService.createRecord("bios.installer.service.last-transaction",
-                                                     EdgeInstallerEventBus.getServiceLastTransaction(true).getAddress(),
+                                                     InstallerEventModel.getServiceLastTransaction(true).getAddress(),
                                                      EventMethodDefinition.createDefault(
                                                          "/services/:module_id/transactions", "/:transaction_id"));
         Single.concatArray(discovery.addRecord(r1), discovery.addRecord(r2), discovery.addRecord(r3)).subscribe();
@@ -60,10 +60,10 @@ public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
 
     @Override
     public void registerEventbus(EventController eventClient) {
-        final EventModel serviceInstaller = EdgeInstallerEventBus.getServiceInstaller(true);
-        final EventModel serviceTransaction = EdgeInstallerEventBus.getServiceTransaction(true);
-        final EventModel serviceLastTransaction = EdgeInstallerEventBus.getServiceLastTransaction(true);
-        eventClient.register(EdgeInstallerEventBus.SERVICE_DEPLOYMENT, new ModuleLoader(vertx))
+        final EventModel serviceInstaller = InstallerEventModel.getServiceInstaller(true);
+        final EventModel serviceTransaction = InstallerEventModel.getServiceTransaction(true);
+        final EventModel serviceLastTransaction = InstallerEventModel.getServiceLastTransaction(true);
+        eventClient.register(InstallerEventModel.SERVICE_DEPLOYMENT, new ModuleLoader(vertx))
                    .register(serviceInstaller, new ModuleEventListener(this, serviceInstaller))
                    .register(serviceTransaction, new TransactionEventListener(this, serviceTransaction))
                    .register(serviceLastTransaction, new LastTransactionEventListener(this, serviceLastTransaction));

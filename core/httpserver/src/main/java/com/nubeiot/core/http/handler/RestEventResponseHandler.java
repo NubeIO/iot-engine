@@ -20,7 +20,7 @@ public final class RestEventResponseHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext context) {
         context.addHeadersEndHandler(
-            v -> context.response().putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE));
+            v -> context.response().putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.JSON_UTF8_CONTENT_TYPE));
         HttpMethod method = context.request().method();
         EventMessage eventMessage = context.get(EventAction.RETURN.name());
         if (Objects.isNull(eventMessage)) {

@@ -21,6 +21,7 @@ public final class RequestDataConverter {
         return RequestData.builder()
                           .headers(HttpHeaderUtils.serializeHeaders(context.request()))
                           .body(body(context))
+                          .sort(HttpRequests.sort(context.request()))
                           .filter(HttpRequests.query(context.request()))
                           .pagination(HttpRequests.pagination(context.request()))
                           .build();

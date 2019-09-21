@@ -18,11 +18,12 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class QuartzSchedulerContext extends UnitContext {
 
+    @Getter(value = AccessLevel.PACKAGE)
     private Scheduler scheduler;
+    @Getter
     private EventModel registerModel;
 
     QuartzSchedulerContext init(Vertx vertx, String sharedKey, SchedulerConfig config) {
@@ -30,13 +31,13 @@ public final class QuartzSchedulerContext extends UnitContext {
                                        .address(config.getRegisterAddress())
                                        .local(vertx.isClustered())
                                        .pattern(EventPattern.REQUEST_RESPONSE)
-                                       .addEvents(EventAction.CREATE, EventAction.REMOVE)
+                                       .addEvents(EventAction.CREATE, EventAction.REMOVE, EventAction.GET_ONE,
+                                                  EventAction.UPDATE)
                                        .build();
         try {
             final DirectSchedulerFactory factory = DirectSchedulerFactory.getInstance();
             factory.createScheduler(config.getSchedulerName(), config.getSchedulerName(),
-                                    new QuartzVertxThreadPool(vertx, config.getWorkerConfig()),
-                                    new RAMJobStore());
+                                    new QuartzVertxThreadPool(vertx, config.getWorkerConfig()), new RAMJobStore());
             scheduler = factory.getScheduler(config.getSchedulerName());
             scheduler.setJobFactory(new VertxJobFactory(vertx, sharedKey, config));
             scheduler.start();

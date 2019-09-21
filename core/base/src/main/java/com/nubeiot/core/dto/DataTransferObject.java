@@ -23,6 +23,22 @@ public interface DataTransferObject extends Serializable, JsonData {
     @JsonProperty(value = "headers")
     JsonObject headers();
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    final class Headers {
+
+        /**
+         * For tracking created/modified by user
+         */
+        public static final String X_REQUEST_USER = "X-Request-User";
+
+        /**
+         * For tracking request by service
+         */
+        public static final String X_REQUEST_BY = "X-Request-By";
+
+    }
+
+
     @SuppressWarnings("unchecked")
     @NoArgsConstructor(access = AccessLevel.PACKAGE)
     abstract class AbstractDTO implements DataTransferObject {

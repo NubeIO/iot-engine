@@ -10,5 +10,22 @@ import lombok.Getter;
 @Getter
 public enum EventAction implements Serializable {
 
-    INIT, CREATE, UPDATE, PATCH, HALT, REMOVE, GET_ONE, GET_LIST, RETURN, MIGRATE, UNKNOWN, SEND, PUBLISH, MONITOR
+    INIT,
+    CREATE,
+    UPDATE,
+    PATCH,
+    HALT,
+    REMOVE,
+    GET_ONE,
+    GET_LIST,
+    RETURN,
+    MIGRATE,
+    UNKNOWN,
+    SEND,
+    PUBLISH,
+    MONITOR,
+    BATCH_CREATE,
+    BATCH_UPDATE,
+    BATCH_PATCH,
+    BATCH_DELETE
 }

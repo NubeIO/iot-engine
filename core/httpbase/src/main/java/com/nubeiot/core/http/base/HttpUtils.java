@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
+import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
@@ -31,13 +34,15 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class HttpUtils {
 
-    public static final String DEFAULT_CONTENT_TYPE = "application/json;charset=utf-8";
+    public static final String JSON_CONTENT_TYPE = "application/json";
+    public static final String JSON_UTF8_CONTENT_TYPE = "application/json;charset=utf-8";
+    public static final String NONE_CONTENT_TYPE = "no-content-type";
     public static final Set<HttpMethod> DEFAULT_CORS_HTTP_METHOD = Collections.unmodifiableSet(new HashSet<>(
         Arrays.asList(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH, HttpMethod.DELETE,
                       HttpMethod.HEAD, HttpMethod.OPTIONS)));
 
     private static boolean isPretty(HttpServerRequest request) {
-        return Boolean.valueOf(request.getParam("pretty"));
+        return Boolean.parseBoolean(request.getParam(Filters.PRETTY));
     }
 
     @SuppressWarnings("unchecked")
@@ -108,7 +113,7 @@ public final class HttpUtils {
         private static final String SEPARATE = "&";
 
         public static String language(@NonNull HttpServerRequest request) {
-            String lang = request.getParam("lang");
+            String lang = request.getParam(Filters.LANG);
             if (Strings.isBlank(lang)) {
                 return "en";
             }
@@ -118,9 +123,16 @@ public final class HttpUtils {
         public static Pagination pagination(@NonNull HttpServerRequest request) {
             if (request.method() == HttpMethod.GET) {
                 return Pagination.builder()
-                                 .page(request.getParam("page"))
-                                 .perPage(request.getParam("per_page"))
+                                 .page(request.getParam(Filters.PAGE))
+                                 .perPage(request.getParam(Filters.PER_PAGE))
                                  .build();
+            }
+            return null;
+        }
+
+        public static Sort sort(@NonNull HttpServerRequest request) {
+            if (request.method() == HttpMethod.GET) {
+                return Sort.from(Urls.decode(Optional.ofNullable(request.getParam(Filters.SORT)).orElse("")));
             }
             return null;
         }
@@ -134,10 +146,15 @@ public final class HttpUtils {
             Map<String, Object> map = new HashMap<>();
             for (String property : query.split("\\" + SEPARATE)) {
                 String[] keyValues = property.split("\\" + EQUAL);
+                String propKey = Urls.decode(keyValues[0]);
+                if (Filters.AUDIT.equals(propKey) || Filters.PRETTY.equals(propKey)) {
+                    map.put(propKey, true);
+                    continue;
+                }
                 if (keyValues.length != 2) {
                     throw new InvalidUrlException("Property doesn't conform the syntax: `key`" + EQUAL + "`value`");
                 }
-                map.put(Urls.decode(keyValues[0]), Urls.decode(keyValues[1]));
+                map.put(propKey, Urls.decode(keyValues[1]));
             }
             return map;
         }

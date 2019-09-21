@@ -17,7 +17,7 @@ public final class NotFoundContextHandler implements Handler<RoutingContext> {
         JsonObject result = new JsonObject().put("uri", request.absoluteURI()).put("message", "Resource not found");
         event.response()
              .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
-             .putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE)
+             .putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.JSON_UTF8_CONTENT_TYPE)
              .end(HttpUtils.prettify(result, request));
     }
 

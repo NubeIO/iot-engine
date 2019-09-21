@@ -15,7 +15,7 @@ import io.vertx.ext.web.Router;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.HttpServer;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.http.base.event.EventMethodMapping;
 import com.nubeiot.core.http.base.event.RestEventApiMetadata;
@@ -41,18 +41,6 @@ public final class RestEventApisBuilder {
 
     public RestEventApisBuilder(Vertx vertx) {
         this.router = Router.router(vertx);
-    }
-
-    public RestEventApisBuilder(io.vertx.reactivex.core.Vertx vertx) {
-        this(vertx.getDelegate());
-    }
-
-    public RestEventApisBuilder(Router router) {
-        this.router = router;
-    }
-
-    public RestEventApisBuilder(io.vertx.reactivex.ext.web.Router router) {
-        this(router.getDelegate());
     }
 
     public RestEventApisBuilder addSharedDataFunc(@NonNull Function<String, Object> func) {
@@ -108,10 +96,8 @@ public final class RestEventApisBuilder {
                                 : mapping.getCapturePath();
             logger.info("Registering route | Event Binding:\t{} {} --- {} {} {}", mapping.getMethod(), path,
                         metadata.getPattern(), mapping.getAction(), metadata.getAddress());
-            router.route(mapping.getMethod(), path)
-                  .order(definition.getOrder())
-                  .produces(HttpUtils.DEFAULT_CONTENT_TYPE)
-                  .handler(restHandler);
+            HttpServer.restrictJsonRoute(
+                router.route(mapping.getMethod(), path).order(definition.getOrder()).handler(restHandler));
         }
     }
 

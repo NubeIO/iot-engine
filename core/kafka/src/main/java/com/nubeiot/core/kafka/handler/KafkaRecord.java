@@ -53,7 +53,7 @@ public final class KafkaRecord<T> implements JsonData {
     }
 
     @Override
-    public ObjectMapper mapper() {
+    public ObjectMapper getMapper() {
         return RecordMixin.MAPPER;
     }
 

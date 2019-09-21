@@ -34,6 +34,7 @@ public class NubeException extends RuntimeException {
     @Getter
     public enum ErrorCode implements Serializable {
 
+        DESIRED_ERROR,
         INVALID_ARGUMENT,
         ALREADY_EXIST,
         NOT_FOUND,

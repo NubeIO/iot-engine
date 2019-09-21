@@ -1,6 +1,6 @@
 package com.nubeiot.core.exceptions;
 
-public class TimeoutException extends NubeException {
+public final class TimeoutException extends NubeException {
 
     public TimeoutException(String message, Throwable e) { super(ErrorCode.TIMEOUT_ERROR, message, e); }
 

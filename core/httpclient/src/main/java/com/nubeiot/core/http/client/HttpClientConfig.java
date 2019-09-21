@@ -52,8 +52,15 @@ public final class HttpClientConfig implements IConfig {
         this.options = options;
     }
 
+    public static HttpClientConfig create(String userAgent, @NonNull HostInfo info) {
+        final HttpClientConfig config = new HttpClientConfig(new HttpClientOptions());
+        config.hostInfo = info;
+        config.userAgent = Strings.isBlank(userAgent) ? config.userAgent : userAgent;
+        return config;
+    }
+
     @Override
-    public String name() { return "__httpClient__"; }
+    public String key() { return "__httpClient__"; }
 
     @Override
     public Class<? extends IConfig> parent() { return AppConfig.class; }

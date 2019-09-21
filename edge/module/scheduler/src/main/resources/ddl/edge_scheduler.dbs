@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="01_edge_scheduler.sql" id="Project_142a251" template="Default" database="H2" >
+	<schema name="PUBLIC" catalogname="edge_scheduler" schemaname="PUBLIC" >
+		<table name="JOB_ENTITY" >
+			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_73EAA25A_08FB_415E_87B5_2D15FDE056E0)</defo>
+			</column>
+			<column name="GROUP_NAME" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
+			<column name="NAME" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
+			<column name="JOB_TYPE" type="varchar" length="15" decimal="0" jt="12" mandatory="y" />
+			<column name="FORWARD_IF_FAILURE" type="boolean" length="1" decimal="0" jt="16" mandatory="y" >
+				<defo>TRUE</defo>
+			</column>
+			<column name="DETAIL_JSON" type="clob" length="2147483647" decimal="0" jt="2005" mandatory="y" />
+			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<index name="CONSTRAINT_4" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_JOB_ENTITY_INDEX_4" unique="UNIQUE" >
+				<column name="GROUP_NAME" />
+				<column name="NAME" />
+			</index>
+			<index name="IDX_JOB_ENTITY_GROUP" unique="NORMAL" >
+				<column name="GROUP_NAME" />
+			</index>
+			<index name="IDX_JOB_ENTITY_TYPE" unique="NORMAL" >
+				<column name="JOB_TYPE" />
+			</index>
+		</table>
+		<table name="JOB_TRIGGER" >
+			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_7D183FB6_980A_414E_8E46_15136B03979D)</defo>
+			</column>
+			<column name="JOB_ID" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="TRIGGER_ID" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="ENABLED" type="boolean" length="1" decimal="0" jt="16" mandatory="y" >
+				<defo>TRUE</defo>
+			</column>
+			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<index name="CONSTRAINT_1E" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_JOB_TRIGGER_INDEX_1" unique="UNIQUE" >
+				<column name="JOB_ID" />
+				<column name="TRIGGER_ID" />
+			</index>
+			<index name="IDX_JOB_TRIGGER_JOB" unique="NORMAL" >
+				<column name="JOB_ID" />
+			</index>
+			<index name="IDX_JOB_TRIGGER_TRIGGER" unique="NORMAL" >
+				<column name="TRIGGER_ID" />
+			</index>
+			<fk name="FK_JOB_TRIGGER_JOB" to_schema="PUBLIC" to_table="JOB_ENTITY" delete_action="restrict" update_action="cascade" >
+				<fk_column name="JOB_ID" pk="ID" />
+			</fk>
+			<fk name="FK_JOB_TRIGGER_TRIGGER" to_schema="PUBLIC" to_table="TRIGGER_ENTITY" delete_action="restrict" update_action="cascade" >
+				<fk_column name="TRIGGER_ID" pk="ID" />
+			</fk>
+		</table>
+		<table name="TRIGGER_ENTITY" >
+			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_791ADE3A_2022_4B7F_8824_980853CA3E2D)</defo>
+			</column>
+			<column name="GROUP_NAME" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
+			<column name="NAME" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
+			<column name="TRIGGER_TYPE" type="varchar" length="15" decimal="0" jt="12" mandatory="y" />
+			<column name="DETAIL_JSON" type="clob" length="2147483647" decimal="0" jt="2005" mandatory="y" />
+			<column name="TRIGGER_THREAD" type="varchar" length="127" decimal="0" jt="12" >
+				<comment><![CDATA[Logical thread to group CRON trigger. It is not null if
+TRIGGER_TYPE = CRON]]></comment>
+			</column>
+			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<index name="CONSTRAINT_1" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_TRIGGER_ENTITY_INDEX_1" unique="UNIQUE" >
+				<column name="GROUP_NAME" />
+				<column name="NAME" />
+			</index>
+			<index name="IDX_TRIGGER_ENTITY_GROUP" unique="NORMAL" >
+				<column name="GROUP_NAME" />
+			</index>
+			<index name="IDX_TRIGGER_ENTITY_THREAD" unique="NORMAL" >
+				<column name="TRIGGER_THREAD" />
+			</index>
+			<index name="IDX_TRIGGER_ENTITY_TYPE" unique="NORMAL" >
+				<column name="TRIGGER_TYPE" />
+			</index>
+		</table>
+		<sequence name="SYSTEM_SEQUENCE_73EAA25A_08FB_415E_87B5_2D15FDE056E0" start="1" />
+		<sequence name="SYSTEM_SEQUENCE_791ADE3A_2022_4B7F_8824_980853CA3E2D" start="1" />
+		<sequence name="SYSTEM_SEQUENCE_7D183FB6_980A_414E_8E46_15136B03979D" start="10" />
+	</schema>
+	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="-1" instance="C:/projects/nubeio/iot-engine/edge/module/scheduler/src/main/resources/ddl/edge_scheduler" />
+	<layout name="Parsed Script Layout" id="Layout_573523a" show_relation="columns" >
+		<entity schema="PUBLIC" name="JOB_ENTITY" color="BED3F4" x="560" y="48" />
+		<entity schema="PUBLIC" name="TRIGGER_ENTITY" color="BED3F4" x="48" y="48" />
+		<entity schema="PUBLIC" name="JOB_TRIGGER" color="BED3F4" x="320" y="48" />
+		<script name="01_edge_scheduler.sql" id="Editor_455bd57" language="SQL" >
+			<string><![CDATA[select "PUBLIC"."JOB_TRIGGER".*, "PUBLIC"."JOB_ENTITY"."ID", "PUBLIC"."TRIGGER_ENTITY"."ID" from "PUBLIC"."JOB_TRIGGER" right outer join "PUBLIC"."JOB_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."JOB_ID" = "PUBLIC"."JOB_ENTITY"."ID" and 1 = 1 and "PUBLIC"."JOB_ENTITY"."ID" = 2) right outer join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1 and "PUBLIC"."TRIGGER_ENTITY"."ID" = 1) where 1 = 1 limit 1select * from "PUBLIC"."JOB_TRIGGER" join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1) where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."ENABLED" = true and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1) limit 20CREATE SCHEMA IF NOT EXISTS PUBLIC;
+
+CREATE TABLE IF NOT EXISTS JOB_ENTITY (
+	ID                   IDENTITY NOT NULL,
+	GROUP_NAME           varchar(63)   NOT NULL,
+	NAME                 varchar(63)   NOT NULL,
+	JOB_TYPE             varchar(15)   NOT NULL,
+	FORWARD_IF_FAILURE   boolean  DEFAULT TRUE NOT NULL,
+	DETAIL_JSON          clob(2147483647) NOT NULL,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_JOB_ENTITY_ID PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_JOB_ENTITY UNIQUE ( GROUP_NAME, NAME )
+ );
+
+CREATE INDEX IDX_JOB_ENTITY_GROUP ON JOB_ENTITY ( GROUP_NAME );
+CREATE INDEX IDX_JOB_ENTITY_TYPE ON JOB_ENTITY ( JOB_TYPE );
+
+CREATE TABLE IF NOT EXISTS TRIGGER_ENTITY (
+	ID                   IDENTITY NOT NULL,
+	GROUP_NAME           varchar(63)   NOT NULL,
+	NAME                 varchar(63)   NOT NULL,
+	TRIGGER_TYPE         varchar(15)   NOT NULL,
+	DETAIL_JSON          clob(2147483647) NOT NULL,
+	TRIGGER_THREAD       varchar(127)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_TRIGGER_ENTITY_ID PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_TRIGGER_ENTITY UNIQUE ( GROUP_NAME, NAME )
+ );
+
+CREATE INDEX IDX_TRIGGER_ENTITY_GROUP ON TRIGGER_ENTITY ( GROUP_NAME );
+CREATE INDEX IDX_TRIGGER_ENTITY_TYPE ON TRIGGER_ENTITY ( TRIGGER_TYPE );
+CREATE INDEX IDX_TRIGGER_ENTITY_THREAD ON TRIGGER_ENTITY ( TRIGGER_THREAD );
+
+COMMENT ON COLUMN TRIGGER_ENTITY.TRIGGER_THREAD IS 'Logical thread to group CRON trigger. It is not null if
+TRIGGER_TYPE = CRON';
+
+CREATE TABLE IF NOT EXISTS JOB_TRIGGER (
+    ID                  IDENTITY NOT NULL,
+    JOB_ID              int NOT NULL,
+    TRIGGER_ID          int NOT NULL,
+    ENABLED             boolean  DEFAULT TRUE NOT NULL,
+	TIME_AUDIT          varchar(500)   ,
+	SYNC_AUDIT          varchar(500)   ,
+    CONSTRAINT PK_JOB_TRIGGER_ID PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_JOB_TRIGGER UNIQUE ( JOB_ID, TRIGGER_ID )
+);
+
+ALTER TABLE JOB_TRIGGER ADD CONSTRAINT FK_JOB_TRIGGER_JOB FOREIGN KEY ( JOB_ID ) REFERENCES JOB_ENTITY( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE JOB_TRIGGER ADD CONSTRAINT FK_JOB_TRIGGER_TRIGGER FOREIGN KEY ( TRIGGER_ID ) REFERENCES TRIGGER_ENTITY( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+CREATE INDEX IDX_JOB_TRIGGER_JOB ON JOB_TRIGGER ( JOB_ID );
+CREATE INDEX IDX_JOB_TRIGGER_TRIGGER ON JOB_TRIGGER ( TRIGGER_ID );]]></string>
+		</script>
+		<script name="JOB_ENTITY" id="Editor_3de1cf4" language="SQL" >
+			<string><![CDATA[insert into "PUBLIC"."JOB_ENTITY" ("ID", "GROUP_NAME", "NAME", "JOB_TYPE", "FORWARD_IF_FAILURE", "DETAIL_JSON", "TIME_AUDIT", "SYNC_AUDIT") 
+values (1, 'group1', 'job1', 'EVENT_JOB', true, '{"process":{"address":"scheduler.1","pattern":"REQUEST_RESPONSE","action":"CREATE"},"callback":null}', null, null);
+
+insert into "PUBLIC"."TRIGGER_ENTITY" ("ID", "GROUP_NAME", "NAME", "TRIGGER_TYPE", "DETAIL_JSON", "TRIGGER_THREAD", "TIME_AUDIT", "SYNC_AUDIT") 
+values (1, 'group1', 'trigger1', 'CRON', '{"expression":"0 0 0 ? * SUN *","timezone":"Australia/Sydney"}', '0 0 0 ? * SUN *::Australia/Sydney', null, null);
+
+insert into "PUBLIC"."TRIGGER_ENTITY" ("ID", "GROUP_NAME", "NAME", "TRIGGER_TYPE", "DETAIL_JSON", "TRIGGER_THREAD", "TIME_AUDIT", "SYNC_AUDIT") 
+values (2, 'group1', 'trigger3', 'PERIODIC', '{"intervalInSeconds":120,"repeat":10}', null, null, null);
+
+insert into "PUBLIC"."JOB_TRIGGER" ("JOB_ID", "TRIGGER_ID", "ENABLED", "TIME_AUDIT", "SYNC_AUDIT") values (1, 1, default, null, null);
+insert into "PUBLIC"."JOB_TRIGGER" ("JOB_ID", "TRIGGER_ID", "ENABLED", "TIME_AUDIT", "SYNC_AUDIT") values (1, 2, false, null, null);]]></string>
+		</script>
+		<script name="JOB_TRIGGER" id="Editor_cfd41f" language="SQL" >
+			<string><![CDATA[select "PUBLIC"."JOB_TRIGGER".*, "PUBLIC"."JOB_ENTITY"."ID", "PUBLIC"."TRIGGER_ENTITY"."ID"
+from "PUBLIC"."JOB_TRIGGER" 
+right outer join "PUBLIC"."JOB_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."JOB_ID" = "PUBLIC"."JOB_ENTITY"."ID" and 1 = 1 and "PUBLIC"."JOB_ENTITY"."ID" = 2) 
+left outer join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1 and "PUBLIC"."TRIGGER_ENTITY"."ID" = 1)
+where 1 = 1
+limit 1
+
+SELECT CASE WHEN EXISTS( select 1 FROM TRIGGER_ENTITY WHERE TRIGGER_ENTITY.ID = 1 )
+  THEN 1 ELSE 0 END as y
+
+select "PUBLIC"."JOB_TRIGGER".*, "PUBLIC"."JOB_ENTITY"."ID"
+from "PUBLIC"."JOB_TRIGGER" 
+right outer join "PUBLIC"."JOB_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."JOB_ID" = "PUBLIC"."JOB_ENTITY"."ID" and "PUBLIC"."JOB_ENTITY"."ID" = 2)
+where (1 = 1 and ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = 1 OR "PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" is null))
+limit 1
+
+select "PUBLIC"."JOB_TRIGGER".*, "PUBLIC"."JOB_ENTITY"."ID"
+from "PUBLIC"."JOB_TRIGGER" 
+right outer join "PUBLIC"."JOB_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."JOB_ID" = "PUBLIC"."JOB_ENTITY"."ID" and 1 = 1 and "PUBLIC"."JOB_ENTITY"."ID" = 3)
+where (1 = 1 and ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = 1 or "PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" is null))
+limit 1]]></string>
+		</script>
+		<script name="TRIGGER_ENTITY" id="Editor_39f6a3e" language="SQL" >
+			<string><![CDATA[select *
+from "PUBLIC"."JOB_TRIGGER" 
+join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1)
+where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."ENABLED" = true and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1) 
+limit 20
+
+select * from "PUBLIC"."JOB_TRIGGER" join "PUBLIC"."TRIGGER_ENTITY" on ("PUBLIC"."JOB_TRIGGER"."TRIGGER_ID" = "PUBLIC"."TRIGGER_ENTITY"."ID" and 1 = 1) 
+where (1 = 1 and "PUBLIC"."JOB_TRIGGER"."JOB_ID" = 1) limit 1]]></string>
+		</script>
+	</layout>
+</project>

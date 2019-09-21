@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
 import io.vertx.core.logging.Logger;
@@ -96,6 +97,9 @@ public final class Reflections {
 
     public static class ReflectionField {
 
+        public final static Predicate<Field> CONSTANT_FILTER = hasModifiers(Modifier.PUBLIC, Modifier.STATIC,
+                                                                            Modifier.FINAL);
+
         /**
          * Find declared fields in given {@code class} that matches with filter
          *
@@ -116,28 +120,55 @@ public final class Reflections {
         }
 
         public static <T> T constantByName(@NonNull Class<?> clazz, String name) {
-            Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+            Predicate<Field> filter = Functions.and(CONSTANT_FILTER,
                                                     f -> f.getName().equals(Strings.requireNotBlank(name)));
             return (T) findToStream(clazz, filter).map(field -> getConstant(clazz, field)).findFirst().orElse(null);
         }
 
+        public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass) {
+            return streamConstants(clazz, fieldClass).collect(Collectors.toList());
+        }
+
         public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,
                                                Predicate<Field> predicate) {
-            Predicate<Field> filter = Functions.and(hasModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+            return streamConstants(clazz, fieldClass, predicate).collect(Collectors.toList());
+        }
+
+        public static <T> Stream<T> streamConstants(@NonNull Class<T> clazz) {
+            return streamConstants(clazz, clazz, null);
+        }
+
+        public static <T> Stream<T> streamConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass) {
+            return streamConstants(clazz, fieldClass, null);
+        }
+
+        public static <T> Stream<T> streamConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass,
+                                                    Predicate<Field> predicate) {
+            Predicate<Field> filter = Functions.and(CONSTANT_FILTER,
                                                     f -> ReflectionClass.assertDataType(fieldClass, f.getType()));
             if (Objects.nonNull(predicate)) {
                 filter = filter.and(predicate);
             }
-            return (List<T>) findToStream(clazz, filter).map(field -> getConstant(clazz, field))
-                                                        .collect(Collectors.toList());
+            return findToStream(clazz, filter).map(field -> getConstant(clazz, field));
         }
 
-        private static <T> T getConstant(@NonNull Class<?> clazz, Field field) {
+        public static <T> T getConstant(@NonNull Class<?> clazz, Field field) {
             try {
                 return (T) field.get(null);
             } catch (IllegalAccessException | ClassCastException e) {
                 throw new NubeException(
                     Strings.format("Failed to get field constant {0} of {1}", field.getName(), clazz.getName()), e);
+            }
+        }
+
+        public static <T> T getConstant(@NonNull Class<?> clazz, Field field, T fallback) {
+            try {
+                return (T) field.get(null);
+            } catch (IllegalAccessException | ClassCastException e) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Failed to get field constant {} of {}", e, field.getName(), clazz.getName());
+                }
+                return fallback;
             }
         }
 
@@ -299,11 +330,17 @@ public final class Reflections {
             return superClass.isAssignableFrom(childClass);
         }
 
-        public static boolean isJavaLangObject(Class<?> clazz) {
+        public static boolean isVertxOrSystemClass(String clazzName) {
+            return clazzName.startsWith("java.") || clazzName.startsWith("javax.") || clazzName.startsWith("sun.*") ||
+                   clazzName.startsWith("com.sun.") || clazzName.startsWith("io.vertx.core") ||
+                   clazzName.startsWith("io.netty.") || clazzName.startsWith("com.fasterxml.jackson");
+        }
+
+        public static boolean isJavaLangObject(@NonNull Class<?> clazz) {
             return clazz.isPrimitive() || clazz.isEnum() || "java.lang".equals(clazz.getPackage().getName());
         }
 
-        private static <T> Class<?> getPrimitiveClass(Class<T> findClazz) {
+        private static <T> Class<?> getPrimitiveClass(@NonNull Class<T> findClazz) {
             try {
                 Field t = findClazz.getField("TYPE");
                 if (!hasModifiers(Modifier.PUBLIC, Modifier.STATIC).test(t)) {
@@ -329,9 +366,18 @@ public final class Reflections {
          * @param annotationClass Given annotation type class {@code @Target(ElementType.TYPE_USE)}
          * @return List of matching class
          */
-        @SuppressWarnings("unchecked")
         public static <T> List<Class<T>> find(String packageName, Class<T> parentClass,
                                               @NonNull Class<? extends Annotation> annotationClass) {
+            return stream(packageName, parentClass, clazz -> clazz.hasAnnotation(annotationClass.getName())).collect(
+                Collectors.toList());
+        }
+
+        public static <T> Stream<Class<T>> stream(String packageName, Class<T> parentClass) {
+            return stream(packageName, parentClass, clazz -> true);
+        }
+
+        public static <T> Stream<Class<T>> stream(String packageName, Class<T> parentClass,
+                                                  @NonNull Predicate<ClassInfo> filter) {
             Strings.requireNotBlank(packageName, "Package name cannot be empty");
             ClassGraph graph = new ClassGraph().enableAnnotationInfo()
                                                .ignoreClassVisibility()
@@ -350,12 +396,13 @@ public final class Reflections {
                 } else {
                     infoList = scanResult.getAllClasses();
                 }
-                return infoList.filter(clazz -> clazz.hasAnnotation(annotationClass.getName()))
-                               .loadClasses()
-                               .stream()
-                               .map(clazz -> (Class<T>) clazz)
-                               .collect(Collectors.toList());
+                return infoList.filter(filter::test).loadClasses().stream().map(clazz -> (Class<T>) clazz);
             }
+        }
+
+        @NonNull
+        public static Predicate<ClassInfo> publicClass() {
+            return clazz -> clazz.isStandardClass() && clazz.isPublic() && !clazz.isAbstract();
         }
 
         public static <T> Class<T> findClass(String clazz) {
@@ -405,7 +452,7 @@ public final class Reflections {
 
         public static <T> Silencer<T> createObject(Class<T> clazz, @NonNull Map<Class, Object> inputs,
                                                    Silencer<T> silencer) {
-            if (!(inputs instanceof LinkedHashMap)) {
+            if (inputs.size() > 1 && !(inputs instanceof LinkedHashMap)) {
                 throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
             }
             try {

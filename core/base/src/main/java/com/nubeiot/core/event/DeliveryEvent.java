@@ -1,5 +1,7 @@
 package com.nubeiot.core.event;
 
+import java.util.Optional;
+
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -43,18 +45,23 @@ public final class DeliveryEvent implements JsonData {
 
     private final JsonObject payload;
 
-    public static DeliveryEvent from(EventModel model, EventAction action) {
+    public static DeliveryEvent from(JsonObject data) {
+        return Optional.ofNullable(data).map(d -> JsonData.convert(d, DeliveryEvent.class)).orElse(null);
+    }
+
+    public static DeliveryEvent from(@NonNull EventModel model, @NonNull EventAction action) {
         if (!model.getEvents().contains(action)) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Action must match one of EventModel Actions");
         }
         return new DeliveryEvent(model.getAddress(), model.getPattern(), action, null);
     }
 
-    public static DeliveryEvent from(EventModel model, EventAction action, RequestData payload) {
+    public static DeliveryEvent from(@NonNull EventModel model, @NonNull EventAction action,
+                                     @NonNull RequestData payload) {
         return from(model, action, payload.toJson());
     }
 
-    public static DeliveryEvent from(EventModel model, EventAction action, JsonObject payload) {
+    public static DeliveryEvent from(@NonNull EventModel model, @NonNull EventAction action, JsonObject payload) {
         if (!model.getEvents().contains(action)) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Action must match one of EventModel Actions");
         }
@@ -66,6 +73,12 @@ public final class DeliveryEvent implements JsonData {
     }
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static class Builder {}
+    public static class Builder {
+
+        public Builder addPayload(@NonNull RequestData payload) {
+            return payload(payload.toJson());
+        }
+
+    }
 
 }

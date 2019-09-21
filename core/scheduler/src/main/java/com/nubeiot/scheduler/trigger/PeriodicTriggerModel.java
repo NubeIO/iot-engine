@@ -5,27 +5,33 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
 import org.quartz.TriggerKey;
 
+import io.vertx.core.json.JsonObject;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.scheduler.trigger.TriggerModel.AbstractTriggerModel;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
 import lombok.NonNull;
 
 @Getter
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = PeriodicTriggerModel.Builder.class)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public final class PeriodicTriggerModel extends AbstractTriggerModel {
 
     /**
      * Specify a repeat interval in seconds - which will then be multiplied by 1000 to produce milliseconds.
      */
+    @Include
     private final int intervalInSeconds;
     /**
      * Specify a the number of time the trigger will repeat - total number of firings will be this number + 1.
      */
+    @Include
     private final int repeat;
 
     private PeriodicTriggerModel(TriggerType type, TriggerKey key, int intervalInSeconds, int repeat) {
@@ -40,8 +46,13 @@ public final class PeriodicTriggerModel extends AbstractTriggerModel {
     }
 
     @Override
-    public String toString() {
-        return Strings.format("Interval: {0}s | Repeat: {1}", intervalInSeconds, repeat);
+    public JsonObject toDetail() {
+        return new JsonObject().put("intervalInSeconds", intervalInSeconds).put("repeat", repeat);
+    }
+
+    @Override
+    public String logicalThread() {
+        return null;
     }
 
     @JsonPOJOBuilder(withPrefix = "")

@@ -9,7 +9,7 @@ import com.nubeiot.edge.bios.MockModuleLoader;
 import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.ModuleEventListener;
 import com.nubeiot.edge.core.TransactionEventListener;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
 
@@ -36,9 +36,9 @@ public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
     public void registerEventbus(EventController eventClient) {
         eventClient.register(MockBiosStartupModulesVerticle.MOCK_BIOS_INSTALLER,
                              new ModuleEventListener(this, MockBiosStartupModulesVerticle.MOCK_BIOS_INSTALLER));
-        eventClient.register(EdgeInstallerEventBus.BIOS_DEPLOYMENT, new MockModuleLoader(null));
-        eventClient.register(EdgeInstallerEventBus.BIOS_TRANSACTION,
-                             new TransactionEventListener(this, EdgeInstallerEventBus.BIOS_TRANSACTION));
+        eventClient.register(InstallerEventModel.BIOS_DEPLOYMENT, new MockModuleLoader(null));
+        eventClient.register(InstallerEventModel.BIOS_TRANSACTION,
+                             new TransactionEventListener(this, InstallerEventModel.BIOS_TRANSACTION));
     }
 
     @Override

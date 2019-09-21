@@ -1,14 +1,20 @@
 package com.nubeiot.buildscript.jooq;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
 import org.jooq.codegen.JavaWriter;
+import org.jooq.meta.TableDefinition;
 import org.jooq.meta.TypedElementDefinition;
 
 import io.github.jklingsporn.vertx.jooq.generate.builder.DIStep;
 import io.github.jklingsporn.vertx.jooq.generate.builder.DelegatingVertxGenerator;
 import io.github.jklingsporn.vertx.jooq.generate.builder.VertxGeneratorBuilder;
+
+import com.nubeiot.buildscript.Strings;
 
 public class NubeJdbcGenerator extends DelegatingVertxGenerator {
 
@@ -16,8 +22,15 @@ public class NubeJdbcGenerator extends DelegatingVertxGenerator {
         this(VertxGeneratorBuilder.init().withRXAPI().withJDBCDriver());
     }
 
-    public NubeJdbcGenerator(DIStep step) {
+    NubeJdbcGenerator(DIStep step) {
         super(step.build());
+    }
+
+    private static boolean writeSetter(JavaWriter out, String setter, String javaMemberName, Function<String, String> f,
+                                       String defVal) {
+        String parser = f.apply(String.format("json.getValue(\"%s\")", javaMemberName));
+        out.tab(2).println("%s(json.getValue(\"%s\")==null?%s:%s);", setter, javaMemberName, defVal, parser);
+        return true;
     }
 
     @Override
@@ -48,11 +61,33 @@ public class NubeJdbcGenerator extends DelegatingVertxGenerator {
         return true;
     }
 
-    private static boolean writeSetter(JavaWriter out, String setter, String javaMemberName, Function<String, String> f,
-                                       String defVal) {
-        String parser = f.apply(String.format("json.getValue(\"%s\")", javaMemberName));
-        out.tab(2).println("%s(json.getValue(\"%s\")==null?%s:%s);", setter, javaMemberName, defVal, parser);
-        return true;
+    @Override
+    protected void generateInterface(TableDefinition table) {
+        super.generateInterface(table);
+    }
+
+    @Override
+    protected void generateTableClassFooter(TableDefinition table, JavaWriter out) {
+        out.println();
+        out.tab(1).println("private final Map<String, String> jsonFields = Collections.unmodifiableMap(initFields());");
+        out.println();
+        out.tab(1).println("private Map<String, String> initFields() {");
+        out.tab(2).println("Map<String, String> map = new HashMap();");
+        table.getColumns().forEach(c -> {
+            String jsonField = Strings.toSnakeCase(CacheDataType.instance().fieldName(c.getName()), false);
+            out.tab(2).println("map.put(\"" + jsonField + "\", \"" + c.getName() + "\");");
+        });
+        out.tab(2).println("return map;");
+        out.tab(1).println("}");
+        out.println();
+        out.tab(1).override();
+        out.tab(1).println("public Map<String, String> jsonFields() {");
+        out.tab(2).println("return jsonFields;");
+        out.tab(1).println("}");
+        out.println();
+        out.ref(Map.class);
+        out.ref(HashMap.class);
+        out.ref(Collections.class);
     }
 
 }

@@ -34,7 +34,7 @@ public class ResponseDataWriter implements HttpResponseWriter<ResponseData> {
         Object message = deSerializeResponseBody(result.body());
         response.setStatusCode(result.getStatus().code());
         response.headers().addAll(HttpUtils.HttpHeaderUtils.deserializeHeaders(result.headers()));
-        response.putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.DEFAULT_CONTENT_TYPE);
+        response.putHeader(HttpHeaders.CONTENT_TYPE, HttpUtils.JSON_UTF8_CONTENT_TYPE);
 
         if (Objects.isNull(message)) {
             response.end();

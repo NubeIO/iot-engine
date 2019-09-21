@@ -1,4 +1,4 @@
 dependencies {
     compile project(':core:base')
-    compile project(':core:httpclient')
+    compile project(':core:httpbase')
 }

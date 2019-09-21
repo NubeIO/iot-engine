@@ -25,7 +25,7 @@ import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
-import com.nubeiot.eventbus.edge.EdgeInstallerEventBus;
+import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 @RunWith(VertxUnitRunner.class)
 public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
@@ -40,7 +40,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                                                   .setVersion(VERSION)
                                                   .setAppConfig(APP_CONFIG)
                                                   .setSystemConfig(APP_SYSTEM_CONFIG)
-                                                  .setModifiedAt(DateTimes.nowUTC()));
+                                                  .setModifiedAt(DateTimes.now()));
     }
 
     @Override
@@ -94,7 +94,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                                                     .put("action", EventAction.PATCH)
                                                     .put("data", new JsonObject("{\"abc\":\"123\"}"));
         this.edgeVerticle.getEventController()
-                         .request(DeliveryEvent.from(EdgeInstallerEventBus.BIOS_DEPLOYMENT, EventAction.PATCH,
+                         .request(DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.PATCH,
                                                      RequestData.builder().body(body).build().toJson()),
                                   EventbusHelper.replyAsserter(context, async, expected));
     }
@@ -106,15 +106,13 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
                                               .put("version", VERSION);
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
         Async async = context.async();
-        final DeliveryEvent deliveryEvent = DeliveryEvent.from(EdgeInstallerEventBus.BIOS_DEPLOYMENT,
-                                                               EventAction.CREATE,
+        final DeliveryEvent deliveryEvent = DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.CREATE,
                                                                RequestData.builder().body(body).build().toJson());
         //create loading takes 9 seconds when timeout is 3 seconds
-        this.edgeVerticle.getEventController().request(deliveryEvent, context.asyncAssertFailure(response -> {
-            response.printStackTrace();
-            context.assertTrue(response instanceof ReplyException);
-            context.assertEquals(((ReplyException) response).failureType(), ReplyFailure.TIMEOUT);
-            context.assertEquals(((ReplyException) response).failureCode(), -1);
+        this.edgeVerticle.getEventController().request(deliveryEvent, context.asyncAssertFailure(throwable -> {
+            context.assertTrue(throwable instanceof ReplyException);
+            context.assertEquals(((ReplyException) throwable).failureType(), ReplyFailure.TIMEOUT);
+            context.assertEquals(((ReplyException) throwable).failureCode(), -1);
             TestHelper.testComplete(async);
         }));
     }

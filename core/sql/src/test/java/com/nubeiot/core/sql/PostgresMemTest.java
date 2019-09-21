@@ -1,8 +1,6 @@
 package com.nubeiot.core.sql;
 
 import org.jooq.SQLDialect;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,42 +24,33 @@ public class PostgresMemTest extends BaseSqlTest {
     @Rule
     public SingleInstancePostgresRule pg = EmbeddedPostgresRules.singleInstance().customize(this::pgBuilder);
 
-    private void pgBuilder(Builder builder) {
-        //        builder.setDataDirectory(folder.getRoot().toPath().resolve("pgsql")).setCleanDataDirectory(true)
-        //        .setPort(5432);
-        builder.setCleanDataDirectory(true).setPort(10000);
-    }
-
     @BeforeClass
     public static void beforeSuite() {
         BaseSqlTest.beforeSuite();
     }
 
-    @Before
-    public void before(TestContext context) {
-        super.before(context);
-    }
-
-    @After
-    public void after(TestContext context) {
-        super.after(context);
-    }
-
     @Override
-    SQLDialect getDialect() {
+    public SQLDialect getDialect() {
         return SQLDialect.POSTGRES;
     }
 
     @Override
-    @NonNull String getJdbcUrl() {
+    @NonNull
+    public String getJdbcUrl() {
         return pg.getEmbeddedPostgres().getJdbcUrl("postgres", "postgres");
     }
 
     @Test
     public void test_restart_app(TestContext context) {
-        startSQL(context, OneSchema.CATALOG, MockOneEntityHandler.class);
+        startSQL(context, SchemaTest.OneSchema.CATALOG, MockOneEntityHandler.class);
         //        stopSQL(context);
         //        startSQL(OneSchema.CATALOG, MockOneEntityHandler.class, context);
+    }
+
+    private void pgBuilder(Builder builder) {
+        //        builder.setDataDirectory(folder.getRoot().toPath().resolve("pgsql")).setCleanDataDirectory(true)
+        //        .setPort(5432);
+        builder.setCleanDataDirectory(true).setPort(10000);
     }
 
 }

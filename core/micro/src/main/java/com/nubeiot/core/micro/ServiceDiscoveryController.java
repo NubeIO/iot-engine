@@ -9,6 +9,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -39,6 +40,7 @@ import com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor;
 import com.nubeiot.core.micro.monitor.ServiceGatewayUsageMonitor;
 import com.nubeiot.core.micro.type.EventMessagePusher;
 import com.nubeiot.core.micro.type.EventMessageService;
+import com.nubeiot.core.utils.Functions;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -67,6 +69,14 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         logger.debug("{} Service Discovery | {} | {}", kind, BackendConfig.DEFAULT_SERVICE_DISCOVERY_BACKEND,
                      System.getProperty(BackendConfig.DEFAULT_SERVICE_DISCOVERY_BACKEND));
         return ServiceDiscovery.create(vertx, config);
+    }
+
+    public static Function<Record, Boolean> defaultHttpEndpointFilter(String serviceName,
+                                                                      @NonNull HttpLocation location) {
+        return r -> r.getType().equals(HttpEndpoint.TYPE) &&
+                    location.getHost().equals(r.getLocation().getString("host")) &&
+                    location.getPort() == r.getLocation().getInteger("port") &&
+                    location.getRoot().equals(r.getLocation().getString("root")) && r.getName().equals(serviceName);
     }
 
     abstract <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, @NonNull T announceMonitor);
@@ -128,12 +138,12 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return addDecoratorRecord(EventMessageService.createRecord(name, address, definition, metadata));
     }
 
-    public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
+    public Single<ResponseData> executeHttpService(Predicate<Record> filter, String path, HttpMethod method,
                                                    RequestData requestData) {
         return executeHttpService(filter, path, method, requestData, null);
     }
 
-    public Single<ResponseData> executeHttpService(Function<Record, Boolean> filter, String path, HttpMethod method,
+    public Single<ResponseData> executeHttpService(Predicate<Record> filter, String path, HttpMethod method,
                                                    RequestData requestData, HttpClientOptions options) {
         return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
             ServiceReference reference = get().getReferenceWithConfiguration(record, Objects.isNull(options)
@@ -145,19 +155,18 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {}::{}", t, method, path));
     }
 
-    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
-                                                           HttpMethod method, RequestData requestData) {
+    public Single<ResponseData> executeEventMessageService(Predicate<Record> filter, String path, HttpMethod method,
+                                                           RequestData requestData) {
         return executeEventMessageService(filter, path, method, requestData.toJson());
     }
 
-    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
-                                                           HttpMethod method, JsonObject requestData) {
+    public Single<ResponseData> executeEventMessageService(Predicate<Record> filter, String path, HttpMethod method,
+                                                           JsonObject requestData) {
         return executeEventMessageService(filter, path, method, requestData, null);
     }
 
-    public Single<ResponseData> executeEventMessageService(Function<Record, Boolean> filter, String path,
-                                                           HttpMethod method, JsonObject requestData,
-                                                           DeliveryOptions options) {
+    public Single<ResponseData> executeEventMessageService(Predicate<Record> filter, String path, HttpMethod method,
+                                                           JsonObject requestData, DeliveryOptions options) {
         return findRecord(filter, EventMessageService.TYPE).flatMap(record -> {
             JsonObject config = new JsonObject().put(EventMessageService.SHARED_KEY_CONFIG, sharedKey)
                                                 .put(EventMessageService.DELIVERY_OPTIONS_CONFIG,
@@ -170,14 +179,18 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
-    private Single<Record> findRecord(Function<Record, Boolean> filter, String type) {
-        return getRx().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r))
+    private Single<Record> findRecord(Predicate<Record> filter, String type) {
+        return getRx().rxGetRecord(Functions.and(r -> type.equals(r.getType()), filter)::test)
                       .switchIfEmpty(Single.error(
                           new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
     }
 
     public Single<Boolean> contains(Function<Record, Boolean> filter, String type) {
         return getRx().rxGetRecord(r -> type.equals(r.getType()) && filter.apply(r)).count().map(c -> c > 0);
+    }
+
+    public Maybe<Record> get(@NonNull Function<Record, Boolean> filter) {
+        return getRx().rxGetRecord(filter);
     }
 
     public Single<List<Record>> getRecords() {
@@ -198,8 +211,8 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
             registrationMap.put(rec.getRegistration(), rec);
             logger.info("Published {} Service | Registration: {} | API: {} | Type: {} | Endpoint: {}", kind(),
                         rec.getRegistration(), rec.getName(), rec.getType(), rec.getLocation().getString("endpoint"));
-            if (logger.isDebugEnabled()) {
-                logger.debug("Published {} Service: {}", kind(), rec.toJson());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Published {} Service: {}", kind(), rec.toJson());
             }
         }).doOnError(t -> logger.error("Cannot publish {} record: {}", t, kind(), record.toJson()));
     }

@@ -1,7 +1,6 @@
 package com.nubeiot.core.kafka.service;
 
 import java.util.Collection;
-import java.util.function.Function;
 
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -11,11 +10,9 @@ import com.nubeiot.core.kafka.KafkaRouter;
 
 public interface KafkaConsumerService {
 
-    static KafkaConsumerService create(Vertx vertx, ConsumerCfg config, KafkaRouter router,
-                                       Function<String, Object> sharedDataFunc) {
+    static KafkaConsumerService create(Vertx vertx, ConsumerCfg config, KafkaRouter router, String sharedKey) {
         return new ConsumerService(vertx, config, router.getConsumerTechId(),
-                                   router.getConsumerExceptionHandler()).create(sharedDataFunc,
-                                                                                router.getConsumerEvents());
+                                   router.getConsumerExceptionHandler()).create(sharedKey, router.getConsumerEvents());
     }
 
     <K, V> KafkaConsumer<K, V> consumer(String topic);
