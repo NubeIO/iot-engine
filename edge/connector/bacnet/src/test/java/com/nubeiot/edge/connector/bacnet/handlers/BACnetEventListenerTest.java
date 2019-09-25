@@ -96,8 +96,8 @@ public class BACnetEventListenerTest {
         Address from = Mockito.mock(Address.class);
 
         Mockito.when(
-            localController.executeHttpService(Mockito.any(java.util.function.Function.class), Mockito.anyString(),
-                                               Mockito.any(HttpMethod.class), Mockito.any(RequestData.class)))
+            localController.executeHttpService(Mockito.anyObject(), Mockito.anyString(), Mockito.any(HttpMethod.class),
+                                               Mockito.any(RequestData.class)))
                .thenReturn(Single.just(ResponseData.noContent()));
 
         Assert.assertEquals(localDevice1.getObject(oid).get(PropertyIdentifier.presentValue),
