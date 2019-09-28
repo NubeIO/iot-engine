@@ -30,7 +30,6 @@ import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
-import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 
 //temporary ignore
@@ -72,7 +71,7 @@ public class SimulatorIntegrationTest {
     public void deviceDiscoveryTest(TestContext context) throws Exception {
         Async async = context.async();
         eventController.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_LIST, addNetWorkToJson(new JsonObject())),
+                             EventMessage.initial(EventAction.GET_LIST, addNetworkToJson(new JsonObject())),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body(), true);
                                  context.assertTrue(message.isSuccess());
@@ -86,7 +85,7 @@ public class SimulatorIntegrationTest {
         Async async = context.async();
         eventController.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
                              EventMessage.initial(EventAction.GET_ONE,
-                                                  addNetWorkToJson(new JsonObject()).put("deviceId",
+                                                  addNetworkToJson(new JsonObject()).put("deviceId",
                                                                                          remoteDeviceId.toString())),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body(), true);
@@ -103,7 +102,7 @@ public class SimulatorIntegrationTest {
         Integer id = remoteDeviceId + 1;
         eventController.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
                              EventMessage.initial(EventAction.GET_ONE,
-                                                  addNetWorkToJson(new JsonObject()).put("deviceId", id.toString())),
+                                                  addNetworkToJson(new JsonObject()).put("deviceId", id.toString())),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  context.assertTrue(message.isError());
@@ -118,7 +117,7 @@ public class SimulatorIntegrationTest {
 
         RequestData req = RequestData.builder()
                                      .body(
-                                         addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString()))
+                                         addNetworkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString()))
                                      .build();
 
         eventController.fire(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_LIST, req),
@@ -180,7 +179,7 @@ public class SimulatorIntegrationTest {
         JsonObject p1o = testPoints.getJsonObject(p1);
 
         RequestData req = RequestData.builder()
-                                     .body(addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
+                                     .body(addNetworkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
                                                                              .put("objectId",
                                                                                   BACnetDataConversions.pointIDNubeToBACnet(
                                                                                       p1)))
@@ -207,7 +206,7 @@ public class SimulatorIntegrationTest {
         eventController.fire("nubeiot.edge.connector.bacnet.device.points-info", EventPattern.REQUEST_RESPONSE,
                              EventMessage.initial(EventAction.GET_ONE, RequestData.builder()
                                                                                   .body(
-                                                                                      addNetWorkToJson(new JsonObject())
+                                                                                      addNetworkToJson(new JsonObject())
                                                                                           .put("deviceId",
                                                                                                remoteDeviceId.toString())
                                                                                           .put("objectId",
@@ -227,7 +226,7 @@ public class SimulatorIntegrationTest {
         JsonObject p1o = testPoints.getJsonObject(p1);
 
         RequestData req = RequestData.builder()
-                                     .body(addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
+                                     .body(addNetworkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
                                                                              .put("objectId",
                                                                                   BACnetDataConversions.pointIDNubeToBACnet(
                                                                                       p1)))
@@ -263,7 +262,7 @@ public class SimulatorIntegrationTest {
 
         RequestData req = RequestData.builder()
                                      .body(
-                                         addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString()))
+                                         addNetworkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString()))
                                      .filter(new JsonObject().put("objectIds", objectIds))
                                      .build();
 
@@ -299,7 +298,7 @@ public class SimulatorIntegrationTest {
         JsonObject point = testPoints.getJsonObject("R1");
         boolean val = point.getInteger("value") == 1;
         RequestData req = RequestData.builder()
-                                     .body(addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
+                                     .body(addNetworkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
                                                                              .put("objectId", pointId)
                                                                              .put("priority", "16")
                                                                              .put("value", !val))
@@ -311,7 +310,7 @@ public class SimulatorIntegrationTest {
                 context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isSuccess());
                 eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
                                      EventMessage.initial(EventAction.GET_ONE, RequestData.builder()
-                                                                                          .body(addNetWorkToJson(
+                                                                                          .body(addNetworkToJson(
                                                                                               new JsonObject()).put(
                                                                                               "deviceId",
                                                                                               remoteDeviceId.toString())
@@ -345,7 +344,7 @@ public class SimulatorIntegrationTest {
         String pointId = "binary-value:0";
         boolean val = true;
         RequestData req = RequestData.builder()
-                                     .body(addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
+                                     .body(addNetworkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
                                                                              .put("objectId", pointId)
                                                                              .put("priority", "16")
                                                                              .put("value", !val))
@@ -357,7 +356,7 @@ public class SimulatorIntegrationTest {
                 context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isSuccess());
                 eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
                                      EventMessage.initial(EventAction.GET_ONE, RequestData.builder()
-                                                                                          .body(addNetWorkToJson(
+                                                                                          .body(addNetworkToJson(
                                                                                               new JsonObject()).put(
                                                                                               "deviceId",
                                                                                               remoteDeviceId.toString())
@@ -392,7 +391,7 @@ public class SimulatorIntegrationTest {
         JsonObject point = testPoints.getJsonObject("R1");
         boolean val = point.getInteger("value") == 1;
         RequestData req = RequestData.builder()
-                                     .body(addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
+                                     .body(addNetworkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
                                                                              .put("objectId", pointId)
                                                                              .put("priority", "10")
                                                                              .put("value", !val))
@@ -413,7 +412,7 @@ public class SimulatorIntegrationTest {
                                              EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_ONE,
                                                                                                  RequestData.builder()
                                                                                                             .body(
-                                                                                                                addNetWorkToJson(
+                                                                                                                addNetworkToJson(
                                                                                                                     new JsonObject())
                                                                                                                     .put(
                                                                                                                         "deviceId",
@@ -443,7 +442,7 @@ public class SimulatorIntegrationTest {
         JsonObject point = testPoints.getJsonObject("UO1");
         double val = 0.12;
         RequestData req = RequestData.builder()
-                                     .body(addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
+                                     .body(addNetworkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
                                                                              .put("objectId", pointId)
                                                                              .put("priority", "10")
                                                                              .put("value", val))
@@ -464,7 +463,7 @@ public class SimulatorIntegrationTest {
                                              EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_ONE,
                                                                                                  RequestData.builder()
                                                                                                             .body(
-                                                                                                                addNetWorkToJson(
+                                                                                                                addNetworkToJson(
                                                                                                                     new JsonObject())
                                                                                                                     .put(
                                                                                                                         "deviceId",
@@ -490,8 +489,8 @@ public class SimulatorIntegrationTest {
             }, null);
     }
 
-    private JsonObject addNetWorkToJson(JsonObject json) {
-        return json.put("network", masterBACnetConfig.getIpConfigs().iterator().next().getName());
+    private JsonObject addNetworkToJson(JsonObject json) {
+        return json.put("network", masterBACnetConfig.getNetworks().toNetworks().iterator().next().getName());
     }
 
 }

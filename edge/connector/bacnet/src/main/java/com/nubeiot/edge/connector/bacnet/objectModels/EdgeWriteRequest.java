@@ -2,9 +2,15 @@ package com.nubeiot.edge.connector.bacnet.objectModels;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
+
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * @deprecated Use {@link PointValue}
+ */
+@Deprecated
 @Getter
 @Setter
 public class EdgeWriteRequest {

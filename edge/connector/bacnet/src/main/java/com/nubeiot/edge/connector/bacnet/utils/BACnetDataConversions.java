@@ -236,7 +236,7 @@ public class BACnetDataConversions {
 
     public static ObjectIdentifier getObjectIdentifier(String idString) throws BACnetRuntimeException {
         String[] arr = idString.split(":");
-        if (arr.length < 2 || arr.length > 2) {
+        if (arr.length != 2) {
             throw new BACnetRuntimeException("Illegal Object Identifier");
         }
         ObjectType type = ObjectType.forName(arr[0]);

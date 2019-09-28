@@ -14,15 +14,14 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import io.reactivex.Single;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
 import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
@@ -40,6 +39,7 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 @RunWith(MockitoJUnitRunner.class)
 public class BACnetEventListenerTest {
 
+    public static final String SHARED_KEY = BACnetEventListenerTest.class.getName();
     protected final HashMap<String, BACnetInstance> bacnetInstances = new HashMap<>();
     private LocalDevice localDevice1;
     private LocalDevice localDevice2;
@@ -52,23 +52,22 @@ public class BACnetEventListenerTest {
     ServiceDiscoveryController localController;
 
     @Before
-    public void before() throws Exception {
+    public void before() {
         Vertx vertx = Mockito.mock(Vertx.class);
         Transport transport = Mockito.mock(DefaultTransport.class);
         localDevice1 = new LocalDevice(111, transport);
         localDevice2 = new LocalDevice(222, transport);
-        BACnetInstance mainInstance = BACnetInstance.createBACnet(localDevice1, vertx);
+        BACnetInstance mainInstance = BACnetInstance.create(vertx, SHARED_KEY, localDevice1);
         bacnetInstances.put("ip1", mainInstance);
-        bacnetInstances.put("ip2", BACnetInstance.createBACnet(localDevice2, vertx));
-        eventListener = new BACnetEventListener(new BACnetConfig(), mainInstance, localDevice1, null, localController,
-                                                bacnetInstances, vertx);
+        bacnetInstances.put("ip2", BACnetInstance.create(vertx, SHARED_KEY, localDevice2));
+        eventListener = new BACnetEventListener(vertx, mainInstance, localDevice1, bacnetInstances);
 
         final URL POINTS_RESOURCE = FileUtils.class.getClassLoader().getResource("points.json");
         points = new JsonObject(FileUtils.readFileToString(POINTS_RESOURCE.toString()));
     }
 
     @After
-    public void afterEach() throws Exception {
+    public void afterEach() {
         localDevice1.terminate();
         localDevice2.terminate();
     }

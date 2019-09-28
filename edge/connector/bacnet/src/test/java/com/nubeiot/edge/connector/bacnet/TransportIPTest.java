@@ -11,13 +11,13 @@ public class TransportIPTest {
     @Test
     @Ignore
     public void test_by_subnet() {
-        Assert.assertNotNull(TransportIP.bySubnet("192.168.1.6/30", -1).get());
+        Assert.assertNotNull(TransportIP.bySubnet("192.168.1.6/30", -1));
     }
 
     @Test
     @Ignore
     public void test_by_network() {
-        Assert.assertNotNull(TransportIP.byNetworkName("enp24s0", -1).get());
+        Assert.assertNotNull(TransportIP.byNetworkName("enp24s0", -1));
     }
 
     @Test(expected = NetworkException.class)
@@ -28,6 +28,11 @@ public class TransportIPTest {
     @Test(expected = NetworkException.class)
     public void test_by_network_invalid() {
         TransportIP.byNetworkName("not_found_xxx", -1);
+    }
+
+    @Test
+    public void test_by_network_null() {
+        Assert.assertNotNull(TransportIP.byNetworkName(null, -1));
     }
 
 }

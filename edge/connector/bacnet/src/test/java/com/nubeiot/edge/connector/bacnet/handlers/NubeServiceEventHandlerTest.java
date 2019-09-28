@@ -10,8 +10,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
@@ -31,6 +31,7 @@ public class NubeServiceEventHandlerTest {
     static LocalDevice localDevice2;
     static NubeServiceEventHandler eventHandler;
     static JsonObject points;
+    private static final String SHARED_KEY = NubeServiceEventHandlerTest.class.getName();
 
     @BeforeClass
     public static void beforeAll() throws Exception {
@@ -38,8 +39,8 @@ public class NubeServiceEventHandlerTest {
         localDevice1 = new LocalDevice(111, transport);
         localDevice2 = new LocalDevice(111, transport);
         Vertx vertx = Mockito.mock(Vertx.class);
-        bacnetInstances.put("net1", BACnetInstance.createBACnet(localDevice1, vertx));
-        bacnetInstances.put("net2", BACnetInstance.createBACnet(localDevice2, vertx));
+        bacnetInstances.put("net1", BACnetInstance.create(vertx, SHARED_KEY, localDevice1));
+        bacnetInstances.put("net2", BACnetInstance.create(vertx, SHARED_KEY, localDevice2));
         eventHandler = new NubeServiceEventHandler(bacnetInstances);
 
         final URL POINTS_RESOURCE = FileUtils.class.getClassLoader().getResource("points.json");
@@ -53,7 +54,7 @@ public class NubeServiceEventHandlerTest {
         bacnetInstances.forEach((s, baCnetInstance) -> {
             try {
                 baCnetInstance.addLocalObject(EdgePoint.fromJson("UI1", points.getJsonObject("UI1")));
-            }catch (Exception e){
+            } catch (Exception e) {
                 Assert.fail(e.getMessage());
             }
         });

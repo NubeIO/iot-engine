@@ -25,13 +25,9 @@
       }
     },
     "__bacnet__": {
-      "deviceName": "NubeIOEdge28",
+      "deviceName": "NubeIO-Edge28",
       "deviceId": 4321,
-      "__ipConfigs__": [
-        {
-          "name": "ip1"
-        }
-      ]
+      "__networks__": {}
     }
   }
 }

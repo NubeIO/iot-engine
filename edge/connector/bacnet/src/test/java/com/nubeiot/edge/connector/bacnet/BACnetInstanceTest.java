@@ -1,10 +1,6 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import static org.junit.Assert.assertEquals;
-
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import org.junit.After;
@@ -12,13 +8,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
@@ -48,7 +43,7 @@ public class BACnetInstanceTest {
         vertx = Mockito.mock(Vertx.class);
         transport = Mockito.mock(DefaultTransport.class);
         localDevice = new LocalDevice(1234, transport);
-        bacnetInstance = BACnetInstance.createBACnet(localDevice, vertx);
+        bacnetInstance = BACnetInstance.create(vertx, BACnetInstanceTest.class.getName(), localDevice);
         final URL POINTS_RESOURCE = FileUtils.class.getClassLoader().getResource("points.json");
         points = new JsonObject(FileUtils.readFileToString(POINTS_RESOURCE.toString()));
     }
@@ -77,7 +72,7 @@ public class BACnetInstanceTest {
     @Test
     public void discoveryTest() throws Exception {
         LocalDevice ld = Mockito.mock(LocalDevice.class);
-        BACnetInstance inst = BACnetInstance.createBACnet(ld, vertx);
+        BACnetInstance inst = BACnetInstance.create(vertx, BACnetInstanceTest.class.getName(), ld);
         Mockito.when(ld.startRemoteDeviceDiscovery()).thenReturn(Mockito.mock(RemoteDeviceDiscoverer.class));
         inst.startRemoteDiscover();
         Mockito.verify(ld).clearRemoteDevices();
@@ -117,12 +112,10 @@ public class BACnetInstanceTest {
         });
     }
 
-
     @Test
     public void getLocalObjectNubeIdError() throws Exception {
         Assert.assertNull(bacnetInstance.getLocalObjectNubeId(new ObjectIdentifier(ObjectType.binaryValue, 11)));
     }
-
 
     @Test
     public void addLocalPoint() throws Exception {
@@ -132,7 +125,7 @@ public class BACnetInstanceTest {
                 bacnetInstance.addLocalObject(p);
                 Assert.assertNotNull(bacnetInstance.getLocalObjectId(s));
                 Assert.assertNotNull(localDevice.getObject(bacnetInstance.getLocalObjectId(s)));
-            }catch (Exception e){
+            } catch (Exception e) {
                 Assert.fail(e.getMessage());
             }
         });

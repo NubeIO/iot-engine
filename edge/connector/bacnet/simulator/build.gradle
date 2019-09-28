@@ -1,6 +1,5 @@
 repositories {
     project.repos
-    maven { url "https://maven.mangoautomation.net/repository/ias-snapshot/" }
     maven { url "https://maven.mangoautomation.net/repository/ias-release/" }
 }
 
@@ -10,6 +9,5 @@ dependencies {
     compile project(':edge:connector:bacnet')
 
     testCompile project(":core:base").sourceSets.test.output
-
     testCompile "org.mockito:mockito-core:1.+"
 }

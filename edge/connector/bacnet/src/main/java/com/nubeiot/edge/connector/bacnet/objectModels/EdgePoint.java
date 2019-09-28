@@ -1,26 +1,19 @@
 package com.nubeiot.edge.connector.bacnet.objectModels;
 
-import java.util.List;
-
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
-import com.nubeiot.edge.connector.bacnet.utils.LocalPointObjectUtils;
-import com.serotonin.bacnet4j.obj.BACnetObject;
-import com.serotonin.bacnet4j.type.Encodable;
-import com.serotonin.bacnet4j.type.constructed.PropertyValue;
-import com.serotonin.bacnet4j.type.constructed.ValueSource;
-import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
-import com.serotonin.bacnet4j.type.primitive.CharacterString;
-import com.serotonin.bacnet4j.type.primitive.Real;
-import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
+import com.nubeiot.iotdata.dto.PointPriorityValue;
 
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * @deprecated Use {@link PointPriorityValue}
+ */
 @Getter
 @Setter
+@Deprecated
 public class EdgePoint {
 
     private String id;
@@ -33,7 +26,7 @@ public class EdgePoint {
 
 
     public enum Kind {
-        NUMBER, BOOL, OTHER;
+        NUMBER, BOOL, OTHER
     }
 
     public EdgePoint(String id, Object value) {

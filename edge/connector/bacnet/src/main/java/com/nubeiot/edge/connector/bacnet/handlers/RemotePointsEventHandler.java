@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
  * VERTX event bus message handler
  *  calls respective messages in BACnetInstance
  */
+@Deprecated
 @RequiredArgsConstructor
 public class RemotePointsEventHandler implements EventListener {
 

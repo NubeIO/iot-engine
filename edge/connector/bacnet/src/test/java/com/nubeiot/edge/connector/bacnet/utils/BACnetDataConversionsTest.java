@@ -10,21 +10,15 @@ import io.vertx.core.json.JsonObject;
 
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
-import com.serotonin.bacnet4j.type.constructed.PropertyValue;
-import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
-import com.serotonin.bacnet4j.type.primitive.Boolean;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 import com.serotonin.bacnet4j.util.PropertyValues;
-
-//import com.nubeiot.core.utils.FileUtilsTest;
-
 
 public class BACnetDataConversionsTest {
 
@@ -57,7 +51,6 @@ public class BACnetDataConversionsTest {
         Assert.assertEquals("binary-output:1", BACnetDataConversions.pointIDNubeToBACnet("DO1"));
         Assert.assertEquals("binary-output:11", BACnetDataConversions.pointIDNubeToBACnet("R1"));
 
-
         Assert.assertEquals("analog-input:11", BACnetDataConversions.pointIDNubeToBACnet("UI11"));
         Assert.assertEquals("analog-input:111", BACnetDataConversions.pointIDNubeToBACnet("UI111"));
         Assert.assertEquals("analog-output:12", BACnetDataConversions.pointIDNubeToBACnet("UO12"));
@@ -68,25 +61,25 @@ public class BACnetDataConversionsTest {
         //        Assert.assertEquals("binary-output:15", BACnetDataConversions.pointIDNubeToBACnet("R15"));
     }
 
-//    @Test
-//    public void CovNotificationTest() throws Exception {
-//        ObjectIdentifier initObj = new ObjectIdentifier(ObjectType.device, 1);
-//        ObjectIdentifier monObj = new ObjectIdentifier(ObjectType.analogOutput, 1);
-//        SequenceOf<PropertyValue> listOfValues = new SequenceOf<>();
-//
-//        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
-//
-//        listOfValues.add(new PropertyValue(PropertyIdentifier.objectName, new CharacterString("yeet")));
-//        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
-//
-//        listOfValues.add(new PropertyValue(PropertyIdentifier.presentValue, new Real(1)));
-//        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
-//
-//        listOfValues = new SequenceOf<>();
-//        listOfValues.add(new PropertyValue(PropertyIdentifier.presentValue, new UnsignedInteger(1), new Real(1),
-//                                           new UnsignedInteger(16)));
-//        Assert.assertNotNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
-//    }
+    //    @Test
+    //    public void CovNotificationTest() throws Exception {
+    //        ObjectIdentifier initObj = new ObjectIdentifier(ObjectType.device, 1);
+    //        ObjectIdentifier monObj = new ObjectIdentifier(ObjectType.analogOutput, 1);
+    //        SequenceOf<PropertyValue> listOfValues = new SequenceOf<>();
+    //
+    //        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
+    //
+    //        listOfValues.add(new PropertyValue(PropertyIdentifier.objectName, new CharacterString("yeet")));
+    //        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
+    //
+    //        listOfValues.add(new PropertyValue(PropertyIdentifier.presentValue, new Real(1)));
+    //        Assert.assertNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
+    //
+    //        listOfValues = new SequenceOf<>();
+    //        listOfValues.add(new PropertyValue(PropertyIdentifier.presentValue, new UnsignedInteger(1), new Real(1),
+    //                                           new UnsignedInteger(16)));
+    //        Assert.assertNotNull(BACnetDataConversions.CovNotification(initObj, monObj, listOfValues));
+    //    }
 
     @Test
     public void getObjectIdentifierTest() throws Exception {
@@ -160,10 +153,13 @@ public class BACnetDataConversionsTest {
     public void readMultipleToJson_Test() throws Exception {
         PropertyValues values = new PropertyValues();
         Assert.assertEquals(new JsonObject(), BACnetDataConversions.readMultipleToJson(values));
-        values.add(new ObjectIdentifier(ObjectType.analogValue, 1), PropertyIdentifier.presentValue, new UnsignedInteger(0), new Real(0));
-        values.add(new ObjectIdentifier(ObjectType.binaryValue, 1), PropertyIdentifier.presentValue, new UnsignedInteger(0), BinaryPV.active);
+        values.add(new ObjectIdentifier(ObjectType.analogValue, 1), PropertyIdentifier.presentValue,
+                   new UnsignedInteger(0), new Real(0));
+        values.add(new ObjectIdentifier(ObjectType.binaryValue, 1), PropertyIdentifier.presentValue,
+                   new UnsignedInteger(0), BinaryPV.active);
 
         JsonObject expected = new JsonObject().put("analog-value:1", 0.0).put("binary-value:1", 1);
         Assert.assertEquals(expected, BACnetDataConversions.readMultipleToJson(values));
     }
+
 }

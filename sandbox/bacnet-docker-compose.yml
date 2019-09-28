@@ -1,17 +1,26 @@
 version: "2.4"
 services:
 
-  bacnet:
+  bacnet-java-simulator:
     image: ${PREFIX_IMG}/edge-connector-bacnet-simulator:${IOT_VERSION}
     mem_limit: 480m
     cpuset: "0"
     environment:
       JVM_OPTS: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseContainerSupport -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:MaxRAM=395m -XX:MinRAMPercentage=50.0 -XX:MaxRAMPercentage=80.0 -Xss256k -XX:ActiveProcessorCount=0
-    ports:
-      - ${BACNET_PORT}:47808/udp
     volumes:
       - bacnet-data:/data
-      - ./engine/bacnet-simulator.json:/app/conf/simulator.json
+
+  bacnet-server:
+    image: docker-bacnet
+    mem_limit: 56m
+    command: ["bacserv", "200001"]
+
+  bacnet-perl-simulator:
+    image: docker-bacnet
+    mem_limit: 56m
+    environment:
+      DEVICE_NUMBER: 222
+    command: ["perl", "/simulator.pl"]
 
 volumes:
   bacnet-data:

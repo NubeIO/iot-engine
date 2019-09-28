@@ -5,7 +5,6 @@ import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -135,7 +134,7 @@ public final class PointPriorityValue implements JsonData {
     }
 
     @Getter
-    public static class PointValue implements VertxPojo, JsonData {
+    public static final class PointValue implements JsonData {
 
         private final int priority;
         private final Double value;
@@ -145,14 +144,8 @@ public final class PointPriorityValue implements JsonData {
             this.value = value;
         }
 
-        @Override
         public PointValue fromJson(JsonObject json) {
             return new PointValue(json.getInteger("priority", DEFAULT_PRIORITY), json.getDouble("value"));
-        }
-
-        @Override
-        public JsonObject toJson() {
-            return JsonData.super.toJson();
         }
 
     }

@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
  * VERTX event bus message handler
  *  calls respective messages in BACnetInstance
  */
+@Deprecated
 @RequiredArgsConstructor
 public class NubeServiceEventHandler implements EventListener {
 
@@ -44,7 +45,6 @@ public class NubeServiceEventHandler implements EventListener {
                 bacnetInstance.addLocalObject(point);
             } catch (Exception e) {
                 logger.warn("Error creating point {} ", e, id);
-                return;
             }
         });
     }
@@ -56,7 +56,6 @@ public class NubeServiceEventHandler implements EventListener {
                 bacnetInstance.removeLocalObject(id);
             } catch (Exception e) {
                 logger.warn("Error removing point {}", e, id);
-                return;
             }
         });
     }
@@ -69,7 +68,6 @@ public class NubeServiceEventHandler implements EventListener {
                 bacnetInstance.writeLocalObject(req);
             } catch (Exception e) {
                 logger.warn("Error writing to point {}", e, id);
-                return;
             }
         });
     }
@@ -82,7 +80,6 @@ public class NubeServiceEventHandler implements EventListener {
                 bacnetInstance.updateLocalObject(id, property, value);
             } catch (Exception e) {
                 logger.warn("Error updating point {} property {}", e, id, property);
-                return;
             }
         });
     }

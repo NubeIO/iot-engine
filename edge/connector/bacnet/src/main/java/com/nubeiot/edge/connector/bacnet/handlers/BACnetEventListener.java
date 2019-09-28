@@ -2,72 +2,54 @@ package com.nubeiot.edge.connector.bacnet.handlers;
 
 import java.util.Map;
 
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.Vertx;
 
-import com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.micro.ServiceDiscoveryController;
-import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
+import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
 import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.utils.LocalPointObjectUtils;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
-import com.serotonin.bacnet4j.exception.BACnetErrorException;
 import com.serotonin.bacnet4j.exception.BACnetException;
-import com.serotonin.bacnet4j.exception.BACnetServiceException;
 import com.serotonin.bacnet4j.obj.BACnetObject;
-import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.service.Service;
 import com.serotonin.bacnet4j.service.confirmed.CreateObjectRequest;
-import com.serotonin.bacnet4j.service.confirmed.ReadPropertyMultipleRequest;
-import com.serotonin.bacnet4j.service.confirmed.ReadPropertyRequest;
 import com.serotonin.bacnet4j.service.confirmed.WritePropertyRequest;
-import com.serotonin.bacnet4j.service.unconfirmed.IAmRequest;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.Address;
-import com.serotonin.bacnet4j.type.constructed.OptionalUnsigned;
 import com.serotonin.bacnet4j.type.constructed.PriorityValue;
-import com.serotonin.bacnet4j.type.constructed.PropertyReference;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
-import com.serotonin.bacnet4j.type.constructed.ReadAccessSpecification;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
-import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 
+/**
+ * @see WhoIsListener
+ * @deprecated split to small part for single responsibility
+ */
+@Deprecated
 public class BACnetEventListener extends DeviceEventAdapter {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private BACnetInstance bacnetInstance;
     private LocalDevice localDevice;
-    private EventController eventController;
-    private ServiceDiscoveryController localController;
     private Map<String, BACnetInstance> bacnetInstances;
     private Vertx vertx;
 
-    public BACnetEventListener(BACnetConfig config, BACnetInstance bacnetInstance, LocalDevice localDevice,
-                               EventController eventController, ServiceDiscoveryController localController,
-                               Map bacnetInstances, Vertx vertx) {
+    public BACnetEventListener(Vertx vertx, BACnetInstance bacnetInstance, LocalDevice localDevice,
+                               Map<String, BACnetInstance> bacnetInstances) {
         this.bacnetInstance = bacnetInstance;
         this.localDevice = localDevice;
-        this.eventController = eventController;
-        this.localController = localController;
         this.bacnetInstances = bacnetInstances;
         this.vertx = vertx;
     }
 
     @Override
-    public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier,
-                                        ObjectIdentifier initiatingDeviceIdentifier,
+    public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier, ObjectIdentifier initiatingDeviceIdentifier,
                                         ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
                                         SequenceOf<PropertyValue> listOfValues) {
         //        logger.info(
@@ -109,8 +91,7 @@ public class BACnetEventListener extends DeviceEventAdapter {
             " @ " + req.getPriority().intValue());
 
         if (!req.getPropertyIdentifier().equals(PropertyIdentifier.presentValue)) {
-            logger.warn(
-                "Unsupported external write request for property Id: " + req.getPropertyIdentifier().toString());
+            logger.warn("Unsupported external write request for property Id: " + req.getPropertyIdentifier().toString());
             return;
         }
 
@@ -140,23 +121,23 @@ public class BACnetEventListener extends DeviceEventAdapter {
     private void sendWriteRequest(EdgeWriteRequest writeRequest, BACnetObject point) {
 
         try {
-            Encodable oldVal = ((PriorityValue) point.readProperty(PropertyIdentifier.priorityArray,
-                                                                   new UnsignedInteger(
-                                                                       writeRequest.getPriority()))).getConstructedValue();
+            Encodable oldVal = ((PriorityValue) point.readProperty(PropertyIdentifier.priorityArray, new UnsignedInteger(
+                writeRequest.getPriority()))).getConstructedValue();
 
             //TODO: write point framework problem...
             // the framework will write to the BACnetObject straight after this method and if not connected to the
             // edge-api, the http is too fast to allow a revert unless called with setTimer / executeBlocking or
             // something like that
 
-            localController.executeHttpService(r -> r.getName().equals("edge-api"), "/edge-api/points", HttpMethod.GET,
-                                               RequestData.builder().build()).subscribe(responseData -> {
-                logger.info("Successfully wrote to point {}", writeRequest.getId());
-                writeToOtherNetworks(writeRequest);
-            }, error -> {
-                logger.error("Failed writing point to database", error);
-                revertWriteRequest(point, oldVal, writeRequest.getPriority());
-            });
+            //            localController.executeHttpService(r -> r.getName().equals("edge-api"), "/edge-api/points",
+            //            HttpMethod.GET,
+            //                                               RequestData.builder().build()).subscribe(responseData -> {
+            //                logger.info("Successfully wrote to point {}", writeRequest.getId());
+            writeToOtherNetworks(writeRequest);
+            //            }, error -> {
+            //                logger.error("Failed writing point to database", error);
+            //                revertWriteRequest(point, oldVal, writeRequest.getPriority());
+            //            });
         } catch (Exception e) {
             logger.error("error writing to point ", e);
         }

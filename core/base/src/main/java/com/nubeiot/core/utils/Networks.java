@@ -90,7 +90,7 @@ public final class Networks {
     }
 
     private static InetSocketAddress computeAddress(String givenHost, int givenPort) {
-        boolean isPublicCluster = Boolean.valueOf(System.getProperty(CLUSTER_PUBLIC_PROP));
+        boolean isPublicCluster = Boolean.parseBoolean(System.getProperty(CLUSTER_PUBLIC_PROP));
         if (!isPublicCluster) {
             return null;
         }
@@ -107,7 +107,7 @@ public final class Networks {
     }
 
     public static InetSocketAddress computeClusterEventbusUrl(String givenHost, int givenPort) {
-        boolean isPublicCluster = Boolean.valueOf(System.getProperty(CLUSTER_PUBLIC_PROP));
+        boolean isPublicCluster = Boolean.parseBoolean(System.getProperty(CLUSTER_PUBLIC_PROP));
         if (!isPublicCluster) {
             return null;
         }

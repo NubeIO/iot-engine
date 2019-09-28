@@ -47,6 +47,7 @@ public interface EnumType extends JsonData {
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     abstract class AbstractEnumType implements EnumType {
 
+        @NonNull
         private final String type;
         private final Collection<String> aliases;
 

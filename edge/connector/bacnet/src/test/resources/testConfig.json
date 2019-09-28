@@ -1,0 +1,13 @@
+{
+  "__app__": {
+    "__bacnet__": {
+      "deviceName": "NubeIO-Edge28",
+      "deviceId": 123456,
+      "__networks__": {
+        "ip1": {
+          "subnet": "172.17.0.1/16"
+        }
+      }
+    }
+  }
+}

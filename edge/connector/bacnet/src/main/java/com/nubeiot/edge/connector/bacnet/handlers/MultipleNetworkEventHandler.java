@@ -8,24 +8,25 @@ import java.util.Map;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
+import com.nubeiot.edge.connector.bacnet.service.NetworkDiscovery;
 import com.serotonin.bacnet4j.exception.BACnetException;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-/*
- * VERTX event bus message handler
- *  calls respective messages in BACnetInstance
+/**
+ * VERTX event bus message handler calls respective messages in BACnetInstance
+ *
+ * @deprecated use {@link NetworkDiscovery}
  */
+@Deprecated
 @RequiredArgsConstructor
 public class MultipleNetworkEventHandler implements EventListener {
 
@@ -62,7 +63,7 @@ public class MultipleNetworkEventHandler implements EventListener {
         if (requestData.body() != null && requestData.body().getString("timeout") != null) {
             long timeout = Long.parseLong(requestData.body().getString("timeout"));
             if (timeout > 0 && timeout < 200) {
-                throw new BACnetException("Timout too short. must be >= 200");
+                throw new BACnetException("Timeout too short. must be >= 200");
             }
             bacnetInstances.forEach((network, instance) -> instance.startRemoteDiscover(timeout));
         } else {

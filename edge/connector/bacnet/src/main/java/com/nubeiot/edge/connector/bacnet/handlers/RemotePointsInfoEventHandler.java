@@ -11,7 +11,6 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
@@ -24,6 +23,7 @@ import lombok.RequiredArgsConstructor;
  * VERTX event bus message handler
  *  calls respective messages in BACnetInstance
  */
+@Deprecated
 @RequiredArgsConstructor
 public class RemotePointsInfoEventHandler implements EventListener {
 
