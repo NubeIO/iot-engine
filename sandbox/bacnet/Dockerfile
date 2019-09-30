@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM debian:stretch-slim
 
 ADD https://astuteinternet.dl.sourceforge.net/project/bacnet/bacnet-stack/bacnet-stack-0.8.6/bacnet-stack-0.8.6.tgz .
 ADD wrapper.sh /

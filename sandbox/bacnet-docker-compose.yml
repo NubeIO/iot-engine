@@ -11,16 +11,22 @@ services:
       - bacnet-data:/data
 
   bacnet-server:
-    image: docker-bacnet
+    image: c-bacnet
     mem_limit: 56m
     command: ["bacserv", "200001"]
 
   bacnet-perl-simulator:
-    image: docker-bacnet
+    image: c-bacnet
     mem_limit: 56m
     environment:
       DEVICE_NUMBER: 222
     command: ["perl", "/simulator.pl"]
+
+  bacnet-py-simulator:
+    image: py-bacnet
+    mem_limit: 56m
+    environment:
+      DEVICE_NUMBER: 222
 
 volumes:
   bacnet-data:
