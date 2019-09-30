@@ -1,24 +1,19 @@
 package com.nubeiot.edge.module.monitor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.edge.module.monitor.info.CpuInfo;
-import com.nubeiot.edge.module.monitor.info.FileSystemInfo;
+import com.nubeiot.edge.module.monitor.info.FileSystemInfos;
 import com.nubeiot.edge.module.monitor.info.MemoryInfo;
-import com.nubeiot.edge.module.monitor.info.ProcessesUsage;
-import com.nubeiot.edge.module.monitor.info.ProcessorInfo;
+import com.nubeiot.edge.module.monitor.info.OsInfo;
+import com.nubeiot.edge.module.monitor.info.UptimeInfo;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import oshi.SystemInfo;
 import oshi.hardware.HardwareAbstractionLayer;
-import oshi.software.os.FileSystem;
-import oshi.software.os.OSFileStore;
 import oshi.software.os.OperatingSystem;
 
 @Getter
@@ -27,34 +22,23 @@ import oshi.software.os.OperatingSystem;
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 public final class MonitorStatus implements JsonData {
 
-    final String os;
-    final ProcessorInfo processor;
-    final MemoryInfo memory;
-    final CpuInfo cpu;
-    final ProcessesUsage processes;
-    final List<FileSystemInfo> fileSystems;
+    final CpuInfo cpuUtilization;
+    final MemoryInfo memoryUtilization;
+    final FileSystemInfos diskUtilization;
+    final UptimeInfo uptime;
+    final OsInfo os;
 
     public static MonitorStatus from(SystemInfo si) {
         HardwareAbstractionLayer hal = si.getHardware();
         OperatingSystem os = si.getOperatingSystem();
 
         return MonitorStatus.builder()
-                            .os(os.toString())
-                            .processor(ProcessorInfo.from(hal.getProcessor()))
-                            .memory(MemoryInfo.from(hal.getMemory()))
-                            .cpu(CpuInfo.from(hal.getProcessor())).processes(ProcessesUsage.from(os, hal.getMemory()))
-                            .fileSystems(getFileSystem(os.getFileSystem()))
+                            .cpuUtilization(CpuInfo.from(os, hal.getProcessor()))
+                            .memoryUtilization(MemoryInfo.from(os, hal.getMemory()))
+                            .diskUtilization(FileSystemInfos.from(os.getFileSystem()))
+                            .uptime(UptimeInfo.from(hal.getProcessor()))
+                            .os(OsInfo.from(os))
                             .build();
-    }
-
-    private static List<FileSystemInfo> getFileSystem(FileSystem fileSystem) {
-        List<FileSystemInfo> fileSystemInfoList = new ArrayList<>();
-        OSFileStore[] fsArray = fileSystem.getFileStores();
-        for (OSFileStore fs : fsArray) {
-            fileSystemInfoList.add(FileSystemInfo.from(fs));
-        }
-
-        return fileSystemInfoList;
     }
 
 }

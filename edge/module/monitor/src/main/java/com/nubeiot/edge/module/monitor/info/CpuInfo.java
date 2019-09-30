@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import oshi.hardware.CentralProcessor;
+import oshi.software.os.OperatingSystem;
 import oshi.util.FormatUtil;
 
 @Getter
@@ -16,15 +17,17 @@ import oshi.util.FormatUtil;
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class CpuInfo implements JsonData {
 
-    final String uptime;
     final String cpuLoad;
     final String frequency;
+    final ProcessorInfo processor;
+    final CpuWiseProcesses cpuWiseProcesses;
 
-    public static CpuInfo from(CentralProcessor processor) {
+    public static CpuInfo from(OperatingSystem os, CentralProcessor processor) {
         return CpuInfo.builder()
-                      .uptime(FormatUtil.formatElapsedSecs(processor.getSystemUptime()))
                       .cpuLoad(String.format("%.1f%% (OS MXBean)", processor.getSystemCpuLoad() * 100))
                       .frequency(FormatUtil.formatHertz(processor.getVendorFreq()))
+                      .processor(ProcessorInfo.from(processor))
+                      .cpuWiseProcesses(CpuWiseProcesses.from(os))
                       .build();
     }
 
