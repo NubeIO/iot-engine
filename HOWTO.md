@@ -10,7 +10,7 @@
 
   ```properties
   nexusSnapshotUrl=http://<your-nexus-server>/repository/maven-snapshots/
-  nexusReleaseURL=http://<your-nexus-server>/repository/maven-releases/
+  nexusReleaseUrl=http://<your-nexus-server>/repository/maven-releases/
   nexusUsername=<your-nexus-user>
   nexusPassword=<your-nexus-password>
   ```

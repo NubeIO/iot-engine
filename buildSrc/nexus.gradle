@@ -3,6 +3,10 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 loadSecretProps("$rootDir/nexus.secret.properties")
+def nexusHost = project.nexusHost
+def snapshotUrl = project.nexusSnapshotUrl ?: nexusHost + "/repository/maven-snapshots/"
+def releaseUrl = project.nexusReleaseUrl ?: nexusHost + "/repository/maven-releases/"
+def vcsBranch = project.vcsBranch
 
 publishing {
     publications {
@@ -25,7 +29,9 @@ publishing {
                 username project.nexusUsername
                 password project.nexusPassword
             }
-            url = project.semanticVersion.endsWith('SNAPSHOT') ? project.nexusSnapshotUrl : project.nexusReleaseUrl
+            def isNotRelease = vcsBranch.matches("v\\d+\\.\\d+\\.\\d+(-.+)?") &&
+                               project.semanticVersion.endsWith('SNAPSHOT')
+            url = isNotRelease ? snapshotUrl : releaseUrl
         }
     }
 }

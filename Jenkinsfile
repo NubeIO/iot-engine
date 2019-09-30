@@ -82,7 +82,15 @@ pipeline {
             }
             steps {
                 // TODO: Update later
-                echo "Publish"
+                withCredentials([string(credentialsId: 'nexus-host', variable: 'NEXUS_HOST'),
+                                 usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'NEXUS_TOKEN',
+                                                  usernameVariable: 'NEXUS_USER')]) {
+                    sh "set +x"
+//                    sh "gradle publish -PvcsBranch=${BRANCH_NAME} -PbuildNumber=${BUILD_NUMBER} " +
+//                       "-PdockerHost=unix:///var/run/docker.sock -PdockerRegistryUrl=gcr.io " +
+//                       "-PdockerRegistryUser=_json_key -PdockerRegistryPwd='${GCR_JSON_PWD}' " +
+//                       "-PdockerRegistryProject=${GCR_PROJECT}"
+                }
             }
         }
 
