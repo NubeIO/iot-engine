@@ -41,6 +41,11 @@
         }
       }
     },
+    "__httpClient__": {
+      "handlerConfig": {
+        "httpLightBodyHandlerClass": "com.nubeiot.dashboard.connector.ditto.HttpDittoResponseBodyHandler"
+      }
+    },
     "__mist__": {
       "schema": "http",
       "host": "mist",
