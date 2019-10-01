@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.monitor.handlers;
+package com.nubeiot.edge.module.monitor.service;
 
 import java.util.Collections;
 import java.util.List;
@@ -8,8 +8,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.edge.module.monitor.MonitorService;
-import com.nubeiot.edge.module.monitor.MonitorStatus;
+import com.nubeiot.edge.module.monitor.info.MonitorStatus;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;

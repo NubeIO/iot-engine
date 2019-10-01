@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.monitor;
+package com.nubeiot.edge.module.monitor.info;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

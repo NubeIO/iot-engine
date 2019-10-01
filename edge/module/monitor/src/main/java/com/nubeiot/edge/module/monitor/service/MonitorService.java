@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.monitor;
+package com.nubeiot.edge.module.monitor.service;
 
 import java.util.Collections;
 import java.util.List;

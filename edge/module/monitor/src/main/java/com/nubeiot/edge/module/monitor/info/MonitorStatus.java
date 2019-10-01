@@ -1,13 +1,8 @@
-package com.nubeiot.edge.module.monitor;
+package com.nubeiot.edge.module.monitor.info;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.edge.module.monitor.info.CpuInfo;
-import com.nubeiot.edge.module.monitor.info.FileSystemInfos;
-import com.nubeiot.edge.module.monitor.info.MemoryInfo;
-import com.nubeiot.edge.module.monitor.info.OsInfo;
-import com.nubeiot.edge.module.monitor.info.UptimeInfo;
 
 import lombok.Builder;
 import lombok.Getter;

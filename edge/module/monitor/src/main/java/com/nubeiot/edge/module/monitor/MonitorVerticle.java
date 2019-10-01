@@ -12,6 +12,7 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
+import com.nubeiot.edge.module.monitor.service.MonitorService;
 
 public final class MonitorVerticle extends ContainerVerticle {
 
