@@ -10,7 +10,6 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import oshi.hardware.GlobalMemory;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
@@ -18,12 +17,11 @@ import oshi.software.os.OperatingSystem.ProcessSort;
 import oshi.util.FormatUtil;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class MemoryWiseProcesses implements JsonData {
+public final class MemoryWiseProcesses implements JsonData {
 
-    final List<ProcessUsage> processes;
+    private final List<ProcessUsage> processes;
 
     public static MemoryWiseProcesses from(OperatingSystem os, GlobalMemory memory) {
         // Sort by highest Memory
@@ -44,7 +42,6 @@ public class MemoryWiseProcesses implements JsonData {
     }
 
     @Getter
-    @RequiredArgsConstructor
     @lombok.Builder(builderClassName = "Builder")
     @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
     static class ProcessUsage implements JsonData {

@@ -6,21 +6,19 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import oshi.hardware.CentralProcessor;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class ProcessorInfo implements JsonData {
+public final class ProcessorInfo implements JsonData {
 
-    final String processor;
-    final int physicalCpuPackageCount;
-    final int physicalCpuCoreCount;
-    final int logicalCpuCount;
-    final String identifier;
-    final String processorId;
+    private final String processor;
+    private final int physicalCpuPackageCount;
+    private final int physicalCpuCoreCount;
+    private final int logicalCpuCount;
+    private final String identifier;
+    private final String processorId;
 
     public static ProcessorInfo from(CentralProcessor processor) {
         return ProcessorInfo.builder()

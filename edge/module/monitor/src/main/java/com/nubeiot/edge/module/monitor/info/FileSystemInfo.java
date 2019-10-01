@@ -6,23 +6,21 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import oshi.software.os.OSFileStore;
 import oshi.util.FormatUtil;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class FileSystemInfo implements JsonData {
+public final class FileSystemInfo implements JsonData {
 
-    final String name;
-    final String description;
-    final String type;
-    final String usable;
-    final String totalSpace;
-    final String freePercent;
-    final String mount;
+    private final String name;
+    private final String description;
+    private final String type;
+    private final String usable;
+    private final String totalSpace;
+    private final String freePercent;
+    private final String mount;
 
     public static FileSystemInfo from(OSFileStore fs) {
         long usable = fs.getUsableSpace();

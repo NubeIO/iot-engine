@@ -11,22 +11,20 @@ import com.nubeiot.edge.module.monitor.info.UptimeInfo;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import oshi.SystemInfo;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.software.os.OperatingSystem;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 public final class MonitorStatus implements JsonData {
 
-    final CpuInfo cpuUtilization;
-    final MemoryInfo memoryUtilization;
-    final FileSystemInfos diskUtilization;
-    final UptimeInfo uptime;
-    final OsInfo os;
+    private final CpuInfo cpuUtilization;
+    private final MemoryInfo memoryUtilization;
+    private final FileSystemInfos diskUtilization;
+    private final UptimeInfo uptime;
+    private final OsInfo os;
 
     public static MonitorStatus from(SystemInfo si) {
         HardwareAbstractionLayer hal = si.getHardware();

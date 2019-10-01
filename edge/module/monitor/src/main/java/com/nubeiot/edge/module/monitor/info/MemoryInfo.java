@@ -6,22 +6,20 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import oshi.hardware.GlobalMemory;
 import oshi.software.os.OperatingSystem;
 import oshi.util.FormatUtil;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class MemoryInfo implements JsonData {
+public final class MemoryInfo implements JsonData {
 
-    final String totalMemory;
-    final String availableMemory;
-    final String totalSwap;
-    final String swapUsed;
-    final MemoryWiseProcesses memoryWiseProcesses;
+    private final String totalMemory;
+    private final String availableMemory;
+    private final String totalSwap;
+    private final String swapUsed;
+    private final MemoryWiseProcesses memoryWiseProcesses;
 
     public static MemoryInfo from(OperatingSystem os, GlobalMemory memory) {
         return MemoryInfo.builder()

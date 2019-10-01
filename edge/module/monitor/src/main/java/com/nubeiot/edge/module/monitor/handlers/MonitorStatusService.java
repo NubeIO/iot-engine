@@ -8,20 +8,26 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventListener;
-import com.nubeiot.edge.module.monitor.info.OsInfo;
+import com.nubeiot.edge.module.monitor.MonitorService;
+import com.nubeiot.edge.module.monitor.MonitorStatus;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import oshi.SystemInfo;
 
 @NoArgsConstructor
-public class MonitorOsEventHandler implements EventListener {
+public class MonitorStatusService implements MonitorService {
 
     @EventContractor(action = EventAction.GET_LIST)
     public JsonObject getList(RequestData data) {
         SystemInfo si = new SystemInfo();
-        return OsInfo.from(si.getOperatingSystem()).toJson();
+        MonitorStatus monitorStatus = MonitorStatus.from(si);
+        return monitorStatus.toJson();
+    }
+
+    @Override
+    public String servicePath() {
+        return "/status";
     }
 
     @Override

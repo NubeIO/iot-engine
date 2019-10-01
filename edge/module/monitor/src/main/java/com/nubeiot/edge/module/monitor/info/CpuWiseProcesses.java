@@ -10,20 +10,18 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 import oshi.software.os.OperatingSystem.ProcessSort;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class CpuWiseProcesses implements JsonData {
+public final class CpuWiseProcesses implements JsonData {
 
-    final int processCount;
-    final int thread;
-    final List<ProcessUsage> processes;
+    private final int processCount;
+    private final int thread;
+    private final List<ProcessUsage> processes;
 
     public static CpuWiseProcesses from(OperatingSystem os) {
         // Sort by highest CPU
@@ -46,7 +44,6 @@ public class CpuWiseProcesses implements JsonData {
     }
 
     @Getter
-    @RequiredArgsConstructor
     @lombok.Builder(builderClassName = "Builder")
     @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
     static class ProcessUsage implements JsonData {

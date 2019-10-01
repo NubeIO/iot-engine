@@ -9,17 +9,15 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import oshi.software.os.FileSystem;
 import oshi.software.os.OSFileStore;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class FileSystemInfos implements JsonData {
+public final class FileSystemInfos implements JsonData {
 
-    final List<FileSystemInfo> fileSystemInfos;
+    private final List<FileSystemInfo> fileSystemInfos;
 
     public static FileSystemInfos from(FileSystem fileSystem) {
         List<FileSystemInfo> fileSystemInfoList = new ArrayList<>();

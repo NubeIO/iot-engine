@@ -19,51 +19,6 @@ public final class EdgeMonitorEventBus {
                          .build();
     }
 
-    public static EventModel monitorCpuUtilization(boolean local) {
-        return EventModel.builder()
-                         .address("nubeiot.edge.module.monitor.cpu-utilization")
-                         .pattern(EventPattern.REQUEST_RESPONSE)
-                         .local(local)
-                         .addEvents(EventAction.GET_LIST)
-                         .build();
-    }
-
-    public static EventModel monitorMemoryUtilization(boolean local) {
-        return EventModel.builder()
-                         .address("nubeiot.edge.module.monitor.memory-utilization")
-                         .pattern(EventPattern.REQUEST_RESPONSE)
-                         .local(local)
-                         .addEvents(EventAction.GET_LIST)
-                         .build();
-    }
-
-    public static EventModel monitorDiskUtilization(boolean local) {
-        return EventModel.builder()
-                         .address("nubeiot.edge.module.monitor.disk-utilization")
-                         .pattern(EventPattern.REQUEST_RESPONSE)
-                         .local(local)
-                         .addEvents(EventAction.GET_LIST)
-                         .build();
-    }
-
-    public static EventModel monitorUptime(boolean local) {
-        return EventModel.builder()
-                         .address("nubeiot.edge.module.monitor.uptime")
-                         .pattern(EventPattern.REQUEST_RESPONSE)
-                         .local(local)
-                         .addEvents(EventAction.GET_LIST)
-                         .build();
-    }
-
-    public static EventModel monitorOs(boolean local) {
-        return EventModel.builder()
-                         .address("nubeiot.edge.module.monitor.os")
-                         .pattern(EventPattern.REQUEST_RESPONSE)
-                         .local(local)
-                         .addEvents(EventAction.GET_LIST)
-                         .build();
-    }
-
     public static EventModel monitorNetworkStatus(boolean local) {
         return EventModel.builder()
                          .address("nubeiot.edge.module.monitor.network.status")

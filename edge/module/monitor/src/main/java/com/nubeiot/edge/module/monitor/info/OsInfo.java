@@ -6,16 +6,14 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import oshi.software.os.OperatingSystem;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class OsInfo implements JsonData {
+public final class OsInfo implements JsonData {
 
-    final String name;
+    private final String name;
 
     public static OsInfo from(OperatingSystem os) {
         return OsInfo.builder().name(os.toString()).build();
