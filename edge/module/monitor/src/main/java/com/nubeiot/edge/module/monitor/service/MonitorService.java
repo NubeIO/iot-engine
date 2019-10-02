@@ -28,7 +28,7 @@ public interface MonitorService extends EventHttpService {
     }
 
     default String api() {
-        return "nubeiot.edge.module.monitor." + this.getClass().getSimpleName();
+        return "bios.monitor." + this.getClass().getSimpleName();
     }
 
     default Set<EventMethodDefinition> definitions() {

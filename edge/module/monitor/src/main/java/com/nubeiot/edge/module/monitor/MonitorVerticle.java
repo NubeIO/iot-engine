@@ -7,8 +7,6 @@ import io.reactivex.Observable;
 import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
@@ -27,10 +25,10 @@ public final class MonitorVerticle extends ContainerVerticle {
         if (!discovery.isEnabled()) {
             return;
         }
-        EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
         Observable.fromIterable(MonitorService.createServices())
                   .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                         .ifPresent(service -> controller.register(service.address(), service)))
+                                         .ifPresent(
+                                             service -> getEventController().register(service.address(), service)))
                   .filter(s -> Objects.nonNull(s.definitions()))
                   .flatMap(s -> registerEndpoint(discovery, s))
                   .subscribe();
