@@ -6,25 +6,26 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import oshi.hardware.CentralProcessor;
+import oshi.software.os.OperatingSystem;
 import oshi.util.FormatUtil;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class CpuInfo implements JsonData {
+public final class CpuInfo implements JsonData {
 
-    final String uptime;
-    final String cpuLoad;
-    final String frequency;
+    private final String cpuLoad;
+    private final String frequency;
+    private final ProcessorInfo processor;
+    private final CpuWiseProcesses cpuWiseProcesses;
 
-    public static CpuInfo from(CentralProcessor processor) {
+    public static CpuInfo from(OperatingSystem os, CentralProcessor processor) {
         return CpuInfo.builder()
-                      .uptime(FormatUtil.formatElapsedSecs(processor.getSystemUptime()))
                       .cpuLoad(String.format("%.1f%% (OS MXBean)", processor.getSystemCpuLoad() * 100))
                       .frequency(FormatUtil.formatHertz(processor.getVendorFreq()))
+                      .processor(ProcessorInfo.from(processor))
+                      .cpuWiseProcesses(CpuWiseProcesses.from(os))
                       .build();
     }
 

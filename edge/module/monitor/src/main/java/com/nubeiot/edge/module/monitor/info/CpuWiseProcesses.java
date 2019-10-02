@@ -10,24 +10,20 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import oshi.hardware.GlobalMemory;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 import oshi.software.os.OperatingSystem.ProcessSort;
-import oshi.util.FormatUtil;
 
 @Getter
-@RequiredArgsConstructor
 @Builder(builderClassName = "Builder")
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class ProcessesUsage implements JsonData {
+public final class CpuWiseProcesses implements JsonData {
 
-    final int processCount;
-    final int thread;
-    final List<ProcessUsage> processes;
+    private final int processCount;
+    private final int thread;
+    private final List<ProcessUsage> processes;
 
-    public static ProcessesUsage from(OperatingSystem os, GlobalMemory memory) {
+    public static CpuWiseProcesses from(OperatingSystem os) {
         // Sort by highest CPU
         List<OSProcess> processesList = Arrays.asList(os.getProcesses(10, ProcessSort.CPU));
         List<ProcessUsage> processes = new ArrayList<>();
@@ -36,31 +32,24 @@ public class ProcessesUsage implements JsonData {
             processes.add(ProcessUsage.builder()
                                       .pid(p.getProcessID())
                                       .cpuPercent(100d * (p.getKernelTime() + p.getUserTime()) / p.getUpTime())
-                                      .memPercent(100d * p.getResidentSetSize() / memory.getTotal())
-                                      .virtualSize(FormatUtil.formatBytes(p.getVirtualSize()))
-                                      .residentSetSize(FormatUtil.formatBytes(p.getResidentSetSize()))
                                       .name(p.getName())
                                       .build());
         }
 
-        return ProcessesUsage.builder()
-                             .processCount(os.getProcessCount())
-                             .thread(os.getThreadCount())
-                             .processes(processes)
-                             .build();
+        return CpuWiseProcesses.builder()
+                               .processCount(os.getProcessCount())
+                               .thread(os.getThreadCount())
+                               .processes(processes)
+                               .build();
     }
 
     @Getter
-    @RequiredArgsConstructor
     @lombok.Builder(builderClassName = "Builder")
     @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
     static class ProcessUsage implements JsonData {
 
         final int pid;
         final double cpuPercent;
-        final double memPercent;
-        final String virtualSize;
-        final String residentSetSize;
         final String name;
 
     }
