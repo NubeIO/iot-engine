@@ -23,6 +23,11 @@
         }
       }
     },
+    "__httpClient__": {
+      "handlerConfig": {
+        "httpLightBodyHandlerClass": "com.nubeiot.dashboard.connector.mist.HttpMistResponseBodyHandler"
+      }
+    },
     "__mist__": {
       "schema": "http",
       "host": "mist",

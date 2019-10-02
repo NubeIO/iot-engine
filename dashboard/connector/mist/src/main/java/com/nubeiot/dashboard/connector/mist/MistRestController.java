@@ -22,6 +22,7 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.HttpConfig;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.HttpUtils;
+import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
@@ -34,14 +35,14 @@ public class MistRestController implements RestApi {
     private static final Logger logger = LoggerFactory.getLogger(MistRestController.class);
 
     @GET
-    @Path("/v2/api/functions/*")
+    @Path("/v2/api/*")
     public Future<ResponseData> getFunction(@Context Vertx vertx, @Context RoutingContext ctx,
                                             @Context RestNubeConfigProvider config) {
         return mistRequestDispatcher(vertx, ctx, config.getNubeConfig());
     }
 
     @POST
-    @Path("/v2/api/functions/*")
+    @Path("/v2/api/*")
     public Future<ResponseData> postFunction(@Context Vertx vertx, @Context RoutingContext ctx,
                                              @Context RestNubeConfigProvider config) {
         return mistRequestDispatcher(vertx, ctx, config.getNubeConfig());
@@ -60,8 +61,10 @@ public class MistRestController implements RestApi {
         RequestOptions requestOptions = new RequestOptions().setHost(mistConfig.getHost())
                                                             .setPort(mistConfig.getPort())
                                                             .setSsl(mistConfig.getSchema().equals("https"));
+        HttpClientConfig httpClientConfig = IConfig.from(config.getAppConfig(), HttpClientConfig.class);
+        logger.info("Http Client config: {}", httpClientConfig.toJson());
 
-        HttpClientDelegate client = HttpClientDelegate.create(vertx, HostInfo.from(requestOptions));
+        HttpClientDelegate client = HttpClientDelegate.create(vertx, httpClientConfig, HostInfo.from(requestOptions));
         Builder requestDataBuilder = RequestData.builder();
         if (Strings.isNotBlank(ctx.getBody().toString())) {
             requestDataBuilder.body(new JsonObject(ctx.getBody().toString()));
