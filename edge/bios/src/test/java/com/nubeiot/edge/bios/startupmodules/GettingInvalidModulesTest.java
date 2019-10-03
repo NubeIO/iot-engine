@@ -7,15 +7,15 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.enums.State;
-import com.nubeiot.edge.bios.BaseEdgeVerticleTest;
+import com.nubeiot.edge.bios.BaseInstallerVerticleTest;
 import com.nubeiot.edge.bios.startupmodules.handler.InvalidModulesInitData;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerVerticle;
 
 @RunWith(VertxUnitRunner.class)
-public class GettingInvalidModulesTest extends BaseEdgeVerticleTest {
+public class GettingInvalidModulesTest extends BaseInstallerVerticleTest {
 
     @Override
-    protected EdgeVerticle initMockupVerticle(TestContext context) {
+    protected InstallerVerticle initMockupVerticle(TestContext context) {
         return new MockBiosStartupModulesVerticle(InvalidModulesInitData.class);
     }
 

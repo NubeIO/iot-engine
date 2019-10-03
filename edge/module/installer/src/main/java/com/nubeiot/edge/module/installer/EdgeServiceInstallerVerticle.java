@@ -11,14 +11,14 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
-import com.nubeiot.edge.core.EdgeEntityHandler;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerEntityHandler;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.module.installer.service.EdgeInstallerService;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
-public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
+public final class EdgeServiceInstallerVerticle extends InstallerVerticle {
 
     @Override
     public void start() {
@@ -32,7 +32,7 @@ public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
     }
 
     @Override
-    protected Class<? extends EdgeEntityHandler> entityHandlerClass() {
+    protected Class<? extends InstallerEntityHandler> entityHandlerClass() {
         return ServiceInstallerEntityHandler.class;
     }
 

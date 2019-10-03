@@ -14,32 +14,29 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class EdgeVerticle extends ContainerVerticle {
+public abstract class InstallerVerticle extends ContainerVerticle {
 
-    public static final String SHARED_INSTALLER_CFG = "INSTALLER_CFG";
     @Getter
     private ModuleTypeRule moduleRule;
     @Getter
-    private EdgeEntityHandler entityHandler;
-    @Getter
-    private InstallerConfig installerConfig;
+    private InstallerEntityHandler entityHandler;
 
     @Override
     public void start() {
         super.start();
-        this.installerConfig = IConfig.from(nubeConfig.getAppConfig(), InstallerConfig.class);
-        this.installerConfig.getRepoConfig().recomputeLocal(nubeConfig.getDataDir());
+        final InstallerConfig installerConfig = IConfig.from(nubeConfig.getAppConfig(), InstallerConfig.class);
+        installerConfig.getRepoConfig().recomputeLocal(nubeConfig.getDataDir());
         this.moduleRule = this.getModuleRuleProvider().get();
-        this.addSharedData(SHARED_INSTALLER_CFG, this.getInstallerConfig().toJson())
+        this.addSharedData(InstallerEntityHandler.SHARED_INSTALLER_CFG, installerConfig)
             .addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass()), this::handler);
     }
 
     private void handler(SqlContext component) {
-        this.entityHandler = (EdgeEntityHandler) component.getEntityHandler();
+        this.entityHandler = (InstallerEntityHandler) component.getEntityHandler();
     }
 
     protected abstract Supplier<ModuleTypeRule> getModuleRuleProvider();
 
-    protected abstract Class<? extends EdgeEntityHandler> entityHandlerClass();
+    protected abstract Class<? extends InstallerEntityHandler> entityHandlerClass();
 
 }

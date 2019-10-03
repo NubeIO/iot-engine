@@ -15,6 +15,7 @@ import org.jooq.UpdatableRecord;
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -31,8 +32,8 @@ import lombok.NonNull;
 public abstract class AbstractEntityHandler implements EntityHandler {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Vertx vertx;
     final Configuration jooqConfig;
+    private final Vertx vertx;
     @Getter(value = AccessLevel.PROTECTED)
     private String sharedKey = getClass().getName();
 
@@ -88,6 +89,11 @@ public abstract class AbstractEntityHandler implements EntityHandler {
     @Override
     public ComplexQueryExecutor complexQuery() {
         return ComplexQueryExecutor.create(this);
+    }
+
+    @Override
+    public Single<EntityHandler> before() {
+        return Single.just(this);
     }
 
     protected boolean isNew(Table table) {

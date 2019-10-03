@@ -14,7 +14,7 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
 
@@ -22,9 +22,9 @@ import lombok.NonNull;
 
 public abstract class TransactionService implements InstallerService {
 
-    private final EdgeVerticle verticle;
+    private final InstallerVerticle verticle;
 
-    public TransactionService(@NonNull EdgeVerticle verticle) {
+    public TransactionService(@NonNull InstallerVerticle verticle) {
         this.verticle = verticle;
     }
 

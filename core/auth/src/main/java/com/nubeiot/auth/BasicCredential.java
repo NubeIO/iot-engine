@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 
-public class BasicCredential extends Credential {
+public final class BasicCredential extends Credential {
 
     @Getter
     private final String password;
@@ -22,19 +22,19 @@ public class BasicCredential extends Credential {
     }
 
     @Override
-    public String computeUrl(String defaultUrl) {
-        return this.computeRemoteUrl(defaultUrl);
+    public String toUrl(String url) {
+        return this.computeRemoteUrl(url);
     }
 
     @Override
-    public String computeUrlCredential() {
-        return this.getUser() + ":" + this.getPassword() + "@";
-    }
-
-    @Override
-    public String computeHeader() {
+    public String toHeader() {
         final byte[] combine = (this.getUser() + ":" + this.getPassword()).getBytes(StandardCharsets.UTF_8);
         return "Basic " + Base64.getEncoder().encodeToString(combine);
+    }
+
+    @Override
+    protected String computeUrlCredential() {
+        return this.getUser() + ":" + this.getPassword() + "@";
     }
 
     @Override

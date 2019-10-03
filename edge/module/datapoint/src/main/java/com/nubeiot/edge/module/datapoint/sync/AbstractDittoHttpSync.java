@@ -50,7 +50,7 @@ abstract class AbstractDittoHttpSync extends AbstractEnumType implements ProxySe
         final JsonObject headers = new JsonObject().put(HttpHeaders.CONTENT_TYPE.toString(),
                                                         HttpUtils.JSON_UTF8_CONTENT_TYPE);
         if (Objects.nonNull(credential)) {
-            headers.put(HttpHeaders.AUTHORIZATION.toString(), credential.computeHeader());
+            headers.put(HttpHeaders.AUTHORIZATION.toString(), credential.toHeader());
         }
         return headers;
     }

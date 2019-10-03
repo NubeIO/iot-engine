@@ -22,14 +22,14 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.edge.bios.BaseEdgeVerticleTest;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.bios.BaseInstallerVerticleTest;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 @RunWith(VertxUnitRunner.class)
-public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
+public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
 
     @Before
     public void before(TestContext context) {
@@ -45,7 +45,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
     }
 
     @Override
-    protected EdgeVerticle initMockupVerticle(TestContext context) {
+    protected InstallerVerticle initMockupVerticle(TestContext context) {
         return new MockTimeoutVerticle();
     }
 
@@ -73,8 +73,9 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         final JsonObject expected = new JsonObject().put("status", Status.SUCCESS)
                                                     .put("action", EventAction.PATCH)
                                                     .put("data", expectedBody);
-        this.edgeVerticle.getEventController()
-                         .request(DeliveryEvent.from(MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER, EventAction.PATCH,
+        this.installerVerticle.getEventController()
+                              .request(
+                                  DeliveryEvent.from(MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER, EventAction.PATCH,
                                                      RequestData.builder().body(body).build().toJson()),
                                   EventbusHelper.replyAsserter(context, async, expected,
                                                                JsonHelper.ignore("data.transaction_id"),
@@ -94,8 +95,8 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         final JsonObject expected = new JsonObject().put("status", Status.SUCCESS)
                                                     .put("action", EventAction.PATCH)
                                                     .put("data", new JsonObject("{\"abc\":\"123\"}"));
-        this.edgeVerticle.getEventController()
-                         .request(DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.PATCH,
+        this.installerVerticle.getEventController()
+                              .request(DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.PATCH,
                                                      RequestData.builder().body(body).build().toJson()),
                                   EventbusHelper.replyAsserter(context, async, expected));
     }
@@ -110,7 +111,7 @@ public class HandlerTimeoutTest extends BaseEdgeVerticleTest {
         final DeliveryEvent deliveryEvent = DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.CREATE,
                                                                RequestData.builder().body(body).build().toJson());
         //create loading takes 9 seconds when timeout is 3 seconds
-        this.edgeVerticle.getEventController().request(deliveryEvent, context.asyncAssertFailure(throwable -> {
+        this.installerVerticle.getEventController().request(deliveryEvent, context.asyncAssertFailure(throwable -> {
             context.assertTrue(throwable instanceof ReplyException);
             context.assertEquals(((ReplyException) throwable).failureType(), ReplyFailure.TIMEOUT);
             context.assertEquals(((ReplyException) throwable).failureCode(), -1);

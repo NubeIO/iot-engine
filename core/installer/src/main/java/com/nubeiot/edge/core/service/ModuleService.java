@@ -23,7 +23,7 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.RequestedServiceData;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
@@ -35,9 +35,9 @@ public abstract class ModuleService implements InstallerService {
 
     public static final String SERVICE_ID_KEY = "service_id";
     @NonNull
-    private final EdgeVerticle verticle;
+    private final InstallerVerticle verticle;
 
-    public ModuleService(@NonNull EdgeVerticle verticle) {
+    public ModuleService(@NonNull InstallerVerticle verticle, @NonNull EventModel eventModel) {
         this.verticle = verticle;
     }
 

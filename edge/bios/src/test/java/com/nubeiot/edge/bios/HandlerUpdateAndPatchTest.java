@@ -14,12 +14,12 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 
 @RunWith(VertxUnitRunner.class)
-public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
+public class HandlerUpdateAndPatchTest extends BaseInstallerVerticleTest {
 
     @Before
     public void before(TestContext context) {
@@ -35,7 +35,7 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
     }
 
     @Override
-    protected EdgeVerticle initMockupVerticle(TestContext context) {
+    protected InstallerVerticle initMockupVerticle(TestContext context) {
         return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context));
     }
 

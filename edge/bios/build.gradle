@@ -1,5 +1,6 @@
 ext {
-    specifiedLog = project.loggers["hazelcast"] + project.loggers["sql"] + ["h2database": "info"]
+    specifiedLog = project.loggers["sql"] + ["h2database"        : "info",
+                                             "org.eclipse.aether": "info"]
 }
 
 dependencies {

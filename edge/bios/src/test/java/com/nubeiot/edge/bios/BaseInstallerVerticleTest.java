@@ -37,7 +37,7 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.edge.bios.service.BiosModuleService;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 
@@ -48,7 +48,7 @@ import lombok.NonNull;
  */
 @RunWith(VertxUnitRunner.class)
 //FIXME: MUST REWRITE/REFACTOR SHIT CODE. IT IS ASSERTING SUCCESS EVEN RAISE EXCEPTION
-public abstract class BaseEdgeVerticleTest {
+public abstract class BaseInstallerVerticleTest {
 
     protected static final String GROUP_ID = "com.nubeiot.edge.module";
     protected static final String ARTIFACT_ID = "mytest";
@@ -66,7 +66,7 @@ public abstract class BaseEdgeVerticleTest {
         "\"workerPoolSize\":20},\"dataDir\":\"file:///root/.nubeio/com.nubeiot.edge.module_installer\"}");
     private static volatile boolean isAvailable;
     protected Vertx vertx;
-    protected EdgeVerticle edgeVerticle;
+    protected InstallerVerticle installerVerticle;
 
     @BeforeClass
     public static void beforeSuite() {
@@ -82,8 +82,8 @@ public abstract class BaseEdgeVerticleTest {
         DeploymentOptions options = new DeploymentOptions().setConfig(getNubeConfig().toJson());
         Async async = context.async();
         this.vertx = Vertx.vertx();
-        this.edgeVerticle = initMockupVerticle(context);
-        this.vertx.deployVerticle(this.edgeVerticle, options,
+        this.installerVerticle = initMockupVerticle(context);
+        this.vertx.deployVerticle(this.installerVerticle, options,
                                   context.asyncAssertSuccess(result -> TestHelper.testComplete(async)));
         async.awaitSuccess();
     }
@@ -93,7 +93,7 @@ public abstract class BaseEdgeVerticleTest {
         this.vertx.close();
     }
 
-    protected abstract EdgeVerticle initMockupVerticle(TestContext context);
+    protected abstract InstallerVerticle initMockupVerticle(TestContext context);
 
     protected NubeConfig getNubeConfig() {
         SqlConfig sqlConfig = new SqlConfig();
@@ -115,7 +115,7 @@ public abstract class BaseEdgeVerticleTest {
 
     protected void insertModule(TestContext context, TblModule module) {
         Async async = context.async(1);
-        edgeVerticle.getEntityHandler().getModuleDao().insert(module).subscribe(result -> {
+        installerVerticle.getEntityHandler().getModuleDao().insert(module).subscribe(result -> {
             System.out.println("Insert module successfully!");
             TestHelper.testComplete(async);
         }, error -> {
@@ -143,10 +143,10 @@ public abstract class BaseEdgeVerticleTest {
 
     private void assertTransaction(TestContext context, Status expectedTransactionStatus, Async async,
                                    CountDownLatch latch) {
-        edgeVerticle.getEntityHandler()
-                    .getTransDao()
-                    .findManyByModuleId(Collections.singletonList(BaseEdgeVerticleTest.MODULE_ID))
-                    .subscribe(result -> {
+        installerVerticle.getEntityHandler()
+                         .getTransDao()
+                         .findManyByModuleId(Collections.singletonList(BaseInstallerVerticleTest.MODULE_ID))
+                         .subscribe(result -> {
                         context.assertNotNull(result);
                         context.assertFalse(result.isEmpty());
                         context.assertEquals(result.size(), 1);
@@ -165,7 +165,10 @@ public abstract class BaseEdgeVerticleTest {
 
     private void assertModule(TestContext context, State expectedModuleState, JsonObject expectedConfig, Async async,
                               CountDownLatch latch) {
-        edgeVerticle.getEntityHandler().getModuleDao().findOneById(BaseEdgeVerticleTest.MODULE_ID).subscribe(result -> {
+        installerVerticle.getEntityHandler()
+                         .getModuleDao()
+                         .findOneById(BaseInstallerVerticleTest.MODULE_ID)
+                         .subscribe(result -> {
             TblModule tblModule = result.orElse(null);
             context.assertNotNull(tblModule);
             if (tblModule.getState() != State.PENDING) {
@@ -184,15 +187,14 @@ public abstract class BaseEdgeVerticleTest {
     }
 
     void executeThenAssert(EventAction action, TestContext context, JsonObject body, Handler<JsonObject> handler) {
-        edgeVerticle.getEventController()
-                    .request(
-                        DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE, action,
-                                           RequestData.builder().body(body).build().toJson()),
-                        EventbusHelper.replyAsserter(context, handler));
+        installerVerticle.getEventController()
+                    .request(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE, action,
+                                                RequestData.builder().body(body).build().toJson()),
+                             EventbusHelper.replyAsserter(context, handler));
     }
 
     protected void assertModuleState(TestContext context, Async async, State expectedState, String moduleId) {
-        final TblModuleDao moduleDao = this.edgeVerticle.getEntityHandler().getModuleDao();
+        final TblModuleDao moduleDao = this.installerVerticle.getEntityHandler().getModuleDao();
         CountDownLatch latch = new CountDownLatch(1);
         long timer = this.vertx.setPeriodic(1000, event -> moduleDao.findOneById(moduleId).subscribe(result -> {
             TblModule tblModule = result.orElse(null);

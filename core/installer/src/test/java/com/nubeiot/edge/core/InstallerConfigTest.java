@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.auth.BasicCredential;
 import com.nubeiot.auth.Credential;
-import com.nubeiot.auth.Credential.CredentialType;
+import com.nubeiot.auth.CredentialType;
 import com.nubeiot.auth.ExternalServer;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper.OSHelper;
@@ -72,7 +72,7 @@ public class InstallerConfigTest {
         Assert.assertNull(externalServers.get(0).getCredential());
         Assert.assertEquals("xyz", externalServers.get(1).getUrl());
         Assert.assertEquals(CredentialType.BASIC, externalServers.get(1).getCredential().getType());
-        Assert.assertEquals("u1", ((BasicCredential) externalServers.get(1).getCredential()).getUser());
+        Assert.assertEquals("u1", externalServers.get(1).getCredential().getUser());
         Assert.assertEquals("p1", ((BasicCredential) externalServers.get(1).getCredential()).getPassword());
 
         Assert.assertEquals(1, installerConfig.getBuiltinApps().size());

@@ -5,14 +5,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -24,11 +20,9 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.maven.MavenVerticleFactory;
-import io.vertx.maven.ResolverOptions;
 
 import com.nubeiot.auth.Credential;
-import com.nubeiot.auth.ExternalServer;
+import com.nubeiot.auth.Credential.HiddenCredential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
@@ -42,13 +36,10 @@ import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
-import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
-import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.Tables;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.daos.TblRemoveHistoryDao;
@@ -60,20 +51,16 @@ import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblRemoveHistory;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
 import com.nubeiot.edge.core.model.tables.records.TblTransactionRecord;
+import com.nubeiot.edge.core.repository.InstallerRepository;
 
 import lombok.NonNull;
 
-public abstract class EdgeEntityHandler extends AbstractEntityHandler {
+public abstract class InstallerEntityHandler extends AbstractEntityHandler {
 
-    private final Supplier<TblModuleDao> moduleDao;
-    private final Supplier<TblTransactionDao> transDao;
-    private final Supplier<TblRemoveHistoryDao> historyDao;
+    protected static final String SHARED_INSTALLER_CFG = "INSTALLER_CFG";
 
-    protected EdgeEntityHandler(Configuration configuration, Vertx vertx) {
+    protected InstallerEntityHandler(Configuration configuration, Vertx vertx) {
         super(configuration, vertx);
-        moduleDao = () -> dao(TblModuleDao.class);
-        transDao = () -> dao(TblTransactionDao.class);
-        historyDao = () -> dao(TblRemoveHistoryDao.class);
     }
 
     @Override
@@ -86,39 +73,23 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
         return this.startupModules().map(r -> EventMessage.success(EventAction.MIGRATE, r));
     }
 
-    protected abstract EventModel deploymentEvent();
-
-    protected void setupServiceRepository(RepositoryConfig repositoryCfg) {
-        logger.info("Setting up service local and remote repository");
-        RemoteRepositoryConfig remoteConfig = repositoryCfg.getRemoteConfig();
-        logger.info("URLs" + remoteConfig.getUrls());
-        remoteConfig.getUrls()
-                    .entrySet()
-                    .stream()
-                    .parallel()
-                    .forEach(entry -> handleVerticleFactory(repositoryCfg.getLocal(), entry));
+    @Override
+    public Single<EntityHandler> before() {
+        InstallerConfig installerCfg = sharedData(SHARED_INSTALLER_CFG);
+        return super.before().map(handler -> {
+            InstallerRepository.create(handler).setup(installerCfg.getRepoConfig(), dataDir());
+            return handler;
+        });
     }
 
+    protected abstract EventModel deploymentEvent();
+
     public TblModuleDao getModuleDao() {
-        return moduleDao.get();
+        return dao(TblModuleDao.class);
     }
 
     public TblTransactionDao getTransDao() {
-        return transDao.get();
-    }
-
-    private void handleVerticleFactory(String local, Entry<ModuleType, List<ExternalServer>> entry) {
-        final ModuleType type = entry.getKey();
-        if (ModuleType.JAVA == type) {
-            List<ExternalServer> externalServers = entry.getValue();
-            String javaLocal = FileUtils.createFolder(local, type.name().toLowerCase(Locale.ENGLISH));
-            logger.info("{} local repositories: {}", type, javaLocal);
-            logger.info("{} remote repositories: {}", type, externalServers);
-            ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(
-                externalServers.stream().map(ExternalServer::getUrl).collect(Collectors.toList()))
-                                                            .setLocalRepository(javaLocal);
-            vertx().registerVerticleFactory(new MavenVerticleFactory(resolver));
-        }
+        return dao(TblTransactionDao.class);
     }
 
     protected Single<JsonObject> startupModules() {
@@ -131,7 +102,7 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
 
     public Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
         logger.info("{} module with data {}", action, module.toJson().encode());
-        return this.handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
+        return handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
             JsonObject appConfig = this.getSecureAppConfig(result.getServiceId(), result.getAppConfig().toJson());
             PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
                                                                          .transactionId(result.getTransactionId())
@@ -170,8 +141,8 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
     }
 
     private Single<List<TblModule>> getModulesWhenBootstrap() {
-        Single<List<TblModule>> enabledModules = moduleDao.get()
-                                                          .findManyByState(Collections.singletonList(State.ENABLED));
+        Single<List<TblModule>> enabledModules = getModuleDao().findManyByState(
+            Collections.singletonList(State.ENABLED));
         Single<List<TblModule>> pendingModules = this.getPendingModules();
         return Single.zip(enabledModules, pendingModules, (flattenEnabledModules, flattenPendingModules) -> {
             if (Objects.nonNull(flattenEnabledModules)) {
@@ -183,12 +154,12 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
     }
 
     private Single<List<TblModule>> getPendingModules() {
-        return moduleDao.get()
-                        .findManyByState(Collections.singletonList(State.PENDING))
-                        .flattenAsObservable(pendingModules -> pendingModules)
-                        .flatMapSingle(module -> genericQuery().executeAny(context -> getTransactions(module, context)))
-                        .collect(ArrayList::new,
-                                 (modules, optional) -> optional.ifPresent(o -> modules.add((TblModule) o)));
+        return getModuleDao().findManyByState(Collections.singletonList(State.PENDING))
+                             .flattenAsObservable(pendingModules -> pendingModules)
+                             .flatMapSingle(m -> genericQuery().executeAny(context -> getTransactions(m, context)))
+                             .filter(Optional::isPresent)
+                             .map(Optional::get)
+                             .collect(ArrayList::new, (modules, m) -> modules.add((TblModule) m));
     }
 
     private Optional<?> getTransactions(TblModule module, DSLContext dslContext) {
@@ -203,14 +174,14 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
                                                                      .fetchInto(TblTransactionRecord.class);
         if (tblTransactionRecords.isEmpty()) {
             module.setState(State.DISABLED);
-            moduleDao.get().update(module).subscribe();
+            getModuleDao().update(module).subscribe();
             return Optional.empty();
         }
         if (checkingTransaction(tblTransactionRecords.get(0))) {
             return Optional.of(module);
         }
         module.setState(State.DISABLED);
-        moduleDao.get().update(module).subscribe();
+        getModuleDao().update(module).subscribe();
         return Optional.empty();
     }
 
@@ -233,39 +204,37 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
     }
 
     public Single<Optional<TblModule>> findModuleById(String serviceId) {
-        return moduleDao.get().findOneById(serviceId);
+        return getModuleDao().findOneById(serviceId);
     }
 
     public Single<Optional<JsonObject>> findTransactionById(String transactionId) {
-        return transDao.get()
-                       .findOneById(transactionId)
-                       .flatMap(optional -> optional.isPresent()
-                                            ? Single.just(Optional.of(optional.get().toJson()))
-                                            : this.findHistoryTransactionById(transactionId));
+        return getTransDao().findOneById(transactionId)
+                            .flatMap(optional -> optional.isPresent()
+                                                 ? Single.just(Optional.of(optional.get().toJson()))
+                                                 : this.findHistoryTransactionById(transactionId));
     }
 
     public Single<List<TblTransaction>> findTransactionByModuleId(String moduleId) {
-        return transDao.get()
-                       .queryExecutor()
-                       .findMany(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
-                                                         .where(
-                                                             DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
-                                                         .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()));
+        return getTransDao().queryExecutor()
+                            .findMany(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
+                                                              .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID)
+                                                                        .eq(moduleId))
+                                                              .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()));
     }
 
     public Single<Optional<JsonObject>> findOneTransactionByModuleId(String moduleId) {
-        return transDao.get()
-                       .queryExecutor()
-                       .findOne(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
-                                                        .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
-                                                        .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc())
-                                                        .limit(1))
-                       .map(optional -> optional.map(TblTransaction::toJson));
+        return getTransDao().queryExecutor()
+                            .findOne(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
+                                                             .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID)
+                                                                       .eq(moduleId))
+                                                             .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc())
+                                                             .limit(1))
+                            .map(optional -> optional.map(TblTransaction::toJson));
     }
 
     private Single<PreDeploymentResult> handlePreDeployment(ITblModule module, EventAction event) {
         logger.info("Handle entities before do deployment...");
-        InstallerConfig config = IConfig.from(sharedData(EdgeVerticle.SHARED_INSTALLER_CFG), InstallerConfig.class);
+        InstallerConfig config = sharedData(SHARED_INSTALLER_CFG);
         if (event == EventAction.REMOVE) {
             module.setState(State.UNAVAILABLE);
         }
@@ -322,9 +291,8 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
 
     private Single<Optional<ITblModule>> validateModuleState(ITblModule tblModule, EventAction eventAction) {
         logger.info("Validate {}::::{} ...", tblModule.getServiceId(), eventAction);
-        return moduleDao.get()
-                        .findOneById(tblModule.getServiceId())
-                        .map(o -> validateModuleState(o.orElse(null), eventAction, tblModule.getState()));
+        return getModuleDao().findOneById(tblModule.getServiceId())
+                             .map(o -> validateModuleState(o.orElse(null), eventAction, tblModule.getState()));
     }
 
     //TODO: register EventBus to send message somewhere
@@ -334,7 +302,7 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
         final Status status = Status.SUCCESS;
         final State state = StateMachine.instance().transition(eventAction, status, targetState);
         if (State.UNAVAILABLE == state) {
-            final TblTransactionDao dao = transDao.get();
+            final TblTransactionDao dao = getTransDao();
             logger.info("Remove module id {} and its transactions", serviceId);
             dao.findOneById(transId)
                .flatMap(o -> this.createRemovedServiceRecord(
@@ -342,7 +310,7 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
                     .setStatus(status)))
                .map(history -> dao)
                .flatMap(transDao -> transDao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(serviceId))
-                                            .flatMap(ignore -> moduleDao.get().deleteById(serviceId)))
+                                            .flatMap(ignore -> getModuleDao().deleteById(serviceId)))
                .subscribe();
         } else {
             Map<TableField, String> v = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
@@ -387,22 +355,21 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
                                                                .setPrevMetadata(metadata)
                                                                .setPrevSystemConfig(module.getSystemConfig())
                                                                .setPrevAppConfig(module.getAppConfig());
-        return transDao.get().insert(transaction).map(i -> transactionId);
+        return getTransDao().insert(transaction).map(i -> transactionId);
     }
 
     private Single<ITblModule> markModuleInsert(ITblModule module) {
         logger.debug("Mark service {} to create...", module.getServiceId());
         OffsetDateTime now = DateTimes.now();
-        return moduleDao.get()
-                        .insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
-                        .map(i -> module);
+        return getModuleDao().insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
+                             .map(i -> module);
     }
 
     private Single<ITblModule> markModuleModify(ITblModule module, ITblModule oldOne, boolean isUpdated) {
         logger.debug("Mark service {} to modify...", module.getServiceId());
         ITblModule into = this.updateModule(oldOne, module, isUpdated);
-        return moduleDao.get().update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.now()))
-                        .map(ignore -> oldOne);
+        return getModuleDao().update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.now()))
+                             .map(ignore -> oldOne);
     }
 
     private ITblModule updateModule(@NonNull ITblModule old, @NonNull ITblModule newOne, boolean isUpdated) {
@@ -430,8 +397,8 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {
         logger.debug("Mark service {} to delete...", module.getServiceId());
-        return moduleDao.get().update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.now()))
-                        .map(ignore -> module);
+        return getModuleDao().update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.now()))
+                             .map(ignore -> module);
     }
 
     private Optional<ITblModule> validateModuleState(ITblModule findModule, EventAction eventAction,
@@ -469,7 +436,7 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
     private Single<ITblRemoveHistory> createRemovedServiceRecord(ITblTransaction transaction) {
         logger.info("Create History record...");
         ITblRemoveHistory history = this.convertToHistory(transaction);
-        return historyDao.get().insert((TblRemoveHistory) history).map(i -> history);
+        return dao(TblRemoveHistoryDao.class).insert((TblRemoveHistory) history).map(i -> history);
     }
 
     private ITblRemoveHistory convertToHistory(ITblTransaction transaction) {
@@ -487,7 +454,8 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
     }
 
     private Single<Optional<JsonObject>> findHistoryTransactionById(String transactionId) {
-        return historyDao.get().findOneById(transactionId).map(optional -> optional.map(ITblRemoveHistory::toJson));
+        return dao(TblRemoveHistoryDao.class).findOneById(transactionId)
+                                             .map(optional -> optional.map(ITblRemoveHistory::toJson));
     }
 
     public JsonObject getSecureAppConfig(String serviceId, JsonObject appConfigJson) {
@@ -500,30 +468,17 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
                 return appConfigJson;
             }
             InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
-            installerConfig.getRepoConfig().getRemoteConfig().getUrls().values().forEach(remoteUrl -> {
-                remoteUrl.forEach(url -> {
-                    Credential credential = url.getCredential();
-                    if (Objects.isNull(credential)) {
-                        return;
-                    }
-                    url.setCredential(new Credential(credential.getType(), credential.getUser()) {
-                        @Override
-                        public String computeUrl(String defaultUrl) {
-                            return null;
-                        }
-
-                        @Override
-                        protected String computeUrlCredential() {
-                            return null;
-                        }
-
-                        @Override
-                        public String computeHeader() {
-                            return null;
-                        }
-                    });
-                });
-            });
+            installerConfig.getRepoConfig()
+                           .getRemoteConfig()
+                           .getUrls()
+                           .values()
+                           .forEach(remoteUrl -> remoteUrl.forEach(url -> {
+                               Credential credential = url.getCredential();
+                               if (Objects.isNull(credential)) {
+                                   return;
+                               }
+                               url.setCredential(new HiddenCredential(credential));
+                           }));
             appConfig.put(InstallerConfig.NAME, installerConfig);
             logger.debug("Installer config {}", installerConfig.toJson().toString());
             return appConfig.toJson();

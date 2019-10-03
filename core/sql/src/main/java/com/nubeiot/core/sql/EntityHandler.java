@@ -50,6 +50,13 @@ public interface EntityHandler {
     ComplexQueryExecutor complexQuery();
 
     /**
+     * Execute any task before setup database
+     *
+     * @return single of reference to this, so the API can be used fluently
+     */
+    Single<EntityHandler> before();
+
+    /**
      * Check database is new or not. Normally just checking one specific table is existed or not.
      * <p>
      * Currently, it has not yet supported officially from {@code jooq}. So {@code NubeIO} supports 2 kinds: {@code H2}

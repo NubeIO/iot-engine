@@ -25,7 +25,7 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.EdgeEntityHandler;
+import com.nubeiot.edge.core.InstallerEntityHandler;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.Tables;
 import com.nubeiot.edge.core.model.tables.records.TblModuleRecord;
@@ -36,9 +36,9 @@ public final class LocalServiceSearch implements IServiceSearch {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private EdgeEntityHandler entityHandler;
+    private InstallerEntityHandler entityHandler;
 
-    public LocalServiceSearch(@NonNull EdgeEntityHandler entityHandler) {
+    public LocalServiceSearch(@NonNull InstallerEntityHandler entityHandler) {
         this.entityHandler = entityHandler;
     }
 

@@ -13,12 +13,12 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 
 @RunWith(VertxUnitRunner.class)
-public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
+public class ServiceNameDuplicationTest extends BaseInstallerVerticleTest {
 
     @Before
     public void before(TestContext context) {
@@ -34,7 +34,7 @@ public class ServiceNameDuplicationTest extends BaseEdgeVerticleTest {
     }
 
     @Override
-    protected EdgeVerticle initMockupVerticle(TestContext context) {
+    protected InstallerVerticle initMockupVerticle(TestContext context) {
         return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context));
     }
 

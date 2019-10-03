@@ -12,13 +12,13 @@ import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.edge.bios.service.BiosInstallerService;
-import com.nubeiot.edge.core.EdgeEntityHandler;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerEntityHandler;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
-public class EdgeBiosVerticle extends EdgeVerticle {
+public class EdgeBiosVerticle extends InstallerVerticle {
 
     static final String SHARED_MODULE_RULE = "MODULE_RULE";
 
@@ -35,7 +35,7 @@ public class EdgeBiosVerticle extends EdgeVerticle {
     }
 
     @Override
-    protected Class<? extends EdgeEntityHandler> entityHandlerClass() {
+    protected Class<? extends InstallerEntityHandler> entityHandlerClass() {
         return EdgeBiosEntityHandler.class;
     }
 

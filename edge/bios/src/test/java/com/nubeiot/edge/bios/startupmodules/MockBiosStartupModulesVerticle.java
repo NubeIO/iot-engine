@@ -10,14 +10,14 @@ import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.edge.bios.EdgeBiosVerticle;
 import com.nubeiot.edge.bios.loader.MockModuleLoader;
 import com.nubeiot.edge.bios.service.BiosInstallerService;
-import com.nubeiot.edge.core.EdgeEntityHandler;
+import com.nubeiot.edge.core.InstallerEntityHandler;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
 
-    private final Class<? extends EdgeEntityHandler> entityHandlerClass;
+    private final Class<? extends InstallerEntityHandler> entityHandlerClass;
 
-    MockBiosStartupModulesVerticle(Class<? extends EdgeEntityHandler> entityHandlerClass) {
+    MockBiosStartupModulesVerticle(Class<? extends InstallerEntityHandler> entityHandlerClass) {
         this.entityHandlerClass = entityHandlerClass;
     }
 
@@ -37,7 +37,7 @@ public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
     }
 
     @Override
-    protected Class<? extends EdgeEntityHandler> entityHandlerClass() {
+    protected Class<? extends InstallerEntityHandler> entityHandlerClass() {
         return this.entityHandlerClass;
     }
 

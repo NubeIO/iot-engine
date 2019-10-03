@@ -48,9 +48,8 @@ public final class InstallerConfig implements IConfig {
     @Getter
     public static final class RepositoryConfig implements IConfig {
 
+        public static final String DEFAULT_LOCAL = "repositories";
         static final String NAME = "repository";
-        static final String DEFAULT_LOCAL = "repositories";
-
         @JsonProperty(defaultValue = DEFAULT_LOCAL)
         private String local = DEFAULT_LOCAL;
         @JsonProperty(value = RemoteRepositoryConfig.NAME)

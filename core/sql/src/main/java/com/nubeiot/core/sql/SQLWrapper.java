@@ -20,7 +20,6 @@ import org.jooq.ForeignKey;
 import org.jooq.Key;
 import org.jooq.Schema;
 import org.jooq.Table;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DefaultConfiguration;
 
 import io.reactivex.Single;
@@ -63,8 +62,8 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     @Override
     public void start(Future<Void> future) {
         this.start();
-        this.createDatabase(new DefaultConfiguration().set(dataSource).set(config.getDialect()))
-            .flatMap(this::validateInitOrMigrationData)
+        this.createDatabaseThenSetupData(new DefaultConfiguration().set(dataSource).set(config.getDialect()))
+            .map(this::validateInitOrMigrationData)
             .subscribe(result -> complete(future, result), t -> future.fail(NubeExceptionConverter.from(t)));
     }
 
@@ -89,23 +88,22 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
         future.complete();
     }
 
-    private Single<EventMessage> createDatabase(Configuration jooqConfig) {
-        try {
-            final T handle = getContext().createHandler(jooqConfig, vertx);
-            EntityHandler handler = ((AbstractEntityHandler) handle).registerSharedKey(this.getSharedKey());
-            if (handler.isNew()) {
-                createNewDatabase(jooqConfig);
-                logger.info("Initializing data...");
-                return handler.initData();
-            }
-            logger.info("Migrating database...");
-            return handler.migrate();
-        } catch (DataAccessException | NullPointerException | IllegalArgumentException | NubeException e) {
-            return Single.error(new InitializerError("Unknown error when initializing database", e));
-        }
+    private Single<EventMessage> createDatabaseThenSetupData(Configuration jooqConfig) {
+        final String k = getSharedKey();
+        final T handler = ((AbstractEntityHandler) getContext().createHandler(jooqConfig, vertx)).registerSharedKey(k);
+        return handler.before()
+                      .flatMap(h -> Single.fromCallable(h::isNew).flatMap(b -> {
+                          if (b) {
+                              return Single.fromCallable(() -> createNewDatabase(jooqConfig))
+                                           .flatMap(cfg -> h.initData());
+                          }
+                          return h.migrate();
+                      }))
+                      .onErrorResumeNext(throwable -> Single.error(
+                          new InitializerError("Unknown error when initializing database", throwable)));
     }
 
-    private void createNewDatabase(Configuration jooqConfig) {
+    private Configuration createNewDatabase(Configuration jooqConfig) {
         logger.info("Creating database model...");
         logger.info("Creating schema...");
         this.catalog.schemaStream()
@@ -119,6 +117,7 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
                     .collect(Collectors.toMap(Entry::getKey, Entry::getValue, this::merge))
                     .forEach((table, constraints) -> createConstraints(jooqConfig, table, constraints));
         logger.info("Created database model successfully");
+        return jooqConfig;
     }
 
     private Schema createSchema(Configuration jooqConfig, Schema schema) {
@@ -180,20 +179,20 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
         return Stream.of(c1, c2).flatMap(Set::stream).collect(Collectors.toSet());
     }
 
-    private Single<EventMessage> validateInitOrMigrationData(EventMessage result) {
-        if (result.isError()) {
-            ErrorMessage error = result.getError();
-            Throwable t = error.getThrowable();
-            if (Objects.isNull(t)) {
-                t = new NubeException(error.getCode(), error.getMessage());
-            }
-            if (result.getAction() == EventAction.INIT) {
-                return Single.error(new InitializerError("Failed to startup SQL component", t));
-            } else {
-                return Single.error(new MigrationError("Failed to startup SQL component", t));
-            }
+    private EventMessage validateInitOrMigrationData(EventMessage result) {
+        if (!result.isError()) {
+            return result;
         }
-        return Single.just(result);
+        ErrorMessage error = result.getError();
+        Throwable t = error.getThrowable();
+        if (Objects.isNull(t)) {
+            t = new NubeException(error.getCode(), error.getMessage());
+        }
+        if (result.getAction() == EventAction.INIT) {
+            throw new InitializerError("Failed to startup SQL component", t);
+        } else {
+            throw new MigrationError("Failed to startup SQL component", t);
+        }
     }
 
 }

@@ -9,12 +9,12 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.edge.core.EdgeEntityHandler;
+import com.nubeiot.edge.core.InstallerEntityHandler;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.daos.TblTransactionDao;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
-public abstract class MockInitDataEntityHandler extends EdgeEntityHandler {
+public abstract class MockInitDataEntityHandler extends InstallerEntityHandler {
 
     protected final TblModuleDao tblModuleDao;
     protected final TblTransactionDao tblTransactionDao;

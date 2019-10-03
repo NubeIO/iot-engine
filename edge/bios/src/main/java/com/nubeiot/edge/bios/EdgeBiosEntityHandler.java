@@ -15,15 +15,15 @@ import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.InstallerConfig;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
+import com.nubeiot.edge.core.InstallerEntityHandler;
 import com.nubeiot.edge.core.RequestedServiceData;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
-public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
+public final class EdgeBiosEntityHandler extends InstallerEntityHandler {
 
     protected EdgeBiosEntityHandler(Configuration configuration, Vertx vertx) {
         super(configuration, vertx);
@@ -45,10 +45,7 @@ public final class EdgeBiosEntityHandler extends EdgeEntityHandler {
     }
 
     private Single<EventMessage> bootstrap(EventAction action) {
-        InstallerConfig installerCfg = IConfig.from(sharedData(EdgeBiosVerticle.SHARED_INSTALLER_CFG),
-                                                    InstallerConfig.class);
-        logger.debug("Shared app configuration: {}", installerCfg);
-        setupServiceRepository(installerCfg.getRepoConfig());
+        InstallerConfig installerCfg = sharedData(SHARED_INSTALLER_CFG);
         return this.isFreshInstall()
                    .flatMap(f -> startup(dataDir(), installerCfg, f).map(r -> EventMessage.success(action, r)));
     }

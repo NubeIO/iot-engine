@@ -4,15 +4,15 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerVerticle;
 
 import lombok.NonNull;
 
 public class RemoteServiceSearch implements IServiceSearch {
-	
-	private final EdgeVerticle verticle;
-	
-	public RemoteServiceSearch(@NonNull EdgeVerticle verticle) {
+
+    private final InstallerVerticle verticle;
+
+    public RemoteServiceSearch(@NonNull InstallerVerticle verticle) {
         this.verticle = verticle;
         
 		//this.discovery = ServiceDiscovery.create( verticle.geRxtVert());

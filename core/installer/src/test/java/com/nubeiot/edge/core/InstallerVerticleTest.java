@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
 
-public class EdgeVerticleTest {
+public class InstallerVerticleTest {
 
     @Test
     public void testJson() {
