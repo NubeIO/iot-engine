@@ -29,9 +29,9 @@ public abstract class EdgeVerticle extends ContainerVerticle {
         super.start();
         this.installerConfig = IConfig.from(nubeConfig.getAppConfig(), InstallerConfig.class);
         this.installerConfig.getRepoConfig().recomputeLocal(nubeConfig.getDataDir());
-        this.addSharedData(SHARED_INSTALLER_CFG, this.getInstallerConfig().toJson());
         this.moduleRule = this.getModuleRuleProvider().get();
-        this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass()), this::handler);
+        this.addSharedData(SHARED_INSTALLER_CFG, this.getInstallerConfig().toJson())
+            .addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass()), this::handler);
     }
 
     private void handler(SqlContext component) {

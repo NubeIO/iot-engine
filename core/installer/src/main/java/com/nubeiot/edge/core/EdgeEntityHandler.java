@@ -492,7 +492,7 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
 
     public JsonObject getSecureAppConfig(String serviceId, JsonObject appConfigJson) {
         if ("com.nubeiot.edge.module:installer".equals(serviceId)) {
-            logger.info("Removing nexus password from result");
+            logger.debug("Removing nexus password from result");
             AppConfig appConfig = IConfig.from(appConfigJson, AppConfig.class);
             Object installerObject = appConfig.get(InstallerConfig.NAME);
             if (Objects.isNull(installerObject)) {

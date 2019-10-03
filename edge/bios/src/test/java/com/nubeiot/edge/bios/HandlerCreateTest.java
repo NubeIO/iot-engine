@@ -36,14 +36,12 @@ public class HandlerCreateTest extends BaseEdgeVerticleTest {
     }
 
     @Test
-    public void test_create_missing_app_config_should_failed(TestContext context) {
-        JsonObject metadata = new JsonObject().put("artifact_id", ARTIFACT_ID)
-                                              .put("group_id", GROUP_ID)
-                                              .put("version", VERSION);
+    public void test_create_missing_metadata_should_failed(TestContext context) {
+        JsonObject metadata = new JsonObject().put("group_id", GROUP_ID).put("version", VERSION);
         JsonObject body = new JsonObject().put("metadata", metadata);
         executeThenAssert(EventAction.CREATE, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
-            context.assertEquals(response.getJsonObject("error").getString("message"), "App config is required!");
+            context.assertEquals(response.getJsonObject("error").getString("message"), "Missing artifact_id");
         });
     }
 

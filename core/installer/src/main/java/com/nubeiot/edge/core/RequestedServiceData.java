@@ -12,14 +12,14 @@ import com.nubeiot.core.dto.JsonData;
 
 import lombok.Getter;
 
-public class RequestedServiceData implements JsonData {
+public final class RequestedServiceData implements JsonData {
 
     @Getter
     private final JsonObject metadata;
     @Getter
     private final AppConfig appConfig;
 
-    public RequestedServiceData() {
+    RequestedServiceData() {
         this.metadata = new JsonObject();
         this.appConfig = new AppConfig();
     }

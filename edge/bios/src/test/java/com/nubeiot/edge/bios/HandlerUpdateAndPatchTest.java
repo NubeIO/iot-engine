@@ -41,31 +41,25 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
 
     @Test
     public void test_update_with_happy_case_should_success(TestContext context) {
-        JsonObject appConfig = new JsonObject().put("", "");
         JsonObject metadata = new JsonObject().put("state", State.ENABLED)
                                               .put("version", VERSION)
                                               .put("service_name", SERVICE_NAME);
-        JsonObject body = new JsonObject().put("service_id", MODULE_ID)
-                                          .put("metadata", metadata)
-                                          .put("appConfig", appConfig);
+        JsonObject body = new JsonObject().put("service_id", MODULE_ID).put("metadata", metadata);
 
         executeThenAssert(EventAction.UPDATE, context, body,
                           response -> context.assertEquals(response.getString("status"), Status.SUCCESS.name()));
 
         //testing the module state and transaction status after update
-        testingDBUpdated(context, State.ENABLED, Status.SUCCESS, appConfig);
+        testingDBUpdated(context, State.ENABLED, Status.SUCCESS, new JsonObject());
     }
 
     @Test
     public void test_update_module_not_available_should_failed(TestContext context) {
-        JsonObject appConfig = new JsonObject().put("", "");
         String idNotExist = ARTIFACT_ID + "com.nubeiot.edge.module.notexist";
-        JsonObject metadata = new JsonObject().put("version", VERSION);
-        JsonObject body = new JsonObject().put("service_id", ARTIFACT_ID + idNotExist)
-                                          .put("metadata", metadata)
-                                          .put("appConfig", appConfig);
+        JsonObject metadata = new JsonObject().put("version", VERSION).put("service_name", SERVICE_NAME);
+        JsonObject body = new JsonObject().put("service_id", ARTIFACT_ID + idNotExist).put("metadata", metadata);
 
-        executeThenAssert(EventAction.UPDATE, context, body, response -> {
+        executeThenAssert(EventAction.PATCH, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
             context.assertEquals(response.getJsonObject("error").getString("code"), ErrorCode.NOT_FOUND.name());
         });
@@ -73,25 +67,19 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
 
     @Test
     public void test_update_missing_version_should_failed(TestContext context) {
-        JsonObject appConfig = new JsonObject().put("", "");
         JsonObject metadata = new JsonObject().put("state", State.DISABLED).put("service_name", SERVICE_NAME);
-        JsonObject body = new JsonObject().put("service_id", MODULE_ID)
-                                          .put("metadata", metadata)
-                                          .put("appConfig", appConfig);
+        JsonObject body = new JsonObject().put("service_id", MODULE_ID).put("metadata", metadata);
 
         executeThenAssert(EventAction.UPDATE, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
-            context.assertEquals(response.getJsonObject("error").getString("message"), "Version is required!");
+            context.assertEquals(response.getJsonObject("error").getString("message"), "Service version is mandatory");
         });
     }
 
     @Test
     public void test_update_missing_state_should_failed(TestContext context) {
-        JsonObject appConfig = new JsonObject().put("", "");
         JsonObject metadata = new JsonObject().put("version", VERSION).put("service_name", SERVICE_NAME);
-        JsonObject body = new JsonObject().put("service_id", MODULE_ID)
-                                          .put("metadata", metadata)
-                                          .put("appConfig", appConfig);
+        JsonObject body = new JsonObject().put("service_id", MODULE_ID).put("metadata", metadata);
 
         executeThenAssert(EventAction.UPDATE, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
@@ -100,15 +88,16 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
     }
 
     @Test
-    public void test_update_missing_app_config_should_failed(TestContext context) {
+    public void test_update_missing_metadata_should_failed(TestContext context) {
         JsonObject metadata = new JsonObject().put("version", VERSION)
                                               .put("state", State.ENABLED)
-                                              .put("service_name", SERVICE_NAME);
+                                              .put("group_id", GROUP_ID)
+                                              .put("version", VERSION);
         JsonObject body = new JsonObject().put("service_id", MODULE_ID).put("metadata", metadata);
 
         executeThenAssert(EventAction.UPDATE, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
-            context.assertEquals(response.getJsonObject("error").getString("message"), "App config is required!");
+            context.assertEquals(response.getJsonObject("error").getString("message"), "Service name is mandatory");
         });
     }
 
@@ -141,6 +130,7 @@ public class HandlerUpdateAndPatchTest extends BaseEdgeVerticleTest {
 
         executeThenAssert(EventAction.PATCH, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
+            context.assertEquals(response.getJsonObject("error").getString("code"), ErrorCode.NOT_FOUND.name());
         });
     }
 
