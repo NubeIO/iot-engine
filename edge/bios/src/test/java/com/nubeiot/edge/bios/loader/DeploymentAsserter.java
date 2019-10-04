@@ -1,4 +1,4 @@
-package com.nubeiot.edge.bios;
+package com.nubeiot.edge.bios.loader;
 
 import java.util.function.Consumer;
 
@@ -13,10 +13,11 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.edge.bios.service.BiosModuleService;
+import com.nubeiot.edge.bios.service.BiosTransactionService;
 import com.nubeiot.edge.core.PreDeploymentResult;
-import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
-interface DeploymentAsserter extends Consumer<PreDeploymentResult> {
+public interface DeploymentAsserter extends Consumer<PreDeploymentResult> {
 
     static DeploymentAsserter init(io.vertx.reactivex.core.Vertx vertx, TestContext context) {
         return init(vertx.getDelegate(), context);
@@ -33,25 +34,23 @@ interface DeploymentAsserter extends Consumer<PreDeploymentResult> {
                                                                    RequestData.builder().body(transactionBody).build());
             final Async async = context.async(2);
 
-            vertx.eventBus()
-                 .send(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER.getAddress(), serviceMessage.toJson(), result -> {
-                     System.out.println("Asserting module");
-                     JsonObject body = (JsonObject) result.result().body();
-                     context.assertEquals(body.getString("status"), Status.SUCCESS.name());
-                     JsonObject data = body.getJsonObject("data");
-                     context.assertEquals(data.getString("state"), State.PENDING.name());
-                     TestHelper.testComplete(async);
-                 });
+            vertx.eventBus().send(BiosModuleService.class.getName(), serviceMessage.toJson(), result -> {
+                System.out.println("Asserting module");
+                JsonObject body = (JsonObject) result.result().body();
+                context.assertEquals(body.getString("status"), Status.SUCCESS.name());
+                JsonObject data = body.getJsonObject("data");
+                context.assertEquals(data.getString("state"), State.PENDING.name());
+                TestHelper.testComplete(async);
+            });
 
-            vertx.eventBus()
-                 .send(InstallerEventModel.BIOS_TRANSACTION.getAddress(), transactionMessage.toJson(), result -> {
-                     System.out.println("Asserting transaction");
-                     JsonObject body = (JsonObject) result.result().body();
-                     context.assertEquals(body.getString("status"), Status.SUCCESS.name());
-                     JsonObject data = body.getJsonObject("data");
-                     context.assertEquals(data.getString("status"), Status.WIP.name());
-                     TestHelper.testComplete(async);
-                 });
+            vertx.eventBus().send(BiosTransactionService.class.getName(), transactionMessage.toJson(), result -> {
+                System.out.println("Asserting transaction");
+                JsonObject body = (JsonObject) result.result().body();
+                context.assertEquals(body.getString("status"), Status.SUCCESS.name());
+                JsonObject data = body.getJsonObject("data");
+                context.assertEquals(data.getString("status"), Status.WIP.name());
+                TestHelper.testComplete(async);
+            });
         };
     }
 

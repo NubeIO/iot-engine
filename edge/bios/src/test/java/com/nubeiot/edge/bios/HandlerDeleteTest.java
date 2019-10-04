@@ -22,8 +22,11 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
+import com.nubeiot.edge.bios.loader.DeploymentAsserter;
+import com.nubeiot.edge.bios.service.BiosModuleService;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
@@ -54,8 +57,8 @@ public class HandlerDeleteTest extends BaseEdgeVerticleTest {
         JsonObject body = new JsonObject().put("service_id", MODULE_ID);
         Async async = context.async();
         edgeVerticle.getEventController()
-                    .request(DeliveryEvent.from(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER, EventAction.REMOVE,
-                                                RequestData.builder().body(body).build()),
+                    .request(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE,
+                                                EventAction.REMOVE, RequestData.builder().body(body).build().toJson()),
                              EventbusHelper.replyAsserter(context, resp -> {
                                  System.out.println(resp);
                                  context.assertEquals(resp.getString("status"), Status.SUCCESS.name());

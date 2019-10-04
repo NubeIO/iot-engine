@@ -33,8 +33,10 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.core.statemachine.StateMachine;
+import com.nubeiot.edge.bios.service.BiosModuleService;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
@@ -48,17 +50,17 @@ import lombok.NonNull;
 //FIXME: MUST REWRITE/REFACTOR SHIT CODE. IT IS ASSERTING SUCCESS EVEN RAISE EXCEPTION
 public abstract class BaseEdgeVerticleTest {
 
-    static final String GROUP_ID = "com.nubeiot.edge.module";
-    static final String ARTIFACT_ID = "mytest";
-    static final String VERSION = "1.0.0";
-    static final String SERVICE_NAME = "bios-mytest";
-    static final String MODULE_ID = GROUP_ID + ":" + ARTIFACT_ID;
-    static final JsonObject APP_CONFIG = new JsonObject(
+    protected static final String GROUP_ID = "com.nubeiot.edge.module";
+    protected static final String ARTIFACT_ID = "mytest";
+    protected static final String VERSION = "1.0.0";
+    protected static final String SERVICE_NAME = "bios-mytest";
+    protected static final String MODULE_ID = GROUP_ID + ":" + ARTIFACT_ID;
+    protected static final JsonObject APP_CONFIG = new JsonObject(
         "{\"__kafka__\":{\"__client__\":{\"bootstrap.servers\":[\"localhost:9092\"]}}," +
         "\"__sql__\":{\"dialect\":\"H2\",\"__hikari__\":{\"jdbcUrl\":\"jdbc:h2:file:" +
         "./bios-installer\",\"minimumIdle\":1,\"maximumPoolSize\":2," +
         "\"connectionTimeout\":30000,\"idleTimeout\":180000,\"maxLifetime\":300000}}}");
-    static final JsonObject APP_SYSTEM_CONFIG = new JsonObject(
+    protected static final JsonObject APP_SYSTEM_CONFIG = new JsonObject(
         "{\"__deploy__\":{\"ha\":false,\"instances\":1,\"maxWorkerExecuteTime\":60000000000," +
         "\"maxWorkerExecuteTimeUnit\":\"NANOSECONDS\",\"multiThreaded\":false,\"worker\":false," +
         "\"workerPoolSize\":20},\"dataDir\":\"file:///root/.nubeio/com.nubeiot.edge.module_installer\"}");
@@ -111,7 +113,7 @@ public abstract class BaseEdgeVerticleTest {
         return nubeConfig;
     }
 
-    void insertModule(TestContext context, TblModule module) {
+    protected void insertModule(TestContext context, TblModule module) {
         Async async = context.async(1);
         edgeVerticle.getEntityHandler().getModuleDao().insert(module).subscribe(result -> {
             System.out.println("Insert module successfully!");
@@ -123,12 +125,12 @@ public abstract class BaseEdgeVerticleTest {
         async.awaitSuccess();
     }
 
-    @NonNull String getJdbcUrl() {
+    private @NonNull String getJdbcUrl() {
         return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString();
     }
 
-    void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus,
-                          JsonObject expectedConfig) {
+    protected void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus,
+                                    JsonObject expectedConfig) {
         CountDownLatch latch = new CountDownLatch(2);
         Async async = context.async(2);
         //Event module is deployed/updated successfully, we still have a gap for DB update.
@@ -183,9 +185,10 @@ public abstract class BaseEdgeVerticleTest {
 
     void executeThenAssert(EventAction action, TestContext context, JsonObject body, Handler<JsonObject> handler) {
         edgeVerticle.getEventController()
-                    .request(DeliveryEvent.from(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER, action,
-                                                RequestData.builder().body(body).build().toJson()),
-                             EventbusHelper.replyAsserter(context, handler));
+                    .request(
+                        DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE, action,
+                                           RequestData.builder().body(body).build().toJson()),
+                        EventbusHelper.replyAsserter(context, handler));
     }
 
     protected void assertModuleState(TestContext context, Async async, State expectedState, String moduleId) {

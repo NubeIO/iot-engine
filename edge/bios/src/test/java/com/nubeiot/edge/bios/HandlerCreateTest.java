@@ -10,6 +10,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.edge.bios.loader.DeploymentAsserter;
 import com.nubeiot.edge.core.EdgeVerticle;
 
 @RunWith(VertxUnitRunner.class)

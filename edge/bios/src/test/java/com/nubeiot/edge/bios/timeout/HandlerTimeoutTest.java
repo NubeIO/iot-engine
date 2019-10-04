@@ -1,4 +1,4 @@
-package com.nubeiot.edge.bios;
+package com.nubeiot.edge.bios.timeout;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +22,7 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
+import com.nubeiot.edge.bios.BaseEdgeVerticleTest;
 import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;

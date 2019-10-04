@@ -129,7 +129,7 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
                    .map(results -> new JsonObject().put("results", results));
     }
 
-    protected Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
+    public Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
         logger.info("{} module with data {}", action, module.toJson().encode());
         return this.handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
             JsonObject appConfig = this.getSecureAppConfig(result.getServiceId(), result.getAppConfig().toJson());
@@ -232,11 +232,11 @@ public abstract class EdgeEntityHandler extends AbstractEntityHandler {
         return genericQuery().executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
     }
 
-    Single<Optional<TblModule>> findModuleById(String serviceId) {
+    public Single<Optional<TblModule>> findModuleById(String serviceId) {
         return moduleDao.get().findOneById(serviceId);
     }
 
-    Single<Optional<JsonObject>> findTransactionById(String transactionId) {
+    public Single<Optional<JsonObject>> findTransactionById(String transactionId) {
         return transDao.get()
                        .findOneById(transactionId)
                        .flatMap(optional -> optional.isPresent()
