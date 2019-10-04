@@ -1,23 +1,21 @@
 package com.nubeiot.edge.module.installer;
 
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
-import io.reactivex.Single;
+import io.reactivex.Observable;
 import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
-import com.nubeiot.core.micro.type.EventMessageService;
 import com.nubeiot.edge.core.EdgeEntityHandler;
 import com.nubeiot.edge.core.EdgeVerticle;
-import com.nubeiot.edge.core.ModuleEventListener;
-import com.nubeiot.edge.core.TransactionEventListener;
 import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.module.installer.service.EdgeInstallerService;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
@@ -38,35 +36,29 @@ public final class EdgeServiceInstallerVerticle extends EdgeVerticle {
         return ServiceInstallerEntityHandler.class;
     }
 
+    @Override
+    public void registerEventbus(EventController eventClient) {
+        eventClient.register(InstallerEventModel.SERVICE_DEPLOYMENT, new ModuleLoader(vertx));
+    }
+
     @SuppressWarnings("unchecked")
     private void publishService(MicroContext microContext) {
         final ServiceDiscoveryController discovery = microContext.getLocalController();
         if (!discovery.isEnabled()) {
             return;
         }
-        Record r1 = EventMessageService.createRecord("bios.installer.service",
-                                                     InstallerEventModel.getServiceInstaller(true).getAddress(),
-                                                     EventMethodDefinition.createDefault("/services", "/:service_id"));
-        Record r2 = EventMessageService.createRecord("bios.installer.service.transaction",
-                                                     InstallerEventModel.getServiceTransaction(true).getAddress(),
-                                                     EventMethodDefinition.createDefault("/services/transactions",
-                                                                                         "/:transaction_id"));
-        Record r3 = EventMessageService.createRecord("bios.installer.service.last-transaction",
-                                                     InstallerEventModel.getServiceLastTransaction(true).getAddress(),
-                                                     EventMethodDefinition.createDefault(
-                                                         "/services/:module_id/transactions", "/:transaction_id"));
-        Single.concatArray(discovery.addRecord(r1), discovery.addRecord(r2), discovery.addRecord(r3)).subscribe();
+        Observable.fromIterable(EdgeInstallerService.createServices(this))
+                  .doOnEach(s -> Optional.ofNullable(s.getValue())
+                                         .ifPresent(
+                                             service -> getEventController().register(service.address(), service)))
+                  .filter(s -> Objects.nonNull(s.definitions()))
+                  .flatMap(s -> registerEndpoint(discovery, s))
+                  .subscribe();
     }
 
-    @Override
-    public void registerEventbus(EventController eventClient) {
-        final EventModel serviceInstaller = InstallerEventModel.getServiceInstaller(true);
-        final EventModel serviceTransaction = InstallerEventModel.getServiceTransaction(true);
-        final EventModel serviceLastTransaction = InstallerEventModel.getServiceLastTransaction(true);
-        eventClient.register(InstallerEventModel.SERVICE_DEPLOYMENT, new ModuleLoader(vertx))
-                   .register(serviceInstaller, new ModuleEventListener(this, serviceInstaller))
-                   .register(serviceTransaction, new TransactionEventListener(this, serviceTransaction))
-                   .register(serviceLastTransaction, new LastTransactionEventListener(this, serviceLastTransaction));
+    private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, EdgeInstallerService s) {
+        return Observable.fromIterable(s.definitions())
+                         .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
     }
 
 }

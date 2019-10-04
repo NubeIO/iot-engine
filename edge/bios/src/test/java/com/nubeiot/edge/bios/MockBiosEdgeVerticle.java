@@ -1,28 +1,25 @@
 package com.nubeiot.edge.bios;
 
-import com.nubeiot.core.event.EventAction;
+import java.util.Objects;
+import java.util.Optional;
+
+import io.reactivex.Observable;
+import io.reactivex.annotations.NonNull;
+
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventListener;
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.edge.core.ModuleEventListener;
-import com.nubeiot.edge.core.TransactionEventListener;
+import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.edge.bios.loader.DeploymentAsserter;
+import com.nubeiot.edge.bios.loader.MockFailedModuleLoader;
+import com.nubeiot.edge.bios.loader.MockModuleLoader;
+import com.nubeiot.edge.bios.service.BiosInstallerService;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public final class MockBiosEdgeVerticle extends EdgeBiosVerticle {
 
-    static EventModel MOCK_BIOS_INSTALLER = EventModel.builder()
-                                                      .address("mockup.nubeiot.edge.bios.installer")
-                                                      .pattern(EventPattern.REQUEST_RESPONSE)
-                                                      .addEvents(EventAction.INIT, EventAction.CREATE,
-                                                                 EventAction.GET_ONE, EventAction.GET_LIST,
-                                                                 EventAction.PATCH, EventAction.REMOVE,
-                                                                 EventAction.UPDATE)
-                                                      .build();
     private final DeploymentAsserter deploymentAsserter;
     private final boolean failed;
 
@@ -32,14 +29,21 @@ public final class MockBiosEdgeVerticle extends EdgeBiosVerticle {
 
     @Override
     public void registerEventbus(EventController eventClient) {
-        final @NonNull EventListener moduleLoader = failed
-                                                    ? new MockFailedModuleLoader(deploymentAsserter)
-                                                    : new MockModuleLoader(deploymentAsserter);
-        eventClient.register(MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER,
-                             new ModuleEventListener(this, MockBiosEdgeVerticle.MOCK_BIOS_INSTALLER))
-                   .register(InstallerEventModel.BIOS_TRANSACTION,
-                             new TransactionEventListener(this, InstallerEventModel.BIOS_TRANSACTION))
-                   .register(InstallerEventModel.BIOS_DEPLOYMENT, moduleLoader);
+        final @NonNull
+        EventListener moduleLoader = failed
+                                     ? new MockFailedModuleLoader(deploymentAsserter)
+                                     : new MockModuleLoader(deploymentAsserter);
+        eventClient.register(InstallerEventModel.BIOS_DEPLOYMENT, moduleLoader);
+    }
+
+    @Override
+    protected void publishService(MicroContext microContext) {
+        Observable.fromIterable(BiosInstallerService.createServices(this))
+                  .doOnEach(s -> Optional.ofNullable(s.getValue())
+                                         .ifPresent(
+                                             service -> getEventController().register(service.address(), service)))
+                  .filter(s -> Objects.nonNull(s.definitions()))
+                  .subscribe();
     }
 
     @Override

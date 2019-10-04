@@ -68,6 +68,11 @@ public final class DeliveryEvent implements JsonData {
         return new DeliveryEvent(model.getAddress(), model.getPattern(), action, payload);
     }
 
+    public static DeliveryEvent from(@NonNull String address, @NonNull EventPattern pattern, EventAction action,
+                                     JsonObject payload) {
+        return new DeliveryEvent(address, pattern, action, payload);
+    }
+
     public EventMessage payload() {
         return EventMessage.initial(action, payload);
     }

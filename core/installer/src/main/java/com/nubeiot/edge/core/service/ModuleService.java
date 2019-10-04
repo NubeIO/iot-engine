@@ -1,13 +1,16 @@
-package com.nubeiot.edge.core;
+package com.nubeiot.edge.core.service;
+
+import static com.nubeiot.core.http.base.event.ActionMethodMapping.defaultCRUDMap;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import io.reactivex.Single;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.component.SharedDataDelegate;
@@ -15,29 +18,25 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventListener;
-import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.RequestedServiceData;
 import com.nubeiot.edge.core.loader.InvalidModuleType;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.search.LocalServiceSearch;
 
-import lombok.Getter;
 import lombok.NonNull;
 
-public final class ModuleEventListener implements EventListener {
+public abstract class ModuleService implements InstallerService {
 
     private final EdgeVerticle verticle;
-    @Getter
-    private final List<EventAction> availableEvents;
 
-    public ModuleEventListener(@NonNull EdgeVerticle verticle, @NonNull EventModel eventModel) {
+    public ModuleService(@NonNull EdgeVerticle verticle) {
         this.verticle = verticle;
-        this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
@@ -56,7 +55,8 @@ public final class ModuleEventListener implements EventListener {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Service Id cannot be blank");
         }
         return this.verticle.getEntityHandler()
-                            .findModuleById(serviceId).map(o -> o.map(this::removeCredentialsInAppConfig))
+                            .findModuleById(serviceId)
+                            .map(o -> o.map(this::removeCredentialsInAppConfig))
                             .map(o -> o.orElseThrow(
                                 () -> new NotFoundException(String.format("Not found service id '%s'", serviceId))));
     }
@@ -132,6 +132,17 @@ public final class ModuleEventListener implements EventListener {
         String dataDir = SharedDataDelegate.getLocalDataValue(verticle.getVertx(), verticle.getSharedKey(),
                                                               SharedDataDelegate.SHARED_DATADIR);
         return Paths.get(dataDir);
+    }
+
+    @Override
+    public Map<EventAction, HttpMethod> map() {
+        return defaultCRUDMap();
+    }
+
+    @Override
+    public @NonNull List<EventAction> getAvailableEvents() {
+        return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE, EventAction.PATCH,
+                             EventAction.UPDATE, EventAction.REMOVE);
     }
 
 }

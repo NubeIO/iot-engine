@@ -1,4 +1,4 @@
-package com.nubeiot.edge.bios;
+package com.nubeiot.edge.bios.timeout;
 
 import java.util.Arrays;
 import java.util.List;

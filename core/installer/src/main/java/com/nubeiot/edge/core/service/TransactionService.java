@@ -1,35 +1,31 @@
-package com.nubeiot.edge.core;
+package com.nubeiot.edge.core.service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.Single;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventListener;
-import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.core.EdgeVerticle;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
 
-import lombok.Getter;
 import lombok.NonNull;
 
-public final class TransactionEventListener implements EventListener {
+public abstract class TransactionService implements InstallerService {
 
     private final EdgeVerticle verticle;
-    @Getter
-    private final List<EventAction> availableEvents;
 
-    public TransactionEventListener(@NonNull EdgeVerticle verticle, @NonNull EventModel eventModel) {
+    public TransactionService(@NonNull EdgeVerticle verticle) {
         this.verticle = verticle;
-        this.availableEvents = Collections.unmodifiableList(new ArrayList<>(eventModel.getEvents()));
     }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
@@ -49,10 +45,29 @@ public final class TransactionEventListener implements EventListener {
 
     private JsonObject removePrevSystemConfig(JsonObject transaction, boolean systemCfg) {
         if (!systemCfg) {
-            // TODO: replace with POJO constant later
             transaction.remove("prev_system_config");
         }
         return transaction;
+    }
+
+    @Override
+    public Map<EventAction, HttpMethod> map() {
+        return Collections.singletonMap(EventAction.GET_ONE, HttpMethod.GET);
+    }
+
+    @Override
+    public String servicePath() {
+        return "/transaction";
+    }
+
+    @Override
+    public String paramPath() {
+        return "/:transaction_id";
+    }
+
+    @Override
+    public @NonNull List<EventAction> getAvailableEvents() {
+        return Collections.singletonList(EventAction.GET_ONE);
     }
 
 }
