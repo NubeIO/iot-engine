@@ -37,7 +37,7 @@ public abstract class ModuleService implements InstallerService {
     @NonNull
     private final InstallerVerticle verticle;
 
-    public ModuleService(@NonNull InstallerVerticle verticle, @NonNull EventModel eventModel) {
+    public ModuleService(@NonNull InstallerVerticle verticle) {
         this.verticle = verticle;
     }
 

@@ -41,7 +41,6 @@ public final class EdgeServiceInstallerVerticle extends InstallerVerticle {
         eventClient.register(InstallerEventModel.SERVICE_DEPLOYMENT, new ModuleLoader(vertx));
     }
 
-    @SuppressWarnings("unchecked")
     private void publishService(MicroContext microContext) {
         final ServiceDiscoveryController discovery = microContext.getLocalController();
         if (!discovery.isEnabled()) {

@@ -7,13 +7,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.service.InstallerService;
 
 public interface EdgeInstallerService extends InstallerService {
 
-    static Set<? extends EdgeInstallerService> createServices(EdgeVerticle edgeVerticle) {
-        final Map<Class, Object> inputs = Collections.singletonMap(EdgeVerticle.class, edgeVerticle);
+    static Set<? extends EdgeInstallerService> createServices(InstallerVerticle edgeVerticle) {
+        final Map<Class, Object> inputs = Collections.singletonMap(InstallerVerticle.class, edgeVerticle);
         return ReflectionClass.stream(EdgeInstallerService.class.getPackage().getName(), EdgeInstallerService.class,
                                       ReflectionClass.publicClass())
                               .map(clazz -> ReflectionClass.createObject(clazz, inputs))

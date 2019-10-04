@@ -7,13 +7,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.edge.core.EdgeVerticle;
+import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.service.InstallerService;
 
 public interface BiosInstallerService extends InstallerService {
 
-    static Set<? extends BiosInstallerService> createServices(EdgeVerticle edgeVerticle) {
-        final Map<Class, Object> inputs = Collections.singletonMap(EdgeVerticle.class, edgeVerticle);
+    static Set<? extends BiosInstallerService> createServices(InstallerVerticle edgeVerticle) {
+        final Map<Class, Object> inputs = Collections.singletonMap(InstallerVerticle.class, edgeVerticle);
         return ReflectionClass.stream(BiosInstallerService.class.getPackage().getName(), BiosInstallerService.class,
                                       ReflectionClass.publicClass())
                               .map(clazz -> ReflectionClass.createObject(clazz, inputs))

@@ -19,7 +19,7 @@ public final class RequestedServiceData implements JsonData {
     @Getter
     private final AppConfig appConfig;
 
-    RequestedServiceData() {
+    public RequestedServiceData() {
         this.metadata = new JsonObject();
         this.appConfig = new AppConfig();
     }
