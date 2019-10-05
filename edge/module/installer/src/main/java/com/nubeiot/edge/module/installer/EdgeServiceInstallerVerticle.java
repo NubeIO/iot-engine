@@ -1,19 +1,13 @@
 package com.nubeiot.edge.module.installer;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
-import io.reactivex.Observable;
-import io.vertx.servicediscovery.Record;
-
-import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.micro.MicroContext;
-import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.edge.core.InstallerEntityHandler;
 import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.core.service.DeployerDefinition;
+import com.nubeiot.edge.core.service.InstallerService;
 import com.nubeiot.edge.module.installer.service.EdgeInstallerService;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
@@ -22,9 +16,8 @@ import lombok.NonNull;
 public final class EdgeServiceInstallerVerticle extends InstallerVerticle {
 
     @Override
-    public void start() {
-        super.start();
-        addProvider(new MicroserviceProvider(), this::publishService);
+    protected Class<? extends InstallerEntityHandler> entityHandlerClass() {
+        return ServiceInstallerEntityHandler.class;
     }
 
     @Override
@@ -33,37 +26,14 @@ public final class EdgeServiceInstallerVerticle extends InstallerVerticle {
     }
 
     @Override
-    protected Class<? extends InstallerEntityHandler> entityHandlerClass() {
-        return ServiceInstallerEntityHandler.class;
+    protected Supplier<Set<? extends InstallerService>> services() {
+        return () -> InstallerService.createServices(getEntityHandler(), EdgeInstallerService.class);
     }
 
     @Override
-    protected @NonNull EventModel deploymentEvent() {
-        return InstallerEventModel.SERVICE_DEPLOYMENT;
-    }
-
-    @Override
-    protected @NonNull EventModel postDeploymentEvent() {
-        return InstallerEventModel.SERVICE_POST_DEPLOYMENT;
-    }
-
-    private void publishService(MicroContext microContext) {
-        final ServiceDiscoveryController discovery = microContext.getLocalController();
-        if (!discovery.isEnabled()) {
-            return;
-        }
-        Observable.fromIterable(EdgeInstallerService.createServices(this))
-                  .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                         .ifPresent(
-                                             service -> getEventController().register(service.address(), service)))
-                  .filter(s -> Objects.nonNull(s.definitions()))
-                  .flatMap(s -> registerEndpoint(discovery, s))
-                  .subscribe();
-    }
-
-    private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, EdgeInstallerService s) {
-        return Observable.fromIterable(s.definitions())
-                         .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
+    protected @NonNull DeployerDefinition deploymentService() {
+        return DeployerDefinition.createDefault(InstallerEventModel.SERVICE_DEPLOYMENT,
+                                                InstallerEventModel.SERVICE_POST_DEPLOYMENT, getEntityHandler());
     }
 
 }

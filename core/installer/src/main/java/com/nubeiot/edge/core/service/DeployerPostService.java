@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.jooq.DSLContext;
 import org.jooq.TableField;
@@ -21,7 +22,6 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventListener;
-import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
@@ -39,9 +39,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class PostDeploymentService implements EventListener {
+public final class DeployerPostService implements EventListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostDeploymentService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeployerPostService.class);
     private final InstallerEntityHandler entityHandler;
 
     @Override
@@ -49,58 +49,53 @@ public final class PostDeploymentService implements EventListener {
         return Collections.singletonList(EventAction.MONITOR);
     }
 
-    @EventContractor(action = EventAction.MONITOR)
-    public boolean success(@Param("result") PreDeploymentResult result, @Param("error") JsonObject error) {
+    @EventContractor(action = EventAction.MONITOR, returnType = Single.class)
+    public Single<Integer> success(@Param("result") PreDeploymentResult result, @Param("error") JsonObject error) {
         if (Objects.isNull(error) || error.isEmpty() || Strings.isBlank(result.getDeployId())) {
-            errorPostDeployment(result.getServiceId(), result.getTransactionId(), result.getAction(),
-                                ErrorMessage.parse(error));
-            return true;
+            return handleError(result.getServiceId(), result.getTransactionId(), result.getAction(), error);
         }
-        succeedPostDeployment(result.getServiceId(), result.getTransactionId(), result.getAction(),
-                              result.getDeployId(), result.getTargetState());
-        return true;
+        return handleSuccess(result.getServiceId(), result.getTransactionId(), result.getAction(), result.getDeployId(),
+                             result.getTargetState());
     }
 
-    private void succeedPostDeployment(String serviceId, String transId, EventAction eventAction, String deployId,
-                                       State targetState) {
+    private Single<Integer> handleSuccess(String service, String transId, EventAction action, String deployId,
+                                          State targetState) {
         LOGGER.info("Handle entities after success deployment...");
         final Status status = Status.SUCCESS;
-        final State state = StateMachine.instance().transition(eventAction, status, targetState);
+        final State state = StateMachine.instance().transition(action, status, targetState);
         if (State.UNAVAILABLE == state) {
             final TblTransactionDao dao = entityHandler.getTransDao();
-            LOGGER.info("Remove module id {} and its transactions", serviceId);
-            dao.findOneById(transId)
-               .flatMap(o -> createRemovedServiceRecord(
-                   o.orElse(new TblTransaction().setTransactionId(transId).setModuleId(serviceId).setEvent(eventAction))
-                    .setStatus(status)))
-               .map(history -> dao)
-               .flatMap(transDao -> transDao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(serviceId))
-                                            .flatMap(ignore -> entityHandler.getModuleDao().deleteById(serviceId)))
-               .subscribe();
-        } else {
-            Map<TableField, String> v = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
-            final JDBCRXGenericQueryExecutor queryExecutor = entityHandler.genericQuery();
-            queryExecutor.executeAny(c -> updateTransStatus(c, transId, status, null))
-                         .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, v))
-                                                     .map(r2 -> r1 + r2))
-                         .subscribe();
+            LOGGER.info("Removing service '{}' and its transactions...", service);
+            return dao.findOneById(transId)
+                      .filter(Optional::isPresent)
+                      .map(Optional::get)
+                      .defaultIfEmpty(
+                          new TblTransaction().setTransactionId(transId).setModuleId(service).setEvent(action))
+                      .flatMapSingle(r -> createHistoryRecord(r.setStatus(status)))
+                      .doOnSuccess(his -> LOGGER.info("History record for service '{}' and transaction '{}' is created",
+                                                      his.getModuleId(), his.getTransactionId()))
+                      .flatMap(history -> dao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(service)))
+                      .doOnSuccess(nr -> LOGGER.info("Service '{}' is removed", service))
+                      .flatMap(ignore -> entityHandler.getModuleDao().deleteById(service))
+                      .doOnSuccess(n -> LOGGER.info("{} transaction records for service '{}' are removed", n, service));
         }
-    }
-
-    //TODO: register EventBus to send message somewhere
-    private void errorPostDeployment(String serviceId, String transId, EventAction action, ErrorMessage error) {
-        LOGGER.error("Handle entities after error deployment...");
+        Map<TableField, String> v = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
         final JDBCRXGenericQueryExecutor queryExecutor = entityHandler.genericQuery();
-        queryExecutor.executeAny(c -> updateTransStatus(c, transId, Status.FAILED,
-                                                        Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR,
-                                                                                 error.toJson())))
-                     .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
-                                                 .map(r2 -> r1 + r2))
-                     .subscribe();
+        return queryExecutor.executeAny(c -> updateTransStatus(c, transId, status, null))
+                            .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, service, state, v))
+                                                        .map(r2 -> r1 + r2));
     }
 
-    private Single<ITblRemoveHistory> createRemovedServiceRecord(ITblTransaction transaction) {
-        LOGGER.info("Create History record...");
+    private Single<Integer> handleError(String serviceId, String transId, EventAction action, JsonObject error) {
+        LOGGER.error("Handle entities after error deployment...");
+        final JDBCRXGenericQueryExecutor query = entityHandler.genericQuery();
+        final Map<?, ?> values = Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR, error);
+        return query.executeAny(c -> updateTransStatus(c, transId, Status.FAILED, values))
+                    .flatMap(r1 -> query.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
+                                        .map(r2 -> r1 + r2));
+    }
+
+    private Single<ITblRemoveHistory> createHistoryRecord(ITblTransaction transaction) {
         ITblRemoveHistory history = this.convertToHistory(transaction);
         return entityHandler.dao(TblRemoveHistoryDao.class).insert((TblRemoveHistory) history).map(i -> history);
     }

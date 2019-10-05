@@ -70,13 +70,9 @@ public final class ModuleTypeRule implements Shareable {
         return Objects.isNull(ruleMetadata) ? new ArrayList<>() : ruleMetadata.getSearchPattern();
     }
 
-    private Map<ModuleType, ModuleTypePredicate> rules() {
-        return Collections.unmodifiableMap(this.rules);
-    }
-
     @Override
     public Shareable copy() {
-        return new ModuleTypeRule(this.rules());
+        return new ModuleTypeRule(Collections.unmodifiableMap(this.rules));
     }
 
 }

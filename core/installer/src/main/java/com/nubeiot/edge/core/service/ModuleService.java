@@ -17,22 +17,23 @@ import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.core.InstallerEntityHandler;
 import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.RequestedServiceData;
+import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.search.LocalServiceSearch;
 
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ModuleService implements InstallerService {
 
     @NonNull
-    private final InstallerVerticle verticle;
-
-    protected ModuleService(@NonNull InstallerVerticle verticle) {
-        this.verticle = verticle;
-    }
+    private final InstallerEntityHandler entityHandler;
 
     public final String servicePath() {
         return "";
@@ -53,7 +54,7 @@ public abstract class ModuleService implements InstallerService {
         if (filter.getBoolean("available", Boolean.FALSE)) {
             return Single.just(new JsonObject());
         }
-        return new LocalServiceSearch(verticle.getEntityHandler()).search(data);
+        return new LocalServiceSearch(entityHandler).search(data);
     }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
@@ -62,12 +63,12 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(serviceId)) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return verticle.getEntityHandler()
-                       .findModuleById(serviceId)
-                       .map(o -> o.map(this::removeCredentialsInAppConfig))
-                       .filter(Optional::isPresent)
-                       .map(Optional::get)
-                       .switchIfEmpty(Single.error(new NotFoundException("Not found service id '" + serviceId + "'")));
+        return entityHandler.findModuleById(serviceId)
+                            .map(o -> o.map(this::removeCredentialsInAppConfig))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .switchIfEmpty(
+                                Single.error(new NotFoundException("Not found service id '" + serviceId + "'")));
     }
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
@@ -76,7 +77,7 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(module.getServiceId())) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.PATCH);
+        return this.entityHandler.processDeploymentTransaction(module, EventAction.PATCH);
     }
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
@@ -85,7 +86,7 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(module.getServiceName()) && Strings.isBlank(module.getServiceId())) {
             throw new IllegalArgumentException("Provide at least service id or service name");
         }
-        return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.UPDATE);
+        return this.entityHandler.processDeploymentTransaction(module, EventAction.UPDATE);
     }
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
@@ -94,17 +95,16 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(module.getServiceId())) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return this.verticle.getEntityHandler().processDeploymentTransaction(module, EventAction.REMOVE);
+        return this.entityHandler.processDeploymentTransaction(module, EventAction.REMOVE);
     }
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData data) {
-        return this.verticle.getEntityHandler().processDeploymentTransaction(validate(data.body()), EventAction.CREATE);
+        return this.entityHandler.processDeploymentTransaction(validate(data.body()), EventAction.CREATE);
     }
 
     private JsonObject removeCredentialsInAppConfig(TblModule record) {
-        record.setAppConfig(
-            verticle.getEntityHandler().getSecureAppConfig(record.getServiceId(), record.getAppConfig()));
+        record.setAppConfig(entityHandler.getSecureAppConfig(record.getServiceId(), record.getAppConfig()));
         return record.toJson();
     }
 
@@ -128,11 +128,12 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isNotBlank(serviceId)) {
             serviceData.getMetadata().put(paramPath(), serviceId);
         }
-        return verticle.getModuleRule().parse(getDataDir(), serviceData.getMetadata(), serviceData.getAppConfig());
+        final ModuleTypeRule rule = entityHandler.sharedData(InstallerVerticle.SHARED_MODULE_RULE);
+        return rule.parse(getDataDir(), serviceData.getMetadata(), serviceData.getAppConfig());
     }
 
     private Path getDataDir() {
-        final String dataDir = verticle.getEntityHandler().sharedData(SharedDataDelegate.SHARED_DATADIR);
+        final String dataDir = entityHandler.sharedData(SharedDataDelegate.SHARED_DATADIR);
         return Strings.isBlank(dataDir) ? FileUtils.DEFAULT_DATADIR : Paths.get(dataDir);
     }
 

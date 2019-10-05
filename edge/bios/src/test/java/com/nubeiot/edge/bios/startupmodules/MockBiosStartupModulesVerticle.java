@@ -1,17 +1,13 @@
 package com.nubeiot.edge.bios.startupmodules;
 
-import java.util.Objects;
-import java.util.Optional;
-
-import io.reactivex.Observable;
-
-import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.edge.bios.EdgeBiosVerticle;
 import com.nubeiot.edge.bios.loader.MockModuleLoader;
-import com.nubeiot.edge.bios.service.BiosInstallerService;
 import com.nubeiot.edge.core.InstallerEntityHandler;
+import com.nubeiot.edge.core.service.DeployerDefinition;
+import com.nubeiot.edge.core.service.DeployerPostService;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
+
+import lombok.NonNull;
 
 public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
 
@@ -22,23 +18,14 @@ public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
     }
 
     @Override
-    public void registerEventbus(EventController eventClient) {
-        eventClient.register(InstallerEventModel.BIOS_DEPLOYMENT, new MockModuleLoader(null));
-    }
-
-    @Override
-    protected void publishService(MicroContext microContext) {
-        Observable.fromIterable(BiosInstallerService.createServices(this))
-                  .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                         .ifPresent(
-                                             service -> getEventController().register(service.address(), service)))
-                  .filter(s -> Objects.nonNull(s.definitions()))
-                  .subscribe();
-    }
-
-    @Override
     protected Class<? extends InstallerEntityHandler> entityHandlerClass() {
         return this.entityHandlerClass;
+    }
+
+    @Override
+    protected @NonNull DeployerDefinition deploymentService() {
+        return DeployerDefinition.create(InstallerEventModel.BIOS_DEPLOYMENT, InstallerEventModel.BIOS_POST_DEPLOYMENT,
+                                         new MockModuleLoader(null), new DeployerPostService(getEntityHandler()));
     }
 
     @Override

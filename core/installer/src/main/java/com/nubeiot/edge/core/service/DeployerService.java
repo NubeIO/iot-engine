@@ -3,15 +3,18 @@ package com.nubeiot.edge.core.service;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import io.reactivex.CompletableObserver;
 import io.reactivex.Single;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.component.SharedDataDelegate;
@@ -30,30 +33,33 @@ import com.nubeiot.edge.core.PreDeploymentResult;
 
 import lombok.NonNull;
 
-public final class ModuleLoader implements EventListener {
+class DeployerService implements EventListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModuleLoader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeployerService.class);
     private final Vertx vertx;
-    private final String sharedKey;
-    private final EventModel postEventModel;
+    private final Function<String, Object> sharedDataFunc;
+    private final EventModel postEvent;
     private final WorkerExecutor worker;
 
-    public ModuleLoader(Vertx vertx, String sharedKey, EventModel postEventModel) {
+    public DeployerService(Vertx vertx, Function<String, Object> sharedDataFunc, EventModel postEvent) {
         this.vertx = vertx;
-        this.sharedKey = sharedKey;
-        this.postEventModel = postEventModel;
-        this.worker = vertx.getDelegate().createSharedWorkerExecutor("installer", 3, 15, TimeUnit.MINUTES);
+        this.sharedDataFunc = sharedDataFunc;
+        this.postEvent = postEvent;
+        this.worker = vertx.createSharedWorkerExecutor("installer", 3, 15, TimeUnit.MINUTES);
     }
 
-    @EventContractor(action = {EventAction.CREATE, EventAction.INIT}, returnType = Single.class)
+    @EventContractor(action = {EventAction.UNKNOWN}, returnType = Single.class)
     public Single<JsonObject> installModule(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
         LOGGER.info("Vertx install module {}...", preResult.getServiceFQN());
         DeploymentOptions options = new DeploymentOptions().setConfig(
             NubeConfig.create(preResult.getSystemConfig(), preResult.getAppConfig()).toJson());
-        return vertx.rxDeployVerticle(preResult.getServiceFQN(), options).doOnError(throwable -> {
-            throw new EngineException(throwable);
-        }).map(id -> new JsonObject().put("deploy_id", id));
+        return io.vertx.reactivex.core.Vertx.newInstance(vertx)
+                                            .rxDeployVerticle(preResult.getServiceFQN(), options)
+                                            .doOnError(throwable -> {
+                                                throw new EngineException(throwable);
+                                            })
+                                            .map(id -> new JsonObject().put("deploy_id", id));
     }
 
     @EventContractor(action = {EventAction.REMOVE, EventAction.HALT}, returnType = Single.class)
@@ -61,7 +67,7 @@ public final class ModuleLoader implements EventListener {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
         String deployId = preResult.getDeployId();
         LOGGER.info("Vertx unload module {}...", deployId);
-        return vertx.rxUndeploy(deployId).onErrorResumeNext(throwable -> {
+        return io.vertx.reactivex.core.Vertx.newInstance(vertx).rxUndeploy(deployId).onErrorResumeNext(throwable -> {
             if (!preResult.isSilent()) {
                 throw new EngineException(throwable);
             }
@@ -77,10 +83,14 @@ public final class ModuleLoader implements EventListener {
             this.removeModule(data);
         }
         LOGGER.info("Vertx reload module {}...", preResult.getDeployId());
-        return vertx.rxUndeploy(preResult.getDeployId()).onErrorResumeNext(throwable -> {
-            LOGGER.debug("Module {} is gone in Vertx. Just installing...", throwable, preResult.getDeployId());
-            return CompletableObserver::onComplete;
-        }).andThen(installModule(data));
+        return io.vertx.reactivex.core.Vertx.newInstance(vertx)
+                                            .rxUndeploy(preResult.getDeployId())
+                                            .onErrorResumeNext(throwable -> {
+                                                LOGGER.debug("Module {} is gone in Vertx. Just installing...",
+                                                             throwable, preResult.getDeployId());
+                                                return CompletableObserver::onComplete;
+                                            })
+                                            .andThen(installModule(data));
     }
 
     @Override
@@ -93,24 +103,24 @@ public final class ModuleLoader implements EventListener {
     public boolean installV2(RequestData data) {
         final PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
         LOGGER.info("Vertx install module {}...", preResult.getServiceFQN());
+        worker.executeBlocking(future -> doDeploy(preResult, future), false,
+                               result -> publishResult(preResult, result));
+        return true;
+    }
+
+    void doDeploy(PreDeploymentResult preResult, Future<Object> future) {
         final JsonObject config = NubeConfig.create(preResult.getSystemConfig(), preResult.getAppConfig()).toJson();
         final DeploymentOptions options = new DeploymentOptions().setConfig(config);
-        final EventController eventClient = SharedDataDelegate.getEventController(vertx.getDelegate(), sharedKey);
-        worker.executeBlocking(
-            future -> vertx.deployVerticle(preResult.getServiceFQN(), options, res -> future.handle(res.map(s -> s))),
-            false, result -> {
-                JsonObject error = null;
-                if (result.succeeded()) {
-                    preResult.toJson().put("deploy_id", result.result());
-                } else {
-                    error = ErrorMessage.parse(result.cause()).toJson();
-                }
-                final JsonObject payload = new JsonObject().put("result", preResult.toJson()
-                                                                                   .put("deploy_id", result.result())
-                                                                                   .put("error", error));
-                eventClient.request(DeliveryEvent.from(postEventModel, EventAction.MONITOR, payload));
-            });
-        return true;
+        vertx.deployVerticle(preResult.getServiceFQN(), options, res -> future.handle(res.map(s -> s)));
+    }
+
+    private void publishResult(PreDeploymentResult preResult, AsyncResult<Object> result) {
+        final EventController eventClient = (EventController) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
+        JsonObject error = result.succeeded() ? null : ErrorMessage.parse(result.cause()).toJson();
+        final JsonObject payload = new JsonObject().put("result", preResult.toJson()
+                                                                           .put("deploy_id", result.result())
+                                                                           .put("error", error));
+        eventClient.request(DeliveryEvent.from(postEvent, EventAction.MONITOR, payload));
     }
 
 }

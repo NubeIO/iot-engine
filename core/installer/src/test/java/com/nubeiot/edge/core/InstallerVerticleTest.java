@@ -4,9 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+@RunWith(VertxUnitRunner.class)
 public class InstallerVerticleTest {
 
     @Test

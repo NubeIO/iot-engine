@@ -14,12 +14,12 @@ import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.daos.TblTransactionDao;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
-public abstract class MockInitDataEntityHandler extends InstallerEntityHandler {
+abstract class MockInitDataEntityHandler extends InstallerEntityHandler {
 
-    protected final TblModuleDao tblModuleDao;
-    protected final TblTransactionDao tblTransactionDao;
+    final TblModuleDao tblModuleDao;
+    final TblTransactionDao tblTransactionDao;
 
-    protected MockInitDataEntityHandler(Configuration configuration, Vertx vertx) {
+    MockInitDataEntityHandler(Configuration configuration, Vertx vertx) {
         super(configuration, vertx);
         this.tblModuleDao = dao(TblModuleDao.class);
         this.tblTransactionDao = dao(TblTransactionDao.class);

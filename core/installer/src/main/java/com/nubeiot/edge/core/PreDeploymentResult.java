@@ -34,7 +34,7 @@ import lombok.Setter;
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(builder = PreDeploymentResult.Builder.class)
-public class PreDeploymentResult implements JsonData, IRequestData {
+public final class PreDeploymentResult implements JsonData, IRequestData {
 
     private static final Logger logger = LoggerFactory.getLogger(PreDeploymentResult.class);
 

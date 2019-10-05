@@ -71,14 +71,6 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         return ServiceDiscovery.create(vertx, config);
     }
 
-    public static Function<Record, Boolean> defaultHttpEndpointFilter(String serviceName,
-                                                                      @NonNull HttpLocation location) {
-        return r -> r.getType().equals(HttpEndpoint.TYPE) &&
-                    location.getHost().equals(r.getLocation().getString("host")) &&
-                    location.getPort() == r.getLocation().getInteger("port") &&
-                    location.getRoot().equals(r.getLocation().getString("root")) && r.getName().equals(serviceName);
-    }
-
     abstract <T extends ServiceGatewayAnnounceMonitor> void subscribe(EventBus eventBus, @NonNull T announceMonitor);
 
     abstract <T extends ServiceGatewayUsageMonitor> void subscribe(EventBus eventBus, @NonNull T usageMonitor);
