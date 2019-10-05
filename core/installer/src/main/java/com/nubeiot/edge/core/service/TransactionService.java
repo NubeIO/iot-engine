@@ -2,10 +2,8 @@ package com.nubeiot.edge.core.service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import io.reactivex.Single;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
@@ -18,15 +16,15 @@ import com.nubeiot.edge.core.InstallerVerticle;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
 
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class TransactionService implements InstallerService {
 
+    @NonNull
     private final InstallerVerticle verticle;
-
-    public TransactionService(@NonNull InstallerVerticle verticle) {
-        this.verticle = verticle;
-    }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
@@ -51,17 +49,12 @@ public abstract class TransactionService implements InstallerService {
     }
 
     @Override
-    public Map<EventAction, HttpMethod> map() {
-        return Collections.singletonMap(EventAction.GET_ONE, HttpMethod.GET);
+    public final String servicePath() {
+        return "/transactions";
     }
 
     @Override
-    public String servicePath() {
-        return "/transaction";
-    }
-
-    @Override
-    public String paramPath() {
+    public final String paramPath() {
         return "/:transaction_id";
     }
 

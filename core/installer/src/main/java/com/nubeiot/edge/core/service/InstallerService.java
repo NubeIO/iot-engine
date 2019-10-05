@@ -17,14 +17,12 @@ public interface InstallerService extends EventHttpService {
 
     @Override
     default Set<EventMethodDefinition> definitions() {
-        Map<EventAction, HttpMethod> map = map();
+        Map<EventAction, HttpMethod> map = ActionMethodMapping.CRUD_MAP.get();
         ActionMethodMapping actionMethodMap = ActionMethodMapping.create(
             getAvailableEvents().stream().filter(map::containsKey).collect(Collectors.toMap(e -> e, map::get)));
         return Collections.singleton(
             EventMethodDefinition.create(Urls.combinePath(rootPath(), servicePath()), paramPath(), actionMethodMap));
     }
-
-    Map<EventAction, HttpMethod> map();
 
     String rootPath();
 

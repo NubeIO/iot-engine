@@ -7,16 +7,17 @@ import java.util.function.Supplier;
 import io.reactivex.Observable;
 import io.vertx.servicediscovery.Record;
 
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.edge.core.InstallerEntityHandler;
 import com.nubeiot.edge.core.InstallerVerticle;
-import com.nubeiot.edge.core.loader.ModuleLoader;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.module.installer.service.EdgeInstallerService;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
+
+import lombok.NonNull;
 
 public final class EdgeServiceInstallerVerticle extends InstallerVerticle {
 
@@ -37,8 +38,13 @@ public final class EdgeServiceInstallerVerticle extends InstallerVerticle {
     }
 
     @Override
-    public void registerEventbus(EventController eventClient) {
-        eventClient.register(InstallerEventModel.SERVICE_DEPLOYMENT, new ModuleLoader(vertx));
+    protected @NonNull EventModel deploymentEvent() {
+        return InstallerEventModel.SERVICE_DEPLOYMENT;
+    }
+
+    @Override
+    protected @NonNull EventModel postDeploymentEvent() {
+        return InstallerEventModel.SERVICE_POST_DEPLOYMENT;
     }
 
     private void publishService(MicroContext microContext) {
