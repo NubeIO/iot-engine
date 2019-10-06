@@ -1,7 +1,9 @@
 package com.nubeiot.edge.core;
 
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -12,13 +14,12 @@ import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.auth.Credential;
-import com.nubeiot.auth.Credential.HiddenCredential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
@@ -29,12 +30,13 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.NotFoundException;
-import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
+import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.Tables;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.daos.TblRemoveHistoryDao;
@@ -43,212 +45,204 @@ import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblRemoveHistory;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
-import com.nubeiot.edge.core.model.tables.records.TblTransactionRecord;
 import com.nubeiot.edge.core.repository.InstallerRepository;
 
 import lombok.NonNull;
 
 public abstract class InstallerEntityHandler extends AbstractEntityHandler {
 
-    protected static final String SHARED_INSTALLER_CFG = "INSTALLER_CFG";
+    private EventAction bootstrapAction;
 
     protected InstallerEntityHandler(Configuration configuration, Vertx vertx) {
         super(configuration, vertx);
     }
 
     @Override
-    public boolean isNew() {
-        return isNew(Tables.TBL_MODULE);
-    }
-
-    @Override
-    public Single<EventMessage> migrate() {
-        return this.startupModules().map(r -> EventMessage.success(EventAction.MIGRATE, r));
-    }
-
-    @Override
     public Single<EntityHandler> before() {
-        InstallerConfig installerCfg = sharedData(SHARED_INSTALLER_CFG);
+        InstallerConfig installerCfg = sharedData(InstallerVerticle.SHARED_INSTALLER_CFG);
         return super.before().map(handler -> {
             InstallerRepository.create(handler).setup(installerCfg.getRepoConfig(), dataDir());
             return handler;
         });
     }
 
+    @Override
+    public boolean isNew() {
+        final boolean isNew = isNew(Tables.TBL_MODULE);
+        bootstrapAction = isNew ? EventAction.INIT : EventAction.MIGRATE;
+        return isNew;
+    }
+
+    @Override
+    public Single<EventMessage> initData() {
+        final InstallerConfig cfg = sharedData(InstallerVerticle.SHARED_INSTALLER_CFG);
+        final EventAction action = EventAction.INIT;
+        return addApps(dataDir(), cfg.getRepoConfig(), cfg.getBuiltinApps()).map(r -> EventMessage.success(action, r));
+    }
+
+    @Override
+    public Single<EventMessage> migrate() {
+        return transitionPendingModules().map(r -> EventMessage.success(EventAction.MIGRATE, r));
+    }
+
     protected abstract EventModel deploymentEvent();
 
-    public TblModuleDao getModuleDao() {
+    protected abstract AppConfig transformAppConfig(RepositoryConfig repoConfig, RequestedServiceData serviceData,
+                                                    ITblModule tblModule, AppConfig appConfig);
+
+    public TblModuleDao moduleDao() {
         return dao(TblModuleDao.class);
     }
 
-    public TblTransactionDao getTransDao() {
+    public TblTransactionDao transDao() {
         return dao(TblTransactionDao.class);
     }
 
-    protected Single<JsonObject> startupModules() {
+    protected Single<JsonObject> startAppModules() {
         return this.getModulesWhenBootstrap()
                    .flattenAsObservable(tblModules -> tblModules)
-                   .flatMapSingle(module -> this.processDeploymentTransaction(module, EventAction.MIGRATE))
+                   .flatMapSingle(module -> processDeploymentTransaction(module, bootstrapAction))
                    .collect(JsonArray::new, JsonArray::add)
                    .map(results -> new JsonObject().put("results", results));
     }
 
     public Single<JsonObject> processDeploymentTransaction(ITblModule module, EventAction action) {
-        logger.info("{} module with data {}", action, module.toJson().encode());
-        return handlePreDeployment(module, action).doAfterSuccess(this::deployModule).map(result -> {
-            JsonObject appConfig = this.getSecureAppConfig(result.getServiceId(), result.getAppConfig().toJson());
-            PreDeploymentResult preDeploymentResult = PreDeploymentResult.builder()
-                                                                         .transactionId(result.getTransactionId())
-                                                                         .action(result.getAction())
-                                                                         .prevState(result.getPrevState())
-                                                                         .targetState(result.getTargetState())
-                                                                         .serviceId(result.getServiceId())
-                                                                         .serviceFQN(result.getServiceFQN())
-                                                                         .deployId(result.getDeployId())
-                                                                         .appConfig(appConfig)
-                                                                         .systemConfig(
-                                                                             result.getSystemConfig().toJson())
-                                                                         .dataDir(dataDir().toString())
-                                                                         .build();
-            return preDeploymentResult.toJson().put("message", "Work in progress").put("status", Status.WIP);
-        });
+        logger.info("INSTALLER start executing {} service {}...", action, module.getServiceId());
+        return createPreDeployment(module, action).doOnSuccess(this::deployModule).map(PreDeploymentResult::toResponse);
     }
 
     private void deployModule(PreDeploymentResult preDeployResult) {
-        String transactionId = preDeployResult.getTransactionId();
         EventAction action = preDeployResult.getAction();
-        logger.info("Execute transaction: {}", transactionId);
+        logger.info("INSTALLER trigger deploying for {}::::{}", preDeployResult.getServiceId(), action);
         preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
         eventClient().request(DeliveryEvent.from(deploymentEvent(), action, preDeployResult.toRequestData()));
     }
 
     private Single<List<TblModule>> getModulesWhenBootstrap() {
-        Single<List<TblModule>> enabledModules = getModuleDao().findManyByState(
-            Collections.singletonList(State.ENABLED));
-        Single<List<TblModule>> pendingModules = this.getPendingModules();
-        return Single.zip(enabledModules, pendingModules, (flattenEnabledModules, flattenPendingModules) -> {
-            if (Objects.nonNull(flattenEnabledModules)) {
-                flattenEnabledModules.addAll(flattenPendingModules);
-                return flattenEnabledModules;
-            }
-            return flattenPendingModules;
-        });
+        return moduleDao().findManyByState(Arrays.asList(State.NONE, State.ENABLED));
     }
 
-    private Single<List<TblModule>> getPendingModules() {
-        return getModuleDao().findManyByState(Collections.singletonList(State.PENDING))
-                             .flattenAsObservable(pendingModules -> pendingModules)
-                             .flatMapSingle(m -> genericQuery().executeAny(context -> getTransactions(m, context)))
-                             .filter(Optional::isPresent)
-                             .map(Optional::get)
-                             .collect(ArrayList::new, (modules, m) -> modules.add((TblModule) m));
-    }
-
-    private Optional<?> getTransactions(TblModule module, DSLContext dslContext) {
-        List<TblTransactionRecord> records = dslContext.select()
-                                                       .from(Tables.TBL_TRANSACTION)
-                                                       .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID)
-                                                                 .eq(module.getServiceId()))
-                                                       .and(DSL.field(Tables.TBL_TRANSACTION.STATUS).eq(Status.WIP))
-                                                       .orderBy(Tables.TBL_TRANSACTION.MODIFIED_AT.desc())
-                                                       .limit(1)
-                                                       .fetchInto(TblTransactionRecord.class);
-        if (records.isEmpty()) {
-            module.setState(State.DISABLED);
-            getModuleDao().update(module).subscribe();
-            return Optional.empty();
+    private Single<JsonObject> addApps(Path dataDir, RepositoryConfig repoConfig,
+                                       List<RequestedServiceData> builtinApps) {
+        if (builtinApps.isEmpty()) {
+            return Single.just(new JsonObject().put("status", Status.SUCCESS));
         }
-        if (checkingTransaction(records.get(0))) {
-            return Optional.of(module);
-        }
-        module.setState(State.DISABLED);
-        getModuleDao().update(module).subscribe();
-        return Optional.empty();
+        return Observable.fromIterable(builtinApps)
+                         .map(serviceData -> createTblModule(dataDir, repoConfig, serviceData))
+                         .map(this::decorateModule)
+                         .collect(ArrayList<TblModule>::new, ArrayList::add)
+                         .flatMap(list -> dao(TblModuleDao.class).insert(list))
+                         .map(results -> new JsonObject().put("results", results));
     }
 
-    private boolean checkingTransaction(TblTransactionRecord transaction) {
+    protected TblModule decorateModule(TblModule module) {
+        final OffsetDateTime now = DateTimes.now();
+        return module.setCreatedAt(now).setModifiedAt(now);
+    }
+
+    private TblModule createTblModule(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData serviceData) {
+        ModuleTypeRule rule = sharedData(InstallerVerticle.SHARED_MODULE_RULE);
+        ITblModule tblModule = rule.parse(serviceData.getMetadata());
+        AppConfig appConfig = transformAppConfig(repoConfig, serviceData, tblModule, serviceData.getAppConfig());
+        return (TblModule) rule.parse(dataDir, tblModule, appConfig).setState(State.NONE);
+    }
+
+    private Single<JsonObject> transitionPendingModules() {
+        final TblModuleDao dao = moduleDao();
+        return dao.findManyByState(Collections.singletonList(State.PENDING))
+                  .flattenAsObservable(pendingModules -> pendingModules)
+                  .flatMapMaybe(m -> genericQuery().executeAny(context -> getLastWipTransaction(m, context))
+                                                   .filter(Optional::isPresent)
+                                                   .map(Optional::get)
+                                                   .map(transaction -> checkingTransaction(m, transaction)))
+                  .flatMapSingle(dao::update)
+                  .reduce(0, Integer::sum)
+                  .map(r -> new JsonObject().put("results", r));
+    }
+
+    private Optional<TblTransaction> getLastWipTransaction(TblModule module, DSLContext dsl) {
+        return Optional.ofNullable(dsl.select()
+                                      .from(Tables.TBL_TRANSACTION)
+                                      .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(module.getServiceId()))
+                                      .and(DSL.field(Tables.TBL_TRANSACTION.STATUS).eq(Status.WIP))
+                                      .orderBy(Tables.TBL_TRANSACTION.MODIFIED_AT.desc())
+                                      .limit(1)
+                                      .fetchOneInto(TblTransaction.class));
+    }
+
+    private TblModule checkingTransaction(TblModule module, TblTransaction transaction) {
         if (transaction.getEvent() == EventAction.CREATE || transaction.getEvent() == EventAction.INIT) {
-            return true;
+            return module.setState(State.ENABLED);
         }
         if (transaction.getEvent() == EventAction.UPDATE || transaction.getEvent() == EventAction.PATCH) {
-            JsonObject prevMetadata = transaction.getPrevMetadata();
-            if (Objects.isNull(prevMetadata)) {
-                return true;
+            JsonObject prevMeta = transaction.getPrevMetadata();
+            if (Objects.isNull(prevMeta)) {
+                return module.setState(State.ENABLED);
             }
-            return new TblModule(prevMetadata).getState() != State.DISABLED;
+            return module.setState(new TblModule(prevMeta).getState() == State.DISABLED ? State.DISABLED : State.NONE);
         }
-        return false;
-    }
-
-    protected Single<Boolean> isFreshInstall() {
-        return genericQuery().executeAny(context -> context.fetchCount(Tables.TBL_MODULE)).map(count -> count == 0);
-    }
-
-    public Single<Optional<TblModule>> findModuleById(String serviceId) {
-        return getModuleDao().findOneById(serviceId);
+        return module.setState(State.DISABLED);
     }
 
     public Single<Optional<JsonObject>> findTransactionById(String transactionId) {
-        return getTransDao().findOneById(transactionId)
-                            .flatMap(optional -> optional.isPresent()
-                                                 ? Single.just(Optional.of(optional.get().toJson()))
-                                                 : this.findHistoryTransactionById(transactionId));
+        return transDao().findOneById(transactionId)
+                         .flatMap(optional -> optional.isPresent()
+                                              ? Single.just(Optional.of(optional.get().toJson()))
+                                              : this.findHistoryTransactionById(transactionId));
     }
 
     public Single<List<TblTransaction>> findTransactionByModuleId(String moduleId) {
-        return getTransDao().queryExecutor()
-                            .findMany(dslContext -> dslContext.selectFrom(Tables.TBL_TRANSACTION)
-                                                              .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID)
-                                                                        .eq(moduleId))
-                                                              .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()));
+        return transDao().queryExecutor()
+                         .findMany(dsl -> dsl.selectFrom(Tables.TBL_TRANSACTION)
+                                             .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
+                                             .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()));
     }
 
     public Single<Optional<JsonObject>> findOneTransactionByModuleId(String moduleId) {
-        return getTransDao().queryExecutor()
-                            .findOne(dsl -> dsl.selectFrom(Tables.TBL_TRANSACTION)
-                                               .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
-                                               .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc())
-                                               .limit(1))
-                            .map(optional -> optional.map(TblTransaction::toJson));
+        return transDao().queryExecutor()
+                         .findOne(dsl -> dsl.selectFrom(Tables.TBL_TRANSACTION)
+                                            .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
+                                            .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc())
+                                            .limit(1))
+                         .map(optional -> optional.map(TblTransaction::toJson));
     }
 
-    private Single<PreDeploymentResult> handlePreDeployment(ITblModule module, EventAction event) {
-        logger.info("Handle entities before do deployment...");
-        InstallerConfig config = sharedData(SHARED_INSTALLER_CFG);
-        if (event == EventAction.REMOVE) {
+    private Single<PreDeploymentResult> createPreDeployment(ITblModule module, EventAction action) {
+        logger.info("INSTALLER create pre-deployment for {}::::{}...", module.getServiceId(), action);
+        InstallerConfig config = sharedData(InstallerVerticle.SHARED_INSTALLER_CFG);
+        if (action == EventAction.REMOVE) {
             module.setState(State.UNAVAILABLE);
         }
 
-        if (event == EventAction.MIGRATE && module.getState() == State.PENDING) {
+        if (action == EventAction.MIGRATE && module.getState() == State.PENDING) {
             module.setState(State.ENABLED);
         }
 
-        return validateModuleState(module, event).flatMap(o -> {
-            if (EventAction.INIT == event || EventAction.CREATE == event) {
+        return validateModuleState(module, action).flatMap(o -> {
+            if (EventAction.INIT == action || EventAction.CREATE == action) {
                 module.setState(State.NONE);
                 TblModule tblModule = new TblModule(module).setDeployLocation(config.getRepoConfig().getLocal());
-                return markModuleInsert(tblModule).flatMap(key -> createTransaction(key.getServiceId(), event, module))
-                                                  .map(transId -> createPreDeployResult(module, transId, event,
+                return markModuleInsert(tblModule).flatMap(key -> createTransaction(key.getServiceId(), action, module))
+                                                  .map(transId -> createPreDeployResult(module, transId, action,
                                                                                         module.getState(),
                                                                                         State.ENABLED));
             }
 
             ITblModule oldOne = o.orElseThrow(() -> new NotFoundException(""));
-
             State targetState = Objects.isNull(module.getState()) ? oldOne.getState() : module.getState();
-            if (EventAction.UPDATE == event || EventAction.PATCH == event || event == EventAction.MIGRATE) {
+            if (EventAction.UPDATE == action || EventAction.PATCH == action || action == EventAction.MIGRATE) {
                 return markModuleModify(module.setDeployLocation(config.getRepoConfig().getLocal()),
                                         new TblModule(oldOne),
-                                        EventAction.UPDATE == event || EventAction.MIGRATE == event).flatMap(
-                    key -> createTransaction(key.getServiceId(), event, oldOne).map(
-                        transId -> createPreDeployResult(key, transId, event, oldOne.getState(), targetState)));
+                                        EventAction.UPDATE == action || EventAction.MIGRATE == action).flatMap(
+                    key -> createTransaction(key.getServiceId(), action, oldOne).map(
+                        transId -> createPreDeployResult(key, transId, action, oldOne.getState(), targetState)));
             }
-            if (EventAction.REMOVE == event) {
+            if (EventAction.REMOVE == action) {
                 return markModuleDelete(new TblModule(oldOne)).flatMap(
-                    key -> createTransaction(key.getServiceId(), event, oldOne).map(
-                        transId -> createPreDeployResult(key, transId, event, oldOne.getState(), targetState)));
+                    key -> createTransaction(key.getServiceId(), action, oldOne).map(
+                        transId -> createPreDeployResult(key, transId, action, oldOne.getState(), targetState)));
             }
-            throw new UnsupportedOperationException("Unsupported event " + event);
+            throw new UnsupportedOperationException("Unsupported event " + action);
         });
     }
 
@@ -270,15 +264,15 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
                                   .build();
     }
 
-    private Single<Optional<ITblModule>> validateModuleState(ITblModule tblModule, EventAction eventAction) {
-        logger.info("Validate {}::::{} ...", tblModule.getServiceId(), eventAction);
-        return getModuleDao().findOneById(tblModule.getServiceId())
-                             .map(o -> validateModuleState(o.orElse(null), eventAction, tblModule.getState()));
+    private Single<Optional<ITblModule>> validateModuleState(ITblModule module, EventAction action) {
+        logger.info("INSTALLER validates service state {}::::{} ...", module.getServiceId(), action);
+        return moduleDao().findOneById(module.getServiceId())
+                          .map(o -> validateModuleState(o.orElse(null), action, module.getState()));
     }
 
     private Single<String> createTransaction(String moduleId, EventAction action, ITblModule module) {
+        logger.info("INSTALLER create transaction for {}::::{}...", moduleId, action);
         if (logger.isDebugEnabled()) {
-            logger.debug("Create new transaction for {}::::{}...", moduleId, action);
             logger.debug("Previous module state: {}", module.toJson());
         }
         final OffsetDateTime now = DateTimes.now();
@@ -297,21 +291,21 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
                                                                .setPrevMetadata(metadata)
                                                                .setPrevSystemConfig(module.getSystemConfig())
                                                                .setPrevAppConfig(module.getAppConfig());
-        return getTransDao().insert(transaction).map(i -> transactionId);
+        return transDao().insert(transaction).map(i -> transactionId);
     }
 
     private Single<ITblModule> markModuleInsert(ITblModule module) {
-        logger.debug("Mark service {} to create...", module.getServiceId());
+        logger.debug("INSTALLER mark service {} to create...", module.getServiceId());
         OffsetDateTime now = DateTimes.now();
-        return getModuleDao().insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
-                             .map(i -> module);
+        return moduleDao().insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
+                          .map(i -> module);
     }
 
     private Single<ITblModule> markModuleModify(ITblModule module, ITblModule oldOne, boolean isUpdated) {
-        logger.debug("Mark service {} to modify...", module.getServiceId());
+        logger.debug("INSTALLER mark service {} to modify...", module.getServiceId());
         ITblModule into = this.updateModule(oldOne, module, isUpdated);
-        return getModuleDao().update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.now()))
-                             .map(ignore -> oldOne);
+        return moduleDao().update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.now()))
+                          .map(ignore -> oldOne);
     }
 
     private ITblModule updateModule(@NonNull ITblModule old, @NonNull ITblModule newOne, boolean isUpdated) {
@@ -327,31 +321,33 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
 
     private void verifyUpdateModule(ITblModule newOne, boolean isUpdated) {
         if (Strings.isBlank(newOne.getVersion()) && isUpdated) {
-            throw new NubeException("Version is required!");
+            throw new IllegalArgumentException("Version is mandatory");
         }
         if (Objects.isNull(newOne.getState()) && isUpdated) {
-            throw new NubeException("State is required!");
+            throw new IllegalArgumentException("State is mandatory");
         }
         if (Objects.isNull(newOne.getAppConfig()) && isUpdated) {
-            throw new NubeException("App config is required!");
+            throw new IllegalArgumentException("App config is mandatory");
         }
     }
 
     private Single<ITblModule> markModuleDelete(ITblModule module) {
-        logger.debug("Mark service {} to delete...", module.getServiceId());
-        return getModuleDao().update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.now()))
-                             .map(ignore -> module);
+        logger.debug("INSTALLER mark service {} to delete...", module.getServiceId());
+        return moduleDao().update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.now()))
+                          .map(ignore -> module);
     }
 
-    private Optional<ITblModule> validateModuleState(ITblModule findModule, EventAction eventAction,
-                                                     State targetState) {
-        logger.info("StateMachine is validating...");
-        StateMachine.instance().validate(findModule, eventAction, "service");
+    private Optional<ITblModule> validateModuleState(ITblModule findModule, EventAction action, State targetState) {
+        logger.info("INSTALLER StateMachine validate action {} with {}...", action, targetState);
+        StateMachine.instance().validate(findModule, action, "service");
         if (Objects.nonNull(findModule)) {
-            logger.info("Module in database is found, validate conflict ");
+            logger.info("Module in database is found, validating conflict...");
+            final State target = action == EventAction.INIT
+                                 ? State.ENABLED
+                                 : Optional.ofNullable(targetState).orElse(findModule.getState());
             StateMachine.instance()
-                        .validateConflict(findModule.getState(), eventAction, "service " + findModule.getServiceId(),
-                                          targetState == null ? findModule.getState() : targetState);
+                        .validateConflict(findModule.getState(), action, "service " + findModule.getServiceId(),
+                                          target);
             return Optional.of(findModule);
         }
         return Optional.empty();
@@ -360,34 +356,6 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
     private Single<Optional<JsonObject>> findHistoryTransactionById(String transactionId) {
         return dao(TblRemoveHistoryDao.class).findOneById(transactionId)
                                              .map(optional -> optional.map(ITblRemoveHistory::toJson));
-    }
-
-    public JsonObject getSecureAppConfig(String serviceId, JsonObject appConfigJson) {
-        if ("com.nubeiot.edge.module:installer".equals(serviceId)) {
-            logger.debug("Removing nexus password from result");
-            AppConfig appConfig = IConfig.from(appConfigJson, AppConfig.class);
-            Object installerObject = appConfig.get(InstallerConfig.NAME);
-            if (Objects.isNull(installerObject)) {
-                logger.debug("Installer config is not available");
-                return appConfigJson;
-            }
-            InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
-            installerConfig.getRepoConfig()
-                           .getRemoteConfig()
-                           .getUrls()
-                           .values()
-                           .forEach(remoteUrl -> remoteUrl.forEach(url -> {
-                               Credential credential = url.getCredential();
-                               if (Objects.isNull(credential)) {
-                                   return;
-                               }
-                               url.setCredential(new HiddenCredential(credential));
-                           }));
-            appConfig.put(InstallerConfig.NAME, installerConfig);
-            logger.debug("Installer config {}", installerConfig.toJson().toString());
-            return appConfig.toJson();
-        }
-        return appConfigJson;
     }
 
 }

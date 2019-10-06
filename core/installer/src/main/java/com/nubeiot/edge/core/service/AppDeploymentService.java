@@ -33,19 +33,19 @@ import com.nubeiot.edge.core.PreDeploymentResult;
 
 import lombok.NonNull;
 
-class DeployerService implements EventListener {
+class AppDeploymentService implements EventListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeployerService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentService.class);
     private final Vertx vertx;
     private final Function<String, Object> sharedDataFunc;
     private final EventModel postEvent;
     private final WorkerExecutor worker;
 
-    public DeployerService(Vertx vertx, Function<String, Object> sharedDataFunc, EventModel postEvent) {
+    public AppDeploymentService(Vertx vertx, Function<String, Object> sharedDataFunc, EventModel postEvent) {
         this.vertx = vertx;
         this.sharedDataFunc = sharedDataFunc;
         this.postEvent = postEvent;
-        this.worker = vertx.createSharedWorkerExecutor("installer", 3, 15, TimeUnit.MINUTES);
+        this.worker = vertx.createSharedWorkerExecutor("installer", 5, 15, TimeUnit.MINUTES);
     }
 
     @EventContractor(action = {EventAction.UNKNOWN}, returnType = Single.class)
@@ -99,13 +99,13 @@ class DeployerService implements EventListener {
                              EventAction.PATCH, EventAction.REMOVE);
     }
 
-    @EventContractor(action = {EventAction.CREATE, EventAction.INIT}, returnType = Boolean.class)
-    public boolean installV2(RequestData data) {
+    @EventContractor(action = {EventAction.CREATE, EventAction.INIT}, returnType = Single.class)
+    public Single<JsonObject> installV2(RequestData data) {
         final PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
         LOGGER.info("Vertx install module {}...", preResult.getServiceFQN());
-        worker.executeBlocking(future -> doDeploy(preResult, future), false,
-                               result -> publishResult(preResult, result));
-        return true;
+        //        worker.executeBlocking(future -> doDeploy(preResult, future), false,
+        //                               result -> publishResult(preResult, result));
+        return doDeployS(preResult);
     }
 
     void doDeploy(PreDeploymentResult preResult, Future<Object> future) {
@@ -114,12 +114,28 @@ class DeployerService implements EventListener {
         vertx.deployVerticle(preResult.getServiceFQN(), options, res -> future.handle(res.map(s -> s)));
     }
 
+    Single<JsonObject> doDeployS(PreDeploymentResult preResult) {
+        final JsonObject config = NubeConfig.create(preResult.getSystemConfig(), preResult.getAppConfig()).toJson();
+        final DeploymentOptions options = new DeploymentOptions().setConfig(config);
+        return io.vertx.reactivex.core.Vertx.newInstance(vertx)
+                                            .rxDeployVerticle(preResult.getServiceFQN(), options)
+                                            .map(id -> preResult.toJson().put("deploy_id", id))
+                                            .doAfterSuccess(r -> publish(r, new JsonObject()))
+                                            .doOnError(
+                                                t -> publish(preResult.toJson(), ErrorMessage.parse(t).toJson()));
+    }
+
+    private void publish(JsonObject preResult, JsonObject error) {
+        final EventController eventClient = (EventController) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
+        eventClient.request(DeliveryEvent.from(postEvent, EventAction.MONITOR,
+                                               new JsonObject().put("result", preResult).put("error", error)));
+    }
+
     private void publishResult(PreDeploymentResult preResult, AsyncResult<Object> result) {
         final EventController eventClient = (EventController) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
-        JsonObject error = result.succeeded() ? null : ErrorMessage.parse(result.cause()).toJson();
-        final JsonObject payload = new JsonObject().put("result", preResult.toJson()
-                                                                           .put("deploy_id", result.result())
-                                                                           .put("error", error));
+        JsonObject error = result.succeeded() ? new JsonObject() : ErrorMessage.parse(result.cause()).toJson();
+        final JsonObject payload = new JsonObject().put("result", preResult.toJson().put("deploy_id", result.result()))
+                                                   .put("error", error);
         eventClient.request(DeliveryEvent.from(postEvent, EventAction.MONITOR, payload));
     }
 

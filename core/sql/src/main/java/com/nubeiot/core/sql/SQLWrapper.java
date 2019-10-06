@@ -83,8 +83,10 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     public String configFile() { return "sql.json"; }
 
     private void complete(Future<Void> future, EventMessage result) {
-        logger.info("Result: {}", result.toJson().encode());
-        logger.info("DATABASE IS READY TO USE");
+        logger.info("{} SQL verticle {}", result.getAction(), result.toJson());
+        if (result.isSuccess()) {
+            logger.info("DATABASE IS READY TO USE");
+        }
         future.complete();
     }
 

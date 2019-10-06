@@ -12,6 +12,7 @@ import org.jooq.TableField;
 
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
 import io.reactivex.Single;
+import io.reactivex.functions.Consumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -39,9 +40,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class DeployerPostService implements EventListener {
+public final class AppDeploymentTracker implements EventListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeployerPostService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentTracker.class);
     private final InstallerEntityHandler entityHandler;
 
     @Override
@@ -50,8 +51,8 @@ public final class DeployerPostService implements EventListener {
     }
 
     @EventContractor(action = EventAction.MONITOR, returnType = Single.class)
-    public Single<Integer> success(@Param("result") PreDeploymentResult result, @Param("error") JsonObject error) {
-        if (Objects.isNull(error) || error.isEmpty() || Strings.isBlank(result.getDeployId())) {
+    public Single<Integer> handle(@Param("result") PreDeploymentResult result, @Param("error") JsonObject error) {
+        if (Objects.nonNull(error) && !error.isEmpty() || Strings.isBlank(result.getDeployId())) {
             return handleError(result.getServiceId(), result.getTransactionId(), result.getAction(), error);
         }
         return handleSuccess(result.getServiceId(), result.getTransactionId(), result.getAction(), result.getDeployId(),
@@ -64,7 +65,7 @@ public final class DeployerPostService implements EventListener {
         final Status status = Status.SUCCESS;
         final State state = StateMachine.instance().transition(action, status, targetState);
         if (State.UNAVAILABLE == state) {
-            final TblTransactionDao dao = entityHandler.getTransDao();
+            final TblTransactionDao dao = entityHandler.transDao();
             LOGGER.info("Removing service '{}' and its transactions...", service);
             return dao.findOneById(transId)
                       .filter(Optional::isPresent)
@@ -76,14 +77,15 @@ public final class DeployerPostService implements EventListener {
                                                       his.getModuleId(), his.getTransactionId()))
                       .flatMap(history -> dao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(service)))
                       .doOnSuccess(nr -> LOGGER.info("Service '{}' is removed", service))
-                      .flatMap(ignore -> entityHandler.getModuleDao().deleteById(service))
+                      .flatMap(ignore -> entityHandler.moduleDao().deleteById(service))
                       .doOnSuccess(n -> LOGGER.info("{} transaction records for service '{}' are removed", n, service));
         }
         Map<TableField, String> v = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
         final JDBCRXGenericQueryExecutor queryExecutor = entityHandler.genericQuery();
         return queryExecutor.executeAny(c -> updateTransStatus(c, transId, status, null))
                             .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, service, state, v))
-                                                        .map(r2 -> r1 + r2));
+                                                        .map(r2 -> r1 + r2))
+                            .doOnSuccess(log(service, transId, action, status, state));
     }
 
     private Single<Integer> handleError(String serviceId, String transId, EventAction action, JsonObject error) {
@@ -92,7 +94,8 @@ public final class DeployerPostService implements EventListener {
         final Map<?, ?> values = Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR, error);
         return query.executeAny(c -> updateTransStatus(c, transId, Status.FAILED, values))
                     .flatMap(r1 -> query.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
-                                        .map(r2 -> r1 + r2));
+                                        .map(r2 -> r1 + r2))
+                    .doOnSuccess(log(serviceId, transId, action, Status.FAILED, State.DISABLED));
     }
 
     private Single<ITblRemoveHistory> createHistoryRecord(ITblTransaction transaction) {
@@ -124,12 +127,17 @@ public final class DeployerPostService implements EventListener {
             history.setIssuedAt(DateTimes.now());
         }
         if (Objects.isNull(history.getModifiedAt())) {
-            history.setIssuedAt(DateTimes.now());
+            history.setModifiedAt(DateTimes.now());
         }
         if (Objects.isNull(history.getRetry())) {
             history.setRetry(0);
         }
         return history;
+    }
+
+    private Consumer<Integer> log(String service, String transId, EventAction action, Status status, State state) {
+        return r -> LOGGER.info("Event {} :: Transaction '{}' - {} :: Service '{}' - {}", action, transId, status,
+                                service, state);
     }
 
 }

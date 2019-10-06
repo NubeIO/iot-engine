@@ -2,13 +2,14 @@ package com.nubeiot.edge.module.installer;
 
 import org.jooq.Configuration;
 
-import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
 import com.nubeiot.edge.core.InstallerEntityHandler;
+import com.nubeiot.edge.core.RequestedServiceData;
+import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 public final class ServiceInstallerEntityHandler extends InstallerEntityHandler {
@@ -23,8 +24,9 @@ public final class ServiceInstallerEntityHandler extends InstallerEntityHandler 
     }
 
     @Override
-    public Single<EventMessage> initData() {
-        return this.startupModules().map(r -> EventMessage.success(EventAction.INIT, r));
+    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, RequestedServiceData serviceData,
+                                           ITblModule tblModule, AppConfig appConfig) {
+        return appConfig;
     }
 
 }

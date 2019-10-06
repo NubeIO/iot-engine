@@ -8,12 +8,12 @@ import io.vertx.core.Vertx;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.edge.core.PreDeploymentResult;
 
-public class MockDeployerService extends DeployerService {
+public class MockAppDeploymentService extends AppDeploymentService {
 
     private final DeploymentAsserter asserter;
 
-    public MockDeployerService(Vertx vertx, Function<String, Object> sharedDataFunc, EventModel postEvent,
-                               DeploymentAsserter asserter) {
+    public MockAppDeploymentService(Vertx vertx, Function<String, Object> sharedDataFunc, EventModel postEvent,
+                                    DeploymentAsserter asserter) {
         super(vertx, sharedDataFunc, postEvent);
         this.asserter = asserter;
     }

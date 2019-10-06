@@ -3,9 +3,11 @@ package com.nubeiot.edge.core;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import io.reactivex.Observable;
+import io.vertx.servicediscovery.Record;
+
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.register.EventHttpServiceRegister;
@@ -13,7 +15,7 @@ import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
 import com.nubeiot.edge.core.model.DefaultCatalog;
-import com.nubeiot.edge.core.service.DeployerDefinition;
+import com.nubeiot.edge.core.service.AppDeployer;
 import com.nubeiot.edge.core.service.InstallerService;
 
 import lombok.AccessLevel;
@@ -25,36 +27,24 @@ import lombok.NonNull;
 public abstract class InstallerVerticle extends ContainerVerticle {
 
     public static final String SHARED_MODULE_RULE = "MODULE_RULE";
+    static final String SHARED_INSTALLER_CFG = "INSTALLER_CFG";
 
     @Getter
-    private ModuleTypeRule moduleRule;
-    @Getter
     private InstallerEntityHandler entityHandler;
+    private MicroContext microCtx;
 
     @Override
     public void start() {
         super.start();
         final InstallerConfig installerConfig = IConfig.from(nubeConfig.getAppConfig(), InstallerConfig.class);
         installerConfig.getRepoConfig().recomputeLocal(nubeConfig.getDataDir());
-        this.moduleRule = getModuleRuleProvider().get();
-        this.addSharedData(InstallerEntityHandler.SHARED_INSTALLER_CFG, installerConfig)
+        final ModuleTypeRule moduleRule = getModuleRuleProvider().get();
+        this.addSharedData(SHARED_INSTALLER_CFG, installerConfig)
             .addSharedData(SHARED_MODULE_RULE, moduleRule)
             .addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass()), this::handler)
-            .addProvider(new MicroserviceProvider(), this::publishService);
-    }
-
-    @Override
-    public final void registerEventbus(EventController eventClient) {
-        deploymentService().register(eventClient);
-    }
-
-    private void publishService(MicroContext c) {
-        new EventHttpServiceRegister<>(vertx.getDelegate(), getSharedKey(), services().get()).publish(
-            c.getLocalController());
-    }
-
-    private void handler(SqlContext sqlContext) {
-        this.entityHandler = (InstallerEntityHandler) sqlContext.getEntityHandler();
+            .addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
+            .registerSuccessHandler(v -> publishApis(microCtx).flatMapSingle(r -> entityHandler.startAppModules())
+                                                              .subscribe(logger::info, logger::error));
     }
 
     @NonNull
@@ -64,9 +54,19 @@ public abstract class InstallerVerticle extends ContainerVerticle {
     protected abstract Supplier<ModuleTypeRule> getModuleRuleProvider();
 
     @NonNull
-    protected abstract Supplier<Set<? extends InstallerService>> services();
+    protected abstract Supplier<Set<? extends InstallerService>> services(@NonNull InstallerEntityHandler handler);
 
     @NonNull
-    protected abstract DeployerDefinition deploymentService();
+    protected abstract AppDeployer appDeployer(@NonNull InstallerEntityHandler entityHandler);
+
+    private void handler(SqlContext sqlContext) {
+        this.entityHandler = (InstallerEntityHandler) sqlContext.getEntityHandler();
+        appDeployer(entityHandler).register(entityHandler.eventClient());
+    }
+
+    private Observable<Record> publishApis(MicroContext c) {
+        return new EventHttpServiceRegister<>(vertx.getDelegate(), getSharedKey(),
+                                              services(entityHandler).get()).publish(c.getLocalController());
+    }
 
 }

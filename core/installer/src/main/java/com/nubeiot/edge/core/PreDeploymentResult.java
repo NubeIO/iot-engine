@@ -14,12 +14,15 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.nubeiot.auth.Credential;
+import com.nubeiot.auth.Credential.HiddenCredential;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.dto.IRequestData;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
+import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
@@ -51,6 +54,40 @@ public final class PreDeploymentResult implements JsonData, IRequestData {
     @Default
     private boolean silent = false;
 
+    public static JsonObject filterOutSensitiveConfig(String serviceId, JsonObject appCfg) {
+        if ("com.nubeiot.edge.module:installer".equals(serviceId)) {
+            logger.debug("Removing nexus password from result");
+            AppConfig appConfig = IConfig.from(appCfg, AppConfig.class);
+            Object installerObject = appConfig.get(InstallerConfig.NAME);
+            if (Objects.isNull(installerObject)) {
+                logger.debug("INSTALLER config is not available");
+                return appCfg;
+            }
+            InstallerConfig installerConfig = IConfig.from(installerObject, InstallerConfig.class);
+            installerConfig.getRepoConfig()
+                           .getRemoteConfig()
+                           .getUrls()
+                           .values()
+                           .forEach(remoteUrl -> remoteUrl.forEach(url -> {
+                               Credential credential = url.getCredential();
+                               if (Objects.isNull(credential)) {
+                                   return;
+                               }
+                               url.setCredential(new HiddenCredential(credential));
+                           }));
+            appConfig.put(InstallerConfig.NAME, installerConfig);
+            if (logger.isDebugEnabled()) {
+                logger.debug("INSTALLER config {}", installerConfig.toJson());
+            }
+            return appConfig.toJson();
+        }
+        return appCfg;
+    }
+
+    public JsonObject toResponse() {
+        JsonObject appConfig = filterOutSensitiveConfig(getServiceId(), getAppConfig().toJson());
+        return toJson().put("app_config", appConfig).put("message", "Work in progress").put("status", Status.WIP);
+    }
 
     @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
     @JsonPOJOBuilder(withPrefix = "")

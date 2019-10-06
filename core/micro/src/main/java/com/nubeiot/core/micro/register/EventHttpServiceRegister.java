@@ -26,14 +26,13 @@ public final class EventHttpServiceRegister<T extends EventHttpService> {
     @NonNull
     private final Set<T> eventServices;
 
-    public void publish(@NonNull ServiceDiscoveryController discovery) {
+    public Observable<Record> publish(@NonNull ServiceDiscoveryController discovery) {
         final EventController client = SharedDataDelegate.getEventController(vertx, sharedKey);
-        Observable.fromIterable(eventServices)
-                  .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                         .ifPresent(service -> client.register(service.address(), service)))
-                  .filter(s -> Objects.nonNull(s.definitions()))
-                  .flatMap(s -> registerEndpoint(discovery, s))
-                  .subscribe();
+        return Observable.fromIterable(eventServices)
+                         .doOnEach(s -> Optional.ofNullable(s.getValue())
+                                                .ifPresent(service -> client.register(service.address(), service)))
+                         .filter(s -> Objects.nonNull(s.definitions()))
+                         .flatMap(s -> registerEndpoint(discovery, s));
     }
 
     private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, T s) {

@@ -12,19 +12,18 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.InstallerVerticle;
+import com.nubeiot.edge.core.InstallerEntityHandler;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
 
-import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+@RequiredArgsConstructor
 public final class EdgeTransactionByModuleService implements EdgeInstallerService {
 
     @NonNull
-    private final InstallerVerticle verticle;
+    private final InstallerEntityHandler entityHandler;
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getList(RequestData data) {
@@ -35,20 +34,18 @@ public final class EdgeTransactionByModuleService implements EdgeInstallerServic
             throw new IllegalArgumentException("Service id is mandatory");
         }
         if (lastTransaction) {
-            return this.verticle.getEntityHandler()
-                                .findOneTransactionByModuleId(transaction.getModuleId())
-                                .map(o -> o.orElseThrow(() -> new NotFoundException(
-                                    String.format("Not found service id '%s'", transaction.getModuleId()))))
-                                .map(this::removePrevSystemConfig)
-                                .map(transactions -> new JsonObject().put("transactions",
-                                                                          new JsonArray().add(transactions)));
+            return this.entityHandler.findOneTransactionByModuleId(transaction.getModuleId())
+                                     .map(o -> o.orElseThrow(() -> new NotFoundException(
+                                         String.format("Not found service id '%s'", transaction.getModuleId()))))
+                                     .map(this::removePrevSystemConfig)
+                                     .map(transactions -> new JsonObject().put("transactions",
+                                                                               new JsonArray().add(transactions)));
         }
-        return this.verticle.getEntityHandler()
-                            .findTransactionByModuleId(transaction.getModuleId())
-                            .flattenAsObservable(transactions -> transactions)
-                            .flatMapSingle(trans -> Single.just(removePrevSystemConfig(trans.toJson())))
-                            .toList()
-                            .map(transactions -> new JsonObject().put("transactions", transactions));
+        return this.entityHandler.findTransactionByModuleId(transaction.getModuleId())
+                                 .flattenAsObservable(transactions -> transactions)
+                                 .flatMapSingle(trans -> Single.just(removePrevSystemConfig(trans.toJson())))
+                                 .toList()
+                                 .map(transactions -> new JsonObject().put("transactions", transactions));
     }
 
     private JsonObject removePrevSystemConfig(JsonObject transaction) {

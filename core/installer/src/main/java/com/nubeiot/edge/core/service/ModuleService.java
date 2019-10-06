@@ -19,8 +19,10 @@ import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.InstallerEntityHandler;
 import com.nubeiot.edge.core.InstallerVerticle;
+import com.nubeiot.edge.core.PreDeploymentResult;
 import com.nubeiot.edge.core.RequestedServiceData;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
 import com.nubeiot.edge.core.search.LocalServiceSearch;
@@ -63,7 +65,7 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(serviceId)) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return entityHandler.findModuleById(serviceId)
+        return entityHandler.dao(TblModuleDao.class).findOneById(serviceId)
                             .map(o -> o.map(this::removeCredentialsInAppConfig))
                             .filter(Optional::isPresent)
                             .map(Optional::get)
@@ -104,7 +106,7 @@ public abstract class ModuleService implements InstallerService {
     }
 
     private JsonObject removeCredentialsInAppConfig(TblModule record) {
-        record.setAppConfig(entityHandler.getSecureAppConfig(record.getServiceId(), record.getAppConfig()));
+        record.setAppConfig(PreDeploymentResult.filterOutSensitiveConfig(record.getServiceId(), record.getAppConfig()));
         return record.toJson();
     }
 

@@ -26,6 +26,7 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.InstallerEntityHandler;
+import com.nubeiot.edge.core.PreDeploymentResult;
 import com.nubeiot.edge.core.loader.ModuleType;
 import com.nubeiot.edge.core.model.Tables;
 import com.nubeiot.edge.core.model.tables.records.TblModuleRecord;
@@ -54,11 +55,9 @@ public final class LocalServiceSearch implements IServiceSearch {
                                  .map(results -> new JsonObject().put("services", results));
     }
 
-    private Single<JsonObject> excludeData(TblModuleRecord record) {
-        return Single.just(
-            record.setAppConfig(this.entityHandler.getSecureAppConfig(record.getServiceId(), record.getAppConfig()))
-                  .setSystemConfig(null)
-                  .toJson());
+    private Single<JsonObject> excludeData(TblModuleRecord rec) {
+        final JsonObject cfg = PreDeploymentResult.filterOutSensitiveConfig(rec.getServiceId(), rec.getAppConfig());
+        return Single.just(rec.setAppConfig(cfg).setSystemConfig(null).toJson());
     }
 
     private JsonObject validateFilter(JsonObject filter) {

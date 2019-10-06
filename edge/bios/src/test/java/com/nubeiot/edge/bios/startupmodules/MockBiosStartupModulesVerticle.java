@@ -3,8 +3,8 @@ package com.nubeiot.edge.bios.startupmodules;
 import com.nubeiot.edge.bios.EdgeBiosVerticle;
 import com.nubeiot.edge.bios.loader.MockModuleLoader;
 import com.nubeiot.edge.core.InstallerEntityHandler;
-import com.nubeiot.edge.core.service.DeployerDefinition;
-import com.nubeiot.edge.core.service.DeployerPostService;
+import com.nubeiot.edge.core.service.AppDeployer;
+import com.nubeiot.edge.core.service.AppDeploymentTracker;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 import lombok.NonNull;
@@ -23,9 +23,9 @@ public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
     }
 
     @Override
-    protected @NonNull DeployerDefinition deploymentService() {
-        return DeployerDefinition.create(InstallerEventModel.BIOS_DEPLOYMENT, InstallerEventModel.BIOS_POST_DEPLOYMENT,
-                                         new MockModuleLoader(null), new DeployerPostService(getEntityHandler()));
+    protected @NonNull AppDeployer appDeployer(InstallerEntityHandler entityHandler) {
+        return AppDeployer.create(InstallerEventModel.BIOS_DEPLOYMENT, InstallerEventModel.BIOS_POST_DEPLOYMENT,
+                                  new MockModuleLoader(null), new AppDeploymentTracker(entityHandler));
     }
 
     @Override

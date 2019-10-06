@@ -115,7 +115,7 @@ public abstract class BaseInstallerVerticleTest {
 
     protected void insertModule(TestContext context, TblModule module) {
         Async async = context.async(1);
-        installerVerticle.getEntityHandler().getModuleDao().insert(module).subscribe(result -> {
+        installerVerticle.getEntityHandler().moduleDao().insert(module).subscribe(result -> {
             System.out.println("Insert module successfully!");
             TestHelper.testComplete(async);
         }, error -> {
@@ -143,8 +143,7 @@ public abstract class BaseInstallerVerticleTest {
 
     private void assertTransaction(TestContext context, Status expectedTransactionStatus, Async async,
                                    CountDownLatch latch) {
-        installerVerticle.getEntityHandler()
-                         .getTransDao()
+        installerVerticle.getEntityHandler().transDao()
                          .findManyByModuleId(Collections.singletonList(BaseInstallerVerticleTest.MODULE_ID))
                          .subscribe(result -> {
                         context.assertNotNull(result);
@@ -165,8 +164,7 @@ public abstract class BaseInstallerVerticleTest {
 
     private void assertModule(TestContext context, State expectedModuleState, JsonObject expectedConfig, Async async,
                               CountDownLatch latch) {
-        installerVerticle.getEntityHandler()
-                         .getModuleDao()
+        installerVerticle.getEntityHandler().moduleDao()
                          .findOneById(BaseInstallerVerticleTest.MODULE_ID)
                          .subscribe(result -> {
             TblModule tblModule = result.orElse(null);
@@ -194,7 +192,7 @@ public abstract class BaseInstallerVerticleTest {
     }
 
     protected void assertModuleState(TestContext context, Async async, State expectedState, String moduleId) {
-        final TblModuleDao moduleDao = this.installerVerticle.getEntityHandler().getModuleDao();
+        final TblModuleDao moduleDao = this.installerVerticle.getEntityHandler().moduleDao();
         CountDownLatch latch = new CountDownLatch(1);
         long timer = this.vertx.setPeriodic(1000, event -> moduleDao.findOneById(moduleId).subscribe(result -> {
             TblModule tblModule = result.orElse(null);

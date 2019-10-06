@@ -68,7 +68,7 @@ public class HandlerDeleteTest extends BaseInstallerVerticleTest {
         Async async2 = context.async(2);
         //Event module is deployed/updated successfully, we still have a gap for DB update.
         long timer = this.vertx.setPeriodic(1000, event -> {
-            installerVerticle.getEntityHandler().getModuleDao().findOneById(GROUP_ID).subscribe(result -> {
+            installerVerticle.getEntityHandler().moduleDao().findOneById(GROUP_ID).subscribe(result -> {
                 TblModule tblModule = result.orElse(null);
                 if (Objects.nonNull(tblModule) && tblModule.getState() != State.PENDING) {
                     return;
@@ -81,8 +81,7 @@ public class HandlerDeleteTest extends BaseInstallerVerticleTest {
                 context.fail(error);
                 TestHelper.testComplete(async2);
             });
-            installerVerticle.getEntityHandler()
-                             .getTransDao()
+            installerVerticle.getEntityHandler().transDao()
                              .findManyByModuleId(Collections.singletonList(MODULE_ID))
                              .subscribe(result -> {
                             if (!Objects.nonNull(result) || result.isEmpty() ||

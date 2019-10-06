@@ -9,15 +9,15 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-final class DefaultDeployerDefinition implements DeployerDefinition {
+final class DefaultAppDeployer implements AppDeployer {
 
     @NonNull
     private final EventModel event;
     @NonNull
-    private final EventModel postEvent;
+    private final EventModel trackerEvent;
     @NonNull
     private final EventListener handler;
     @NonNull
-    private final EventListener postHandler;
+    private final EventListener tracker;
 
 }
