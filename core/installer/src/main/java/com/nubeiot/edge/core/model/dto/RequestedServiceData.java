@@ -1,4 +1,4 @@
-package com.nubeiot.edge.core;
+package com.nubeiot.edge.core.model.dto;
 
 import java.util.Map;
 import java.util.Objects;

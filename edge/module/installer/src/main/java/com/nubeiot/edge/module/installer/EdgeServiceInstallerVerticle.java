@@ -26,14 +26,15 @@ public final class EdgeServiceInstallerVerticle extends InstallerVerticle {
     }
 
     @Override
-    protected Supplier<Set<? extends InstallerService>> services(@NonNull InstallerEntityHandler handler) {
-        return () -> InstallerService.createServices(handler, EdgeInstallerService.class);
+    protected @NonNull AppDeployer appDeployer() {
+        return AppDeployer.create(InstallerEventModel.SERVICE_DEPLOYMENT,
+                                  InstallerEventModel.SERVICE_DEPLOYMENT_TRACKER,
+                                  InstallerEventModel.SERVICE_DEPLOYMENT_FINISHER);
     }
 
     @Override
-    protected @NonNull AppDeployer appDeployer(@NonNull InstallerEntityHandler entityHandler) {
-        return AppDeployer.createDefault(InstallerEventModel.SERVICE_DEPLOYMENT,
-                                         InstallerEventModel.SERVICE_POST_DEPLOYMENT, entityHandler);
+    protected Supplier<Set<? extends InstallerService>> services(@NonNull InstallerEntityHandler handler) {
+        return () -> InstallerService.createServices(handler, EdgeInstallerService.class);
     }
 
 }

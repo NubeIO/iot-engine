@@ -18,6 +18,7 @@ import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.loader.ModuleType;
+import com.nubeiot.edge.core.model.dto.RequestedServiceData;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -59,9 +60,9 @@ public final class InstallerConfig implements IConfig {
             return Strings.isBlank(local) ? DEFAULT_LOCAL : local;
         }
 
-        String recomputeLocal(Path parent) {
+        RepositoryConfig recomputeLocal(Path parent) {
             local = FileUtils.recomputeDataDir(parent, getLocal()).toString();
-            return local;
+            return this;
         }
 
         @Override

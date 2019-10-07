@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.AlreadyExistException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.StateException;
 
@@ -105,8 +106,8 @@ public class StateMachineTest {
         StateMachine.instance().validateConflict(State.NONE, EventAction.INIT, "module", State.ENABLED);
     }
 
-    @Test
-    public void test_Create_From_null_To_Enabled() {
+    @Test(expected = StateException.class)
+    public void test_Create_From_NonExist() {
         StateMachine.instance().validateConflict(null, EventAction.CREATE, "module", State.ENABLED);
     }
 
@@ -125,7 +126,7 @@ public class StateMachineTest {
         StateMachine.instance().validate(null, EventAction.CREATE, "service");
     }
 
-    @Test
+    @Test(expected = AlreadyExistException.class)
     public void test_validate_Exist_Create() {
         StateMachine.instance().validate("", EventAction.CREATE, "service");
     }

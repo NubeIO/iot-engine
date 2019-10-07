@@ -12,23 +12,23 @@ import org.jooq.TableField;
 
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
 import io.reactivex.Single;
-import io.reactivex.functions.Consumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventContractor.Param;
-import com.nubeiot.core.event.EventListener;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.InstallerEntityHandler;
-import com.nubeiot.edge.core.PreDeploymentResult;
 import com.nubeiot.edge.core.model.Tables;
+import com.nubeiot.edge.core.model.dto.PostDeploymentResult;
 import com.nubeiot.edge.core.model.tables.daos.TblRemoveHistoryDao;
 import com.nubeiot.edge.core.model.tables.daos.TblTransactionDao;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblRemoveHistory;
@@ -36,11 +36,12 @@ import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
 import com.nubeiot.edge.core.model.tables.pojos.TblRemoveHistory;
 import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
 
+import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
-public final class AppDeploymentTracker implements EventListener {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+class AppDeploymentTracker implements DeploymentService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentTracker.class);
     private final InstallerEntityHandler entityHandler;
@@ -51,51 +52,51 @@ public final class AppDeploymentTracker implements EventListener {
     }
 
     @EventContractor(action = EventAction.MONITOR, returnType = Single.class)
-    public Single<Integer> handle(@Param("result") PreDeploymentResult result, @Param("error") JsonObject error) {
-        if (Objects.nonNull(error) && !error.isEmpty() || Strings.isBlank(result.getDeployId())) {
-            return handleError(result.getServiceId(), result.getTransactionId(), result.getAction(), error);
-        }
-        return handleSuccess(result.getServiceId(), result.getTransactionId(), result.getAction(), result.getDeployId(),
-                             result.getTargetState());
+    public Single<PostDeploymentResult> handle(@Param("result") PostDeploymentResult result) {
+        Single<PostDeploymentResult> last = Status.FAILED == result.getStatus()
+                                            ? handleError(result)
+                                            : handleSuccess(result);
+        final EventController client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
+        final AppDeployer deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
+        return last.doOnSuccess(res -> client.request(
+            DeliveryEvent.from(deployer.getFinisherEvent(), new JsonObject().put("result", res.toJson()))));
     }
 
-    private Single<Integer> handleSuccess(String service, String transId, EventAction action, String deployId,
-                                          State targetState) {
-        LOGGER.info("Handle entities after success deployment...");
-        final Status status = Status.SUCCESS;
-        final State state = StateMachine.instance().transition(action, status, targetState);
+    private Single<PostDeploymentResult> handleSuccess(@NonNull PostDeploymentResult res) {
+        LOGGER.info("INSTALLER::Handle entities after success deployment...");
+        final Status status = res.getStatus();
+        final State state = StateMachine.instance().transition(res.getAction(), status, res.getToState());
+        final String serviceId = res.getServiceId();
         if (State.UNAVAILABLE == state) {
             final TblTransactionDao dao = entityHandler.transDao();
-            LOGGER.info("Removing service '{}' and its transactions...", service);
-            return dao.findOneById(transId)
+            LOGGER.info("INSTALLER::Removing service '{}' and its transactions...", serviceId);
+            return dao.findOneById(res.getTransactionId())
                       .filter(Optional::isPresent)
                       .map(Optional::get)
-                      .defaultIfEmpty(
-                          new TblTransaction().setTransactionId(transId).setModuleId(service).setEvent(action))
+                      .defaultIfEmpty(new TblTransaction().setTransactionId(res.getTransactionId())
+                                                          .setModuleId(serviceId)
+                                                          .setEvent(res.getAction()))
                       .flatMapSingle(r -> createHistoryRecord(r.setStatus(status)))
-                      .doOnSuccess(his -> LOGGER.info("History record for service '{}' and transaction '{}' is created",
-                                                      his.getModuleId(), his.getTransactionId()))
-                      .flatMap(history -> dao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(service)))
-                      .doOnSuccess(nr -> LOGGER.info("Service '{}' is removed", service))
-                      .flatMap(ignore -> entityHandler.moduleDao().deleteById(service))
-                      .doOnSuccess(n -> LOGGER.info("{} transaction records for service '{}' are removed", n, service));
+                      .flatMap(his -> dao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(serviceId)))
+                      .flatMap(r -> entityHandler.moduleDao().deleteById(serviceId).map(n -> r + n + 1))
+                      .map(records -> PostDeploymentResult.from(res, state, records));
         }
-        Map<TableField, String> v = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, deployId);
+        Map<TableField, String> v = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, res.getDeployId());
         final JDBCRXGenericQueryExecutor queryExecutor = entityHandler.genericQuery();
-        return queryExecutor.executeAny(c -> updateTransStatus(c, transId, status, null))
-                            .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, service, state, v))
+        return queryExecutor.executeAny(c -> updateTransStatus(c, res.getTransactionId(), status, null))
+                            .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, v))
                                                         .map(r2 -> r1 + r2))
-                            .doOnSuccess(log(service, transId, action, status, state));
+                            .map(records -> PostDeploymentResult.from(res, state, records));
     }
 
-    private Single<Integer> handleError(String serviceId, String transId, EventAction action, JsonObject error) {
-        LOGGER.error("Handle entities after error deployment...");
+    private Single<PostDeploymentResult> handleError(@NonNull PostDeploymentResult res) {
+        LOGGER.error("INSTALLER::Handle entities after error deployment...");
         final JDBCRXGenericQueryExecutor query = entityHandler.genericQuery();
-        final Map<?, ?> values = Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR, error);
-        return query.executeAny(c -> updateTransStatus(c, transId, Status.FAILED, values))
-                    .flatMap(r1 -> query.executeAny(c -> updateModuleState(c, serviceId, State.DISABLED, null))
+        final Map<?, ?> values = Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR, res.getError());
+        return query.executeAny(c -> updateTransStatus(c, res.getTransactionId(), Status.FAILED, values))
+                    .flatMap(r1 -> query.executeAny(c -> updateModuleState(c, res.getServiceId(), State.DISABLED, null))
                                         .map(r2 -> r1 + r2))
-                    .doOnSuccess(log(serviceId, transId, action, Status.FAILED, State.DISABLED));
+                    .map(records -> PostDeploymentResult.from(res, State.DISABLED, records));
     }
 
     private Single<ITblRemoveHistory> createHistoryRecord(ITblTransaction transaction) {
@@ -135,9 +136,9 @@ public final class AppDeploymentTracker implements EventListener {
         return history;
     }
 
-    private Consumer<Integer> log(String service, String transId, EventAction action, Status status, State state) {
-        return r -> LOGGER.info("Event {} :: Transaction '{}' - {} :: Service '{}' - {}", action, transId, status,
-                                service, state);
+    @Override
+    public <D> D sharedData(String dataKey) {
+        return entityHandler.sharedData(dataKey);
     }
 
 }

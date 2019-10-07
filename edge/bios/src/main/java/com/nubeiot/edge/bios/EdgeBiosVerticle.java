@@ -26,14 +26,14 @@ public class EdgeBiosVerticle extends InstallerVerticle {
     }
 
     @Override
-    protected Supplier<Set<? extends InstallerService>> services(@NonNull InstallerEntityHandler handler) {
-        return () -> InstallerService.createServices(handler, BiosInstallerService.class);
+    protected @NonNull AppDeployer appDeployer() {
+        return AppDeployer.create(InstallerEventModel.BIOS_DEPLOYMENT, InstallerEventModel.BIOS_DEPLOYMENT_TRACKER,
+                                  InstallerEventModel.BIOS_DEPLOYMENT_FINISHER);
     }
 
     @Override
-    protected @NonNull AppDeployer appDeployer(@NonNull InstallerEntityHandler entityHandler) {
-        return AppDeployer.createDefault(InstallerEventModel.BIOS_DEPLOYMENT, InstallerEventModel.BIOS_POST_DEPLOYMENT,
-                                         entityHandler);
+    protected Supplier<Set<? extends InstallerService>> services(@NonNull InstallerEntityHandler handler) {
+        return () -> InstallerService.createServices(handler, BiosInstallerService.class);
     }
 
 }

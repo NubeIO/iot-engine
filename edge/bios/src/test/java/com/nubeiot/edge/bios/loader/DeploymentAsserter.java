@@ -15,7 +15,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.edge.bios.service.BiosModuleService;
 import com.nubeiot.edge.bios.service.BiosTransactionService;
-import com.nubeiot.edge.core.PreDeploymentResult;
+import com.nubeiot.edge.core.model.dto.PreDeploymentResult;
 
 public interface DeploymentAsserter extends Consumer<PreDeploymentResult> {
 

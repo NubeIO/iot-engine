@@ -33,8 +33,7 @@ public final class StateMachine {
         }
         stateMachine = new StateMachine().addLifeCycle(EventAction.INIT,
                                                        new StateLifeCycle(State.ENABLED).addFrom(State.NONE, null))
-                                         .addLifeCycle(EventAction.CREATE,
-                                                       new StateLifeCycle(State.ENABLED).addFrom(State.NONE, null))
+                                         .addLifeCycle(EventAction.CREATE, new StateLifeCycle(State.ENABLED))
                                          .addLifeCycle(EventAction.UPDATE,
                                                        new StateLifeCycle(State.ENABLED).addFrom(State.DISABLED))
                                          .addLifeCycle(EventAction.UPDATE,
@@ -80,9 +79,9 @@ public final class StateMachine {
         if (lifeCycle.acceptBothNullAndNonNull()) {
             return;
         }
-        if (Objects.isNull(obj) && lifeCycle.isEmpty()) {
+        if (Objects.isNull(obj) && !lifeCycle.isAcceptNonExisted()) {
             throw new NotFoundException(errorStateMsg(objName, action, false));
-        } else if (Objects.nonNull(obj) && !lifeCycle.isEmpty()) {
+        } else if (Objects.nonNull(obj) && lifeCycle.isAcceptNonExisted()) {
             throw new AlreadyExistException(errorStateMsg(objName, action, true));
         }
     }
@@ -149,12 +148,12 @@ public final class StateMachine {
             return Collections.unmodifiableSet(from);
         }
 
-        boolean isEmpty() {
-            return from.stream().noneMatch(state -> Objects.isNull(state) || state == State.NONE);
+        boolean isAcceptNonExisted() {
+            return from.isEmpty() || from.stream().allMatch(state -> Objects.isNull(state) || state == State.NONE);
         }
 
         boolean acceptBothNullAndNonNull() {
-            return from.stream().allMatch(state -> Objects.isNull(state) || state == State.NONE);
+            return !from.isEmpty() && from.stream().allMatch(state -> Objects.isNull(state) || state == State.NONE);
         }
 
     }

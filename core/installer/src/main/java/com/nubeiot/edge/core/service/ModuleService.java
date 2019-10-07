@@ -18,10 +18,9 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.core.InstallerEntityHandler;
-import com.nubeiot.edge.core.InstallerVerticle;
-import com.nubeiot.edge.core.PreDeploymentResult;
-import com.nubeiot.edge.core.RequestedServiceData;
 import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.core.model.dto.PreDeploymentResult;
+import com.nubeiot.edge.core.model.dto.RequestedServiceData;
 import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
 import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.core.model.tables.pojos.TblModule;
@@ -79,7 +78,7 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(module.getServiceId())) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return this.entityHandler.processDeploymentTransaction(module, EventAction.PATCH);
+        return new AppDeploymentWorkflow(this.entityHandler).process(module, EventAction.PATCH);
     }
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
@@ -88,7 +87,7 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(module.getServiceName()) && Strings.isBlank(module.getServiceId())) {
             throw new IllegalArgumentException("Provide at least service id or service name");
         }
-        return this.entityHandler.processDeploymentTransaction(module, EventAction.UPDATE);
+        return new AppDeploymentWorkflow(this.entityHandler).process(module, EventAction.UPDATE);
     }
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
@@ -97,12 +96,12 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(module.getServiceId())) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return this.entityHandler.processDeploymentTransaction(module, EventAction.REMOVE);
+        return new AppDeploymentWorkflow(this.entityHandler).process(module, EventAction.REMOVE);
     }
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData data) {
-        return this.entityHandler.processDeploymentTransaction(validate(data.body()), EventAction.CREATE);
+        return new AppDeploymentWorkflow(this.entityHandler).process(validate(data.body()), EventAction.CREATE);
     }
 
     private JsonObject removeCredentialsInAppConfig(TblModule record) {
@@ -130,7 +129,7 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isNotBlank(serviceId)) {
             serviceData.getMetadata().put(paramPath(), serviceId);
         }
-        final ModuleTypeRule rule = entityHandler.sharedData(InstallerVerticle.SHARED_MODULE_RULE);
+        final ModuleTypeRule rule = entityHandler.sharedData(InstallerEntityHandler.SHARED_MODULE_RULE);
         return rule.parse(getDataDir(), serviceData.getMetadata(), serviceData.getAppConfig());
     }
 

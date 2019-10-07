@@ -23,7 +23,7 @@ public enum EventAction implements Serializable {
     UNKNOWN,
     SEND,
     PUBLISH,
-    MONITOR,
+    MONITOR, NOTIFY,
     BATCH_CREATE,
     BATCH_UPDATE,
     BATCH_PATCH,

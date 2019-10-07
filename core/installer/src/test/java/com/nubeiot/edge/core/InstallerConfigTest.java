@@ -16,6 +16,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper.OSHelper;
 import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
 import com.nubeiot.edge.core.loader.ModuleType;
+import com.nubeiot.edge.core.model.dto.RequestedServiceData;
 
 public class InstallerConfigTest {
 

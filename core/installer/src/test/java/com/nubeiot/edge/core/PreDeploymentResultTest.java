@@ -16,6 +16,7 @@ import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.edge.core.model.dto.PreDeploymentResult;
 
 public class PreDeploymentResultTest {
 

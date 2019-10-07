@@ -13,7 +13,7 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.edge.core.PreDeploymentResult;
+import com.nubeiot.edge.core.model.dto.PreDeploymentResult;
 
 public interface DeploymentAsserter extends Consumer<PreDeploymentResult> {
 

@@ -1,4 +1,4 @@
-package com.nubeiot.edge.core;
+package com.nubeiot.edge.core.model.dto;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -26,6 +26,7 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.core.InstallerConfig;
 
 import lombok.Builder;
 import lombok.Builder.Default;
