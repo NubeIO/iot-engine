@@ -46,8 +46,8 @@ import lombok.NonNull;
 /**
  * {@link HandlerCreateTest#test_create_should_success(TestContext)}
  */
-@RunWith(VertxUnitRunner.class)
 //FIXME: MUST REWRITE/REFACTOR SHIT CODE. IT IS ASSERTING SUCCESS EVEN RAISE EXCEPTION
+@RunWith(VertxUnitRunner.class)
 public abstract class BaseInstallerVerticleTest {
 
     protected static final String GROUP_ID = "com.nubeiot.edge.module";
@@ -146,20 +146,20 @@ public abstract class BaseInstallerVerticleTest {
         installerVerticle.getEntityHandler().transDao()
                          .findManyByModuleId(Collections.singletonList(BaseInstallerVerticleTest.MODULE_ID))
                          .subscribe(result -> {
-                        context.assertNotNull(result);
-                        context.assertFalse(result.isEmpty());
-                        context.assertEquals(result.size(), 1);
-                        if (result.get(0).getStatus() != Status.WIP) {
-                            latch.countDown();
-                            System.out.println("Ready. Testing transaction");
-                            context.assertEquals(result.get(0).getStatus(), expectedTransactionStatus);
-                            TestHelper.testComplete(async);
-                        }
-                    }, error -> {
-                        latch.countDown();
-                        context.fail(error);
-                        TestHelper.testComplete(async);
-                    });
+                             context.assertNotNull(result);
+                             context.assertFalse(result.isEmpty());
+                             context.assertEquals(result.size(), 1);
+                             if (result.get(0).getStatus() != Status.WIP) {
+                                 latch.countDown();
+                                 System.out.println("Ready. Testing transaction");
+                                 context.assertEquals(result.get(0).getStatus(), expectedTransactionStatus);
+                                 TestHelper.testComplete(async);
+                             }
+                         }, error -> {
+                             latch.countDown();
+                             context.fail(error);
+                             TestHelper.testComplete(async);
+                         });
     }
 
     private void assertModule(TestContext context, State expectedModuleState, JsonObject expectedConfig, Async async,
@@ -167,28 +167,30 @@ public abstract class BaseInstallerVerticleTest {
         installerVerticle.getEntityHandler().moduleDao()
                          .findOneById(BaseInstallerVerticleTest.MODULE_ID)
                          .subscribe(result -> {
-            TblModule tblModule = result.orElse(null);
-            context.assertNotNull(tblModule);
-            if (tblModule.getState() != State.PENDING) {
-                latch.countDown();
-                System.out.println("Ready. Testing module");
-                context.assertEquals(tblModule.getState(), expectedModuleState);
-                JsonObject actualConfig = IConfig.from(tblModule.getAppConfig(), AppConfig.class).toJson();
-                JsonHelper.assertJson(context, async, expectedConfig, actualConfig, JSONCompareMode.STRICT);
-                TestHelper.testComplete(async);
-            }
-        }, error -> {
-            latch.countDown();
-            context.fail(error);
-            TestHelper.testComplete(async);
-        });
+                             TblModule tblModule = result.orElse(null);
+                             context.assertNotNull(tblModule);
+                             if (tblModule.getState() != State.PENDING) {
+                                 latch.countDown();
+                                 System.out.println("Ready. Testing module");
+                                 context.assertEquals(tblModule.getState(), expectedModuleState);
+                                 JsonObject actualConfig = IConfig.from(tblModule.getAppConfig(), AppConfig.class)
+                                                                  .toJson();
+                                 JsonHelper.assertJson(context, async, expectedConfig, actualConfig,
+                                                       JSONCompareMode.STRICT);
+                                 TestHelper.testComplete(async);
+                             }
+                         }, error -> {
+                             latch.countDown();
+                             context.fail(error);
+                             TestHelper.testComplete(async);
+                         });
     }
 
     void executeThenAssert(EventAction action, TestContext context, JsonObject body, Handler<JsonObject> handler) {
         installerVerticle.getEventController()
-                    .request(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE, action,
-                                                RequestData.builder().body(body).build().toJson()),
-                             EventbusHelper.replyAsserter(context, handler));
+                         .request(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE,
+                                                     action, RequestData.builder().body(body).build().toJson()),
+                                  EventbusHelper.replyAsserter(context, handler));
     }
 
     protected void assertModuleState(TestContext context, Async async, State expectedState, String moduleId) {

@@ -1,15 +1,14 @@
 package com.nubeiot.edge.bios.timeout;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.eventbus.ReplyFailure;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.SystemConfig;
@@ -28,7 +27,7 @@ import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
-@RunWith(VertxUnitRunner.class)
+@Ignore
 public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
 
     @Before
@@ -97,8 +96,8 @@ public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
                                                     .put("data", new JsonObject("{\"abc\":\"123\"}"));
         this.installerVerticle.getEventController()
                               .request(DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.PATCH,
-                                                     RequestData.builder().body(body).build().toJson()),
-                                  EventbusHelper.replyAsserter(context, async, expected));
+                                                          RequestData.builder().body(body).build().toJson()),
+                                       EventbusHelper.replyAsserter(context, async, expected));
     }
 
     @Test

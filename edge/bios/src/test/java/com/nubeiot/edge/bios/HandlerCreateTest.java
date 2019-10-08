@@ -1,11 +1,10 @@
 package com.nubeiot.edge.bios;
 
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
@@ -13,7 +12,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
 import com.nubeiot.edge.installer.InstallerVerticle;
 
-@RunWith(VertxUnitRunner.class)
+@Ignore
 public class HandlerCreateTest extends BaseInstallerVerticleTest {
 
     @Override

@@ -1,11 +1,10 @@
 package com.nubeiot.edge.bios;
 
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
@@ -16,7 +15,7 @@ import com.nubeiot.edge.installer.InstallerVerticle;
 import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
 
-@RunWith(VertxUnitRunner.class)
+@Ignore
 public class HandlerDeployFailedTest extends BaseInstallerVerticleTest {
 
     @Override

@@ -87,7 +87,9 @@ public final class PreDeploymentResult implements JsonData, IRequestData {
 
     public JsonObject toResponse() {
         JsonObject appConfig = filterOutSensitiveConfig(getServiceId(), getAppConfig().toJson());
-        return toJson().put("app_config", appConfig).put("message", "Work in progress").put("status", Status.WIP);
+        final JsonObject response = toJson();
+        response.remove("silent");
+        return response.put("app_config", appConfig).put("message", "Work in progress").put("status", Status.WIP);
     }
 
     @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
@@ -130,7 +132,6 @@ public final class PreDeploymentResult implements JsonData, IRequestData {
             NubeConfig systemConfig = IConfig.parseConfig(this.systemConfig, NubeConfig.class,
                                                           () -> NubeConfig.blank(this.systemConfig));
             systemConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(serviceId)));
-
             return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
                                            Objects.isNull(targetState) ? State.NONE : targetState, serviceId,
                                            serviceFQN, deployId, appConfig, systemConfig, silent);

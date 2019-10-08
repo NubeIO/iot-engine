@@ -13,6 +13,7 @@ dependencies {
     compile project(':eventbus:edge')
     compile project.deps.database.h2
     compile "io.vertx:vertx-maven-service-factory:$project.versions.vertx"
+
     testCompile project(":core:base").sourceSets.test.output
 }
 
