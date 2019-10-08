@@ -6,12 +6,11 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
-import com.nubeiot.edge.core.InstallerEntityHandler;
-import com.nubeiot.edge.core.model.dto.RequestedServiceData;
-import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
-import com.nubeiot.edge.core.model.tables.daos.TblTransactionDao;
-import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
+import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
+import com.nubeiot.edge.installer.InstallerEntityHandler;
+import com.nubeiot.edge.installer.model.tables.daos.TblModuleDao;
+import com.nubeiot.edge.installer.model.tables.daos.TblTransactionDao;
+import com.nubeiot.edge.installer.model.tables.interfaces.ITblModule;
 
 abstract class MockInitDataEntityHandler extends InstallerEntityHandler {
 
@@ -33,8 +32,7 @@ abstract class MockInitDataEntityHandler extends InstallerEntityHandler {
     //    }
 
     @Override
-    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, RequestedServiceData serviceData,
-                                           ITblModule tblModule, AppConfig appConfig) {
+    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, ITblModule tblModule, AppConfig appConfig) {
         return appConfig;
     }
 

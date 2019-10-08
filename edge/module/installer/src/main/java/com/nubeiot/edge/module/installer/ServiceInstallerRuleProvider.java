@@ -3,8 +3,8 @@ package com.nubeiot.edge.module.installer;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
-import com.nubeiot.edge.core.loader.ModuleType;
-import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.loader.ModuleTypeRule;
 
 final class ServiceInstallerRuleProvider implements Supplier<ModuleTypeRule> {
 

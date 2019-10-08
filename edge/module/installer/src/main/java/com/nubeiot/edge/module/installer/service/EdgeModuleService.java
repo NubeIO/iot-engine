@@ -1,7 +1,7 @@
 package com.nubeiot.edge.module.installer.service;
 
-import com.nubeiot.edge.core.InstallerEntityHandler;
-import com.nubeiot.edge.core.service.ModuleService;
+import com.nubeiot.edge.installer.InstallerEntityHandler;
+import com.nubeiot.edge.installer.service.ModuleService;
 
 import lombok.NonNull;
 

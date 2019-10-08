@@ -1,7 +1,7 @@
 package com.nubeiot.edge.bios.startupmodules;
 
 import com.nubeiot.edge.bios.EdgeBiosVerticle;
-import com.nubeiot.edge.core.InstallerEntityHandler;
+import com.nubeiot.edge.installer.InstallerEntityHandler;
 
 public class MockBiosStartupModulesVerticle extends EdgeBiosVerticle {
 

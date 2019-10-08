@@ -8,7 +8,7 @@ This is an `App` for setting static/dynamic `IP` address.
 {
   "metadata": {
     "group_id": "com.nubeiot.edge.connector",
-    "artifact_id": "device",
+    "artifact_id": "network",
     "service_name": "edge-connector-network",
     "version": "1.0.0-SNAPSHOT"
   }

@@ -1,6 +1,6 @@
 package com.nubeiot.edge.module.installer.service;
 
-import com.nubeiot.edge.core.service.InstallerService;
+import com.nubeiot.edge.installer.service.InstallerService;
 
 public interface EdgeInstallerService extends InstallerService {
 

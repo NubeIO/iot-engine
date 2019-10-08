@@ -7,12 +7,11 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.edge.core.InstallerConfig;
-import com.nubeiot.edge.core.InstallerConfig.RepositoryConfig;
-import com.nubeiot.edge.core.InstallerEntityHandler;
-import com.nubeiot.edge.core.model.dto.RequestedServiceData;
-import com.nubeiot.edge.core.model.tables.interfaces.ITblModule;
-import com.nubeiot.edge.core.model.tables.pojos.TblModule;
+import com.nubeiot.edge.installer.InstallerConfig;
+import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
+import com.nubeiot.edge.installer.InstallerEntityHandler;
+import com.nubeiot.edge.installer.model.tables.interfaces.ITblModule;
+import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
 
 public final class EdgeBiosEntityHandler extends InstallerEntityHandler {
 
@@ -20,13 +19,12 @@ public final class EdgeBiosEntityHandler extends InstallerEntityHandler {
         super(configuration, vertx);
     }
 
-    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, RequestedServiceData serviceData,
-                                           ITblModule tblModule, AppConfig appConfig) {
+    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, ITblModule tblModule, AppConfig appConfig) {
         if (String.format("%s:%s", "com.nubeiot.edge.module", "installer").equals(tblModule.getServiceId())) {
             InstallerConfig installerConfig = new InstallerConfig();
             installerConfig.setRepoConfig(repoConfig);
-            appConfig = IConfig.merge(new JsonObject().put(installerConfig.key(), installerConfig.toJson()),
-                                      serviceData.getAppConfig(), AppConfig.class);
+            return IConfig.merge(new JsonObject().put(installerConfig.key(), installerConfig.toJson()), appConfig,
+                                 AppConfig.class);
         }
         return appConfig;
     }

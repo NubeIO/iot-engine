@@ -12,7 +12,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
-import com.nubeiot.edge.core.model.dto.PreDeploymentResult;
+import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

@@ -12,9 +12,9 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.core.InstallerEntityHandler;
-import com.nubeiot.edge.core.model.tables.interfaces.ITblTransaction;
-import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
+import com.nubeiot.edge.installer.InstallerEntityHandler;
+import com.nubeiot.edge.installer.model.tables.interfaces.ITblTransaction;
+import com.nubeiot.edge.installer.model.tables.pojos.TblTransaction;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

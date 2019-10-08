@@ -3,11 +3,11 @@ package com.nubeiot.edge.module.installer;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import com.nubeiot.edge.core.InstallerEntityHandler;
-import com.nubeiot.edge.core.InstallerVerticle;
-import com.nubeiot.edge.core.loader.ModuleTypeRule;
-import com.nubeiot.edge.core.service.AppDeployer;
-import com.nubeiot.edge.core.service.InstallerService;
+import com.nubeiot.edge.installer.InstallerEntityHandler;
+import com.nubeiot.edge.installer.InstallerVerticle;
+import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.service.AppDeployer;
+import com.nubeiot.edge.installer.service.InstallerService;
 import com.nubeiot.edge.module.installer.service.EdgeInstallerService;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 

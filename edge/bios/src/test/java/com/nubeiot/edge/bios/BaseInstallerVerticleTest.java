@@ -37,9 +37,9 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.edge.bios.service.BiosModuleService;
-import com.nubeiot.edge.core.InstallerVerticle;
-import com.nubeiot.edge.core.model.tables.daos.TblModuleDao;
-import com.nubeiot.edge.core.model.tables.pojos.TblModule;
+import com.nubeiot.edge.installer.InstallerVerticle;
+import com.nubeiot.edge.installer.model.tables.daos.TblModuleDao;
+import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
 
 import lombok.NonNull;
 

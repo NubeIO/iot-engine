@@ -1,7 +1,7 @@
 package com.nubeiot.edge.bios.service;
 
-import com.nubeiot.edge.core.InstallerEntityHandler;
-import com.nubeiot.edge.core.service.TransactionService;
+import com.nubeiot.edge.installer.InstallerEntityHandler;
+import com.nubeiot.edge.installer.service.TransactionService;
 
 import lombok.NonNull;
 

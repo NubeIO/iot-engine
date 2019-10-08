@@ -17,19 +17,19 @@ dependencies {
 }
 
 task jooqGen(type: JooqGenerateTask) {
-    packageName = "com.nubeiot.edge.core.model"
+    packageName = "com.nubeiot.edge.installer.model"
     doFirst {
         enumTypes = project(':core:sql').ext.enumTypes
         dbTypes = project(':core:sql').ext.dbTypes + [
-            new ForcedType(userType: "com.nubeiot.edge.core.loader.ModuleType", types: DB.TYPES.varchar,
+            new ForcedType(userType: "com.nubeiot.edge.installer.loader.ModuleType", types: DB.TYPES.varchar,
                            expression: Strings.toRegexIgnoreCase("service_type"),
-                           converter: "com.nubeiot.edge.core.model.converter.ModuleTypeConverter")
+                           converter: "com.nubeiot.edge.installer.model.converter.ModuleTypeConverter")
         ]
         javaTypes = project(':core:sql').ext.javaTypes + [
-            new JsonDataType(className: "com.nubeiot.edge.core.loader.ModuleType",
+            new JsonDataType(className: "com.nubeiot.edge.installer.loader.ModuleType",
                              converter: "%s.name()",
-                             parser: "com.nubeiot.edge.core.loader.ModuleType.factory((String)%s)",
-                             defVal: "com.nubeiot.edge.core.loader.ModuleType.getDefault()")
+                             parser: "com.nubeiot.edge.installer.loader.ModuleType.factory((String)%s)",
+                             defVal: "com.nubeiot.edge.installer.loader.ModuleType.getDefault()")
         ]
     }
 
