@@ -15,7 +15,7 @@ public class ErrorMessageTest {
 
     @Test(expected = NullPointerException.class)
     public void test_null_throwable() {
-        ErrorMessage.parse(null);
+        ErrorMessage.parse((Throwable) null);
     }
 
     @Test

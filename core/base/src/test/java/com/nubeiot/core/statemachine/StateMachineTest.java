@@ -102,12 +102,32 @@ public class StateMachineTest {
     }
 
     @Test
-    public void test_validate_NonExist() {
+    public void test_Init_From_None_To_Enabled() {
+        StateMachine.instance().validateConflict(State.NONE, EventAction.INIT, "module", State.ENABLED);
+    }
+
+    @Test(expected = StateException.class)
+    public void test_Create_From_NonExist() {
+        StateMachine.instance().validateConflict(null, EventAction.CREATE, "module", State.ENABLED);
+    }
+
+    @Test
+    public void test_validate_NonExist_Init() {
+        StateMachine.instance().validate(null, EventAction.INIT, "service");
+    }
+
+    @Test
+    public void test_validate_Exist_Init() {
+        StateMachine.instance().validate("", EventAction.INIT, "service");
+    }
+
+    @Test
+    public void test_validate_NonExist_Create() {
         StateMachine.instance().validate(null, EventAction.CREATE, "service");
     }
 
     @Test(expected = AlreadyExistException.class)
-    public void test_validate_NonExist_Conflict() {
+    public void test_validate_Exist_Create() {
         StateMachine.instance().validate("", EventAction.CREATE, "service");
     }
 

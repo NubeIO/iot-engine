@@ -7,32 +7,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 
-public class TokenCredential extends Credential {
+public final class TokenCredential extends Credential {
 
     @Getter
     private final String token;
 
     @JsonCreator
     public TokenCredential(@JsonProperty(value = "type", required = true) CredentialType type,
-                           @JsonProperty(value = "user", required = false) String user,
+                           @JsonProperty(value = "user") String user,
                            @JsonProperty(value = "token", required = true) String token) {
         super(type, user);
         this.token = token;
     }
 
     @Override
-    public String computeUrl(String defaultUrl) {
-        return this.computeRemoteUrl(defaultUrl);
+    public String toUrl(String url) {
+        return this.computeRemoteUrl(url);
     }
 
     @Override
-    public String computeUrlCredential() {
-        return (Objects.nonNull(this.getUser()) ? this.getUser() + ":" : "") + this.getToken() + "@";
-    }
-
-    @Override
-    public String computeHeader() {
+    public String toHeader() {
         return "Bearer " + this.getToken();
+    }
+
+    @Override
+    protected String computeUrlCredential() {
+        return (Objects.nonNull(this.getUser()) ? this.getUser() + ":" : "") + this.getToken() + "@";
     }
 
     @Override

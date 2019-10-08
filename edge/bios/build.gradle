@@ -1,12 +1,13 @@
 ext {
-    specifiedLog = project.loggers["hazelcast"] + project.loggers["sql"] + ["h2database": "info"]
+    specifiedLog = project.loggers["sql"] + ["h2database"        : "info",
+                                             "org.eclipse.aether": "info"]
 }
 
 dependencies {
-    compile project(':core:micro')
     compile project(':core:installer')
     compile project(':eventbus:edge:gateway')
     compile project(':eventbus:edge:installer')
 
     testCompile project(":core:base").sourceSets.test.output
+    testCompile project(":core:installer").sourceSets.test.output
 }

@@ -9,8 +9,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.nubeiot.edge.core.loader.ModuleType;
-import com.nubeiot.edge.core.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.loader.ModuleTypeRule;
 
 public class EdgeBiosRuleProviderTest {
 

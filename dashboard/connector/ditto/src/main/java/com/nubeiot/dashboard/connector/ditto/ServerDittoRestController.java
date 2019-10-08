@@ -18,7 +18,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.auth.BasicCredential;
-import com.nubeiot.auth.Credential.CredentialType;
+import com.nubeiot.auth.CredentialType;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Builder;
 import com.nubeiot.core.dto.ResponseData;
@@ -118,7 +118,7 @@ public class ServerDittoRestController implements RestApi {
             BasicCredential basicCredential = new BasicCredential(CredentialType.BASIC, dittoConfig.getUsername(),
                                                                   dittoConfig.getPassword());
             requestDataBuilder.headers(
-                new JsonObject().put(HttpHeaders.AUTHORIZATION.toString(), basicCredential.computeHeader()));
+                new JsonObject().put(HttpHeaders.AUTHORIZATION.toString(), basicCredential.toHeader()));
             if (Strings.isNotBlank(ctx.getBody().toString())) {
                 requestDataBuilder.body(new JsonObject(ctx.getBody().toString()));
             }

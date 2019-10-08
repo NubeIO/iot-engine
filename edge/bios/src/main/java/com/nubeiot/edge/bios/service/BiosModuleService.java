@@ -1,22 +1,12 @@
 package com.nubeiot.edge.bios.service;
 
-import com.nubeiot.edge.core.EdgeVerticle;
-import com.nubeiot.edge.core.service.ModuleService;
+import com.nubeiot.edge.installer.InstallerEntityHandler;
+import com.nubeiot.edge.installer.service.ModuleService;
 
-import lombok.NonNull;
+public final class BiosModuleService extends ModuleService implements BiosInstallerService {
 
-public class BiosModuleService extends ModuleService implements BiosInstallerService {
-
-    public BiosModuleService(@NonNull EdgeVerticle verticle) {
-        super(verticle);
-    }
-
-    public String servicePath() {
-        return "";
-    }
-
-    public String paramPath() {
-        return "/:service_id";
+    public BiosModuleService(InstallerEntityHandler entityHandler) {
+        super(entityHandler);
     }
 
 }

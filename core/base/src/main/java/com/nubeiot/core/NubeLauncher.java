@@ -1,7 +1,10 @@
 package com.nubeiot.core;
 
 import java.net.InetSocketAddress;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Launcher;
@@ -23,8 +26,11 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.Configs;
+import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
+
+import lombok.NonNull;
 
 public final class NubeLauncher extends Launcher {
 
@@ -54,7 +60,9 @@ public final class NubeLauncher extends Launcher {
         this.config = new ConfigProcessor(dummy).override(fileConfig.toJson(), false, true).orElse(fileConfig);
         dummy.close();
         JsonObject cfg = this.config.toJson();
-        logger.debug("CONFIG::FINAL: {}", cfg.encode());
+        if (logger.isDebugEnabled()) {
+            logger.debug("CONFIG::FINAL: {}", cfg.encode());
+        }
         super.afterConfigParsed(cfg);
     }
 
@@ -106,15 +114,19 @@ public final class NubeLauncher extends Launcher {
     private DeployConfig mergeDeployConfig(DeploymentOptions deploymentOptions) {
         JsonObject input = deploymentOptions.toJson();
         input.remove("config");
-        logger.debug("CONFIG::INPUT DEPLOYMENT CFG: {}", input.encode());
-        logger.debug("CONFIG::CURRENT DEPLOYMENT CFG: {}", config.getDeployConfig().toJson().encode());
+        if (logger.isDebugEnabled()) {
+            logger.debug("CONFIG::INPUT DEPLOYMENT CFG: {}", input.encode());
+            logger.debug("CONFIG::CURRENT DEPLOYMENT CFG: {}", config.getDeployConfig().toJson().encode());
+        }
         return IConfig.merge(config.getDeployConfig(), input, NubeConfig.DeployConfig.class);
     }
 
     private AppConfig mergeAppConfig(DeploymentOptions deploymentOptions) {
         JsonObject input = deploymentOptions.getConfig();
-        logger.debug("CONFIG::INPUT APP CFG: {}", input.encode());
-        logger.debug("CONFIG::CURRENT APP CFG: {}", config.getAppConfig().toJson().encode());
+        if (logger.isDebugEnabled()) {
+            logger.debug("CONFIG::INPUT APP CFG: {}", input.encode());
+            logger.debug("CONFIG::CURRENT APP CFG: {}", config.getAppConfig().toJson().encode());
+        }
         return IConfig.merge(config.getAppConfig(), input, NubeConfig.AppConfig.class);
     }
 
@@ -123,7 +135,31 @@ public final class NubeLauncher extends Launcher {
         ClusterRegistry.init();
         configEventBus(vertxOptions);
         configCluster(vertxOptions);
+        final Entry<Long, TimeUnit> e1 = getSystemProp("vertx.blockedThreadCheckInterval",
+                                                       VertxOptions.DEFAULT_BLOCKED_THREAD_CHECK_INTERVAL,
+                                                       VertxOptions.DEFAULT_BLOCKED_THREAD_CHECK_INTERVAL_UNIT);
+        vertxOptions.setBlockedThreadCheckInterval(e1.getKey()).setBlockedThreadCheckIntervalUnit(e1.getValue());
+        final Entry<Long, TimeUnit> e2 = getSystemProp("vertx.maxEventLoopExecuteTime",
+                                                       VertxOptions.DEFAULT_MAX_EVENT_LOOP_EXECUTE_TIME,
+                                                       VertxOptions.DEFAULT_MAX_EVENT_LOOP_EXECUTE_TIME_UNIT);
+        vertxOptions.setMaxEventLoopExecuteTime(e2.getKey()).setMaxEventLoopExecuteTimeUnit(e2.getValue());
+        final Entry<Long, TimeUnit> e3 = getSystemProp("vertx.maxWorkerExecuteTime",
+                                                       VertxOptions.DEFAULT_MAX_WORKER_EXECUTE_TIME,
+                                                       VertxOptions.DEFAULT_MAX_WORKER_EXECUTE_TIME_UNIT);
+        vertxOptions.setMaxWorkerExecuteTime(e3.getKey()).setMaxWorkerExecuteTimeUnit(e3.getValue());
+        final Entry<Long, TimeUnit> e4 = getSystemProp("vertx.warningExceptionTime", TimeUnit.SECONDS.toNanos(5),
+                                                       VertxOptions.DEFAULT_WARNING_EXCEPTION_TIME_UNIT);
+        vertxOptions.setWarningExceptionTime(e4.getKey()).setWarningExceptionTimeUnit(e4.getValue());
+        vertxOptions.setPreferNativeTransport(Boolean.parseBoolean(System.getProperty("vertx.preferNativeTransport",
+                                                                                      String.valueOf(
+                                                                                          VertxOptions.DEFAULT_PREFER_NATIVE_TRANSPORT))));
         return vertxOptions;
+    }
+
+    private Entry<Long, TimeUnit> getSystemProp(@NonNull String propName, long def, @NonNull TimeUnit defTimeUnit) {
+        final String propVal = System.getProperty(propName, String.valueOf(def));
+        final long val = Functions.getIfThrow(() -> Functions.toLong().apply(propVal)).orElse(def);
+        return new SimpleEntry<>(val, val == def ? defTimeUnit : TimeUnit.SECONDS);
     }
 
     private void configEventBus(VertxOptions options) {

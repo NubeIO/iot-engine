@@ -1,0 +1,25 @@
+{
+  "__app__": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": false
+      },
+      "__serviceDiscovery__": {
+        "enabled": false
+      },
+      "__localServiceDiscovery__": {
+        "enabled": false
+      },
+      "__circuitBreaker__": {
+        "enabled": false,
+        "options": {
+          "timeout": 60000
+        }
+      }
+    },
+    "__installer__": {
+      "auto_install": true,
+      "builtin_app": []
+    }
+  }
+}

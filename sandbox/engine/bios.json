@@ -73,6 +73,30 @@
         {
           "metadata": {
             "group_id": "com.nubeiot.edge.module",
+            "artifact_id": "gateway",
+            "version": "1.0.0-SNAPSHOT",
+            "service_name": "edge-gateway"
+          }
+        },
+        {
+          "metadata": {
+            "group_id": "com.nubeiot.edge.module",
+            "artifact_id": "scheduler",
+            "version": "1.0.0-SNAPSHOT",
+            "service_name": "edge-scheduler"
+          }
+        },
+        {
+          "metadata": {
+            "group_id": "com.nubeiot.edge.module",
+            "artifact_id": "monitor",
+            "version": "1.0.0-SNAPSHOT",
+            "service_name": "edge-monitor"
+          }
+        },
+        {
+          "metadata": {
+            "group_id": "com.nubeiot.edge.module",
             "artifact_id": "installer",
             "version": "1.0.0-SNAPSHOT",
             "service_name": "bios-installer"
@@ -124,22 +148,6 @@
                 }
               }
             }
-          }
-        },
-        {
-          "metadata": {
-            "group_id": "com.nubeiot.edge.module",
-            "artifact_id": "gateway",
-            "version": "1.0.0-SNAPSHOT",
-            "service_name": "edge-gateway"
-          }
-        },
-        {
-          "metadata": {
-            "group_id": "com.nubeiot.edge.module",
-            "artifact_id": "monitor",
-            "version": "1.0.0-SNAPSHOT",
-            "service_name": "edge-monitor"
           }
         },
         {
@@ -540,14 +548,6 @@
                 ]
               }
             }
-          }
-        },
-        {
-          "metadata": {
-            "group_id": "com.nubeiot.edge.module",
-            "artifact_id": "scheduler",
-            "version": "1.0.0-SNAPSHOT",
-            "service_name": "edge-scheduler"
           }
         }
       ]

@@ -15,7 +15,7 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.auth.BasicCredential;
-import com.nubeiot.auth.Credential.CredentialType;
+import com.nubeiot.auth.CredentialType;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;

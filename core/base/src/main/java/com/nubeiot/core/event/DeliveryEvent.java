@@ -61,9 +61,16 @@ public final class DeliveryEvent implements JsonData {
         return from(model, action, payload.toJson());
     }
 
+    public static DeliveryEvent from(@NonNull EventModel model, JsonObject payload) {
+        return from(model, model.getEvents()
+                                .stream()
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalArgumentException("Not found any action")), payload);
+    }
+
     public static DeliveryEvent from(@NonNull EventModel model, @NonNull EventAction action, JsonObject payload) {
         if (!model.getEvents().contains(action)) {
-            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Action must match one of EventModel Actions");
+            throw new IllegalArgumentException("Action must match one of EventModel Actions");
         }
         return new DeliveryEvent(model.getAddress(), model.getPattern(), action, payload);
     }

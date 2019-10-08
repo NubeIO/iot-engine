@@ -12,9 +12,9 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.edge.core.loader.ModuleType;
-import com.nubeiot.edge.core.model.tables.pojos.TblModule;
-import com.nubeiot.edge.core.model.tables.pojos.TblTransaction;
+import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
+import com.nubeiot.edge.installer.model.tables.pojos.TblTransaction;
 
 public class PendingModuleWithInitActionInitData extends MockInitDataEntityHandler {
 

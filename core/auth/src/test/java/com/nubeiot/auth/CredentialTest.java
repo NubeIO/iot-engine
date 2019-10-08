@@ -5,7 +5,6 @@ import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.auth.Credential.CredentialType;
 import com.nubeiot.core.dto.JsonData;
 
 public class CredentialTest {
@@ -17,7 +16,7 @@ public class CredentialTest {
         jsonObject.put("user", "xx");
         jsonObject.put("password", "abc");
         Credential credential = JsonData.convert(jsonObject, BasicCredential.class);
-        Assert.assertEquals(Credential.CredentialType.BASIC, credential.getType());
+        Assert.assertEquals(CredentialType.BASIC, credential.getType());
         Assert.assertEquals("xx", credential.getUser());
         Assert.assertEquals("abc", ((BasicCredential) credential).getPassword());
     }
@@ -29,7 +28,7 @@ public class CredentialTest {
         jsonObject.put("user", "xx");
         jsonObject.put("password", "abc");
         Credential credential = JsonData.convert(jsonObject, BasicCredential.class);
-        Assert.assertEquals("http://xx:abc@123.com", credential.computeUrl("http://123.com"));
+        Assert.assertEquals("http://xx:abc@123.com", credential.toUrl("http://123.com"));
     }
 
     @Test
@@ -39,7 +38,7 @@ public class CredentialTest {
         jsonObject.put("user", "xx");
         jsonObject.put("password", "abc");
         Credential credential = JsonData.convert(jsonObject, BasicCredential.class);
-        Assert.assertEquals("Basic eHg6YWJj", credential.computeHeader());
+        Assert.assertEquals("Basic eHg6YWJj", credential.toHeader());
     }
 
     @Test
@@ -58,7 +57,7 @@ public class CredentialTest {
         jsonObject.put("type", "TOKEN");
         jsonObject.put("token", "abcdef");
         Credential credential = JsonData.convert(jsonObject, TokenCredential.class);
-        Assert.assertEquals("http://abcdef@123.com", credential.computeUrl("http://123.com"));
+        Assert.assertEquals("http://abcdef@123.com", credential.toUrl("http://123.com"));
     }
 
     @Test
@@ -67,7 +66,7 @@ public class CredentialTest {
         jsonObject.put("type", "TOKEN");
         jsonObject.put("token", "abcdef");
         Credential credential = JsonData.convert(jsonObject, TokenCredential.class);
-        Assert.assertEquals("Bearer abcdef", credential.computeHeader());
+        Assert.assertEquals("Bearer abcdef", credential.toHeader());
     }
 
     @Test
@@ -77,10 +76,10 @@ public class CredentialTest {
         jsonObject.put("user", "xx");
         jsonObject.put("password", "abc");
         BasicCredential credential = JsonData.convert(jsonObject, BasicCredential.class);
-        Assert.assertEquals("https://xx:abc@abc.xyz", credential.computeUrl("https://abc.xyz"));
-        Assert.assertEquals("http://xx:abc@abc.xyz", credential.computeUrl("http://abc.xyz"));
-        Assert.assertEquals("ws://xx:abc@abc.xyz", credential.computeUrl("ws://abc.xyz"));
-        Assert.assertEquals("wss://xx:abc@abc.xyz", credential.computeUrl("wss://abc.xyz"));
+        Assert.assertEquals("https://xx:abc@abc.xyz", credential.toUrl("https://abc.xyz"));
+        Assert.assertEquals("http://xx:abc@abc.xyz", credential.toUrl("http://abc.xyz"));
+        Assert.assertEquals("ws://xx:abc@abc.xyz", credential.toUrl("ws://abc.xyz"));
+        Assert.assertEquals("wss://xx:abc@abc.xyz", credential.toUrl("wss://abc.xyz"));
     }
 
 }

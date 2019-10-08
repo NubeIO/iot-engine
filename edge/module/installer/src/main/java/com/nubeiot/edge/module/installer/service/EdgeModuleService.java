@@ -1,22 +1,14 @@
 package com.nubeiot.edge.module.installer.service;
 
-import com.nubeiot.edge.core.EdgeVerticle;
-import com.nubeiot.edge.core.service.ModuleService;
+import com.nubeiot.edge.installer.InstallerEntityHandler;
+import com.nubeiot.edge.installer.service.ModuleService;
 
 import lombok.NonNull;
 
-public class EdgeModuleService extends ModuleService implements EdgeInstallerService {
+public final class EdgeModuleService extends ModuleService implements EdgeInstallerService {
 
-    public EdgeModuleService(@NonNull EdgeVerticle verticle) {
-        super(verticle);
-    }
-
-    public String servicePath() {
-        return "";
-    }
-
-    public String paramPath() {
-        return "/:service_id";
+    public EdgeModuleService(@NonNull InstallerEntityHandler entityHandler) {
+        super(entityHandler);
     }
 
 }

@@ -47,6 +47,10 @@ public final class ErrorMessage implements Serializable, JsonData {
         return new ErrorMessage(code, message);
     }
 
+    public static ErrorMessage parse(JsonObject error) {
+        return JsonData.convert(error, ErrorMessage.class);
+    }
+
     @Override
     public JsonObject toJson() {
         final JsonObject jsonObject = JsonData.super.toJson();
