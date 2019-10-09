@@ -4,19 +4,15 @@ import java.util.Objects;
 import java.util.UUID;
 
 import org.jooq.Catalog;
-import org.jooq.Record;
-import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.LoggerFactory;
 
-import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.IConfig;
@@ -25,7 +21,6 @@ import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.utils.Configs;
-import com.nubeiot.core.utils.Reflections.ReflectionField;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -45,19 +40,6 @@ public abstract class BaseSqlTest {
         TestHelper.setup();
         ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.zaxxer.hikari")).setLevel(Level.DEBUG);
-    }
-
-    static <T> void assertValue(@NonNull TestContext context, @NonNull Async async, VertxPojo pojo,
-                                @NonNull String field, @NonNull T expect) {
-        try {
-            context.assertNotNull(pojo);
-            context.assertEquals(expect, ReflectionField.getFieldValue(pojo, pojo.getClass().getDeclaredField(field),
-                                                                       expect.getClass()));
-        } catch (AssertionError | NoSuchFieldException ex) {
-            context.fail(ex);
-        } finally {
-            TestHelper.testComplete(async);
-        }
     }
 
     @Before
@@ -88,7 +70,7 @@ public abstract class BaseSqlTest {
         return SharedDataDelegate.getEventController(vertx, sharedKey);
     }
 
-    void stopSQL(TestContext context) {
+    protected void stopSQL(TestContext context) {
         System.out.println("Stop deployId: " + deployId);
         if (Objects.nonNull(deployId)) {
             vertx.undeploy(deployId, context.asyncAssertSuccess());
@@ -104,19 +86,10 @@ public abstract class BaseSqlTest {
         return v.getContext().getEntityHandler();
     }
 
-    <T extends AbstractEntityHandler> void startSQLFailed(TestContext context, Catalog catalog, Class<T> handlerClass,
-                                                          Handler<Throwable> consumer) {
+    protected <T extends AbstractEntityHandler> void startSQLFailed(TestContext context, Catalog catalog,
+                                                                    Class<T> handlerClass,
+                                                                    Handler<Throwable> consumer) {
         VertxHelper.deployFailed(vertx, context, options, new SQLWrapper<>(catalog, handlerClass), consumer);
-    }
-
-    void assertSize(TestContext context, Async async, int expected, Result<? extends Record> rs) {
-        try {
-            context.assertEquals(expected, rs.size());
-        } catch (AssertionError e) {
-            context.fail(e);
-        } finally {
-            TestHelper.testComplete(async);
-        }
     }
 
 }

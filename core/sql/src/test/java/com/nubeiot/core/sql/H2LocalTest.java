@@ -1,6 +1,5 @@
 package com.nubeiot.core.sql;
 
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -21,11 +20,6 @@ public class H2LocalTest extends BaseSqlTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
-
-    @BeforeClass
-    public static void beforeSuite() {
-        BaseSqlTest.beforeSuite();
-    }
 
     @Override
     @NonNull

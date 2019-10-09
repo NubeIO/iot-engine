@@ -94,7 +94,6 @@ public interface DataPointIndex extends MetadataIndex {
     String CUSTOMER_CODE = "CUSTOMER_CODE";
     String SITE_CODE = "SITE_CODE";
     String DEVICE_ID = "DEVICE_ID";
-    String NETWORK_ID = "NETWORK_ID";
 
     static Map<EntityMetadata, Integer> dependencies() {
         Map<EntityMetadata, Integer> map = new HashMap<>();

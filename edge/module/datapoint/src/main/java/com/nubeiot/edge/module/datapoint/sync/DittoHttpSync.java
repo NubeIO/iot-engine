@@ -39,6 +39,7 @@ public final class DittoHttpSync extends AbstractDittoHttpSync
         }
         if (action == EventAction.REMOVE) {
             logger.error("Not yet supported sync with action = " + EventAction.REMOVE);
+            return;
         }
         doSyncOnSuccess(service, action, transform(service, data), requestData).subscribe();
     }

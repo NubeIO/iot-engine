@@ -39,7 +39,7 @@ public interface EntityHandler {
 
     <D> D sharedData(String dataKey);
 
-    <D> D sharedData(String dataKey, D data);
+    <D> D addSharedData(String dataKey, D data);
 
     DSLContext dsl();
 

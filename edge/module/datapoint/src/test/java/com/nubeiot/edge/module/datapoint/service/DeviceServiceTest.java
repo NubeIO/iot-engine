@@ -11,7 +11,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper.EventbusHelper;
-import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
@@ -63,7 +62,8 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
                                      .build();
         DeliveryEvent event = DeliveryEvent.builder()
                                            .action(EventAction.GET_ONE)
-                                           .address(DeviceService.class.getName()).addPayload(req)
+                                           .address(DeviceService.class.getName())
+                                           .addPayload(req)
                                            .build();
         controller().request(event, EventbusHelper.replyAsserter(context, registerAsserter(context)));
     }
@@ -85,10 +85,7 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_list_network(TestContext context) {
-        Network def = new Network().setId(
-            UUID64.uuid64ToUuid(SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.NETWORK_ID)))
-                                   .setDevice(PrimaryKey.DEVICE)
-                                   .setCode("DEFAULT");
+        Network def = new Network().setDevice(PrimaryKey.DEVICE).setCode("DEFAULT");
         JsonObject expected = new JsonObject().put("networks",
                                                    new JsonArray().add(JsonPojo.from(MockData.NETWORK).toJson())
                                                                   .add(JsonPojo.from(def).toJson()));
