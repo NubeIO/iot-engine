@@ -18,6 +18,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.core.RxHelper;
 
 import com.nubeiot.core.ConfigProcessor;
 import com.nubeiot.core.IConfig;
@@ -110,7 +111,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
             return vertx.rxDeployVerticle(unit, options)
                         .doOnSuccess(deployId -> succeed(unit, deployId))
                         .doOnError(t -> logger.error("Cannot start unit verticle {}", t, unit.getClass().getName()));
-        }).toList().subscribe(ignored -> {
+        }).toList().subscribeOn(RxHelper.blockingScheduler(vertx)).subscribe(ignored -> {
             if (Objects.nonNull(successHandler)) {
                 this.successHandler.handle(null);
             }

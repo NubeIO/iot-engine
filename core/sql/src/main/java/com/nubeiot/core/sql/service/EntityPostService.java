@@ -26,7 +26,7 @@ public interface EntityPostService<T extends Transporter, D extends EntitySyncDa
         public Transporter transporter() { return null; }
 
         @Override
-        public EntitySyncData transform(@NonNull EntityService service, VertxPojo data) { return null; }
+        public @NonNull Maybe transform(@NonNull EntityService service, VertxPojo data) { return Maybe.empty(); }
 
         @Override
         public void onSuccess(@NonNull EntityService service, @NonNull EventAction action, VertxPojo data,
@@ -42,11 +42,11 @@ public interface EntityPostService<T extends Transporter, D extends EntitySyncDa
         public void onError(@NonNull EntityService service, @NonNull EventAction action, @NonNull Throwable t) { }
     };
 
-    @NonNull D transform(@NonNull EntityService service, @NonNull VertxPojo data);
+    @NonNull Maybe<D> transform(@NonNull EntityService service, @NonNull VertxPojo data);
 
     default void onSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull VertxPojo data,
                            @NonNull RequestData requestData) {
-        doSyncOnSuccess(service, action, transform(service, data), requestData).subscribe();
+        transform(service, data).map(syncData -> doSyncOnSuccess(service, action, syncData, requestData)).subscribe();
     }
 
     Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action, @NonNull D data,
@@ -70,7 +70,7 @@ public interface EntityPostService<T extends Transporter, D extends EntitySyncDa
         private final EntityPostService<T, D> delegate;
 
         @Override
-        public D transform(@NonNull EntityService service, @NonNull VertxPojo data) {
+        public @NonNull Maybe<D> transform(@NonNull EntityService service, @NonNull VertxPojo data) {
             return delegate.transform(service, data);
         }
 

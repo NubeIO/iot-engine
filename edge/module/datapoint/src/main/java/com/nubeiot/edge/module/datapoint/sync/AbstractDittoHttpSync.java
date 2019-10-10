@@ -21,6 +21,8 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.transport.ProxyService;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 
 abstract class AbstractDittoHttpSync extends AbstractEnumType implements ProxyService<HttpClientDelegate> {
@@ -29,6 +31,7 @@ abstract class AbstractDittoHttpSync extends AbstractEnumType implements ProxySe
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
     @NonNull
+    @Getter(value = AccessLevel.PROTECTED)
     private final Vertx vertx;
     @NonNull
     private final JsonObject clientConfig;

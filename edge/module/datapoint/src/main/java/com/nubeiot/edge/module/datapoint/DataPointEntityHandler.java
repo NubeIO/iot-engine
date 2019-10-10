@@ -72,7 +72,7 @@ final class DataPointEntityHandler extends AbstractEntityHandler
         map.put(Tables.POINT, Tables.POINT.ID);
         map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
         return Single.fromCallable(() -> createDefaultUUID(map))
-                     .doOnSuccess(i -> logger.info("Updated {} tables with random_uuid function", i))
+                     .doOnSuccess(i -> logger.info("Updated {} tables with random_uuid function", map.size()))
                      .flatMap(i -> initDataFromConfig(EventAction.INIT));
     }
 

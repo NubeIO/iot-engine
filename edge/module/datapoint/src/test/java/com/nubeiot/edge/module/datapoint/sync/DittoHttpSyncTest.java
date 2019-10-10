@@ -45,7 +45,8 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
     @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
-        ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);
+        ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.INFO);
+        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.INFO);
     }
 
     @Override
@@ -157,8 +158,8 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                                           "\"sync_audit\":{\"status\":\"INITIAL\"," +
                                           "\"data\":{\"message\":\"Not yet synced modified resource with record " +
                                           "revision 2\"}}}");
-        assertRestByClient(context, HttpMethod.PATCH, "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data?_audit",
-                           req1,
+        assertRestByClient(context, HttpMethod.PATCH,
+                           "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data?_audit=true", req1,
                            ExpectedResponse.builder()
                                            .code(200)
                                            .expected(new JsonObject().put("action", EventAction.PATCH)

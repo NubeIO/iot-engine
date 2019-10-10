@@ -1,5 +1,7 @@
 package com.nubeiot.edge.module.datapoint.sync;
 
+import java.util.function.Function;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -9,6 +11,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -19,13 +22,14 @@ public final class SyncServiceFactory {
 
     private static Logger LOGGER = LoggerFactory.getLogger(SyncServiceFactory.class);
 
-    public static EntityPostService get(@NonNull Vertx vertx, JsonObject syncConfig) {
-        final DataSyncConfig sync = IConfig.from(syncConfig, DataSyncConfig.class);
+    public static EntityPostService get(@NonNull Vertx vertx, Function<String, ?> sharedDataFunc) {
+        final DataSyncConfig sync = IConfig.from(sharedDataFunc.apply(DataPointIndex.DATA_SYNC_CFG),
+                                                 DataSyncConfig.class);
         if (!sync.isEnabled()) {
             return EntityPostService.EMPTY;
         }
         if (AbstractDittoHttpSync.TYPE.equalsIgnoreCase(sync.getType())) {
-            return new DittoHttpSync(vertx, sync.getClientConfig(), sync.getCredential());
+            return new DittoHttpSync(vertx, sync.getClientConfig(), sync.getCredential(), sharedDataFunc);
         }
         LOGGER.warn("Not yet supported sync service type {}", sync.getType());
         return EntityPostService.EMPTY;

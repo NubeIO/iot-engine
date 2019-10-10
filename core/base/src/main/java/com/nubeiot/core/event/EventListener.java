@@ -9,6 +9,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.exceptions.DesiredException;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.core.utils.Strings;
@@ -70,7 +71,11 @@ public interface EventListener extends Consumer<Message<Object>> {
 
     default Consumer<Throwable> error(Message<Object> message, EventAction action, Logger logger, String overrideMsg) {
         return throwable -> {
-            logger.error("Failed when handle event {}", throwable, action);
+            if (throwable instanceof DesiredException) {
+                logger.debug("Failed when handle event {}", throwable, action);
+            } else {
+                logger.error("Failed when handle event {}", throwable, action);
+            }
             Throwable t = throwable;
             if (Strings.isNotBlank(overrideMsg)) {
                 t = NubeExceptionConverter.friendly(throwable, overrideMsg);

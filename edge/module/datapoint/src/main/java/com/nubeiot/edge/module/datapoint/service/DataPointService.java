@@ -36,10 +36,21 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
                               .collect(Collectors.toSet());
     }
 
+    //TODO refactor it
+    static Set<EventMethodDefinition> definitionsForMany(@NonNull Collection<EventAction> availableEvents,
+                                                         @NonNull EntityMetadata reference,
+                                                         @NonNull EntityMetadata resource) {
+        Map<EventAction, HttpMethod> crud = ActionMethodMapping.CRUD_MAP.get();
+        ActionMethodMapping map = ActionMethodMapping.create(
+            availableEvents.stream().filter(crud::containsKey).collect(Collectors.toMap(e -> e, crud::get)));
+        final String servicePath = Urls.combinePath(
+            Urls.capturePath(reference.singularKeyName(), reference.requestKeyName()), resource.singularKeyName());
+        return Collections.singleton(EventMethodDefinition.create(servicePath, resource.requestKeyName(), map));
+    }
+
     @Override
     default @NonNull EntityPostService asyncPostService() {
-        return SyncServiceFactory.get(entityHandler().vertx(),
-                                      entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG));
+        return SyncServiceFactory.get(entityHandler().vertx(), entityHandler()::sharedData);
     }
 
     default String api() {
@@ -55,18 +66,6 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
 
     default String servicePath() {
         return Urls.toPathWithLC(context().singularKeyName());
-    }
-
-    //TODO refactor it
-    static Set<EventMethodDefinition> definitionsForMany(@NonNull Collection<EventAction> availableEvents,
-                                                         @NonNull EntityMetadata reference,
-                                                         @NonNull EntityMetadata resource) {
-        Map<EventAction, HttpMethod> crud = ActionMethodMapping.CRUD_MAP.get();
-        ActionMethodMapping map = ActionMethodMapping.create(
-            availableEvents.stream().filter(crud::containsKey).collect(Collectors.toMap(e -> e, crud::get)));
-        final String servicePath = Urls.combinePath(
-            Urls.capturePath(reference.singularKeyName(), reference.requestKeyName()), resource.singularKeyName());
-        return Collections.singleton(EventMethodDefinition.create(servicePath, resource.requestKeyName(), map));
     }
 
 }
