@@ -63,7 +63,7 @@ public abstract class AbstractEntityHandler implements EntityHandler {
     }
 
     @Override
-    public <D> D sharedData(String dataKey, D data) {
+    public <D> D addSharedData(String dataKey, D data) {
         return SharedDataDelegate.addLocalDataValue(vertx, sharedKey, dataKey, data);
     }
 

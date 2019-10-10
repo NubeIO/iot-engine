@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import org.jooq.Configuration;
 import org.jooq.Field;
 import org.jooq.Table;
+import org.jooq.impl.DSL;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -35,7 +36,6 @@ import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.sync.SyncServiceFactory;
@@ -71,28 +71,27 @@ final class DataPointEntityHandler extends AbstractEntityHandler
         map.put(Tables.NETWORK, Tables.NETWORK.ID);
         map.put(Tables.POINT, Tables.POINT.ID);
         map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
-        createDefaultUUID(map);
-        return initDataFromConfig(EventAction.INIT);
+        return Single.fromCallable(() -> createDefaultUUID(map))
+                     .doOnSuccess(i -> logger.info("Updated {} tables with random_uuid function", i))
+                     .flatMap(i -> initDataFromConfig(EventAction.INIT));
     }
 
     @Override
     public Single<EventMessage> migrate() {
-        if (dsl().fetchExists(Tables.DEVICE)) {
-            return Single.just(EventMessage.initial(EventAction.MIGRATE));
-        } else {
-            return initDataFromConfig(EventAction.MIGRATE);
-        }
+        return DeviceMetadata.INSTANCE.dao(this)
+                                      .findOneByCondition(DSL.trueCondition())
+                                      .filter(Optional::isPresent)
+                                      .map(Optional::get)
+                                      .map(this::cacheDevice)
+                                      .map(device -> EventMessage.initial(EventAction.MIGRATE))
+                                      .switchIfEmpty(initDataFromConfig(EventAction.MIGRATE));
     }
 
     @SuppressWarnings("unchecked")
     private Single<EventMessage> initDataFromConfig(EventAction action) {
         Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
         JsonObject cfgData = configData();
-        final Device device = initDevice(cfgData);
-        sharedData(DEVICE_ID, device.getId().toString());
-        sharedData(CUSTOMER_CODE, device.getCustomerCode());
-        sharedData(SITE_CODE, device.getSiteCode());
-        sharedData(NETWORK_ID, UUID64.random());
+        final Device device = cacheDevice(initDevice(cfgData));
         final JsonObject data = cfgData.put(DeviceMetadata.INSTANCE.singularKeyName(), device.toJson())
                                        .put(NetworkMetadata.INSTANCE.singularKeyName(),
                                             initNetwork(cfgData, device.getId()));
@@ -124,12 +123,12 @@ final class DataPointEntityHandler extends AbstractEntityHandler
         JsonObject syncCfg = SharedDataDelegate.removeLocalDataValue(vertx(), getSharedKey(), DATA_SYNC_CFG);
         //TODO fix hard-code version
         syncCfg = DataSyncConfig.update(Optional.ofNullable(syncCfg).orElse(new JsonObject()), "1.0.0", device.getId());
-        JsonObject m = new JsonObject().put(DataSyncConfig.NAME, sharedData(DATA_SYNC_CFG, syncCfg));
+        JsonObject m = new JsonObject().put(DataSyncConfig.NAME, addSharedData(DATA_SYNC_CFG, syncCfg));
         return device.setMetadata(m.mergeIn(Optional.ofNullable(device.getMetadata()).orElse(new JsonObject()), true));
     }
 
     private JsonArray initNetwork(@NonNull JsonObject builtinData, @NonNull UUID deviceId) {
-        final UUID networkId = UUID64.uuid64ToUuid(sharedData(NETWORK_ID));
+        final UUID networkId = UUID.randomUUID();
         final Object value = builtinData.getValue(NetworkMetadata.INSTANCE.singularKeyName());
         final JsonObject defaultNetwork = new Network().setId(networkId)
                                                        .setCode("DEFAULT")
@@ -156,21 +155,21 @@ final class DataPointEntityHandler extends AbstractEntityHandler
     @SuppressWarnings("unchecked")
     private Single<Integer> insert(EntityMetadata metadata, @NonNull Object data) {
         final String createdBy = "SYSTEM_INITIATOR";
-        Class<? extends VertxPojo> pojoClass = metadata.modelClass();
+        Class<? extends VertxPojo> pClazz = metadata.modelClass();
         VertxDAO dao = metadata.dao(this);
-        if (parsable(pojoClass, data)) {
+        if (parsable(pClazz, data)) {
             return ((Single<Integer>) dao.insert(
                 AuditDecorator.addCreationAudit(true, validate(metadata, data), createdBy))).doOnSuccess(
-                initLog(pojoClass));
+                logInsertEvent(pClazz));
         }
         final Stream<Object> stream = getArrayStream(data);
         if (Objects.isNull(stream)) {
             return Single.just(0);
         }
-        return ((Single<Integer>) dao.insert(stream.filter(o -> parsable(pojoClass, o))
+        return ((Single<Integer>) dao.insert(stream.filter(o -> parsable(pClazz, o))
                                                    .map(o -> validate(metadata, o))
                                                    .map(pojo -> AuditDecorator.addCreationAudit(true, pojo, createdBy))
-                                                   .collect(Collectors.toList()))).doOnSuccess(initLog(pojoClass));
+                                                   .collect(Collectors.toList()))).doOnSuccess(logInsertEvent(pClazz));
     }
 
     private VertxPojo validate(EntityMetadata metadata, @NonNull Object data) {
@@ -189,12 +188,19 @@ final class DataPointEntityHandler extends AbstractEntityHandler
         return data instanceof JsonObject || data instanceof Map || pojoClass.isInstance(data);
     }
 
-    private Consumer<Integer> initLog(@NonNull Class<? extends VertxPojo> pojoClass) {
+    private Consumer<Integer> logInsertEvent(@NonNull Class<? extends VertxPojo> pojoClass) {
         return r -> logger.info("Inserted {} record(s) in {}", r, pojoClass.getSimpleName());
     }
 
     private EventMessage msg(EventAction action, Integer r, Object sync) {
         return EventMessage.success(action, new JsonObject().put("records", r).put("synced", sync));
+    }
+
+    private Device cacheDevice(@NonNull Device device) {
+        addSharedData(DEVICE_ID, device.getId().toString());
+        addSharedData(CUSTOMER_CODE, device.getCustomerCode());
+        addSharedData(SITE_CODE, device.getSiteCode());
+        return device;
     }
 
 }

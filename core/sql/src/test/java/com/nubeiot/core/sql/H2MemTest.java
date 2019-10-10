@@ -1,5 +1,7 @@
 package com.nubeiot.core.sql;
 
+import org.jooq.Record;
+import org.jooq.Result;
 import org.jooq.Table;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -12,6 +14,7 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.sql.MockManyEntityHandler.MockManyNoData;
 import com.nubeiot.core.sql.mock.manyschema.mock0.tables.pojos.TblSample_00;
@@ -66,6 +69,16 @@ public class H2MemTest extends BaseSqlTest {
     @Test
     public void test_init_complex_model(TestContext context) {
         startSQL(context, SchemaTest.OneSchema.CATALOG, MockOneEntityHandler.class);
+    }
+
+    private void assertSize(TestContext context, Async async, int expected, Result<? extends Record> rs) {
+        try {
+            context.assertEquals(expected, rs.size());
+        } catch (AssertionError e) {
+            context.fail(e);
+        } finally {
+            TestHelper.testComplete(async);
+        }
     }
 
 }

@@ -54,7 +54,7 @@ public final class DeviceService extends AbstractEntityService<Device, DeviceMet
         final JsonObject syncConfig = Optional.ofNullable(((Device) entry.getValue()).getMetadata())
                                               .map(info -> info.getJsonObject(DataSyncConfig.NAME, new JsonObject()))
                                               .orElse(new JsonObject());
-        entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG, syncConfig);
+        entityHandler().addSharedData(DataPointIndex.DATA_SYNC_CFG, syncConfig);
         return entry;
     }
 
