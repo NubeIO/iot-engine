@@ -6,10 +6,10 @@ import io.vertx.core.shareddata.Shareable;
 
 import lombok.NonNull;
 
-public interface InternalCache<K, V> extends Cache, Shareable {
+public interface LocalCache<K, V> extends Cache, Shareable {
 
     V get(@NonNull K key);
 
-    InternalCache register(Function<K, V> discover);
+    LocalCache register(Function<K, V> discover);
 
 }

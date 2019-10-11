@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -25,6 +27,7 @@ import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistoryDataMetad
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.dto.HistorySettingType;
+import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 
 import lombok.NonNull;
@@ -42,11 +45,6 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     }
 
     @Override
-    public String servicePath() {
-        return "/histories";
-    }
-
-    @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
         return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE);
     }
@@ -60,13 +58,22 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     }
 
     @Override
-    protected Single<?> doInsert(@NonNull RequestData reqData) {
-        final PointHistoryData hisData = (PointHistoryData) validation().onCreating(reqData);
-        return validateReferenceEntity(reqData).flatMapSingle(b -> isAbleToInsertByCov(hisData))
-                                               .flatMap(b -> queryExecutor().insertReturningPrimary(hisData, reqData));
+    public String servicePath() {
+        return "/histories";
     }
 
-    private Single<Boolean> isAbleToInsertByCov(PointHistoryData his) {
+    @Override
+    protected Single<?> doInsert(@NonNull RequestData reqData) {
+        final PointHistoryData his = (PointHistoryData) validation().onCreating(reqData);
+        return validateReferenceEntity(reqData).flatMap(b -> isAbleToInsertByCov(his))
+                                               .filter(b -> b)
+                                               .switchIfEmpty(Single.error(new DesiredException(
+                                                   "COV of point " + his.getPoint() +
+                                                   " doesn't meet setting requirement")))
+                                               .flatMap(b -> queryExecutor().insertReturningPrimary(his, reqData));
+    }
+
+    private Maybe<Boolean> isAbleToInsertByCov(PointHistoryData his) {
         final JsonObject filter = new JsonObject().put(context().table().POINT.getName(),
                                                        JsonData.checkAndConvert(his.getPoint()));
         final Sort sort = Sort.builder().item(context().table().TIME.getName(), SortType.DESC).build();
@@ -74,19 +81,24 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
                               .map(rr -> rr.fetchOptionalInto(PointHistoryData.class))
                               .filter(Optional::isPresent)
                               .map(Optional::get)
-                              .flatMap(p -> entityHandler().dao(HistorySettingMetadata.INSTANCE.daoClass())
-                                                           .findOneById(his.getPoint())
-                                                           .filter(Optional::isPresent)
-                                                           .map(Optional::get)
-                                                           .filter(s -> s.getType() == HistorySettingType.COV &&
-                                                                        Objects.nonNull(s.getTolerance()))
-                                                           .map(s -> s.getTolerance()
-                                                                      .compareTo(
-                                                                          Math.abs(his.getValue() - p.getValue())) < 0))
-                              .defaultIfEmpty(true)
-                              .filter(b -> b)
-                              .switchIfEmpty(Single.error(new DesiredException(
-                                  "COV of point " + his.getPoint() + " doesn't meet setting requirement")));
+                              .flatMap(p -> getHistorySetting(his.getPoint()).filter(this::isTolerance)
+                                                                             .map(s -> validateCOV(his, p, s)))
+                              .defaultIfEmpty(true);
+    }
+
+    private boolean validateCOV(PointHistoryData his, PointHistoryData p, HistorySetting s) {
+        return s.getTolerance().compareTo(Math.abs(his.getValue() - p.getValue())) < 0;
+    }
+
+    private boolean isTolerance(HistorySetting s) {
+        return s.getType() == HistorySettingType.COV && Objects.nonNull(s.getTolerance());
+    }
+
+    private Maybe<HistorySetting> getHistorySetting(UUID pointId) {
+        return entityHandler().dao(HistorySettingMetadata.INSTANCE.daoClass())
+                              .findOneById(pointId)
+                              .filter(Optional::isPresent)
+                              .map(Optional::get);
     }
 
 }

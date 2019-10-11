@@ -38,7 +38,6 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, UnitProvider<? extends Unit>> components = new LinkedHashMap<>();
     private final Map<Class<? extends Unit>, Consumer<? extends UnitContext>> afterSuccesses = new HashMap<>();
     private final Set<String> deployments = new HashSet<>();
-    private final Map<String, Object> sharedData = new HashMap<>();
     @Getter
     protected EventController eventController;
     @Getter
@@ -60,8 +59,6 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     public void start(Future<Void> future) {
         this.start();
-        this.vertx.getDelegate().sharedData().getLocalMap(getSharedKey()).putAll(sharedData);
-        this.sharedData.clear();
         this.installUnits(future);
     }
 
@@ -75,7 +72,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     @Override
     public final Container addSharedData(String key, Object data) {
-        this.sharedData.put(key, data);
+        this.vertx.sharedData().getLocalMap(getSharedKey()).put(key, data);
         return this;
     }
 

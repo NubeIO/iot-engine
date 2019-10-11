@@ -142,7 +142,7 @@ public final class DataPointConfig implements IConfig {
 
         static final String NAME = "__builtin_data__";
 
-        public static BuiltinData def() {
+        static BuiltinData def() {
             final BuiltinData bd = new BuiltinData();
             bd.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.available()
                                                                            .map(dt -> new MeasureUnit(dt.toJson()))

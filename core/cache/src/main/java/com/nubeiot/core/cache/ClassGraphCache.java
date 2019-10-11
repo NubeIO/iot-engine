@@ -1,13 +1,13 @@
 package com.nubeiot.core.cache;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
-public final class ClassGraphCache<K> implements InternalCache<K, Class<?>> {
+public final class ClassGraphCache<K> implements LocalCache<K, Class<?>> {
 
-    private final Map<K, Class<?>> cache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<K, Class<?>> cache = new ConcurrentHashMap<>();
     private Function<K, Class<?>> discover;
 
     @Override

@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ClusterRegistry {
 
-    private static final String DEFAULT_CLUSTER_PACKAGE = "com.nubeiot.core.cluster";
     private static ClusterRegistry instance;
     private final EnumMap<ClusterType, IClusterDelegate> registry = new EnumMap<>(ClusterType.class);
 
@@ -20,9 +19,8 @@ public final class ClusterRegistry {
             throw new IllegalStateException("Machine is already initialized");
         }
         instance = new ClusterRegistry();
-        ReflectionClass.find(DEFAULT_CLUSTER_PACKAGE, IClusterDelegate.class, ClusterDelegate.class)
-                       .parallelStream()
-                       .forEach(instance::addDelegate);
+        ReflectionClass.stream(ClusterRegistry.class.getPackage().getName(), IClusterDelegate.class,
+                               ClusterDelegate.class).forEach(instance::addDelegate);
     }
 
     public static ClusterRegistry instance() {
