@@ -17,7 +17,6 @@ import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.core.utils.ExecutorHelpers;
-import com.nubeiot.edge.module.datapoint.cache.DataPointCacheInitializer;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
 import com.nubeiot.iotdata.edge.model.DefaultCatalog;
@@ -43,7 +42,6 @@ public final class DataPointVerticle extends ContainerVerticle {
     }
 
     private void successHandler() {
-        new DataPointCacheInitializer().init(entityHandler);
         EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
         ServiceDiscoveryController discovery = microCtx.getLocalController();
         ExecutorHelpers.blocking(vertx.getDelegate(), () -> DataPointService.createServices(entityHandler))

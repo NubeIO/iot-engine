@@ -1,9 +1,11 @@
 package com.nubeiot.core.cache;
 
+import lombok.NonNull;
+
 public interface LIFOCache<K, V> extends Cache {
 
-    V pop(K key);
+    V first(@NonNull K key);
 
-    V first(K key);
+    V pop(@NonNull K key);
 
 }

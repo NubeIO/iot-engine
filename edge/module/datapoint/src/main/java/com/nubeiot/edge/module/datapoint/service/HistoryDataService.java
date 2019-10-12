@@ -23,6 +23,8 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.edge.module.datapoint.cache.DataPointCacheInitializer;
+import com.nubeiot.edge.module.datapoint.cache.PointHistoryCache;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
@@ -52,14 +54,14 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     @Override
     public Set<EventMethodDefinition> definitions() {
         final EventMethodDefinition definition = EventMethodDefinition.create("/point/:point_id/histories",
-                                                                              "/:" + context().requestKeyName(),
+                                                                              context().requestKeyName(),
                                                                               ActionMethodMapping.READ_MAP);
         return Stream.of(definition).collect(Collectors.toSet());
     }
 
     @Override
     public String servicePath() {
-        return "/histories";
+        return context().pluralKeyName();
     }
 
     @Override
@@ -70,24 +72,32 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
                                                .switchIfEmpty(Single.error(new DesiredException(
                                                    "COV of point " + his.getPoint() +
                                                    " doesn't meet setting requirement")))
-                                               .flatMap(b -> queryExecutor().insertReturningPrimary(his, reqData));
+                                               .flatMap(b -> queryExecutor().insertReturningPrimary(his, reqData))
+                                               .doOnSuccess(pk -> putIntoCache(his));
     }
 
     private Maybe<Boolean> isAbleToInsertByCov(PointHistoryData his) {
         final UUID point = his.getPoint();
-        final JsonObject filter = new JsonObject().put(context().table().POINT.getName(),
-                                                       JsonData.checkAndConvert(point));
-        final Sort sort = Sort.builder().item(context().table().TIME.getName(), SortType.DESC).build();
         return getHistorySetting(point).filter(this::isTolerance)
-                                       .flatMap(s -> getLastHistory(filter, sort).map(p -> validateCOV(his, p, s)))
+                                       .flatMap(s -> getLastHistory(point).map(p -> validateCOV(his, p, s)))
                                        .defaultIfEmpty(true);
     }
 
-    private Maybe<PointHistoryData> getLastHistory(JsonObject filter, Sort sort) {
+    private Maybe<PointHistoryData> getLastHistory(@NonNull UUID point) {
+        final PointHistoryCache cache = entityHandler().sharedData(DataPointCacheInitializer.CACHE_HISTORIES_DATA);
+        final PointHistoryData his = cache.get(point);
+        if (Objects.nonNull(his)) {
+            logger.info("Last history of point {} from cache", point);
+            return Maybe.just(his);
+        }
+        final JsonObject filter = new JsonObject().put(context().table().POINT.getName(),
+                                                       JsonData.checkAndConvert(point));
+        final Sort sort = Sort.builder().item(context().table().TIME.getName(), SortType.DESC).build();
         return queryExecutor().executeAny(queryExecutor().queryBuilder().viewOne(filter, sort))
                               .map(rr -> rr.fetchOptionalInto(PointHistoryData.class))
                               .filter(Optional::isPresent)
-                              .map(Optional::get);
+                              .map(Optional::get)
+                              .doOnSuccess(history -> cache.add(point, history));
     }
 
     private boolean validateCOV(PointHistoryData his, PointHistoryData p, HistorySetting s) {
@@ -103,6 +113,11 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
                               .findOneById(pointId)
                               .filter(Optional::isPresent)
                               .map(Optional::get);
+    }
+
+    private void putIntoCache(PointHistoryData his) {
+        final PointHistoryCache cache = entityHandler().sharedData(DataPointCacheInitializer.CACHE_HISTORIES_DATA);
+        cache.add(his.getPoint(), his);
     }
 
 }

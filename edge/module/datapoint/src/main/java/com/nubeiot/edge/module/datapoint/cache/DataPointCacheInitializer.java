@@ -12,12 +12,14 @@ import lombok.NonNull;
 
 public final class DataPointCacheInitializer implements CacheInitializer<DataPointCacheInitializer, EntityHandler> {
 
-    private static String CACHE_DATA_TYPE = "CACHE_DATA_TYPE";
+    public static final String CACHE_DATA_TYPE = "CACHE_DATA_TYPE";
+    public static final String CACHE_HISTORIES_DATA = "CACHE_HISTORIES";
 
     @Override
     public DataPointCacheInitializer init(EntityHandler context) {
         addBlockingCache(context, IDittoModel.CACHE_SYNC_CLASSES,
                          () -> new ClassGraphCache<EntityMetadata>().register(IDittoModel::find));
+        addBlockingCache(context, CACHE_HISTORIES_DATA, PointHistoryCache::new);
         //        addBlockingCache(context, CACHE_DATA_TYPE,
         //                         () -> Collections.unmodifiableSet(DataType.available().collect(Collectors.toSet())));
         return this;

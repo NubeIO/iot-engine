@@ -47,13 +47,14 @@ public final class QuartzSchedulerContext extends UnitContext {
         }
     }
 
-    void shutdown() {
+    QuartzSchedulerContext shutdown() {
         try {
             scheduler.shutdown();
             scheduler = null;
         } catch (SchedulerException e) {
-            logger.warn("Cannot shutdown Quartz Scheduler");
+            logger.warn("Cannot shutdown Quartz Scheduler", e);
         }
+        return this;
     }
 
 }

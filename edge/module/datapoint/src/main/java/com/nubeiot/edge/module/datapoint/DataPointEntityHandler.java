@@ -38,6 +38,7 @@ import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
+import com.nubeiot.edge.module.datapoint.cache.DataPointCacheInitializer;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.edge.model.Keys;
@@ -74,7 +75,8 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
         return Single.fromCallable(() -> createDefaultUUID(map))
                      .doOnSuccess(i -> logger.info("Updated {} tables with random_uuid function", map.size()))
-                     .flatMap(i -> initDataFromConfig(EventAction.INIT));
+                     .flatMap(i -> initDataFromConfig(EventAction.INIT))
+                     .doOnSuccess(ignore -> new DataPointCacheInitializer().init(this));
     }
 
     @Override
@@ -85,7 +87,8 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                       .map(Optional::get)
                                       .map(this::cacheDevice)
                                       .map(device -> EventMessage.initial(EventAction.MIGRATE))
-                                      .switchIfEmpty(initDataFromConfig(EventAction.MIGRATE));
+                                      .switchIfEmpty(initDataFromConfig(EventAction.MIGRATE))
+                                      .doOnSuccess(ignore -> new DataPointCacheInitializer().init(this));
     }
 
     private Single<EventMessage> initDataFromConfig(EventAction action) {

@@ -13,7 +13,7 @@ import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 import lombok.NonNull;
 
-public final class EdgeServiceInstallerVerticle extends InstallerVerticle {
+public final class EdgeServiceInstallerVerticle extends InstallerVerticle<EdgeInstallerService> {
 
     @Override
     protected Class<? extends InstallerEntityHandler> entityHandlerClass() {
@@ -33,7 +33,7 @@ public final class EdgeServiceInstallerVerticle extends InstallerVerticle {
     }
 
     @Override
-    protected Supplier<Set<? extends InstallerService>> services(@NonNull InstallerEntityHandler handler) {
+    protected Supplier<Set<EdgeInstallerService>> services(@NonNull InstallerEntityHandler handler) {
         return () -> InstallerService.createServices(handler, EdgeInstallerService.class);
     }
 

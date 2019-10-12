@@ -1,45 +1,53 @@
 package com.nubeiot.edge.module.datapoint.cache;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 import com.nubeiot.core.cache.LIFOCache;
-import com.nubeiot.core.cache.LocalCache;
 import com.nubeiot.core.cache.LocalDataCache;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-public class PointHistoryCache implements LocalDataCache<UUID, PointHistoryData>, LIFOCache<UUID, PointHistoryCache> {
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
+public final class PointHistoryCache
+    implements LocalDataCache<UUID, PointHistoryData>, LIFOCache<UUID, PointHistoryData> {
+
+    private final ConcurrentMap<UUID, PointHistoryData> cache = new ConcurrentHashMap<>();
 
     @Override
-    public LocalDataCache add(UUID key, PointHistoryData pointHistoryData) {
-        return null;
-    }
-
-    @Override
-    public PointHistoryData remove(UUID key) {
-        return null;
+    public PointHistoryCache add(@NonNull UUID key, PointHistoryData pointHistoryData) {
+        cache.put(key, pointHistoryData);
+        return this;
     }
 
     @Override
     public PointHistoryData get(@NonNull UUID key) {
-        return null;
+        return cache.get(key);
     }
 
     @Override
-    public LocalCache register(Function<UUID, PointHistoryData> discover) {
-        return null;
+    public PointHistoryData remove(@NonNull UUID key) {
+        return cache.remove(key);
     }
 
     @Override
-    public PointHistoryCache pop(UUID key) {
-        return null;
+    public PointHistoryCache register(Function<UUID, PointHistoryData> discover) {
+        return this;
     }
 
     @Override
-    public PointHistoryCache first(UUID key) {
-        return null;
+    public PointHistoryData first(@NonNull UUID key) {
+        return get(key);
+    }
+
+    @Override
+    public PointHistoryData pop(@NonNull UUID key) {
+        return remove(key);
     }
 
 }

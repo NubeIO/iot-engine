@@ -8,6 +8,8 @@ public interface LocalCache<K, V> extends Cache {
 
     V get(@NonNull K key);
 
+    V remove(@NonNull K key);
+
     LocalCache register(Function<K, V> discover);
 
 }

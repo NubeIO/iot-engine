@@ -42,7 +42,7 @@ class AppDeploymentService implements DeploymentService {
     AppDeploymentService(@NonNull InstallerEntityHandler entityHandler) {
         this.vertx = entityHandler.vertx();
         this.sharedDataFunc = entityHandler::sharedData;
-        this.worker = vertx.createSharedWorkerExecutor("installer", 5, 15, TimeUnit.MINUTES);
+        this.worker = vertx.createSharedWorkerExecutor("installer", 1, 3, TimeUnit.MINUTES);
     }
 
     @EventContractor(action = {EventAction.CREATE, EventAction.INIT})
