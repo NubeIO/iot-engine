@@ -10,9 +10,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.exceptions.DesiredException;
-import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
-import com.nubeiot.core.exceptions.NubeExceptionConverter;
 
 import lombok.NonNull;
 
@@ -33,6 +30,10 @@ public interface EventListener extends Function<Message<Object>, Single<EventMes
      */
     @NonNull Collection<EventAction> getAvailableEvents();
 
+    default Logger logger() {
+        return LoggerFactory.getLogger(this.getClass());
+    }
+
     /**
      * Jackson Object mapper for serialize/deserialize data
      *
@@ -49,27 +50,8 @@ public interface EventListener extends Function<Message<Object>, Single<EventMes
 
     @Override
     default Single<EventMessage> apply(Message<Object> message) {
-        Logger logger = LoggerFactory.getLogger(this.getClass());
         EventMessage msg = EventMessage.tryParse(message.body());
-        EventAction action = msg.getAction();
-        AnnotationHandler<? extends EventListener> handler = new AnnotationHandler<>(this);
-        return handler.execute(msg)
-                      .map(data -> EventMessage.success(action, data))
-                      .onErrorReturn(t -> error(action, logger).apply(t))
-                      .doOnSuccess(data -> message.reply(data.toJson()));
-    }
-
-    default Function<Throwable, EventMessage> error(EventAction action, Logger logger) {
-        return throwable -> {
-            if (throwable instanceof DesiredException) {
-                logger.debug("Failed when handle event {}", throwable, action);
-            } else {
-                logger.error("Failed when handle event {}", throwable, action);
-            }
-            Throwable t = NubeExceptionConverter.friendly(throwable, throwable instanceof ImplementationError ?
-                                                                     "No reply from event " + action : null);
-            return EventMessage.error(action, t);
-        };
+        return new AnnotationHandler<>(this).execute(msg).doOnSuccess(data -> message.reply(data.toJson()));
     }
 
 }

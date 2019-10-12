@@ -74,16 +74,20 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     }
 
     private Maybe<Boolean> isAbleToInsertByCov(PointHistoryData his) {
+        final UUID point = his.getPoint();
         final JsonObject filter = new JsonObject().put(context().table().POINT.getName(),
-                                                       JsonData.checkAndConvert(his.getPoint()));
+                                                       JsonData.checkAndConvert(point));
         final Sort sort = Sort.builder().item(context().table().TIME.getName(), SortType.DESC).build();
+        return getHistorySetting(point).filter(this::isTolerance)
+                                       .flatMap(s -> getLastHistory(filter, sort).map(p -> validateCOV(his, p, s)))
+                                       .defaultIfEmpty(true);
+    }
+
+    private Maybe<PointHistoryData> getLastHistory(JsonObject filter, Sort sort) {
         return queryExecutor().executeAny(queryExecutor().queryBuilder().viewOne(filter, sort))
                               .map(rr -> rr.fetchOptionalInto(PointHistoryData.class))
                               .filter(Optional::isPresent)
-                              .map(Optional::get)
-                              .flatMap(p -> getHistorySetting(his.getPoint()).filter(this::isTolerance)
-                                                                             .map(s -> validateCOV(his, p, s)))
-                              .defaultIfEmpty(true);
+                              .map(Optional::get);
     }
 
     private boolean validateCOV(PointHistoryData his, PointHistoryData p, HistorySetting s) {

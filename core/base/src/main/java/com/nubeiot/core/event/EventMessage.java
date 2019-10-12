@@ -117,6 +117,10 @@ public final class EventMessage implements Serializable, JsonData {
         return new EventMessage(Status.SUCCESS, action, data);
     }
 
+    public static EventMessage success(EventAction action, EventAction prevAction, JsonObject data) {
+        return from(Status.SUCCESS, action, prevAction, data);
+    }
+
     public static EventMessage success(EventAction action, JsonData data) {
         return new EventMessage(Status.SUCCESS, action, data);
     }

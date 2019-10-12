@@ -2,11 +2,9 @@ package com.nubeiot.core.cache;
 
 import java.util.function.Function;
 
-import io.vertx.core.shareddata.Shareable;
-
 import lombok.NonNull;
 
-public interface LocalCache<K, V> extends Cache, Shareable {
+public interface LocalCache<K, V> extends Cache {
 
     V get(@NonNull K key);
 

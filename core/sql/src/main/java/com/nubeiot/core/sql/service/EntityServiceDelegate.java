@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.Collection;
-import java.util.function.Function;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -89,13 +88,8 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public @NonNull EntityHandler entityHandler() {
-        return unwrap().entityHandler();
-    }
-
-    @Override
-    public M context() {
-        return unwrap().context();
+    public Logger logger() {
+        return unwrap().logger();
     }
 
     @Override
@@ -114,8 +108,13 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public Function<Throwable, EventMessage> error(EventAction action, Logger logger, String overrideMsg) {
-        return unwrap().error(action, logger, overrideMsg);
+    public @NonNull EntityHandler entityHandler() {
+        return unwrap().entityHandler();
+    }
+
+    @Override
+    public M context() {
+        return unwrap().context();
     }
 
 }

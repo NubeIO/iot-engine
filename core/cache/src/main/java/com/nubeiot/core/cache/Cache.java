@@ -1,3 +1,5 @@
 package com.nubeiot.core.cache;
 
-public interface Cache {}
+import io.vertx.core.shareddata.Shareable;
+
+public interface Cache extends Shareable {}

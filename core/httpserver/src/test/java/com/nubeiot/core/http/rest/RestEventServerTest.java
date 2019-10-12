@@ -13,7 +13,7 @@ import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.TestHelper;
-import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.mock.MockApiDefinition;
@@ -38,8 +38,9 @@ public class RestEventServerTest extends HttpServerTestBase {
     public void test_api_eventbus_error_unexpected(TestContext context) {
         MockEventBusErrorListener.create(this.vertx.eventBus()).start();
         String path = "/api/test/events";
-        JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.UNKNOWN_ERROR)
-                                              .put("message", "UNKNOWN_ERROR | Cause: xxx");
+        //TODO need to check again??
+        JsonObject expected = new JsonObject().put("code", ErrorCode.UNKNOWN_ERROR)
+                                              .put("message", "UNKNOWN_ERROR | Cause: xxx | Cause: xxx");
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
         assertRestByClient(context, HttpMethod.GET, path, 500, expected);
     }
@@ -48,8 +49,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     public void test_api_eventbus_error_from_server(TestContext context) {
         MockEventBusErrorListener.create(this.vertx.eventBus()).start();
         String path = "/api/test/events";
-        JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.ENGINE_ERROR)
-                                              .put("message", "Engine error");
+        JsonObject expected = new JsonObject().put("code", ErrorCode.ENGINE_ERROR).put("message", "Engine error");
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
         assertRestByClient(context, HttpMethod.POST, path, 500, expected);
     }
@@ -58,8 +58,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     public void test_api_eventbus_error_from_user(TestContext context) {
         MockEventBusErrorListener.create(this.vertx.eventBus()).start();
         String path = "/api/test/events/:event_id";
-        JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.INVALID_ARGUMENT)
-                                              .put("message", "invalid");
+        JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT).put("message", "invalid");
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
         assertRestByClient(context, HttpMethod.PUT, path, 400, expected);
     }
@@ -67,7 +66,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     @Test
     public void test_api_eventbus_no_reply(TestContext context) {
         String path = "/api/test/events/:event_id";
-        JsonObject expected = new JsonObject().put("code", NubeException.ErrorCode.SERVICE_ERROR)
+        JsonObject expected = new JsonObject().put("code", ErrorCode.SERVICE_ERROR)
                                               .put("message", "Service unavailable");
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));
         assertRestByClient(context, HttpMethod.GET, path, 503, expected);

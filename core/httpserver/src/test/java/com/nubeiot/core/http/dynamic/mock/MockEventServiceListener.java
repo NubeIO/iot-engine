@@ -117,8 +117,7 @@ class MockEventServiceListener {
                        .flatMap(JsonArray::stream)
                        .map(JsonObject.class::cast)
                        .filter(p -> !Strings.isBlank(pId) && p.containsKey(pId))
-                       .findFirst()
-                       .orElseThrow(() -> new NotFoundException(""));
+                       .findFirst().orElseThrow(() -> new NotFoundException("Not found"));
         }
 
     }

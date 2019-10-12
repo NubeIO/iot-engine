@@ -36,7 +36,7 @@ public class DynamicEventOneApiMultiLocServiceTest extends DynamicServiceTestBas
     @Test
     public void test_get_one_not_found(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/p/pId.05", 404,
-                           new JsonObject("{\"message\":\"NOT_FOUND\",\"code\":\"NOT_FOUND\"}"));
+                           new JsonObject("{\"message\":\"Not found\",\"code\":\"NOT_FOUND\"}"));
     }
 
     @Test
@@ -60,7 +60,7 @@ public class DynamicEventOneApiMultiLocServiceTest extends DynamicServiceTestBas
     @Test
     public void test_get_one_by_another_not_found(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/c/cId.02/p/pId.02", 404,
-                           new JsonObject("{\"message\":\"NOT_FOUND\",\"code\":\"NOT_FOUND\"}"));
+                           new JsonObject("{\"message\":\"Not found\",\"code\":\"NOT_FOUND\"}"));
     }
 
 }

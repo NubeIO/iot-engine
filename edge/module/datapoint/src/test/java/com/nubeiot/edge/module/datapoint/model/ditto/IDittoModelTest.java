@@ -5,13 +5,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.reactivex.Flowable;
-import io.reactivex.Scheduler;
 import io.vertx.core.Vertx;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.reactivex.RxHelper;
 
 import com.nubeiot.core.cache.ClassGraphCache;
 import com.nubeiot.core.component.SharedDataDelegate;
@@ -69,26 +64,6 @@ public class IDittoModelTest {
             e.printStackTrace();
             return null;
         }
-    }
-
-    @Test
-    public void test(TestContext context) {
-        Async async = context.async();
-        Flowable<String> o = Flowable.just("someID1", "someID2", "someID3", "someID4");
-
-        // This scheduler can execute blocking actions
-        Scheduler scheduler = RxHelper.blockingScheduler(vertx);
-
-        // All operations done on the observer now can be blocking
-        o = o.observeOn(scheduler);
-
-        // Load from a blocking api
-        o = o.map(this::blockingLoad);
-
-        o.subscribe(item -> System.out.println("Got item " + item), Throwable::printStackTrace, () -> {
-            System.out.println("Done");
-            async.complete();
-        });
     }
 
 }
