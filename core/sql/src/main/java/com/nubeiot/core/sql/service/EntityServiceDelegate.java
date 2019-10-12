@@ -1,17 +1,18 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.Collection;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
-import io.vertx.reactivex.core.eventbus.Message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
@@ -38,23 +39,13 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public @NonNull EntityHandler entityHandler() {
-        return unwrap().entityHandler();
-    }
-
-    @Override
-    public M context() {
-        return unwrap().context();
+    public @NonNull EntityQueryExecutor<P> queryExecutor() {
+        return unwrap().queryExecutor();
     }
 
     @Override
     public EntityValidation validation() {
         return unwrap().validation();
-    }
-
-    @Override
-    public @NonNull EntityQueryExecutor<P> queryExecutor() {
-        return unwrap().queryExecutor();
     }
 
     @Override
@@ -98,8 +89,13 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public void accept(Message<Object> message) {
-        unwrap().accept(message);
+    public @NonNull EntityHandler entityHandler() {
+        return unwrap().entityHandler();
+    }
+
+    @Override
+    public M context() {
+        return unwrap().context();
     }
 
     @Override
@@ -113,14 +109,13 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public void accept(io.vertx.core.eventbus.Message<Object> message) {
-        unwrap().accept(message);
+    public Single<EventMessage> apply(Message<Object> message) {
+        return unwrap().apply(message);
     }
 
     @Override
-    public Consumer<Throwable> error(io.vertx.core.eventbus.Message<Object> message, EventAction action, Logger logger,
-                                     String overrideMsg) {
-        return unwrap().error(message, action, logger, overrideMsg);
+    public Function<Throwable, EventMessage> error(EventAction action, Logger logger, String overrideMsg) {
+        return unwrap().error(action, logger, overrideMsg);
     }
 
 }

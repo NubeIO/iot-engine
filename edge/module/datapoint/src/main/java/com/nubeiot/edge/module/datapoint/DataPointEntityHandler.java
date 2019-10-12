@@ -22,6 +22,7 @@ import io.reactivex.functions.Consumer;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.RxHelper;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
@@ -87,7 +88,6 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                       .switchIfEmpty(initDataFromConfig(EventAction.MIGRATE));
     }
 
-    @SuppressWarnings("unchecked")
     private Single<EventMessage> initDataFromConfig(EventAction action) {
         Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
         JsonObject cfgData = configData();
@@ -103,10 +103,8 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                    .collect(Collectors.toList()))
                      .buffer(5)
                      .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
-                     .flatMap(r -> SyncServiceFactory.getInitialSync(this, sharedData(DATA_SYNC_CFG))
-                                                     .sync(device)
-                                                     .map(sync -> msg(action, r, sync))
-                                                     .switchIfEmpty(Single.just(msg(action, r, null))));
+                     .doOnSuccess(r -> syncData(device))
+                     .map(r -> EventMessage.success(action, new JsonObject().put("records", r)));
     }
 
     private JsonObject configData() {
@@ -192,8 +190,15 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         return r -> logger.info("Inserted {} record(s) in {}", r, pojoClass.getSimpleName());
     }
 
-    private EventMessage msg(EventAction action, Integer r, Object sync) {
-        return EventMessage.success(action, new JsonObject().put("records", r).put("synced", sync));
+    @SuppressWarnings("unchecked")
+    private void syncData(Device device) {
+        SyncServiceFactory.getInitialSync(this, sharedData(DATA_SYNC_CFG))
+                          .sync(device)
+                          .defaultIfEmpty(new JsonObject().put("message", "Not yet synced device"))
+                          .map(msg -> EventMessage.success(EventAction.SYNC, (JsonObject) msg))
+                          .map(msg -> ((EventMessage) msg).toJson())
+                          .subscribeOn(RxHelper.blockingScheduler(vertx()))
+                          .subscribe(logger::info, logger::error);
     }
 
     private Device cacheDevice(@NonNull Device device) {

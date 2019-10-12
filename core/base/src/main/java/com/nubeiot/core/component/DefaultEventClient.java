@@ -10,6 +10,7 @@ import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
+import io.vertx.reactivex.RxHelper;
 
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventListener;
@@ -71,10 +72,13 @@ final class DefaultEventClient implements EventController {
     public EventController register(String address, boolean local, @NonNull EventListener handler) {
         LOGGER.info("Registering {} Event Listener '{}' | Address '{}'...", local ? "Local" : "Cluster",
                     handler.getClass().getName(), Strings.requireNotBlank(address));
+        final Handler<Message<Object>> msgHandler = msg -> handler.apply(msg)
+                                                                  .subscribeOn(RxHelper.blockingScheduler(vertx))
+                                                                  .subscribe();
         if (local) {
-            vertx.eventBus().localConsumer(address, handler::accept);
+            vertx.eventBus().localConsumer(address, msgHandler);
         } else {
-            vertx.eventBus().consumer(address, handler::accept);
+            vertx.eventBus().consumer(address, msgHandler);
         }
         return this;
     }

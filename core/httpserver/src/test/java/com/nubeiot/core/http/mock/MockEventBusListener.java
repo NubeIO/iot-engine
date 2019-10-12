@@ -23,13 +23,13 @@ public abstract class MockEventBusListener implements EventListener {
                                                               EventAction.CREATE, EventAction.UPDATE,
                                                               EventAction.PATCH);
 
-    public MockEventBusListener(EventBus eventBus, EventModel model) {
+    MockEventBusListener(EventBus eventBus, EventModel model) {
         this(eventBus, model.getAddress());
         this.availableEvents = new ArrayList<>(model.getEvents());
     }
 
     public void start() {
-        this.eventBus.consumer(address, this::accept);
+        this.eventBus.getDelegate().consumer(address, msg -> apply(msg).subscribe());
     }
 
 }

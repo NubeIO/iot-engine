@@ -34,6 +34,7 @@ import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.InitializerError.MigrationError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
+import com.nubeiot.core.utils.ExecutorHelpers;
 import com.zaxxer.hikari.HikariDataSource;
 
 public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlConfig, SqlContext<T>> {
@@ -49,22 +50,21 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     @Override
     public void start() {
         super.start();
-        logger.info("Creating Hikari datasource from application configuration...");
         config.getHikariConfig()
-              .setJdbcUrl(config.computeJdbcUrl(() -> SharedDataDelegate.getLocalDataValue(vertx, getSharedKey(),
-                                                                                           SharedDataDelegate.SHARED_DATADIR)));
+              .setJdbcUrl(config.computeJdbcUrl(() -> getSharedData(SharedDataDelegate.SHARED_DATADIR)));
         if (logger.isDebugEnabled()) {
             logger.debug(config.getHikariConfig().toJson());
         }
-        this.dataSource = new HikariDataSource(config.getHikariConfig());
     }
 
     @Override
     public void start(Future<Void> future) {
         this.start();
-        this.createDatabaseThenSetupData(new DefaultConfiguration().set(dataSource).set(config.getDialect()))
-            .map(this::validateInitOrMigrationData)
-            .subscribe(result -> complete(future, result), t -> future.fail(NubeExceptionConverter.from(t)));
+        logger.info("Creating Hikari datasource from application configuration...");
+        ExecutorHelpers.blocking(vertx, () -> this.dataSource = new HikariDataSource(config.getHikariConfig()))
+                       .flatMap(ds -> createSchemaThenData(new DefaultConfiguration().set(ds).set(config.getDialect())))
+                       .map(this::validateInitOrMigrationData)
+                       .subscribe(result -> complete(future, result), t -> future.fail(NubeExceptionConverter.from(t)));
     }
 
     @Override
@@ -90,14 +90,12 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
         future.complete();
     }
 
-    private Single<EventMessage> createDatabaseThenSetupData(Configuration jooqConfig) {
+    private Single<EventMessage> createSchemaThenData(Configuration jooqConfig) {
         final String k = getSharedKey();
         final T handler = ((AbstractEntityHandler) getContext().createHandler(jooqConfig, vertx)).registerSharedKey(k);
-        return handler.before()
-                      .flatMap(h -> Single.fromCallable(h::isNew).flatMap(b -> {
+        return handler.before().flatMap(h -> Single.just(h.isNew()).flatMap(b -> {
                           if (b) {
-                              return Single.fromCallable(() -> createNewDatabase(jooqConfig))
-                                           .flatMap(cfg -> h.initData());
+                              return Single.just(createNewDatabase(jooqConfig)).flatMap(cfg -> h.initData());
                           }
                           return h.migrate();
                       }))

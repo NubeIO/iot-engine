@@ -44,7 +44,9 @@ final class AnnotationHandler<T extends EventListener> {
     AnnotationHandler(T eventHandler) {
         this.eventHandler = eventHandler;
         this.func = SerializerFunction.builder()
-                                      .mapper(eventHandler.mapper()).backupKey(eventHandler.fallback()).lenient(true)
+                                      .mapper(eventHandler.mapper())
+                                      .backupKey(eventHandler.fallback())
+                                      .lenient(true)
                                       .build();
     }
 
@@ -97,13 +99,17 @@ final class AnnotationHandler<T extends EventListener> {
     Single<JsonObject> execute(@NonNull EventMessage message) {
         logger.debug("Executing action '{}' in listener '{}'", message.getAction(), eventHandler.getClass());
         if (!eventHandler.getAvailableEvents().contains(message.getAction())) {
-            throw new StateException("Unsupported event " + message.getAction());
+            return Single.error(new StateException("Unsupported event " + message.getAction()));
         }
-        MethodInfo methodInfo = getMethodByAnnotation(eventHandler.getClass(), message.getAction());
-        Object response = ReflectionMethod.executeMethod(eventHandler, methodInfo.getMethod(), methodInfo.getOutput(),
-                                                         methodInfo.getParams().values(),
-                                                         parseMessage(message, methodInfo.getParams()));
-        return convertResult(response);
+        try {
+            MethodInfo methodInfo = getMethodByAnnotation(eventHandler.getClass(), message.getAction());
+            Object response = ReflectionMethod.executeMethod(eventHandler, methodInfo.getMethod(),
+                                                             methodInfo.getOutput(), methodInfo.getParams().values(),
+                                                             parseMessage(message, methodInfo.getParams()));
+            return convertResult(response);
+        } catch (Exception e) {
+            return Single.error(e);
+        }
     }
 
     @SuppressWarnings("unchecked")

@@ -1,15 +1,12 @@
 package com.nubeiot.edge.module.datapoint.cache;
 
-import java.util.Collections;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import com.nubeiot.core.cache.CacheInitializer;
 import com.nubeiot.core.cache.ClassGraphCache;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel;
-import com.nubeiot.iotdata.unit.DataType;
 
 import lombok.NonNull;
 
@@ -21,8 +18,8 @@ public final class DataPointCacheInitializer implements CacheInitializer<DataPoi
     public DataPointCacheInitializer init(EntityHandler context) {
         addBlockingCache(context, IDittoModel.CACHE_SYNC_CLASSES,
                          () -> new ClassGraphCache<EntityMetadata>().register(IDittoModel::find));
-        addBlockingCache(context, CACHE_DATA_TYPE,
-                         () -> Collections.unmodifiableSet(DataType.available().collect(Collectors.toSet())));
+        //        addBlockingCache(context, CACHE_DATA_TYPE,
+        //                         () -> Collections.unmodifiableSet(DataType.available().collect(Collectors.toSet())));
         return this;
     }
 

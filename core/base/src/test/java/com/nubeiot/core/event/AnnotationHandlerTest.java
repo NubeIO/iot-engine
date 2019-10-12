@@ -62,7 +62,7 @@ public class AnnotationHandlerTest {
         Method method = AnnotationHandler.getMethodByAnnotation(MockChildEventListener.class, EventAction.UPDATE)
                                          .getMethod();
         Assert.assertNotNull(method);
-        MCH.get().execute(EventMessage.initial(EventAction.UPDATE));
+        MCH.get().execute(EventMessage.initial(EventAction.UPDATE)).blockingGet();
     }
 
     @Test
@@ -75,12 +75,16 @@ public class AnnotationHandlerTest {
 
     @Test(expected = NubeException.class)
     public void test_data_is_null() {
-        MH.get().execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR, "Invalid status"));
+        MH.get()
+          .execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR, "Invalid status"))
+          .blockingGet();
     }
 
     @Test(expected = NubeException.class)
     public void test_invalid_status() {
-        MH.get().execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR, "Invalid status"));
+        MH.get()
+          .execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR, "Invalid status"))
+          .blockingGet();
     }
 
     @Test(expected = ImplementationError.class)
@@ -144,12 +148,12 @@ public class AnnotationHandlerTest {
 
     @Test(expected = RuntimeException.class)
     public void test_execute_method_that_throwException() {
-        MH.get().execute(createMsgRequestData(EventAction.UPDATE));
+        MH.get().execute(createMsgRequestData(EventAction.UPDATE)).blockingGet();
     }
 
     @Test(expected = StateException.class)
     public void test_execute_method_unsupported_event() {
-        MEH.get().execute(createMsgRequestData(EventAction.GET_LIST));
+        MEH.get().execute(createMsgRequestData(EventAction.GET_LIST)).blockingGet();
     }
 
     private EventMessage createMsgRequestData(EventAction action) {
