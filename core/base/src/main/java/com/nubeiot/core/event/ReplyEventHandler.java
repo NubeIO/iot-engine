@@ -29,6 +29,8 @@ public final class ReplyEventHandler implements Handler<AsyncResult<Message<Obje
     @Default
     private final String system = REPLY_SYSTEM;
     @NonNull
+    private final String address;
+    @NonNull
     private final EventAction action;
     @NonNull
     private final Consumer<EventMessage> success;
@@ -50,8 +52,8 @@ public final class ReplyEventHandler implements Handler<AsyncResult<Message<Obje
             return Single.error(new ServiceException("Service unavailable", hidden));
         }
         final EventMessage msg = EventMessage.tryParse(result.body());
-        logger.info("{}::Backend eventbus response | Action: {} | Status: {}", system, msg.getAction(),
-                    msg.getStatus());
+        logger.info("{}::Backend eventbus response | Address: {} | Action: {} | Status: {}", system, address,
+                    msg.getAction(), msg.getStatus());
         return Single.just(msg);
     }
 

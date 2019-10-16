@@ -54,7 +54,7 @@ public abstract class BaseSqlServiceTest extends BaseSqlTest {
                   RequestData reqData, CountDownLatch latch, JSONCompareMode mode, Customization... customizations) {
         final Async async = context.async();
         controller().request(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(action, reqData),
-                             ReplyEventHandler.builder().action(action).success(msg -> {
+                             ReplyEventHandler.builder().address(address).action(action).success(msg -> {
                                  latch.countDown();
                                  asserter(context, async, isSuccess, expected, msg, mode, customizations);
                              }).build());

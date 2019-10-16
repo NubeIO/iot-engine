@@ -46,7 +46,7 @@ public final class DataPointConfig implements IConfig {
     @JsonProperty(BuiltinData.NAME)
     private BuiltinData builtinData;
     @JsonProperty("__data_scheduler__")
-    private List<DataJobDefinition> jobs;
+    private List<JsonObject> jobs;
 
     static DataPointConfig def() {
         return new DataPointConfig(new LowdbMigration(), DataSyncConfig.def(), BuiltinData.def(),

@@ -1,7 +1,7 @@
 package com.nubeiot.edge.module.datapoint.model.ditto;
 
 import java.util.Collections;
-import java.util.function.Function;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import io.github.classgraph.ClassInfo;
@@ -30,8 +30,6 @@ import lombok.RequiredArgsConstructor;
 @SuppressWarnings("unchecked")
 public interface IDittoModel<V extends VertxPojo> extends EntitySyncData<V> {
 
-    String CACHE_SYNC_CLASSES = "CACHE_SYNC_CLASSES";
-
     static Class<IDittoModel> find(@NonNull EntityMetadata metadata) {
         final @NonNull JsonTable table = metadata.table();
         return ReflectionClass.stream(IDittoModel.class.getPackage().getName(), IDittoModel.class,
@@ -40,16 +38,15 @@ public interface IDittoModel<V extends VertxPojo> extends EntitySyncData<V> {
                               .orElseThrow(() -> new IllegalArgumentException("Not found sync model of " + table));
     }
 
-    static IDittoModel<VertxPojo> create(@NonNull Function<String, ?> sharedDataFunc, @NonNull EntityMetadata metadata,
-                                         @NonNull VertxPojo data) {
-        final ClassGraphCache<EntityMetadata> cache = (ClassGraphCache) sharedDataFunc.apply(CACHE_SYNC_CLASSES);
-        return ReflectionClass.createObject((Class<IDittoModel>) cache.get(metadata),
-                                            Collections.singletonMap(metadata.modelClass(), data));
+    static IDittoModel<VertxPojo> create(ClassGraphCache<EntityMetadata, IDittoModel> cache,
+                                         @NonNull EntityMetadata metadata, @NonNull VertxPojo data) {
+        Class<IDittoModel> clazz = Objects.isNull(cache) ? find(metadata) : cache.get(metadata);
+        return ReflectionClass.createObject(clazz, Collections.singletonMap(metadata.modelClass(), data));
     }
 
-    static IDittoModel<VertxPojo> create(@NonNull Function<String, ?> sharedDataFunc, @NonNull EntityMetadata metadata,
-                                         @NonNull JsonObject data) {
-        return create(sharedDataFunc, metadata, metadata.parseFromRequest(data));
+    static IDittoModel<VertxPojo> create(ClassGraphCache<EntityMetadata, IDittoModel> cache,
+                                         @NonNull EntityMetadata metadata, @NonNull JsonObject data) {
+        return create(cache, metadata, metadata.parseFromRequest(data));
     }
 
     static Predicate<ClassInfo> getClassInfoPredicate(@NonNull EntityMetadata metadata) {

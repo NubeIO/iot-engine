@@ -32,8 +32,7 @@ abstract class AbstractDataJobDefinition extends AbstractEnumType implements Dat
 
     static Stream<DataJobDefinition> def() {
         return ReflectionClass.stream(DataJobDefinition.class.getPackage().getName(), DataJobDefinition.class,
-                                      clazz -> clazz.isStandardClass() && !clazz.isAbstract())
-                              .map(ReflectionClass::createObject);
+                                      ReflectionClass.publicClass()).map(ReflectionClass::createObject);
     }
 
     DataJobDefinition wrap(@NonNull Map<String, Object> data) {

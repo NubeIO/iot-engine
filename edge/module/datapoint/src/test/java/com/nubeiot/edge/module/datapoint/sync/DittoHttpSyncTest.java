@@ -17,6 +17,7 @@ import io.vertx.ext.unit.TestContext;
 import com.nubeiot.auth.BasicCredential;
 import com.nubeiot.auth.CredentialType;
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.enums.Status;
@@ -83,7 +84,12 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
         };
         RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();
         assertRestByClient(context, HttpMethod.PATCH, "/api/s/device/" + UUID64.uuidToBase64(PrimaryKey.DEVICE), req,
-                           ExpectedResponse.builder().code(200).expected(expected).after(after).build());
+                           ExpectedResponse.builder()
+                                           .code(200)
+                                           .expected(expected)
+                                           .after(after)
+                                           .customizations(JsonHelper.ignore("resource.metadata.__data_sync__"))
+                                           .build());
     }
 
     @Test

@@ -62,7 +62,6 @@ abstract class AbstractDittoHttpSync extends AbstractEnumType implements ProxySe
                                       String endpoint, VertxPojo pojo, RequestData reqData) {
         return transporter().execute(endpoint, HttpMethod.PUT, reqData, false)
                             .map(DataTransferObject::body)
-                            .doOnSuccess(resp -> logger.debug("Sync success"))
                             .flatMapMaybe(resp -> entityHandler.syncSuccess(context, pojo, resp, type()))
                             .onErrorResumeNext(
                                 error -> (Maybe<JsonObject>) entityHandler.syncFailed(context, pojo, error, type()))
@@ -75,7 +74,7 @@ abstract class AbstractDittoHttpSync extends AbstractEnumType implements ProxySe
                                 }
                             })
                             .doOnError(err -> logger.error("Failed when updating synced status of resource {}", err,
-                                                           context.table().getName()));
+                                                           context.table().getName())).onErrorComplete();
     }
 
 }

@@ -52,14 +52,14 @@ abstract class JobTriggerCompositeService
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public @NonNull ComplexQueryExecutor<JobTriggerComposite> queryExecutor() {
-        return super.queryExecutor().viewPredicate(metadata -> true);
+    public JobTriggerMetadata context() {
+        return JobTriggerMetadata.INSTANCE;
     }
 
     @Override
-    public JobTriggerMetadata context() {
-        return JobTriggerMetadata.INSTANCE;
+    @SuppressWarnings("unchecked")
+    public @NonNull ComplexQueryExecutor<JobTriggerComposite> queryExecutor() {
+        return super.queryExecutor().viewPredicate(metadata -> true);
     }
 
     @Override
@@ -86,11 +86,8 @@ abstract class JobTriggerCompositeService
         }
         final DeliveryEvent event = createDeliveryEvent(composite, EventAction.GET_ONE);
         final EventController client = entityHandler().eventClient();
-        return Single.create(emitter -> client.request(event, replyHandler(EventAction.GET_ONE,
-                                                                           msg -> emitter.onSuccess(
-                                                                               onSuccess(composite, reqData, msg)),
-                                                                           error -> emitter.onError(
-                                                                               error.getThrowable()))));
+        return Single.create(emitter -> client.request(event, replyHandler(event, msg -> emitter.onSuccess(
+            onSuccess(composite, reqData, msg)), error -> emitter.onError(error.getThrowable()))));
     }
 
     @Override
@@ -105,7 +102,7 @@ abstract class JobTriggerCompositeService
         }
         final DeliveryEvent event = createDeliveryEvent(composite, EventAction.CREATE);
         final EventController client = entityHandler().eventClient();
-        return Single.create(emitter -> client.request(event, replyHandler(EventAction.CREATE, msg -> emitter.onSuccess(
+        return Single.create(emitter -> client.request(event, replyHandler(event, msg -> emitter.onSuccess(
             cudResponse(composite, reqData, msg)), error -> emitter.onError(error.getThrowable()))));
     }
 
@@ -135,11 +132,10 @@ abstract class JobTriggerCompositeService
                             .build();
     }
 
-    private ReplyEventHandler replyHandler(EventAction action, Consumer<EventMessage> response,
+    private ReplyEventHandler replyHandler(DeliveryEvent event, Consumer<EventMessage> response,
                                            Consumer<ErrorMessage> onError) {
         return ReplyEventHandler.builder()
-                                .system("EDGE_SCHEDULER")
-                                .action(action)
+                                .system("EDGE_SCHEDULER").address(event.getAddress()).action(event.getAction())
                                 .success(response)
                                 .error(onError)
                                 .build();

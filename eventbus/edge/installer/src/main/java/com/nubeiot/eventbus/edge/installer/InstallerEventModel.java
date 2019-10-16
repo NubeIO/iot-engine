@@ -14,7 +14,7 @@ public final class InstallerEventModel {
                                                                   .pattern(EventPattern.POINT_2_POINT)
                                                                   .local(true)
                                                                   .addEvents(EventAction.INIT, EventAction.CREATE,
-                                                                             EventAction.UPDATE, EventAction.HALT,
+                                                                             EventAction.UPDATE, EventAction.PATCH,
                                                                              EventAction.REMOVE)
                                                                   .build();
     public static final EventModel SERVICE_DEPLOYMENT_TRACKER = EventModel.builder()

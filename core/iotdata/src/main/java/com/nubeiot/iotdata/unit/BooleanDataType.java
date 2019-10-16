@@ -18,6 +18,10 @@ public final class BooleanDataType extends NumberDataType {
         super(dt.type(), dt.unit(), dt.category(), Optional.ofNullable(unitAlias).orElse(dt.alias()));
     }
 
+    BooleanDataType(@NonNull BooleanDataType dt) {
+        super(dt.type(), dt.unit(), dt.category(), dt.alias());
+    }
+
     @Override
     public Double parse(Object data) {
         if (Objects.isNull(data)) {

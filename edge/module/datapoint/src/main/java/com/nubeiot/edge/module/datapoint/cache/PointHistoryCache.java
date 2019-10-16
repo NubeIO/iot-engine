@@ -1,5 +1,7 @@
 package com.nubeiot.edge.module.datapoint.cache;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -33,6 +35,11 @@ public final class PointHistoryCache
     @Override
     public PointHistoryData remove(@NonNull UUID key) {
         return cache.remove(key);
+    }
+
+    @Override
+    public Map<UUID, PointHistoryData> all() {
+        return Collections.unmodifiableMap(cache);
     }
 
     @Override

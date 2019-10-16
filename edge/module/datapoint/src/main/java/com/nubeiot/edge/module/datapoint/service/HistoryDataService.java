@@ -23,7 +23,7 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
-import com.nubeiot.edge.module.datapoint.cache.DataPointCacheInitializer;
+import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.cache.PointHistoryCache;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistorySettingMetadata;
@@ -84,7 +84,7 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     }
 
     private Maybe<PointHistoryData> getLastHistory(@NonNull UUID point) {
-        final PointHistoryCache cache = entityHandler().sharedData(DataPointCacheInitializer.CACHE_HISTORIES_DATA);
+        final PointHistoryCache cache = entityHandler().sharedData(DataCacheInitializer.HISTORIES_DATA_CACHE);
         final PointHistoryData his = cache.get(point);
         if (Objects.nonNull(his)) {
             logger.info("Last history of point {} from cache", point);
@@ -116,7 +116,7 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     }
 
     private void putIntoCache(PointHistoryData his) {
-        final PointHistoryCache cache = entityHandler().sharedData(DataPointCacheInitializer.CACHE_HISTORIES_DATA);
+        final PointHistoryCache cache = entityHandler().sharedData(DataCacheInitializer.HISTORIES_DATA_CACHE);
         cache.add(his.getPoint(), his);
     }
 
