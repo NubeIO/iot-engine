@@ -1,4 +1,4 @@
 #!/bin/bash
 
-#docker build -t c-bacnet:latest .
-docker build -t py-bacnet:latest -f Dockerfile-pybacnet .
+docker build -t c-bacnet:latest ./cbacnet/
+docker build -t py-bacnet:latest ./pybacnet/
