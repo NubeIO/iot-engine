@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -54,7 +53,7 @@ class AppDeploymentService implements DeploymentService {
         return new JsonObject();
     }
 
-    @EventContractor(action = {EventAction.REMOVE, EventAction.HALT}, returnType = Single.class)
+    @EventContractor(action = {EventAction.REMOVE, EventAction.HALT})
     public JsonObject remove(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
         String deployId = preResult.getDeployId();
