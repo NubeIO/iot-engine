@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
-import io.reactivex.Observable;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -25,6 +24,7 @@ import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
+import com.nubeiot.core.utils.ExecutorHelpers;
 
 import lombok.Getter;
 
@@ -37,7 +37,6 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, UnitProvider<? extends Unit>> components = new LinkedHashMap<>();
     private final Map<Class<? extends Unit>, Consumer<? extends UnitContext>> afterSuccesses = new HashMap<>();
     private final Set<String> deployments = new HashSet<>();
-    private final Map<String, Object> sharedData = new HashMap<>();
     @Getter
     protected EventController eventController;
     @Getter
@@ -59,8 +58,6 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     public void start(Future<Void> future) {
         this.start();
-        this.vertx.getDelegate().sharedData().getLocalMap(getSharedKey()).putAll(sharedData);
-        this.sharedData.clear();
         this.installUnits(future);
     }
 
@@ -74,7 +71,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
 
     @Override
     public final Container addSharedData(String key, Object data) {
-        this.sharedData.put(key, data);
+        this.vertx.sharedData().getLocalMap(getSharedKey()).put(key, data);
         return this;
     }
 
@@ -103,20 +100,25 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
             future.complete();
             return;
         }
-        Observable.fromIterable(components.entrySet()).flatMapSingle(entry -> {
-            Unit unit = entry.getValue().get().registerSharedKey(getSharedKey());
-            JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
-            DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
-            return vertx.rxDeployVerticle(unit, options)
-                        .doOnSuccess(deployId -> succeed(unit, deployId))
-                        .doOnError(t -> logger.error("Cannot start unit verticle {}", t, unit.getClass().getName()));
-        }).toList().subscribe(ignored -> {
-            if (Objects.nonNull(successHandler)) {
-                this.successHandler.handle(null);
-            }
-            logger.info("Deployed {} verticle(s)...", components.size());
-            future.complete();
-        }, throwable -> fail(future, throwable));
+        ExecutorHelpers.blocking(vertx.getDelegate(), components::entrySet)
+                       .flattenAsObservable(s -> s)
+                       .flatMapSingle(entry -> {
+                           Unit unit = entry.getValue().get().registerSharedKey(getSharedKey());
+                           JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
+                           DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
+                           return vertx.rxDeployVerticle(unit, options)
+                                       .doOnSuccess(deployId -> succeed(unit, deployId))
+                                       .doOnError(t -> logger.error("Cannot start unit verticle {}", t,
+                                                                    unit.getClass().getName()));
+                       })
+                       .toList()
+                       .subscribe(ignored -> {
+                           if (Objects.nonNull(successHandler)) {
+                               this.successHandler.handle(null);
+                           }
+                           logger.info("Deployed {} verticle(s)...", ignored.size());
+                           future.complete();
+                       }, throwable -> fail(future, throwable));
     }
 
     @Override

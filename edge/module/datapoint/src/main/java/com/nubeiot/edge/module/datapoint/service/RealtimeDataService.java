@@ -92,7 +92,7 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
                                                  .build();
         return Single.<EventMessage>create(emitter -> {
             client.request(event, ReplyEventHandler.builder()
-                                                   .action(EventAction.GET_ONE)
+                                                   .action(EventAction.GET_ONE).address(event.getAddress())
                                                    .success(emitter::onSuccess)
                                                    .exception(emitter::onError)
                                                    .build());

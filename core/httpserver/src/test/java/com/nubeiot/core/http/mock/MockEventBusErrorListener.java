@@ -8,6 +8,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
 public class MockEventBusErrorListener extends MockEventBusListener {
 
@@ -35,7 +36,7 @@ public class MockEventBusErrorListener extends MockEventBusListener {
 
     @EventContractor(action = EventAction.UPDATE)
     public JsonObject update(RequestData data) {
-        throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "invalid");
+        throw new NubeException(ErrorCode.INVALID_ARGUMENT, "invalid");
     }
 
 }

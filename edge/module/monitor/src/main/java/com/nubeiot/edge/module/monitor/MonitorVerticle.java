@@ -10,6 +10,7 @@ import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
+import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.edge.module.monitor.service.MonitorService;
 
 public final class MonitorVerticle extends ContainerVerticle {
@@ -25,13 +26,14 @@ public final class MonitorVerticle extends ContainerVerticle {
         if (!discovery.isEnabled()) {
             return;
         }
-        Observable.fromIterable(MonitorService.createServices())
-                  .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                         .ifPresent(
-                                             service -> getEventController().register(service.address(), service)))
-                  .filter(s -> Objects.nonNull(s.definitions()))
-                  .flatMap(s -> registerEndpoint(discovery, s))
-                  .subscribe();
+        ExecutorHelpers.blocking(vertx.getDelegate(), MonitorService::createServices)
+                       .flattenAsObservable(s -> s)
+                       .doOnEach(s -> Optional.ofNullable(s.getValue())
+                                              .ifPresent(
+                                                  service -> getEventController().register(service.address(), service)))
+                       .filter(s -> Objects.nonNull(s.definitions()))
+                       .flatMap(s -> registerEndpoint(discovery, s))
+                       .subscribe();
     }
 
     private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, MonitorService s) {

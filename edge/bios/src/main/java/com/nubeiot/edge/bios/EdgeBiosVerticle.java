@@ -13,7 +13,7 @@ import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 import lombok.NonNull;
 
-public class EdgeBiosVerticle extends InstallerVerticle {
+public class EdgeBiosVerticle extends InstallerVerticle<BiosInstallerService> {
 
     @Override
     protected Class<? extends InstallerEntityHandler> entityHandlerClass() {
@@ -32,7 +32,7 @@ public class EdgeBiosVerticle extends InstallerVerticle {
     }
 
     @Override
-    protected Supplier<Set<? extends InstallerService>> services(@NonNull InstallerEntityHandler handler) {
+    protected Supplier<Set<BiosInstallerService>> services(@NonNull InstallerEntityHandler handler) {
         return () -> InstallerService.createServices(handler, BiosInstallerService.class);
     }
 

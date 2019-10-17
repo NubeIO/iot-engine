@@ -46,7 +46,7 @@ public final class DataPointConfig implements IConfig {
     @JsonProperty(BuiltinData.NAME)
     private BuiltinData builtinData;
     @JsonProperty("__data_scheduler__")
-    private List<DataJobDefinition> jobs;
+    private List<JsonObject> jobs;
 
     static DataPointConfig def() {
         return new DataPointConfig(new LowdbMigration(), DataSyncConfig.def(), BuiltinData.def(),
@@ -120,18 +120,18 @@ public final class DataPointConfig implements IConfig {
             return new DataSyncConfig("DITTO", true, credential, cfg);
         }
 
+        static JsonObject update(@NonNull JsonObject cfg, @NonNull String version, @NonNull UUID deviceId) {
+            JsonObject userAgent = new JsonObject().put("userAgent", USER_AGENT + "/" + version + " " +
+                                                                     UUID64.uuidToBase64(deviceId));
+            return cfg.mergeIn(new JsonObject().put("clientConfig", userAgent), true);
+        }
+
         @Override
         public String key() { return NAME; }
 
         @Override
         public Class<? extends IConfig> parent() {
             return DataPointConfig.class;
-        }
-
-        static JsonObject update(@NonNull JsonObject cfg, @NonNull String version, @NonNull UUID deviceId) {
-            JsonObject userAgent = new JsonObject().put("userAgent", USER_AGENT + "/" + version + " " +
-                                                                     UUID64.uuidToBase64(deviceId));
-            return cfg.mergeIn(new JsonObject().put("clientConfig", userAgent), true);
         }
 
     }
@@ -142,7 +142,7 @@ public final class DataPointConfig implements IConfig {
 
         static final String NAME = "__builtin_data__";
 
-        public static BuiltinData def() {
+        static BuiltinData def() {
             final BuiltinData bd = new BuiltinData();
             bd.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.available()
                                                                            .map(dt -> new MeasureUnit(dt.toJson()))

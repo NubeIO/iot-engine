@@ -356,6 +356,10 @@ public final class Reflections {
             return null;
         }
 
+        public static <T> Stream<Class<T>> stream(String packageName, Class<T> parentClass) {
+            return stream(packageName, parentClass, clazz -> true);
+        }
+
         /**
          * Scan all classes in given package that matches annotation and sub class given parent class.
          *
@@ -366,14 +370,9 @@ public final class Reflections {
          * @param annotationClass Given annotation type class {@code @Target(ElementType.TYPE_USE)}
          * @return List of matching class
          */
-        public static <T> List<Class<T>> find(String packageName, Class<T> parentClass,
-                                              @NonNull Class<? extends Annotation> annotationClass) {
-            return stream(packageName, parentClass, clazz -> clazz.hasAnnotation(annotationClass.getName())).collect(
-                Collectors.toList());
-        }
-
-        public static <T> Stream<Class<T>> stream(String packageName, Class<T> parentClass) {
-            return stream(packageName, parentClass, clazz -> true);
+        public static <T> Stream<Class<T>> stream(String packageName, Class<T> parentClass,
+                                                  @NonNull Class<? extends Annotation> annotationClass) {
+            return stream(packageName, parentClass, clazz -> clazz.hasAnnotation(annotationClass.getName()));
         }
 
         public static <T> Stream<Class<T>> stream(String packageName, Class<T> parentClass,

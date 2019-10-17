@@ -34,7 +34,7 @@ public class EventMessageJob implements Job {
     public void execute() {
         if (jobStep.getPattern() == EventPattern.REQUEST_RESPONSE) {
             ReplyEventHandler handler = ReplyEventHandler.builder()
-                                                         .system("EVENT-MESSAGE-JOB")
+                                                         .system("EVENT-MESSAGE-JOB").address(jobStep.getAddress())
                                                          .action(payload.getAction())
                                                          .success(callback(postJobStep,
                                                                            msg -> logger.info("Receive message {}",

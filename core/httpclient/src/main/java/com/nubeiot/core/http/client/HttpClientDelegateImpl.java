@@ -16,6 +16,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
+import io.vertx.reactivex.RxHelper;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
@@ -58,7 +59,8 @@ final class HttpClientDelegateImpl extends ClientDelegate implements HttpClientD
             }
             HttpClientWriter.create(cfg.getHttpClientWriterClass()).apply(req, reqData).end();
         }).doOnSuccess(res -> HttpClientRegistry.getInstance().remove(hostInfo, false))
-          .doOnError(err -> HttpClientRegistry.getInstance().remove(hostInfo, false));
+          .doOnError(err -> HttpClientRegistry.getInstance().remove(hostInfo, false))
+          .subscribeOn(RxHelper.blockingScheduler(getVertx()));
     }
 
     @Override

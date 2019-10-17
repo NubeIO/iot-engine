@@ -1,34 +1,46 @@
 package com.nubeiot.edge.module.datapoint.sync;
 
+import java.util.Optional;
+
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.auth.Credential;
+import com.nubeiot.core.cache.ClassGraphCache;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.DesiredException;
 import com.nubeiot.core.http.client.HttpClientDelegate;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.core.sql.service.EntityService;
+import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.core.utils.UUID64;
+import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 
 import lombok.NonNull;
 
 public final class DittoHttpSync extends AbstractDittoHttpSync
-    implements EntityPostService<HttpClientDelegate, IDittoModel<? extends VertxPojo>> {
+    implements EntityPostService<HttpClientDelegate, IDittoModel<VertxPojo>> {
 
     DittoHttpSync(Vertx vertx, JsonObject clientConfig, Credential credential) {
         super(vertx, clientConfig, credential);
     }
 
     @Override
-    public IDittoModel<?> transform(@NonNull EntityService service, VertxPojo data) {
-        return IDittoModel.create(service.context(), data.toJson());
+    public @NonNull Maybe<IDittoModel<VertxPojo>> transform(@NonNull EntityService service, VertxPojo data) {
+        ClassGraphCache<EntityMetadata, IDittoModel> cache = service.entityHandler()
+                                                                    .sharedData(DataCacheInitializer.SYNC_CONFIG_CACHE);
+        return ExecutorHelpers.blocking(getVertx(), () -> Optional.ofNullable(
+            IDittoModel.create(cache, service.context(), data.toJson())))
+                              .filter(Optional::isPresent)
+                              .map(Optional::get);
     }
 
     @Override
@@ -41,7 +53,19 @@ public final class DittoHttpSync extends AbstractDittoHttpSync
             logger.error("Not yet supported sync with action = " + EventAction.REMOVE);
             return;
         }
-        doSyncOnSuccess(service, action, transform(service, data), requestData).subscribe();
+        transform(service, data).map(syncData -> doSyncOnSuccess(service, action, syncData, requestData)).subscribe();
+    }
+
+    @Override
+    public Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action,
+                                             IDittoModel<VertxPojo> syncData, @NonNull RequestData requestData) {
+        final @NonNull EntitySyncHandler entityHandler = (EntitySyncHandler) service.entityHandler();
+        final String thingId = Strings.format("com.nubeio.{0}:{1}",
+                                              entityHandler.sharedData(DataPointIndex.CUSTOMER_CODE),
+                                              UUID64.uuid64ToUuidStr(
+                                                  entityHandler.sharedData(DataPointIndex.DEVICE_ID)));
+        final RequestData reqData = RequestData.builder().headers(createRequestHeader()).body(syncData.body()).build();
+        return doSyncOnSuccess(entityHandler, service.context(), syncData.endpoint(thingId), syncData.get(), reqData);
     }
 
     @Override
@@ -50,20 +74,12 @@ public final class DittoHttpSync extends AbstractDittoHttpSync
             return;
         }
         if (logger.isDebugEnabled()) {
+            if (throwable instanceof DesiredException) {
+                logger.debug("Not sync due to previous error", throwable);
+                return;
+            }
             logger.error("Not sync due to previous error", throwable);
         }
-    }
-
-    @Override
-    public Maybe<JsonObject> doSyncOnSuccess(@NonNull EntityService service, @NonNull EventAction action,
-                                             IDittoModel<?> syncData, @NonNull RequestData requestData) {
-        final @NonNull EntitySyncHandler entityHandler = (EntitySyncHandler) service.entityHandler();
-        final String thingId = Strings.format("com.nubeio.{0}:{1}",
-                                              entityHandler.sharedData(DataPointIndex.CUSTOMER_CODE),
-                                              UUID64.uuid64ToUuidStr(
-                                                  entityHandler.sharedData(DataPointIndex.DEVICE_ID)));
-        final RequestData reqData = RequestData.builder().headers(createRequestHeader()).body(syncData.body()).build();
-        return doSyncOnSuccess(entityHandler, service.context(), syncData.endpoint(thingId), syncData.get(), reqData);
     }
 
 }

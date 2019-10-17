@@ -13,6 +13,7 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
+import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.edge.module.scheduler.service.SchedulerService;
 import com.nubeiot.iotdata.scheduler.model.DefaultCatalog;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
@@ -47,13 +48,15 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     private void successHandler() {
         EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
         ServiceDiscoveryController discovery = microCtx.getLocalController();
-        Observable.fromIterable(SchedulerService.createServices(entityHandler, schedulerCtx))
-                  .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                         .ifPresent(service -> controller.register(service.address(), service)))
-                  .filter(s -> Objects.nonNull(s.definitions()))
-                  .flatMap(s -> Observable.fromIterable(s.definitions())
-                                          .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e)))
-                  .subscribe();
+        ExecutorHelpers.blocking(getVertx(), () -> SchedulerService.createServices(entityHandler, schedulerCtx))
+                       .flattenAsObservable(s -> s)
+                       .doOnEach(s -> Optional.ofNullable(s.getValue())
+                                              .ifPresent(service -> controller.register(service.address(), service)))
+                       .filter(s -> Objects.nonNull(s.definitions()))
+                       .flatMap(s -> Observable.fromIterable(s.definitions())
+                                               .flatMapSingle(
+                                                   e -> discovery.addEventMessageRecord(s.api(), s.address(), e)))
+                       .subscribe();
         //TODO Need to merge with above
         entityHandler.register(schedulerCtx).subscribe();
     }

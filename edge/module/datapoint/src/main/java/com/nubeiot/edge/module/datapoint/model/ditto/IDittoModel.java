@@ -1,6 +1,7 @@
 package com.nubeiot.edge.module.datapoint.model.ditto;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import io.github.classgraph.ClassInfo;
@@ -9,10 +10,12 @@ import io.github.classgraph.TypeArgument;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.cache.ClassGraphCache;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.HasSyncAudit;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.EntityPostService.EntitySyncData;
+import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
@@ -24,25 +27,26 @@ import lombok.RequiredArgsConstructor;
  *
  * @param <V> Pojo class that represents for data entity
  */
+@SuppressWarnings("unchecked")
 public interface IDittoModel<V extends VertxPojo> extends EntitySyncData<V> {
 
-    static IDittoModel create(@NonNull EntityMetadata metadata, @NonNull VertxPojo data) {
+    static Class<IDittoModel> find(@NonNull EntityMetadata metadata) {
+        final @NonNull JsonTable table = metadata.table();
         return ReflectionClass.stream(IDittoModel.class.getPackage().getName(), IDittoModel.class,
                                       ReflectionClass.publicClass().and(getClassInfoPredicate(metadata)))
-                              .map(c -> ReflectionClass.createObject(c, Collections.singletonMap(metadata.modelClass(),
-                                                                                                 data)))
                               .findFirst()
-                              .orElseThrow(() -> new IllegalArgumentException("Not found " + metadata.table()));
+                              .orElseThrow(() -> new IllegalArgumentException("Not found sync model of " + table));
     }
 
-    static IDittoModel create(@NonNull EntityMetadata metadata, @NonNull JsonObject data) {
-        return ReflectionClass.stream(IDittoModel.class.getPackage().getName(), IDittoModel.class,
-                                      ReflectionClass.publicClass().and(getClassInfoPredicate(metadata)))
-                              .map(c -> ReflectionClass.createObject(c, Collections.singletonMap(metadata.modelClass(),
-                                                                                                 metadata.parseFromRequest(
-                                                                                                     data))))
-                              .findFirst()
-                              .orElseThrow(() -> new IllegalArgumentException("Not found " + metadata.table()));
+    static IDittoModel<VertxPojo> create(ClassGraphCache<EntityMetadata, IDittoModel> cache,
+                                         @NonNull EntityMetadata metadata, @NonNull VertxPojo data) {
+        Class<IDittoModel> clazz = Objects.isNull(cache) ? find(metadata) : cache.get(metadata);
+        return ReflectionClass.createObject(clazz, Collections.singletonMap(metadata.modelClass(), data));
+    }
+
+    static IDittoModel<VertxPojo> create(ClassGraphCache<EntityMetadata, IDittoModel> cache,
+                                         @NonNull EntityMetadata metadata, @NonNull JsonObject data) {
+        return create(cache, metadata, metadata.parseFromRequest(data));
     }
 
     static Predicate<ClassInfo> getClassInfoPredicate(@NonNull EntityMetadata metadata) {

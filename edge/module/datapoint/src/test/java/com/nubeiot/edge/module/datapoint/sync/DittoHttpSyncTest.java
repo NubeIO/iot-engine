@@ -17,6 +17,7 @@ import io.vertx.ext.unit.TestContext;
 import com.nubeiot.auth.BasicCredential;
 import com.nubeiot.auth.CredentialType;
 import com.nubeiot.core.TestHelper;
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.enums.Status;
@@ -45,7 +46,8 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
     @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
-        ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);
+        ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.INFO);
+        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.INFO);
     }
 
     @Override
@@ -82,7 +84,12 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
         };
         RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();
         assertRestByClient(context, HttpMethod.PATCH, "/api/s/device/" + UUID64.uuidToBase64(PrimaryKey.DEVICE), req,
-                           ExpectedResponse.builder().code(200).expected(expected).after(after).build());
+                           ExpectedResponse.builder()
+                                           .code(200)
+                                           .expected(expected)
+                                           .after(after)
+                                           .customizations(JsonHelper.ignore("resource.metadata.__data_sync__"))
+                                           .build());
     }
 
     @Test
@@ -157,8 +164,8 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                                           "\"sync_audit\":{\"status\":\"INITIAL\"," +
                                           "\"data\":{\"message\":\"Not yet synced modified resource with record " +
                                           "revision 2\"}}}");
-        assertRestByClient(context, HttpMethod.PATCH, "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data?_audit",
-                           req1,
+        assertRestByClient(context, HttpMethod.PATCH,
+                           "/api/s/point/" + PrimaryKey.P_BACNET_SWITCH + "/data?_audit=true", req1,
                            ExpectedResponse.builder()
                                            .code(200)
                                            .expected(new JsonObject().put("action", EventAction.PATCH)

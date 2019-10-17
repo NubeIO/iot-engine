@@ -1,13 +1,13 @@
 package com.nubeiot.edge.module.datapoint;
 
 import org.junit.Test;
-import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.ExpectedResponse;
@@ -34,8 +34,8 @@ public class DeviceVerticleTest extends BaseDataPointVerticleTest {
                                             .put("data_version", "0.0.2")
                                             .put("metadata", new JsonObject().put(DataSyncConfig.NAME, syncConfig));
         assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + PrimaryKey.DEVICE, 200, expected,
-                           new Customization("metadata.__data_sync__.clientConfig.hostInfo", (o1, o2) -> true),
-                           new Customization("metadata.__data_sync__.clientConfig.options", (o1, o2) -> true));
+                           JsonHelper.ignore("metadata.__data_sync__.clientConfig.hostInfo"),
+                           JsonHelper.ignore("metadata.__data_sync__.clientConfig.options"));
     }
 
     @Test

@@ -21,10 +21,12 @@ import io.vertx.core.logging.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData.SerializerFunction;
 import com.nubeiot.core.event.EventContractor.Param;
+import com.nubeiot.core.exceptions.DesiredException;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.core.exceptions.StateException;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Reflections;
@@ -44,7 +46,9 @@ final class AnnotationHandler<T extends EventListener> {
     AnnotationHandler(T eventHandler) {
         this.eventHandler = eventHandler;
         this.func = SerializerFunction.builder()
-                                      .mapper(eventHandler.mapper()).backupKey(eventHandler.fallback()).lenient(true)
+                                      .mapper(eventHandler.mapper())
+                                      .backupKey(eventHandler.fallback())
+                                      .lenient(true)
                                       .build();
     }
 
@@ -94,16 +98,22 @@ final class AnnotationHandler<T extends EventListener> {
         return (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); };
     }
 
-    Single<JsonObject> execute(@NonNull EventMessage message) {
-        logger.debug("Executing action '{}' in listener '{}'", message.getAction(), eventHandler.getClass());
-        if (!eventHandler.getAvailableEvents().contains(message.getAction())) {
-            throw new StateException("Unsupported event " + message.getAction());
+    Single<EventMessage> execute(@NonNull EventMessage message) {
+        final EventAction action = message.getAction();
+        eventHandler.logger().debug("Executing action '{}' in listener '{}'", action, eventHandler.getClass());
+        try {
+            if (!eventHandler.getAvailableEvents().contains(action)) {
+                throw new StateException("Unsupported event " + action);
+            }
+            MethodInfo methodInfo = getMethodByAnnotation(eventHandler.getClass(), action);
+            Object response = ReflectionMethod.executeMethod(eventHandler, methodInfo.getMethod(),
+                                                             methodInfo.getOutput(), methodInfo.getParams().values(),
+                                                             parseMessage(message, methodInfo.getParams()));
+            return convertResult(response).map(data -> EventMessage.success(action, data))
+                                          .onErrorReturn(t -> convertError(t, action, eventHandler.logger()));
+        } catch (Exception e) {
+            return Single.just(convertError(e, action, eventHandler.logger()));
         }
-        MethodInfo methodInfo = getMethodByAnnotation(eventHandler.getClass(), message.getAction());
-        Object response = ReflectionMethod.executeMethod(eventHandler, methodInfo.getMethod(), methodInfo.getOutput(),
-                                                         methodInfo.getParams().values(),
-                                                         parseMessage(message, methodInfo.getParams()));
-        return convertResult(response);
     }
 
     @SuppressWarnings("unchecked")
@@ -168,6 +178,17 @@ final class AnnotationHandler<T extends EventListener> {
         } catch (IllegalArgumentException e) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Message format is invalid", new HiddenException(e));
         }
+    }
+
+    private EventMessage convertError(Throwable throwable, EventAction action, Logger logger) {
+        if (throwable instanceof DesiredException) {
+            logger.debug("Failed when handle event {}", throwable, action);
+        } else {
+            logger.error("Failed when handle event {}", throwable, action);
+        }
+        Throwable t = NubeExceptionConverter.friendly(throwable, throwable instanceof ImplementationError ?
+                                                                 "No reply from event " + action : null);
+        return EventMessage.error(action, t);
     }
 
 }

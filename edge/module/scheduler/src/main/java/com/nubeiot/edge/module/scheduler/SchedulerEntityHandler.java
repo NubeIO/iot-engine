@@ -73,10 +73,8 @@ class SchedulerEntityHandler extends AbstractEntityHandler
                              .viewPredicate(metadata -> true)
                              .findMany(reqData)
                              .map(jobTrigger -> event((JobTriggerComposite) jobTrigger, schedulerContext))
-                             .doOnEach(notification -> Optional.ofNullable(
-                                 ((Notification<DeliveryEvent>) notification).getValue())
-                                                               .ifPresent(
-                                                                   event -> client.request(event, replyHandler())));
+                             .doOnEach(no -> Optional.ofNullable(((Notification<DeliveryEvent>) no).getValue())
+                                                     .ifPresent(event -> client.request(event, replyHandler(event))));
     }
 
     private DeliveryEvent event(@NonNull JobTriggerComposite composite, @NonNull QuartzSchedulerContext context) {
@@ -92,10 +90,9 @@ class SchedulerEntityHandler extends AbstractEntityHandler
                             .build();
     }
 
-    private ReplyEventHandler replyHandler() {
+    private ReplyEventHandler replyHandler(DeliveryEvent event) {
         return ReplyEventHandler.builder()
-                                .system("EDGE_SCHEDULER")
-                                .action(EventAction.CREATE)
+                                .system("EDGE_SCHEDULER").address(event.getAddress()).action(event.getAction())
                                 .success(msg -> logger.info(msg.toJson()))
                                 .error(error -> logger.error(error.toJson()))
                                 .build();

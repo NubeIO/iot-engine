@@ -70,6 +70,13 @@ public interface DataType extends EnumType, Cloneable {
                        null).setAlias(label);
     }
 
+    static DataType clone(@NonNull DataType type) {
+        if (type instanceof BooleanDataType) {
+            return new BooleanDataType((BooleanDataType) type);
+        }
+        return new NumberDataType(type);
+    }
+
     @NonNull
     @JsonProperty(value = "symbol")
     String unit();

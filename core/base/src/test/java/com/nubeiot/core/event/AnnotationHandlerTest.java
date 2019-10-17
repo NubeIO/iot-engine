@@ -52,9 +52,9 @@ public class AnnotationHandlerTest {
                                          .getMethod();
         Assert.assertNotNull(method);
         Assert.assertEquals("customOutputObject", method.getName());
-        Single<JsonObject> r = MH.get().execute(createMsgRequestData(EventAction.CREATE));
+        Single<EventMessage> r = MH.get().execute(createMsgRequestData(EventAction.CREATE));
         Assert.assertNotNull(r);
-        Assert.assertEquals("install", r.blockingGet().getString("key"));
+        Assert.assertEquals("install", r.blockingGet().getData().getString("key"));
     }
 
     @Test(expected = StateException.class)
@@ -62,7 +62,9 @@ public class AnnotationHandlerTest {
         Method method = AnnotationHandler.getMethodByAnnotation(MockChildEventListener.class, EventAction.UPDATE)
                                          .getMethod();
         Assert.assertNotNull(method);
-        MCH.get().execute(EventMessage.initial(EventAction.UPDATE));
+        final EventMessage msg = MCH.get().execute(EventMessage.initial(EventAction.UPDATE)).blockingGet();
+        Assert.assertTrue(msg.isError());
+        throw msg.getError().getThrowable();
     }
 
     @Test
@@ -75,12 +77,22 @@ public class AnnotationHandlerTest {
 
     @Test(expected = NubeException.class)
     public void test_data_is_null() {
-        MH.get().execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR, "Invalid status"));
+        final EventMessage msg = MH.get()
+                                   .execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR,
+                                                               "Invalid status"))
+                                   .blockingGet();
+        Assert.assertTrue(msg.isError());
+        throw msg.getError().getThrowable();
     }
 
     @Test(expected = NubeException.class)
     public void test_invalid_status() {
-        MH.get().execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR, "Invalid status"));
+        final EventMessage msg = MH.get()
+                                   .execute(EventMessage.error(EventAction.GET_LIST, ErrorCode.EVENT_ERROR,
+                                                               "Invalid status"))
+                                   .blockingGet();
+        Assert.assertTrue(msg.isError());
+        throw msg.getError().getThrowable();
     }
 
     @Test(expected = ImplementationError.class)
@@ -105,23 +117,23 @@ public class AnnotationHandlerTest {
 
     @Test
     public void test_execute_method_contractor_return_other() {
-        Single<JsonObject> r = MH.get().execute(createMsgRequestData(EventAction.CREATE));
+        Single<EventMessage> r = MH.get().execute(createMsgRequestData(EventAction.CREATE));
         Assert.assertNotNull(r);
-        Assert.assertEquals("install", r.blockingGet().getString("key"));
+        Assert.assertEquals("install", r.blockingGet().getData().getString("key"));
     }
 
     @Test
     public void test_execute_method_contractor_return_single_json() {
-        Single<JsonObject> r = MH.get().execute(createMsgRequestData(EventAction.INIT));
+        Single<EventMessage> r = MH.get().execute(createMsgRequestData(EventAction.INIT));
         Assert.assertNotNull(r);
-        Assert.assertEquals("init", r.blockingGet().getString("key"));
+        Assert.assertEquals("init", r.blockingGet().getData().getString("key"));
     }
 
     @Test
     public void test_execute_method_contractor_return_single_other() {
-        Single<JsonObject> r = MH.get().execute(createMsgRequestData(EventAction.GET_LIST));
+        Single<EventMessage> r = MH.get().execute(createMsgRequestData(EventAction.GET_LIST));
         Assert.assertNotNull(r);
-        Assert.assertEquals("list", r.blockingGet().getString("key"));
+        Assert.assertEquals("list", r.blockingGet().getData().getString("key"));
     }
 
     @Test
@@ -137,19 +149,23 @@ public class AnnotationHandlerTest {
 
     @Test
     public void test_execute_method_with_multiple_contractor() {
-        Single<JsonObject> r = MH.get().execute(createMsgRequestData(EventAction.REMOVE));
+        Single<EventMessage> r = MH.get().execute(createMsgRequestData(EventAction.REMOVE));
         Assert.assertNotNull(r);
-        Assert.assertEquals("delete", r.blockingGet().getString("key"));
+        Assert.assertEquals("delete", r.blockingGet().getData().getString("key"));
     }
 
     @Test(expected = RuntimeException.class)
     public void test_execute_method_that_throwException() {
-        MH.get().execute(createMsgRequestData(EventAction.UPDATE));
+        final EventMessage msg = MH.get().execute(createMsgRequestData(EventAction.UPDATE)).blockingGet();
+        Assert.assertTrue(msg.isError());
+        throw msg.getError().getThrowable();
     }
 
     @Test(expected = StateException.class)
     public void test_execute_method_unsupported_event() {
-        MEH.get().execute(createMsgRequestData(EventAction.GET_LIST));
+        final EventMessage msg = MEH.get().execute(createMsgRequestData(EventAction.GET_LIST)).blockingGet();
+        Assert.assertTrue(msg.isError());
+        throw msg.getError().getThrowable();
     }
 
     private EventMessage createMsgRequestData(EventAction action) {
@@ -158,22 +174,23 @@ public class AnnotationHandlerTest {
 
     @Test
     public void test_no_param() {
-        Single<JsonObject> r = MPH.get().execute(EventMessage.initial(EventAction.GET_LIST));
-        Assert.assertEquals("hello", r.blockingGet().getString("data"));
+        Single<EventMessage> r = MPH.get().execute(EventMessage.initial(EventAction.GET_LIST));
+        Assert.assertEquals("hello", r.blockingGet().getData().getString("data"));
     }
 
     @Test
     public void test_one_javaTypeParam() {
-        Single<JsonObject> r = MPH.get()
-                                  .execute(EventMessage.initial(EventAction.GET_ONE, new JsonObject().put("id", "1")));
-        Assert.assertEquals(1, r.blockingGet().getInteger("data").intValue());
+        Single<EventMessage> r = MPH.get()
+                                    .execute(
+                                        EventMessage.initial(EventAction.GET_ONE, new JsonObject().put("id", "1")));
+        Assert.assertEquals(1, r.blockingGet().getData().getInteger("data").intValue());
     }
 
     @Test
     public void test_one_refParam() {
         EventMessage msg = EventMessage.initial(EventAction.CREATE,
                                                 RequestData.builder().body(new JsonObject().put("id", 1)).build());
-        JsonObject r = MPH.get().execute(msg).blockingGet();
+        JsonObject r = MPH.get().execute(msg).blockingGet().getData();
         RequestData from = JsonData.from(r, RequestData.class);
         Assert.assertEquals(1, from.body().getInteger("id").intValue());
     }
@@ -182,7 +199,7 @@ public class AnnotationHandlerTest {
     public void test_one_override_RefParam() {
         EventMessage msg = EventMessage.initial(EventAction.PATCH,
                                                 RequestData.builder().body(new JsonObject().put("key", "1")).build());
-        JsonObject r = MPH.get().execute(msg).blockingGet();
+        JsonObject r = MPH.get().execute(msg).blockingGet().getData();
         RequestData from = JsonData.from(r, RequestData.class);
         Assert.assertEquals("1", from.body().getString("key"));
     }
@@ -195,7 +212,7 @@ public class AnnotationHandlerTest {
                                                                .build()
                                                                .toJson());
         EventMessage msg = EventMessage.initial(EventAction.UPDATE, d);
-        JsonObject r = MPH.get().execute(msg).blockingGet();
+        JsonObject r = MPH.get().execute(msg).blockingGet().getData();
         MockParam mock = r.getJsonObject("param").mapTo(MockParam.class);
         RequestData from = JsonData.from(r.getValue("request"), RequestData.class);
         Assert.assertEquals(1, mock.getId());
@@ -211,7 +228,7 @@ public class AnnotationHandlerTest {
                                                                .build()
                                                                .toJson());
         EventMessage msg = EventMessage.initial(EventAction.REMOVE, d);
-        JsonObject r = MPH.get().execute(msg).blockingGet();
+        JsonObject r = MPH.get().execute(msg).blockingGet().getData();
         Assert.assertEquals(10, r.getValue("id"));
         RequestData from = JsonData.from(r.getValue("request"), RequestData.class);
         Assert.assertEquals("o", from.body().getString("o"));
@@ -221,7 +238,7 @@ public class AnnotationHandlerTest {
     public void test_collectionParam() {
         JsonObject d = new JsonObject().put("list", Arrays.asList("one", "two"));
         EventMessage msg = EventMessage.initial(EventAction.HALT, d);
-        JsonObject r = MPH.get().execute(msg).blockingGet();
+        JsonObject r = MPH.get().execute(msg).blockingGet().getData();
         Assert.assertEquals("one", r.getString("one"));
         Assert.assertEquals("two", r.getString("two"));
     }
@@ -244,14 +261,13 @@ public class AnnotationHandlerTest {
     @Test
     public void test_json_param() throws JSONException {
         JsonObject data = new JsonObject(
-            "{\"metadata" + "\":{\"service_name\":\"bios-installer\",\"version\":\"1.0.0-SNAPSHOT\"," + "\"state" +
-            "\":\"ENABLED\"}," + "\"appConfig" + "\":{}," + "\"service_id" + "\":\"com.nubeiot" + ".edge" + ".module" +
-            ":installer\"}");
-        Single<JsonObject> response = MPH.get().execute(EventMessage.initial(EventAction.UNKNOWN, data));
+            "{\"metadata\":{\"service_name\":\"bios-installer\",\"version\":\"1.0.0-SNAPSHOT\",\"state" +
+            "\":\"ENABLED\"},\"appConfig\":{},\"service_id\":\"com.nubeiot.edge.module:installer\"}");
+        Single<EventMessage> response = MPH.get().execute(EventMessage.initial(EventAction.UNKNOWN, data));
 
         JSONAssert.assertEquals(
-            "{\"service_name\":\"bios-installer\",\"version\":\"1.0.0-SNAPSHOT\"," + "\"state\":\"ENABLED\"}",
-            response.blockingGet().toString(), JSONCompareMode.STRICT);
+            "{\"service_name\":\"bios-installer\",\"version\":\"1.0.0-SNAPSHOT\",\"state\":\"ENABLED\"}",
+            response.blockingGet().getData().toString(), JSONCompareMode.STRICT);
     }
 
 }

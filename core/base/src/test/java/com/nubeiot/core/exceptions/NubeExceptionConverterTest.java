@@ -24,7 +24,7 @@ public class NubeExceptionConverterTest {
     public void test_only_code() {
         NubeException t = converter.apply(new NubeException(ErrorCode.SERVICE_ERROR));
         Assert.assertEquals(ErrorCode.SERVICE_ERROR, t.getErrorCode());
-        Assert.assertEquals("SERVICE_ERROR", t.getMessage());
+        Assert.assertNull(t.getMessage());
         Assert.assertNull(t.getCause());
     }
 

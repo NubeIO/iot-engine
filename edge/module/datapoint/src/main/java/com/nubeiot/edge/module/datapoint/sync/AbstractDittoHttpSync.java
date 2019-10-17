@@ -21,6 +21,8 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.transport.ProxyService;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 
 abstract class AbstractDittoHttpSync extends AbstractEnumType implements ProxyService<HttpClientDelegate> {
@@ -29,6 +31,7 @@ abstract class AbstractDittoHttpSync extends AbstractEnumType implements ProxySe
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
     @NonNull
+    @Getter(value = AccessLevel.PROTECTED)
     private final Vertx vertx;
     @NonNull
     private final JsonObject clientConfig;
@@ -59,7 +62,6 @@ abstract class AbstractDittoHttpSync extends AbstractEnumType implements ProxySe
                                       String endpoint, VertxPojo pojo, RequestData reqData) {
         return transporter().execute(endpoint, HttpMethod.PUT, reqData, false)
                             .map(DataTransferObject::body)
-                            .doOnSuccess(resp -> logger.debug("Sync success"))
                             .flatMapMaybe(resp -> entityHandler.syncSuccess(context, pojo, resp, type()))
                             .onErrorResumeNext(
                                 error -> (Maybe<JsonObject>) entityHandler.syncFailed(context, pojo, error, type()))
@@ -72,7 +74,7 @@ abstract class AbstractDittoHttpSync extends AbstractEnumType implements ProxySe
                                 }
                             })
                             .doOnError(err -> logger.error("Failed when updating synced status of resource {}", err,
-                                                           context.table().getName()));
+                                                           context.table().getName())).onErrorComplete();
     }
 
 }

@@ -19,15 +19,14 @@ public final class SyncServiceFactory {
 
     private static Logger LOGGER = LoggerFactory.getLogger(SyncServiceFactory.class);
 
-    public static EntityPostService get(@NonNull Vertx vertx, JsonObject syncConfig) {
-        final DataSyncConfig sync = IConfig.from(syncConfig, DataSyncConfig.class);
-        if (!sync.isEnabled()) {
+    public static EntityPostService get(@NonNull Vertx vertx, DataSyncConfig syncConfig) {
+        if (!syncConfig.isEnabled()) {
             return EntityPostService.EMPTY;
         }
-        if (AbstractDittoHttpSync.TYPE.equalsIgnoreCase(sync.getType())) {
-            return new DittoHttpSync(vertx, sync.getClientConfig(), sync.getCredential());
+        if (AbstractDittoHttpSync.TYPE.equalsIgnoreCase(syncConfig.getType())) {
+            return new DittoHttpSync(vertx, syncConfig.getClientConfig(), syncConfig.getCredential());
         }
-        LOGGER.warn("Not yet supported sync service type {}", sync.getType());
+        LOGGER.warn("Not yet supported sync service type {}", syncConfig.getType());
         return EntityPostService.EMPTY;
     }
 

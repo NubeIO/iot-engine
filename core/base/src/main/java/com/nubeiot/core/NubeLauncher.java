@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import io.vertx.core.DeploymentOptions;
@@ -137,17 +138,21 @@ public final class NubeLauncher extends Launcher {
         configCluster(vertxOptions);
         final Entry<Long, TimeUnit> e1 = getSystemProp("vertx.blockedThreadCheckInterval",
                                                        VertxOptions.DEFAULT_BLOCKED_THREAD_CHECK_INTERVAL,
+                                                       "vertx.blockedThreadCheckIntervalUnit",
                                                        VertxOptions.DEFAULT_BLOCKED_THREAD_CHECK_INTERVAL_UNIT);
         vertxOptions.setBlockedThreadCheckInterval(e1.getKey()).setBlockedThreadCheckIntervalUnit(e1.getValue());
         final Entry<Long, TimeUnit> e2 = getSystemProp("vertx.maxEventLoopExecuteTime",
                                                        VertxOptions.DEFAULT_MAX_EVENT_LOOP_EXECUTE_TIME,
+                                                       "vertx.maxEventLoopExecuteTimeUnit",
                                                        VertxOptions.DEFAULT_MAX_EVENT_LOOP_EXECUTE_TIME_UNIT);
         vertxOptions.setMaxEventLoopExecuteTime(e2.getKey()).setMaxEventLoopExecuteTimeUnit(e2.getValue());
         final Entry<Long, TimeUnit> e3 = getSystemProp("vertx.maxWorkerExecuteTime",
                                                        VertxOptions.DEFAULT_MAX_WORKER_EXECUTE_TIME,
+                                                       "vertx.maxWorkerExecuteTimeUnit",
                                                        VertxOptions.DEFAULT_MAX_WORKER_EXECUTE_TIME_UNIT);
         vertxOptions.setMaxWorkerExecuteTime(e3.getKey()).setMaxWorkerExecuteTimeUnit(e3.getValue());
         final Entry<Long, TimeUnit> e4 = getSystemProp("vertx.warningExceptionTime", TimeUnit.SECONDS.toNanos(5),
+                                                       "vertx.warningExceptionTimeUnit",
                                                        VertxOptions.DEFAULT_WARNING_EXCEPTION_TIME_UNIT);
         vertxOptions.setWarningExceptionTime(e4.getKey()).setWarningExceptionTimeUnit(e4.getValue());
         vertxOptions.setPreferNativeTransport(Boolean.parseBoolean(System.getProperty("vertx.preferNativeTransport",
@@ -156,10 +161,13 @@ public final class NubeLauncher extends Launcher {
         return vertxOptions;
     }
 
-    private Entry<Long, TimeUnit> getSystemProp(@NonNull String propName, long def, @NonNull TimeUnit defTimeUnit) {
+    private Entry<Long, TimeUnit> getSystemProp(@NonNull String propName, long def, @NonNull String propUnitName,
+                                                @NonNull TimeUnit defTimeUnit) {
         final String propVal = System.getProperty(propName, String.valueOf(def));
         final long val = Functions.getIfThrow(() -> Functions.toLong().apply(propVal)).orElse(def);
-        return new SimpleEntry<>(val, val == def ? defTimeUnit : TimeUnit.SECONDS);
+        final Optional<TimeUnit> unitOpt = Optional.ofNullable(System.getProperty(propUnitName))
+                                                   .flatMap(ut -> Functions.getIfThrow(() -> TimeUnit.valueOf(ut)));
+        return new SimpleEntry<>(val, unitOpt.orElse(val == def ? defTimeUnit : TimeUnit.SECONDS));
     }
 
     private void configEventBus(VertxOptions options) {

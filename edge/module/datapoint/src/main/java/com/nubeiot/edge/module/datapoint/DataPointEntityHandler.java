@@ -35,8 +35,10 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
+import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
+import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.edge.model.Keys;
@@ -46,7 +48,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 import lombok.NonNull;
 
-final class DataPointEntityHandler extends AbstractEntityHandler
+public final class DataPointEntityHandler extends AbstractEntityHandler
     implements AuditDecorator, EntityConstraintHolder, DataPointIndex, EntitySyncHandler {
 
     DataPointEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
@@ -72,8 +74,9 @@ final class DataPointEntityHandler extends AbstractEntityHandler
         map.put(Tables.POINT, Tables.POINT.ID);
         map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
         return Single.fromCallable(() -> createDefaultUUID(map))
-                     .doOnSuccess(i -> logger.info("Updated {} tables with random_uuid function", i))
-                     .flatMap(i -> initDataFromConfig(EventAction.INIT));
+                     .doOnSuccess(i -> logger.info("Updated {} tables with random_uuid function", map.size()))
+                     .flatMap(i -> initDataFromConfig(EventAction.INIT))
+                     .doOnSuccess(ignore -> new DataCacheInitializer().init(this));
     }
 
     @Override
@@ -84,10 +87,10 @@ final class DataPointEntityHandler extends AbstractEntityHandler
                                       .map(Optional::get)
                                       .map(this::cacheDevice)
                                       .map(device -> EventMessage.initial(EventAction.MIGRATE))
-                                      .switchIfEmpty(initDataFromConfig(EventAction.MIGRATE));
+                                      .switchIfEmpty(initDataFromConfig(EventAction.MIGRATE))
+                                      .doOnSuccess(ignore -> new DataCacheInitializer().init(this));
     }
 
-    @SuppressWarnings("unchecked")
     private Single<EventMessage> initDataFromConfig(EventAction action) {
         Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
         JsonObject cfgData = configData();
@@ -103,10 +106,8 @@ final class DataPointEntityHandler extends AbstractEntityHandler
                                    .collect(Collectors.toList()))
                      .buffer(5)
                      .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
-                     .flatMap(r -> SyncServiceFactory.getInitialSync(this, sharedData(DATA_SYNC_CFG))
-                                                     .sync(device)
-                                                     .map(sync -> msg(action, r, sync))
-                                                     .switchIfEmpty(Single.just(msg(action, r, null))));
+                     .doOnSuccess(r -> syncData(device))
+                     .map(r -> EventMessage.success(action, new JsonObject().put("records", r)));
     }
 
     private JsonObject configData() {
@@ -122,9 +123,11 @@ final class DataPointEntityHandler extends AbstractEntityHandler
         final @NonNull Device device = DeviceMetadata.INSTANCE.onCreating(RequestData.builder().body(obj).build());
         JsonObject syncCfg = SharedDataDelegate.removeLocalDataValue(vertx(), getSharedKey(), DATA_SYNC_CFG);
         //TODO fix hard-code version
-        syncCfg = DataSyncConfig.update(Optional.ofNullable(syncCfg).orElse(new JsonObject()), "1.0.0", device.getId());
-        JsonObject m = new JsonObject().put(DataSyncConfig.NAME, addSharedData(DATA_SYNC_CFG, syncCfg));
-        return device.setMetadata(m.mergeIn(Optional.ofNullable(device.getMetadata()).orElse(new JsonObject()), true));
+        syncCfg = new JsonObject().put(DataSyncConfig.NAME,
+                                       DataSyncConfig.update(Optional.ofNullable(syncCfg).orElse(new JsonObject()),
+                                                             "1.0.0", device.getId()));
+        return device.setMetadata(
+            syncCfg.mergeIn(Optional.ofNullable(device.getMetadata()).orElse(new JsonObject()), true));
     }
 
     private JsonArray initNetwork(@NonNull JsonObject builtinData, @NonNull UUID deviceId) {
@@ -192,14 +195,19 @@ final class DataPointEntityHandler extends AbstractEntityHandler
         return r -> logger.info("Inserted {} record(s) in {}", r, pojoClass.getSimpleName());
     }
 
-    private EventMessage msg(EventAction action, Integer r, Object sync) {
-        return EventMessage.success(action, new JsonObject().put("records", r).put("synced", sync));
+    private void syncData(Device device) {
+        ExecutorHelpers.blocking(vertx(), () -> SyncServiceFactory.getInitialSync(this, sharedData(DATA_SYNC_CFG)))
+                       .flatMapMaybe(syncService -> syncService.sync(device))
+                       .subscribe();
     }
 
     private Device cacheDevice(@NonNull Device device) {
         addSharedData(DEVICE_ID, device.getId().toString());
         addSharedData(CUSTOMER_CODE, device.getCustomerCode());
         addSharedData(SITE_CODE, device.getSiteCode());
+        addSharedData(DATA_SYNC_CFG,
+                      DataSyncConfig.update(device.getMetadata().getJsonObject(DataSyncConfig.NAME, new JsonObject()),
+                                            "1.0.0", device.getId()));
         return device;
     }
 

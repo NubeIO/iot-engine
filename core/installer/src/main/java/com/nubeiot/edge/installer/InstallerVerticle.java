@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class InstallerVerticle extends ContainerVerticle {
+public abstract class InstallerVerticle<T extends InstallerService> extends ContainerVerticle {
 
     @Getter
     private InstallerEntityHandler entityHandler;
@@ -64,7 +64,7 @@ public abstract class InstallerVerticle extends ContainerVerticle {
     protected abstract AppDeployer appDeployer();
 
     @NonNull
-    protected abstract Supplier<Set<? extends InstallerService>> services(@NonNull InstallerEntityHandler handler);
+    protected abstract Supplier<Set<T>> services(@NonNull InstallerEntityHandler handler);
 
     private Single<JsonArray> deployAppModules() {
         final AppDeploymentWorkflow workflow = new AppDeploymentWorkflow(entityHandler);
@@ -80,7 +80,7 @@ public abstract class InstallerVerticle extends ContainerVerticle {
     private Single<List<Record>> publishApis(MicroContext microContext) {
         final ServiceDiscoveryController discover = microContext.getLocalController();
         final Observable<Record> recs = new EventHttpServiceRegister<>(vertx.getDelegate(), getSharedKey(),
-                                                                       services(entityHandler).get()).publish(discover);
+                                                                       services(entityHandler)).publish(discover);
         return recs.toList().doOnSuccess(r -> logger.info("Publish {} APIs", r.size()));
     }
 

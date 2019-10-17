@@ -32,7 +32,7 @@ public abstract class BaseDataPointVerticleTest extends DynamicServiceTestBase {
     @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
-        ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.INFO);
+        ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.zaxxer.hikari")).setLevel(Level.INFO);
     }
 

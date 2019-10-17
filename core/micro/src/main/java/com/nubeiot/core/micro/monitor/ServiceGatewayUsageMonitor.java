@@ -24,10 +24,9 @@ public class ServiceGatewayUsageMonitor extends AbstractServiceGatewayMonitor {
 
     @Override
     public void handle(Message<Object> message) {
-        String msg = "SERVICE USAGE GATEWAY::Receive message from:";
-        logger.info("{} '{}'", msg, message.address());
         if (logger.isTraceEnabled()) {
-            logger.trace("{} '{}' - Headers: '{}' - Body: '{}'", message.address(), message.headers(), message.body());
+            logger.trace("SERVICE USAGE GATEWAY::Receive message from: '{}' - Headers: '{}' - Body: '{}'",
+                         message.address(), message.headers(), message.body());
         }
     }
 

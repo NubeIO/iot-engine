@@ -90,7 +90,7 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
         final ErrorCode code = t.getErrorCode();
         final String message = originMessage(code, t.getMessage());
         if (Objects.isNull(cause)) {
-            return new NubeException(code, message);
+            return t;
         }
         if (cause instanceof IllegalArgumentException || cause instanceof NullPointerException) {
             final String msg = Strings.isBlank(cause.getMessage()) ? message : cause.getMessage();

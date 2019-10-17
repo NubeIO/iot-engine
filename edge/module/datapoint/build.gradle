@@ -10,6 +10,7 @@ ext {
 }
 
 dependencies {
+    compile project(":core:cache")
     compile project(":core:iotdata")
     compile project.deps.database.h2
     compile project(":core:micro")

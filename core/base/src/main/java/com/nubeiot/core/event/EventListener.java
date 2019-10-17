@@ -1,17 +1,15 @@
 package com.nubeiot.core.event;
 
 import java.util.Collection;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
+import io.reactivex.Single;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
-import com.nubeiot.core.exceptions.NubeExceptionConverter;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -23,7 +21,7 @@ import lombok.NonNull;
  * @see EventAction
  * @see EventPattern#REQUEST_RESPONSE
  */
-public interface EventListener extends Consumer<Message<Object>> {
+public interface EventListener extends Function<Message<Object>, Single<EventMessage>> {
 
     /**
      * Available events that this handler can process
@@ -32,9 +30,8 @@ public interface EventListener extends Consumer<Message<Object>> {
      */
     @NonNull Collection<EventAction> getAvailableEvents();
 
-    @SuppressWarnings("unchecked")
-    default void accept(io.vertx.reactivex.core.eventbus.Message<Object> message) {
-        this.accept(message.getDelegate());
+    default Logger logger() {
+        return LoggerFactory.getLogger(this.getClass());
     }
 
     /**
@@ -52,31 +49,9 @@ public interface EventListener extends Consumer<Message<Object>> {
     default String fallback() { return "data"; }
 
     @Override
-    default void accept(Message<Object> message) {
-        Logger logger = LoggerFactory.getLogger(this.getClass());
+    default Single<EventMessage> apply(Message<Object> message) {
         EventMessage msg = EventMessage.tryParse(message.body());
-        EventAction action = msg.getAction();
-        AnnotationHandler<? extends EventListener> handler = new AnnotationHandler<>(this);
-        try {
-            handler.execute(msg)
-                   .subscribe(data -> message.reply(EventMessage.success(action, data).toJson()),
-                              error(message, action, logger, null)::accept);
-        } catch (ImplementationError ex) {
-            error(message, action, logger, "No reply from event " + action).accept(ex);
-        } catch (Throwable t) {
-            error(message, action, logger, null).accept(t);
-        }
-    }
-
-    default Consumer<Throwable> error(Message<Object> message, EventAction action, Logger logger, String overrideMsg) {
-        return throwable -> {
-            logger.error("Failed when handle event {}", throwable, action);
-            Throwable t = throwable;
-            if (Strings.isNotBlank(overrideMsg)) {
-                t = NubeExceptionConverter.friendly(throwable, overrideMsg);
-            }
-            message.reply(EventMessage.error(action, t).toJson());
-        };
+        return new AnnotationHandler<>(this).execute(msg).doOnSuccess(data -> message.reply(data.toJson()));
     }
 
 }

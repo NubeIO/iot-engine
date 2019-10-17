@@ -14,7 +14,7 @@ public final class SyncPointSettingJob extends AbstractDataJobDefinition {
 
     @Override
     public JsonObject toSchedule(@NonNull JsonObject config) {
-        return null;
+        return new JsonObject();
     }
 
 }

@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -21,10 +23,13 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
+import com.nubeiot.edge.module.datapoint.cache.PointHistoryCache;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.dto.HistorySettingType;
+import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 
 import lombok.NonNull;
@@ -42,11 +47,6 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     }
 
     @Override
-    public String servicePath() {
-        return "/histories";
-    }
-
-    @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
         return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE);
     }
@@ -54,39 +54,70 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     @Override
     public Set<EventMethodDefinition> definitions() {
         final EventMethodDefinition definition = EventMethodDefinition.create("/point/:point_id/histories",
-                                                                              "/:" + context().requestKeyName(),
+                                                                              context().requestKeyName(),
                                                                               ActionMethodMapping.READ_MAP);
         return Stream.of(definition).collect(Collectors.toSet());
     }
 
     @Override
-    protected Single<?> doInsert(@NonNull RequestData reqData) {
-        final PointHistoryData hisData = (PointHistoryData) validation().onCreating(reqData);
-        return validateReferenceEntity(reqData).flatMapSingle(b -> isAbleToInsertByCov(hisData))
-                                               .flatMap(b -> queryExecutor().insertReturningPrimary(hisData, reqData));
+    public String servicePath() {
+        return context().pluralKeyName();
     }
 
-    private Single<Boolean> isAbleToInsertByCov(PointHistoryData his) {
+    @Override
+    protected Single<?> doInsert(@NonNull RequestData reqData) {
+        final PointHistoryData his = (PointHistoryData) validation().onCreating(reqData);
+        return validateReferenceEntity(reqData).flatMap(b -> isAbleToInsertByCov(his))
+                                               .filter(b -> b)
+                                               .switchIfEmpty(Single.error(new DesiredException(
+                                                   "COV of point " + his.getPoint() +
+                                                   " doesn't meet setting requirement")))
+                                               .flatMap(b -> queryExecutor().insertReturningPrimary(his, reqData))
+                                               .doOnSuccess(pk -> putIntoCache(his));
+    }
+
+    private Maybe<Boolean> isAbleToInsertByCov(PointHistoryData his) {
+        final UUID point = his.getPoint();
+        return getHistorySetting(point).filter(this::isTolerance)
+                                       .flatMap(s -> getLastHistory(point).map(p -> validateCOV(his, p, s)))
+                                       .defaultIfEmpty(true);
+    }
+
+    private Maybe<PointHistoryData> getLastHistory(@NonNull UUID point) {
+        final PointHistoryCache cache = entityHandler().sharedData(DataCacheInitializer.HISTORIES_DATA_CACHE);
+        final PointHistoryData his = cache.get(point);
+        if (Objects.nonNull(his)) {
+            logger.info("Last history of point {} from cache", point);
+            return Maybe.just(his);
+        }
         final JsonObject filter = new JsonObject().put(context().table().POINT.getName(),
-                                                       JsonData.checkAndConvert(his.getPoint()));
+                                                       JsonData.checkAndConvert(point));
         final Sort sort = Sort.builder().item(context().table().TIME.getName(), SortType.DESC).build();
         return queryExecutor().executeAny(queryExecutor().queryBuilder().viewOne(filter, sort))
                               .map(rr -> rr.fetchOptionalInto(PointHistoryData.class))
                               .filter(Optional::isPresent)
                               .map(Optional::get)
-                              .flatMap(p -> entityHandler().dao(HistorySettingMetadata.INSTANCE.daoClass())
-                                                           .findOneById(his.getPoint())
-                                                           .filter(Optional::isPresent)
-                                                           .map(Optional::get)
-                                                           .filter(s -> s.getType() == HistorySettingType.COV &&
-                                                                        Objects.nonNull(s.getTolerance()))
-                                                           .map(s -> s.getTolerance()
-                                                                      .compareTo(
-                                                                          Math.abs(his.getValue() - p.getValue())) < 0))
-                              .defaultIfEmpty(true)
-                              .filter(b -> b)
-                              .switchIfEmpty(Single.error(new DesiredException(
-                                  "COV of point " + his.getPoint() + " doesn't meet setting requirement")));
+                              .doOnSuccess(history -> cache.add(point, history));
+    }
+
+    private boolean validateCOV(PointHistoryData his, PointHistoryData p, HistorySetting s) {
+        return s.getTolerance().compareTo(Math.abs(his.getValue() - p.getValue())) < 0;
+    }
+
+    private boolean isTolerance(HistorySetting s) {
+        return s.getType() == HistorySettingType.COV && Objects.nonNull(s.getTolerance());
+    }
+
+    private Maybe<HistorySetting> getHistorySetting(UUID pointId) {
+        return entityHandler().dao(HistorySettingMetadata.INSTANCE.daoClass())
+                              .findOneById(pointId)
+                              .filter(Optional::isPresent)
+                              .map(Optional::get);
+    }
+
+    private void putIntoCache(PointHistoryData his) {
+        final PointHistoryCache cache = entityHandler().sharedData(DataCacheInitializer.HISTORIES_DATA_CACHE);
+        cache.add(his.getPoint(), his);
     }
 
 }

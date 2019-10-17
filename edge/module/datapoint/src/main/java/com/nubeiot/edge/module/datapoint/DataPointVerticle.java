@@ -16,6 +16,7 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
+import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
 import com.nubeiot.iotdata.edge.model.DefaultCatalog;
@@ -43,12 +44,13 @@ public final class DataPointVerticle extends ContainerVerticle {
     private void successHandler() {
         EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
         ServiceDiscoveryController discovery = microCtx.getLocalController();
-        Observable.fromIterable(DataPointService.createServices(entityHandler))
-                  .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                         .ifPresent(service -> controller.register(service.address(), service)))
-                  .filter(s -> Objects.nonNull(s.definitions()))
-                  .flatMap(s -> registerEndpoint(discovery, s))
-                  .subscribe();
+        ExecutorHelpers.blocking(vertx.getDelegate(), () -> DataPointService.createServices(entityHandler))
+                       .flattenAsObservable(s -> s)
+                       .doOnEach(s -> Optional.ofNullable(s.getValue())
+                                              .ifPresent(service -> controller.register(service.address(), service)))
+                       .filter(s -> Objects.nonNull(s.definitions()))
+                       .flatMap(s -> registerEndpoint(discovery, s))
+                       .subscribe();
     }
 
     @SuppressWarnings("unchecked")

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.http.HttpMethod;
 
+import com.nubeiot.core.IConfig;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.http.base.Urls;
@@ -20,6 +21,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.sync.SyncServiceFactory;
 
 import lombok.NonNull;
@@ -36,10 +38,23 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
                               .collect(Collectors.toSet());
     }
 
+    //TODO refactor it
+    static Set<EventMethodDefinition> definitionsForMany(@NonNull Collection<EventAction> availableEvents,
+                                                         @NonNull EntityMetadata reference,
+                                                         @NonNull EntityMetadata resource) {
+        Map<EventAction, HttpMethod> crud = ActionMethodMapping.CRUD_MAP.get();
+        ActionMethodMapping map = ActionMethodMapping.create(
+            availableEvents.stream().filter(crud::containsKey).collect(Collectors.toMap(e -> e, crud::get)));
+        final String servicePath = Urls.combinePath(
+            Urls.capturePath(reference.singularKeyName(), reference.requestKeyName()), resource.singularKeyName());
+        return Collections.singleton(EventMethodDefinition.create(servicePath, resource.requestKeyName(), map));
+    }
+
     @Override
     default @NonNull EntityPostService asyncPostService() {
         return SyncServiceFactory.get(entityHandler().vertx(),
-                                      entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG));
+                                      IConfig.from(entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG),
+                                                   DataSyncConfig.class));
     }
 
     default String api() {
@@ -55,18 +70,6 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
 
     default String servicePath() {
         return Urls.toPathWithLC(context().singularKeyName());
-    }
-
-    //TODO refactor it
-    static Set<EventMethodDefinition> definitionsForMany(@NonNull Collection<EventAction> availableEvents,
-                                                         @NonNull EntityMetadata reference,
-                                                         @NonNull EntityMetadata resource) {
-        Map<EventAction, HttpMethod> crud = ActionMethodMapping.CRUD_MAP.get();
-        ActionMethodMapping map = ActionMethodMapping.create(
-            availableEvents.stream().filter(crud::containsKey).collect(Collectors.toMap(e -> e, crud::get)));
-        final String servicePath = Urls.combinePath(
-            Urls.capturePath(reference.singularKeyName(), reference.requestKeyName()), resource.singularKeyName());
-        return Collections.singleton(EventMethodDefinition.create(servicePath, resource.requestKeyName(), map));
     }
 
 }

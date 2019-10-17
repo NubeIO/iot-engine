@@ -18,8 +18,8 @@ import com.nubeiot.edge.installer.InstallerEntityHandler;
 
 public interface InstallerService extends EventHttpService {
 
-    static Set<? extends InstallerService> createServices(InstallerEntityHandler entityHandler,
-                                                          Class<? extends InstallerService> serviceClazz) {
+    static <T extends InstallerService> Set<T> createServices(InstallerEntityHandler entityHandler,
+                                                              Class<T> serviceClazz) {
         final Map<Class, Object> inputs = Collections.singletonMap(InstallerEntityHandler.class, entityHandler);
         return ReflectionClass.stream(serviceClazz.getPackage().getName(), serviceClazz, ReflectionClass.publicClass())
                               .map(clazz -> ReflectionClass.createObject(clazz, inputs))
