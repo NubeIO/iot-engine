@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.vertx.core.Future;
@@ -20,8 +19,8 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
-import com.nubeiot.core.utils.Functions;
-import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
+import com.nubeiot.core.utils.ExecutorHelpers;
+import com.nubeiot.edge.connector.bacnet.dto.BACnetDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.handlers.MultipleNetworkEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.NubeServiceEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.RemoteDeviceEventHandler;
@@ -41,21 +40,21 @@ public class BACnetVerticle extends ContainerVerticle {
     @Override
     public void start() {
         super.start();
-        final BACnetConfig bacnetConfig = IConfig.from(this.nubeConfig.getAppConfig(), BACnetConfig.class);
-        logger.info("BACnet configuration: {}", bacnetConfig.toJson());
-        final LocalDeviceMetadata metadata = LocalDeviceMetadata.builder()
-                                                                .vendorId(BACnetConfig.VENDOR_ID)
-                                                                .vendorName(BACnetConfig.VENDOR_NAME)
-                                                                .deviceNumber(bacnetConfig.getDeviceId())
-                                                                .modelName(bacnetConfig.getModelName())
-                                                                .objectName(bacnetConfig.getDeviceName())
-                                                                .slave(bacnetConfig.isAllowSlave())
-                                                                .addDiscoverTimeout(bacnetConfig.getDiscoveryTimeout(),
-                                                                                    TimeUnit.MILLISECONDS)
-                                                                .build();
+        final BACnetConfig config = IConfig.from(this.nubeConfig.getAppConfig(), BACnetConfig.class);
+        logger.info("BACnet configuration: {}", config.toJson());
+        final BACnetDeviceMetadata metadata = BACnetDeviceMetadata.builder()
+                                                                  .vendorId(BACnetConfig.VENDOR_ID)
+                                                                  .vendorName(BACnetConfig.VENDOR_NAME)
+                                                                  .deviceNumber(config.getDeviceId())
+                                                                  .modelName(config.getModelName())
+                                                                  .objectName(config.getDeviceName())
+                                                                  .slave(config.isAllowSlave())
+                                                                  .discoverTimeout(config.getDiscoveryTimeout())
+                                                                  .discoverTimeoutUnit(config.getDiscoveryTimeoutUnit())
+                                                                  .build();
         this.addSharedData(DEVICE_METADATA, metadata)
             .addProvider(new MicroserviceProvider(), ctx -> microContext = (MicroContext) ctx)
-            .registerSuccessHandler(event -> successHandler(bacnetConfig));
+            .registerSuccessHandler(event -> successHandler(config));
     }
 
     @Override
@@ -74,27 +73,26 @@ public class BACnetVerticle extends ContainerVerticle {
 
     private void initBACnetService() {
         final EventController client = getEventController();
-        Observable.fromIterable(BACnetDiscoveryService.createServices(vertx.getDelegate(), getSharedKey()))
-                  .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                         .ifPresent(service -> client.register(service.address(), service)))
-                  .filter(s -> Objects.nonNull(s.definitions()))
-                  .flatMap(s -> registerEndpoint(microContext.getLocalController(), s))
-                  .subscribe();
+        ExecutorHelpers.blocking(getVertx(), () -> BACnetDiscoveryService.createServices(getVertx(), getSharedKey()))
+                       .flattenAsObservable(s -> s)
+                       .doOnEach(s -> Optional.ofNullable(s.getValue())
+                                              .ifPresent(service -> client.register(service.address(), service)))
+                       .filter(s -> Objects.nonNull(s.definitions()))
+                       .flatMap(s -> registerEndpoint(microContext.getLocalController(), s))
+                       .subscribe();
     }
 
     private void createBACnet(BACnetConfig bacnetConfig) {
         EventController eventClient = getEventController();
         ServiceDiscoveryController localController = microContext.getLocalController();
         startBACnet(bacnetConfig);
-        if (bacnetConfig.isAllowSlave()) {
-            eventClient.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
-        }
         eventClient.register(BACnetEventModels.NETWORKS_ALL, new MultipleNetworkEventHandler(bacnetInstances));
         eventClient.register(BACnetEventModels.DEVICES, new RemoteDeviceEventHandler(bacnetInstances));
         eventClient.register(BACnetEventModels.POINTS_INFO, new RemotePointsInfoEventHandler(bacnetInstances));
         eventClient.register(BACnetEventModels.POINTS, new RemotePointsEventHandler(bacnetInstances));
         publishServices(localController);
         if (bacnetConfig.isAllowSlave()) {
+            eventClient.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
             initLocalPoints(bacnetConfig.getLocalPointsApiAddress(), localController);
         }
     }
@@ -105,12 +103,12 @@ public class BACnetVerticle extends ContainerVerticle {
     }
 
     private void startBACnet(BACnetConfig bacnetConfig) {
-        Observable.fromIterable(bacnetConfig.getNetworks().toNetworks())
-                  .map(network -> Functions.getIfThrow(() -> TransportProvider.byConfig(network)))
-                  .filter(Optional::isPresent)
-                  .map(Optional::get)
-                  .flatMapSingle(nw -> BACnetInstance.create(vertx.getDelegate(), getSharedKey(), nw, bacnetInstances))
-                  .subscribe();
+        //        Observable.fromIterable(bacnetConfig.getNetworks().toNetworks())
+        //                  .map(network -> Functions.getIfThrow(() -> TransportProvider.byConfig(network)))
+        //                  .filter(Optional::isPresent)
+        //                  .map(Optional::get)
+        //                  .flatMapSingle(nw -> BACnetInstance.create(getVertx(), getSharedKey(), nw, bacnetInstances))
+        //                  .subscribe();
     }
 
     private void publishServices(ServiceDiscoveryController localController) {

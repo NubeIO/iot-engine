@@ -42,8 +42,8 @@ public final class Networks {
     private static final Logger logger = LoggerFactory.getLogger(Networks.class);
     private static final List<String> BLACK_LIST_ADDRESS = Arrays.asList("0.0.0.0", "127.0.0.1", "localhost");
     private static final String DEFAULT_ADDRESS = "0.0.0.0";
-    private static final String IPV4_REGEX = "(([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}([0-1]?\\d{1," +
-                                             "2}|2[0-4]\\d|25[0-5])";
+    private static final String IPV4_REGEX
+        = "(([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])";
     private static String natHost = "";
     private static InetSocketAddress publicClusterAddr = null;
     private static InetSocketAddress publicClusterEventbusAddr = null;

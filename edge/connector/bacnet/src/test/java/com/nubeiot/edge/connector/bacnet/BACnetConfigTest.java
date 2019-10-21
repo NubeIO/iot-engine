@@ -17,7 +17,8 @@ public class BACnetConfigTest {
     public void test_default() throws JSONException {
         BACnetConfig config = new BACnetConfig();
         BACnetConfig fromFile = IConfig.fromClasspath("config.json", BACnetConfig.class);
-        JsonHelper.assertJson(config.toJson(), fromFile.toJson());
+        JsonHelper.assertJson(config.toJson(), fromFile.toJson(), JsonHelper.ignore("deviceId"),
+                              JsonHelper.ignore("deviceName"));
     }
 
     @Test

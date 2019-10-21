@@ -1,6 +1,5 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import io.vertx.core.shareddata.Shareable;
@@ -20,20 +19,21 @@ import lombok.NonNull;
 
 @Getter
 @Builder(builderClassName = "Builder")
-@JsonDeserialize(builder = LocalDeviceMetadata.Builder.class)
-public final class LocalDeviceMetadata implements JsonData, Shareable {
+@JsonDeserialize(builder = BACnetDeviceMetadata.Builder.class)
+public final class BACnetDeviceMetadata implements JsonData, Shareable {
 
-    private static final long MAX_TIMEOUT = 30;
+    private static final long MAX_TIMEOUT_SECONDS = 60;
     private final int vendorId;
     private final String vendorName;
     private final int deviceNumber;
     private final String modelName;
     private final String objectName;
     private final long discoverTimeout;
+    private final TimeUnit discoverTimeoutUnit;
     private final boolean slave;
 
     public static long maxTimeout(long timeout) {
-        return Math.min(timeout, MAX_TIMEOUT);
+        return Math.min(timeout, MAX_TIMEOUT_SECONDS);
     }
 
     public LocalDevice decorate(@NonNull LocalDevice localDevice) {
@@ -48,18 +48,10 @@ public final class LocalDeviceMetadata implements JsonData, Shareable {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
-        private TimeUnit timeUnit = TimeUnit.SECONDS;
-
-        public Builder addDiscoverTimeout(long timeout, TimeUnit timeUnit) {
-            this.timeUnit = Objects.nonNull(timeUnit) ? timeUnit : TimeUnit.SECONDS;
-            this.discoverTimeout = timeout;
-            return this;
-        }
-
-        public LocalDeviceMetadata build() {
-            long timeout = TimeUnit.SECONDS.convert(discoverTimeout, timeUnit);
-            return new LocalDeviceMetadata(vendorId, vendorName, deviceNumber, modelName, objectName,
-                                           maxTimeout(timeout), slave);
+        public BACnetDeviceMetadata build() {
+            long timeout = TimeUnit.SECONDS.convert(discoverTimeout, discoverTimeoutUnit);
+            return new BACnetDeviceMetadata(vendorId, vendorName, deviceNumber, modelName, objectName,
+                                            maxTimeout(timeout), TimeUnit.SECONDS, slave);
         }
 
     }

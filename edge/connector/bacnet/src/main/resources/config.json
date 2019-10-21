@@ -25,9 +25,12 @@
       }
     },
     "__bacnet__": {
-      "deviceName": "NubeIO-Edge28",
-      "deviceId": 4321,
-      "__networks__": {}
+      "modelName" : "NubeIO-Edge28",
+      "discoveryTimeout" : 10,
+      "discoveryTimeoutUnit" : "SECONDS",
+      "allowSlave" : true,
+      "localPointsApiAddress" : "/edge-api/points",
+      "__networks__" : { }
     }
   }
 }

@@ -12,19 +12,26 @@ services:
     networks:
       - bacnet-n1
 
-  #  bacnet-simulator-for-java:
-  #    image: c-bacnet
-  #    mem_limit: 56m
-  #    environment:
-  #      DEVICE_NUMBER: 222
-  #    command: ["perl", "./simulator.pl"]
-  #    networks:
-  #      - bacnet-n1
+  bacnet-simulator-for-java:
+    image: c-bacnet
+    mem_limit: 56m
+    environment:
+      DEVICE_NUMBER: 222
+    command: ["perl", "./simulator.pl"]
+    networks:
+      - bacnet-n1
 
-  bacnet-server:
+  bacnet-server-n1:
     image: c-bacnet
     mem_limit: 56m
     command: ["bacserv", "200001"]
+    networks:
+      - bacnet-n1
+
+  bacnet-server-n2:
+    image: c-bacnet
+    mem_limit: 56m
+    command: ["bacserv", "200002"]
     networks:
       - bacnet-n2
 
@@ -37,22 +44,20 @@ services:
     networks:
       - bacnet-n2
 
-  bacnet-py-simulator:
-    image: py-bacnet
-    mem_limit: 56m
-    environment:
-      DEVICE_NUMBER: 456
-    networks:
-      - bacnet-n3
+#   bacnet-py-simulator:
+#     image: py-bacnet
+#     mem_limit: 56m
+#     networks:
+#       - bacnet-n3
 
-  bacnet-simulator-for-py:
-    image: c-bacnet
-    mem_limit: 56m
-    environment:
-      DEVICE_NUMBER: 456
-    command: ["perl", "./simulator.pl"]
-    networks:
-      - bacnet-n3
+#   bacnet-simulator-for-py:
+#     image: c-bacnet
+#     mem_limit: 56m
+#     environment:
+#       DEVICE_NUMBER: 456
+#     command: ["perl", "./simulator.pl"]
+#     networks:
+#       - bacnet-n3
 
 volumes:
   bacnet-data:
@@ -63,5 +68,5 @@ networks:
     driver: bridge
   bacnet-n2:
     driver: bridge
-  bacnet-n3:
-    driver: bridge
+#   bacnet-n3:
+#     driver: bridge

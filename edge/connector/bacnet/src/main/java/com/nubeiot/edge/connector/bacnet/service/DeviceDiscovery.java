@@ -12,7 +12,7 @@ public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implem
 
     @Override
     public @NonNull String servicePath() {
-        return "/discovery/bacnet/device";
+        return "/discovery/bacnet/network/:network_name/device";
     }
 
     @Override

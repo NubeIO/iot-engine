@@ -31,7 +31,7 @@ import com.nubeiot.edge.module.datapoint.service.DataPointIndex.ThingMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TransducerMetadata;
 import com.nubeiot.iotdata.dto.EquipType;
 import com.nubeiot.iotdata.dto.HistorySettingType;
-import com.nubeiot.iotdata.dto.PointCategory;
+import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointType;
@@ -163,7 +163,7 @@ public final class MockData {
     private static List<Point> points() {
         final Point p1 = new Point().setId(PrimaryKey.P_GPIO_HUMIDITY)
                                     .setCode("2CB2B763_HUMIDITY")
-                                    .setCategory(PointCategory.GPIO)
+                                    .setProtocol(Protocol.GPIO)
                                     .setDevice(DEVICE.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
@@ -176,7 +176,7 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p2 = new Point().setId(PrimaryKey.P_GPIO_TEMP)
                                     .setCode("2CB2B763_TEMP")
-                                    .setCategory(PointCategory.GPIO)
+                                    .setProtocol(Protocol.GPIO)
                                     .setDevice(DEVICE.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
@@ -187,7 +187,7 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p3 = new Point().setId(PrimaryKey.P_BACNET_TEMP)
                                     .setCode("HVAC_01_TEMP")
-                                    .setCategory(PointCategory.BACNET)
+                                    .setProtocol(Protocol.BACNET)
                                     .setDevice(DEVICE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
@@ -199,7 +199,7 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p4 = new Point().setId(PrimaryKey.P_BACNET_FAN)
                                     .setCode("HVAC_01_FAN")
-                                    .setCategory(PointCategory.BACNET)
+                                    .setProtocol(Protocol.BACNET)
                                     .setDevice(DEVICE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
@@ -210,7 +210,7 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p5 = new Point().setId(PrimaryKey.P_BACNET_SWITCH)
                                     .setCode("HVAC_01_FAN_CONTROL")
-                                    .setCategory(PointCategory.BACNET)
+                                    .setProtocol(Protocol.BACNET)
                                     .setDevice(DEVICE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.OUTPUT)

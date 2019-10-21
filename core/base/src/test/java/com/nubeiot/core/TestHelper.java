@@ -229,6 +229,17 @@ public interface TestHelper {
             assertJson(expected, actual, JSONCompareMode.STRICT);
         }
 
+        static void assertJson(JsonObject expected, JsonObject actual, Customization... customizations)
+            throws JSONException {
+            try {
+                JSONAssert.assertEquals(expected.encode(), actual.encode(), comparator(customizations));
+            } catch (JSONException | AssertionError e) {
+                System.out.println("Actual: " + actual.encode());
+                System.out.println("Expected: " + expected.encode());
+                throw e;
+            }
+        }
+
         static void assertJson(JsonObject expected, JsonObject actual, JSONCompareMode mode) throws JSONException {
             try {
                 JSONAssert.assertEquals(expected.encode(), actual.encode(), mode);
