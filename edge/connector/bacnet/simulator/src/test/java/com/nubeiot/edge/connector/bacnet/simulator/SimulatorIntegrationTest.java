@@ -125,6 +125,7 @@ public class SimulatorIntegrationTest {
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  JsonObject data = message.getData();
+
                                  context.assertTrue(message.isSuccess());
                                  context.assertFalse(data.isEmpty());
                                  testPoints.getMap().keySet().forEach(o -> {
@@ -137,14 +138,45 @@ public class SimulatorIntegrationTest {
                                          }
                                      }
                                  });
-                                 TestHelper.testComplete(async);
+                                 //                                 TestHelper.testComplete(async);
+                                 RequestData req2 = RequestData.builder()
+                                                               .body(addNetWorkToJson(new JsonObject()).put("deviceId",
+                                                                                                            remoteDeviceId
+                                                                                                                .toString())
+                                                                                                       .put("allData",
+                                                                                                            "1"))
+                                                               .build();
+
+                                 eventController.fire(address, EventPattern.REQUEST_RESPONSE,
+                                                      EventMessage.initial(EventAction.GET_LIST, req2),
+                                                      messageAsyncResult2 -> {
+                                                          EventMessage message2 = EventMessage.tryParse(
+                                                              messageAsyncResult2.result().body());
+                                                          JsonObject data2 = message2.getData();
+
+                                                          context.assertTrue(message2.isSuccess());
+                                                          context.assertFalse(data2.isEmpty());
+                                                          testPoints.getMap().keySet().forEach(o -> {
+                                                              try {
+                                                                  context.assertTrue(data2.containsKey(
+                                                                      BACnetDataConversions.pointIDNubeToBACnet(o)));
+                                                              } catch (Exception e) {
+                                                                  if (!e.getMessage()
+                                                                        .equalsIgnoreCase("Invalid Nube point Id")) {
+                                                                      context.fail(e);
+                                                                  }
+                                                              }
+                                                          });
+                                                          TestHelper.testComplete(async);
+                                                      }, null);
                              }, null);
     }
 
     @Test
     public void readSinglePointInfo(TestContext context) throws Exception {
         Async async = context.async();
-        String p1 = testPoints.getMap().keySet().iterator().next();
+        //        String p1 = testPoints.getMap().keySet().iterator().next();
+        String p1 = "UO1";
         JsonObject p1o = testPoints.getJsonObject(p1);
 
         RequestData req = RequestData.builder()
@@ -154,7 +186,7 @@ public class SimulatorIntegrationTest {
                                                                                       p1)))
                                      .build();
 
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+        eventController.fire("nubeiot.edge.connector.bacnet.device.points-info", EventPattern.REQUEST_RESPONSE,
                              EventMessage.initial(EventAction.GET_ONE, req), messageAsyncResult -> {
                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                 context.assertTrue(message.isSuccess());
@@ -163,7 +195,7 @@ public class SimulatorIntegrationTest {
                 if (val instanceof Integer) {
                     val = new Float((Integer) val);
                 }
-                context.assertEquals(val, message.getData().getValue("value"));
+                context.assertEquals(val, message.getData().getValue("present-value"));
                 TestHelper.testComplete(async);
             }, null);
     }
@@ -182,7 +214,8 @@ public class SimulatorIntegrationTest {
                                                                                                BACnetDataConversions.pointIDNubeToBACnet(
                                                                                                    p1)))
                                                                                   .build()), messageAsyncResult -> {
-                context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isError());
+                EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
+                context.assertTrue(message.isError());
                 TestHelper.testComplete(async);
             }, null);
     }
@@ -349,6 +382,111 @@ public class SimulatorIntegrationTest {
 
                                          TestHelper.testComplete(async);
                                      }, null);
+            }, null);
+    }
+
+    @Test
+    public void writePointNullTestBinary(TestContext context) throws Exception {
+        Async async = context.async();
+        String pointId = BACnetDataConversions.pointIDNubeToBACnet("R1");
+        JsonObject point = testPoints.getJsonObject("R1");
+        boolean val = point.getInteger("value") == 1;
+        RequestData req = RequestData.builder()
+                                     .body(addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
+                                                                             .put("objectId", pointId)
+                                                                             .put("priority", "10")
+                                                                             .put("value", !val))
+                                     .build();
+
+        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                             EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
+
+                context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isSuccess());
+                req.body().remove("value");
+                req.body().put("value", "null");
+
+                eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                                     EventMessage.initial(EventAction.PATCH, req), messageAsyncResult2 -> {
+
+                        context.assertTrue(EventMessage.tryParse(messageAsyncResult2.result().body()).isSuccess());
+                        eventController.fire("nubeiot.edge.connector.bacnet.device.points-info",
+                                             EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_ONE,
+                                                                                                 RequestData.builder()
+                                                                                                            .body(
+                                                                                                                addNetWorkToJson(
+                                                                                                                    new JsonObject())
+                                                                                                                    .put(
+                                                                                                                        "deviceId",
+                                                                                                                        remoteDeviceId
+                                                                                                                            .toString())
+                                                                                                                    .put(
+                                                                                                                        "objectId",
+                                                                                                                        pointId))
+                                                                                                            .build()),
+                                             messageAsyncResult3 -> {
+                                                 EventMessage message3 = EventMessage.tryParse(
+                                                     messageAsyncResult3.result().body());
+                                                 context.assertTrue(message3.isSuccess());
+                                                 context.assertTrue(message3.getData().containsKey("priority-array"));
+                                                 context.assertFalse(
+                                                     message3.getData().getString("priority-array").contains("10=1"));
+                                                 TestHelper.testComplete(async);
+                                             }, null);
+                    }, null);
+            }, null);
+    }
+
+    @Test
+    public void writePointNullTestAnalog(TestContext context) throws Exception {
+        Async async = context.async();
+        String pointId = BACnetDataConversions.pointIDNubeToBACnet("UO1");
+        JsonObject point = testPoints.getJsonObject("UO1");
+        double val = 0.12;
+        RequestData req = RequestData.builder()
+                                     .body(addNetWorkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString())
+                                                                             .put("objectId", pointId)
+                                                                             .put("priority", "10")
+                                                                             .put("value", val))
+                                     .build();
+
+        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                             EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
+
+                context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isSuccess());
+                req.body().remove("value");
+                req.body().put("value", "null");
+
+                eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                                     EventMessage.initial(EventAction.PATCH, req), messageAsyncResult2 -> {
+
+                        context.assertTrue(EventMessage.tryParse(messageAsyncResult2.result().body()).isSuccess());
+                        eventController.fire("nubeiot.edge.connector.bacnet.device.points-info",
+                                             EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_ONE,
+                                                                                                 RequestData.builder()
+                                                                                                            .body(
+                                                                                                                addNetWorkToJson(
+                                                                                                                    new JsonObject())
+                                                                                                                    .put(
+                                                                                                                        "deviceId",
+                                                                                                                        remoteDeviceId
+                                                                                                                            .toString())
+                                                                                                                    .put(
+                                                                                                                        "objectId",
+                                                                                                                        pointId))
+                                                                                                            .build()),
+                                             messageAsyncResult3 -> {
+                                                 EventMessage message3 = EventMessage.tryParse(
+                                                     messageAsyncResult3.result().body());
+                                                 context.assertTrue(message3.isSuccess());
+                                                 context.assertTrue(message3.getData().containsKey("priority-array"));
+                                                 context.assertTrue(
+                                                     message3.getData().getFloat("present-value") != val);
+                                                 context.assertFalse(message3.getData()
+                                                                             .getString("priority-array")
+                                                                             .contains("10=" + Double.toString(val)));
+                                                 TestHelper.testComplete(async);
+                                             }, null);
+                    }, null);
             }, null);
     }
 

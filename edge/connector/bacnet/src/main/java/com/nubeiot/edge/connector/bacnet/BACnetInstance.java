@@ -45,6 +45,7 @@ import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.error.ErrorClassAndCode;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
+import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.util.DiscoveryUtils;
 import com.serotonin.bacnet4j.util.PropertyValues;
@@ -265,27 +266,37 @@ public class BACnetInstance {
         });
     }
 
-    public Single<JsonObject> getRemoteDeviceObjectList(int instanceNumber) {
+    public Single<JsonObject> getRemoteDeviceObjectList(int instanceNumber, boolean allData) {
         RemoteDevice remoteDevice = localDevice.getCachedRemoteDevice(instanceNumber);
         if (remoteDevice == null) {
             return Single.error(new BACnetRuntimeException("Remote device not found"));
         } else {
-            return getRemoteDeviceObjectList(remoteDevice);
+            return getRemoteDeviceObjectList(remoteDevice, allData);
         }
     }
 
-    private Single<JsonObject> getRemoteDeviceObjectList(RemoteDevice remoteDevice) {
+    private Single<JsonObject> getRemoteDeviceObjectList(RemoteDevice remoteDevice, boolean allData) {
         return callAsyncBlocking(() -> {
             SequenceOf<ObjectIdentifier> list = RequestUtils.getObjectList(localDevice, remoteDevice);
             remoteDevice.setDeviceProperty(PropertyIdentifier.objectList, list);
 
             List<ObjectPropertyReference> refs = new ArrayList<>();
             list.forEach(objectIdentifier -> {
-                if (!objectIdentifier.getObjectType().equals(ObjectType.device)) {
-                    refs.add(new ObjectPropertyReference(objectIdentifier, PropertyIdentifier.objectName));
-                    if (ObjectProperties.getObjectPropertyTypeDefinition(objectIdentifier.getObjectType(),
-                                                                         PropertyIdentifier.presentValue) != null) {
-                        refs.add(new ObjectPropertyReference(objectIdentifier, PropertyIdentifier.presentValue));
+                if (allData) {
+                    List<ObjectPropertyTypeDefinition> propsDefs = ObjectProperties.getObjectPropertyTypeDefinitions(
+                        objectIdentifier.getObjectType());
+
+                    for (ObjectPropertyTypeDefinition prop : propsDefs) {
+                        refs.add(new ObjectPropertyReference(objectIdentifier,
+                                                             prop.getPropertyTypeDefinition().getPropertyIdentifier()));
+                    }
+                } else {
+                    if (!objectIdentifier.getObjectType().equals(ObjectType.device)) {
+                        refs.add(new ObjectPropertyReference(objectIdentifier, PropertyIdentifier.objectName));
+                        if (ObjectProperties.getObjectPropertyTypeDefinition(objectIdentifier.getObjectType(),
+                                                                             PropertyIdentifier.presentValue) != null) {
+                            refs.add(new ObjectPropertyReference(objectIdentifier, PropertyIdentifier.presentValue));
+                        }
                     }
                 }
             });
@@ -327,9 +338,9 @@ public class BACnetInstance {
                 propValuesFinal.put(pid, val);
                 d.setObjectProperty(oid, pid, val);
             });
-//            if(propValuesFinal.isEmpty()){
-//                throw new BACnetException("Object not found");
-//            }
+            if (propValuesFinal.isEmpty()) {
+                throw new BACnetException("Object not found");
+            }
             return BACnetDataConversions.objectProperties(propValuesFinal);
         });
     }
@@ -470,7 +481,10 @@ public class BACnetInstance {
             }
             Encodable val;
             ObjectIdentifier oid = BACnetDataConversions.getObjectIdentifier(obj);
-            if (oid.getObjectType().isOneOf(ObjectType.binaryOutput, ObjectType.binaryInput, ObjectType.binaryValue)) {
+            if (BACnetDataConversions.isPrimitiveNull(v)) {
+                val = Null.instance;
+            } else if (oid.getObjectType()
+                          .isOneOf(ObjectType.binaryOutput, ObjectType.binaryInput, ObjectType.binaryValue)) {
                 val = BACnetDataConversions.primitiveToBinary(v);
             } else {
                 val = BACnetDataConversions.primitiveToReal(v);

@@ -38,8 +38,13 @@ public class RemotePointsInfoEventHandler implements EventListener {
     public Single<JsonObject> getRemoteDevicePoints(RequestData requestData) {
         String network = requestData.body().getString("network");
         Integer instanceNumber = Integer.parseInt(requestData.body().getString("deviceId"));
+        Boolean allData = false;
+        if (requestData.body().containsKey("allData")) {
+            allData = Integer.parseInt(requestData.body().getString("allData")) == 1;
+        }
+
         try {
-            return bacnetInstances.get(network).getRemoteDeviceObjectList(instanceNumber);
+            return bacnetInstances.get(network).getRemoteDeviceObjectList(instanceNumber, allData);
         } catch (NullPointerException e) {
             return Single.error(new BACnetException("No network found", e));
         } catch (ClassCastException e) {

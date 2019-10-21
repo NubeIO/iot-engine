@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+
 import io.vertx.core.json.JsonObject;
+
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
@@ -14,6 +16,7 @@ import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
+import com.serotonin.bacnet4j.type.error.ErrorClassAndCode;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
@@ -51,6 +54,10 @@ public class BACnetDataConversions {
         JsonObject data = new JsonObject();
         list.forEach(objectPropertyReferenceEncodablePair -> {
             String key = pointFormatBACnet(objectPropertyReferenceEncodablePair.getLeft().getObjectIdentifier());
+
+            if (objectPropertyReferenceEncodablePair.getRight() instanceof ErrorClassAndCode) {
+                return;
+            }
             if (!data.containsKey(key)) {
                 data.put(key, new JsonObject());
             }
@@ -69,30 +76,32 @@ public class BACnetDataConversions {
     }
 
     //probably won't be used anymore
-//    public static EdgeWriteRequest CovNotification(ObjectIdentifier initiatingDeviceIdentifier,
-//                                                   ObjectIdentifier monitoredObjectIdentifier,
-//                                                   SequenceOf<PropertyValue> listOfValues) {
-//        EdgeWriteRequest req;
-//        try {
-//            listOfValues.forEach(propertyValue -> {
-//                if (propertyValue.getPropertyIdentifier() == PropertyIdentifier.presentValue) {
-//                    Object value = encodableToPrimitive(propertyValue.getValue());
-//                    int priority = propertyValue.getPriority().intValue();
-//                    req = new EdgeWriteRequest()
-//                }
-//            });
-//        } catch (Exception e) {
-//            return null;
-//        }
-//        return req;
-//    }
+    //    public static EdgeWriteRequest CovNotification(ObjectIdentifier initiatingDeviceIdentifier,
+    //                                                   ObjectIdentifier monitoredObjectIdentifier,
+    //                                                   SequenceOf<PropertyValue> listOfValues) {
+    //        EdgeWriteRequest req;
+    //        try {
+    //            listOfValues.forEach(propertyValue -> {
+    //                if (propertyValue.getPropertyIdentifier() == PropertyIdentifier.presentValue) {
+    //                    Object value = encodableToPrimitive(propertyValue.getValue());
+    //                    int priority = propertyValue.getPriority().intValue();
+    //                    req = new EdgeWriteRequest()
+    //                }
+    //            });
+    //        } catch (Exception e) {
+    //            return null;
+    //        }
+    //        return req;
+    //    }
 
-    public static JsonObject readMultipleToJson(PropertyValues values){
+    public static JsonObject readMultipleToJson(PropertyValues values) {
         JsonObject json = new JsonObject();
         values.forEach(objectPropertyReference -> {
             try {
-                json.put(pointFormatBACnet(objectPropertyReference.getObjectIdentifier()), encodableToPrimitive(values.get(objectPropertyReference)));
-            }catch (Exception e){}
+                json.put(pointFormatBACnet(objectPropertyReference.getObjectIdentifier()),
+                         encodableToPrimitive(values.get(objectPropertyReference)));
+            } catch (Exception e) {
+            }
         });
         return json;
     }
@@ -111,6 +120,16 @@ public class BACnetDataConversions {
         }
     }
 
+    public static boolean isPrimitiveNull(Object obj) {
+        if (obj instanceof String) {
+            String str = (String) obj;
+            if (str.isEmpty() || str.equalsIgnoreCase("null")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static BinaryPV primitiveToBinary(Object obj) {
         if (obj instanceof Integer || obj instanceof Long) {
             return BinaryPV.forId((Integer) obj);
@@ -126,7 +145,7 @@ public class BACnetDataConversions {
             }
         } else if (obj instanceof String) {
             String str = (String) obj;
-            if (str.equals("true") || str.equals("1") || str.equals("on")) {
+            if (str.equalsIgnoreCase("true") || str.equals("1") || str.equalsIgnoreCase("on")) {
                 return BinaryPV.active;
             } else {
                 return BinaryPV.inactive;
@@ -155,15 +174,17 @@ public class BACnetDataConversions {
         return oid.getObjectType().toString() + ":" + oid.getInstanceNumber();
     }
 
-    public static String  pointIDNubeToBACnet(String id) throws Exception {
+    public static String pointIDNubeToBACnet(String id) throws Exception {
         //TODO: problem with Relays and having more than 10 Binary Outputs... kill me
         String pointPrefix = null;
         int inst = 0;
-        if(id.startsWith("UI") || id.startsWith("UO") || id.startsWith("DI") || id.startsWith("DO")){
+        if (id.startsWith("UI") || id.startsWith("UO") || id.startsWith("DI") || id.startsWith("DO")) {
             pointPrefix = id.substring(0, 2);
-        }else if(id.startsWith("R")){
-            pointPrefix = id.substring(0,1);
-        }else throw new BACnetException("Invalid Nube point Id");
+        } else if (id.startsWith("R")) {
+            pointPrefix = id.substring(0, 1);
+        } else {
+            throw new BACnetException("Invalid Nube point Id");
+        }
 
         try {
             inst = Integer.parseInt(id.substring(pointPrefix.length()));
