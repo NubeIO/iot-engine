@@ -13,6 +13,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
+import com.nubeiot.edge.bios.mock.MockBiosEdgeVerticle;
 import com.nubeiot.edge.installer.InstallerVerticle;
 import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.TblModule;

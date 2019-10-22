@@ -18,7 +18,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class MockFailedModuleLoader implements EventListener {
+public class MockFailedAppDeploymentService implements EventListener {
 
     private final DeploymentAsserter deploymentAsserter;
 

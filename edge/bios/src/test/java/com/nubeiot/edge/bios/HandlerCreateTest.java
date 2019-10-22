@@ -1,6 +1,5 @@
 package com.nubeiot.edge.bios;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
@@ -10,9 +9,9 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
+import com.nubeiot.edge.bios.mock.MockBiosEdgeVerticle;
 import com.nubeiot.edge.installer.InstallerVerticle;
 
-@Ignore
 public class HandlerCreateTest extends BaseInstallerVerticleTest {
 
     @Override
@@ -26,11 +25,9 @@ public class HandlerCreateTest extends BaseInstallerVerticleTest {
                                               .put("group_id", GROUP_ID)
                                               .put("version", VERSION);
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
-        executeThenAssert(EventAction.CREATE, context, body, response -> {
-            //TODO add asserter
-            System.out.println(response);
-        });
-        //Checking module state and transaction status
+        executeThenAssert(EventAction.CREATE, context, body,
+                          response -> context.assertEquals(response.getString("status"), Status.SUCCESS.name()));
+        // Checking module state and transaction status
         testingDBUpdated(context, State.ENABLED, Status.SUCCESS, APP_CONFIG);
     }
 
