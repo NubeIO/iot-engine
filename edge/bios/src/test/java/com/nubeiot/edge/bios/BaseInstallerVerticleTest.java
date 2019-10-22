@@ -133,6 +133,10 @@ public abstract class BaseInstallerVerticleTest {
         async.awaitSuccess();
     }
 
+    protected void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus) {
+        testingDBUpdated(context, expectedModuleState, expectedTransactionStatus, new JsonObject());
+    }
+
     protected void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus,
                                     JsonObject expectedConfig) {
         CountDownLatch latch = new CountDownLatch(2);

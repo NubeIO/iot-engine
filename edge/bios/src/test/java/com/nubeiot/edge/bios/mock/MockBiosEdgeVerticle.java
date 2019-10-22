@@ -4,7 +4,6 @@ import com.nubeiot.core.event.EventListener;
 import com.nubeiot.edge.bios.EdgeBiosVerticle;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
 import com.nubeiot.edge.bios.loader.MockAppDeploymentService;
-import com.nubeiot.edge.bios.loader.MockFailedAppDeploymentService;
 import com.nubeiot.edge.installer.service.AppDeployer;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
@@ -14,10 +13,10 @@ import lombok.RequiredArgsConstructor;
 public class MockBiosEdgeVerticle extends EdgeBiosVerticle {
 
     private final DeploymentAsserter deploymentAsserter;
-    private final boolean failed;
+    private final boolean deployState;
 
     public MockBiosEdgeVerticle(DeploymentAsserter deploymentAsserter) {
-        this(deploymentAsserter, false);
+        this(deploymentAsserter, true);
     }
 
     @Override
@@ -27,9 +26,7 @@ public class MockBiosEdgeVerticle extends EdgeBiosVerticle {
 
     @Override
     protected @lombok.NonNull AppDeployer appDeployer() {
-        final EventListener loaderHandler = failed
-                                            ? new MockFailedAppDeploymentService(deploymentAsserter)
-                                            : new MockAppDeploymentService(this, deploymentAsserter);
+        final EventListener loaderHandler = new MockAppDeploymentService(this, deploymentAsserter, deployState);
         return MockAppDeployer.create(InstallerEventModel.BIOS_DEPLOYMENT, InstallerEventModel.BIOS_DEPLOYMENT_TRACKER,
                                       InstallerEventModel.BIOS_DEPLOYMENT_FINISHER, loaderHandler);
     }

@@ -29,11 +29,13 @@ public class MockAppDeploymentService implements DeploymentService {
 
     private final MockBiosEdgeVerticle mockBiosEdgeVerticle;
     private final DeploymentAsserter deploymentAsserter;
+    private final boolean deployState;
 
     public MockAppDeploymentService(@NotNull MockBiosEdgeVerticle mockBiosEdgeVerticle,
-                                    @NotNull DeploymentAsserter deploymentAsserter) {
+                                    @NotNull DeploymentAsserter deploymentAsserter, @NotNull boolean deployState) {
         this.mockBiosEdgeVerticle = mockBiosEdgeVerticle;
         this.deploymentAsserter = deploymentAsserter;
+        this.deployState = deployState;
     }
 
     @EventContractor(action = {
@@ -51,7 +53,11 @@ public class MockAppDeploymentService implements DeploymentService {
     private void publishResult(PreDeploymentResult preResult) {
         final EventController client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
         final AppDeployer deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
-        final PostDeploymentResult pr = PostDeploymentResult.from(preResult, "123", new JsonObject());
+        JsonObject error = new JsonObject();
+        if (!deployState) {
+            error = error.put("error", "Module deployment failed");
+        }
+        final PostDeploymentResult pr = PostDeploymentResult.from(preResult, "123", error);
         client.request(DeliveryEvent.from(deployer.getTrackerEvent(), new JsonObject().put("result", pr.toJson())));
     }
 
