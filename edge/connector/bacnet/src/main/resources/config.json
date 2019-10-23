@@ -25,12 +25,11 @@
       }
     },
     "__bacnet__": {
-      "modelName" : "NubeIO-Edge28",
-      "discoveryTimeout" : 10,
-      "discoveryTimeoutUnit" : "SECONDS",
-      "allowSlave" : true,
-      "localPointsApiAddress" : "/edge-api/points",
-      "__networks__" : { }
+      "modelName": "NubeIO-Edge28",
+      "maxDiscoverTimeout": 10,
+      "maxDiscoverTimeoutUnit": "SECONDS",
+      "allowSlave": true,
+      "gatewayDiscoverAddress": ""
     }
   }
 }

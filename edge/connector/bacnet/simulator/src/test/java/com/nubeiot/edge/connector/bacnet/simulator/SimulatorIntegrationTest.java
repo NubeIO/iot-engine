@@ -27,9 +27,8 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.utils.Configs;
-import com.nubeiot.edge.connector.bacnet.BACnetConfig;
-import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
-import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.AbstractBACnetConfig;
+import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
 import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 
 //temporary ignore
@@ -39,9 +38,9 @@ public class SimulatorIntegrationTest {
 
     static Vertx vertx;
     static EventController eventController;
-    static BACnetVerticle verticle;
-    static BACnetConfig simConfig;
-    static BACnetConfig masterBACnetConfig;
+    static BACnetSimulator verticle;
+    static AbstractBACnetConfig simConfig;
+    static AbstractBACnetConfig masterBACnetConfig;
     static JsonObject testPoints;
     static Integer remoteDeviceId;
 
@@ -59,9 +58,9 @@ public class SimulatorIntegrationTest {
         eventController = SharedDataDelegate.getEventController(vertx.getDelegate(),
                                                                 SimulatorIntegrationTest.class.getName());
         JsonObject masterConfig = IConfig.fromClasspath("master.json", NubeConfig.class).toJson();
-        masterBACnetConfig = IConfig.from(masterConfig, BACnetConfig.class);
+        masterBACnetConfig = IConfig.from(masterConfig, AbstractBACnetConfig.class);
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(masterConfig), verticle);
-        simConfig = IConfig.fromClasspath("config.json", BACnetConfig.class);
+        simConfig = IConfig.fromClasspath("config.json", AbstractBACnetConfig.class);
         remoteDeviceId = simConfig.getDeviceId();
         testPoints = Configs.loadJsonConfig("points.json");
         ThreadUtils.sleep(1000); //just to assure enough discovery time
@@ -139,7 +138,7 @@ public class SimulatorIntegrationTest {
                                  });
                                  //                                 TestHelper.testComplete(async);
                                  RequestData req2 = RequestData.builder()
-                                                               .body(addNetWorkToJson(new JsonObject()).put("deviceId",
+                                                               .body(addNetworkToJson(new JsonObject()).put("deviceId",
                                                                                                             remoteDeviceId
                                                                                                                 .toString())
                                                                                                        .put("allData",
@@ -482,7 +481,7 @@ public class SimulatorIntegrationTest {
                                                      message3.getData().getFloat("present-value") != val);
                                                  context.assertFalse(message3.getData()
                                                                              .getString("priority-array")
-                                                                             .contains("10=" + Double.toString(val)));
+                                                                             .contains("10=" + val));
                                                  TestHelper.testComplete(async);
                                              }, null);
                     }, null);
@@ -490,7 +489,8 @@ public class SimulatorIntegrationTest {
     }
 
     private JsonObject addNetworkToJson(JsonObject json) {
-        return json.put("network", masterBACnetConfig.getNetworks().toNetworks().iterator().next().getName());
+        //        return json.put("network", masterBACnetConfig.getNetworks().toNetworks().iterator().next().getName());
+        return json;
     }
 
 }

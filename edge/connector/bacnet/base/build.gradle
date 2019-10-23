@@ -5,8 +5,9 @@ repositories {
 
 dependencies {
     compile project(':core:base')
-    compile project(':edge:connector:bacnet:base')
+    compile project(':core:cache')
+    compile project(':core:iotdata')
+    compile "com.infiniteautomation:bacnet4j:5.0.2"
 
     testCompile project(":core:base").sourceSets.test.output
-    testCompile "org.mockito:mockito-core:1.+"
 }

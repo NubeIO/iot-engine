@@ -16,13 +16,14 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate.AbstractSharedDataDelegate;
-import com.nubeiot.edge.connector.bacnet.dto.BACnetDeviceMetadata;
+import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.converter.LocalPointObjectUtils;
+import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
+import com.nubeiot.edge.connector.bacnet.dto.TransportProvider;
 import com.nubeiot.edge.connector.bacnet.handlers.BACnetEventListener;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
-import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
-import com.nubeiot.edge.connector.bacnet.utils.LocalPointObjectUtils;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.cache.RemoteEntityCachePolicy;
@@ -55,7 +56,7 @@ import lombok.NonNull;
  *
  * @implNote Use {@link DeviceEventListener} to listen event.
  *     <p>
- *     Must add more listener in {@link #addBACnetEvent(BACnetDeviceMetadata, LocalDevice, Map)}
+ *     Must add more listener in {@link #addBACnetEvent(LocalDeviceMetadata, LocalDevice, Map)}
  */
 public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInstance> {
 
@@ -76,8 +77,7 @@ public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInsta
     private BACnetInstance(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull TransportProvider provider) {
         super(vertx);
         registerSharedKey(sharedKey);
-        final BACnetDeviceMetadata metadata = getSharedDataValue(BACnetVerticle.DEVICE_METADATA);
-        this.localDevice = metadata.decorate(new LocalDevice(metadata.getDeviceNumber(), provider.get()));
+        this.localDevice = BACnetDevice.create(getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA), provider);
         logger.info("Init BACnet instance with network {}", provider.config().toJson());
     }
 
@@ -103,20 +103,20 @@ public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInsta
     }
 
     private Single<BACnetInstance> init(@NonNull Map<String, BACnetInstance> instances) {
-        final BACnetDeviceMetadata metadata = getSharedDataValue(BACnetVerticle.DEVICE_METADATA);
+        final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);
         //TODO should consider RemoteEntityCachePolicy.NEVER_EXPIRE
         return Single.fromCallable(localDevice::initialize)
                      .map(ld -> addBACnetEvent(metadata, localDevice, instances))
                      .map(ld -> ld.startRemoteDeviceDiscovery(rd -> ld.getCachePolicies()
                                                                       .putDevicePolicy(rd.getInstanceNumber(),
                                                                                        RemoteEntityCachePolicy.NEVER_EXPIRE)))
-                     .delay(metadata.getDiscoverTimeout(), TimeUnit.SECONDS)
+                     .delay(metadata.getMaxTimeoutInMS(), TimeUnit.MILLISECONDS)
                      .doOnEvent((discoverer, throwable) -> discoverer.stop())
                      .doOnSuccess(discover -> deviceDiscoverer = discover)
                      .map(discover -> this);
     }
 
-    private LocalDevice addBACnetEvent(@NonNull BACnetDeviceMetadata metadata, @NonNull LocalDevice localDevice,
+    private LocalDevice addBACnetEvent(@NonNull LocalDeviceMetadata metadata, @NonNull LocalDevice localDevice,
                                        @NonNull Map<String, BACnetInstance> instances) {
         localDevice.getEventHandler().addListener(new WhoIsListener());
         //TODO: not meaningful, should remove
@@ -129,8 +129,8 @@ public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInsta
 
     @Deprecated
     public void startRemoteDiscover() {
-        final BACnetDeviceMetadata metadata = getSharedDataValue(BACnetVerticle.DEVICE_METADATA);
-        startRemoteDiscover(metadata.getDiscoverTimeout() * 1000);
+        final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);
+        startRemoteDiscover(metadata.getMaxTimeoutInMS());
     }
 
     @Deprecated

@@ -16,8 +16,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.utils.FileUtils;
+import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
-import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.cache.RemoteEntityCachePolicy;

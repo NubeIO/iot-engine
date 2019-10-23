@@ -15,7 +15,7 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.edge.connector.bacnet.BACnetEventModels;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
-import com.nubeiot.edge.connector.bacnet.service.NetworkDiscovery;
+import com.nubeiot.edge.connector.bacnet.service.discover.NetworkDiscovery;
 import com.serotonin.bacnet4j.exception.BACnetException;
 
 import lombok.NonNull;

@@ -24,7 +24,7 @@ import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetIP;
-import com.nubeiot.edge.connector.bacnet.service.NetworkDiscovery;
+import com.nubeiot.edge.connector.bacnet.service.discover.NetworkDiscovery;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -55,20 +55,17 @@ public class BACnetVerticleTest {
 
     @After
     public void after(TestContext context) {
-        this.vertx.close(context.asyncAssertSuccess());
+        this.vertx.close();
     }
 
     @Test
     public void test(TestContext context) {
         Async async = context.async();
-        final BACnetIP dockerIp = BACnetIP.builder().subnet("172.20.0.1/16").name("docker").build();
+        final BACnetIP dockerIp = BACnetIP.builder().subnet("172.17.0.1/16").name("docker").build();
         busClient.request(DeliveryEvent.builder()
                                        .address(NetworkDiscovery.class.getName())
                                        .action(EventAction.DISCOVER)
-                                       .addPayload(RequestData.builder()
-                                                              .body(dockerIp.toJson())
-                                                              .filter(new JsonObject().put("timeout", 3))
-                                                              .build())
+                                       .addPayload(RequestData.builder().body(dockerIp.toJson()).build())
                                        .build(), EventbusHelper.replyAsserter(context, async, new JsonObject()));
     }
 

@@ -7,10 +7,10 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
+import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.converter.LocalPointObjectUtils;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
-import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
-import com.nubeiot.edge.connector.bacnet.utils.LocalPointObjectUtils;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
 import com.serotonin.bacnet4j.exception.BACnetException;
