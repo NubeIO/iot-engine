@@ -10,7 +10,7 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
-import com.nubeiot.edge.bios.mock.MockBiosEdgeVerticle;
+import com.nubeiot.edge.bios.mock.MockEdgeBiosVerticle;
 import com.nubeiot.edge.installer.InstallerVerticle;
 import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
@@ -19,7 +19,7 @@ public class HandlerDeployFailedTest extends BaseInstallerVerticleTest {
 
     @Override
     protected InstallerVerticle initMockupVerticle(TestContext context) {
-        return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context), false);
+        return new MockEdgeBiosVerticle(DeploymentAsserter.init(vertx, context), false);
     }
 
     @Test

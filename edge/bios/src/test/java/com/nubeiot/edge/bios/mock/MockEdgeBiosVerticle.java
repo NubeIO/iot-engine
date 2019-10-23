@@ -10,12 +10,12 @@ import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class MockBiosEdgeVerticle extends EdgeBiosVerticle {
+public class MockEdgeBiosVerticle extends EdgeBiosVerticle {
 
     private final DeploymentAsserter deploymentAsserter;
     private final boolean deployState;
 
-    public MockBiosEdgeVerticle(DeploymentAsserter deploymentAsserter) {
+    public MockEdgeBiosVerticle(DeploymentAsserter deploymentAsserter) {
         this(deploymentAsserter, true);
     }
 

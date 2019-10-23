@@ -72,7 +72,7 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
     }
 
     @Override
-    public final Single<EventMessage> initData() {
+    public Single<EventMessage> initData() {
         final InstallerConfig config = sharedData(SHARED_INSTALLER_CFG);
         return addBuiltinApps(config).map(results -> EventMessage.success(EventAction.INIT, results));
     }

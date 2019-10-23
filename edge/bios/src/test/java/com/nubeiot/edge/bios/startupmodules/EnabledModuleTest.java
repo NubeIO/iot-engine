@@ -8,6 +8,7 @@ import io.vertx.ext.unit.TestContext;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.edge.bios.BaseInstallerVerticleTest;
 import com.nubeiot.edge.bios.startupmodules.handler.EnabledModuleInitData;
+import com.nubeiot.edge.bios.startupmodules.mock.MockBiosStartupModulesVerticle;
 import com.nubeiot.edge.installer.InstallerVerticle;
 
 @Ignore

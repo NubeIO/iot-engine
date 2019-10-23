@@ -1,6 +1,5 @@
 package com.nubeiot.edge.bios.startupmodules;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import io.vertx.ext.unit.TestContext;
@@ -8,9 +7,13 @@ import io.vertx.ext.unit.TestContext;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.edge.bios.BaseInstallerVerticleTest;
 import com.nubeiot.edge.bios.startupmodules.handler.InvalidModulesInitData;
+import com.nubeiot.edge.bios.startupmodules.mock.MockBiosStartupModulesVerticle;
 import com.nubeiot.edge.installer.InstallerVerticle;
 
-@Ignore
+/**
+ * It basically updates the Table > Module to DISABLE state via searching the Table > Transaction state which is WIP and
+ * then searches for prev_meta_data of Table > Module
+ */
 public class GettingInvalidModulesTest extends BaseInstallerVerticleTest {
 
     @Override
@@ -38,11 +41,6 @@ public class GettingInvalidModulesTest extends BaseInstallerVerticleTest {
     @Test
     public void test_module_with_2_transactions_invalid(TestContext context) {
         assertModuleState(context, context.async(), State.DISABLED, "pending_module_with_two_transactions_invalid");
-    }
-
-    @Test
-    public void test_pending_but_failed_module(TestContext context) {
-        assertModuleState(context, context.async(), State.DISABLED, "pending-but-failed-module");
     }
 
 }

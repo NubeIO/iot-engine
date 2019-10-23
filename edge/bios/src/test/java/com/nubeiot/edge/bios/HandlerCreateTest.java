@@ -9,14 +9,14 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
-import com.nubeiot.edge.bios.mock.MockBiosEdgeVerticle;
+import com.nubeiot.edge.bios.mock.MockEdgeBiosVerticle;
 import com.nubeiot.edge.installer.InstallerVerticle;
 
 public class HandlerCreateTest extends BaseInstallerVerticleTest {
 
     @Override
     protected InstallerVerticle initMockupVerticle(TestContext context) {
-        return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context));
+        return new MockEdgeBiosVerticle(DeploymentAsserter.init(vertx, context));
     }
 
     @Test

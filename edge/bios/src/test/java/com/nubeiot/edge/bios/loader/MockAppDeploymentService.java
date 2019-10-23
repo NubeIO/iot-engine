@@ -15,7 +15,7 @@ import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.edge.bios.mock.MockBiosEdgeVerticle;
+import com.nubeiot.edge.bios.EdgeBiosVerticle;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.model.dto.PostDeploymentResult;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
@@ -27,13 +27,13 @@ import lombok.NonNull;
 
 public class MockAppDeploymentService implements DeploymentService {
 
-    private final MockBiosEdgeVerticle mockBiosEdgeVerticle;
+    private final EdgeBiosVerticle edgeBiosVerticle;
     private final DeploymentAsserter deploymentAsserter;
     private final boolean deployState;
 
-    public MockAppDeploymentService(@NotNull MockBiosEdgeVerticle mockBiosEdgeVerticle,
-                                    @NotNull DeploymentAsserter deploymentAsserter, @NotNull boolean deployState) {
-        this.mockBiosEdgeVerticle = mockBiosEdgeVerticle;
+    public MockAppDeploymentService(@NotNull EdgeBiosVerticle edgeBiosVerticle, DeploymentAsserter deploymentAsserter,
+                                    boolean deployState) {
+        this.edgeBiosVerticle = edgeBiosVerticle;
         this.deploymentAsserter = deploymentAsserter;
         this.deployState = deployState;
     }
@@ -70,7 +70,7 @@ public class MockAppDeploymentService implements DeploymentService {
     @Override
     @SuppressWarnings("unchecked")
     public <D> D sharedData(String dataKey) {
-        Function<String, Object> sharedDataFunc = key -> mockBiosEdgeVerticle.getEntityHandler().sharedData(key);
+        Function<String, Object> sharedDataFunc = key -> edgeBiosVerticle.getEntityHandler().sharedData(key);
         return (D) sharedDataFunc.apply(dataKey);
     }
 
