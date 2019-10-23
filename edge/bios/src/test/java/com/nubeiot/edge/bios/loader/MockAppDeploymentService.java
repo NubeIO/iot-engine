@@ -21,22 +21,16 @@ import com.nubeiot.edge.installer.model.dto.PostDeploymentResult;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
 import com.nubeiot.edge.installer.service.AppDeployer;
 import com.nubeiot.edge.installer.service.DeploymentService;
-import com.sun.istack.internal.NotNull;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class MockAppDeploymentService implements DeploymentService {
 
     private final EdgeBiosVerticle edgeBiosVerticle;
     private final DeploymentAsserter deploymentAsserter;
     private final boolean deployState;
-
-    public MockAppDeploymentService(@NotNull EdgeBiosVerticle edgeBiosVerticle, DeploymentAsserter deploymentAsserter,
-                                    boolean deployState) {
-        this.edgeBiosVerticle = edgeBiosVerticle;
-        this.deploymentAsserter = deploymentAsserter;
-        this.deployState = deployState;
-    }
 
     @EventContractor(action = {
         EventAction.UPDATE, EventAction.PATCH, EventAction.INIT, EventAction.CREATE, EventAction.REMOVE
