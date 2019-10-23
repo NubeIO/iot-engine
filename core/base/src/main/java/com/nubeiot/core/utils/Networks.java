@@ -24,6 +24,7 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Networks {
@@ -41,7 +42,7 @@ public final class Networks {
     static final String CLUSTER_PUBLIC_EVENTBUS_PORT_PROP = "nube.cluster.public.eventbus.port";
     private static final Logger logger = LoggerFactory.getLogger(Networks.class);
     private static final List<String> BLACK_LIST_ADDRESS = Arrays.asList("0.0.0.0", "127.0.0.1", "localhost");
-    private static final String DEFAULT_ADDRESS = "0.0.0.0";
+    private static final String GLOBAL_ADDRESS = "0.0.0.0";
     private static final String IPV4_REGEX
         = "(([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])";
     private static String natHost = "";
@@ -158,8 +159,8 @@ public final class Networks {
         if (usableINetAddresses.size() > 1) {
             logger.warn("Don't know which INetAddress to use, there are more than one: {}", usableINetAddresses);
             // TODO: switch case between Docker environment and Bare-metal server | device
-            logger.warn("Hence we are using localhost address: {}", DEFAULT_ADDRESS);
-            return DEFAULT_ADDRESS;
+            logger.warn("Hence we are using localhost address: {}", GLOBAL_ADDRESS);
+            return GLOBAL_ADDRESS;
         } else if (usableINetAddresses.size() == 1) {
             logger.info("Found default INetAddress: {}", usableINetAddresses.get(0).toString());
             return usableINetAddresses.get(0).getHostAddress();
@@ -167,7 +168,7 @@ public final class Networks {
 
         logger.warn("Not found usable INet address, fallback to loopback");
         InetAddress loopbackAddress = InetAddress.getLoopbackAddress();
-        return Objects.isNull(loopbackAddress) ? DEFAULT_ADDRESS : loopbackAddress.getHostAddress();
+        return Objects.isNull(loopbackAddress) ? GLOBAL_ADDRESS : loopbackAddress.getHostAddress();
     }
 
     private static Enumeration<NetworkInterface> getNetworkInterfaces() {
@@ -196,18 +197,7 @@ public final class Networks {
     }
 
     public static InterfaceAddress firstNATIPv4() {
-        Enumeration<NetworkInterface> nets = getNetworkInterfaces();
-        while (nets.hasMoreElements()) {
-            NetworkInterface networkInterface = nets.nextElement();
-            final Optional<InterfaceAddress> first = networkInterface.getInterfaceAddresses()
-                                                                     .stream()
-                                                                     .filter(IS_V4)
-                                                                     .findFirst();
-            if (first.isPresent()) {
-                return first.get();
-            }
-        }
-        throw new NetworkException("Cannot find any IPv4 network interface");
+        return getInterfaceIPv4(interfaceAddress -> true);
     }
 
     public static boolean validIPv4(String ip) {
@@ -223,6 +213,26 @@ public final class Networks {
 
     public static int priorityOrder(int len, int factor) {
         return len > factor ? priorityOrder(len, factor * 10) : (factor - len) * factor;
+    }
+
+    public static String getHostAddressByBroadcast(@NonNull String broadcast) {
+        return getInterfaceIPv4(ia -> ia.getBroadcast().getHostAddress().equals(broadcast)).getAddress()
+                                                                                           .getHostAddress();
+    }
+
+    public static InterfaceAddress getInterfaceIPv4(@NonNull Predicate<InterfaceAddress> predicate) {
+        Enumeration<NetworkInterface> nets = getNetworkInterfaces();
+        while (nets.hasMoreElements()) {
+            final NetworkInterface networkInterface = nets.nextElement();
+            final Optional<InterfaceAddress> first = networkInterface.getInterfaceAddresses()
+                                                                     .stream()
+                                                                     .filter(IS_V4.and(predicate))
+                                                                     .findFirst();
+            if (first.isPresent()) {
+                return first.get();
+            }
+        }
+        throw new NetworkException("Cannot find any IPv4 network interface");
     }
 
 }

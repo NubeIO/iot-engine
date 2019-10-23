@@ -19,7 +19,7 @@ services:
       ./wait-for-it.sh nexus:8081 --timeout=120 -s -- ./entrypoint.sh
     mem_limit: 400m
     cpuset: "0"
-    cpus: 0.35
+    cpus: 0.4
     #    cpu_percent: 35
     #    cpu_quota: 50000
     #    cpu_period: 20ms
@@ -29,7 +29,6 @@ services:
       - ${BIOS_EVENTBUS_PORT}:5000
       - ${BIOS_CLUSTER_PORT}:5701
       - ${BIOS_GATEWAY_PORT}:8080
-      - ${BIOS_BACNET_PORT}:47808/udp
     volumes:
       - bios-data:/data
       - ./engine/bios.json:/app/conf/config.json

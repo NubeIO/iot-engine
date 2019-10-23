@@ -1,18 +1,18 @@
 version: "2.4"
 services:
 
-  bacnet-java-simulator:
+  bacnet-sn1:
     image: ${PREFIX_IMG}/edge-connector-bacnet-simulator:${IOT_VERSION}
-    mem_limit: 480m
+    mem_limit: 200m
     cpuset: "0"
     environment:
-      JVM_OPTS: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseContainerSupport -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:MaxRAM=395m -XX:MinRAMPercentage=50.0 -XX:MaxRAMPercentage=80.0 -Xss256k -XX:ActiveProcessorCount=0
+      JVM_OPTS: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseContainerSupport -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:MaxRAM=165m -XX:MinRAMPercentage=50.0 -XX:MaxRAMPercentage=80.0 -Xss256k -XX:ActiveProcessorCount=0
     volumes:
-      - bacnet-data:/data
+      - bacnet-data-sn1:/data
     networks:
       - bacnet-n1
 
-  bacnet-simulator-for-java:
+  bacnet-s4c-n1:
     image: c-bacnet
     mem_limit: 56m
     environment:
@@ -28,6 +28,17 @@ services:
     networks:
       - bacnet-n1
 
+  bacnet-sn2:
+    image: ${PREFIX_IMG}/edge-connector-bacnet-simulator:${IOT_VERSION}
+    mem_limit: 200m
+    cpuset: "0"
+    environment:
+      JVM_OPTS: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseContainerSupport -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:MaxRAM=165m -XX:MinRAMPercentage=50.0 -XX:MaxRAMPercentage=80.0 -Xss256k -XX:ActiveProcessorCount=0
+    volumes:
+      - bacnet-data-sn2:/data
+    networks:
+      - bacnet-n2
+
   bacnet-server-n2:
     image: c-bacnet
     mem_limit: 56m
@@ -35,7 +46,7 @@ services:
     networks:
       - bacnet-n2
 
-  bacnet-simulator-for-c:
+  bacnet-s4c-n2:
     image: c-bacnet
     mem_limit: 56m
     environment:
@@ -50,7 +61,7 @@ services:
 #     networks:
 #       - bacnet-n3
 
-#   bacnet-simulator-for-py:
+#   bacnet-s4p-n3:
 #     image: c-bacnet
 #     mem_limit: 56m
 #     environment:
@@ -60,7 +71,9 @@ services:
 #       - bacnet-n3
 
 volumes:
-  bacnet-data:
+  bacnet-data-sn1:
+    driver: local
+  bacnet-data-sn2:
     driver: local
 
 networks:
