@@ -44,7 +44,8 @@ public final class NetworkDiscovery extends AbstractBACnetDiscoveryService imple
                                           ? BACnetDataConversions.deviceExtended(remoteDevice)
                                           : BACnetDataConversions.deviceMinimal(remoteDevice))
                      .collect(JsonArray::new, JsonArray::add)
-                     .map(results -> new JsonObject().put("remote_devices", results));
+                     .map(results -> new JsonObject().put("remote_devices", results))
+                     .doFinally(device::stop);
     }
 
 }

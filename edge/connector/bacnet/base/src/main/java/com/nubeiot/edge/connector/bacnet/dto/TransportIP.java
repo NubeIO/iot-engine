@@ -44,7 +44,9 @@ final class TransportIP implements TransportProvider {
             throw new NetworkException("Subnet is invalid: " + check);
         }
         final IpNetworkBuilder builder = new IpNetworkBuilder().withSubnet(parts[0], prefix);
-        return builder.withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT)).withReuseAddress(true).build();
+        return builder.withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT))
+                      .withLocalBindAddress(Networks.getHostAddressByBroadcast(builder.getBroadcastAddress()))
+                      .build();
     }
 
     static IpNetwork byNetworkName(String networkName, int port) {
@@ -54,7 +56,8 @@ final class TransportIP implements TransportProvider {
         LOGGER.info("Interface address for BACnetIP: {}", address.toString());
         return new IpNetworkBuilder().withBroadcast(address.getBroadcast().getHostAddress(),
                                                     address.getNetworkPrefixLength())
-                                     .withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT)).withReuseAddress(true)
+                                     .withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT))
+                                     .withLocalBindAddress(address.getAddress().getHostAddress())
                                      .build();
     }
 

@@ -55,13 +55,13 @@ public class BACnetVerticleTest {
 
     @After
     public void after(TestContext context) {
-        this.vertx.close();
+        this.vertx.close(context.asyncAssertSuccess());
     }
 
     @Test
     public void test(TestContext context) {
         Async async = context.async();
-        final BACnetIP dockerIp = BACnetIP.builder().subnet("172.17.0.1/16").name("docker").build();
+        final BACnetIP dockerIp = BACnetIP.builder().subnet("10.10.14.1/24").name("docker").build();
         busClient.request(DeliveryEvent.builder()
                                        .address(NetworkDiscovery.class.getName())
                                        .action(EventAction.DISCOVER)
