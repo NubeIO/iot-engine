@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bacnet;
 
+import java.util.Optional;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -8,6 +10,7 @@ import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -20,9 +23,11 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetIP;
 import com.nubeiot.edge.connector.bacnet.service.discover.NetworkDiscovery;
 
@@ -46,7 +51,12 @@ public class BACnetVerticleTest {
         DeploymentOptions options = new DeploymentOptions().setConfig(getNubeConfig().toJson());
         this.vertx = Vertx.vertx();
         final BACnetVerticle verticle = new BACnetVerticle();
-        VertxHelper.deploy(vertx, context, options, verticle, event -> busClient = verticle.getEventController());
+        final Async async = context.async();
+        VertxHelper.deploy(vertx, context, options, verticle, event -> {
+            busClient = verticle.getEventController();
+            TestHelper.sleep(500);
+            TestHelper.testComplete(async);
+        });
     }
 
     private NubeConfig getNubeConfig() {
@@ -59,9 +69,33 @@ public class BACnetVerticleTest {
     }
 
     @Test
+    public void test_get_networks(TestContext context) {
+        final Async async = context.async();
+        Handler<JsonObject> handler = json -> {
+            final EventMessage eventMessage = EventMessage.tryParse(json);
+            try {
+                context.assertEquals(Status.SUCCESS, eventMessage.getStatus());
+                context.assertEquals(EventAction.GET_LIST, eventMessage.getAction());
+                JsonObject ip = Optional.ofNullable(eventMessage.getData())
+                                        .map(js -> js.getJsonObject("ip", new JsonObject()))
+                                        .orElseGet(JsonObject::new);
+                System.out.println(ip.encodePrettily());
+                context.assertNotEquals(0, ip.size());
+            } finally {
+                TestHelper.testComplete(async);
+            }
+        };
+        busClient.request(DeliveryEvent.builder()
+                                       .address(NetworkDiscovery.class.getName())
+                                       .action(EventAction.GET_LIST)
+                                       .payload(new JsonObject())
+                                       .build(), EventbusHelper.replyAsserter(context, handler));
+    }
+
+    @Test
     public void test(TestContext context) {
         Async async = context.async();
-        final BACnetIP dockerIp = BACnetIP.builder().subnet("10.10.14.1/24").name("docker").build();
+        final BACnetIP dockerIp = BACnetIP.builder().subnet("192.168.16.1/20").name("docker").build();
         busClient.request(DeliveryEvent.builder()
                                        .address(NetworkDiscovery.class.getName())
                                        .action(EventAction.DISCOVER)

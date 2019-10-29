@@ -77,6 +77,14 @@ public interface TestHelper {
         }
     }
 
+    static void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     interface VertxHelper {
 
         static <T extends Verticle> T deploy(@NonNull Vertx vertx, @NonNull TestContext context,

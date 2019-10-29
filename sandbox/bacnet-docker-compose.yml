@@ -1,7 +1,7 @@
 version: "2.4"
 services:
 
-  bacnet-sn1:
+  bacnet-java-n1:
     image: ${PREFIX_IMG}/edge-connector-bacnet-simulator:${IOT_VERSION}
     mem_limit: 200m
     cpuset: "0"
@@ -12,63 +12,89 @@ services:
     networks:
       - bacnet-n1
 
-#  bacnet-s4c-n1:
-#    image: c-bacnet
-#    mem_limit: 56m
-#    environment:
-#      DEVICE_NUMBER: 222
-#    command: ["perl", "./simulator.pl"]
-#    networks:
-#      - bacnet-n1
-#
-#  bacnet-server-n1:
-#    image: c-bacnet
-#    mem_limit: 56m
-#    command: ["bacserv", "200001"]
-#    networks:
-#      - bacnet-n1
+  bacnet-py1-n1:
+    image: py-bacnet
+    mem_limit: 56m
+    environment:
+      DEVICE_ID: 4000
+      DEVICE_NAME: spy1-n1
+    command: ["HandsOnLab/Sample1_SimpleApplication", "--debug"]
+    networks:
+      - bacnet-n1
 
-#  bacnet-sn2:
-#    image: ${PREFIX_IMG}/edge-connector-bacnet-simulator:${IOT_VERSION}
-#    mem_limit: 200m
-#    cpuset: "0"
-#    environment:
-#      JVM_OPTS: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseContainerSupport -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:MaxRAM=165m -XX:MinRAMPercentage=50.0 -XX:MaxRAMPercentage=80.0 -Xss256k -XX:ActiveProcessorCount=0
-#    volumes:
-#      - bacnet-data-sn2:/data
-#    networks:
-#      - bacnet-n2
-#
-#  bacnet-server-n2:
-#    image: c-bacnet
-#    mem_limit: 56m
-#    command: ["bacserv", "200002"]
-#    networks:
-#      - bacnet-n2
-#
-#  bacnet-s4c-n2:
-#    image: c-bacnet
-#    mem_limit: 56m
-#    environment:
-#      DEVICE_NUMBER: 200001
-#    command: ["perl", "./simulator.pl"]
-#    networks:
-#      - bacnet-n2
+  bacnet-java-n2:
+    image: ${PREFIX_IMG}/edge-connector-bacnet-simulator:${IOT_VERSION}
+    mem_limit: 200m
+    cpuset: "0"
+    environment:
+      JVM_OPTS: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseContainerSupport -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:MaxRAM=165m -XX:MinRAMPercentage=50.0 -XX:MaxRAMPercentage=80.0 -Xss256k -XX:ActiveProcessorCount=0
+    volumes:
+      - bacnet-data-sn2:/data
+    networks:
+      - bacnet-n2
 
-#   bacnet-py-simulator:
-#     image: py-bacnet
-#     mem_limit: 56m
-#     networks:
-#       - bacnet-n3
+  bacnet-py1-n2:
+    image: py-bacnet
+    mem_limit: 56m
+    environment:
+      DEVICE_ID: 4100
+      DEVICE_NAME: spy1-n2
+    command: ["HandsOnLab/Sample2_WhoIsIAmApplication", "--debug"]
+    networks:
+      - bacnet-n2
 
-#   bacnet-s4p-n3:
-#     image: c-bacnet
-#     mem_limit: 56m
-#     environment:
-#       DEVICE_NUMBER: 456
-#     command: ["perl", "./simulator.pl"]
-#     networks:
-#       - bacnet-n3
+  bacnet-py2-n2:
+    image: py-bacnet
+    mem_limit: 56m
+    environment:
+      DEVICE_ID: 4101
+      DEVICE_NAME: spy2-n2
+    command: ["HandsOnLab/Sample4_RandomAnalogValueObject", "--debug"]
+    networks:
+      - bacnet-n2
+
+  #  bacnet-s4c-n1:
+  #    image: c-bacnet
+  #    mem_limit: 56m
+  #    environment:
+  #      DEVICE_NUMBER: 222
+  #    command: ["perl", "./simulator.pl"]
+  #    networks:
+  #      - bacnet-n1
+  #
+  #  bacnet-server-n1:
+  #    image: c-bacnet
+  #    mem_limit: 56m
+  #    command: ["bacserv", "200001"]
+  #    networks:
+  #      - bacnet-n1
+
+  #  bacnet-sn2:
+  #    image: ${PREFIX_IMG}/edge-connector-bacnet-simulator:${IOT_VERSION}
+  #    mem_limit: 200m
+  #    cpuset: "0"
+  #    environment:
+  #      JVM_OPTS: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseContainerSupport -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:MaxRAM=165m -XX:MinRAMPercentage=50.0 -XX:MaxRAMPercentage=80.0 -Xss256k -XX:ActiveProcessorCount=0
+  #    volumes:
+  #      - bacnet-data-sn2:/data
+  #    networks:
+  #      - bacnet-n2
+  #
+  #  bacnet-server-n2:
+  #    image: c-bacnet
+  #    mem_limit: 56m
+  #    command: ["bacserv", "200002"]
+  #    networks:
+  #      - bacnet-n2
+  #
+  #  bacnet-s4c-n2:
+  #    image: c-bacnet
+  #    mem_limit: 56m
+  #    environment:
+  #      DEVICE_NUMBER: 200001
+  #    command: ["perl", "./simulator.pl"]
+  #    networks:
+  #      - bacnet-n2
 
 volumes:
   bacnet-data-sn1:
@@ -81,5 +107,3 @@ networks:
     driver: bridge
   bacnet-n2:
     driver: bridge
-#   bacnet-n3:
-#     driver: bridge

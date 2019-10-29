@@ -18,6 +18,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.utils.ExecutorHelpers;
+import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.dto.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
@@ -77,12 +78,18 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                                                  .build();
         init(DiscoverOptions.builder()
                             .timeout(metadata.getMaxTimeoutInMS())
-                            .timeUnit(TimeUnit.MILLISECONDS)
-                            .build()).subscribe(discoverer -> client.request(event), logger::error);
+                            .timeUnit(TimeUnit.MILLISECONDS).build()).doOnSuccess(
+            dis -> dis.getRemoteDevices().stream().map(BACnetDataConversions::deviceExtended).forEach(logger::info))
+                                                                     .subscribe(discoverer -> client.request(event),
+                                                                                logger::error);
     }
 
     public void stop() {
         localDevice.terminate();
+    }
+
+    public Single<LocalDevice> init() {
+        return ExecutorHelpers.blocking(getVertx(), localDevice::initialize);
     }
 
     public Observable<RemoteDevice> discoverRemoteDevices(DiscoverOptions options) {
@@ -101,7 +108,7 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                                                        .map(TimedExpiry::new)
                                                        .map(RemoteEntityCachePolicy.class::cast)
                                                        .orElse(RemoteEntityCachePolicy.NEVER_EXPIRE);
-        return ExecutorHelpers.blocking(getVertx(), localDevice::initialize).map(ld -> {
+        return init().map(ld -> {
             logger.info("BACNET::START DISCOVER - Thread: {}", Thread.currentThread().getName());
             return ld.startRemoteDeviceDiscovery(rd -> {
                 logger.info("BACNET::INSIDE DISCOVER - Thread: {}", Thread.currentThread().getName());

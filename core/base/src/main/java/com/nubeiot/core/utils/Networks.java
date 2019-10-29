@@ -9,7 +9,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -233,6 +235,29 @@ public final class Networks {
             }
         }
         throw new NetworkException("Cannot find any IPv4 network interface");
+    }
+
+    public static Map<NetworkInterface, InterfaceAddress> getActiveInterfacesIPv4() {
+        Map<NetworkInterface, InterfaceAddress> map = new HashMap<>();
+        Enumeration<NetworkInterface> nets = getNetworkInterfaces();
+        while (nets.hasMoreElements()) {
+            final NetworkInterface networkInterface = nets.nextElement();
+            try {
+                if (!networkInterface.isUp()) {
+                    continue;
+                }
+            } catch (SocketException e) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Unknown status of network interface {}", e, networkInterface.getName());
+                }
+            }
+            networkInterface.getInterfaceAddresses()
+                            .stream()
+                            .filter(IS_V4)
+                            .findFirst()
+                            .ifPresent(interfaceAddress -> map.put(networkInterface, interfaceAddress));
+        }
+        return map;
     }
 
 }

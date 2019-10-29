@@ -1,7 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +31,7 @@ public interface BACnetDiscoveryService extends BACnetService {
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
-        return Collections.unmodifiableList(Collections.singletonList(EventAction.DISCOVER));
+        return Arrays.asList(EventAction.GET_LIST, EventAction.DISCOVER);
     }
 
     @Override

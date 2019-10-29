@@ -31,7 +31,8 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
 
     @Override
     public void stop(Future<Void> future) {
-        super.stop(future.compose(v -> stopBACnet()));
+        super.stop(future);
+        //        super.stop(future.compose(v -> stopBACnet()));
     }
 
     protected void successHandler(@NonNull C config) {
