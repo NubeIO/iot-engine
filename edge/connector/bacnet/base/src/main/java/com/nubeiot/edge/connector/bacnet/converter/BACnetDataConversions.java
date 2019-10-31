@@ -30,7 +30,7 @@ public class BACnetDataConversions {
         JsonObject data = new JsonObject();
         data.put("instanceNumber", remoteDevice.getInstanceNumber());
         data.put("name", remoteDevice.getName());
-        data.put("address", remoteDevice.getAddress().toString());
+        data.put("address", remoteDevice.getAddress().getDescription());
         return data;
     }
 
@@ -38,7 +38,7 @@ public class BACnetDataConversions {
         JsonObject data = new JsonObject();
         data.put("instanceNumber", remoteDevice.getInstanceNumber());
         data.put("name", remoteDevice.getName());
-        data.put("address", remoteDevice.getAddress().toString());
+        data.put("address", remoteDevice.getAddress().getDescription());
         data.put("maxAPDULengthAccepted",
                  encodableToPrimitive(remoteDevice.getDeviceProperty(PropertyIdentifier.maxApduLengthAccepted)));
         data.put("segmentationSupported",

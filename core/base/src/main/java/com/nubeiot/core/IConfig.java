@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.core.utils.Functions.Silencer;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
@@ -61,7 +62,7 @@ public interface IConfig extends JsonData, Shareable {
                 hidden.addSuppressed(Objects.nonNull(cause.getCause()) ? cause.getCause() : cause);
             }
             String msg = Strings.isNotBlank(errorMsg) ? errorMsg : "Invalid config format";
-            throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, msg, hidden);
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, msg, hidden);
         }
     }
 
@@ -183,7 +184,7 @@ public interface IConfig extends JsonData, Shareable {
                                     : entries;
                 return mapper.convertValue(values.getMap(), clazz);
             } catch (IllegalArgumentException | ClassCastException e) {
-                throw new HiddenException(NubeException.ErrorCode.INVALID_ARGUMENT, e);
+                throw new HiddenException(ErrorCode.INVALID_ARGUMENT, e);
             }
         }
 

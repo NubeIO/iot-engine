@@ -1,9 +1,5 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
-import java.util.Map;
-
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -13,13 +9,13 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.utils.ExecutorHelpers;
-import com.nubeiot.core.utils.Networks;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
+import com.nubeiot.edge.connector.bacnet.cache.IpNetworkCache;
 import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
-import com.nubeiot.edge.connector.bacnet.dto.DiscoverOptions;
-import com.nubeiot.edge.connector.bacnet.mixin.NetworkInterfaceWrapper;
 
 import lombok.NonNull;
 
@@ -41,18 +37,17 @@ public final class NetworkDiscovery extends AbstractBACnetDiscoveryService imple
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(RequestData reqData) {
-        final Map<NetworkInterface, InterfaceAddress> activeInterfacesIPv4 = Networks.getActiveInterfacesIPv4();
-        return ExecutorHelpers.blocking(getVertx(), Networks::getActiveInterfacesIPv4)
-                              .flatMapObservable(map -> Observable.fromIterable(map.entrySet()))
-                              .map(entry -> new NetworkInterfaceWrapper(entry.getKey(), entry.getValue()))
-                              .collect(JsonObject::new, (json, net) -> json.put(net.getName(), net.toJson()))
-                              .map(json -> new JsonObject().put("ip", json));
+        final IpNetworkCache cache = getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        return Observable.fromIterable(cache.all().entrySet())
+                         .collect(JsonObject::new, (json, net) -> json.put(net.getKey(), net.getValue().toJson()))
+                         .map(json -> new JsonObject().put("ipv4", json));
     }
 
     @EventContractor(action = EventAction.DISCOVER, returnType = Single.class)
     public Single<JsonObject> discover(RequestData reqData) {
         final BACnetNetwork network = BACnetNetwork.factory(reqData.body());
         logger.info("Request network {}", network.toJson());
+        final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
         final BACnetDevice device = new BACnetDevice(getVertx(), getSharedKey(), network);
         final DiscoverOptions options = parseDiscoverOptions(reqData);
         return device.discoverRemoteDevices(options)

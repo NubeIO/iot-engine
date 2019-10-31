@@ -7,6 +7,7 @@ import javax.ws.rs.Produces;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.rest.RestApi;
 
@@ -25,7 +26,7 @@ public final class EdgeRestController implements RestApi {
     @GET
     @Path("/test")
     public JsonObject test() {
-        throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Test exception");
+        throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Test exception");
     }
 
 }

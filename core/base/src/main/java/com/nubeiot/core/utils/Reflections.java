@@ -28,6 +28,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Functions.Silencer;
 
 import lombok.AccessLevel;
@@ -443,7 +444,7 @@ public final class Reflections {
                 constructor.setAccessible(true);
                 silencer.accept(constructor.newInstance(), null);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                silencer.accept(null, new HiddenException(NubeException.ErrorCode.INITIALIZER_ERROR,
+                silencer.accept(null, new HiddenException(ErrorCode.INITIALIZER_ERROR,
                                                           "Cannot init instance of " + clazz.getName(), e));
             }
             return silencer;
@@ -452,14 +453,14 @@ public final class Reflections {
         public static <T> Silencer<T> createObject(Class<T> clazz, @NonNull Map<Class, Object> inputs,
                                                    Silencer<T> silencer) {
             if (inputs.size() > 1 && !(inputs instanceof LinkedHashMap)) {
-                throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
+                throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
             }
             try {
                 Constructor<T> constructor = clazz.getDeclaredConstructor(inputs.keySet().toArray(new Class[] {}));
                 constructor.setAccessible(true);
                 silencer.accept(constructor.newInstance(inputs.values().toArray(new Object[] {})), null);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                silencer.accept(null, new HiddenException(NubeException.ErrorCode.INITIALIZER_ERROR,
+                silencer.accept(null, new HiddenException(ErrorCode.INITIALIZER_ERROR,
                                                           "Cannot init instance of " + clazz.getName(), e));
             }
             return silencer;

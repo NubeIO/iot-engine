@@ -77,7 +77,7 @@ public class BACnetVerticleTest {
                 context.assertEquals(Status.SUCCESS, eventMessage.getStatus());
                 context.assertEquals(EventAction.GET_LIST, eventMessage.getAction());
                 JsonObject ip = Optional.ofNullable(eventMessage.getData())
-                                        .map(js -> js.getJsonObject("ip", new JsonObject()))
+                                        .map(js -> js.getJsonObject("ipv4", new JsonObject()))
                                         .orElseGet(JsonObject::new);
                 System.out.println(ip.encodePrettily());
                 context.assertNotEquals(0, ip.size());

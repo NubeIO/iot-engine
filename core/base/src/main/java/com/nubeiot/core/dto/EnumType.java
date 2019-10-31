@@ -41,7 +41,9 @@ public interface EnumType extends JsonData {
     @NonNull String type();
 
     @JsonProperty(value = "alternatives")
-    Collection<String> alternatives();
+    default Collection<String> alternatives() {
+        return null;
+    }
 
     @EqualsAndHashCode
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)

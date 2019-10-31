@@ -14,7 +14,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.dto.DiscoverOptions;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 
 import lombok.NonNull;

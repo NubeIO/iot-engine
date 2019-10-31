@@ -6,10 +6,11 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.NetworkException;
+import com.nubeiot.core.protocol.network.Ipv4Network;
+import com.nubeiot.core.protocol.network.UdpProtocol;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 import com.serotonin.bacnet4j.npdu.Network;
-import com.serotonin.bacnet4j.npdu.NetworkIdentifier;
 import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 import com.serotonin.bacnet4j.npdu.ip.IpNetworkBuilder;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
@@ -25,15 +26,20 @@ final class TransportIP implements TransportProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TransportIP.class);
     @NonNull
-    private final BACnetNetwork config;
+    private final UdpProtocol protocol;
     @NonNull
     private final Network network;
 
     static TransportIP byConfig(@NonNull BACnetIP config) {
-        IpNetwork network = Strings.isNotBlank(config.getSubnet())
-                            ? bySubnet(config.getSubnet(), config.getPort())
-                            : byNetworkName(config.getNetworkInterface(), config.getPort());
-        return new TransportIP(config, network);
+        final IpNetwork network = Strings.isNotBlank(config.getSubnet())
+                                  ? bySubnet(config.getSubnet(), config.getPort())
+                                  : byNetworkName(config.getNetworkInterface(), config.getPort());
+        final Ipv4Network ipv4 = Ipv4Network.builder()
+                                            .broadcastAddress(network.getBroadcastAddresss())
+                                            .cidrAddress(config.getSubnet())
+                                            .name(config.getNetworkInterface())
+                                            .build();
+        return new TransportIP(UdpProtocol.builder().port(network.getPort()).ip(ipv4).build(), network);
     }
 
     static IpNetwork bySubnet(String subnet, int port) {
@@ -44,8 +50,7 @@ final class TransportIP implements TransportProvider {
             throw new NetworkException("Subnet is invalid: " + check);
         }
         final IpNetworkBuilder builder = new IpNetworkBuilder().withSubnet(parts[0], prefix);
-        return builder.withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT)).withReuseAddress(true)
-                      .build();
+        return builder.withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT)).withReuseAddress(true).build();
     }
 
     static IpNetwork byNetworkName(String networkName, int port) {
@@ -55,7 +60,8 @@ final class TransportIP implements TransportProvider {
         LOGGER.info("Interface address for BACnetIP: {}", address.toString());
         return new IpNetworkBuilder().withBroadcast(address.getBroadcast().getHostAddress(),
                                                     address.getNetworkPrefixLength())
-                                     .withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT)).withReuseAddress(true)
+                                     .withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT))
+                                     .withReuseAddress(true)
                                      .build();
     }
 
@@ -63,13 +69,8 @@ final class TransportIP implements TransportProvider {
     public Transport get() { return new DefaultTransport(network); }
 
     @Override
-    public BACnetNetwork config() {
-        return config;
-    }
-
-    @Override
-    public NetworkIdentifier identifier() {
-        return network.getNetworkIdentifier();
+    public UdpProtocol protocol() {
+        return protocol;
     }
 
 }

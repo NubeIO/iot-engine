@@ -7,6 +7,7 @@ dependencies {
     compile project(':core:base')
     compile project(':core:cache')
     compile project(':core:iotdata')
+    compile project(':core:protocol')
     compile "com.infiniteautomation:bacnet4j:5.0.2"
 
     testCompile project(":core:base").sourceSets.test.output

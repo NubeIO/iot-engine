@@ -9,6 +9,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
 public class EventMessageTest {
 
@@ -77,7 +78,7 @@ public class EventMessageTest {
         Assert.assertFalse(message.isSuccess());
         Assert.assertEquals(EventAction.REMOVE, message.getAction());
         Assert.assertNull(message.getData());
-        Assert.assertEquals(NubeException.ErrorCode.UNKNOWN_ERROR, message.getError().getCode());
+        Assert.assertEquals(ErrorCode.UNKNOWN_ERROR, message.getError().getCode());
         Assert.assertEquals("UNKNOWN_ERROR | Cause: xxx", message.getError().getMessage());
         Assert.assertNull(message.getError().getThrowable());
     }

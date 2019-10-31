@@ -13,7 +13,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.mock.MockApiDefinition;
@@ -48,7 +48,7 @@ public class RestServerTest extends HttpServerTestBase {
     @Test
     public void test_api_throwable(TestContext context) {
         String path = "/api/test/error";
-        JsonObject expected = ErrorMessage.parse(NubeException.ErrorCode.UNKNOWN_ERROR, "error").toJson();
+        JsonObject expected = ErrorMessage.parse(ErrorCode.UNKNOWN_ERROR, "error").toJson();
         startServer(context, new HttpServerRouter().registerApi(MockApiDefinition.MockAPI.class));
         assertRestByClient(context, HttpMethod.GET, path, 500, expected);
     }

@@ -78,7 +78,7 @@ public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInsta
         super(vertx);
         registerSharedKey(sharedKey);
         this.localDevice = BACnetDevice.create(getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA), provider);
-        logger.info("Init BACnet instance with network {}", provider.config().toJson());
+        logger.info("Init BACnet instance with network {}", provider.protocol().toJson());
     }
 
     public static BACnetInstance create(Vertx vertx, String sharedKey, LocalDevice localDevice) {
@@ -90,7 +90,7 @@ public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInsta
                                                 @NonNull Map<String, BACnetInstance> bacnetInstances) {
         return new BACnetInstance(vertx, sharedKey, provider).init(bacnetInstances)
                                                              .doOnSuccess(instance -> bacnetInstances.put(
-                                                                 provider.config().getName(), instance));
+                                                                 provider.protocol().identifier(), instance));
     }
 
     void terminate() {

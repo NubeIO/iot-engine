@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-class JsonModule {
+final class JsonModule {
 
     static final Module BASIC;
 

@@ -7,7 +7,7 @@ import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 
-public class CovListener extends DeviceEventAdapter implements DeviceEventListener {
+public final class CovListener extends DeviceEventAdapter implements DeviceEventListener {
 
     @Override
     public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier,

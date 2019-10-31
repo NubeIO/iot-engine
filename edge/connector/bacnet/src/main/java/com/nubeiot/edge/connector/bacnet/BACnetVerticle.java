@@ -21,6 +21,7 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.handlers.MultipleNetworkEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.NubeServiceEventHandler;
@@ -49,6 +50,12 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
     @Override
     protected @NonNull Class<BacnetConfig> bacnetConfigClass() {
         return BacnetConfig.class;
+    }
+
+    @Override
+    protected void successHandler(@NonNull BacnetConfig config) {
+        new BACnetCacheInitializer().init(this);
+        super.successHandler(config);
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.dto;
 
 import java.util.function.Supplier;
 
-import com.serotonin.bacnet4j.npdu.NetworkIdentifier;
+import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.serotonin.bacnet4j.transport.Transport;
 
 import lombok.NonNull;
@@ -20,8 +20,6 @@ public interface TransportProvider extends Supplier<Transport> {
             "Does not support BACNet network config type " + config.getClass().getName());
     }
 
-    BACnetNetwork config();
-
-    NetworkIdentifier identifier();
+    CommunicationProtocol protocol();
 
 }

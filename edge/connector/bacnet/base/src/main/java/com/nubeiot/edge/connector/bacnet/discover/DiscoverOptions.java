@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.dto;
+package com.nubeiot.edge.connector.bacnet.discover;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -32,19 +32,25 @@ public final class DiscoverOptions implements JsonData {
     private final boolean persist;
     private final boolean detail;
     private final Duration duration;
+    private final int minItem;
+    private final int maxItem;
 
     public static DiscoverOptions from(long maxTimeoutInMS, @NonNull RequestData requestData) {
         return from(maxTimeoutInMS, requestData.getFilter());
     }
 
     public static DiscoverOptions from(long maxTimeoutInMS, JsonObject filter) {
-        JsonObject f = Optional.ofNullable(filter).orElseGet(JsonObject::new);
+        final JsonObject f = Optional.ofNullable(filter).orElseGet(JsonObject::new);
         final Optional<Long> timeoutOpt = Functions.getIfThrow(
             () -> Functions.toLong().apply(Strings.toString(f.getValue(Fields.timeout))));
         final Optional<TimeUnit> timeUnitOpt = Functions.getIfThrow(
             () -> TimeUnit.valueOf(Strings.toString(f.getValue(Fields.timeUnit)).toUpperCase()));
         final Duration duration = Functions.getIfThrow(
             () -> Duration.parse(Strings.toString(f.getValue(Fields.duration)))).orElse(Duration.ofMinutes(15));
+        final int minItem = Functions.getIfThrow(
+            () -> Functions.toInt().apply(Strings.toString(f.getValue(Fields.minItem)))).orElse(0);
+        final int maxItem = Functions.getIfThrow(
+            () -> Functions.toInt().apply(Strings.toString(f.getValue(Fields.maxItem)))).orElse(-1);
         final boolean persist = Boolean.parseBoolean(Strings.toString(f.getValue(Fields.persist)));
         final boolean detail = Boolean.parseBoolean(Strings.toString(f.getValue(Fields.detail)));
         final TimeUnit timeUnit = timeoutOpt.isPresent() ? timeUnitOpt.orElse(TimeUnit.SECONDS) : TimeUnit.MILLISECONDS;
@@ -56,7 +62,7 @@ public final class DiscoverOptions implements JsonData {
                               .timeUnit(timeUnit)
                               .detail(detail)
                               .persist(persist)
-                              .duration(duration)
+                              .duration(duration).minItem(Math.max(minItem, 0)).maxItem(Math.max(maxItem, -1))
                               .build();
     }
 

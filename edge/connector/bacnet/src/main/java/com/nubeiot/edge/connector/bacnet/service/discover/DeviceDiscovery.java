@@ -13,8 +13,8 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
-import com.nubeiot.edge.connector.bacnet.dto.DiscoverOptions;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.exception.BACnetException;
@@ -48,7 +48,7 @@ public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implem
     public Single<JsonObject> discover(RequestData reqData) {
         final BACnetNetwork network = BACnetNetwork.factory(reqData.body().getJsonObject("network"));
         logger.info("Request network {}", network.toJson());
-        final int deviceId = reqData.body().getJsonObject("device", new JsonObject()).getInteger("device", -1);
+        final int deviceId = reqData.body().getInteger("device_id", -1);
         final BACnetDevice device = new BACnetDevice(getVertx(), getSharedKey(), network);
         final DiscoverOptions options = parseDiscoverOptions(reqData);
         return device.discoverRemoteDevices(options)
@@ -64,7 +64,7 @@ public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implem
                                                    @NonNull RemoteDevice remoteDevice) {
         return Observable.fromIterable(getObjectList(localDevice, remoteDevice))
                          .filter(objId -> objId.getObjectType() != ObjectType.device)
-                         .flatMap(objId -> eachObject(localDevice, remoteDevice, objId).map(
+                         .flatMap(objId -> eachRemoteObject(localDevice, remoteDevice, objId).map(
                              r -> new JsonObject().put(toId(objId), r)).toObservable())
                          .collectInto(new JsonObject(), JsonObject::mergeIn);
     }
@@ -73,8 +73,8 @@ public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implem
         return BACnetDataConversions.pointFormatBACnet(objId);
     }
 
-    private Single<JsonObject> eachObject(@NonNull LocalDevice localDevice, @NonNull RemoteDevice remoteDevice,
-                                          @NonNull ObjectIdentifier objId) {
+    private Single<JsonObject> eachRemoteObject(@NonNull LocalDevice localDevice, @NonNull RemoteDevice remoteDevice,
+                                                @NonNull ObjectIdentifier objId) {
         return Observable.fromIterable(ObjectProperties.getRequiredObjectPropertyTypeDefinitions(objId.getObjectType()))
                          .map(definition -> new ObjectPropertyReference(objId, definition.getPropertyTypeDefinition()
                                                                                          .getPropertyIdentifier()))

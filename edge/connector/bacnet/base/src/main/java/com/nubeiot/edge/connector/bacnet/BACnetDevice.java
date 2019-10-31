@@ -1,7 +1,6 @@
 package com.nubeiot.edge.connector.bacnet;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -18,21 +17,18 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.utils.ExecutorHelpers;
-import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
+import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
-import com.nubeiot.edge.connector.bacnet.dto.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.dto.TransportProvider;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
-import com.serotonin.bacnet4j.cache.RemoteEntityCachePolicy;
-import com.serotonin.bacnet4j.cache.RemoteEntityCachePolicy.TimedExpiry;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
-import com.serotonin.bacnet4j.util.RemoteDeviceDiscoverer;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -68,8 +64,8 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                                             new CharacterString(metadata.getObjectName()));
     }
 
-    public void start() {
-        EventController client = getSharedDataValue(SHARED_EVENTBUS);
+    void start() {
+        final EventController client = getSharedDataValue(SHARED_EVENTBUS);
         final DeliveryEvent event = DeliveryEvent.builder()
                                                  .action(EventAction.NOTIFY)
                                                  .address(metadata.getCompleteDiscoverAddress())
@@ -77,23 +73,16 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                                                  .addPayload(RequestData.builder().body(network.toJson()).build())
                                                  .build();
         init(DiscoverOptions.builder()
-                            .timeout(metadata.getMaxTimeoutInMS())
-                            .timeUnit(TimeUnit.MILLISECONDS).build()).doOnSuccess(
-            dis -> dis.getRemoteDevices().stream().map(BACnetDataConversions::deviceExtended).forEach(logger::info))
-                                                                     .subscribe(discoverer -> client.request(event),
-                                                                                logger::error);
+                            .timeout(metadata.getMaxTimeoutInMS()).timeUnit(TimeUnit.MILLISECONDS).build()).subscribe(
+            discoverer -> client.request(event), logger::error);
     }
 
     public void stop() {
         localDevice.terminate();
     }
 
-    public Single<LocalDevice> init() {
-        return ExecutorHelpers.blocking(getVertx(), localDevice::initialize);
-    }
-
     public Observable<RemoteDevice> discoverRemoteDevices(DiscoverOptions options) {
-        return init(options).map(RemoteDeviceDiscoverer::getRemoteDevices).flattenAsObservable(r -> r);
+        return init(options).map(RemoteDeviceScanner::getRemoteDevices).flattenAsObservable(r -> r);
     }
 
     public BACnetDevice addListener(DeviceEventListener... listeners) {
@@ -103,18 +92,12 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
         return this;
     }
 
-    private Single<RemoteDeviceDiscoverer> init(DiscoverOptions options) {
-        final RemoteEntityCachePolicy policy = Optional.ofNullable(options.getDuration())
-                                                       .map(TimedExpiry::new)
-                                                       .map(RemoteEntityCachePolicy.class::cast)
-                                                       .orElse(RemoteEntityCachePolicy.NEVER_EXPIRE);
-        return init().map(ld -> {
-            logger.info("BACNET::START DISCOVER - Thread: {}", Thread.currentThread().getName());
-            return ld.startRemoteDeviceDiscovery(rd -> {
-                logger.info("BACNET::INSIDE DISCOVER - Thread: {}", Thread.currentThread().getName());
-                ld.getCachePolicies().putDevicePolicy(rd.getInstanceNumber(), policy);
-            });
-        }).delay(options.getTimeout(), options.getTimeUnit()).doAfterSuccess(RemoteDeviceDiscoverer::stop);
+    private Single<RemoteDeviceScanner> init(DiscoverOptions options) {
+        return ExecutorHelpers.blocking(getVertx(), localDevice::initialize)
+                              .map(ld -> RemoteDeviceScanner.create(ld, options))
+                              .map(RemoteDeviceScanner::start)
+                              .delay(options.getTimeout(), options.getTimeUnit())
+                              .doAfterSuccess(RemoteDeviceScanner::stop);
     }
 
 }

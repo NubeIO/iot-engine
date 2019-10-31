@@ -9,10 +9,11 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.nubeiot.core.utils.Strings;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpMethod;
+
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.utils.Strings;
 
 public class HttpStatusMappingTest {
 
@@ -37,10 +38,9 @@ public class HttpStatusMappingTest {
 
     @Test
     public void test_error_bad_request() {
+        assertEquals(HttpResponseStatus.BAD_REQUEST, HttpStatusMapping.error(HttpMethod.DELETE, ErrorCode.HTTP_ERROR));
         assertEquals(HttpResponseStatus.BAD_REQUEST,
-                     HttpStatusMapping.error(HttpMethod.DELETE, NubeException.ErrorCode.HTTP_ERROR));
-        assertEquals(HttpResponseStatus.BAD_REQUEST,
-                     HttpStatusMapping.error(HttpMethod.POST, NubeException.ErrorCode.INVALID_ARGUMENT));
+                     HttpStatusMapping.error(HttpMethod.POST, ErrorCode.INVALID_ARGUMENT));
     }
 
     @Test
@@ -49,37 +49,36 @@ public class HttpStatusMappingTest {
               .parallel()
               .filter(method -> HttpMethod.GET != method)
               .forEach(method -> assertEquals("HTTP Method: " + method, HttpResponseStatus.GONE,
-                                              HttpStatusMapping.error(method, NubeException.ErrorCode.NOT_FOUND)));
+                                              HttpStatusMapping.error(method, ErrorCode.NOT_FOUND)));
     }
 
     @Test
     public void test_error_not_found() {
-        assertEquals(HttpResponseStatus.NOT_FOUND,
-                     HttpStatusMapping.error(HttpMethod.GET, NubeException.ErrorCode.NOT_FOUND));
+        assertEquals(HttpResponseStatus.NOT_FOUND, HttpStatusMapping.error(HttpMethod.GET, ErrorCode.NOT_FOUND));
     }
 
     @Test
     public void test_error_internal_server_error() {
         assertEquals(HttpResponseStatus.INTERNAL_SERVER_ERROR,
-                     HttpStatusMapping.error(HttpMethod.DELETE, NubeException.ErrorCode.UNKNOWN_ERROR));
+                     HttpStatusMapping.error(HttpMethod.DELETE, ErrorCode.UNKNOWN_ERROR));
         assertEquals(HttpResponseStatus.INTERNAL_SERVER_ERROR,
-                     HttpStatusMapping.error(HttpMethod.GET, NubeException.ErrorCode.SERVICE_ERROR));
+                     HttpStatusMapping.error(HttpMethod.GET, ErrorCode.SERVICE_ERROR));
     }
 
     @Test
     public void test_error_service_unavailable() {
-        Map<NubeException.ErrorCode, List<HttpMethod>> test = new HashMap<>();
-        test.put(NubeException.ErrorCode.EVENT_ERROR, Arrays.asList(HttpMethod.values()));
-        test.put(NubeException.ErrorCode.CLUSTER_ERROR, Arrays.asList(HttpMethod.values()));
+        Map<ErrorCode, List<HttpMethod>> test = new HashMap<>();
+        test.put(ErrorCode.EVENT_ERROR, Arrays.asList(HttpMethod.values()));
+        test.put(ErrorCode.CLUSTER_ERROR, Arrays.asList(HttpMethod.values()));
         test.entrySet()
             .stream()
             .parallel()
             .forEach(entry -> entry.getValue()
                                    .parallelStream()
                                    .forEach(method -> assertEquals(
-                                           Strings.format("Method: {0} | Code: {1}", method, entry.getKey()),
-                                           HttpResponseStatus.SERVICE_UNAVAILABLE,
-                                           HttpStatusMapping.error(method, entry.getKey()))));
+                                       Strings.format("Method: {0} | Code: {1}", method, entry.getKey()),
+                                       HttpResponseStatus.SERVICE_UNAVAILABLE,
+                                       HttpStatusMapping.error(method, entry.getKey()))));
     }
 
     @Test
@@ -90,8 +89,7 @@ public class HttpStatusMappingTest {
 
     @Test
     public void test_error_by_exception_with_hidden() {
-        ServiceException t = new ServiceException("Hey",
-                                                  new HiddenException(NubeException.ErrorCode.CLUSTER_ERROR, "xx"));
+        ServiceException t = new ServiceException("Hey", new HiddenException(ErrorCode.CLUSTER_ERROR, "xx"));
         assertEquals(HttpResponseStatus.SERVICE_UNAVAILABLE, HttpStatusMapping.error(HttpMethod.GET, t));
     }
 

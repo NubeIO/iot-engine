@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import com.serotonin.bacnet4j.npdu.NetworkIdentifier;
+import com.nubeiot.core.protocol.serial.SerialPortProtocol;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
 
 final class TransportMstp implements TransportProvider {
@@ -21,12 +21,7 @@ final class TransportMstp implements TransportProvider {
     public DefaultTransport get() { throw new UnsupportedOperationException("Not yet implemented"); }
 
     @Override
-    public BACnetNetwork config() {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public NetworkIdentifier identifier() {
+    public SerialPortProtocol protocol() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 

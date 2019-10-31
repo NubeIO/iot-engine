@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.dto;
+package com.nubeiot.edge.connector.bacnet.discover;
 
 import java.util.concurrent.TimeUnit;
 
@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.edge.connector.bacnet.dto.DiscoverOptions.Fields;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions.Fields;
 
 public class DiscoverOptionsTest {
 
