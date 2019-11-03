@@ -58,6 +58,7 @@ import lombok.NonNull;
  *     <p>
  *     Must add more listener in {@link #addBACnetEvent(LocalDeviceMetadata, LocalDevice, Map)}
  */
+@Deprecated
 public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInstance> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());

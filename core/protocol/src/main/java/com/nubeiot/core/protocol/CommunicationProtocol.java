@@ -1,7 +1,17 @@
 package com.nubeiot.core.protocol;
 
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.EnumType;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
+import com.nubeiot.core.protocol.network.IpNetwork;
+import com.nubeiot.core.protocol.network.TransportProtocol;
+import com.nubeiot.core.protocol.serial.SerialPortProtocol;
+import com.nubeiot.core.protocol.usb.UsbProtocol;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -16,7 +26,66 @@ public interface CommunicationProtocol extends EnumType {
     String SPLIT_CHAR = "-";
 
     /**
-     * Validate current communication protocol is still reach by machine/computer
+     * Parse {@code protocol} based on given {@code identifier}
+     *
+     * @param identifier identifier
+     * @return communication protocol
+     * @throws IllegalArgumentException if unsupported protocol
+     */
+    @NonNull
+    static CommunicationProtocol parse(@NonNull String identifier) {
+        String[] splitter = identifier.split(SPLIT_CHAR, 2);
+        if (splitter[0].startsWith("ipv") || splitter.length == 1) {
+            return IpNetwork.parse(identifier);
+        }
+        if (splitter[0].startsWith("udp") || splitter[0].startsWith("tcp")) {
+            return TransportProtocol.parse(identifier);
+        }
+        if (splitter[0].startsWith("serial")) {
+            return SerialPortProtocol.parse(identifier);
+        }
+        if (splitter[0].startsWith("usb")) {
+            return UsbProtocol.parse(identifier);
+        }
+        throw new IllegalArgumentException("Not yet supported protocol " + splitter[0]);
+    }
+
+    /**
+     * Parse {@code protocol} based on given {@code data map}
+     *
+     * @param data data map
+     * @return communication protocol
+     * @throws IllegalArgumentException if unsupported protocol
+     */
+    @NonNull
+    @JsonCreator
+    static CommunicationProtocol parse(@NonNull Map<String, Object> data) {
+        final String type = Strings.requireNotBlank(data.get("type"), "Missing protocol type");
+        if (type.startsWith("ipv")) {
+            return JsonData.from(data, IpNetwork.class);
+        }
+        if (type.startsWith("udp") || type.startsWith("tcp")) {
+            return JsonData.from(data, TransportProtocol.class);
+        }
+        if (type.startsWith("serial")) {
+            return JsonData.from(data, SerialPortProtocol.class);
+        }
+        if (type.startsWith("usb")) {
+            return JsonData.from(data, UsbProtocol.class);
+        }
+        throw new IllegalArgumentException("Not yet supported protocol " + type);
+    }
+
+    /**
+     * Protocol type
+     *
+     * @return Protocol type
+     */
+    @JsonProperty(value = "type")
+    @NonNull String type();
+
+    /**
+     * Validate current communication protocol is reachable by machine/computer
      * <p>
      * It should be call in {@code runtime} process
      *

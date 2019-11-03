@@ -1,27 +1,21 @@
 package com.nubeiot.core.protocol.network;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
 
-import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 
-@Getter
-@Setter(value = AccessLevel.PROTECTED)
-@Accessors(chain = true)
 @Builder(builderClassName = "Builder")
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @JsonDeserialize(builder = UdpProtocol.Builder.class)
-public final class UdpProtocol implements TransportProtocol {
+public final class UdpProtocol extends TransportProtocol {
 
-    @NonNull
-    private IpNetwork ip;
-    private int port;
+    private UdpProtocol(IpNetwork ip, int port) {
+        super(ip, port);
+    }
 
     @Override
     public @NonNull String type() {
@@ -31,6 +25,16 @@ public final class UdpProtocol implements TransportProtocol {
     @Override
     public @NonNull UdpProtocol isReachable() throws CommunicationProtocolException {
         return this;
+    }
+
+    @JsonPOJOBuilder(withPrefix = "")
+    public static final class Builder extends TransportBuilder<UdpProtocol, Builder> {
+
+        @Override
+        public UdpProtocol build() {
+            return new UdpProtocol(Optional.ofNullable(ip()).orElseGet(this::buildIp), port());
+        }
+
     }
 
 }

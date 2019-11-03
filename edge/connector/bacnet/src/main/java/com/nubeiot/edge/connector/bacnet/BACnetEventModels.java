@@ -4,6 +4,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 
+@Deprecated
 public final class BACnetEventModels {
 
     public static final EventModel NUBE_SERVICE = EventModel.builder()

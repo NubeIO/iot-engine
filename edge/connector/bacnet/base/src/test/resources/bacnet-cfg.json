@@ -2,7 +2,7 @@
   "__bacnet__": {
     "modelName": "NubeIO-Edge28",
     "allowSlave": true,
-    "maxDiscoverTimeout": 10,
+    "maxDiscoverTimeout": 6,
     "maxDiscoverTimeoutUnit": "SECONDS"
   }
 }

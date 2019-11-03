@@ -2,19 +2,18 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import io.reactivex.Maybe;
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.ExecutorHelpers;
-import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
+import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 
 import lombok.NonNull;
 
@@ -24,7 +23,9 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
     public void start() {
         super.start();
         C config = IConfig.from(this.nubeConfig.getAppConfig(), bacnetConfigClass());
-        logger.debug(config.toJson());
+        if (logger.isDebugEnabled()) {
+            logger.debug("BACnet verticle configuration: {}", config.toJson());
+        }
         this.addSharedData(BACnetDevice.EDGE_BACNET_METADATA, LocalDeviceMetadata.from(config))
             .registerSuccessHandler(event -> successHandler(config));
     }
@@ -36,13 +37,19 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
     }
 
     protected void successHandler(@NonNull C config) {
-        ExecutorHelpers.blocking(getVertx(), registerServices(config))
+        ExecutorHelpers.blocking(getVertx(), this::createDiscoverCompletionHandler)
+                       .map(handler -> getEventController().register(config.getCompleteDiscoverAddress(), handler))
+                       .flatMapMaybe(ignore -> registerServices(config))
                        .defaultIfEmpty(new JsonObject().put("message", "No BACnet services"))
                        .doOnSuccess(logger::info)
                        .map(r -> config)
-                       .flatMapSingle(this::findNetworks)
-                       .doOnSuccess(networks -> logger.info("Found {} BACnet networks", networks.size()))
-                       .flatMapObservable(this::startBACnet)
+                       .flatMapSingle(this::availableNetworks)
+                       .doOnSuccess(protocols -> logger.info("Found {} BACnet networks", protocols.size()))
+                       .flattenAsObservable(protocols -> protocols)
+                       .filter(Objects::nonNull)
+                       .map(protocol -> new BACnetDevice(getVertx(), getSharedKey(), protocol))
+                       .map(this::onEachStartup)
+                       .map(BACnetDevice::asyncStart)
                        .count()
                        .doOnSuccess(total -> logger.info("Start {} BACnet devices", total))
                        .subscribe();
@@ -66,26 +73,20 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
     protected abstract Maybe<JsonObject> registerServices(@NonNull C config);
 
     /**
-     * Find BACnet networks
+     * Provide available BACnet networks
      *
      * @param config BACnet config
      * @return single of list networks
-     * @see BACnetNetwork
+     * @see CommunicationProtocol
      */
-    @NonNull
-    protected abstract Single<List<BACnetNetwork>> findNetworks(@NonNull C config);
+    protected abstract @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull C config);
 
-    private Observable<BACnetDevice> startBACnet(List<BACnetNetwork> networks) {
-        return Observable.fromIterable(networks)
-                         .filter(Objects::nonNull)
-                         .map(network -> new BACnetDevice(getVertx(), getSharedKey(), network))
-                         .map(this::handle)
-                         .doOnEach(notification -> Optional.ofNullable(notification.getValue())
-                                                           .ifPresent(BACnetDevice::start));
-    }
-
-    protected abstract BACnetDevice handle(BACnetDevice device);
+    protected abstract BACnetDevice onEachStartup(BACnetDevice device);
 
     protected abstract Future<Void> stopBACnet();
+
+    protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
+        return new DiscoverCompletionHandler();
+    }
 
 }

@@ -1,18 +1,13 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import java.util.Optional;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -20,25 +15,17 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.TestHelper;
-import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.DeliveryEvent;
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.edge.connector.bacnet.dto.BACnetIP;
-import com.nubeiot.edge.connector.bacnet.service.discover.NetworkDiscovery;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
 @RunWith(VertxUnitRunner.class)
-public class BACnetVerticleTest {
+public abstract class BACnetVerticleTest {
 
-    private Vertx vertx;
-    private EventController busClient;
+    protected Vertx vertx;
+    protected EventController busClient;
 
     @BeforeClass
     public static void beforeSuite() {
@@ -54,7 +41,7 @@ public class BACnetVerticleTest {
         final Async async = context.async();
         VertxHelper.deploy(vertx, context, options, verticle, event -> {
             busClient = verticle.getEventController();
-            TestHelper.sleep(500);
+            TestHelper.sleep(1000);
             TestHelper.testComplete(async);
         });
     }
@@ -66,41 +53,6 @@ public class BACnetVerticleTest {
     @After
     public void after(TestContext context) {
         this.vertx.close(context.asyncAssertSuccess());
-    }
-
-    @Test
-    public void test_get_networks(TestContext context) {
-        final Async async = context.async();
-        Handler<JsonObject> handler = json -> {
-            final EventMessage eventMessage = EventMessage.tryParse(json);
-            try {
-                context.assertEquals(Status.SUCCESS, eventMessage.getStatus());
-                context.assertEquals(EventAction.GET_LIST, eventMessage.getAction());
-                JsonObject ip = Optional.ofNullable(eventMessage.getData())
-                                        .map(js -> js.getJsonObject("ipv4", new JsonObject()))
-                                        .orElseGet(JsonObject::new);
-                System.out.println(ip.encodePrettily());
-                context.assertNotEquals(0, ip.size());
-            } finally {
-                TestHelper.testComplete(async);
-            }
-        };
-        busClient.request(DeliveryEvent.builder()
-                                       .address(NetworkDiscovery.class.getName())
-                                       .action(EventAction.GET_LIST)
-                                       .payload(new JsonObject())
-                                       .build(), EventbusHelper.replyAsserter(context, handler));
-    }
-
-    @Test
-    public void test(TestContext context) {
-        Async async = context.async();
-        final BACnetIP dockerIp = BACnetIP.builder().subnet("192.168.16.1/20").name("docker").build();
-        busClient.request(DeliveryEvent.builder()
-                                       .address(NetworkDiscovery.class.getName())
-                                       .action(EventAction.DISCOVER)
-                                       .addPayload(RequestData.builder().body(dockerIp.toJson()).build())
-                                       .build(), EventbusHelper.replyAsserter(context, async, new JsonObject()));
     }
 
 }

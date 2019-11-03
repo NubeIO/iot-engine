@@ -4,9 +4,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.utils.Networks;
+import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.Strings;
-import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -14,19 +13,16 @@ import lombok.NonNull;
 @Getter
 public abstract class BACnetNetwork extends AbstractEnumType {
 
-    @NonNull
-    private final String name;
-    private final int port;
+    private final String label;
 
-    BACnetNetwork(String type, String name, int port) {
+    BACnetNetwork(String type, String label) {
         super(type);
-        this.name = Strings.requireNotBlank(name);
-        this.port = Networks.validPort(port, IpNetwork.DEFAULT_PORT);
+        this.label = label;
     }
 
     public static BACnetNetwork factory(@NonNull JsonObject data) {
         String type = (String) data.remove("type");
-        if (BACnetIP.TYPE.equals(type)) {
+        if (Strings.isBlank(type) || BACnetIP.TYPE.equals(type)) {
             return JsonData.convert(data, BACnetIP.class);
         }
         if (BACnetMSTP.TYPE.equals(type)) {
@@ -37,19 +33,15 @@ public abstract class BACnetNetwork extends AbstractEnumType {
             BACnetMSTP.TYPE);
     }
 
+    public abstract @NonNull CommunicationProtocol toProtocol();
+
     @SuppressWarnings("unchecked")
     static abstract class BACnetNetworkBuilder<T extends BACnetNetwork, B extends BACnetNetworkBuilder> {
 
-        String name;
-        int port;
+        String label;
 
-        public B port(int port) {
-            this.port = port;
-            return (B) this;
-        }
-
-        public B name(String name) {
-            this.name = name;
+        public B label(String label) {
+            this.label = label;
             return (B) this;
         }
 

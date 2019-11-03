@@ -3,6 +3,7 @@ package com.nubeiot.edge.connector.bacnet.discover;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.nubeiot.edge.connector.bacnet.listener.ReceiveIAmListener;
 import com.serotonin.bacnet4j.LocalDevice;
@@ -15,8 +16,8 @@ import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import lombok.Builder;
 import lombok.NonNull;
 
-@Builder
-public class RemoteDeviceScanner {
+@Builder(builderClassName = "Builder")
+public final class RemoteDeviceScanner {
 
     @NonNull
     private final LocalDevice localDevice;
@@ -52,7 +53,11 @@ public class RemoteDeviceScanner {
     }
 
     public List<RemoteDevice> getRemoteDevices() {
-        return localDevice.getRemoteDevices();
+        return localDevice.getRemoteDevices()
+                          .stream()
+                          .filter(remoteDevice -> remoteDevice.getInstanceNumber() >= minDevice &&
+                                                  remoteDevice.getInstanceNumber() <= maxDevice)
+                          .collect(Collectors.toList());
     }
 
 }

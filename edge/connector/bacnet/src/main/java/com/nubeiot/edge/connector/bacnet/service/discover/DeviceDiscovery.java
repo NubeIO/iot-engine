@@ -1,30 +1,22 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.exceptions.NotFoundException;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
-import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
-import com.serotonin.bacnet4j.LocalDevice;
-import com.serotonin.bacnet4j.RemoteDevice;
-import com.serotonin.bacnet4j.exception.BACnetException;
-import com.serotonin.bacnet4j.obj.ObjectProperties;
-import com.serotonin.bacnet4j.type.constructed.ObjectPropertyReference;
-import com.serotonin.bacnet4j.type.constructed.SequenceOf;
-import com.serotonin.bacnet4j.type.enumerated.ObjectType;
-import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
-import com.serotonin.bacnet4j.util.PropertyReferences;
-import com.serotonin.bacnet4j.util.RequestUtils;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
+import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 
 import lombok.NonNull;
 
@@ -36,68 +28,55 @@ public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implem
 
     @Override
     public @NonNull String servicePath() {
-        return "/discovery/bacnet/network/:network_code/device";
+        return "/discovery/bacnet/network/:" + Fields.networkCode + "/device";
     }
 
     @Override
     public String paramPath() {
-        return "/:device_id";
+        return Fields.deviceCode;
     }
 
-    @EventContractor(action = EventAction.DISCOVER, returnType = Single.class)
-    public Single<JsonObject> discover(RequestData reqData) {
-        final BACnetNetwork network = BACnetNetwork.factory(reqData.body().getJsonObject("network"));
-        logger.info("Request network {}", network.toJson());
-        final int deviceId = reqData.body().getInteger("device_id", -1);
-        final BACnetDevice device = new BACnetDevice(getVertx(), getSharedKey(), network);
+    @Override
+    public Single<JsonObject> list(RequestData reqData) {
+        final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.NETWORK);
         final DiscoverOptions options = parseDiscoverOptions(reqData);
-        return device.discoverRemoteDevices(options)
-                     .filter(remoteDevice -> remoteDevice.getInstanceNumber() == deviceId)
-                     .switchIfEmpty(Observable.error(new NotFoundException("Not found device id")))
-                     .flatMapSingle(remote -> collectRemoteDevice(device.getLocalDevice(), remote).map(
-                         r -> new JsonObject().put(toId(remote.getObjectIdentifier()), r)))
-                     .collectInto(new JsonObject(), JsonObject::mergeIn)
+        final CommunicationProtocol requestProtocol = parseNetworkProtocol(request);
+        logger.info("Discover devices by network {}", requestProtocol.toJson());
+        final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+        final BACnetDevice device = cache.get(requestProtocol);
+        return device.scanRemoteDevices(options)
+                     .map(RemoteDeviceScanner::getRemoteDevices)
+                     .flattenAsObservable(r -> r)
+                     .map(remoteDevice -> options.isDetail()
+                                          ? BACnetDataConversions.deviceExtended(remoteDevice)
+                                          : BACnetDataConversions.deviceMinimal(remoteDevice))
+                     .collect(JsonArray::new, JsonArray::add)
+                     .map(results -> DiscoverResponse.builder().remoteDevices(results).build().toJson())
                      .doFinally(device::stop);
     }
 
-    private Single<JsonObject> collectRemoteDevice(@NonNull LocalDevice localDevice,
-                                                   @NonNull RemoteDevice remoteDevice) {
-        return Observable.fromIterable(getObjectList(localDevice, remoteDevice))
-                         .filter(objId -> objId.getObjectType() != ObjectType.device)
-                         .flatMap(objId -> eachRemoteObject(localDevice, remoteDevice, objId).map(
-                             r -> new JsonObject().put(toId(objId), r)).toObservable())
-                         .collectInto(new JsonObject(), JsonObject::mergeIn);
+    @Override
+    public Single<JsonObject> get(RequestData reqData) {
+        final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.DEVICE);
+        final DiscoverOptions options = parseDiscoverOptions(reqData);
+        final CommunicationProtocol protocol = parseNetworkProtocol(request);
+        logger.info("Discover device {} by network {}", request.getDeviceCode(), protocol.toJson());
+        final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+        final BACnetDevice device = cache.get(protocol);
+        return device.discoverRemoteDevice(request.getDeviceCode(), options)
+                     .map(BACnetDataConversions::deviceExtended)
+                     .map(r -> DiscoverResponse.builder().remoteDevice(r).build().toJson())
+                     .doFinally(device::stop);
     }
 
-    private String toId(ObjectIdentifier objId) {
-        return BACnetDataConversions.pointFormatBACnet(objId);
+    @Override
+    public Single<JsonObject> batchPersist(RequestData reqData) {
+        return Single.just(new JsonObject());
     }
 
-    private Single<JsonObject> eachRemoteObject(@NonNull LocalDevice localDevice, @NonNull RemoteDevice remoteDevice,
-                                                @NonNull ObjectIdentifier objId) {
-        return Observable.fromIterable(ObjectProperties.getRequiredObjectPropertyTypeDefinitions(objId.getObjectType()))
-                         .map(definition -> new ObjectPropertyReference(objId, definition.getPropertyTypeDefinition()
-                                                                                         .getPropertyIdentifier()))
-                         .collect(PropertyReferences::new,
-                                  (refs, opr) -> refs.addIndex(objId, opr.getPropertyIdentifier(),
-                                                               opr.getPropertyArrayIndex()))
-                         .map(propRefs -> RequestUtils.readProperties(localDevice, remoteDevice, propRefs, true, null))
-                         .map(pvs -> {
-                             JsonObject json = new JsonObject();
-                             pvs.iterator()
-                                .forEachRemaining(opr -> json.put(opr.getPropertyIdentifier().toString(),
-                                                                  pvs.getNoErrorCheck(opr).toString()));
-                             return json;
-                         });
-    }
-
-    private SequenceOf<ObjectIdentifier> getObjectList(@NonNull LocalDevice localDevice,
-                                                       @NonNull RemoteDevice remoteDevice) {
-        try {
-            return RequestUtils.getObjectList(localDevice, remoteDevice);
-        } catch (BACnetException e) {
-            throw new NubeException(ErrorCode.ENGINE_ERROR, e);
-        }
+    @Override
+    public Single<JsonObject> persist(RequestData reqData) {
+        return Single.just(new JsonObject());
     }
 
 }

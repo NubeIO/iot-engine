@@ -53,7 +53,8 @@ public class BACnetDataConversions {
     public static JsonObject deviceObjectList(List<Pair<ObjectPropertyReference, Encodable>> list) {
         JsonObject data = new JsonObject();
         list.forEach(objectPropertyReferenceEncodablePair -> {
-            String key = pointFormatBACnet(objectPropertyReferenceEncodablePair.getLeft().getObjectIdentifier());
+            String key = ObjectIdentifierConverter.toRequestId(
+                objectPropertyReferenceEncodablePair.getLeft().getObjectIdentifier());
 
             if (objectPropertyReferenceEncodablePair.getRight() instanceof ErrorClassAndCode) {
                 return;
@@ -98,7 +99,7 @@ public class BACnetDataConversions {
         JsonObject json = new JsonObject();
         values.forEach(objectPropertyReference -> {
             try {
-                json.put(pointFormatBACnet(objectPropertyReference.getObjectIdentifier()),
+                json.put(ObjectIdentifierConverter.toRequestId(objectPropertyReference.getObjectIdentifier()),
                          encodableToPrimitive(values.get(objectPropertyReference)));
             } catch (Exception e) {
             }
@@ -166,10 +167,6 @@ public class BACnetDataConversions {
                 throw new BACnetException("Invalid primitive for Real");
             }
         }
-    }
-
-    public static String pointFormatBACnet(ObjectIdentifier oid) {
-        return oid.getObjectType().toString() + ":" + oid.getInstanceNumber();
     }
 
     public static String pointIDNubeToBACnet(String id) throws Exception {

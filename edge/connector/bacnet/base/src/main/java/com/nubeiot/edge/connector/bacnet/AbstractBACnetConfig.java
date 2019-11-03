@@ -25,7 +25,7 @@ public abstract class AbstractBACnetConfig implements IConfig {
     private String deviceName;
     private boolean allowSlave = true;
     @Setter(value = AccessLevel.PACKAGE)
-    private long maxDiscoverTimeout = 10;
+    private long maxDiscoverTimeout = 6;
     @Setter(value = AccessLevel.PACKAGE)
     private TimeUnit maxDiscoverTimeoutUnit = TimeUnit.SECONDS;
     private String completeDiscoverAddress = AbstractBACnetConfig.class.getPackage().getName() + ".discover.complete";

@@ -14,8 +14,9 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
 
     @Override
     public BACnetCacheInitializer init(@NonNull BACnetVerticle context) {
-        addBlockingCache(context, EDGE_NETWORK_CACHE, IpNetworkCache::init);
-        addBlockingCache(context, BACNET_DEVICE_CACHE, BACnetDeviceCache::new);
+        addBlockingCache(context, EDGE_NETWORK_CACHE, BACnetNetworkCache::init);
+        addBlockingCache(context, BACNET_DEVICE_CACHE,
+                         () -> BACnetDeviceCache.init(context.getVertx(), context.getSharedKey()));
         return this;
     }
 

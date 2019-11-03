@@ -1,38 +1,38 @@
 package com.nubeiot.edge.connector.bacnet.cache;
 
-import java.util.Map;
-import java.util.function.Function;
+import io.vertx.core.Vertx;
 
+import com.nubeiot.core.cache.AbstractLocalCache;
 import com.nubeiot.core.cache.LocalDataCache;
+import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-public final class BACnetDeviceCache implements LocalDataCache<String, BACnetDevice> {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class BACnetDeviceCache extends AbstractLocalCache<CommunicationProtocol, BACnetDevice, BACnetDeviceCache>
+    implements LocalDataCache<CommunicationProtocol, BACnetDevice> {
 
-    @Override
-    public BACnetDeviceCache add(@NonNull String key, BACnetDevice device) {
-        return null;
+    static BACnetDeviceCache init(@NonNull Vertx vertx, @NonNull String sharedKey) {
+        return new BACnetDeviceCache().register(protocol -> new BACnetDevice(vertx, sharedKey, protocol));
     }
 
     @Override
-    public BACnetDevice get(@NonNull String key) {
-        return null;
+    public BACnetDeviceCache add(@NonNull CommunicationProtocol protocol, BACnetDevice device) {
+        cache().put(protocol, device);
+        return this;
     }
 
     @Override
-    public BACnetDevice remove(@NonNull String key) {
-        return null;
+    protected String keyClass() {
+        return CommunicationProtocol.class.getName();
     }
 
     @Override
-    public Map<String, BACnetDevice> all() {
-        return null;
-    }
-
-    @Override
-    public BACnetDeviceCache register(Function<String, BACnetDevice> discover) {
-        return null;
+    protected String valueClass() {
+        return BACnetDevice.class.getSimpleName();
     }
 
 }

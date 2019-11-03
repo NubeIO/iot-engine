@@ -3,19 +3,17 @@ package com.nubeiot.edge.connector.bacnet.service.discover;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
-import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
-import com.nubeiot.edge.connector.bacnet.cache.IpNetworkCache;
-import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
-import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 
 import lombok.NonNull;
 
@@ -32,31 +30,41 @@ public final class NetworkDiscovery extends AbstractBACnetDiscoveryService imple
 
     @Override
     public String paramPath() {
-        return "network_name";
+        return Fields.networkCode;
     }
 
-    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
+    @Override
     public Single<JsonObject> list(RequestData reqData) {
-        final IpNetworkCache cache = getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        final DiscoverOptions options = parseDiscoverOptions(reqData);
+        final BACnetNetworkCache cache = getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        if (options.isForce()) {
+            BACnetNetworkCache.rescan(cache);
+        }
         return Observable.fromIterable(cache.all().entrySet())
-                         .collect(JsonObject::new, (json, net) -> json.put(net.getKey(), net.getValue().toJson()))
-                         .map(json -> new JsonObject().put("ipv4", json));
+                         .groupBy(entry -> entry.getValue().type())
+                         .flatMapSingle(m -> m.collect(JsonObject::new,
+                                                       (json, net) -> json.put(net.getKey(), net.getValue().toJson()))
+                                              .map(r -> new JsonObject().put(m.getKey(), r)))
+                         .reduce(new JsonObject(), JsonObject::mergeIn);
     }
 
-    @EventContractor(action = EventAction.DISCOVER, returnType = Single.class)
-    public Single<JsonObject> discover(RequestData reqData) {
-        final BACnetNetwork network = BACnetNetwork.factory(reqData.body());
-        logger.info("Request network {}", network.toJson());
-        final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
-        final BACnetDevice device = new BACnetDevice(getVertx(), getSharedKey(), network);
+    @Override
+    public Single<JsonObject> get(RequestData reqData) {
+        final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.NETWORK);
         final DiscoverOptions options = parseDiscoverOptions(reqData);
-        return device.discoverRemoteDevices(options)
-                     .map(remoteDevice -> options.isDetail()
-                                          ? BACnetDataConversions.deviceExtended(remoteDevice)
-                                          : BACnetDataConversions.deviceMinimal(remoteDevice))
-                     .collect(JsonArray::new, JsonArray::add)
-                     .map(results -> new JsonObject().put("remote_devices", results))
-                     .doFinally(device::stop);
+        final CommunicationProtocol requestProtocol = parseNetworkProtocol(request);
+        logger.info("Request network {}", requestProtocol.toJson());
+        return Single.just(DiscoverResponse.builder().network(requestProtocol).build().toJson());
+    }
+
+    @Override
+    public Single<JsonObject> batchPersist(RequestData reqData) {
+        return Single.just(new JsonObject());
+    }
+
+    @Override
+    public Single<JsonObject> persist(RequestData reqData) {
+        return Single.just(new JsonObject());
     }
 
 }

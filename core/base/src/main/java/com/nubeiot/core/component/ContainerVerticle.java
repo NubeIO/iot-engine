@@ -38,7 +38,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, Consumer<? extends UnitContext>> afterSuccesses = new HashMap<>();
     private final Set<String> deployments = new HashSet<>();
     @Getter
-    protected EventController eventController;
+    private EventController eventController;
     @Getter
     protected NubeConfig nubeConfig;
     private Handler<Void> successHandler;

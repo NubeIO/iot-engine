@@ -31,7 +31,7 @@ public final class LocalDeviceMetadata implements JsonData, Shareable {
     private final String objectName;
     private final boolean slave;
     private final long maxTimeoutInMS;
-    private final String completeDiscoverAddress;
+    private final String discoverCompletionAddress;
 
     public static LocalDeviceMetadata from(@NonNull AbstractBACnetConfig config) {
         final long maxTimeout = TimeUnit.MILLISECONDS.convert(config.getMaxDiscoverTimeout(),
@@ -42,7 +42,7 @@ public final class LocalDeviceMetadata implements JsonData, Shareable {
                                   .objectName(config.getDeviceName())
                                   .slave(config.isAllowSlave())
                                   .maxTimeoutInMS(maxTimeout)
-                                  .completeDiscoverAddress(config.getCompleteDiscoverAddress())
+                                  .discoverCompletionAddress(config.getCompleteDiscoverAddress())
                                   .build();
     }
 

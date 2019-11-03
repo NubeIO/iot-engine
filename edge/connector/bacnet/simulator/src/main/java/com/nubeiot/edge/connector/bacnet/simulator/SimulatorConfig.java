@@ -56,7 +56,7 @@ final class SimulatorConfig extends AbstractBACnetConfig {
         List<BACnetNetwork> toNetworks() {
             return entrySet().stream()
                              .filter(entry -> Objects.nonNull(entry.getValue()) && Strings.isNotBlank(entry.getKey()))
-                             .map(entry -> entry.getValue().copy().put("name", entry.getKey()))
+                             .map(entry -> entry.getValue().copy().put("label", entry.getKey()))
                              .map(data -> Functions.getIfThrow(() -> BACnetNetwork.factory(data)))
                              .filter(Optional::isPresent)
                              .map(Optional::get)

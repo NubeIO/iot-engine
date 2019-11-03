@@ -1,6 +1,6 @@
 package com.nubeiot.core.utils;
 
-import java.net.Inet6Address;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.InterfaceAddress;
@@ -9,13 +9,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -24,15 +20,14 @@ import com.nubeiot.core.exceptions.NetworkException;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Networks {
 
     public static final Predicate<InetAddress> IS_NAT_V4 = address -> !address.isAnyLocalAddress() &&
                                                                       !address.isMulticastAddress() &&
-                                                                      !(address instanceof Inet6Address) &&
-                                                                      !address.isLoopbackAddress();
+                                                                      !address.isLoopbackAddress() &&
+                                                                      address instanceof Inet4Address;
     public static final Predicate<InterfaceAddress> IS_V4 = address -> IS_NAT_V4.test(address.getAddress());
     public static final int PRIORITY_FACTOR = 100;
 
@@ -43,8 +38,6 @@ public final class Networks {
     private static final Logger logger = LoggerFactory.getLogger(Networks.class);
     private static final List<String> BLACK_LIST_ADDRESS = Arrays.asList("0.0.0.0", "127.0.0.1", "localhost");
     private static final String GLOBAL_ADDRESS = "0.0.0.0";
-    private static final String IPV4_REGEX
-        = "(([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])";
     private static String natHost = "";
     private static InetSocketAddress publicClusterAddr = null;
     private static InetSocketAddress publicClusterEventbusAddr = null;
@@ -171,40 +164,12 @@ public final class Networks {
         return Objects.isNull(loopbackAddress) ? GLOBAL_ADDRESS : loopbackAddress.getHostAddress();
     }
 
-    private static Enumeration<NetworkInterface> getNetworkInterfaces() {
+    public static Enumeration<NetworkInterface> getNetworkInterfaces() {
         try {
             return NetworkInterface.getNetworkInterfaces();
         } catch (SocketException e) {
             throw new NetworkException("Cannot get the network interfaces", e);
         }
-    }
-
-    public static InterfaceAddress findByName(String networkName) {
-        try {
-            NetworkInterface byName = NetworkInterface.getByName(Strings.requireNotBlank(networkName));
-            if (Objects.isNull(byName)) {
-                throw new NetworkException("Not found network interface by name " + networkName);
-            }
-            return byName.getInterfaceAddresses()
-                         .stream()
-                         .filter(IS_V4)
-                         .findFirst()
-                         .orElseThrow(() -> new NetworkException(
-                             "Network interface address " + networkName + " is not valid IPv4"));
-        } catch (SocketException e) {
-            throw new NetworkException("Not found network interface by name " + networkName);
-        }
-    }
-
-    public static InterfaceAddress firstNATIPv4() {
-        return getInterfaceIPv4(interfaceAddress -> true);
-    }
-
-    public static boolean validIPv4(String ip) {
-        if (Strings.isBlank(ip)) {
-            throw new IllegalArgumentException("IP can't be blank");
-        }
-        return Pattern.compile(IPV4_REGEX).matcher(ip).matches();
     }
 
     public static int priorityOrder(int len) {
@@ -213,72 +178,6 @@ public final class Networks {
 
     public static int priorityOrder(int len, int factor) {
         return len > factor ? priorityOrder(len, factor * 10) : (factor - len) * factor;
-    }
-
-    public static String getHostAddressByBroadcast(@NonNull String broadcast) {
-        return getInterfaceIPv4(ia -> ia.getBroadcast().getHostAddress().equals(broadcast)).getAddress()
-                                                                                           .getHostAddress();
-    }
-
-    public static InterfaceAddress getInterfaceIPv4(@NonNull Predicate<InterfaceAddress> predicate) {
-        Enumeration<NetworkInterface> nets = getNetworkInterfaces();
-        while (nets.hasMoreElements()) {
-            final NetworkInterface networkInterface = nets.nextElement();
-            final Optional<InterfaceAddress> first = networkInterface.getInterfaceAddresses()
-                                                                     .stream()
-                                                                     .filter(IS_V4.and(predicate))
-                                                                     .findFirst();
-            if (first.isPresent()) {
-                return first.get();
-            }
-        }
-        throw new NetworkException("Cannot find any IPv4 network interface");
-    }
-
-    public static Map<NetworkInterface, InterfaceAddress> getActiveInterfacesIPv4(String interfaceName) {
-        Map<NetworkInterface, InterfaceAddress> map = new HashMap<>();
-        Enumeration<NetworkInterface> nets = getNetworkInterfaces();
-        while (nets.hasMoreElements()) {
-            final NetworkInterface networkInterface = nets.nextElement();
-            try {
-                if (!networkInterface.isUp() && !networkInterface.getName().equalsIgnoreCase(interfaceName)) {
-                    continue;
-                }
-            } catch (SocketException e) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("Unknown status of network interface {}", e, networkInterface.getName());
-                }
-            }
-            networkInterface.getInterfaceAddresses()
-                            .stream()
-                            .filter(IS_V4)
-                            .findFirst()
-                            .ifPresent(interfaceAddress -> map.put(networkInterface, interfaceAddress));
-        }
-        return map;
-    }
-
-    public static Map<NetworkInterface, InterfaceAddress> getActiveInterfacesIPv4() {
-        Map<NetworkInterface, InterfaceAddress> map = new HashMap<>();
-        Enumeration<NetworkInterface> nets = getNetworkInterfaces();
-        while (nets.hasMoreElements()) {
-            final NetworkInterface networkInterface = nets.nextElement();
-            try {
-                if (!networkInterface.isUp()) {
-                    continue;
-                }
-            } catch (SocketException e) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("Unknown status of network interface {}", e, networkInterface.getName());
-                }
-            }
-            networkInterface.getInterfaceAddresses()
-                            .stream()
-                            .filter(IS_V4)
-                            .findFirst()
-                            .ifPresent(interfaceAddress -> map.put(networkInterface, interfaceAddress));
-        }
-        return map;
     }
 
 }

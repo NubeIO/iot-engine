@@ -31,7 +31,7 @@ public interface BACnetDiscoveryService extends BACnetService {
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.GET_LIST, EventAction.DISCOVER);
+        return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.BATCH_CREATE, EventAction.CREATE);
     }
 
     @Override

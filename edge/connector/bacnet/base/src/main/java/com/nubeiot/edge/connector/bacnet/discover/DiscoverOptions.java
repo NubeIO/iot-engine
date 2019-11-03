@@ -29,11 +29,11 @@ public final class DiscoverOptions implements JsonData {
 
     private final long timeout;
     private final TimeUnit timeUnit;
-    private final boolean persist;
     private final boolean detail;
     private final Duration duration;
     private final int minItem;
     private final int maxItem;
+    private final boolean force;
 
     public static DiscoverOptions from(long maxTimeoutInMS, @NonNull RequestData requestData) {
         return from(maxTimeoutInMS, requestData.getFilter());
@@ -51,8 +51,8 @@ public final class DiscoverOptions implements JsonData {
             () -> Functions.toInt().apply(Strings.toString(f.getValue(Fields.minItem)))).orElse(0);
         final int maxItem = Functions.getIfThrow(
             () -> Functions.toInt().apply(Strings.toString(f.getValue(Fields.maxItem)))).orElse(-1);
-        final boolean persist = Boolean.parseBoolean(Strings.toString(f.getValue(Fields.persist)));
         final boolean detail = Boolean.parseBoolean(Strings.toString(f.getValue(Fields.detail)));
+        final boolean force = Boolean.parseBoolean(Strings.toString(f.getValue(Fields.force)));
         final TimeUnit timeUnit = timeoutOpt.isPresent() ? timeUnitOpt.orElse(TimeUnit.SECONDS) : TimeUnit.MILLISECONDS;
         final long maxTimeout = timeUnit.convert(maxTimeoutInMS, TimeUnit.MILLISECONDS);
         final long defTimeout = timeUnit.convert(DEFAULT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
@@ -61,8 +61,10 @@ public final class DiscoverOptions implements JsonData {
                               .timeout(timeout)
                               .timeUnit(timeUnit)
                               .detail(detail)
-                              .persist(persist)
-                              .duration(duration).minItem(Math.max(minItem, 0)).maxItem(Math.max(maxItem, -1))
+                              .duration(duration)
+                              .minItem(Math.max(minItem, 0))
+                              .maxItem(Math.max(maxItem, -1))
+                              .force(force)
                               .build();
     }
 

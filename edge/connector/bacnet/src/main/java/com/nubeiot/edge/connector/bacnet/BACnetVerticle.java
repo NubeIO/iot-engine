@@ -21,8 +21,8 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
+import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
-import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.handlers.MultipleNetworkEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.NubeServiceEventHandler;
 import com.nubeiot.edge.connector.bacnet.handlers.RemoteDeviceEventHandler;
@@ -48,14 +48,14 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
     }
 
     @Override
-    protected @NonNull Class<BacnetConfig> bacnetConfigClass() {
-        return BacnetConfig.class;
-    }
-
-    @Override
     protected void successHandler(@NonNull BacnetConfig config) {
         new BACnetCacheInitializer().init(this);
         super.successHandler(config);
+    }
+
+    @Override
+    protected @NonNull Class<BacnetConfig> bacnetConfigClass() {
+        return BacnetConfig.class;
     }
 
     @Override
@@ -73,12 +73,12 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
     }
 
     @Override
-    protected Single<List<BACnetNetwork>> findNetworks(@NonNull BacnetConfig config) {
+    protected @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull BacnetConfig config) {
         return Single.just(new ArrayList<>());
     }
 
     @Override
-    protected BACnetDevice handle(BACnetDevice device) {
+    protected BACnetDevice onEachStartup(BACnetDevice device) {
         return device.addListener(new WhoIsListener());
     }
 

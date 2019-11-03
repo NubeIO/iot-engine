@@ -17,7 +17,7 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.utils.Networks;
+import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
@@ -35,7 +35,7 @@ public class NetworkIPEventHandler implements EventListener {
         NetworkInfo networkInfo = NetworkInfo.from(address);
 
         String invalidIps = Stream.of(networkInfo.getIpAddress(), networkInfo.getSubnetMask(), networkInfo.getGateway())
-                                  .filter(ip -> !Networks.validIPv4(ip))
+                                  .filter(ip -> !Ipv4Network.isValidIPv4(ip))
                                   .collect(Collectors.joining(", "));
 
         if (Strings.isNotBlank(invalidIps)) {

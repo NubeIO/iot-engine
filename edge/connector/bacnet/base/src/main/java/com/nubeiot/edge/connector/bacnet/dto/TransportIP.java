@@ -1,16 +1,14 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import java.net.InterfaceAddress;
-
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.NetworkException;
 import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.protocol.network.UdpProtocol;
+import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
-import com.serotonin.bacnet4j.npdu.Network;
 import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 import com.serotonin.bacnet4j.npdu.ip.IpNetworkBuilder;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
@@ -21,30 +19,20 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 final class TransportIP implements TransportProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TransportIP.class);
     @NonNull
     private final UdpProtocol protocol;
-    @NonNull
-    private final Network network;
 
     static TransportIP byConfig(@NonNull BACnetIP config) {
-        final IpNetwork network = Strings.isNotBlank(config.getSubnet())
-                                  ? bySubnet(config.getSubnet(), config.getPort())
-                                  : byNetworkName(config.getNetworkInterface(), config.getPort());
-        final Ipv4Network ipv4 = Ipv4Network.builder()
-                                            .broadcastAddress(network.getBroadcastAddresss())
-                                            .cidrAddress(config.getSubnet())
-                                            .name(config.getNetworkInterface())
-                                            .build();
-        return new TransportIP(UdpProtocol.builder().port(network.getPort()).ip(ipv4).build(), network);
+        return new TransportIP(config.toProtocol());
     }
 
     static IpNetwork bySubnet(String subnet, int port) {
-        String[] parts = Strings.requireNotBlank(subnet).split("/");
-        int prefix = parts.length < 2 ? 0 : Strings.convertToInt(parts[1], 0);
+        String[] parts = Strings.requireNotBlank(subnet).split("/", 2);
+        int prefix = Ipv4Network.parsePrefixLength(Functions.getIfThrow(() -> parts[1]).orElse(""));
         String check = IpAddressUtils.checkIpMask(parts[0]);
         if (Strings.isNotBlank(check)) {
             throw new NetworkException("Subnet is invalid: " + check);
@@ -54,23 +42,28 @@ final class TransportIP implements TransportProvider {
     }
 
     static IpNetwork byNetworkName(String networkName, int port) {
-        InterfaceAddress address = Strings.isBlank(networkName)
-                                   ? Networks.firstNATIPv4()
-                                   : Networks.findByName(networkName);
-        LOGGER.info("Interface address for BACnetIP: {}", address.toString());
-        return new IpNetworkBuilder().withBroadcast(address.getBroadcast().getHostAddress(),
-                                                    address.getNetworkPrefixLength())
+        Ipv4Network network = Strings.isBlank(networkName)
+                              ? Ipv4Network.getFirstActiveIp()
+                              : Ipv4Network.getActiveIpByName(networkName);
+        LOGGER.info("Interface address for BACnetIP: {}", network.identifier());
+        return new IpNetworkBuilder().withSubnet(network.getBroadcastAddress(), network.getPrefixLength())
                                      .withPort(Networks.validPort(port, IpNetwork.DEFAULT_PORT))
                                      .withReuseAddress(true)
                                      .build();
     }
 
     @Override
-    public Transport get() { return new DefaultTransport(network); }
-
-    @Override
     public UdpProtocol protocol() {
         return protocol;
+    }
+
+    @Override
+    public Transport get() {
+        final UdpProtocol reachable = protocol.isReachable();
+        final IpNetwork network = Strings.isNotBlank(reachable.getCidrAddress())
+                                  ? bySubnet(reachable.getCidrAddress(), reachable.getPort())
+                                  : byNetworkName(reachable.getIfName(), reachable.getPort());
+        return new DefaultTransport(network);
     }
 
 }
