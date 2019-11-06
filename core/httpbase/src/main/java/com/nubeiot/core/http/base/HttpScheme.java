@@ -25,12 +25,11 @@ public enum HttpScheme {
 
     @JsonCreator
     public static HttpScheme parse(String name) {
-        return Arrays.stream(HttpScheme.values()).filter(s -> s.scheme.equals(name)).findFirst().orElse(HTTP);
+        return Arrays.stream(HttpScheme.values()).filter(s -> s.scheme.equalsIgnoreCase(name)).findFirst().orElse(HTTP);
     }
 
     @Override
     public String toString() {
         return this.scheme;
     }
-
 }
