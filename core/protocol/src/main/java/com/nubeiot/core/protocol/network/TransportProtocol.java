@@ -43,22 +43,33 @@ public abstract class TransportProtocol implements Ethernet {
     }
 
     public static TransportProtocol parse(@NonNull String identifier) {
-        final String[] splitter = identifier.split(SPLIT_CHAR, 3);
+        final String[] splitter = identifier.split(SPLIT_CHAR, 2);
         if (!splitter[0].matches("(?i)(udp|tcp)([46])?")) {
             throw new IllegalArgumentException("Unsupported protocol " + splitter[0]);
         }
-        final String ifName = Strings.requireNotBlank(Functions.getIfThrow(() -> splitter[1]).orElse(null),
-                                                      "Missing network interface name");
-        final int port = Functions.getIfThrow(() -> Functions.toInt().apply(splitter[2]))
+        final String namePart = Strings.requireNotBlank(Functions.getIfThrow(() -> splitter[1]).orElse(null),
+                                                        "Missing network interface name");
+        final int lastSplitChar = namePart.lastIndexOf(SPLIT_CHAR);
+        final String ifName = namePart.substring(0, lastSplitChar);
+        final int port = Functions.getIfThrow(() -> Functions.toInt().apply(namePart.substring(lastSplitChar + 1)))
                                   .map(Networks::validPort)
                                   .orElseThrow(() -> new IllegalArgumentException("Missing port"));
         final IpNetwork network = splitter[0].endsWith("6")
                                   ? Ipv6Network.getActiveIpByName(ifName)
                                   : Ipv4Network.getActiveIpByName(ifName);
-        if (splitter[0].equalsIgnoreCase("udp")) {
+        if (splitter[0].toLowerCase().startsWith("udp")) {
             return UdpProtocol.builder().ip(network).port(port).build();
         }
         return TcpProtocol.builder().ip(network).port(port).build();
+    }
+
+    @Override
+    public abstract @NonNull TransportProtocol isReachable() throws CommunicationProtocolException;
+
+    @Override
+    @EqualsAndHashCode.Include
+    public @NonNull String identifier() {
+        return Ethernet.super.identifier() + SPLIT_CHAR + getPort();
     }
 
     @Override
@@ -89,15 +100,6 @@ public abstract class TransportProtocol implements Ethernet {
     @Override
     public String getHostAddress() {
         return getIp().getHostAddress();
-    }
-
-    @Override
-    public abstract @NonNull TransportProtocol isReachable() throws CommunicationProtocolException;
-
-    @Override
-    @EqualsAndHashCode.Include
-    public @NonNull String identifier() {
-        return Ethernet.super.identifier() + SPLIT_CHAR + getPort();
     }
 
 }

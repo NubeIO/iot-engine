@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -36,6 +37,7 @@ import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class BACnetEventListenerTest {
 
@@ -109,8 +111,7 @@ public class BACnetEventListenerTest {
     @Test
     public void handleWriteRequestNoObject() throws Exception {
         WritePropertyRequest req = new WritePropertyRequest(new ObjectIdentifier(ObjectType.analogValue, 1),
-                                                            PropertyIdentifier.presentValue, null, new Real(1),
-                                                            new UnsignedInteger(1));
+                                                            PropertyIdentifier.presentValue, null, new Real(1), new UnsignedInteger(1));
 
         Address from = Mockito.mock(Address.class);
     }

@@ -1,11 +1,10 @@
 package com.nubeiot.edge.connector.bacnet.handlers;
 
-import static org.mockito.Matchers.any;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -17,6 +16,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.serotonin.bacnet4j.exception.BACnetException;
 
+@Ignore
 public class RemotePointsInfoEventHandlerTest {
 
     String n = "testNet";

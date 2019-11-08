@@ -5,6 +5,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.nubeiot.core.exceptions.NetworkException;
+import com.nubeiot.core.exceptions.NotFoundException;
 
 public class TransportIPTest {
 
@@ -25,7 +26,7 @@ public class TransportIPTest {
         TransportIP.bySubnet("456.168.6.1/24", -1);
     }
 
-    @Test(expected = NetworkException.class)
+    @Test(expected = NotFoundException.class)
     public void test_by_network_invalid() {
         TransportIP.byNetworkName("not_found_xxx", -1);
     }

@@ -15,7 +15,7 @@ public class LocalDeviceMetadataTest {
     @Test
     public void test_default() {
         LocalDeviceMetadata metadata = LocalDeviceMetadata.from(new MockBACnetConfig());
-        Assert.assertEquals(10000, metadata.getMaxTimeoutInMS());
+        Assert.assertEquals(6000, metadata.getMaxTimeoutInMS());
         Assert.assertEquals(1173, metadata.getVendorId());
         Assert.assertEquals("Nube iO Operations Pty Ltd", metadata.getVendorName());
         Assert.assertEquals("NubeIO-Edge28", metadata.getModelName());
@@ -27,7 +27,7 @@ public class LocalDeviceMetadataTest {
         JsonHelper.assertJson(new JsonObject("{\"vendorId\":1173,\"vendorName\":\"Nube iO Operations Pty Ltd\"," +
                                              "\"deviceNumber\":85084,\"modelName\":\"NubeIO-Edge28\"," +
                                              "\"objectName\":\"NubeIO-Edge28-85084\",\"slave\":true," +
-                                             "\"maxTimeoutInMS\":10000}"), metadata.toJson(),
+                                             "\"maxTimeoutInMS\":6000}"), metadata.toJson(),
                               JsonHelper.ignore("objectName"), JsonHelper.ignore("deviceNumber"));
     }
 

@@ -21,7 +21,7 @@ import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.type.Encodable;
 
-
+@Ignore
 public class RemotePointsEventHandlerTest {
 
     String n = "testNet";
