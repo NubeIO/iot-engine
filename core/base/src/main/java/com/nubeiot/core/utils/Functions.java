@@ -84,6 +84,17 @@ public final class Functions {
         }
     }
 
+    public static <T> T getOrDefault(T def, @NonNull Provider<T> provider) {
+        try {
+            return provider.get();
+        } catch (Exception t) {
+            if (logger.isTraceEnabled()) {
+                logger.trace("Fallback default", t);
+            }
+            return def;
+        }
+    }
+
     @SafeVarargs
     public static <T> Predicate<T> and(Predicate<T>... predicates) {
         return Arrays.stream(predicates).reduce(Predicate::and).orElse(x -> true);

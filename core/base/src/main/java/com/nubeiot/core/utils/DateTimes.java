@@ -3,6 +3,7 @@ package com.nubeiot.core.utils;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -75,6 +76,14 @@ public final class DateTimes {
 
     public static Instant parseISO8601(String datetime) {
         return Instant.from(parseFromISO8601(datetime));
+    }
+
+    public static String formatDate(OffsetDateTime offsetDate) {
+        return offsetDate.format(DateTimeFormatter.ISO_OFFSET_DATE);
+    }
+
+    public static String formatTime(@NonNull OffsetTime value) {
+        return DateTimeFormatter.ISO_TIME.format(value);
     }
 
     public static String format(@NonNull ZonedDateTime zonedDateTime) {

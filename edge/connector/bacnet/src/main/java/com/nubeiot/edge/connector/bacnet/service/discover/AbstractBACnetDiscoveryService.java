@@ -2,9 +2,11 @@ package com.nubeiot.edge.connector.bacnet.service.discover;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -15,6 +17,7 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.protocol.CommunicationProtocol;
@@ -25,6 +28,17 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
+import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
+import com.nubeiot.iotdata.dto.Protocol;
+import com.serotonin.bacnet4j.LocalDevice;
+import com.serotonin.bacnet4j.RemoteDevice;
+import com.serotonin.bacnet4j.obj.ObjectProperties;
+import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;
+import com.serotonin.bacnet4j.type.constructed.ObjectPropertyReference;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
+import com.serotonin.bacnet4j.util.PropertyReferences;
+import com.serotonin.bacnet4j.util.RequestUtils;
 
 import lombok.NonNull;
 
@@ -67,16 +81,55 @@ abstract class AbstractBACnetDiscoveryService extends AbstractSharedDataDelegate
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public abstract Single<JsonObject> persist(RequestData reqData);
 
-    protected final DiscoverOptions parseDiscoverOptions(@NonNull RequestData reqData) {
+    @Override
+    public final String gatewayAddress() {
+        return getSharedDataValue(BACnetCacheInitializer.GATEWAY_ADDRESS);
+    }
+
+    @Override
+    public final String requestService() {
+        return Protocol.BACNET.type();
+    }
+
+    @Override
+    public final EventController eventClient() {
+        return getSharedDataValue(SHARED_EVENTBUS);
+    }
+
+    @Override
+    public EventAction action() {
+        return EventAction.UPDATE;
+    }
+
+    final DiscoverOptions parseDiscoverOptions(@NonNull RequestData reqData) {
         final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);
         return DiscoverOptions.from(metadata.getMaxTimeoutInMS(), reqData);
     }
 
-    protected final CommunicationProtocol parseNetworkProtocol(@NonNull DiscoverRequest request) {
+    final CommunicationProtocol parseNetworkProtocol(@NonNull DiscoverRequest request) {
         final BACnetNetworkCache networkCache = getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
         final CommunicationProtocol cacheProtocol = networkCache.get(request.getNetworkCode());
         final CommunicationProtocol reqBodyProtocol = BACnetNetwork.factory(request.getNetwork()).toProtocol();
         return JsonData.from(cacheProtocol.toJson().mergeIn(reqBodyProtocol.toJson()), CommunicationProtocol.class);
+    }
+
+    final Single<JsonObject> parseRemoteObject(@NonNull LocalDevice localDevice, @NonNull RemoteDevice remoteDevice,
+                                               @NonNull ObjectIdentifier objId, boolean detail, boolean includeError) {
+        return Observable.fromIterable(getObjectTypes(detail, objId.getObjectType()))
+                         .map(definition -> new ObjectPropertyReference(objId, definition.getPropertyTypeDefinition()
+                                                                                         .getPropertyIdentifier()))
+                         .collect(PropertyReferences::new,
+                                  (refs, opr) -> refs.addIndex(objId, opr.getPropertyIdentifier(),
+                                                               opr.getPropertyArrayIndex()))
+                         .map(propRefs -> RequestUtils.readProperties(localDevice, remoteDevice, propRefs, true, null))
+                         .map(pvs -> new PropertyValuesMixin(pvs, includeError))
+                         .map(PropertyValuesMixin::toJson);
+    }
+
+    private List<ObjectPropertyTypeDefinition> getObjectTypes(boolean detail, @NonNull ObjectType objectType) {
+        return detail
+               ? ObjectProperties.getObjectPropertyTypeDefinitions(objectType)
+               : ObjectProperties.getRequiredObjectPropertyTypeDefinitions(objectType);
     }
 
 }

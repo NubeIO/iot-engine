@@ -67,4 +67,9 @@ public final class NetworkDiscovery extends AbstractBACnetDiscoveryService imple
         return Single.just(new JsonObject());
     }
 
+    @Override
+    public String destination() {
+        return null;
+    }
+
 }
