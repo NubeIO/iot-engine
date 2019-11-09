@@ -29,6 +29,7 @@ public abstract class TransportProtocol implements Ethernet {
     @JsonUnwrapped
     private IpNetwork ip;
     private int port;
+    private boolean canReusePort;
 
     @JsonCreator
     public static TransportProtocol parse(@NonNull Map<String, Object> data) {
@@ -101,5 +102,7 @@ public abstract class TransportProtocol implements Ethernet {
     public String getHostAddress() {
         return getIp().getHostAddress();
     }
+
+    abstract @NonNull TransportProtocol isPortAvailable() throws CommunicationProtocolException;
 
 }

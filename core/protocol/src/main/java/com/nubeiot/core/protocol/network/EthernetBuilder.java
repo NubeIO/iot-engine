@@ -16,7 +16,6 @@ abstract class EthernetBuilder<T extends Ethernet, B extends EthernetBuilder> {
     private String ifName;
     private String displayName;
     private String macAddress;
-    private short prefixLength;
     private String cidrAddress;
     private String hostAddress;
 
@@ -49,11 +48,6 @@ abstract class EthernetBuilder<T extends Ethernet, B extends EthernetBuilder> {
 
     public B cidrAddress(String cidrAddress) {
         this.cidrAddress = cidrAddress;
-        return (B) this;
-    }
-
-    public B prefixLength(short prefixLength) {
-        this.prefixLength = prefixLength;
         return (B) this;
     }
 

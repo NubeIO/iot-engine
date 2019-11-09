@@ -1,5 +1,7 @@
 package com.nubeiot.core.protocol.network;
 
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -13,8 +15,8 @@ import lombok.NonNull;
 @JsonDeserialize(builder = UdpProtocol.Builder.class)
 public final class UdpProtocol extends TransportProtocol {
 
-    private UdpProtocol(IpNetwork ip, int port) {
-        super(ip, port);
+    private UdpProtocol(IpNetwork ip, int port, boolean canReusePort) {
+        super(ip, port, canReusePort);
     }
 
     @Override
@@ -24,7 +26,19 @@ public final class UdpProtocol extends TransportProtocol {
 
     @Override
     public @NonNull UdpProtocol isReachable() throws CommunicationProtocolException {
-        return this;
+        return (UdpProtocol) this.setIp(this.getIp().isReachable()).isPortAvailable();
+    }
+
+    @Override
+    @NonNull UdpProtocol isPortAvailable() throws CommunicationProtocolException {
+        if (isCanReusePort()) {
+            return this;
+        }
+        try (DatagramSocket ignored = new DatagramSocket(getPort(), InetAddress.getByName(getHostAddress()))) {
+            return this;
+        } catch (Exception ex) {
+            throw new CommunicationProtocolException("Port is not available", ex);
+        }
     }
 
     @JsonPOJOBuilder(withPrefix = "")
@@ -32,7 +46,7 @@ public final class UdpProtocol extends TransportProtocol {
 
         @Override
         public UdpProtocol build() {
-            return new UdpProtocol(Optional.ofNullable(ip()).orElseGet(this::buildIp), port());
+            return new UdpProtocol(Optional.ofNullable(ip()).orElseGet(this::buildIp), port(), canReusePort());
         }
 
     }

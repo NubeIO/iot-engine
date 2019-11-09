@@ -24,7 +24,8 @@ public class UdpProtocolTest {
         System.out.println(protocol.toJson());
         JsonHelper.assertJson(new JsonObject("{\"ifIndex\":1,\"ifName\":\"eth0\",\"cidrAddress\":\"172.1.0.1/16\"," +
                                              "\"hostAddress\":\"172.1.0.2\",\"broadcastAddress\":\"172.1.0.255\"," +
-                                             "\"type\":\"udp4\",\"port\":8080}"), protocol.toJson());
+                                             "\"type\":\"udp4\",\"port\":8080,\"canReusePort\":false}"),
+                              protocol.toJson());
     }
 
     @Test

@@ -2,9 +2,6 @@ package com.nubeiot.core.protocol.network;
 
 import java.util.Optional;
 
-import io.vertx.core.json.JsonObject;
-
-import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
@@ -17,6 +14,7 @@ abstract class TransportBuilder<T extends TransportProtocol, B extends Transport
 
     private IpNetwork ip;
     private int port;
+    private boolean canReusePort;
     private String broadcastAddress;
 
     public B ip(IpNetwork ip) {
@@ -26,6 +24,11 @@ abstract class TransportBuilder<T extends TransportProtocol, B extends Transport
 
     public B port(int port) {
         this.port = port;
+        return (B) this;
+    }
+
+    public B canReusePort(boolean canReusePort) {
+        this.canReusePort = canReusePort;
         return (B) this;
     }
 

@@ -3,44 +3,57 @@ package com.nubeiot.edge.connector.bacnet.dto;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.nubeiot.core.exceptions.NetworkException;
-import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.exceptions.CommunicationProtocolException;
 import com.nubeiot.core.protocol.network.Ipv4Network;
-import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 
 public class TransportIPTest {
 
     @Test
     public void test_by_subnet() {
-        final Ipv4Network firstActiveIp = Ipv4Network.getFirstActiveIp();
-        final IpNetwork ipNetwork = TransportIP.bySubnet(firstActiveIp.getCidrAddress(), -1);
-        Assert.assertNotNull(ipNetwork);
-        Assert.assertEquals(47808, ipNetwork.getPort());
-        Assert.assertEquals(firstActiveIp.getBroadcastAddress(), ipNetwork.getBroadcastAddresss());
+        final Ipv4Network ip = Ipv4Network.getFirstActiveIp();
+        final TransportIP transportIP = TransportIP.byConfig(BACnetIP.builder().subnet(ip.getCidrAddress()).build());
+        Assert.assertEquals(47808, transportIP.protocol().getPort());
+        Assert.assertEquals(ip.getCidrAddress(), transportIP.protocol().getCidrAddress());
+        Assert.assertNull(transportIP.protocol().getIfName());
+        transportIP.get();
+        Assert.assertEquals(ip, transportIP.protocol().getIp());
+        Assert.assertTrue(transportIP.protocol().isCanReusePort());
     }
 
     @Test
     public void test_by_network() {
-        final Ipv4Network firstActiveIp = Ipv4Network.getFirstActiveIp();
-        final IpNetwork ipNetwork = TransportIP.byNetworkName(firstActiveIp.getIfName(), 9999);
-        Assert.assertNotNull(ipNetwork);
-        Assert.assertEquals(9999, ipNetwork.getPort());
-        Assert.assertEquals(firstActiveIp.getBroadcastAddress(), ipNetwork.getBroadcastAddresss());
+        final Ipv4Network ip = Ipv4Network.getFirstActiveIp();
+        final TransportIP transportIP = TransportIP.byConfig(
+            BACnetIP.builder().networkInterface(ip.getIfName()).port(9999).build());
+        Assert.assertEquals(9999, transportIP.protocol().getPort());
+        Assert.assertEquals(ip.getIfName(), transportIP.protocol().getIfName());
+        Assert.assertNull(transportIP.protocol().getCidrAddress());
+        transportIP.get();
+        Assert.assertEquals(ip, transportIP.protocol().getIp());
+        Assert.assertTrue(transportIP.protocol().isCanReusePort());
     }
 
-    @Test(expected = NetworkException.class)
+    @Test(expected = CommunicationProtocolException.class)
     public void test_by_subnet_invalid() {
-        TransportIP.bySubnet("456.168.6.1/24", -1);
+        TransportIP.byConfig(BACnetIP.builder().subnet("456.168.6.1/24").build()).get();
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test(expected = CommunicationProtocolException.class)
     public void test_by_network_invalid() {
-        TransportIP.byNetworkName("not_found_xxx", -1);
+        TransportIP.byConfig(BACnetIP.builder().networkInterface("not_found_xxx").build()).get();
     }
 
     @Test
     public void test_by_network_null() {
-        Assert.assertNotNull(TransportIP.byNetworkName(null, -1));
+        final Ipv4Network ip = Ipv4Network.getFirstActiveIp();
+        final TransportIP transportIP = TransportIP.byConfig(BACnetIP.builder().build());
+        Assert.assertEquals("udp4", transportIP.protocol().type());
+        Assert.assertNull(transportIP.protocol().getIfName());
+        Assert.assertNull(transportIP.protocol().getCidrAddress());
+        Assert.assertNotEquals(ip, transportIP.protocol().getIp());
+        transportIP.get();
+        Assert.assertEquals(ip, transportIP.protocol().getIp());
+        Assert.assertTrue(transportIP.protocol().isCanReusePort());
     }
 
 }

@@ -34,7 +34,7 @@ public final class BACnetIP extends BACnetNetwork {
                           .ifName(networkInterface)
                           .cidrAddress(subnet)
                           .type("udp4")
-                          .displayName(getLabel())
+                          .displayName(getLabel()).canReusePort(true)
                           .build();
     }
 

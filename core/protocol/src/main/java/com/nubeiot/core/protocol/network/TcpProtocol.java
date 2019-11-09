@@ -1,5 +1,7 @@
 package com.nubeiot.core.protocol.network;
 
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -13,8 +15,8 @@ import lombok.NonNull;
 @JsonDeserialize(builder = TcpProtocol.Builder.class)
 public final class TcpProtocol extends TransportProtocol {
 
-    private TcpProtocol(@NonNull IpNetwork ip, int port) {
-        super(ip, port);
+    private TcpProtocol(@NonNull IpNetwork ip, int port, boolean canReusePort) {
+        super(ip, port, canReusePort);
     }
 
     @Override
@@ -24,7 +26,19 @@ public final class TcpProtocol extends TransportProtocol {
 
     @Override
     public @NonNull TcpProtocol isReachable() throws CommunicationProtocolException {
-        return this;
+        return (TcpProtocol) this.setIp(this.getIp().isReachable()).isPortAvailable();
+    }
+
+    @Override
+    @NonNull TcpProtocol isPortAvailable() throws CommunicationProtocolException {
+        if (isCanReusePort()) {
+            return this;
+        }
+        try (ServerSocket ignored = new ServerSocket(getPort(), 1, InetAddress.getByName(getHostAddress()))) {
+            return this;
+        } catch (Exception ex) {
+            throw new CommunicationProtocolException("Port is not available", ex);
+        }
     }
 
     @JsonPOJOBuilder(withPrefix = "")
@@ -32,7 +46,7 @@ public final class TcpProtocol extends TransportProtocol {
 
         @Override
         public TcpProtocol build() {
-            return new TcpProtocol(Optional.ofNullable(ip()).orElseGet(this::buildIp), port());
+            return new TcpProtocol(Optional.ofNullable(ip()).orElseGet(this::buildIp), port(), canReusePort());
         }
 
     }

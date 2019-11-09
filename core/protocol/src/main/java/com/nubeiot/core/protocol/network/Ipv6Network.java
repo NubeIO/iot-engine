@@ -10,7 +10,6 @@ import java.util.function.Predicate;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
-import com.nubeiot.core.exceptions.NotFoundException;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +17,7 @@ import lombok.Getter;
 @Getter
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = Ipv4Network.Builder.class)
-public final class Ipv6Network extends IpNetwork implements Ethernet {
+public final class Ipv6Network extends IpNetwork<Ipv6Network> implements Ethernet {
 
     private static final Predicate<InetAddress> IS_NAT_V6 = address -> !address.isAnyLocalAddress() &&
                                                                        !address.isMulticastAddress() &&
@@ -27,14 +26,13 @@ public final class Ipv6Network extends IpNetwork implements Ethernet {
     private static final Predicate<InterfaceAddress> IS_V6 = address -> IS_NAT_V6.test(address.getAddress());
 
     private Ipv6Network(Integer ifIndex, String ifName, String displayName, String macAddress, String cidrAddress,
-                        String hostAddress, short prefixLength) {
-        super(ifIndex, ifName, displayName, macAddress, cidrAddress, hostAddress, prefixLength);
+                        String hostAddress) {
+        super(ifIndex, ifName, displayName, macAddress, cidrAddress, hostAddress);
     }
 
     public static Ipv6Network from(NetworkInterface ni, InterfaceAddress ia) {
         return new Ipv6Network(ni.getIndex(), ni.getName(), ni.getDisplayName(), mac(ni),
-                               cidr(ia.getAddress(), ia.getNetworkPrefixLength()), ia.getAddress().getHostAddress(),
-                               ia.getNetworkPrefixLength());
+                               cidr(ia.getAddress(), ia.getNetworkPrefixLength()), ia.getAddress().getHostAddress());
     }
 
     //TODO implement it
@@ -42,23 +40,16 @@ public final class Ipv6Network extends IpNetwork implements Ethernet {
         return null;
     }
 
-    public static List<IpNetwork> getActiveIps() {
+    public static List<Ipv6Network> getActiveIps() {
         return getActiveInterfaces(networkInterface -> true, IS_V6, Ipv6Network::from);
     }
 
     public static Ipv6Network getActiveIpByName(String interfaceName) {
-        return getActiveInterfaces(networkInterface -> networkInterface.getName().equalsIgnoreCase(interfaceName),
-                                   IS_V6, Ipv6Network::from).stream()
-                                                            .findFirst()
-                                                            .map(Ipv6Network.class::cast)
-                                                            .orElseThrow(() -> new NotFoundException(
-                                                                "Not found active network interface with name " +
-                                                                interfaceName));
+        return getActiveIpByName(interfaceName, IS_V6, Ipv6Network::from);
     }
 
-    @Override
-    public Ipv6Network isReachable() throws CommunicationProtocolException {
-        return this;
+    public static Ipv6Network getFirstActiveIp() {
+        return getFirstActiveIp(IS_V6, Ipv6Network::from);
     }
 
     @Override
@@ -66,13 +57,17 @@ public final class Ipv6Network extends IpNetwork implements Ethernet {
         return 6;
     }
 
+    @Override
+    public Ipv6Network isReachable() throws CommunicationProtocolException {
+        return this;
+    }
+
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder extends EthernetBuilder<Ipv6Network, Builder> {
 
         @Override
         public Ipv6Network build() {
-            return new Ipv6Network(ifIndex(), ifName(), displayName(), macAddress(), cidrAddress(), hostAddress(),
-                                   prefixLength());
+            return new Ipv6Network(ifIndex(), ifName(), displayName(), macAddress(), cidrAddress(), hostAddress());
         }
 
     }
