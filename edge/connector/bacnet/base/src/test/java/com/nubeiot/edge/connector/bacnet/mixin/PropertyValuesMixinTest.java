@@ -1,11 +1,17 @@
 package com.nubeiot.edge.connector.bacnet.mixin;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
 import org.json.JSONException;
+import org.junit.Assert;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.TestHelper.JsonHelper;
+import com.nubeiot.core.utils.DateTimes;
 import com.serotonin.bacnet4j.enums.DayOfWeek;
 import com.serotonin.bacnet4j.enums.Month;
 import com.serotonin.bacnet4j.type.constructed.AssignedLandingCalls.LandingCall;
@@ -41,13 +47,16 @@ public class PropertyValuesMixinTest {
     @Test
     public void test_serialize_java_type_or_primitive() throws JSONException {
         final PropertyValues pvs = new PropertyValues();
-        final Date date = new Date(2019, Month.DECEMBER, 22, DayOfWeek.SUNDAY);
-        final Time time = new Time(18, 36, 56, 999);
+        final Instant now = Instant.now();
+        final OffsetDateTime odt = now.atOffset(ZoneOffset.UTC);
+        final Date date = new Date(odt.getYear(), Month.valueOf(odt.getMonthValue()), odt.getDayOfMonth(),
+                                   DayOfWeek.valueOf(odt.getDayOfWeek().getValue()));
+        final Time time = new Time(odt.getHour(), odt.getMinute(), odt.getSecond(), odt.getNano());
         pvs.add(oid, PropertyIdentifier.objectIdentifier, null, oid);
         pvs.add(oid, PropertyIdentifier.groupId, null, new CharacterString("xxx"));
         pvs.add(oid, PropertyIdentifier.timeOfDeviceRestart, null, date);
         pvs.add(oid, PropertyIdentifier.activationTime, null, time);
-        pvs.add(oid, PropertyIdentifier.expirationTime, null, new DateTime(date, time));
+        pvs.add(oid, PropertyIdentifier.expirationTime, null, new DateTime(odt.toInstant().toEpochMilli()));
         pvs.add(oid, PropertyIdentifier.isUtc, null, Boolean.valueOf(true));
         pvs.add(oid, PropertyIdentifier.alarmValue, null, new Double(10.0));
         pvs.add(oid, PropertyIdentifier.adjustValue, null, new Real(20.5f));
@@ -58,11 +67,23 @@ public class PropertyValuesMixinTest {
         final JsonObject expected = new JsonObject(
             "{\"status-flags\":{\"in-alarm\":true,\"fault\":false,\"overridden\":true,\"out-of-service\":false}," +
             "\"adjust-value\":20.5,\"group-id\":\"xxx\",\"alarm-value\":10.0,\"is-utc\":true,\"feedback-value\":100," +
-            "\"object-identifier\":\"device:111\",\"time-of-device-restart\":\"2019-12-22T05:00:00Z\"," +
-            "\"average-value\":-100,\"activation-time\":\"18:36:56.000000999Z\"," +
-            "\"expiration-time\":\"2019-12-22T11:37:05.99Z\"}");
-        System.out.println(pvJson.toJson().encode());
-        JsonHelper.assertJson(expected, pvJson.toJson());
+            "\"object-identifier\":\"device:111\",\"time-of-device-restart\":\"" + DateTimes.formatDate(odt) + "\"," +
+            "\"average-value\":-100,\"activation-time\":\"" + DateTimes.formatTime(odt.toOffsetTime()) + "\"," +
+            "\"expiration-time\":\"" + DateTimes.format(odt) + "\"}");
+        final JsonObject actual = pvJson.toJson();
+        System.out.println(actual.encode());
+        JsonHelper.assertJson(expected, actual, JsonHelper.ignore("expiration-time"));
+        String expirationExpected = expected.getString("expiration-time");
+        String expirationActual = actual.getString("expiration-time");
+        final int expectedLength = expirationExpected.length();
+        if (expectedLength == expirationActual.length()) {
+            Assert.assertEquals(expirationExpected, expirationActual);
+        } else {
+            System.out.println("Due to BACnet DateTime truncate `.SSS` to `.SS`");
+            final String expectedFix = expirationExpected.substring(0, expectedLength - 2) +
+                                       expirationExpected.substring(expectedLength - 1);
+            Assert.assertEquals(expectedFix, expirationActual);
+        }
     }
 
     @Test

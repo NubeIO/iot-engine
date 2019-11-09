@@ -14,7 +14,7 @@ import lombok.NonNull;
 
 public abstract class EncodableSerializer<T extends Encodable> extends StdSerializer<T> {
 
-    protected static final Logger LOGGER = LoggerFactory.getLogger(EncodableSerializer.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(EncodableSerializer.class);
 
     static final EncodableSerializer<Encodable> DEFAULT = new EncodableSerializer<Encodable>(Encodable.class) {};
 

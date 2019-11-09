@@ -35,8 +35,8 @@ public abstract class BACnetVerticleTest {
 
     @Before
     public void before(TestContext context) {
-        DeploymentOptions options = new DeploymentOptions().setConfig(getNubeConfig().toJson());
         this.vertx = Vertx.vertx();
+        final DeploymentOptions options = new DeploymentOptions().setConfig(getNubeConfig().toJson());
         final BACnetVerticle verticle = new BACnetVerticle();
         final Async async = context.async();
         VertxHelper.deploy(vertx, context, options, verticle, event -> {

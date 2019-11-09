@@ -20,8 +20,8 @@ public class DeviceDiscoveryTest extends BACnetVerticleTest {
 
     @Test
     public void test_network_without_device(TestContext context) {
-        final UdpProtocol protocol = UdpProtocol.builder().ip(Ipv4Network.getFirstActiveIp()).port(47808).build();
         Async async = context.async();
+        final UdpProtocol protocol = UdpProtocol.builder().ip(Ipv4Network.getFirstActiveIp()).port(47808).build();
         final JsonObject body = new JsonObject().put("networkCode", protocol.identifier());
         final JsonObject expected = EventMessage.success(EventAction.GET_LIST,
                                                          new JsonObject().put("remoteDevices", new JsonArray()))
