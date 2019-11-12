@@ -1,50 +1,16 @@
-import org.jooq.meta.jaxb.ForcedType
-
-import com.nubeiot.buildscript.Strings
-import com.nubeiot.buildscript.jooq.DB
-import com.nubeiot.buildscript.jooq.JooqGenerateTask
-import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
-
 ext {
     specifiedLog = project.loggers["sql"] + ["h2database": "info"]
 }
 
 dependencies {
     compile project(":core:micro")
-    compile project(":core:sql")
-    compile project.deps.database.h2
     compile project(":core:scheduler")
+    compile project(":core:scheduler:model")
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:sql").sourceSets.test.output
     testCompile project(":core:httpserver")
     testCompile project(":core:httpserver").sourceSets.test.output
-}
-
-task jooqGen(type: JooqGenerateTask) {
-    packageName = "com.nubeiot.iotdata.scheduler.model"
-    enumTypes = project(':core:sql').ext.enumTypes
-    renameFields = ["trigger_type|job_type": "type",
-                    "trigger_thread"       : "thread",
-                    "group_name"           : "group"]
-    dbTypes = project(':core:sql').ext.dbTypes + [
-        new ForcedType(userType: "com.nubeiot.scheduler.job.JobType",
-                       types: DB.TYPES.varchar,
-                       expression: Strings.toRegexIgnoreCase("job_type"),
-                       converter: "com.nubeiot.scheduler.converter.JobTypeConverter"),
-        new ForcedType(userType: "com.nubeiot.scheduler.trigger.TriggerType",
-                       types: DB.TYPES.varchar,
-                       expression: Strings.toRegexIgnoreCase("trigger_type"),
-                       converter: "com.nubeiot.scheduler.converter.TriggerTypeConverter")
-    ]
-    javaTypes = project(':core:sql').ext.javaTypes + [
-        new JsonDataType(className: "com.nubeiot.scheduler.job.JobType",
-                         converter: "%s.type()",
-                         parser: "com.nubeiot.scheduler.job.JobType.factory((String)%s)"),
-        new JsonDataType(className: "com.nubeiot.scheduler.trigger.TriggerType",
-                         converter: "%s.type()",
-                         parser: "com.nubeiot.scheduler.trigger.TriggerType.factory((String)%s)"),
-    ]
 }
 
 test {
