@@ -193,6 +193,8 @@ public interface JsonData {
             JsonObject entries = SerializerFunction.builder().mapper(mapper).build().apply(object);
             return mapper.convertValue(entries.getMap(), clazz);
         } catch (IllegalArgumentException | NullPointerException | DecodeException ex) {
+            //            final Throwable cause = JacksonExceptionPrettier.getCause(ex);
+            //            throw NubeExceptionConverter.friendly(cause, errorMsg);
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, errorMsg, new HiddenException(ex));
         }
     }

@@ -16,6 +16,7 @@ public class TransportIPTest {
         Assert.assertEquals(ip.getCidrAddress(), transportIP.protocol().getCidrAddress());
         Assert.assertNull(transportIP.protocol().getIfName());
         transportIP.get();
+        Assert.assertNotNull(transportIP.protocol().getIfName());
         Assert.assertEquals(ip, transportIP.protocol().getIp());
         Assert.assertTrue(transportIP.protocol().isCanReusePort());
     }
@@ -33,7 +34,7 @@ public class TransportIPTest {
         Assert.assertTrue(transportIP.protocol().isCanReusePort());
     }
 
-    @Test(expected = CommunicationProtocolException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void test_by_subnet_invalid() {
         TransportIP.byConfig(BACnetIP.builder().subnet("456.168.6.1/24").build()).get();
     }

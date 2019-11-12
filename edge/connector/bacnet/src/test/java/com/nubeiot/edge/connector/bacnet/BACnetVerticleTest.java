@@ -41,9 +41,9 @@ public abstract class BACnetVerticleTest {
         final Async async = context.async();
         VertxHelper.deploy(vertx, context, options, verticle, event -> {
             busClient = verticle.getEventController();
-            TestHelper.sleep(1000);
             TestHelper.testComplete(async);
         });
+        TestHelper.sleep(1000);
     }
 
     private NubeConfig getNubeConfig() {

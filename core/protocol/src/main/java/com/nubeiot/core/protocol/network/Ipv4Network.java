@@ -1,13 +1,11 @@
 package com.nubeiot.core.protocol.network;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import io.vertx.core.logging.Logger;
@@ -41,24 +39,7 @@ public final class Ipv4Network extends IpNetwork<Ipv4Network> implements Etherne
                         String hostAddress, String broadcastAddress) {
         super(ifIndex, ifName, displayName, macAddress, cidrAddress, hostAddress);
         this.broadcastAddress = broadcastAddress;
-    }
-
-    public static boolean isValidIPv4(String ip) {
-        if (Strings.isBlank(ip)) {
-            throw new IllegalArgumentException("IP can't be blank");
-        }
-        return Pattern.compile(IPV4_REGEX).matcher(ip).matches();
-    }
-
-    public static int validatePrefixLength(int prefixLength) {
-        if (prefixLength < 0 || prefixLength > 32) {
-            throw new IllegalArgumentException("Invalid IPv4 prefix length, only [0,32]");
-        }
-        return prefixLength;
-    }
-
-    public static int parsePrefixLength(String prefixLength) {
-        return validatePrefixLength(Strings.convertToInt(prefixLength, 32));
+        this.validate();
     }
 
     public static Ipv4Network from(@NonNull NetworkInterface ni, @NonNull InterfaceAddress ia) {
@@ -83,12 +64,13 @@ public final class Ipv4Network extends IpNetwork<Ipv4Network> implements Etherne
             Networks.IS_V4.and(ia -> ia.getBroadcast().getHostAddress().equals(broadcast)), Ipv4Network::from);
     }
 
-    private static String cidr(@NonNull InterfaceAddress interfaceAddress) {
-        return cidr(interfaceAddress.getAddress(), interfaceAddress.getNetworkPrefixLength());
-    }
-
-    private static String cidr(@NonNull InetAddress ia, short prefixLength) {
-        return Arrays.stream(intToByteArray(byteArrayToInt(ia.getAddress()) & mask(prefixLength)))
+    static String cidr(@NonNull InterfaceAddress interfaceAddress) {
+        final InetAddress address = interfaceAddress.getAddress();
+        final short prefixLength = interfaceAddress.getNetworkPrefixLength();
+        if (!(address instanceof Inet4Address)) {
+            throw new IllegalArgumentException("Given interface address is not IPv4");
+        }
+        return Arrays.stream(intToByteArray(byteArrayToInt(address.getAddress()) & mask(prefixLength)))
                      .mapToObj(String::valueOf)
                      .collect(Collectors.joining(".")) + "/" + prefixLength;
     }
@@ -101,9 +83,36 @@ public final class Ipv4Network extends IpNetwork<Ipv4Network> implements Etherne
         return new int[] {(a >> 24) & 0xFF, (a >> 16) & 0xFF, (a >> 8) & 0xFF, a & 0xFF};
     }
 
+    private static int mask(final int length) {
+        int l = 0;
+        int shift = 31;
+        for (int i = 0; i < length; i++) {
+            l |= 1 << shift--;
+        }
+        return l;
+    }
+
     @Override
-    int version() {
+    public int version() {
         return 4;
+    }
+
+    String validateIpAddress(String address) {
+        if (Strings.isNotBlank(address) && !address.matches(IPV4_REGEX)) {
+            throw new IllegalArgumentException("Invalid IPv4 address: " + address);
+        }
+        return address;
+    }
+
+    @Override
+    int maxPrefixLength() {
+        return 32;
+    }
+
+    @Override
+    Ipv4Network validate() {
+        setBroadcastAddress(super.validate().validateIpAddress(getBroadcastAddress()));
+        return this;
     }
 
     @Override
@@ -113,18 +122,7 @@ public final class Ipv4Network extends IpNetwork<Ipv4Network> implements Etherne
 
     @Override
     public Ipv4Network isReachable() throws CommunicationProtocolException {
-        if (Strings.isBlank(getIfName()) && Strings.isBlank(getCidrAddress())) {
-            return reload(Ipv4Network.getFirstActiveIp());
-        }
-        final Predicate<InterfaceAddress> iaPredicate = ia -> Optional.ofNullable(getCidrAddress())
-                                                                      .map(cidr -> cidr.equals(cidr(ia)))
-                                                                      .orElse(true);
-        final List<Ipv4Network> interfaces = getActiveInterfaces(validateNetworkInterface(), iaPredicate,
-                                                                 Ipv4Network::from);
-        if (interfaces.size() != 1) {
-            throw new CommunicationProtocolException("Interface name " + getIfName() + "is obsolete or down");
-        }
-        return reload(interfaces.get(0));
+        return isReachable(Networks.IS_V4, Ipv4Network::from, Ipv4Network::getFirstActiveIp);
     }
 
     @JsonPOJOBuilder(withPrefix = "")

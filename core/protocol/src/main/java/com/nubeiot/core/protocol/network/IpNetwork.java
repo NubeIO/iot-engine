@@ -1,5 +1,6 @@
 package com.nubeiot.core.protocol.network;
 
+import java.net.Inet6Address;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -12,14 +13,19 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
 import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 
+import inet.ipaddr.IPAddressString;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -35,6 +41,7 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
 
+    protected static final Logger LOGGER = LoggerFactory.getLogger(IpNetwork.class);
     private Integer ifIndex;
     private String ifName;
     private String displayName;
@@ -104,6 +111,13 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
         return getActiveInterfaces(ni -> true, iaPredicate, parser).stream().findFirst().orElseThrow(notFound(null));
     }
 
+    private static String cidr(@NonNull InterfaceAddress interfaceAddress) {
+        if (interfaceAddress.getAddress() instanceof Inet6Address) {
+            return Ipv6Network.cidr(interfaceAddress);
+        }
+        return Ipv4Network.cidr(interfaceAddress);
+    }
+
     private static Supplier<NotFoundException> notFound(String interfaceName) {
         return () -> new NotFoundException("Not found active IP network interface" +
                                            Optional.ofNullable(interfaceName).map(n -> " with name " + n).orElse(""));
@@ -123,29 +137,59 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
             }
             return sb.toString();
         } catch (SocketException | NullPointerException e) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.warn("Cannot compute MAC address");
+            }
             return null;
         }
     }
 
-    static int mask(final int length) {
-        int l = 0;
-        int shift = 31;
-        for (int i = 0; i < length; i++) {
-            l |= 1 << shift--;
-        }
-        return l;
+    public static boolean isIpv6(String address) {
+        return Strings.isNotBlank(address) && new IPAddressString(address).isIPv6();
     }
 
-    abstract int version();
+    public static boolean isIpv4(String address) {
+        return Strings.isNotBlank(address) && new IPAddressString(address).isIPv4();
+    }
+
+    public abstract int version();
+
+    abstract String validateIpAddress(String address);
+
+    abstract int maxPrefixLength();
 
     @SuppressWarnings("unchecked")
+    T validate() {
+        hostAddress = validateIpAddress(hostAddress);
+        cidrAddress = validateCidrAddress(cidrAddress);
+        return (T) this;
+    }
+
+    private int validatePrefixLength(int prefixLength) {
+        if (prefixLength < 0 || prefixLength > maxPrefixLength()) {
+            throw new IllegalArgumentException("Invalid prefix length, only [0," + maxPrefixLength() + "]");
+        }
+        return prefixLength;
+    }
+
+    private String validateCidrAddress(String cidr) {
+        if (Strings.isBlank(cidr)) {
+            return cidr;
+        }
+        String[] splits = cidr.split("/", 2);
+        return Functions.getOrThrow(() -> validateIpAddress(splits[0]) + "/" + validatePrefixLength(
+            Functions.toInt().apply(Functions.getOrDefault(() -> splits[1], () -> String.valueOf(maxPrefixLength())))),
+                                    t -> new IllegalArgumentException("Invalid CIDR address: " + t.getMessage()));
+    }
+
     protected T reload(@NonNull T network) {
-        return (T) this.setIfIndex(network.getIfIndex())
-                       .setIfName(network.getIfName())
-                       .setDisplayName(network.getDisplayName())
-                       .setMacAddress(network.getMacAddress())
-                       .setCidrAddress(network.getCidrAddress())
-                       .setHostAddress(network.getHostAddress());
+        return this.setIfIndex(network.getIfIndex())
+                   .setIfName(network.getIfName())
+                   .setDisplayName(network.getDisplayName())
+                   .setMacAddress(network.getMacAddress())
+                   .setCidrAddress(network.getCidrAddress())
+                   .setHostAddress(network.getHostAddress())
+                   .validate();
     }
 
     @Override
@@ -172,13 +216,31 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
         return Short.parseShort(cidrAddress.substring(cidrAddress.lastIndexOf("/") + 1));
     }
 
-    Predicate<NetworkInterface> validateNetworkInterface() {
-        return ni ->
-                   Optional.ofNullable(getIfName()).map(ifName -> ifName.equalsIgnoreCase(ni.getName())).orElse(true) &&
-                   Optional.ofNullable(mac(ni))
-                           .flatMap(mac -> Optional.ofNullable(getMacAddress())
-                                                   .map(givenMac -> givenMac.equalsIgnoreCase(mac)))
-                           .orElse(true);
+    T isReachable(@NonNull Predicate<InterfaceAddress> predicate,
+                  @NonNull BiFunction<NetworkInterface, InterfaceAddress, T> parser, @NonNull Supplier<T> fallback)
+        throws CommunicationProtocolException {
+        if (Strings.isBlank(getIfName()) && Strings.isBlank(getCidrAddress())) {
+            return reload(fallback.get());
+        }
+        final Predicate<InterfaceAddress> iaPredicate = ia -> Optional.ofNullable(getCidrAddress())
+                                                                      .map(cidr -> cidr.equals(cidr(ia)))
+                                                                      .orElse(true);
+        final List<T> interfaces = getActiveInterfaces(this::checkInterface, predicate.and(iaPredicate), parser);
+        final String name = Strings.isBlank(getIfName()) ? getCidrAddress() : getIfName();
+        if (interfaces.isEmpty()) {
+            throw new CommunicationProtocolException("Interface name " + name + " is obsolete or down");
+        }
+        if (interfaces.size() > 1) {
+            LOGGER.warn("Has more than one CIDR with same given interface {}", name);
+        }
+        return reload(interfaces.get(0));
+    }
+
+    private boolean checkInterface(NetworkInterface ni) {
+        return Optional.ofNullable(getIfName()).map(ifName -> ifName.equalsIgnoreCase(ni.getName())).orElse(true) &&
+               Optional.ofNullable(getMacAddress())
+                       .flatMap(mac -> Optional.ofNullable(mac(ni)).map(actualMac -> actualMac.equalsIgnoreCase(mac)))
+                       .orElse(true);
     }
 
 }

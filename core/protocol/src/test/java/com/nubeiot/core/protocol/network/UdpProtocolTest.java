@@ -48,7 +48,7 @@ public class UdpProtocolTest {
     @Test
     public void test_equals_udp4() {
         final UdpProtocol udp1 = JsonData.from(
-            "{\"type\":\"udp6\",\"ifIndex\":1,\"ifName\":\"eth0\",\"cidrAddress\":\"172.1.0.1/16\"," +
+            "{\"type\":\"udp4\",\"ifIndex\":1,\"ifName\":\"eth0\",\"cidrAddress\":\"172.1.0.1/16\"," +
             "\"hostAddress\":\"172.1.0.2\",\"broadcastAddress\":\"172.1.0.255\",\"port\":8080}", UdpProtocol.class);
         final UdpProtocol udp2 = UdpProtocol.builder()
                                             .ifIndex(2)

@@ -117,6 +117,10 @@ public final class Functions {
         return Long::parseLong;
     }
 
+    public static Function<String, Double> toDouble() {
+        return Double::parseDouble;
+    }
+
     public static Function<String, UUID> toUUID() {
         return UUID64::uuid64ToUuid;
     }

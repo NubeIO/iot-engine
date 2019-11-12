@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.protocol.network.TcpProtocol;
 import com.nubeiot.core.protocol.network.UdpProtocol;
@@ -83,6 +84,12 @@ public class CommunicationProtocolTest {
         Assert.assertEquals("172.1.0.2", ipv4.getHostAddress());
         Assert.assertEquals("172.1.0.255", ipv4.getBroadcastAddress());
         Assert.assertEquals("172.1.0.1/16", ipv4.getCidrAddress());
+    }
+
+    @Test(expected = NubeException.class)
+    public void test_deserialize_invalid_ipv6() {
+        JsonData.from("{\"type\":\"ipv6\",\"ifIndex\":1,\"ifName\":\"eth0\",\"cidrAddress\":\"172.1.0.1/16\"," +
+                      "\"hostAddress\":\"172.1.0.2\"}", CommunicationProtocol.class);
     }
 
 }

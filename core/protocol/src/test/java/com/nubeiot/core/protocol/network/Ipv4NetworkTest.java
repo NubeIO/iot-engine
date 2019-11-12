@@ -11,6 +11,26 @@ import com.nubeiot.core.dto.JsonData;
 
 public class Ipv4NetworkTest {
 
+    @Test(expected = IllegalArgumentException.class)
+    public void test_serialize_invalid_ipv4() {
+        try {
+            Ipv4Network.builder().ifIndex(1).ifName("eth0").hostAddress("fe80::e30d:4eeb:2108:5ae9%wlo1").build();
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Invalid IPv4 address: fe80::e30d:4eeb:2108:5ae9%wlo1", e.getMessage());
+            throw e;
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void test_serialize_invalid_cidr() {
+        try {
+            Ipv4Network.builder().ifIndex(1).ifName("eth0").cidrAddress("172.1.0.1/40").build();
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Invalid CIDR address: Invalid prefix length, only [0,32]", e.getMessage());
+            throw e;
+        }
+    }
+
     @Test
     public void test_serialize() throws JSONException {
         final Ipv4Network eth0 = Ipv4Network.builder()
@@ -55,25 +75,6 @@ public class Ipv4NetworkTest {
                                            .build();
         Assert.assertEquals(ip1, ip2);
         Assert.assertEquals(ip1.identifier(), ip2.identifier());
-    }
-
-    @Test
-    public void test_valid_ipv4() {
-        Assert.assertTrue(Ipv4Network.isValidIPv4("255.255.255.255"));
-        Assert.assertTrue(Ipv4Network.isValidIPv4("0.0.0.0"));
-        Assert.assertTrue(Ipv4Network.isValidIPv4("192.168.1.1"));
-        Assert.assertTrue(Ipv4Network.isValidIPv4("10.0.1.1"));
-    }
-
-    @Test
-    public void test_invalid_ipv4() {
-        Assert.assertFalse(Ipv4Network.isValidIPv4("256.255.255.255"));
-        Assert.assertFalse(Ipv4Network.isValidIPv4("0.0.0"));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void test_invalid_ipv4_catch() {
-        Assert.assertFalse(Ipv4Network.isValidIPv4(""));
     }
 
 }

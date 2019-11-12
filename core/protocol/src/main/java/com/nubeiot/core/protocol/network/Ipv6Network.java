@@ -5,18 +5,24 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
+import com.nubeiot.core.utils.Functions;
 
+import inet.ipaddr.IPAddressString;
+import inet.ipaddr.IPAddressStringParameters;
+import inet.ipaddr.ipv6.IPv6Address;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 
 @Getter
 @Builder(builderClassName = "Builder")
-@JsonDeserialize(builder = Ipv4Network.Builder.class)
+@JsonDeserialize(builder = Ipv6Network.Builder.class)
 public final class Ipv6Network extends IpNetwork<Ipv6Network> implements Ethernet {
 
     private static final Predicate<InetAddress> IS_NAT_V6 = address -> !address.isAnyLocalAddress() &&
@@ -28,16 +34,21 @@ public final class Ipv6Network extends IpNetwork<Ipv6Network> implements Etherne
     private Ipv6Network(Integer ifIndex, String ifName, String displayName, String macAddress, String cidrAddress,
                         String hostAddress) {
         super(ifIndex, ifName, displayName, macAddress, cidrAddress, hostAddress);
+        validate();
     }
 
     public static Ipv6Network from(NetworkInterface ni, InterfaceAddress ia) {
-        return new Ipv6Network(ni.getIndex(), ni.getName(), ni.getDisplayName(), mac(ni),
-                               cidr(ia.getAddress(), ia.getNetworkPrefixLength()), ia.getAddress().getHostAddress());
+        return new Ipv6Network(ni.getIndex(), ni.getName(), ni.getDisplayName(), mac(ni), cidr(ia),
+                               ia.getAddress().getHostAddress());
     }
 
-    //TODO implement it
-    private static String cidr(InetAddress address, short prefixLength) {
-        return null;
+    static String cidr(@NonNull InterfaceAddress interfaceAddress) {
+        final InetAddress address = interfaceAddress.getAddress();
+        final short prefixLength = interfaceAddress.getNetworkPrefixLength();
+        if (!(address instanceof Inet6Address)) {
+            throw new IllegalArgumentException("Given interface address is not IPv6");
+        }
+        return new IPv6Address((Inet6Address) address, (int) prefixLength).toPrefixBlock().toCanonicalString();
     }
 
     public static List<Ipv6Network> getActiveIps() {
@@ -53,13 +64,34 @@ public final class Ipv6Network extends IpNetwork<Ipv6Network> implements Etherne
     }
 
     @Override
-    int version() {
+    public int version() {
         return 6;
     }
 
     @Override
+    String validateIpAddress(String address) {
+        if (Objects.isNull(address)) {
+            return null;
+        }
+        final IPAddressStringParameters params = new IPAddressStringParameters.Builder().allowIPv6(true)
+                                                                                        .allowIPv4(false)
+                                                                                        .allowMask(false)
+                                                                                        .allowPrefix(false)
+                                                                                        .allowPrefixOnly(false)
+                                                                                        .allowWildcardedSeparator(false)
+                                                                                        .toParams();
+        return Functions.getOrThrow(t -> new IllegalArgumentException("Invalid IPv6 address: " + address, t),
+                                    () -> new IPAddressString(address, params).toAddress()).toCanonicalString();
+    }
+
+    @Override
+    int maxPrefixLength() {
+        return 128;
+    }
+
+    @Override
     public Ipv6Network isReachable() throws CommunicationProtocolException {
-        return this;
+        return isReachable(IS_V6, Ipv6Network::from, Ipv6Network::getFirstActiveIp);
     }
 
     @JsonPOJOBuilder(withPrefix = "")

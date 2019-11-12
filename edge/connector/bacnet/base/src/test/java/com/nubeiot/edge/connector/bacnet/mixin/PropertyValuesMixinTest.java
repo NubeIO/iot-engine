@@ -72,18 +72,10 @@ public class PropertyValuesMixinTest {
             "\"expiration-time\":\"" + DateTimes.format(odt) + "\"}");
         final JsonObject actual = pvJson.toJson();
         System.out.println(actual.encode());
-        JsonHelper.assertJson(expected, actual, JsonHelper.ignore("expiration-time"));
-        String expirationExpected = expected.getString("expiration-time");
-        String expirationActual = actual.getString("expiration-time");
-        final int expectedLength = expirationExpected.length();
-        if (expectedLength == expirationActual.length()) {
-            Assert.assertEquals(expirationExpected, expirationActual);
-        } else {
-            System.out.println("Due to BACnet DateTime truncate `.SSS` to `.SS`");
-            final String expectedFix = expirationExpected.substring(0, expectedLength - 2) +
-                                       expirationExpected.substring(expectedLength - 1);
-            Assert.assertEquals(expectedFix, expirationActual);
-        }
+        JsonHelper.assertJson(expected, actual, JsonHelper.ignore("expiration-time"),
+                              JsonHelper.ignore("activation-time"));
+        assertBACnetTime(expected, actual, "expiration-time");
+        assertBACnetTime(expected, actual, "activation-time");
     }
 
     @Test
@@ -116,6 +108,20 @@ public class PropertyValuesMixinTest {
                                                    "\"timer-state\":{\"choice\":true}}");
         System.out.println(pvJson.toJson().encode());
         JsonHelper.assertJson(expected, pvJson.toJson());
+    }
+
+    private void assertBACnetTime(JsonObject expected, JsonObject actual, String key) {
+        String expirationExpected = expected.getString(key);
+        String expirationActual = actual.getString(key);
+        final int expectedLength = expirationExpected.length();
+        if (expectedLength == expirationActual.length()) {
+            Assert.assertEquals(expirationExpected, expirationActual);
+        } else {
+            System.out.println("Due to BACnet DateTime truncate `.SSS` to `.SS`");
+            final String expectedFix = expirationExpected.substring(0, expectedLength - 2) +
+                                       expirationExpected.substring(expectedLength - 1);
+            Assert.assertEquals(expectedFix, expirationActual);
+        }
     }
 
 }

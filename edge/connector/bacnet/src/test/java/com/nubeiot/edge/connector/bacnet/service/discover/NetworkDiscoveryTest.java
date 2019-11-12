@@ -73,7 +73,7 @@ public class NetworkDiscoveryTest extends BACnetVerticleTest {
         final JsonObject request = new JsonObject().put("networkCode", network.identifier());
         final JsonObject response = new JsonObject().put("network", UdpProtocol.builder()
                                                                                .ip(network)
-                                                                               .port(47808)
+                                                                               .port(47808).canReusePort(true)
                                                                                .build()
                                                                                .toJson());
         final JsonObject expected = EventMessage.success(EventAction.GET_ONE, response).toJson();

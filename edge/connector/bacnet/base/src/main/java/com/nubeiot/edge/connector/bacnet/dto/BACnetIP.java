@@ -32,9 +32,7 @@ public final class BACnetIP extends BACnetNetwork {
         return UdpProtocol.builder()
                           .port(port)
                           .ifName(networkInterface)
-                          .cidrAddress(subnet)
-                          .type("udp4")
-                          .displayName(getLabel()).canReusePort(true)
+                          .cidrAddress(subnet).displayName(getLabel()).canReusePort(true)
                           .build();
     }
 
