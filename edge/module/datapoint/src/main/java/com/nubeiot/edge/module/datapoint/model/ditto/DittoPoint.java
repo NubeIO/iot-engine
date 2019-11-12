@@ -31,7 +31,7 @@ public final class DittoPoint extends AbstractDittoModel<PointComposite> {
     }
 
     @Override
-    public JsonObject body() {
+    public JsonObject toJson() {
         final PointComposite point = get();
         MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
         other.setSyncAudit(null);

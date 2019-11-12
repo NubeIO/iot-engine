@@ -1,6 +1,7 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -16,6 +17,7 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
+import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.validation.EntityValidation;
 
 import lombok.NonNull;
@@ -53,8 +55,8 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public @NonNull EntityPostService asyncPostService() {
-        return unwrap().asyncPostService();
+    public Optional<EntityTask> asyncPostTask() {
+        return unwrap().asyncPostTask();
     }
 
     @Override

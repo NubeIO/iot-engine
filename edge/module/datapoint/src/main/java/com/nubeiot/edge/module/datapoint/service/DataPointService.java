@@ -4,13 +4,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.http.HttpMethod;
 
-import com.nubeiot.core.IConfig;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.http.base.Urls;
@@ -18,10 +18,9 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.core.sql.service.EntityService;
+import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.sync.SyncServiceFactory;
 
 import lombok.NonNull;
@@ -51,10 +50,8 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     @Override
-    default @NonNull EntityPostService asyncPostService() {
-        return SyncServiceFactory.get(entityHandler().vertx(),
-                                      IConfig.from(entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG),
-                                                   DataSyncConfig.class));
+    default Optional<EntityTask> asyncPostTask() {
+        return SyncServiceFactory.get(entityHandler(), entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG));
     }
 
     default String api() {
