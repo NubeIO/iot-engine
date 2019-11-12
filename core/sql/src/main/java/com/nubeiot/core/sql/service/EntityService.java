@@ -2,6 +2,7 @@ package com.nubeiot.core.sql.service;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -13,6 +14,7 @@ import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
+import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.validation.EntityValidation;
 
 import lombok.NonNull;
@@ -67,13 +69,14 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
     @NonNull EntityTransformer transformer();
 
     /**
-     * Async post-back service to publish response
+     * Async post task to publish resource. It should be invoked immediately in retrieve {@code entity pojo} after
+     * create/update/delete action
      *
-     * @return post service
-     * @see EntityPostService
+     * @return post task
+     * @see EntityTask
      */
-    default @NonNull EntityPostService asyncPostService() {
-        return EntityPostService.EMPTY;
+    default Optional<EntityTask> asyncPostTask() {
+        return Optional.empty();
     }
 
     /**

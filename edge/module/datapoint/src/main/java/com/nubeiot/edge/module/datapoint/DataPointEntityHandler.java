@@ -35,8 +35,9 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
-import com.nubeiot.core.utils.ExecutorHelpers;
+import com.nubeiot.core.sql.service.task.EntityTaskData;
 import com.nubeiot.core.utils.Functions;
+import com.nubeiot.core.workflow.TaskExecuter;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
@@ -106,7 +107,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                    .collect(Collectors.toList()))
                      .buffer(5)
                      .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
-                     .doOnSuccess(r -> syncData(device))
+                     .doOnSuccess(r -> syncData(action, device))
                      .map(r -> EventMessage.success(action, new JsonObject().put("records", r)));
     }
 
@@ -195,10 +196,17 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         return r -> logger.info("Inserted {} record(s) in {}", r, pojoClass.getSimpleName());
     }
 
-    private void syncData(Device device) {
-        ExecutorHelpers.blocking(vertx(), () -> SyncServiceFactory.getInitialSync(this, sharedData(DATA_SYNC_CFG)))
-                       .flatMapMaybe(syncService -> syncService.sync(device))
-                       .subscribe();
+    private void syncData(EventAction action, Device device) {
+        SyncServiceFactory.getInitialTask(this, sharedData(DATA_SYNC_CFG))
+                          .ifPresent(task -> TaskExecuter.execute(task, getTaskData(action, device)));
+    }
+
+    private EntityTaskData<Device> getTaskData(EventAction action, Device device) {
+        return EntityTaskData.<Device>builder().originReqAction(action)
+                                               .originReqData(RequestData.builder().build())
+                                               .metadata(DeviceMetadata.INSTANCE)
+                                               .data(device)
+                                               .build();
     }
 
     private Device cacheDevice(@NonNull Device device) {

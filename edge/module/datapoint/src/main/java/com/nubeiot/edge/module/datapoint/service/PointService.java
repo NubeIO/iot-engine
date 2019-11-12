@@ -14,15 +14,14 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
-import com.nubeiot.core.sql.service.EntityPostService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
+import com.nubeiot.core.sql.service.task.EntityTaskData;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.sync.PointSyncService;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.unit.DataType;
@@ -69,13 +68,20 @@ public final class PointService
     }
 
     @Override
-    public @NonNull EntityPostService asyncPostService() {
-        return new PointSyncService(DataPointService.super.asyncPostService());
+    protected Single<PointComposite> doGetOne(RequestData reqData) {
+        return groupQuery().findOneByKey(reqData);
     }
 
     @Override
-    protected Single<PointComposite> doGetOne(RequestData reqData) {
-        return groupQuery().findOneByKey(reqData);
+    protected EntityTaskData<VertxPojo> asyncTaskData(@NonNull RequestData reqData, @NonNull EventAction action,
+                                                      VertxPojo pojo, Throwable t) {
+        return EntityTaskData.builder()
+                             .originReqData(reqData)
+                             .originReqAction(action)
+                             .metadata(contextGroup())
+                             .data(pojo)
+                             .throwable(t)
+                             .build();
     }
 
     @Override

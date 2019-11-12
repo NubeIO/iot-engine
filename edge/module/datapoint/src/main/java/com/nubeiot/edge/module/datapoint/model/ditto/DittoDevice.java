@@ -32,7 +32,7 @@ public final class DittoDevice extends AbstractDittoModel<IDevice> {
     }
 
     @Override
-    public JsonObject body() {
+    public JsonObject toJson() {
         JsonObject metadata = get().getMetadata();
         metadata.remove(DataSyncConfig.NAME);
         return JsonPojo.from(get().setMetadata(metadata).setSyncAudit(null)).toJson();
