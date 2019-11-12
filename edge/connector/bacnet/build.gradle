@@ -5,6 +5,7 @@ repositories {
 
 dependencies {
     compile project(':core:micro')
+    compile project(':edge:module:datapoint:model')
     compile project(':edge:connector:bacnet:base')
 
     testCompile project(":core:base").sourceSets.test.output
