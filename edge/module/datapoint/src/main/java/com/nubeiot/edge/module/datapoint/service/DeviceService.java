@@ -16,7 +16,8 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 
 import lombok.NonNull;

@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint.sync;
+package com.nubeiot.edge.module.datapoint.task.sync;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -10,22 +10,23 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 
 import lombok.NonNull;
 
-final class DittoInitialSyncTask extends AbstractDittoTask<Device> implements InitialSyncTask<DittoTaskContext> {
+final class DittoInitialSyncTask extends AbstractDittoTask<Device>
+    implements SyncTask.InitialSyncTask<DittoTaskContext> {
 
     DittoInitialSyncTask(DittoTaskContext context) {
         super(context);
     }
 
     @Override
-    public @NonNull Single<Boolean> isExecutable(@NonNull EntityTaskData<Device> executionContext) {
+    public @NonNull Single<Boolean> isExecutable(@NonNull EntityTaskData<Device> executionData) {
         return Single.just(true);
     }
 
     @Override
-    public @NonNull Maybe<JsonObject> execute(@NonNull EntityTaskData<Device> executionContext) {
-        final DittoDevice ditto = new DittoDevice(executionContext.getData());
-        return doSyncOnSuccess(executionContext.getMetadata(), ditto.creationEndpoint(thingId(definition())),
-                               createReqBody(ditto), executionContext.getData());
+    public @NonNull Maybe<JsonObject> execute(@NonNull EntityTaskData<Device> executionData) {
+        final DittoDevice ditto = new DittoDevice(executionData.getData());
+        return doSyncOnSuccess(executionData.getMetadata(), ditto.creationEndpoint(thingId(definition())),
+                               createReqBody(ditto), executionData.getData());
     }
 
     private JsonObject createReqBody(@NonNull DittoDevice pojo) {

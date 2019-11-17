@@ -40,8 +40,7 @@ import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.workflow.TaskExecuter;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
-import com.nubeiot.edge.module.datapoint.sync.SyncServiceFactory;
+import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.edge.model.Keys;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
@@ -198,7 +197,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
 
     private void syncData(EventAction action, Device device) {
         SyncServiceFactory.getInitialTask(this, sharedData(DATA_SYNC_CFG))
-                          .ifPresent(task -> TaskExecuter.execute(task, getTaskData(action, device)));
+                          .ifPresent(task -> TaskExecuter.asyncExecute(task, getTaskData(action, device)));
     }
 
     private EntityTaskData<Device> getTaskData(EventAction action, Device device) {

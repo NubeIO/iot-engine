@@ -1,5 +1,6 @@
 package com.nubeiot.core.sql.query;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -73,12 +74,13 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
 
     @Override
     public Single<?> modifyReturningPrimary(RequestData reqData, EventAction action,
-                                            BiFunction<VertxPojo, RequestData, VertxPojo> validator) {
+                                            BiFunction<VertxPojo, RequestData, Single<P>> validator) {
         final Object pk = metadata.parseKey(reqData);
         final VertxDAO dao = entityHandler().dao(metadata.daoClass());
         //TODO validate unique keys
-        return findOneByKey(reqData).map(
-            db -> (P) AuditDecorator.addModifiedAudit(reqData, metadata, db, validator.apply(db, reqData)))
+        return findOneByKey(reqData).flatMap(db -> validator.apply(db, reqData).map(p -> new SimpleEntry<>(db, p)))
+                                    .map(pojo -> AuditDecorator.addModifiedAudit(reqData, metadata, pojo.getKey(),
+                                                                                 pojo.getValue()))
                                     .flatMap(p -> (Single<Integer>) dao.update(p))
                                     .filter(i -> i > 0)
                                     .switchIfEmpty(Single.error(metadata.notFound(pk)))

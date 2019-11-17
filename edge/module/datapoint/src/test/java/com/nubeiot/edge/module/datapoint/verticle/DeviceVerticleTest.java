@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint;
+package com.nubeiot.edge.module.datapoint.verticle;
 
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -13,7 +13,9 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.ExpectedResponse;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.utils.UUID64;
+import com.nubeiot.edge.module.datapoint.BaseDataPointVerticleTest;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
+import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 
 public class DeviceVerticleTest extends BaseDataPointVerticleTest {

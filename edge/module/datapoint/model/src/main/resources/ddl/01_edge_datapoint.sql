@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS DEVICE_EQUIP (
 	DEVICE               uuid   NOT NULL,
 	EQUIP                uuid   NOT NULL,
 	NETWORK              uuid   ,
+	ADDRESS              varchar(500)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
 	CONSTRAINT IDX_UQ_DEVICE_EQUIP UNIQUE ( DEVICE, EQUIP ) ,
@@ -252,6 +253,18 @@ CREATE TABLE IF NOT EXISTS HISTORY_SETTING (
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
     CONSTRAINT PK_HISTORY_SETTING PRIMARY KEY ( POINT )
+);
+
+CREATE TABLE IF NOT EXISTS PROTOCOL_DISPATCHER (
+    ID                   int GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	PROTOCOL             varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
+	ENTITY               varchar(127)   NOT NULL,
+	ACTION               varchar(31)    NOT NULL,
+	ADDRESS              varchar(255)   NOT NULL,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           clob(2147483647)   ,
+    CONSTRAINT PK_PROTOCOL_DISPATCHER PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_PROTOCOL_DISPATCHER UNIQUE ( PROTOCOL, ENTITY, ACTION )
 );
 
 -- ALTER FK

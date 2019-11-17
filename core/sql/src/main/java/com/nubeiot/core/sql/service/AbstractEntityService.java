@@ -2,6 +2,7 @@ package com.nubeiot.core.sql.service;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
+import java.util.function.BiFunction;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Observable;
@@ -129,17 +130,23 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
 
     @SuppressWarnings("unchecked")
     protected Single<?> doInsert(RequestData reqData) {
-        return queryExecutor().insertReturningPrimary((P) validation().onCreating(reqData), reqData);
+        return Single.just((P) validation().onCreating(reqData))
+                     .flatMap(p -> executeBeforeTask(reqData, EventAction.CREATE, p))
+                     .flatMap(p -> queryExecutor().insertReturningPrimary(p, reqData));
     }
 
     @SuppressWarnings("unchecked")
     protected Single<?> doUpdate(RequestData reqData) {
-        return queryExecutor().modifyReturningPrimary(reqData, EventAction.UPDATE, validation()::onUpdating);
+        final BiFunction<VertxPojo, RequestData, VertxPojo> validator = validation()::onUpdating;
+        return queryExecutor().modifyReturningPrimary(reqData, EventAction.UPDATE, validator.andThen(
+            p -> executeBeforeTask(reqData, EventAction.UPDATE, (P) p)));
     }
 
     @SuppressWarnings("unchecked")
     protected Single<?> doPatch(RequestData reqData) {
-        return queryExecutor().modifyReturningPrimary(reqData, EventAction.PATCH, validation()::onPatching);
+        final BiFunction<VertxPojo, RequestData, VertxPojo> validator = validation()::onPatching;
+        return queryExecutor().modifyReturningPrimary(reqData, EventAction.PATCH, validator.andThen(
+            p -> executeBeforeTask(reqData, EventAction.PATCH, (P) p)));
     }
 
     protected Single<P> doDelete(RequestData reqData) {
@@ -162,9 +169,19 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     }
 
     @SuppressWarnings("unchecked")
+    protected Single<P> executeBeforeTask(RequestData reqData, EventAction action, P p) {
+        if (!taskBeforePersist().isPresent()) {
+            return Single.just(p);
+        }
+        return TaskExecuter.blockingExecute(taskBeforePersist().get(), asyncTaskData(reqData, action, p, null))
+                           .switchIfEmpty(Single.just(p));
+    }
+
+    @SuppressWarnings("unchecked")
     protected void invokeAsyncTask(@NonNull RequestData reqData, @NonNull EventAction action, VertxPojo pojo,
                                    Throwable t) {
-        asyncPostTask().ifPresent(task -> TaskExecuter.execute(task, asyncTaskData(reqData, action, pojo, t)));
+        asyncTaskAfterPersist().ifPresent(
+            task -> TaskExecuter.asyncExecute(task, asyncTaskData(reqData, action, pojo, t)));
     }
 
     protected EntityTaskData<VertxPojo> asyncTaskData(@NonNull RequestData reqData, @NonNull EventAction action,

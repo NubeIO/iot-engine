@@ -1,9 +1,10 @@
 package com.nubeiot.core.sql.service.task;
 
-import io.vertx.core.json.JsonObject;
+import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 
 import com.nubeiot.core.workflow.Task;
 
-public interface EntityTask<DC extends EntityTaskContext, EC extends EntityTaskData> extends Task<DC, EC, JsonObject> {
+public interface EntityTask<DC extends EntityTaskContext, P extends VertxPojo, R>
+    extends Task<DC, EntityTaskData<P>, R> {
 
 }

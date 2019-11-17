@@ -69,13 +69,22 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
     @NonNull EntityTransformer transformer();
 
     /**
-     * Async post task to publish resource. It should be invoked immediately in retrieve {@code entity pojo} after
-     * create/update/delete action
+     * Defines {@code task} after validation and before {@code persisting} entity resource in database
      *
      * @return post task
      * @see EntityTask
      */
-    default Optional<EntityTask> asyncPostTask() {
+    default Optional<? extends EntityTask> taskBeforePersist() {
+        return Optional.empty();
+    }
+
+    /**
+     * Defines {@code async task} after {@code persisting} entity resource in database
+     *
+     * @return post task
+     * @see EntityTask
+     */
+    default Optional<? extends EntityTask> asyncTaskAfterPersist() {
         return Optional.empty();
     }
 

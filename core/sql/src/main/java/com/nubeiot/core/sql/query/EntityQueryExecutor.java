@@ -109,7 +109,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @return primary key
      */
     Single<?> modifyReturningPrimary(@NonNull RequestData requestData, @NonNull EventAction action,
-                                     BiFunction<VertxPojo, RequestData, VertxPojo> validator);
+                                     BiFunction<VertxPojo, RequestData, Single<P>> validator);
 
     /**
      * Do delete data by primary
@@ -139,7 +139,8 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
         return Observable.fromIterable(holder.referenceTableKeysTo(metadata.table()))
                          .flatMapMaybe(e -> fetchExists(queryBuilder().exist(e.getKey(), e.getValue().eq(pk))))
                          .flatMap(b -> Observable.error(metadata.unableDeleteDueUsing(keyProvider.apply(pojo))))
-                         .map(b -> pojo).defaultIfEmpty(pojo)
+                         .map(b -> pojo)
+                         .defaultIfEmpty(pojo)
                          .singleOrError();
     }
 

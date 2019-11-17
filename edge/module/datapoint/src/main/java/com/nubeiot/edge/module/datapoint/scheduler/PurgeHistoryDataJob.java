@@ -10,9 +10,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.type.Label;
 import com.nubeiot.core.utils.Functions;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.OldestCleanupPolicy;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
 
 import lombok.NonNull;
 

@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint.sync;
+package com.nubeiot.edge.module.datapoint.task.sync;
 
 import java.util.Optional;
 
@@ -25,19 +25,19 @@ final class DittoSyncTask extends AbstractDittoTask<VertxPojo> {
     }
 
     @Override
-    public @NonNull Single<Boolean> isExecutable(@NonNull EntityTaskData<VertxPojo> executionContext) {
-        final EventAction action = executionContext.getOriginReqAction();
+    public @NonNull Single<Boolean> isExecutable(@NonNull EntityTaskData<VertxPojo> executionData) {
+        final EventAction action = executionData.getOriginReqAction();
         return Single.just(
             action == EventAction.GET_LIST || action == EventAction.GET_ONE || action == EventAction.REMOVE ||
             !(definition().handler() instanceof EntitySyncHandler));
     }
 
     @Override
-    public @NonNull Maybe<JsonObject> execute(@NonNull EntityTaskData<VertxPojo> executionContext) {
-        if (executionContext.isError()) {
-            return doOnError(executionContext.getThrowable());
+    public @NonNull Maybe<JsonObject> execute(@NonNull EntityTaskData<VertxPojo> executionData) {
+        if (executionData.isError()) {
+            return doOnError(executionData.getThrowable());
         }
-        return transform(executionContext).flatMap(syncData -> doOnSuccess(executionContext.getMetadata(), syncData));
+        return transform(executionData).flatMap(syncData -> doOnSuccess(executionData.getMetadata(), syncData));
     }
 
     private @NonNull Maybe<IDittoModel<VertxPojo>> transform(@NonNull EntityTaskData<VertxPojo> data) {
