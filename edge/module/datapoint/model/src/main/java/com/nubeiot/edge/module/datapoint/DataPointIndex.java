@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint.service;
+package com.nubeiot.edge.module.datapoint;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,6 +45,7 @@ import com.nubeiot.iotdata.edge.model.tables.daos.PointHistoryDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointRealtimeDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointTagDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointValueDataDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.ProtocolDispatcherDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.RealtimeSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ThingDao;
@@ -60,6 +61,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
+import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
@@ -75,6 +77,7 @@ import com.nubeiot.iotdata.edge.model.tables.records.PointRealtimeDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointTagRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointValueDataRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.ProtocolDispatcherRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.RealtimeSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ScheduleSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ThingRecord;
@@ -309,13 +312,13 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull String jsonKeyName() {
-            return "type";
+        public @NonNull String requestKeyName() {
+            return "unit_type";
         }
 
         @Override
-        public @NonNull String requestKeyName() {
-            return "unit_type";
+        public @NonNull String jsonKeyName() {
+            return "type";
         }
 
         @Override
@@ -343,7 +346,7 @@ public interface DataPointIndex extends MetadataIndex {
         private static Set<String> NULL_ALIASES = Collections.unmodifiableSet(
             new HashSet<>(Arrays.asList("default", "gpio")));
 
-        static void optimizeAlias(JsonObject req) {
+        public static void optimizeAlias(JsonObject req) {
             Optional.ofNullable(req).ifPresent(r -> {
                 if (NULL_ALIASES.contains(r.getString(INSTANCE.requestKeyName(), "").toLowerCase())) {
                     r.put(INSTANCE.requestKeyName(), (String) null);
@@ -463,6 +466,16 @@ public interface DataPointIndex extends MetadataIndex {
         public final @NonNull Class<PointValueDataDao> daoClass() { return PointValueDataDao.class; }
 
         @Override
+        public @NonNull PointValueData parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
+            PointValueData pojo = UUIDKeyEntity.super.parseFromRequest(request);
+            pojo.setPriority(Optional.ofNullable(pojo.getPriority()).orElse(PointPriorityValue.DEFAULT_PRIORITY));
+            pojo.setPriorityValues(Optional.ofNullable(pojo.getPriorityValues())
+                                           .orElse(new PointPriorityValue())
+                                           .add(pojo.getPriority(), pojo.getValue()));
+            return pojo;
+        }
+
+        @Override
         public @NonNull String requestKeyName() {
             return PointMetadata.INSTANCE.requestKeyName();
         }
@@ -486,16 +499,6 @@ public interface DataPointIndex extends MetadataIndex {
             return pvData;
         }
 
-        @Override
-        public @NonNull PointValueData parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
-            PointValueData pojo = UUIDKeyEntity.super.parseFromRequest(request);
-            pojo.setPriority(Optional.ofNullable(pojo.getPriority()).orElse(PointPriorityValue.DEFAULT_PRIORITY));
-            pojo.setPriorityValues(Optional.ofNullable(pojo.getPriorityValues())
-                                           .orElse(new PointPriorityValue())
-                                           .add(pojo.getPriority(), pojo.getValue()));
-            return pojo;
-        }
-
     }
 
 
@@ -504,6 +507,16 @@ public interface DataPointIndex extends MetadataIndex {
         implements BigSerialKeyEntity<PointRealtimeData, PointRealtimeDataRecord, PointRealtimeDataDao> {
 
         public static final RealtimeDataMetadata INSTANCE = new RealtimeDataMetadata();
+
+        public static JsonObject simpleValue(Double val, Integer priority) {
+            return new JsonObject().put("val", val)
+                                   .put("priority",
+                                        Optional.ofNullable(priority).orElse(PointPriorityValue.DEFAULT_PRIORITY));
+        }
+
+        public static JsonObject fullValue(@NonNull JsonObject value, @NonNull DataType dataType) {
+            return value.put("display", dataType.display(dataType.parse(value.getValue("val"))));
+        }
 
         @Override
         public @NonNull JsonTable<PointRealtimeDataRecord> table() {
@@ -539,16 +552,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull List<OrderField<?>> orderFields() {
             return Arrays.asList(Tables.POINT_REALTIME_DATA.TIME.desc(), Tables.POINT_REALTIME_DATA.POINT.asc());
-        }
-
-        public static JsonObject simpleValue(Double val, Integer priority) {
-            return new JsonObject().put("val", val)
-                                   .put("priority",
-                                        Optional.ofNullable(priority).orElse(PointPriorityValue.DEFAULT_PRIORITY));
-        }
-
-        public static JsonObject fullValue(@NonNull JsonObject value, @NonNull DataType dataType) {
-            return value.put("display", dataType.display(dataType.parse(value.getValue("val"))));
         }
 
     }
@@ -792,6 +795,29 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<DeviceEquipDao> daoClass() {
             return DeviceEquipDao.class;
+        }
+
+    }
+
+
+    final class ProtocolDispatcherMetadata
+        implements SerialKeyEntity<ProtocolDispatcher, ProtocolDispatcherRecord, ProtocolDispatcherDao> {
+
+        public static final ProtocolDispatcherMetadata INSTANCE = new ProtocolDispatcherMetadata();
+
+        @Override
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.ProtocolDispatcher table() {
+            return Tables.PROTOCOL_DISPATCHER;
+        }
+
+        @Override
+        public @NonNull Class<ProtocolDispatcher> modelClass() {
+            return ProtocolDispatcher.class;
+        }
+
+        @Override
+        public @NonNull Class<ProtocolDispatcherDao> daoClass() {
+            return ProtocolDispatcherDao.class;
         }
 
     }

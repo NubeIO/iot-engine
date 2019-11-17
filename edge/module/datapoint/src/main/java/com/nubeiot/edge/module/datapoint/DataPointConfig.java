@@ -19,8 +19,8 @@ import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.utils.UUID64;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.scheduler.DataJobDefinition;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.unit.DataType;
 

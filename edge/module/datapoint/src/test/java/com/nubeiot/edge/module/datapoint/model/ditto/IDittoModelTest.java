@@ -12,10 +12,10 @@ import com.nubeiot.core.cache.ClassGraphCache;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointCompositeMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
 import com.nubeiot.iotdata.edge.model.Tables;
 
 @RunWith(VertxUnitRunner.class)
@@ -38,7 +38,8 @@ public class IDittoModelTest {
                                                 !(metadata instanceof CompositeMetadata ||
                                                   metadata instanceof PointMetadata))
                             .filter(metadata -> !(Tables.DEVICE_EQUIP.equals(metadata.table()) ||
-                                                  Tables.THING.equals(metadata.table())))
+                                                  Tables.THING.equals(metadata.table()) ||
+                                                  Tables.PROTOCOL_DISPATCHER.equals(metadata.table())))
                             .map(IDittoModel::find)
                             .forEach(Assert::assertNotNull);
     }

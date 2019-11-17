@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint;
+package com.nubeiot.edge.module.datapoint.verticle;
 
 import org.junit.Test;
 
@@ -6,6 +6,8 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
+import com.nubeiot.edge.module.datapoint.BaseDataPointVerticleTest;
+import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 
 public class PointVerticleTest extends BaseDataPointVerticleTest {

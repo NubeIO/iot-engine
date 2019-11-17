@@ -23,6 +23,6 @@ public interface TaskDefinitionContext<T extends Transporter>
      *
      * @return {@code true} {@code task} will be executed in {@code another worker}
      */
-    boolean isAsync();
+    boolean isConcurrent();
 
 }

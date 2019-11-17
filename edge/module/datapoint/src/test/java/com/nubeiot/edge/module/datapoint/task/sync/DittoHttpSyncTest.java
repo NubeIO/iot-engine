@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint.sync;
+package com.nubeiot.edge.module.datapoint.task.sync;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -30,9 +30,9 @@ import com.nubeiot.edge.module.datapoint.BaseDataPointVerticleTest;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
-import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointType;
+import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;

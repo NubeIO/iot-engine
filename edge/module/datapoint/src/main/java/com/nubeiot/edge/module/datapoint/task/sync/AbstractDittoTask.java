@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint.sync;
+package com.nubeiot.edge.module.datapoint.task.sync;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
@@ -11,17 +11,15 @@ import com.nubeiot.core.dto.DataTransferObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
-import com.nubeiot.core.sql.service.task.EntityTask;
-import com.nubeiot.core.sql.service.task.EntityTaskData;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.core.utils.UUID64;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-abstract class AbstractDittoTask<D extends VertxPojo> implements EntityTask<DittoTaskContext, EntityTaskData<D>> {
+abstract class AbstractDittoTask<D extends VertxPojo> implements SyncTask<DittoTaskContext, D> {
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final DittoTaskContext taskContext;

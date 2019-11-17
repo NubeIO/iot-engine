@@ -17,10 +17,10 @@ import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.NewestCleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.OldestCleanupPolicy;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
 
 public class DataPointConfigTest {
 

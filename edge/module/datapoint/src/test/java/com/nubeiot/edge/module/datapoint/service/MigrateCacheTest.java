@@ -9,6 +9,7 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 

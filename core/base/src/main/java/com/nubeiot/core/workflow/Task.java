@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 
 public interface Task<DC extends TaskDefinitionContext, EC extends TaskExecutionData, R> {
 
-    DC definition();
+    @NonNull DC definition();
 
-    @NonNull Single<Boolean> isExecutable(@NonNull EC executionContext);
+    @NonNull Single<Boolean> isExecutable(@NonNull EC executionData);
 
-    @NonNull Maybe<R> execute(@NonNull EC executionContext);
+    @NonNull Maybe<R> execute(@NonNull EC executionData);
 
     @RequiredArgsConstructor
     abstract class TaskDelegate<DC extends TaskDefinitionContext, EC extends TaskExecutionData, R>
@@ -24,18 +24,18 @@ public interface Task<DC extends TaskDefinitionContext, EC extends TaskExecution
         private final Task<DC, EC, R> delegate;
 
         @Override
-        public DC definition() {
+        public @NonNull DC definition() {
             return delegate.definition();
         }
 
         @Override
-        public @NonNull Single<Boolean> isExecutable(EC executionContext) {
-            return delegate.isExecutable(executionContext);
+        public @NonNull Single<Boolean> isExecutable(EC executionData) {
+            return delegate.isExecutable(executionData);
         }
 
         @Override
-        public @NonNull Maybe<R> execute(EC executionContext) {
-            return delegate.execute(executionContext);
+        public @NonNull Maybe<R> execute(EC executionData) {
+            return delegate.execute(executionData);
         }
 
     }

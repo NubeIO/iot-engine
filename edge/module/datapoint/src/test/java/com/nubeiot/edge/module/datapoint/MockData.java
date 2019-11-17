@@ -17,18 +17,19 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.Label;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceEquipMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.EquipmentMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistoryDataMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.HistorySettingMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointValueMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.RealtimeSettingMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TagPointMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.ThingMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TransducerMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceEquipMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EquipmentMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.TagPointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.TransducerMetadata;
 import com.nubeiot.iotdata.dto.EquipType;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointKind;
@@ -46,6 +47,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
+import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
@@ -71,6 +73,19 @@ public final class MockData {
     public static final List<HistorySetting> HISTORY_SETTINGS = historySettings();
     public static final List<PointHistoryData> HISTORY_DATA = historyData();
     public static final List<RealtimeSetting> RT_SETTINGS = rtSettings();
+    public static final List<ProtocolDispatcher> PROTOCOL_DISPATCHERS = protocolDispatchers();
+
+    private static List<ProtocolDispatcher> protocolDispatchers() {
+        return Arrays.asList(new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                                                     .setEntity(NetworkMetadata.INSTANCE.singularKeyName())
+                                                     .setAddress("bacnet.dispatcher.network"),
+                             new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                                                     .setEntity(EquipmentMetadata.INSTANCE.singularKeyName())
+                                                     .setAddress("bacnet.dispatcher.equipment"),
+                             new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                                                     .setEntity(PointMetadata.INSTANCE.singularKeyName())
+                                                     .setAddress("bacnet.dispatcher.point"));
+    }
 
     private static List<RealtimeSetting> rtSettings() {
         return Collections.singletonList(new RealtimeSetting().setPoint(PrimaryKey.P_GPIO_TEMP).setEnabled(true));
@@ -324,6 +339,11 @@ public final class MockData {
                                  .put(HistorySettingMetadata.INSTANCE.singularKeyName(), data(HISTORY_SETTINGS))
                                  .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA))
                                  .put(RealtimeSettingMetadata.INSTANCE.singularKeyName(), data(RT_SETTINGS));
+    }
+
+    public static JsonObject data_Protocol_Dispatcher() {
+        return data_Point_Setting_Tag().put(ProtocolDispatcherMetadata.INSTANCE.singularKeyName(),
+                                            data(PROTOCOL_DISPATCHERS));
     }
 
     public static <T extends VertxPojo> List<JsonObject> data(List<T> list) {

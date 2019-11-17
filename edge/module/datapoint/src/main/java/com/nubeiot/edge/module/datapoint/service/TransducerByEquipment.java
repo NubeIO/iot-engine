@@ -6,10 +6,10 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EquipThingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EquipmentMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.TransducerMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.ThingComposite;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.EquipThingMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.EquipmentMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TransducerMetadata;
 import com.nubeiot.iotdata.edge.model.tables.Thing;
 
 import lombok.NonNull;

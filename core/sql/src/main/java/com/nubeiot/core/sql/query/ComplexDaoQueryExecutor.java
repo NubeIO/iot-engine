@@ -155,8 +155,8 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
 
     @Override
     public Single<?> modifyReturningPrimary(RequestData req, EventAction action,
-                                            BiFunction<VertxPojo, RequestData, VertxPojo> validator) {
-        return findOneByKey(req).map(db -> (CP) validator.apply(db, req))
+                                            BiFunction<VertxPojo, RequestData, Single<CP>> validator) {
+        return findOneByKey(req).flatMap(db -> validator.apply(db, req))
                                 .flatMap(p -> Optional.ofNullable(p.getOther(resource.singularKeyName()))
                                                       .map(VertxPojo.class::cast)
                                                       .map(r -> (Single) dao(resource).update(

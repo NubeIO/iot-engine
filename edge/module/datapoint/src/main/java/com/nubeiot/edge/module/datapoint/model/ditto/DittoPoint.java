@@ -7,9 +7,9 @@ import io.vertx.core.json.JsonObject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel.AbstractDittoModel;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 
 import lombok.NonNull;

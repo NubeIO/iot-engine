@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="H2" id="Project_20250b0" template="Default" database="H2" >
-	<schema name="PUBLIC" catalogname="01_edge_datapoint.sql" schemaname="PUBLIC" >
+	<schema name="PUBLIC" catalogname="01_edge_datapoint.sql" >
 		<table name="DEVICE" >
 			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" >
 				<defo>RANDOM_UUID()</defo>
@@ -30,6 +30,7 @@
 			<column name="DEVICE" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="EQUIP" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="NETWORK" type="uuid" length="2147483647" decimal="0" jt="-2" />
+			<column name="ADDRESS" type="varchar" length="500" jt="12" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<index name="CONSTRAINT_9" unique="PRIMARY_KEY" >
@@ -308,6 +309,21 @@
 				<fk_column name="POINT" pk="ID" />
 			</fk>
 		</table>
+		<table name="PROTOCOL_DISPATCHER" >
+			<column name="ID" type="integer" jt="4" mandatory="y" autoincrement="y" />
+			<column name="PROTOCOL" type="varchar" length="31" jt="12" mandatory="y" />
+			<column name="ENTITY" type="varchar" length="127" jt="12" mandatory="y" />
+			<column name="ADDRESS" type="varchar" length="255" jt="12" mandatory="y" />
+			<column name="TIME_AUDIT" type="varchar" length="500" jt="12" />
+			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
+			<index name="PK_PROTOCOL_DISPATCHER" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_PROTOCOL_DISPATCHER" unique="UNIQUE" >
+				<column name="PROTOCOL" />
+				<column name="ENTITY" />
+			</index>
+		</table>
 		<table name="REALTIME_SETTING" >
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="ENABLED" type="boolean" length="1" decimal="0" jt="16" mandatory="y" >
@@ -424,43 +440,45 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 		<sequence name="SYSTEM_SEQUENCE_80300AAB_0F06_4978_9ABB_E101C001FAB6" />
 		<sequence name="SYSTEM_SEQUENCE_8477E3AC_D540_4A25_891F_B44771BDA9AB" />
 	</schema>
-	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="-1" instance="/data/projects/nubeio/iot-engine/edge/module/datapoint/src/main/resources/ddl/edge_datapoint" />
+	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="0" instance="C:/projects/nubeio/iot-engine/edge/module/datapoint/model/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
-		<entity schema="PUBLIC" name="TRANSDUCER" color="EEF7EC" x="656" y="384" />
-		<entity schema="PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="240" />
-		<entity schema="PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="432" y="592" />
-		<entity schema="PUBLIC" name="POINT_TAG" color="FFCCE6" x="656" y="160" />
-		<entity schema="PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="64" y="592" />
-		<entity schema="PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="256" y="560" />
-		<entity schema="PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="416" />
-		<entity schema="PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
-		<entity schema="PUBLIC" name="EQUIPMENT" color="EEF7EC" x="1120" y="608" />
-		<entity schema="PUBLIC" name="DEVICE" color="EEF7EC" x="672" y="592" />
-		<entity schema="PUBLIC" name="THING" color="EEF7EC" x="1136" y="384" />
-		<entity schema="PUBLIC" name="POINT" color="BED3F4" x="352" y="112" />
-		<entity schema="PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="1104" y="80" />
-		<entity schema="PUBLIC" name="DEVICE_EQUIP" color="EEF7EC" x="928" y="608" />
-		<entity schema="PUBLIC" name="NETWORK" color="FFCCE6" x="896" y="112" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="384" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="48" y="240" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="BED3F4" x="368" y="96" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" color="BED3F4" x="640" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="320" y="576" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="576" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="592" y="528" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="C7F4BE" x="864" y="576" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="1072" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="FFCCE6" x="1312" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="848" y="352" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="C7F4BE" x="1152" y="368" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE_EQUIP" color="C7F4BE" x="1184" y="576" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EQUIPMENT" color="C7F4BE" x="1392" y="432" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCE6" x="848" y="80" />
 		<group name="POINT" color="ECF0F7" >
-			<entity schema="PUBLIC" name="POINT" />
-			<entity schema="PUBLIC" name="HISTORY_SETTING" />
-			<entity schema="PUBLIC" name="POINT_VALUE_DATA" />
-			<entity schema="PUBLIC" name="POINT_HISTORY_DATA" />
-			<entity schema="PUBLIC" name="POINT_REALTIME_DATA" />
-			<entity schema="PUBLIC" name="REALTIME_SETTING" />
-			<entity schema="PUBLIC" name="SCHEDULE_SETTING" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_REALTIME_DATA" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" />
 		</group>
 		<group name="THING" color="EEF7EC" >
-			<entity schema="PUBLIC" name="THING" />
-			<entity schema="PUBLIC" name="DEVICE" />
-			<entity schema="PUBLIC" name="DEVICE_EQUIP" />
-			<entity schema="PUBLIC" name="EQUIPMENT" />
-			<entity schema="PUBLIC" name="TRANSDUCER" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE_EQUIP" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="EQUIPMENT" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" />
 		</group>
 		<group name="Common" color="FFCCE6" >
-			<entity schema="PUBLIC" name="NETWORK" />
-			<entity schema="PUBLIC" name="MEASURE_UNIT" />
-			<entity schema="PUBLIC" name="POINT_TAG" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" />
 		</group>
 		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.DEVICE ( 
@@ -473,8 +491,7 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           varchar(500)   ,
 	CONSTRAINT PK_DEVICE_ID PRIMARY KEY ( ID )
- );
-]]></string>
+ );]]></string>
 		</script>
 		<script name="POINT" id="Editor_37a712" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.POINT ( 

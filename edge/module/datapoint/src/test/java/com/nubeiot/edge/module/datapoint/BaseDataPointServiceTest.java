@@ -9,7 +9,6 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.sql.service.BaseSqlServiceTest;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
 import com.nubeiot.iotdata.edge.model.DefaultCatalog;
 

@@ -19,9 +19,11 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.EntityService;
-import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.edge.module.datapoint.sync.SyncServiceFactory;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.task.remote.ProtocolDispatcherTask;
+import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
+import com.nubeiot.edge.module.datapoint.task.sync.SyncTask;
 
 import lombok.NonNull;
 
@@ -50,7 +52,12 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     @Override
-    default Optional<EntityTask> asyncPostTask() {
+    default Optional<ProtocolDispatcherTask> taskBeforePersist() {
+        return Optional.of(new ProtocolDispatcherTask(entityHandler()));
+    }
+
+    @Override
+    default Optional<SyncTask> asyncTaskAfterPersist() {
         return SyncServiceFactory.get(entityHandler(), entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG));
     }
 

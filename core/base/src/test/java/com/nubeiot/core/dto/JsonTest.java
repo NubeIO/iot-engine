@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint;
+package com.nubeiot.core.dto;
 
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsSame.sameInstance;

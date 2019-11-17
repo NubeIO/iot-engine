@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint.sync;
+package com.nubeiot.edge.module.datapoint.task.sync;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -15,7 +15,7 @@ import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 
 import lombok.NonNull;
 
-public final class DittoTaskContext extends AbstractEnumType implements EntityTaskContext<HttpClientDelegate> {
+final class DittoTaskContext extends AbstractEnumType implements EntityTaskContext<HttpClientDelegate> {
 
     static final String TYPE = "DITTO";
     @NonNull
@@ -35,7 +35,7 @@ public final class DittoTaskContext extends AbstractEnumType implements EntityTa
     }
 
     @Override
-    public final boolean isAsync() {
+    public final boolean isConcurrent() {
         return true;
     }
 

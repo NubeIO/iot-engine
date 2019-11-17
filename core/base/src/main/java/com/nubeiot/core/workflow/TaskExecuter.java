@@ -1,23 +1,24 @@
 package com.nubeiot.core.workflow;
 
-import java.util.Objects;
-
 import io.reactivex.Maybe;
 
 import com.nubeiot.core.utils.ExecutorHelpers;
 
 public final class TaskExecuter {
 
-    public static <DC extends TaskDefinitionContext, EC extends TaskExecutionData, R> void execute(
-        Task<DC, EC, R> task, EC executionContext) {
-        final Maybe<R> execution = task.isExecutable(executionContext)
-                                       .filter(b -> b)
-                                       .flatMap(b -> task.execute(executionContext));
-        if (Objects.nonNull(task.definition()) && task.definition().isAsync()) {
-            ExecutorHelpers.blocking(task.definition().vertx(), execution).subscribe();
-            return;
+    public static <TDC extends TaskDefinitionContext, TED extends TaskExecutionData, R, T extends Task<TDC, TED, R>> void asyncExecute(
+        T task, TED executionData) {
+        blockingExecute(task, executionData).subscribe();
+    }
+
+    public static <TDC extends TaskDefinitionContext, TED extends TaskExecutionData, R, T extends Task<TDC, TED, R>> Maybe<R> blockingExecute(
+        T task, TED executionData) {
+        final Maybe<R> execution = task.isExecutable(executionData)
+                                       .filter(b -> b).flatMap(b -> task.execute(executionData));
+        if (task.definition().isConcurrent()) {
+            return ExecutorHelpers.blocking(task.definition().vertx(), execution);
         }
-        execution.subscribe();
+        return execution;
     }
 
 }
