@@ -3,19 +3,18 @@ package com.nubeiot.edge.module.datapoint.task.remote;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.ReplyEventHandler;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.service.task.EntityTaskData;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
 import com.nubeiot.edge.module.datapoint.service.ProtocolDispatcherService;
 import com.nubeiot.iotdata.dto.Protocol;
+import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 
 import lombok.NonNull;
 
@@ -35,8 +34,8 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
     @Override
     public @NonNull Single<Boolean> isExecutable(@NonNull EntityTaskData<VertxPojo> executionData) {
         final DeliveryEvent event = createProtocolDispatcherEvent(executionData);
-        final EventController eventClient = definition().handler().eventClient();
-        eventClient.request(event, ReplyEventHandler.builder().build());
+        final EventbusClient eventClient = definition().handler().eventClient();
+        //        eventClient.fire(event, ReplyEventHandler.builder().build());
         return Single.just(false);
     }
 
@@ -45,16 +44,13 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
         return Maybe.empty();
     }
 
-    private DeliveryEvent createProtocolDispatcherEvent(@NonNull EntityTaskData<VertxPojo> executionData) {
-        final String entity = executionData.getMetadata().singularKeyName();
-        final JsonObject filter = new JsonObject().put(ProtocolDispatcherMetadata.INSTANCE.table().ENTITY.getName(),
-                                                       entity)
-                                                  .put(ProtocolDispatcherMetadata.INSTANCE.table().PROTOCOL.getName(),
-                                                       Protocol.BACNET);
+    private DeliveryEvent createProtocolDispatcherEvent(@NonNull EntityTaskData<VertxPojo> taskData) {
+        final ProtocolDispatcher pojo = new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                                                                .setEntity(taskData.getMetadata().singularKeyName());
         return DeliveryEvent.builder()
                             .address(ProtocolDispatcherService.class.getName())
                             .action(EventAction.GET_LIST)
-                            .addPayload(RequestData.builder().filter(filter).build())
+                            .addPayload(RequestData.builder().filter(JsonPojo.from(pojo).toJson()).build())
                             .build();
     }
 

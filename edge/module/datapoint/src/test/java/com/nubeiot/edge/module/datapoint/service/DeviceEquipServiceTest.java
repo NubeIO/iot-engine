@@ -52,7 +52,8 @@ public class DeviceEquipServiceTest extends BaseDataPointServiceTest {
     public void test_create_equip_by_device(TestContext context) {
         final String id = UUID.randomUUID().toString();
         final JsonObject data = new JsonObject(
-            "{\"id\":3,\"network\":null,\"equipment\":{\"id\":\"" + id + "\",\"code\":\"DROPLET_02\"," +
+            "{\"id\":3,\"network\":null,\"address\":null,\"equipment\":{\"id\":\"" + id +
+            "\",\"code\":\"DROPLET_02\"," +
             "\"label\":null,\"type\":\"DROPLET\",\"manufacturer\":\"NubeIO\",\"metadata\":null}}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                               .put("status", Status.SUCCESS)

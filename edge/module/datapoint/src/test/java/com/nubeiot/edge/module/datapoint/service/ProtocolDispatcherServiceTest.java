@@ -20,10 +20,11 @@ public class ProtocolDispatcherServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_list_protocols(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"protocol_dispatchers\":[{\"id\":1,\"protocol\":\"BACNET\",\"entity\":\"network\",\"address\":\"bacnet" +
-            ".dispatcher.network\"},{\"id\":2,\"protocol\":\"BACNET\",\"entity\":\"equipment\",\"address\":\"bacnet" +
-            ".dispatcher.equipment\"},{\"id\":3,\"protocol\":\"BACNET\",\"entity\":\"point\",\"address\":\"bacnet" +
-            ".dispatcher.point\"}]}");
+            "{\"protocol_dispatchers\":[{\"id\":1,\"protocol\":\"BACNET\",\"entity\":\"network\"," +
+            "\"action\":\"CREATE\",\"address\":\"bacnet.dispatcher.network\"}," +
+            "{\"id\":2,\"protocol\":\"BACNET\",\"entity\":\"equipment\",\"action\":\"CREATE\",\"address\":\"bacnet" +
+            ".dispatcher.equipment\"},{\"id\":3,\"protocol\":\"BACNET\",\"entity\":\"point\",\"action\":\"CREATE\"," +
+            "\"address\":\"bacnet" + ".dispatcher.point\"}]}");
         asserter(context, true, expected, ProtocolDispatcherService.class.getName(), EventAction.GET_LIST,
                  RequestData.builder().build());
     }

@@ -13,10 +13,9 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate.AbstractSharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.ExecutorHelpers;
@@ -76,13 +75,14 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     }
 
     BACnetDevice asyncStart() {
-        final EventController client = getSharedDataValue(SHARED_EVENTBUS);
+        final EventbusClient client = getSharedDataValue(SHARED_EVENTBUS);
         final DiscoverOptions options = DiscoverOptions.builder()
                                                        .force(true)
                                                        .timeout(metadata.getMaxTimeoutInMS())
                                                        .timeUnit(TimeUnit.MILLISECONDS)
                                                        .build();
-        scanRemoteDevices(options).subscribe(discoverer -> client.request(publishDiscoverCompletion(discoverer)),
+        scanRemoteDevices(options).subscribe(discoverer -> client.publish(metadata.getDiscoverCompletionAddress(),
+                                                                          createDiscoverCompletionMessage(discoverer)),
                                              logger::error);
         return this;
     }
@@ -122,7 +122,7 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
         });
     }
 
-    private DeliveryEvent publishDiscoverCompletion(RemoteDeviceScanner scanner) {
+    private EventMessage createDiscoverCompletionMessage(RemoteDeviceScanner scanner) {
         final JsonArray remotes = scanner.getRemoteDevices()
                                          .stream()
                                          .map(BACnetDataConversions::deviceMinimal)
@@ -133,12 +133,7 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                                                 .remoteDevices(remotes)
                                                 .build()
                                                 .toJson();
-        return DeliveryEvent.builder()
-                            .action(EventAction.NOTIFY)
-                            .address(metadata.getDiscoverCompletionAddress())
-                            .pattern(EventPattern.PUBLISH_SUBSCRIBE)
-                            .addPayload(RequestData.builder().body(body).build())
-                            .build();
+        return EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(body).build().toJson());
     }
 
 }

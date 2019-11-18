@@ -20,9 +20,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
-import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
@@ -138,12 +137,8 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
 
     private void send(@NonNull Class<? extends DataPointService> serviceName, @NonNull JsonObject body) {
         entityHandler().eventClient()
-                       .request(DeliveryEvent.builder()
-                                             .address(serviceName.getName())
-                                             .action(EventAction.CREATE)
-                                             .pattern(EventPattern.POINT_2_POINT)
-                                             .addPayload(RequestData.builder().body(body).build())
-                                             .build());
+                       .send(serviceName.getName(),
+                             EventMessage.initial(EventAction.CREATE, RequestData.builder().body(body).build()));
     }
 
 }

@@ -3,8 +3,9 @@ package com.nubeiot.iotdata.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
+import com.nubeiot.core.dto.PlainType;
 
-public final class TransducerType extends AbstractEnumType {
+public final class TransducerType extends AbstractEnumType implements PlainType {
 
     public static final TransducerType SENSOR = new TransducerType("SENSOR");
     public static final TransducerType ACTUATOR = new TransducerType("ACTUATOR");

@@ -187,10 +187,10 @@ public abstract class BaseInstallerVerticleTest {
     }
 
     void executeThenAssert(EventAction action, TestContext context, JsonObject body, Handler<JsonObject> handler) {
-        installerVerticle.getEventController()
-                         .request(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE,
-                                                     action, RequestData.builder().body(body).build().toJson()),
-                                  EventbusHelper.replyAsserter(context, handler));
+        installerVerticle.getEventbusClient()
+                         .fire(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE,
+                                                  action, RequestData.builder().body(body).build().toJson()),
+                               EventbusHelper.replyAsserter(context, handler));
     }
 
     protected void assertModuleState(TestContext context, Async async, State expectedState, String moduleId) {

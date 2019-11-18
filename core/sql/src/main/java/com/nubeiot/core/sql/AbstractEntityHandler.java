@@ -21,7 +21,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
@@ -48,7 +48,7 @@ public abstract class AbstractEntityHandler implements EntityHandler {
     }
 
     @Override
-    public EventController eventClient() {
+    public EventbusClient eventClient() {
         return SharedDataDelegate.getEventController(vertx, sharedKey);
     }
 

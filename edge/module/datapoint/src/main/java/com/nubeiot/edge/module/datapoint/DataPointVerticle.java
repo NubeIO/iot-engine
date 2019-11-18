@@ -9,7 +9,7 @@ import io.vertx.servicediscovery.Record;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
@@ -41,7 +41,7 @@ public final class DataPointVerticle extends ContainerVerticle {
     }
 
     private void successHandler() {
-        EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
+        EventbusClient controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
         ServiceDiscoveryController discovery = microCtx.getLocalController();
         ExecutorHelpers.blocking(vertx.getDelegate(), () -> DataPointService.createServices(entityHandler))
                        .flattenAsObservable(s -> s)

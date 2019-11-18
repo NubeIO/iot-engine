@@ -12,11 +12,9 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.ReplyEventHandler;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.DesiredException;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
@@ -80,24 +78,15 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
     }
 
     private Single<DataType> findDataType(@NonNull PointRealtimeData rtData) {
-        final EventController client = entityHandler().eventClient();
+        final EventbusClient client = entityHandler().eventClient();
         final RequestData reqData = RequestData.builder()
                                                .body(new JsonObject().put(PointMetadata.INSTANCE.requestKeyName(),
                                                                           rtData.getPoint().toString()))
                                                .build();
-        final DeliveryEvent event = DeliveryEvent.builder()
-                                                 .address(PointService.class.getName())
-                                                 .action(EventAction.GET_ONE)
-                                                 .addPayload(reqData)
-                                                 .build();
-        return Single.<EventMessage>create(emitter -> {
-            client.request(event, ReplyEventHandler.builder().action(EventAction.GET_ONE).address(event.getAddress())
-                                                   .success(emitter::onSuccess)
-                                                   .exception(emitter::onError)
-                                                   .build());
-        }).map(EventMessage::getData)
-          .map(json -> json.getJsonObject(MeasureUnitMetadata.INSTANCE.singularKeyName(), new JsonObject()))
-          .map(unit -> JsonData.convert(unit, DataType.class));
+        return client.request(PointService.class.getName(), EventMessage.initial(EventAction.GET_ONE, reqData.toJson()))
+                     .map(EventMessage::getData)
+                     .map(json -> json.getJsonObject(MeasureUnitMetadata.INSTANCE.singularKeyName(), new JsonObject()))
+                     .map(unit -> JsonData.convert(unit, DataType.class));
     }
 
 }

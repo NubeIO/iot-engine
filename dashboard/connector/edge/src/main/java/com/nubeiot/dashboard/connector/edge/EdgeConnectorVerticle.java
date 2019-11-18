@@ -3,9 +3,9 @@ package com.nubeiot.dashboard.connector.edge;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 
@@ -26,7 +26,7 @@ public final class EdgeConnectorVerticle extends ContainerVerticle {
     }
 
     @Override
-    public void registerEventbus(EventController eventClient) {
+    public void registerEventbus(EventbusClient eventClient) {
         ClusterType clusterType = this.nubeConfig.getSystemConfig().getClusterConfig().getType();
         eventClient.register(CLUSTER_INFO, new ClusterController(clusterType));
     }

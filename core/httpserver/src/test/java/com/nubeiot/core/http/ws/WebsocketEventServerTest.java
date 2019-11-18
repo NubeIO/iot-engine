@@ -21,9 +21,9 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.HttpServerRouter;
@@ -104,9 +104,9 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
     public void test_client_listen_only_publisher(TestContext context) {
         EventMessage echo = EventMessage.success(EventAction.GET_ONE, new JsonObject().put("echo", 1));
         EventModel publisher = MockWebsocketEvent.ONLY_PUBLISHER.getPublisher();
-        EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(),
-                                                                           this.getClass().getName());
-        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo));
+        EventbusClient controller = SharedDataDelegate.getEventController(vertx.getDelegate(),
+                                                                          this.getClass().getName());
+        vertx.setPeriodic(1000, t -> controller.fire(publisher.getAddress(), publisher.getPattern(), echo));
         Async async = context.async(1);
         assertJsonData(async, publisher.getAddress(), JsonHelper.asserter(context, async, echo.toJson()));
     }
@@ -116,10 +116,10 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
         EventModel publisher = MockWebsocketEvent.ONLY_PUBLISHER.getPublisher();
         EventMessage echo = EventMessage.success(EventAction.GET_ONE, new JsonObject().put("echo", 1));
         JsonObject expected = createWebsocketMsg(publisher.getAddress(), echo, BridgeEventType.RECEIVE);
-        EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(),
-                                                                           this.getClass().getName());
+        EventbusClient controller = SharedDataDelegate.getEventController(vertx.getDelegate(),
+                                                                          this.getClass().getName());
         startServer(context, new HttpServerRouter().registerEventBusSocket(MockWebsocketEvent.ONLY_PUBLISHER));
-        vertx.setPeriodic(1000, t -> controller.response(publisher.getAddress(), publisher.getPattern(), echo));
+        vertx.setPeriodic(1000, t -> controller.fire(publisher.getAddress(), publisher.getPattern(), echo));
         Async async = context.async(1);
         WebSocket ws = setupSockJsClient(context, async,
                                          Urls.combinePath("/ws", MockWebsocketEvent.ONLY_PUBLISHER.getPath()),

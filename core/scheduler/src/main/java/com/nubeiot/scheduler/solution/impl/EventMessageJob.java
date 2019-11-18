@@ -7,10 +7,10 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.scheduler.solution.Job;
 
@@ -23,7 +23,7 @@ public class EventMessageJob implements Job {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @NonNull
-    private final EventController controller;
+    private final EventbusClient controller;
     @NonNull
     private final EventMessage payload;
     @NonNull
@@ -40,9 +40,9 @@ public class EventMessageJob implements Job {
                                                                            msg -> logger.info("Receive message {}",
                                                                                               msg.toJson())))
                                                          .build();
-            controller.request(jobStep.getAddress(), jobStep.getPattern(), payload, handler);
+            controller.fire(jobStep.getAddress(), jobStep.getPattern(), payload, handler);
         } else {
-            controller.request(jobStep.getAddress(), jobStep.getPattern(), payload);
+            controller.fire(jobStep.getAddress(), jobStep.getPattern(), payload);
         }
     }
 
@@ -50,7 +50,7 @@ public class EventMessageJob implements Job {
         if (Objects.isNull(step)) {
             return defCallback;
         }
-        return eventMessage -> controller.response(step.getAddress(), step.getPattern(), eventMessage);
+        return eventMessage -> controller.fire(step.getAddress(), step.getPattern(), eventMessage);
     }
 
     public static class Builder implements JobBuilder<EventMessageJob> {

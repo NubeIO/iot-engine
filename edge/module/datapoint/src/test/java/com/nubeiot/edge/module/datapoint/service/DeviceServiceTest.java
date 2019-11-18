@@ -67,7 +67,7 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
                                            .address(DeviceService.class.getName())
                                            .addPayload(req)
                                            .build();
-        controller().request(event, EventbusHelper.replyAsserter(context, registerAsserter(context)));
+        controller().fire(event, EventbusHelper.replyAsserter(context, registerAsserter(context)));
     }
 
     private Handler<JsonObject> registerAsserter(TestContext context) {

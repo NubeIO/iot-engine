@@ -30,7 +30,7 @@ public final class MonitorVerticle extends ContainerVerticle {
                        .flattenAsObservable(s -> s)
                        .doOnEach(s -> Optional.ofNullable(s.getValue())
                                               .ifPresent(
-                                                  service -> getEventController().register(service.address(), service)))
+                                                  service -> getEventbusClient().register(service.address(), service)))
                        .filter(s -> Objects.nonNull(s.definitions()))
                        .flatMap(s -> registerEndpoint(discovery, s))
                        .subscribe();

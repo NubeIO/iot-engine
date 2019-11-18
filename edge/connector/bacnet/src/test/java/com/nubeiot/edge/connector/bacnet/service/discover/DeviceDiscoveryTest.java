@@ -26,11 +26,11 @@ public class DeviceDiscoveryTest extends BACnetVerticleTest {
         final JsonObject expected = EventMessage.success(EventAction.GET_LIST,
                                                          new JsonObject().put("remoteDevices", new JsonArray()))
                                                 .toJson();
-        busClient.request(DeliveryEvent.builder()
-                                       .address(DeviceDiscovery.class.getName())
-                                       .action(EventAction.GET_LIST)
-                                       .addPayload(RequestData.builder().body(body).build())
-                                       .build(), EventbusHelper.replyAsserter(context, async, expected));
+        busClient.fire(DeliveryEvent.builder()
+                                    .address(DeviceDiscovery.class.getName())
+                                    .action(EventAction.GET_LIST)
+                                    .addPayload(RequestData.builder().body(body).build())
+                                    .build(), EventbusHelper.replyAsserter(context, async, expected));
     }
 
 }

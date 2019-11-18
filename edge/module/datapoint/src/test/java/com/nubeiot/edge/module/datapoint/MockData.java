@@ -14,6 +14,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.Label;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
@@ -76,13 +77,13 @@ public final class MockData {
     public static final List<ProtocolDispatcher> PROTOCOL_DISPATCHERS = protocolDispatchers();
 
     private static List<ProtocolDispatcher> protocolDispatchers() {
-        return Arrays.asList(new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+        return Arrays.asList(new ProtocolDispatcher().setProtocol(Protocol.BACNET).setAction(EventAction.CREATE)
                                                      .setEntity(NetworkMetadata.INSTANCE.singularKeyName())
                                                      .setAddress("bacnet.dispatcher.network"),
-                             new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                             new ProtocolDispatcher().setProtocol(Protocol.BACNET).setAction(EventAction.CREATE)
                                                      .setEntity(EquipmentMetadata.INSTANCE.singularKeyName())
                                                      .setAddress("bacnet.dispatcher.equipment"),
-                             new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                             new ProtocolDispatcher().setProtocol(Protocol.BACNET).setAction(EventAction.CREATE)
                                                      .setEntity(PointMetadata.INSTANCE.singularKeyName())
                                                      .setAddress("bacnet.dispatcher.point"));
     }

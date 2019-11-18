@@ -13,8 +13,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
@@ -33,7 +33,7 @@ public interface EntityHandler {
 
     Vertx vertx();
 
-    EventController eventClient();
+    EventbusClient eventClient();
 
     Path dataDir();
 

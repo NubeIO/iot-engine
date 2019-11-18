@@ -72,8 +72,7 @@ public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
         final JsonObject expected = new JsonObject().put("status", Status.SUCCESS)
                                                     .put("action", EventAction.PATCH)
                                                     .put("data", expectedBody);
-        this.installerVerticle.getEventController()
-                              .request(
+        this.installerVerticle.getEventbusClient().fire(
                                   DeliveryEvent.from(MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER, EventAction.PATCH,
                                                      RequestData.builder().body(body).build().toJson()),
                                   EventbusHelper.replyAsserter(context, async, expected,
@@ -94,10 +93,10 @@ public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
         final JsonObject expected = new JsonObject().put("status", Status.SUCCESS)
                                                     .put("action", EventAction.PATCH)
                                                     .put("data", new JsonObject("{\"abc\":\"123\"}"));
-        this.installerVerticle.getEventController()
-                              .request(DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.PATCH,
-                                                          RequestData.builder().body(body).build().toJson()),
-                                       EventbusHelper.replyAsserter(context, async, expected));
+        this.installerVerticle.getEventbusClient()
+                              .fire(DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.PATCH,
+                                                       RequestData.builder().body(body).build().toJson()),
+                                    EventbusHelper.replyAsserter(context, async, expected));
     }
 
     @Test
@@ -110,7 +109,7 @@ public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
         final DeliveryEvent deliveryEvent = DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.CREATE,
                                                                RequestData.builder().body(body).build().toJson());
         //create loading takes 9 seconds when timeout is 3 seconds
-        this.installerVerticle.getEventController().request(deliveryEvent, context.asyncAssertFailure(throwable -> {
+        this.installerVerticle.getEventbusClient().fire(deliveryEvent, context.asyncAssertFailure(throwable -> {
             context.assertTrue(throwable instanceof ReplyException);
             context.assertEquals(((ReplyException) throwable).failureType(), ReplyFailure.TIMEOUT);
             context.assertEquals(((ReplyException) throwable).failureCode(), -1);
