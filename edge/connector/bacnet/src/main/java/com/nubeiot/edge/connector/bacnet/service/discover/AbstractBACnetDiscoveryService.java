@@ -17,7 +17,7 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.protocol.CommunicationProtocol;
@@ -92,7 +92,7 @@ abstract class AbstractBACnetDiscoveryService extends AbstractSharedDataDelegate
     }
 
     @Override
-    public final EventController eventClient() {
+    public final EventbusClient eventClient() {
         return getSharedDataValue(SHARED_EVENTBUS);
     }
 

@@ -5,12 +5,10 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.DataTransferObject.Headers;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.ReplyEventHandler;
+import com.nubeiot.core.event.EventbusClient;
 
 import lombok.NonNull;
 
@@ -35,7 +33,7 @@ public interface RemoteDiscoverService {
      *
      * @return event client
      */
-    EventController eventClient();
+    EventbusClient eventClient();
 
     /**
      * Destination address
@@ -56,20 +54,8 @@ public interface RemoteDiscoverService {
 
     default Single<JsonObject> execute(@NonNull RequestData requestData) {
         requestData.headers().put(Headers.X_REQUEST_BY, requestService());
-        return Single.<EventMessage>create(emitter -> {
-            eventClient().request(DeliveryEvent.builder()
-                                               .address(destination())
-                                               .action(action())
-                                               .pattern(EventPattern.REQUEST_RESPONSE)
-                                               .addPayload(requestData)
-                                               .build(), ReplyEventHandler.builder()
-                                                                          .system("REMOTE_DISCOVER")
-                                                                          .action(action())
-                                                                          .address(destination())
-                                                                          .success(emitter::onSuccess)
-                                                                          .exception(emitter::onError)
-                                                                          .build());
-        }).map(EventMessage::getData);
+        return eventClient().request(destination(), EventMessage.initial(action(), requestData.toJson()))
+                            .map(EventMessage::getData);
     }
 
 }

@@ -12,7 +12,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
@@ -51,7 +51,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
 
     @Override
     protected Maybe<JsonObject> registerServices(@NonNull BacnetConfig config) {
-        final EventController client = getEventController();
+        final EventbusClient client = getEventbusClient();
         return Observable.fromIterable(BACnetDiscoveryService.createServices(getVertx(), getSharedKey()))
                          .doOnEach(s -> Optional.ofNullable(s.getValue())
                                                 .ifPresent(service -> client.register(service.address(), service)))

@@ -13,9 +13,9 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
@@ -66,7 +66,7 @@ class SchedulerEntityHandler extends AbstractEntityHandler
     @SuppressWarnings("unchecked")
     Observable register(@NonNull QuartzSchedulerContext schedulerContext) {
         final RequestData reqData = RequestData.builder().filter(new JsonObject().put("enable", true)).build();
-        final EventController client = eventClient();
+        final EventbusClient client = eventClient();
         return complexQuery().from(JobTriggerMetadata.INSTANCE)
                              .context(JobEntityMetadata.INSTANCE)
                              .with(TriggerEntityMetadata.INSTANCE)
@@ -74,7 +74,7 @@ class SchedulerEntityHandler extends AbstractEntityHandler
                              .findMany(reqData)
                              .map(jobTrigger -> event((JobTriggerComposite) jobTrigger, schedulerContext))
                              .doOnEach(no -> Optional.ofNullable(((Notification<DeliveryEvent>) no).getValue())
-                                                     .ifPresent(event -> client.request(event, replyHandler(event))));
+                                                     .ifPresent(event -> client.fire(event, replyHandler(event))));
     }
 
     private DeliveryEvent event(@NonNull JobTriggerComposite composite, @NonNull QuartzSchedulerContext context) {

@@ -35,20 +35,22 @@ public interface ServiceGatewayMonitor extends Handler<Message<Object>> {
         return Objects.isNull(monitor) ? ReflectionClass.createObject(fallback, inputs) : monitor;
     }
 
-    Vertx getVertx();
+    @NonNull Vertx getVertx();
 
-    ServiceDiscoveryController getController();
+    @NonNull ServiceDiscoveryController getController();
 
-    String getSharedKey();
+    @NonNull String getSharedKey();
 
     @Getter
     @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
     abstract class AbstractServiceGatewayMonitor implements ServiceGatewayMonitor {
 
         protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-
+        @NonNull
         private final Vertx vertx;
+        @NonNull
         private final ServiceDiscoveryController controller;
+        @NonNull
         private final String sharedKey;
 
     }

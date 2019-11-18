@@ -3,8 +3,9 @@ package com.nubeiot.iotdata.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
+import com.nubeiot.core.dto.PlainType;
 
-public final class PointKind extends AbstractEnumType {
+public final class PointKind extends AbstractEnumType implements PlainType {
 
     public static final PointKind INPUT = new PointKind("INPUT");
     public static final PointKind OUTPUT = new PointKind("OUTPUT");

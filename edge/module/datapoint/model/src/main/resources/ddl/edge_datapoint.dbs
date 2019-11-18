@@ -313,6 +313,7 @@
 			<column name="ID" type="integer" jt="4" mandatory="y" autoincrement="y" />
 			<column name="PROTOCOL" type="varchar" length="31" jt="12" mandatory="y" />
 			<column name="ENTITY" type="varchar" length="127" jt="12" mandatory="y" />
+			<column name="ACTION" type="varchar" length="31" jt="12" mandatory="y" />
 			<column name="ADDRESS" type="varchar" length="255" jt="12" mandatory="y" />
 			<column name="TIME_AUDIT" type="varchar" length="500" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
@@ -322,6 +323,7 @@
 			<index name="IDX_UQ_PROTOCOL_DISPATCHER" unique="UNIQUE" >
 				<column name="PROTOCOL" />
 				<column name="ENTITY" />
+				<column name="ACTION" />
 			</index>
 		</table>
 		<table name="REALTIME_SETTING" >
@@ -481,17 +483,7 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" />
 		</group>
 		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
-			<string><![CDATA[CREATE TABLE PUBLIC.DEVICE ( 
-	ID                   uuid(2147483647)  DEFAULT RANDOM_UUID() NOT NULL,
-	CODE                 varchar(63)   NOT NULL,
-	CUSTOMER_CODE        varchar(31)   NOT NULL,
-	SITE_CODE            varchar(63)   NOT NULL,
-	DATA_VERSION         varchar(15)  DEFAULT '0.0.2' NOT NULL,
-	METADATA_JSON        clob(2147483647)   ,
-	TIME_AUDIT           varchar(500)   ,
-	SYNC_AUDIT           varchar(500)   ,
-	CONSTRAINT PK_DEVICE_ID PRIMARY KEY ( ID )
- );]]></string>
+			<string><![CDATA[DROP INDEX IDX_UQ_PROTOCOL_DISPATCHER]]></string>
 		</script>
 		<script name="POINT" id="Editor_37a712" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.POINT ( 

@@ -42,11 +42,11 @@ public class PointHistoryRTDataServiceTest extends BaseDataPointServiceTest {
     public void test_assert_history_data(TestContext context) {
         JsonObject req = new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString());
         Async async = context.async();
-        controller().request(DeliveryEvent.builder()
-                                          .address(HistoryDataService.class.getName())
-                                          .action(EventAction.GET_LIST)
-                                          .payload(RequestData.builder().body(req).build().toJson())
-                                          .build(), EventbusHelper.replyAsserter(context, body -> {
+        controller().fire(DeliveryEvent.builder()
+                                       .address(HistoryDataService.class.getName())
+                                       .action(EventAction.GET_LIST)
+                                       .payload(RequestData.builder().body(req).build().toJson())
+                                       .build(), EventbusHelper.replyAsserter(context, body -> {
             JsonObject expected = new JsonObject("{\"histories\":[{\"id\":9,\"value\":28.0,\"priority\":5}]}");
             JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
                                   JsonHelper.ignore("histories.[].time"));
@@ -60,11 +60,11 @@ public class PointHistoryRTDataServiceTest extends BaseDataPointServiceTest {
             new PointPriorityValue().add(firstValue.getPriority(), firstValue.getValue()).add(8, 27.5)));
         JsonObject req = new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString());
         Async async = context.async();
-        controller().request(DeliveryEvent.builder()
-                                          .address(HistoryDataService.class.getName())
-                                          .action(EventAction.GET_LIST)
-                                          .payload(RequestData.builder().body(req).build().toJson())
-                                          .build(), EventbusHelper.replyAsserter(context, body -> {
+        controller().fire(DeliveryEvent.builder()
+                                       .address(HistoryDataService.class.getName())
+                                       .action(EventAction.GET_LIST)
+                                       .payload(RequestData.builder().body(req).build().toJson())
+                                       .build(), EventbusHelper.replyAsserter(context, body -> {
             JsonObject expected = new JsonObject("{\"histories\":[{\"id\":9,\"value\":28.0,\"priority\":5}]}");
             JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
                                   JsonHelper.ignore("histories.[].time"));
@@ -78,11 +78,11 @@ public class PointHistoryRTDataServiceTest extends BaseDataPointServiceTest {
             new PointPriorityValue().add(firstValue.getPriority(), firstValue.getValue()).add(8, 25.7)));
         JsonObject req = new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString());
         Async async = context.async();
-        controller().request(DeliveryEvent.builder()
-                                          .address(HistoryDataService.class.getName())
-                                          .action(EventAction.GET_LIST)
-                                          .payload(RequestData.builder().body(req).build().toJson())
-                                          .build(), EventbusHelper.replyAsserter(context, body -> {
+        controller().fire(DeliveryEvent.builder()
+                                       .address(HistoryDataService.class.getName())
+                                       .action(EventAction.GET_LIST)
+                                       .payload(RequestData.builder().body(req).build().toJson())
+                                       .build(), EventbusHelper.replyAsserter(context, body -> {
             JsonObject expected = new JsonObject("{\"histories\":[{\"id\":9,\"value\":28.0,\"priority\":5}," +
                                                  "{\"id\":10,\"value\":25.7,\"priority\":8}]}");
             JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
@@ -94,11 +94,11 @@ public class PointHistoryRTDataServiceTest extends BaseDataPointServiceTest {
     public void test_assert_realtime_data(TestContext context) {
         JsonObject req = new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString());
         Async async = context.async();
-        controller().request(DeliveryEvent.builder()
-                                          .address(RealtimeDataService.class.getName())
-                                          .action(EventAction.GET_LIST)
-                                          .payload(RequestData.builder().body(req).build().toJson())
-                                          .build(), EventbusHelper.replyAsserter(context, body -> {
+        controller().fire(DeliveryEvent.builder()
+                                       .address(RealtimeDataService.class.getName())
+                                       .action(EventAction.GET_LIST)
+                                       .payload(RequestData.builder().body(req).build().toJson())
+                                       .build(), EventbusHelper.replyAsserter(context, body -> {
             JsonObject expected = new JsonObject(
                 "{\"rt_data\":[{\"id\":1,\"value\":{\"val\":28.0,\"priority\":5,\"display\":\"28.0 °C\"}}]}");
             JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"),
@@ -113,11 +113,11 @@ public class PointHistoryRTDataServiceTest extends BaseDataPointServiceTest {
                         new PointValueData(another).setPriorityValues(new PointPriorityValue().add(5, 28)));
         JsonObject req = new JsonObject().put("point_id", PrimaryKey.P_BACNET_SWITCH.toString());
         Async async = context.async();
-        controller().request(DeliveryEvent.builder()
-                                          .address(RealtimeDataService.class.getName())
-                                          .action(EventAction.GET_LIST)
-                                          .payload(RequestData.builder().body(req).build().toJson())
-                                          .build(), EventbusHelper.replyAsserter(context, body -> {
+        controller().fire(DeliveryEvent.builder()
+                                       .address(RealtimeDataService.class.getName())
+                                       .action(EventAction.GET_LIST)
+                                       .payload(RequestData.builder().body(req).build().toJson())
+                                       .build(), EventbusHelper.replyAsserter(context, body -> {
             JsonHelper.assertJson(context, async, new JsonObject("{\"rt_data\":[]}"), body.getJsonObject("data"));
         }));
     }
@@ -126,7 +126,7 @@ public class PointHistoryRTDataServiceTest extends BaseDataPointServiceTest {
                                  @NonNull PointValueData output) {
         final DeliveryEvent event = PointDataServiceTest.createPointEvent(action, pv, false);
         final Async async = context.async();
-        controller().request(event, EventbusHelper.replyAsserter(context, body -> {
+        controller().fire(event, EventbusHelper.replyAsserter(context, body -> {
             JsonObject expected = new JsonObject().put("action", event.getAction())
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", JsonPojo.from(output).toJson());

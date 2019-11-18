@@ -3,7 +3,7 @@ package com.nubeiot.edge.module.datapoint.task.remote;
 import java.util.function.Function;
 
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.task.EntityTaskContext;
 
@@ -11,7 +11,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class ProtocolTaskContext implements EntityTaskContext<EventController> {
+public final class ProtocolTaskContext implements EntityTaskContext<EventbusClient> {
 
     private final EntityHandler handler;
 
@@ -31,7 +31,7 @@ public final class ProtocolTaskContext implements EntityTaskContext<EventControl
     }
 
     @Override
-    public EventController transporter() {
+    public EventbusClient transporter() {
         return getSharedDataValue(SharedDataDelegate.SHARED_EVENTBUS);
     }
 

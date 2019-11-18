@@ -15,9 +15,9 @@ import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import io.vertx.ext.web.handler.sockjs.SockJSSocket;
 
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
 import com.nubeiot.core.http.ws.WebsocketEventExecutor;
@@ -36,9 +36,9 @@ public class WebsocketBridgeEventHandler implements Handler<BridgeEvent> {
     private final Map<String, WebsocketServerEventMetadata> metadataByListener = new HashMap<>();
     private final WebsocketEventExecutor executor;
 
-    public WebsocketBridgeEventHandler(@NonNull EventController eventController,
+    public WebsocketBridgeEventHandler(@NonNull EventbusClient eventbusClient,
                                        @NonNull List<WebsocketServerEventMetadata> addressMap) {
-        this.executor = new WebsocketEventExecutor(eventController);
+        this.executor = new WebsocketEventExecutor(eventbusClient);
         addressMap.forEach(this::initMetadata);
     }
 

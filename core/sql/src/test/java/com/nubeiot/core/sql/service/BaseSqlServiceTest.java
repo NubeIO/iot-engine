@@ -14,7 +14,6 @@ import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.sql.BaseSqlTest;
 import com.nubeiot.core.sql.MockOneEntityHandler;
@@ -53,7 +52,7 @@ public abstract class BaseSqlServiceTest extends BaseSqlTest {
     void asserter(TestContext context, boolean isSuccess, JsonObject expected, String address, EventAction action,
                   RequestData reqData, CountDownLatch latch, JSONCompareMode mode, Customization... customizations) {
         final Async async = context.async();
-        controller().request(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(action, reqData),
+        controller().request(address, EventMessage.initial(action, reqData),
                              ReplyEventHandler.builder().address(address).action(action).success(msg -> {
                                  latch.countDown();
                                  asserter(context, async, isSuccess, expected, msg, mode, customizations);

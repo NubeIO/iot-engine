@@ -9,7 +9,7 @@ import io.vertx.core.VertxException;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.WebsocketRejectedException;
 
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
 import com.nubeiot.core.exceptions.NubeException;
@@ -27,18 +27,18 @@ import lombok.RequiredArgsConstructor;
 public abstract class WsConnectErrorHandler implements Handler<Throwable> {
 
     private final HostInfo hostInfo;
-    private final EventController controller;
+    private final EventbusClient controller;
 
     @SuppressWarnings("unchecked")
     public static <T extends WsConnectErrorHandler> T create(@NonNull HostInfo hostInfo,
-                                                             @NonNull EventController controller,
+                                                             @NonNull EventbusClient controller,
                                                              @NonNull Class<T> connErrorHandlerClass) {
         if (Objects.isNull(connErrorHandlerClass) || WsConnectErrorHandler.class.equals(connErrorHandlerClass)) {
             return (T) new WsConnectErrorHandler(hostInfo, controller) {};
         }
         Map<Class, Object> params = new LinkedHashMap<>();
         params.put(HostInfo.class, hostInfo);
-        params.put(EventController.class, controller);
+        params.put(EventbusClient.class, controller);
         return ReflectionClass.createObject(connErrorHandlerClass, params);
     }
 

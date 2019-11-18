@@ -13,9 +13,9 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.http.base.Urls;
@@ -85,8 +85,8 @@ abstract class JobTriggerCompositeService
             return super.afterGet(pojo, reqData);
         }
         final DeliveryEvent event = createDeliveryEvent(composite, EventAction.GET_ONE);
-        final EventController client = entityHandler().eventClient();
-        return Single.create(emitter -> client.request(event, replyHandler(event, msg -> emitter.onSuccess(
+        final EventbusClient client = entityHandler().eventClient();
+        return Single.create(emitter -> client.fire(event, replyHandler(event, msg -> emitter.onSuccess(
             onSuccess(composite, reqData, msg)), error -> emitter.onError(error.getThrowable()))));
     }
 
@@ -101,8 +101,8 @@ abstract class JobTriggerCompositeService
             return Single.just(EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key));
         }
         final DeliveryEvent event = createDeliveryEvent(composite, EventAction.CREATE);
-        final EventController client = entityHandler().eventClient();
-        return Single.create(emitter -> client.request(event, replyHandler(event, msg -> emitter.onSuccess(
+        final EventbusClient client = entityHandler().eventClient();
+        return Single.create(emitter -> client.fire(event, replyHandler(event, msg -> emitter.onSuccess(
             cudResponse(composite, reqData, msg)), error -> emitter.onError(error.getThrowable()))));
     }
 
@@ -135,7 +135,9 @@ abstract class JobTriggerCompositeService
     private ReplyEventHandler replyHandler(DeliveryEvent event, Consumer<EventMessage> response,
                                            Consumer<ErrorMessage> onError) {
         return ReplyEventHandler.builder()
-                                .system("EDGE_SCHEDULER").address(event.getAddress()).action(event.getAction())
+                                .system("EDGE_SCHEDULER")
+                                .address(event.getAddress())
+                                .action(event.getAction())
                                 .success(response)
                                 .error(onError)
                                 .build();

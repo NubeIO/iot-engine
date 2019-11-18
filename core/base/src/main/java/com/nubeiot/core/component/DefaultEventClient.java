@@ -3,18 +3,22 @@ package com.nubeiot.core.component;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.shareddata.Shareable;
 
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.core.utils.Strings;
@@ -28,7 +32,9 @@ import lombok.NonNull;
  * @see EventMessage
  * @see ErrorMessage
  */
-final class DefaultEventClient implements EventController {
+final class DefaultEventClient implements EventbusClient {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventbusClient.class);
 
     @Getter
     private final Vertx vertx;
@@ -47,13 +53,25 @@ final class DefaultEventClient implements EventController {
         this.deliveryOptions = Objects.nonNull(deliveryOptions) ? deliveryOptions : new DeliveryOptions();
     }
 
+    @Override
+    public Single<EventMessage> request(@NonNull String address, @NonNull EventMessage message,
+                                        DeliveryOptions deliveryOptions) {
+        return Single.create(emitter -> request(address, message, ReplyEventHandler.builder()
+                                                                                   .action(message.getAction())
+                                                                                   .address(address)
+                                                                                   .success(emitter::onSuccess)
+                                                                                   .exception(emitter::onError)
+                                                                                   .build()));
+    }
+
     /**
      * {@inheritDoc}
      */
     public void fire(String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
-                     Handler<AsyncResult<Message<Object>>> replyConsumer, DeliveryOptions deliveryOptions) {
+                     Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions) {
         DeliveryOptions options = Objects.nonNull(deliveryOptions) ? deliveryOptions : this.deliveryOptions;
         Strings.requireNotBlank(address);
+        LOGGER.debug("Eventbus::Fire:Address: {} - Pattern: {}", address, pattern);
         if (pattern == EventPattern.PUBLISH_SUBSCRIBE) {
             vertx.eventBus().publish(address, data, options);
         }
@@ -61,18 +79,18 @@ final class DefaultEventClient implements EventController {
             vertx.eventBus().send(address, data, options);
         }
         if (pattern == EventPattern.REQUEST_RESPONSE) {
-            Objects.requireNonNull(replyConsumer, "Must provide reply consumer");
-            vertx.eventBus().send(address, data, options, replyConsumer);
+            Objects.requireNonNull(replyHandler, "Must provide message reply handler");
+            vertx.eventBus().send(address, data, options, replyHandler);
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public EventController register(String address, boolean local, @NonNull EventListener handler) {
+    public EventbusClient register(String address, boolean local, @NonNull EventListener listener) {
         LOGGER.info("Registering {} Event Listener '{}' | Address '{}'...", local ? "Local" : "Cluster",
-                    handler.getClass().getName(), Strings.requireNotBlank(address));
-        final Handler<Message<Object>> msgHandler = msg -> ExecutorHelpers.blocking(vertx, handler.apply(msg))
+                    listener.getClass().getName(), Strings.requireNotBlank(address));
+        final Handler<Message<Object>> msgHandler = msg -> ExecutorHelpers.blocking(vertx, listener.apply(msg))
                                                                           .subscribe();
         if (local) {
             vertx.eventBus().localConsumer(address, msgHandler);

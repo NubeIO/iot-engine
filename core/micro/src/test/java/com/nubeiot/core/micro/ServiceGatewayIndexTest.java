@@ -27,7 +27,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.filter.RecordPredicate;
 
@@ -37,7 +37,7 @@ public class ServiceGatewayIndexTest {
     private Vertx vertx;
     private MicroConfig config;
     private MicroContext micro;
-    private EventController eventClient;
+    private EventbusClient eventClient;
 
     @BeforeClass
     public static void init() {
@@ -91,12 +91,12 @@ public class ServiceGatewayIndexTest {
                                               .filter(new JsonObject().put(RecordPredicate.BY, "name"))
                                               .build()
                                               .toJson();
-        eventClient.request(DeliveryEvent.builder()
-                                         .address(config.getGatewayConfig().getIndexAddress())
-                                         .payload(payload)
-                                         .action(EventAction.GET_ONE)
-                                         .build(),
-                            EventbusHelper.replyAsserter(context, async, indexExpected, JSONCompareMode.LENIENT));
+        eventClient.fire(DeliveryEvent.builder()
+                                      .address(config.getGatewayConfig().getIndexAddress())
+                                      .payload(payload)
+                                      .action(EventAction.GET_ONE)
+                                      .build(),
+                         EventbusHelper.replyAsserter(context, async, indexExpected, JSONCompareMode.LENIENT));
     }
 
     @Test
@@ -113,11 +113,11 @@ public class ServiceGatewayIndexTest {
                                               .filter(new JsonObject().put(RecordPredicate.BY, "group"))
                                               .build()
                                               .toJson();
-        eventClient.request(DeliveryEvent.builder()
-                                         .address(config.getGatewayConfig().getIndexAddress())
-                                         .payload(payload)
-                                         .action(EventAction.GET_ONE)
-                                         .build(), EventbusHelper.replyAsserter(context, async, indexExpected));
+        eventClient.fire(DeliveryEvent.builder()
+                                      .address(config.getGatewayConfig().getIndexAddress())
+                                      .payload(payload)
+                                      .action(EventAction.GET_ONE)
+                                      .build(), EventbusHelper.replyAsserter(context, async, indexExpected));
     }
 
     @Test
@@ -133,11 +133,12 @@ public class ServiceGatewayIndexTest {
                                               .filter(new JsonObject().put(RecordPredicate.BY, "path"))
                                               .build()
                                               .toJson();
-        eventClient.request(DeliveryEvent.builder()
-                                         .address(config.getGatewayConfig().getIndexAddress())
-                                         .payload(payload)
-                                         .action(EventAction.GET_ONE).build(),
-                            EventbusHelper.replyAsserter(context, async, expected, JSONCompareMode.LENIENT));
+        eventClient.fire(DeliveryEvent.builder()
+                                      .address(config.getGatewayConfig().getIndexAddress())
+                                      .payload(payload)
+                                      .action(EventAction.GET_ONE)
+                                      .build(),
+                         EventbusHelper.replyAsserter(context, async, expected, JSONCompareMode.LENIENT));
     }
 
     @Test
@@ -161,12 +162,12 @@ public class ServiceGatewayIndexTest {
                                               .filter(new JsonObject().put(RecordPredicate.BY, "group"))
                                               .build()
                                               .toJson();
-        eventClient.request(DeliveryEvent.builder()
-                                         .address(config.getGatewayConfig().getIndexAddress())
-                                         .payload(payload)
-                                         .action(EventAction.GET_LIST)
-                                         .build(),
-                            EventbusHelper.replyAsserter(context, async, indexExpected, JSONCompareMode.LENIENT));
+        eventClient.fire(DeliveryEvent.builder()
+                                      .address(config.getGatewayConfig().getIndexAddress())
+                                      .payload(payload)
+                                      .action(EventAction.GET_LIST)
+                                      .build(),
+                         EventbusHelper.replyAsserter(context, async, indexExpected, JSONCompareMode.LENIENT));
     }
 
 }

@@ -7,7 +7,7 @@ import io.reactivex.Observable;
 
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
@@ -46,7 +46,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     }
 
     private void successHandler() {
-        EventController controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
+        EventbusClient controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
         ServiceDiscoveryController discovery = microCtx.getLocalController();
         ExecutorHelpers.blocking(getVertx(), () -> SchedulerService.createServices(entityHandler, schedulerCtx))
                        .flattenAsObservable(s -> s)

@@ -38,7 +38,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
 
     protected void successHandler(@NonNull C config) {
         ExecutorHelpers.blocking(getVertx(), this::createDiscoverCompletionHandler)
-                       .map(handler -> getEventController().register(config.getCompleteDiscoverAddress(), handler))
+                       .map(handler -> getEventbusClient().register(config.getCompleteDiscoverAddress(), handler))
                        .flatMapMaybe(ignore -> registerServices(config))
                        .defaultIfEmpty(new JsonObject().put("message", "No BACnet services"))
                        .doOnSuccess(logger::info)

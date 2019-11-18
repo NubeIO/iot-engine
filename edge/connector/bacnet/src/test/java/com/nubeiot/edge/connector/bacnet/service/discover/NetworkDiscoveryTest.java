@@ -42,11 +42,11 @@ public class NetworkDiscoveryTest extends BACnetVerticleTest {
                 TestHelper.testComplete(async);
             }
         };
-        busClient.request(DeliveryEvent.builder()
-                                       .address(NetworkDiscovery.class.getName())
-                                       .action(EventAction.GET_LIST)
-                                       .payload(new JsonObject())
-                                       .build(), EventbusHelper.replyAsserter(context, handler));
+        busClient.fire(DeliveryEvent.builder()
+                                    .address(NetworkDiscovery.class.getName())
+                                    .action(EventAction.GET_LIST)
+                                    .payload(new JsonObject())
+                                    .build(), EventbusHelper.replyAsserter(context, handler));
     }
 
     @Test
@@ -57,10 +57,11 @@ public class NetworkDiscoveryTest extends BACnetVerticleTest {
         final JsonObject expected = new JsonObject(
             "{\"status\":\"FAILED\",\"action\":\"GET_ONE\",\"error\":{\"code\":\"INVALID_ARGUMENT\"," +
             "\"message\":\"Missing BACnet network code\"}}");
-        busClient.request(DeliveryEvent.builder()
-                                       .address(NetworkDiscovery.class.getName()).action(EventAction.GET_ONE)
-                                       .addPayload(RequestData.builder().body(body).build())
-                                       .build(), EventbusHelper.replyAsserter(context, async, expected));
+        busClient.fire(DeliveryEvent.builder()
+                                    .address(NetworkDiscovery.class.getName())
+                                    .action(EventAction.GET_ONE)
+                                    .addPayload(RequestData.builder().body(body).build())
+                                    .build(), EventbusHelper.replyAsserter(context, async, expected));
     }
 
     @Test
@@ -77,11 +78,11 @@ public class NetworkDiscoveryTest extends BACnetVerticleTest {
                                                                                .build()
                                                                                .toJson());
         final JsonObject expected = EventMessage.success(EventAction.GET_ONE, response).toJson();
-        busClient.request(DeliveryEvent.builder()
-                                       .address(NetworkDiscovery.class.getName())
-                                       .action(EventAction.GET_ONE)
-                                       .addPayload(RequestData.builder().body(request).build())
-                                       .build(), EventbusHelper.replyAsserter(context, async, expected));
+        busClient.fire(DeliveryEvent.builder()
+                                    .address(NetworkDiscovery.class.getName())
+                                    .action(EventAction.GET_ONE)
+                                    .addPayload(RequestData.builder().body(request).build())
+                                    .build(), EventbusHelper.replyAsserter(context, async, expected));
     }
 
 }

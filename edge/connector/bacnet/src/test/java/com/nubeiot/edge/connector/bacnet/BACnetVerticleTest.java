@@ -16,7 +16,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -25,7 +25,7 @@ import ch.qos.logback.classic.Logger;
 public abstract class BACnetVerticleTest {
 
     protected Vertx vertx;
-    protected EventController busClient;
+    protected EventbusClient busClient;
 
     @BeforeClass
     public static void beforeSuite() {
@@ -40,7 +40,7 @@ public abstract class BACnetVerticleTest {
         final BACnetVerticle verticle = new BACnetVerticle();
         final Async async = context.async();
         VertxHelper.deploy(vertx, context, options, verticle, event -> {
-            busClient = verticle.getEventController();
+            busClient = verticle.getEventbusClient();
             TestHelper.testComplete(async);
         });
         TestHelper.sleep(1000);
