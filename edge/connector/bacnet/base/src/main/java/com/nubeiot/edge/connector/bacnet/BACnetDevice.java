@@ -1,12 +1,13 @@
 package com.nubeiot.edge.connector.bacnet;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -20,11 +21,11 @@ import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
+import com.nubeiot.edge.connector.bacnet.dto.RemoteDeviceMixin;
 import com.nubeiot.edge.connector.bacnet.dto.TransportProvider;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
@@ -123,10 +124,10 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     }
 
     private EventMessage createDiscoverCompletionMessage(RemoteDeviceScanner scanner) {
-        final JsonArray remotes = scanner.getRemoteDevices()
-                                         .stream()
-                                         .map(BACnetDataConversions::deviceMinimal)
-                                         .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
+        final List<RemoteDeviceMixin> remotes = scanner.getRemoteDevices()
+                                                       .stream()
+                                                       .map(RemoteDeviceMixin::create)
+                                                       .collect(Collectors.toList());
         final JsonObject body = DiscoverResponse.builder()
                                                 .network(transportProvider.protocol())
                                                 .localDevice(metadata)

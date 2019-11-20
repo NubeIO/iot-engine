@@ -6,7 +6,7 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
-interface BACnetMixin extends JsonData {
+public interface BACnetMixin extends JsonData {
 
     ObjectMapper MAPPER = JsonData.MAPPER.copy().registerModule(BACnetJsonModule.MODULE);
 

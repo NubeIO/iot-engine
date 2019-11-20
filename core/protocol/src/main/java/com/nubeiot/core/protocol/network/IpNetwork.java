@@ -128,20 +128,22 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
     }
 
     static String mac(@NonNull NetworkInterface networkInterface) {
-        final byte[] mac;
         try {
-            mac = networkInterface.getHardwareAddress();
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < mac.length; i++) {
-                sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
-            }
-            return sb.toString();
+            return mac(networkInterface.getHardwareAddress());
         } catch (SocketException | NullPointerException e) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.warn("Cannot compute MAC address");
             }
             return null;
         }
+    }
+
+    public static String mac(byte[] mac) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < mac.length; i++) {
+            sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+        }
+        return sb.toString();
     }
 
     public static boolean isIpv6(String address) {

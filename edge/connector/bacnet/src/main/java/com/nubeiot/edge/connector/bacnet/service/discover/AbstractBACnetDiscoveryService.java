@@ -28,7 +28,7 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
-import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
+import com.nubeiot.edge.connector.bacnet.dto.PropertyValuesMixin;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
@@ -113,8 +113,10 @@ abstract class AbstractBACnetDiscoveryService extends AbstractSharedDataDelegate
         return JsonData.from(cacheProtocol.toJson().mergeIn(reqBodyProtocol.toJson()), CommunicationProtocol.class);
     }
 
-    final Single<JsonObject> parseRemoteObject(@NonNull LocalDevice localDevice, @NonNull RemoteDevice remoteDevice,
-                                               @NonNull ObjectIdentifier objId, boolean detail, boolean includeError) {
+    final Single<PropertyValuesMixin> parseRemoteObject(@NonNull LocalDevice localDevice,
+                                                        @NonNull RemoteDevice remoteDevice,
+                                                        @NonNull ObjectIdentifier objId, boolean detail,
+                                                        boolean includeError) {
         return Observable.fromIterable(getObjectTypes(detail, objId.getObjectType()))
                          .map(definition -> new ObjectPropertyReference(objId, definition.getPropertyTypeDefinition()
                                                                                          .getPropertyIdentifier()))
@@ -122,8 +124,7 @@ abstract class AbstractBACnetDiscoveryService extends AbstractSharedDataDelegate
                                   (refs, opr) -> refs.addIndex(objId, opr.getPropertyIdentifier(),
                                                                opr.getPropertyArrayIndex()))
                          .map(propRefs -> RequestUtils.readProperties(localDevice, remoteDevice, propRefs, true, null))
-                         .map(pvs -> new PropertyValuesMixin(pvs, includeError))
-                         .map(PropertyValuesMixin::toJson);
+                         .map(pvs -> PropertyValuesMixin.create(objId, pvs, includeError));
     }
 
     private List<ObjectPropertyTypeDefinition> getObjectTypes(boolean detail, @NonNull ObjectType objectType) {
