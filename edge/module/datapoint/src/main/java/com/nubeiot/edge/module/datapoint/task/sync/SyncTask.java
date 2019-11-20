@@ -5,10 +5,10 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.service.task.EntityTaskContext;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 
 public interface SyncTask<T extends EntityTaskContext, P extends VertxPojo> extends EntityTask<T, P, JsonObject> {
 
-    interface InitialSyncTask<T extends EntityTaskContext> extends SyncTask<T, Device> {}
+    interface InitialSyncTask<T extends EntityTaskContext> extends SyncTask<T, Edge> {}
 
 }

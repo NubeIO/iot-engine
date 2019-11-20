@@ -18,8 +18,8 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.Label;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceEquipMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeEquipMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EquipmentMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
@@ -39,8 +39,8 @@ import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.dto.TransducerCategory;
 import com.nubeiot.iotdata.dto.TransducerType;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
-import com.nubeiot.iotdata.edge.model.tables.pojos.DeviceEquip;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
+import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeEquip;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
 import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
@@ -58,15 +58,15 @@ import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
 public final class MockData {
 
-    public static final Device DEVICE = new Device().setId(PrimaryKey.DEVICE)
-                                                    .setCode("NUBEIO_EDGE_28")
-                                                    .setCustomerCode("NUBEIO")
-                                                    .setSiteCode("SYDNEY-00001");
+    public static final Edge EDGE = new Edge().setId(PrimaryKey.EDGE)
+                                              .setCode("NUBEIO_EDGE_28")
+                                              .setCustomerCode("NUBEIO")
+                                              .setSiteCode("SYDNEY-00001");
     public static final JsonObject MEASURE_UNITS = measures();
     public static final Network NETWORK = network();
     public static final List<Equipment> EQUIPS = equips();
     public static final List<Transducer> TRANSDUCERS = transducers();
-    public static final List<DeviceEquip> DEVICE_EQUIPS = deviceEquips();
+    public static final List<EdgeEquip> EDGE_EQUIPS = edgeEquips();
     public static final List<Thing> THINGS = things();
     public static final List<Point> POINTS = points();
     public static final List<PointTag> TAGS = tags();
@@ -160,10 +160,7 @@ public final class MockData {
         final JsonObject metadata = new JsonObject(
             "{\"subnet_name\":\"subnet-A\",\"networkInterface\":\"docker0\",\"subnet\":\"172.17.0.1/16\"," +
             "\"broadcast\":\"172.17.255.255\",\"mac\":\"02:42:50:e1:cf:2b\",\"port\":47808}");
-        return new Network().setId(PrimaryKey.NETWORK)
-                            .setCode("network-1")
-                            .setDevice(DEVICE.getId())
-                            .setMetadata(metadata);
+        return new Network().setId(PrimaryKey.NETWORK).setCode("network-1").setEdge(EDGE.getId()).setMetadata(metadata);
     }
 
     private static List<Equipment> equips() {
@@ -179,8 +176,7 @@ public final class MockData {
     private static List<Point> points() {
         final Point p1 = new Point().setId(PrimaryKey.P_GPIO_HUMIDITY)
                                     .setCode("2CB2B763_HUMIDITY")
-                                    .setProtocol(Protocol.GPIO)
-                                    .setDevice(DEVICE.getId())
+                                    .setProtocol(Protocol.GPIO).setEdge(EDGE.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(Base.PERCENTAGE.type())
@@ -192,8 +188,7 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p2 = new Point().setId(PrimaryKey.P_GPIO_TEMP)
                                     .setCode("2CB2B763_TEMP")
-                                    .setProtocol(Protocol.GPIO)
-                                    .setDevice(DEVICE.getId())
+                                    .setProtocol(Protocol.GPIO).setEdge(EDGE.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
@@ -203,8 +198,7 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p3 = new Point().setId(PrimaryKey.P_BACNET_TEMP)
                                     .setCode("HVAC_01_TEMP")
-                                    .setProtocol(Protocol.BACNET)
-                                    .setDevice(DEVICE.getId())
+                                    .setProtocol(Protocol.BACNET).setEdge(EDGE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
@@ -215,8 +209,7 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p4 = new Point().setId(PrimaryKey.P_BACNET_FAN)
                                     .setCode("HVAC_01_FAN")
-                                    .setProtocol(Protocol.BACNET)
-                                    .setDevice(DEVICE.getId())
+                                    .setProtocol(Protocol.BACNET).setEdge(EDGE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
@@ -226,8 +219,7 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p5 = new Point().setId(PrimaryKey.P_BACNET_SWITCH)
                                     .setCode("HVAC_01_FAN_CONTROL")
-                                    .setProtocol(Protocol.BACNET)
-                                    .setDevice(DEVICE.getId())
+                                    .setProtocol(Protocol.BACNET).setEdge(EDGE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.OUTPUT)
                                     .setType(PointType.DIGITAL)
@@ -255,11 +247,11 @@ public final class MockData {
                               "\"symbol\":\"mph\"}]}");
     }
 
-    private static List<DeviceEquip> deviceEquips() {
-        return Arrays.asList(new DeviceEquip().setDevice(DEVICE.getId()).setEquip(PrimaryKey.EQUIP_DROPLET),
-                             new DeviceEquip().setDevice(DEVICE.getId())
-                                              .setEquip(PrimaryKey.EQUIP_HVAC)
-                                              .setNetwork(NETWORK.getId()));
+    private static List<EdgeEquip> edgeEquips() {
+        return Arrays.asList(new EdgeEquip().setEdge(EDGE.getId()).setEquip(PrimaryKey.EQUIP_DROPLET),
+                             new EdgeEquip().setEdge(EDGE.getId())
+                                            .setEquip(PrimaryKey.EQUIP_HVAC)
+                                            .setNetwork(NETWORK.getId()));
     }
 
     private static List<Transducer> transducers() {
@@ -319,18 +311,17 @@ public final class MockData {
         return POINT_DATA.stream().filter(p -> p.getPoint().equals(pointKey)).findFirst().orElse(null);
     }
 
-    public static JsonObject data_Device_Network() {
+    public static JsonObject data_Edge_Network() {
         return BuiltinData.def()
-                          .toJson()
-                          .put(DeviceMetadata.INSTANCE.singularKeyName(), DEVICE.toJson())
+                          .toJson().put(EdgeMetadata.INSTANCE.singularKeyName(), EDGE.toJson())
                           .put(NetworkMetadata.INSTANCE.singularKeyName(), NETWORK.toJson());
     }
 
     public static JsonObject data_Equip_Thing() {
-        return data_Device_Network().put(EquipmentMetadata.INSTANCE.singularKeyName(), data(EQUIPS))
-                                    .put(DeviceEquipMetadata.INSTANCE.singularKeyName(), data(DEVICE_EQUIPS))
-                                    .put(TransducerMetadata.INSTANCE.singularKeyName(), data(TRANSDUCERS))
-                                    .put(ThingMetadata.INSTANCE.singularKeyName(), data(THINGS));
+        return data_Edge_Network().put(EquipmentMetadata.INSTANCE.singularKeyName(), data(EQUIPS))
+                                  .put(EdgeEquipMetadata.INSTANCE.singularKeyName(), data(EDGE_EQUIPS))
+                                  .put(TransducerMetadata.INSTANCE.singularKeyName(), data(TRANSDUCERS))
+                                  .put(ThingMetadata.INSTANCE.singularKeyName(), data(THINGS));
     }
 
     public static JsonObject data_Point_Setting_Tag() {
@@ -359,7 +350,7 @@ public final class MockData {
 
     public static final class PrimaryKey {
 
-        public static final UUID DEVICE = UUID.fromString("d7cd3f57-a188-4462-b959-df7a23994c92");
+        public static final UUID EDGE = UUID.fromString("d7cd3f57-a188-4462-b959-df7a23994c92");
         public static final UUID P_GPIO_HUMIDITY = UUID.fromString("3bea3c91-850d-4409-b594-8ffb5aa6b8a0");
         public static final UUID P_GPIO_TEMP = UUID.fromString("1efaf662-1333-48d1-a60f-8fc60f259f0e");
         public static final UUID P_BACNET_TEMP = UUID.fromString("edbe3acf-5fca-4672-b633-72aa73004917");

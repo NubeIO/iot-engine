@@ -31,7 +31,7 @@ abstract class AbstractDittoTask<D extends VertxPojo> implements SyncTask<DittoT
 
     final String thingId(DittoTaskContext ctx) {
         return Strings.format("com.nubeio.{0}:{1}", ctx.getSharedDataValue(DataPointIndex.CUSTOMER_CODE),
-                              UUID64.uuid64ToUuidStr(ctx.getSharedDataValue(DataPointIndex.DEVICE_ID)));
+                              UUID64.uuid64ToUuidStr(ctx.getSharedDataValue(DataPointIndex.EDGE_ID)));
     }
 
     final Maybe<JsonObject> doSyncOnSuccess(EntityMetadata metadata, String endpoint, JsonObject reqBody, D pojo) {

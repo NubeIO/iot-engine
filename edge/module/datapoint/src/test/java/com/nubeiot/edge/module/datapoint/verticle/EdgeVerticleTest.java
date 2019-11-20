@@ -18,24 +18,24 @@ import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 
-public class DeviceVerticleTest extends BaseDataPointVerticleTest {
+public class EdgeVerticleTest extends BaseDataPointVerticleTest {
 
     @Override
     protected JsonObject builtinData() {
-        return MockData.data_Device_Network();
+        return MockData.data_Edge_Network();
     }
 
     @Test
-    public void test_get_device(TestContext context) {
+    public void test_get_edge(TestContext context) {
         final JsonObject syncConfig = new JsonObject("{\"type\":\"DITTO\",\"enabled\":false," +
                                                      "\"clientConfig\":{\"userAgent\":\"nubeio.edge.datapoint/1.0.0 " +
-                                                     UUID64.uuidToBase64(PrimaryKey.DEVICE) + "\",\"hostInfo\":{}," +
+                                                     UUID64.uuidToBase64(PrimaryKey.EDGE) + "\",\"hostInfo\":{}," +
                                                      "\"options\":{}}}");
-        final JsonObject expected = JsonPojo.from(MockData.DEVICE)
+        final JsonObject expected = JsonPojo.from(MockData.EDGE)
                                             .toJson()
                                             .put("data_version", "0.0.2")
                                             .put("metadata", new JsonObject().put(DataSyncConfig.NAME, syncConfig));
-        assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + PrimaryKey.DEVICE, 200, expected,
+        assertRestByClient(context, HttpMethod.GET, "/api/s/edge/" + PrimaryKey.EDGE, 200, expected,
                            JsonHelper.ignore("metadata.__data_sync__.clientConfig.hostInfo"),
                            JsonHelper.ignore("metadata.__data_sync__.clientConfig.options"));
     }
@@ -47,8 +47,8 @@ public class DeviceVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_patch_device_readOnly_field(TestContext context) {
-        assertRestByClient(context, HttpMethod.PATCH, "/api/s/device/" + PrimaryKey.DEVICE,
+    public void test_patch_edge_readOnly_field(TestContext context) {
+        assertRestByClient(context, HttpMethod.PATCH, "/api/s/edge/" + PrimaryKey.EDGE,
                            RequestData.builder().body(new JsonObject().put("customer_code", "123")).build(),
                            ExpectedResponse.builder()
                                            .code(400)

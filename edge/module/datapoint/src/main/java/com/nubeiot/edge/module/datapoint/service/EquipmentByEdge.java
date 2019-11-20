@@ -7,36 +7,35 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceEquipCompositeMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeEquipCompositeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EquipmentMetadata;
-import com.nubeiot.edge.module.datapoint.model.pojos.DeviceComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.EdgeComposite;
 
 import lombok.NonNull;
 
-public final class EquipmentByDevice
-    extends AbstractManyToManyEntityService<DeviceComposite, DeviceEquipCompositeMetadata>
-    implements DataPointService<DeviceComposite, DeviceEquipCompositeMetadata> {
+public final class EquipmentByEdge extends AbstractManyToManyEntityService<EdgeComposite, EdgeEquipCompositeMetadata>
+    implements DataPointService<EdgeComposite, EdgeEquipCompositeMetadata> {
 
-    public EquipmentByDevice(@NonNull EntityHandler entityHandler) {
+    public EquipmentByEdge(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public DeviceEquipCompositeMetadata context() {
-        return DeviceEquipCompositeMetadata.INSTANCE;
+    public EdgeEquipCompositeMetadata context() {
+        return EdgeEquipCompositeMetadata.INSTANCE;
     }
 
     @Override
     public EntityReferences entityReferences() {
-        final @NonNull com.nubeiot.iotdata.edge.model.tables.DeviceEquip table = context().table();
-        return new EntityReferences().add(reference(), table.getJsonField(table.DEVICE))
+        final @NonNull com.nubeiot.iotdata.edge.model.tables.EdgeEquip table = context().table();
+        return new EntityReferences().add(reference(), table.getJsonField(table.EDGE))
                                      .add(resource(), table.getJsonField(table.EQUIP));
     }
 
     @Override
     public @NonNull EntityMetadata reference() {
-        return DeviceMetadata.INSTANCE;
+        return EdgeMetadata.INSTANCE;
     }
 
     @Override

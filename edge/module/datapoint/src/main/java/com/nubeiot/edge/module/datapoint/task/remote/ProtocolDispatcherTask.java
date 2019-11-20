@@ -5,13 +5,14 @@ import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.service.task.EntityTaskData;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
 import com.nubeiot.edge.module.datapoint.service.ProtocolDispatcherService;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
@@ -33,10 +34,12 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
 
     @Override
     public @NonNull Single<Boolean> isExecutable(@NonNull EntityTaskData<VertxPojo> executionData) {
-        final DeliveryEvent event = createProtocolDispatcherEvent(executionData);
+        final EventMessage msg = createProtocolDispatcherMsg(executionData);
         final EventbusClient eventClient = definition().handler().eventClient();
-        //        eventClient.fire(event, ReplyEventHandler.builder().build());
-        return Single.just(false);
+        return eventClient.request(ProtocolDispatcherService.class.getName(), msg)
+                          .map(EventMessage::getData)
+                          .map(response -> response.getJsonArray(ProtocolDispatcherMetadata.INSTANCE.pluralKeyName()))
+                          .map(out -> !out.isEmpty());
     }
 
     @Override
@@ -44,14 +47,12 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
         return Maybe.empty();
     }
 
-    private DeliveryEvent createProtocolDispatcherEvent(@NonNull EntityTaskData<VertxPojo> taskData) {
+    private EventMessage createProtocolDispatcherMsg(@NonNull EntityTaskData<VertxPojo> taskData) {
         final ProtocolDispatcher pojo = new ProtocolDispatcher().setProtocol(Protocol.BACNET)
-                                                                .setEntity(taskData.getMetadata().singularKeyName());
-        return DeliveryEvent.builder()
-                            .address(ProtocolDispatcherService.class.getName())
-                            .action(EventAction.GET_LIST)
-                            .addPayload(RequestData.builder().filter(JsonPojo.from(pojo).toJson()).build())
-                            .build();
+                                                                .setEntity(taskData.getMetadata().singularKeyName())
+                                                                .setAction(taskData.getOriginReqAction());
+        return EventMessage.initial(EventAction.GET_LIST,
+                                    RequestData.builder().filter(JsonPojo.from(pojo).toJson()).build());
     }
 
 }
