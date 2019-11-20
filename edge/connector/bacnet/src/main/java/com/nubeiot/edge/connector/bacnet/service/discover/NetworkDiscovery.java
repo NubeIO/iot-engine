@@ -6,6 +6,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.enums.State;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
@@ -14,6 +15,8 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
+import com.nubeiot.iotdata.dto.Protocol;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 import lombok.NonNull;
 
@@ -50,11 +53,7 @@ public final class NetworkDiscovery extends AbstractBACnetDiscoveryService imple
 
     @Override
     public Single<JsonObject> get(RequestData reqData) {
-        final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.NETWORK);
-        final DiscoverOptions options = parseDiscoverOptions(reqData);
-        final CommunicationProtocol requestProtocol = parseNetworkProtocol(request);
-        logger.info("Request network {}", requestProtocol.toJson());
-        return Single.just(DiscoverResponse.builder().network(requestProtocol).build().toJson());
+        return Single.just(DiscoverResponse.builder().network(parseProtocol(reqData)).build().toJson());
     }
 
     @Override
@@ -64,12 +63,21 @@ public final class NetworkDiscovery extends AbstractBACnetDiscoveryService imple
 
     @Override
     public Single<JsonObject> persist(RequestData reqData) {
-        return Single.just(new JsonObject());
+        final CommunicationProtocol requestProtocol = parseProtocol(reqData);
+        final Network network = new Network().setProtocol(Protocol.BACNET)
+                                             .setCode(requestProtocol.identifier())
+                                             .setState(State.ENABLED)
+                                             .setMetadata(requestProtocol.toJson());
+        return execute(network.toJson());
     }
 
     @Override
     public String destination() {
         return null;
+    }
+
+    private CommunicationProtocol parseProtocol(RequestData reqData) {
+        return parseNetworkProtocol(DiscoverRequest.from(reqData, DiscoverLevel.NETWORK));
     }
 
 }

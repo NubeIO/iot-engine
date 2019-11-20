@@ -1,7 +1,5 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
-import java.util.HashMap;
-
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -19,6 +17,9 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
+import com.nubeiot.edge.connector.bacnet.dto.ObjectPropertyValues;
+import com.nubeiot.edge.connector.bacnet.dto.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierSerializer;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
@@ -54,6 +55,8 @@ public final class ObjectDiscovery extends AbstractBACnetDiscoveryService implem
         final BACnetDevice device = cache.get(protocol);
         return device.discoverRemoteDevice(request.getDeviceCode(), options)
                      .flatMap(remote -> getRemoteObjects(device.getLocalDevice(), remote, options.isDetail()))
+                     .map(opv -> DiscoverResponse.builder().objects(opv).build())
+                     .map(DiscoverResponse::toJson)
                      .doFinally(device::stop);
     }
 
@@ -69,6 +72,7 @@ public final class ObjectDiscovery extends AbstractBACnetDiscoveryService implem
         final ObjectIdentifier objId = ObjectIdentifierSerializer.deserialize(request.getObjectCode());
         return device.discoverRemoteDevice(request.getDeviceCode(), options)
                      .flatMap(rd -> parseRemoteObject(device.getLocalDevice(), rd, objId, true, options.isDetail()))
+                     .map(PropertyValuesMixin::toJson)
                      .doFinally(device::stop);
     }
 
@@ -87,13 +91,13 @@ public final class ObjectDiscovery extends AbstractBACnetDiscoveryService implem
         return null;
     }
 
-    private Single<JsonObject> getRemoteObjects(@NonNull LocalDevice local, @NonNull RemoteDevice rd, boolean detail) {
+    private Single<ObjectPropertyValues> getRemoteObjects(@NonNull LocalDevice local, @NonNull RemoteDevice rd,
+                                                          boolean detail) {
         return Observable.fromIterable(Functions.getOrThrow(t -> new NubeException(ErrorCode.ENGINE_ERROR, t),
                                                             () -> RequestUtils.getObjectList(local, rd)))
                          .filter(objId -> objId.getObjectType() != ObjectType.device)
-                         .collect(HashMap::new,
-                                  (map, objId) -> map.put(objId, parseRemoteObject(local, rd, objId, detail, false)))
-                         .map(JsonObject::mapFrom);
+                         .flatMapSingle(objId -> parseRemoteObject(local, rd, objId, detail, false))
+                         .collect(ObjectPropertyValues::new, ObjectPropertyValues::add);
     }
 
 }

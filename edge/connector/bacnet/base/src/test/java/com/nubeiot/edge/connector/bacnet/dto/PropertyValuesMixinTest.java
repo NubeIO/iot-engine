@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.mixin;
+package com.nubeiot.edge.connector.bacnet.dto;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -63,7 +63,7 @@ public class PropertyValuesMixinTest {
         pvs.add(oid, PropertyIdentifier.averageValue, null, new SignedInteger(-100));
         pvs.add(oid, PropertyIdentifier.feedbackValue, null, new UnsignedInteger(100));
         pvs.add(oid, PropertyIdentifier.statusFlags, null, new StatusFlags(true, false, true, false));
-        PropertyValuesMixin pvJson = new PropertyValuesMixin(pvs, false);
+        PropertyValuesMixin pvJson = PropertyValuesMixin.create(oid, pvs, false);
         final JsonObject expected = new JsonObject(
             "{\"status-flags\":{\"in-alarm\":true,\"fault\":false,\"overridden\":true,\"out-of-service\":false}," +
             "\"adjust-value\":20.5,\"group-id\":\"xxx\",\"alarm-value\":10.0,\"is-utc\":true,\"feedback-value\":100," +
@@ -84,7 +84,7 @@ public class PropertyValuesMixinTest {
         pvs.add(oid, PropertyIdentifier.action, null, Action.direct);
         pvs.add(oid, PropertyIdentifier.errorLimit, null,
                 new ErrorClassAndCode(ErrorClass.device, ErrorCode.abortSecurityError));
-        PropertyValuesMixin pvJson = new PropertyValuesMixin(pvs, true);
+        PropertyValuesMixin pvJson = PropertyValuesMixin.create(oid, pvs, true);
         final JsonObject expected = new JsonObject("{\"action\":\"direct\",\"error-limit\":{\"errorClass\":\"device" +
                                                    "\",\"errorCode\":\"abort-security-error\"}}");
         System.out.println(pvJson.toJson().encode());
@@ -100,7 +100,7 @@ public class PropertyValuesMixinTest {
         pvs.add(oid, PropertyIdentifier.timerState, null, new TimerStateChangeValue(Boolean.TRUE));
         pvs.add(oid, PropertyIdentifier.restartNotificationRecipients, null,
                 new Recipient(new ObjectIdentifier(ObjectType.device, 222)));
-        PropertyValuesMixin pvJson = new PropertyValuesMixin(pvs, true);
+        PropertyValuesMixin pvJson = PropertyValuesMixin.create(oid, pvs, true);
         final JsonObject expected = new JsonObject("{\"active-text\":{\"name\":\"abc\",\"value\":\"xxx\"}," +
                                                    "\"landing-calls\":{\"floor-number\":12,\"direction\":\"up\"}," +
                                                    "\"priority-for-writing\":16," +
@@ -114,12 +114,14 @@ public class PropertyValuesMixinTest {
         String expirationExpected = expected.getString(key);
         String expirationActual = actual.getString(key);
         final int expectedLength = expirationExpected.length();
-        if (expectedLength == expirationActual.length()) {
+        final int actualLength = expirationActual.length();
+        if (expectedLength == actualLength) {
             Assert.assertEquals(expirationExpected, expirationActual);
         } else {
-            System.out.println("Due to BACnet DateTime truncate `.SSS` to `.SS`");
-            final String expectedFix = expirationExpected.substring(0, expectedLength - 2) +
-                                       expirationExpected.substring(expectedLength - 1);
+            System.out.println("Due to BACnet DateTime truncate `.SSS` to `.SS` or `.S`");
+            final int gap = Math.abs(actualLength - expectedLength);
+            final String expectedFix = expirationExpected.substring(0, expectedLength - gap - 1) +
+                                       expirationExpected.substring(expectedLength - gap);
             Assert.assertEquals(expectedFix, expirationActual);
         }
     }
