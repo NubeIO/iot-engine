@@ -33,7 +33,7 @@ import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.dto.Protocol;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
@@ -62,17 +62,17 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_patch_device(TestContext context) {
+    public void test_patch_edge(TestContext context) {
         Async async = context.async();
-        JsonObject data = new JsonObject("{\"id\":\"" + PrimaryKey.DEVICE + "\",\"code\":\"TET_01\"," +
+        JsonObject data = new JsonObject("{\"id\":\"" + PrimaryKey.EDGE + "\",\"code\":\"TET_01\"," +
                                          "\"customer_code\":\"NUBEIO\",\"site_code\":\"SYDNEY-00001\"," +
                                          "\"data_version\":\"0.0.3\",\"metadata\":{\"hostname\":\"abc\"}}");
         JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", data);
-        Device p1 = new Device().setCode("TET_01")
-                                .setDataVersion("0.0.3")
-                                .setMetadata(new JsonObject().put("hostname", "abc"));
+        Edge p1 = new Edge().setCode("TET_01")
+                            .setDataVersion("0.0.3")
+                            .setMetadata(new JsonObject().put("hostname", "abc"));
         final Consumer<ResponseData> after = r -> {
             try {
                 Thread.sleep(2000);
@@ -83,7 +83,7 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
             }
         };
         RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();
-        assertRestByClient(context, HttpMethod.PATCH, "/api/s/device/" + UUID64.uuidToBase64(PrimaryKey.DEVICE), req,
+        assertRestByClient(context, HttpMethod.PATCH, "/api/s/edge/" + UUID64.uuidToBase64(PrimaryKey.EDGE), req,
                            ExpectedResponse.builder()
                                            .code(200)
                                            .expected(expected)
@@ -99,7 +99,7 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
         JsonObject data = new JsonObject(
             "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"OUTPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"BACNET\",\"unit\":{\"type\":\"fahrenheit\",\"symbol\":\"°F\",\"category\":\"TEMPERATURE\"}," +
-            "\"device\":\"" + PrimaryKey.DEVICE + "\",\"enabled\":true}");
+            "\"edge\":\"" + PrimaryKey.EDGE + "\",\"enabled\":true}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", data);
@@ -119,9 +119,8 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
             }
         };
         RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();
-        assertRestByClient(context, HttpMethod.POST,
-                           "/api/s/device/" + UUID64.uuidToBase64(PrimaryKey.DEVICE) + "/point", req,
-                           ExpectedResponse.builder().code(201).expected(expected).after(after).build());
+        assertRestByClient(context, HttpMethod.POST, "/api/s/edge/" + UUID64.uuidToBase64(PrimaryKey.EDGE) + "/point",
+                           req, ExpectedResponse.builder().code(201).expected(expected).after(after).build());
     }
 
     @Test

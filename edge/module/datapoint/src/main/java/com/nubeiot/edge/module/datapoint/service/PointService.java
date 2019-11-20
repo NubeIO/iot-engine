@@ -17,7 +17,7 @@ import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.core.sql.service.task.EntityTaskData;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
@@ -58,7 +58,7 @@ public final class PointService
     @Override
     public EntityReferences entityReferences() {
         final com.nubeiot.iotdata.edge.model.tables.Point table = context().table();
-        return new EntityReferences().add(DeviceMetadata.INSTANCE, table.getJsonField(table.DEVICE))
+        return new EntityReferences().add(EdgeMetadata.INSTANCE, table.getJsonField(table.EDGE))
                                      .add(NetworkMetadata.INSTANCE, table.getJsonField(table.NETWORK));
     }
 
@@ -131,10 +131,9 @@ public final class PointService
     public Set<EventMethodDefinition> definitions() {
         return Stream.concat(DataPointService.super.definitions().stream(),
                              Stream.of(EventMethodDefinition.createDefault("/network/:network_id/point", "/:point_id"),
-                                       EventMethodDefinition.createDefault("/device/:device_id/point", "/:point_id"),
-                                       EventMethodDefinition.createDefault(
-                                           "/device/:device_id/network/:network_id/point", "/:point_id")))
-                     .collect(Collectors.toSet());
+                                       EventMethodDefinition.createDefault("/edge/:edge_id/point", "/:point_id"),
+                                       EventMethodDefinition.createDefault("/edge/:edge_id/network/:network_id/point",
+                                                                           "/:point_id"))).collect(Collectors.toSet());
     }
 
     public interface PointExtension extends HasReferenceResource {

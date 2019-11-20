@@ -43,7 +43,7 @@ import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.edge.model.Keys;
 import com.nubeiot.iotdata.edge.model.Tables;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 import lombok.NonNull;
@@ -62,13 +62,13 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
 
     @Override
     public boolean isNew() {
-        return isNew(Tables.DEVICE);
+        return isNew(Tables.EDGE);
     }
 
     @Override
     public Single<EventMessage> initData() {
         Map<Table, Field<UUID>> map = new HashMap<>();
-        map.put(Tables.DEVICE, Tables.DEVICE.ID);
+        map.put(Tables.EDGE, Tables.EDGE.ID);
         map.put(Tables.EQUIPMENT, Tables.EQUIPMENT.ID);
         map.put(Tables.NETWORK, Tables.NETWORK.ID);
         map.put(Tables.POINT, Tables.POINT.ID);
@@ -81,23 +81,23 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
 
     @Override
     public Single<EventMessage> migrate() {
-        return DeviceMetadata.INSTANCE.dao(this)
-                                      .findOneByCondition(DSL.trueCondition())
-                                      .filter(Optional::isPresent)
-                                      .map(Optional::get)
-                                      .map(this::cacheDevice)
-                                      .map(device -> EventMessage.initial(EventAction.MIGRATE))
-                                      .switchIfEmpty(initDataFromConfig(EventAction.MIGRATE))
-                                      .doOnSuccess(ignore -> new DataCacheInitializer().init(this));
+        return EdgeMetadata.INSTANCE.dao(this)
+                                    .findOneByCondition(DSL.trueCondition())
+                                    .filter(Optional::isPresent)
+                                    .map(Optional::get)
+                                    .map(this::cacheEdge)
+                                    .map(edge -> EventMessage.initial(EventAction.MIGRATE))
+                                    .switchIfEmpty(initDataFromConfig(EventAction.MIGRATE))
+                                    .doOnSuccess(ignore -> new DataCacheInitializer().init(this));
     }
 
     private Single<EventMessage> initDataFromConfig(EventAction action) {
         Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
         JsonObject cfgData = configData();
-        final Device device = cacheDevice(initDevice(cfgData));
-        final JsonObject data = cfgData.put(DeviceMetadata.INSTANCE.singularKeyName(), device.toJson())
+        final Edge edge = cacheEdge(initEdge(cfgData));
+        final JsonObject data = cfgData.put(EdgeMetadata.INSTANCE.singularKeyName(), edge.toJson())
                                        .put(NetworkMetadata.INSTANCE.singularKeyName(),
-                                            initNetwork(cfgData, device.getId()));
+                                            initNetwork(cfgData, edge.getId()));
         return Single.merge(index().stream()
                                    .filter(meta -> !(meta instanceof CompositeMetadata) &&
                                                    data.containsKey(meta.singularKeyName()))
@@ -106,7 +106,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                    .collect(Collectors.toList()))
                      .buffer(5)
                      .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
-                     .doOnSuccess(r -> syncData(action, device))
+                     .doOnSuccess(r -> syncData(action, edge))
                      .map(r -> EventMessage.success(action, new JsonObject().put("records", r)));
     }
 
@@ -115,32 +115,29 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         return Optional.ofNullable(data).orElseGet(JsonObject::new);
     }
 
-    private Device initDevice(JsonObject builtinData) {
+    private Edge initEdge(JsonObject builtinData) {
         JsonObject obj = Functions.getIfThrow(
-            () -> JsonData.tryParse(builtinData.getValue(DeviceMetadata.INSTANCE.singularKeyName())))
+            () -> JsonData.tryParse(builtinData.getValue(EdgeMetadata.INSTANCE.singularKeyName())))
                                   .map(JsonData::toJson)
                                   .orElse(new JsonObject());
-        final @NonNull Device device = DeviceMetadata.INSTANCE.onCreating(RequestData.builder().body(obj).build());
+        final @NonNull Edge edge = EdgeMetadata.INSTANCE.onCreating(RequestData.builder().body(obj).build());
         JsonObject syncCfg = SharedDataDelegate.removeLocalDataValue(vertx(), getSharedKey(), DATA_SYNC_CFG);
         //TODO fix hard-code version
         syncCfg = new JsonObject().put(DataSyncConfig.NAME,
                                        DataSyncConfig.update(Optional.ofNullable(syncCfg).orElse(new JsonObject()),
-                                                             "1.0.0", device.getId()));
-        return device.setMetadata(
-            syncCfg.mergeIn(Optional.ofNullable(device.getMetadata()).orElse(new JsonObject()), true));
+                                                             "1.0.0", edge.getId()));
+        return edge.setMetadata(
+            syncCfg.mergeIn(Optional.ofNullable(edge.getMetadata()).orElse(new JsonObject()), true));
     }
 
-    private JsonArray initNetwork(@NonNull JsonObject builtinData, @NonNull UUID deviceId) {
+    private JsonArray initNetwork(@NonNull JsonObject builtinData, @NonNull UUID edgeId) {
         final UUID networkId = UUID.randomUUID();
         final Object value = builtinData.getValue(NetworkMetadata.INSTANCE.singularKeyName());
-        final JsonObject defaultNetwork = new Network().setId(networkId)
-                                                       .setCode("DEFAULT")
-                                                       .setDevice(deviceId)
-                                                       .toJson();
+        final JsonObject defaultNetwork = new Network().setId(networkId).setCode("DEFAULT").setEdge(edgeId).toJson();
         if (parsable(Network.class, value)) {
             Network network = EntityHandler.parse(Network.class, value);
             if ("DEFAULT".equals(network.getCode())) {
-                network.setDevice(deviceId).setId(networkId);
+                network.setEdge(edgeId).setId(networkId);
                 return new JsonArray().add(network.toJson());
             }
             return new JsonArray().add(network.toJson()).add(defaultNetwork);
@@ -195,27 +192,27 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         return r -> logger.info("Inserted {} record(s) in {}", r, pojoClass.getSimpleName());
     }
 
-    private void syncData(EventAction action, Device device) {
+    private void syncData(EventAction action, Edge edge) {
         SyncServiceFactory.getInitialTask(this, sharedData(DATA_SYNC_CFG))
-                          .ifPresent(task -> TaskExecuter.asyncExecute(task, getTaskData(action, device)));
+                          .ifPresent(task -> TaskExecuter.asyncExecute(task, getTaskData(action, edge)));
     }
 
-    private EntityTaskData<Device> getTaskData(EventAction action, Device device) {
-        return EntityTaskData.<Device>builder().originReqAction(action)
-                                               .originReqData(RequestData.builder().build())
-                                               .metadata(DeviceMetadata.INSTANCE)
-                                               .data(device)
-                                               .build();
+    private EntityTaskData<Edge> getTaskData(EventAction action, Edge edge) {
+        return EntityTaskData.<Edge>builder().originReqAction(action)
+                                             .originReqData(RequestData.builder().build())
+                                             .metadata(EdgeMetadata.INSTANCE)
+                                             .data(edge)
+                                             .build();
     }
 
-    private Device cacheDevice(@NonNull Device device) {
-        addSharedData(DEVICE_ID, device.getId().toString());
-        addSharedData(CUSTOMER_CODE, device.getCustomerCode());
-        addSharedData(SITE_CODE, device.getSiteCode());
+    private Edge cacheEdge(@NonNull Edge edge) {
+        addSharedData(EDGE_ID, edge.getId().toString());
+        addSharedData(CUSTOMER_CODE, edge.getCustomerCode());
+        addSharedData(SITE_CODE, edge.getSiteCode());
         addSharedData(DATA_SYNC_CFG,
-                      DataSyncConfig.update(device.getMetadata().getJsonObject(DataSyncConfig.NAME, new JsonObject()),
-                                            "1.0.0", device.getId()));
-        return device;
+                      DataSyncConfig.update(edge.getMetadata().getJsonObject(DataSyncConfig.NAME, new JsonObject()),
+                                            "1.0.0", edge.getId()));
+        return edge;
     }
 
 }

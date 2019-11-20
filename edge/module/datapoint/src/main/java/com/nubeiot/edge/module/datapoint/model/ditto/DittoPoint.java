@@ -36,7 +36,7 @@ public final class DittoPoint extends AbstractDittoModel<PointComposite> {
         MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
         other.setSyncAudit(null);
         other.setTimeAudit(null);
-        return JsonPojo.from(point.setDevice(null).setMeasureUnit(null).setSyncAudit(null)).toJson();
+        return JsonPojo.from(point.setEdge(null).setMeasureUnit(null).setSyncAudit(null)).toJson();
     }
 
 }

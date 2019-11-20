@@ -28,14 +28,14 @@ import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.module.datapoint.model.pojos.DeviceComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.EdgeComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.ThingComposite;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.edge.model.Tables;
-import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
-import com.nubeiot.iotdata.edge.model.tables.daos.DeviceEquipDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.EdgeEquipDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EquipmentDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.HistorySettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.MeasureUnitDao;
@@ -50,8 +50,8 @@ import com.nubeiot.iotdata.edge.model.tables.daos.RealtimeSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ThingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.TransducerDao;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
-import com.nubeiot.iotdata.edge.model.tables.pojos.DeviceEquip;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
+import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeEquip;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
 import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
@@ -66,8 +66,8 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
-import com.nubeiot.iotdata.edge.model.tables.records.DeviceEquipRecord;
-import com.nubeiot.iotdata.edge.model.tables.records.DeviceRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.EdgeEquipRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.EdgeRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EquipmentRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.HistorySettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.MeasureUnitRecord;
@@ -96,17 +96,17 @@ public interface DataPointIndex extends MetadataIndex {
     String DATA_SYNC_CFG = "DATA_SYNC_CFG";
     String CUSTOMER_CODE = "CUSTOMER_CODE";
     String SITE_CODE = "SITE_CODE";
-    String DEVICE_ID = "DEVICE_ID";
+    String EDGE_ID = "EDGE_ID";
 
     static Map<EntityMetadata, Integer> dependencies() {
         Map<EntityMetadata, Integer> map = new HashMap<>();
         map.put(MeasureUnitMetadata.INSTANCE, 10);
-        map.put(DeviceMetadata.INSTANCE, 10);
+        map.put(EdgeMetadata.INSTANCE, 10);
         map.put(EquipmentMetadata.INSTANCE, 10);
         map.put(TransducerMetadata.INSTANCE, 10);
         map.put(NetworkMetadata.INSTANCE, 20);
         map.put(ThingMetadata.INSTANCE, 20);
-        map.put(DeviceEquipMetadata.INSTANCE, 30);
+        map.put(EdgeEquipMetadata.INSTANCE, 30);
         map.put(PointMetadata.INSTANCE, 40);
         return map;
     }
@@ -148,49 +148,48 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class DeviceMetadata implements UUIDKeyEntity<Device, DeviceRecord, DeviceDao> {
+    final class EdgeMetadata implements UUIDKeyEntity<Edge, EdgeRecord, EdgeDao> {
 
-        public static final DeviceMetadata INSTANCE = new DeviceMetadata();
+        public static final EdgeMetadata INSTANCE = new EdgeMetadata();
 
         @Override
-        public @NonNull JsonTable<DeviceRecord> table() {
-            return Tables.DEVICE;
+        public @NonNull JsonTable<EdgeRecord> table() {
+            return Tables.EDGE;
         }
 
         @Override
-        public @NonNull Class<Device> modelClass() {
-            return Device.class;
+        public @NonNull Class<Edge> modelClass() {
+            return Edge.class;
         }
 
         @Override
-        public @NonNull Class<DeviceDao> daoClass() {
-            return DeviceDao.class;
+        public @NonNull Class<EdgeDao> daoClass() {
+            return EdgeDao.class;
         }
 
         @Override
-        public @NonNull Device onCreating(RequestData reqData) throws IllegalArgumentException {
-            Device device = parseFromRequest(reqData.body());
-            device.setCustomerCode(
-                Strings.requireNotBlank(device.getCustomerCode(), "Customer code cannot be blank").toUpperCase());
-            device.setSiteCode(
-                Strings.requireNotBlank(device.getSiteCode(), "Site code cannot be blank").toUpperCase());
-            return device.setId(Optional.ofNullable(device.getId()).orElseGet(UUID::randomUUID))
-                         .setCode(Optional.ofNullable(device.getCode()).orElse(device.getId().toString()));
+        public @NonNull Edge onCreating(RequestData reqData) throws IllegalArgumentException {
+            Edge edge = parseFromRequest(reqData.body());
+            edge.setCustomerCode(
+                Strings.requireNotBlank(edge.getCustomerCode(), "Customer code cannot be blank").toUpperCase());
+            edge.setSiteCode(Strings.requireNotBlank(edge.getSiteCode(), "Site code cannot be blank").toUpperCase());
+            return edge.setId(Optional.ofNullable(edge.getId()).orElseGet(UUID::randomUUID))
+                       .setCode(Optional.ofNullable(edge.getCode()).orElse(edge.getId().toString()));
         }
 
         @Override
-        public @NonNull Device onPatching(@NonNull Device dbData, RequestData reqData) throws IllegalArgumentException {
+        public @NonNull Edge onPatching(@NonNull Edge dbData, RequestData reqData) throws IllegalArgumentException {
             final JsonObject body = reqData.body().copy();
             body.put(context().jsonKeyName(),
                      JsonData.checkAndConvert(context().parseKey(body.remove(context().requestKeyName()).toString())));
-            Device device = parseFromRequest(JsonPojo.merge(dbData, body));
-            if (!device.getCustomerCode().equals(dbData.getCustomerCode())) {
+            Edge edge = parseFromRequest(JsonPojo.merge(dbData, body));
+            if (!edge.getCustomerCode().equals(dbData.getCustomerCode())) {
                 throw new IllegalArgumentException("Customer code is read-only");
             }
-            if (!device.getSiteCode().equals(dbData.getSiteCode())) {
+            if (!edge.getSiteCode().equals(dbData.getSiteCode())) {
                 throw new IllegalArgumentException("Site code is read-only");
             }
-            return device;
+            return edge;
         }
 
     }
@@ -372,7 +371,7 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Network onCreating(RequestData reqData) throws IllegalArgumentException {
             Network network = parseFromRequest(reqData.body());
-            Objects.requireNonNull(network.getDevice(), "Device is mandatory");
+            Objects.requireNonNull(network.getEdge(), "Edge is mandatory");
             Strings.requireNotBlank(network.getCode(), "Network code is mandatory");
             return network.setId(Optional.ofNullable(network.getId()).orElseGet(UUID::randomUUID));
         }
@@ -403,7 +402,7 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public Point onCreating(RequestData reqData) throws IllegalArgumentException {
             final Point point = UUIDKeyEntity.super.onCreating(reqData);
-            Objects.requireNonNull(point.getDevice(), "Missing device");
+            Objects.requireNonNull(point.getEdge(), "Missing device");
             Strings.requireNotBlank(point.getMeasureUnit(), "Missing point measure unit");
             return point.setId(Optional.ofNullable(point.getId()).orElseGet(UUID::randomUUID));
         }
@@ -436,7 +435,7 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public PointComposite onCreating(RequestData reqData) throws IllegalArgumentException {
             PointComposite point = parseFromRequest(reqData.body());
-            Objects.requireNonNull(point.getDevice(), "Point must be assigned to Device");
+            Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
             MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
             if (Objects.isNull(other)) {
                 point.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), new MeasureUnit().setType(
@@ -718,23 +717,23 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class DeviceEquipMetadata implements BigSerialKeyEntity<DeviceEquip, DeviceEquipRecord, DeviceEquipDao> {
+    final class EdgeEquipMetadata implements BigSerialKeyEntity<EdgeEquip, EdgeEquipRecord, EdgeEquipDao> {
 
-        public static final DeviceEquipMetadata INSTANCE = new DeviceEquipMetadata();
+        public static final EdgeEquipMetadata INSTANCE = new EdgeEquipMetadata();
 
         @Override
-        public @NonNull JsonTable<DeviceEquipRecord> table() {
-            return Tables.DEVICE_EQUIP;
+        public @NonNull JsonTable<EdgeEquipRecord> table() {
+            return Tables.EDGE_EQUIP;
         }
 
         @Override
-        public @NonNull Class<DeviceEquip> modelClass() {
-            return DeviceEquip.class;
+        public @NonNull Class<EdgeEquip> modelClass() {
+            return EdgeEquip.class;
         }
 
         @Override
-        public @NonNull Class<DeviceEquipDao> daoClass() {
-            return DeviceEquipDao.class;
+        public @NonNull Class<EdgeEquipDao> daoClass() {
+            return EdgeEquipDao.class;
         }
 
     }
@@ -770,31 +769,31 @@ public interface DataPointIndex extends MetadataIndex {
     }
 
 
-    final class DeviceEquipCompositeMetadata
-        extends AbstractCompositeMetadata<Long, DeviceEquip, DeviceEquipRecord, DeviceEquipDao, DeviceComposite>
-        implements BigSerialKeyEntity<DeviceEquip, DeviceEquipRecord, DeviceEquipDao> {
+    final class EdgeEquipCompositeMetadata
+        extends AbstractCompositeMetadata<Long, EdgeEquip, EdgeEquipRecord, EdgeEquipDao, EdgeComposite>
+        implements BigSerialKeyEntity<EdgeEquip, EdgeEquipRecord, EdgeEquipDao> {
 
-        public static final DeviceEquipCompositeMetadata INSTANCE = new DeviceEquipCompositeMetadata().addSubItem(
-            EquipmentMetadata.INSTANCE, DeviceMetadata.INSTANCE);
+        public static final EdgeEquipCompositeMetadata INSTANCE = new EdgeEquipCompositeMetadata().addSubItem(
+            EquipmentMetadata.INSTANCE, EdgeMetadata.INSTANCE);
 
         @Override
-        public @NonNull Class<DeviceEquip> rawClass() {
-            return DeviceEquip.class;
+        public @NonNull Class<EdgeEquip> rawClass() {
+            return EdgeEquip.class;
         }
 
         @Override
-        public @NonNull Class<DeviceComposite> modelClass() {
-            return DeviceComposite.class;
+        public @NonNull Class<EdgeComposite> modelClass() {
+            return EdgeComposite.class;
         }
 
         @Override
-        public @NonNull com.nubeiot.iotdata.edge.model.tables.DeviceEquip table() {
-            return Tables.DEVICE_EQUIP;
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.EdgeEquip table() {
+            return Tables.EDGE_EQUIP;
         }
 
         @Override
-        public @NonNull Class<DeviceEquipDao> daoClass() {
-            return DeviceEquipDao.class;
+        public @NonNull Class<EdgeEquipDao> daoClass() {
+            return EdgeEquipDao.class;
         }
 
     }

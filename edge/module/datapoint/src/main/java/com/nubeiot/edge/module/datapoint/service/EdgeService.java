@@ -17,21 +17,21 @@ import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 
 import lombok.NonNull;
 
-public final class DeviceService extends AbstractEntityService<Device, DeviceMetadata>
-    implements DataPointService<Device, DeviceMetadata> {
+public final class EdgeService extends AbstractEntityService<Edge, EdgeMetadata>
+    implements DataPointService<Edge, EdgeMetadata> {
 
-    public DeviceService(@NonNull EntityHandler entityHandler) {
+    public EdgeService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public DeviceMetadata context() {
-        return DeviceMetadata.INSTANCE;
+    public EdgeMetadata context() {
+        return EdgeMetadata.INSTANCE;
     }
 
     @Override
@@ -42,23 +42,23 @@ public final class DeviceService extends AbstractEntityService<Device, DeviceMet
     protected Single<Entry<?, ? extends VertxPojo>> afterCreateOrUpdate(@NonNull RequestData reqData,
                                                                         @NonNull EventAction action,
                                                                         @NonNull Object primaryKey) {
-        return doLookupByPrimaryKey(primaryKey).doOnSuccess(pojo -> cacheConfig((Device) pojo))
+        return doLookupByPrimaryKey(primaryKey).doOnSuccess(pojo -> cacheConfig((Edge) pojo))
                                                .doOnEvent((p, e) -> invokeAsyncTask(reqData, action, p, e))
                                                .map(pojo -> new SimpleEntry<>(primaryKey, pojo));
     }
 
-    private void cacheConfig(Device device) {
-        final JsonObject syncConfig = Optional.ofNullable(device.getMetadata())
+    private void cacheConfig(Edge edge) {
+        final JsonObject syncConfig = Optional.ofNullable(edge.getMetadata())
                                               .map(info -> info.getJsonObject(DataSyncConfig.NAME, new JsonObject()))
                                               .orElse(new JsonObject());
         entityHandler().addSharedData(DataPointIndex.DATA_SYNC_CFG, syncConfig);
     }
 
-    public interface DeviceExtension extends HasReferenceResource {
+    public interface EdgeExtension extends HasReferenceResource {
 
         @Override
         default EntityReferences entityReferences() {
-            return new EntityReferences().add(DeviceMetadata.INSTANCE, "device");
+            return new EntityReferences().add(EdgeMetadata.INSTANCE, "edge");
         }
 
     }

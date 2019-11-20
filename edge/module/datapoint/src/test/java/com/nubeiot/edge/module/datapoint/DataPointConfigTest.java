@@ -17,7 +17,7 @@ import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.NewestCleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.OldestCleanupPolicy;
@@ -30,8 +30,8 @@ public class DataPointConfigTest {
             "{\"__lowdb_migration__\":{\"enabled\":false},\"__data_scheduler__\":[{\"type\":\"PURGE_HISTORY_DATA\"," +
             "\"enabled\":false,\"label\":{\"label\":\"Purge point history data\"},\"trigger\":{\"type\":\"CRON\"," +
             "\"expression\":\"0 0 0 1/1 * ? *\",\"timezone\":\"Australia/Sydney\"},\"policy\":{\"type\":\"oldest\"," +
-            "\"max_item\":100,\"group_by\":\"point_id\",\"duration\":\"PT720H\"}},{\"type\":\"SYNC_DEVICE_INFO\"," +
-            "\"label\":{\"label\":\"Sync device information to cloud\"},\"enabled\":false," +
+            "\"max_item\":100,\"group_by\":\"point_id\",\"duration\":\"PT720H\"}},{\"type\":\"SYNC_EDGE_INFO\"," +
+            "\"label\":{\"label\":\"Sync edge information to cloud\"},\"enabled\":false," +
             "\"trigger\":{\"type\":\"CRON\",\"expression\":\"0 0 0 1/1 * ? *\",\"timezone\":\"Australia/Sydney\"}}," +
             "{\"type\":\"SYNC_POINT_DATA\",\"label\":{\"label\":\"Sync point data to cloud\"},\"enabled\":false," +
             "\"trigger\":{\"type\":\"CRON\",\"expression\":\"0 0 0 1/1 * ? *\",\"timezone\":\"Australia/Sydney\"}}," +
@@ -81,8 +81,7 @@ public class DataPointConfigTest {
     @Test
     public void deserialize_custom_config() throws JSONException {
         JsonObject builtin = BuiltinData.def()
-                                        .toJson()
-                                        .put(DeviceMetadata.INSTANCE.singularKeyName(), MockData.DEVICE.toJson());
+                                        .toJson().put(EdgeMetadata.INSTANCE.singularKeyName(), MockData.EDGE.toJson());
         final HostInfo hostInfo = HostInfo.builder().host("abc").port(80).build();
         final HttpClientConfig httpCfg = HttpClientConfig.create("edge.datapoint", hostInfo);
         final DataSyncConfig syncConfig = new DataSyncConfig("XXX", true, null, httpCfg.toJson());
@@ -96,8 +95,8 @@ public class DataPointConfigTest {
         Assert.assertTrue(merge.getDataSyncConfig().isEnabled());
         Assert.assertEquals("XXX", merge.getDataSyncConfig().getType());
         JsonHelper.assertJson(httpCfg.toJson(), merge.getDataSyncConfig().getClientConfig());
-        JsonHelper.assertJson(JsonPojo.from(MockData.DEVICE).toJson(), JsonData.tryParse(
-            merge.getBuiltinData().toJson().remove(DeviceMetadata.INSTANCE.singularKeyName())).toJson());
+        JsonHelper.assertJson(JsonPojo.from(MockData.EDGE).toJson(), JsonData.tryParse(
+            merge.getBuiltinData().toJson().remove(EdgeMetadata.INSTANCE.singularKeyName())).toJson());
         JsonHelper.assertJson(BuiltinData.def().toJson(), merge.getBuiltinData().toJson(), JSONCompareMode.LENIENT);
         JsonHelper.assertJson(syncConfig.toJson(), merge.getDataSyncConfig().toJson(), JSONCompareMode.LENIENT);
     }

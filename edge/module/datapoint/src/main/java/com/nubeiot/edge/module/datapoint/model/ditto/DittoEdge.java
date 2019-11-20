@@ -10,25 +10,20 @@ import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel.AbstractDittoModel;
-import com.nubeiot.iotdata.edge.model.tables.interfaces.IDevice;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
+import com.nubeiot.iotdata.edge.model.tables.interfaces.IEdge;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 
 import lombok.NonNull;
 
-public final class DittoDevice extends AbstractDittoModel<IDevice> {
+public final class DittoEdge extends AbstractDittoModel<IEdge> {
 
-    public DittoDevice(@NonNull Device data) {
+    public DittoEdge(@NonNull Edge data) {
         super(data);
     }
 
     @JsonCreator
-    public static DittoDevice create(Map<String, Object> settings) {
-        return new DittoDevice(new Device(JsonData.tryParse(settings).toJson()));
-    }
-
-    @Override
-    String endpointPattern() {
-        return "/things/{0}/attributes/extra";
+    public static DittoEdge create(Map<String, Object> settings) {
+        return new DittoEdge(new Edge(JsonData.tryParse(settings).toJson()));
     }
 
     @Override
@@ -36,6 +31,11 @@ public final class DittoDevice extends AbstractDittoModel<IDevice> {
         JsonObject metadata = get().getMetadata();
         metadata.remove(DataSyncConfig.NAME);
         return JsonPojo.from(get().setMetadata(metadata).setSyncAudit(null)).toJson();
+    }
+
+    @Override
+    String endpointPattern() {
+        return "/things/{0}/attributes/extra";
     }
 
     public String creationEndpoint(String thingId) {

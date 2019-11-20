@@ -1,28 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="H2" id="Project_20250b0" template="Default" database="H2" >
 	<schema name="PUBLIC" catalogname="01_edge_datapoint.sql" >
-		<table name="DEVICE" >
-			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" >
-				<defo>RANDOM_UUID()</defo>
-			</column>
-			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" >
-				<comment><![CDATA[Device Code]]></comment>
-			</column>
-			<column name="CUSTOMER_CODE" type="varchar" length="31" decimal="0" jt="12" mandatory="y" />
-			<column name="SITE_CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
-			<column name="DATA_VERSION" type="varchar" length="15" decimal="0" jt="12" mandatory="y" >
-				<defo>&#039;0.0.2&#039;</defo>
-				<comment><![CDATA[Legacy version: startswith 0.0.x. 0.0.1: default lowdb - 0.0.2: migrate point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` and `schedule`]]></comment>
-			</column>
-			<column name="METADATA_JSON" type="clob" length="2147483647" decimal="0" jt="2005" >
-				<comment><![CDATA[Extra information]]></comment>
-			</column>
-			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<index name="PK_DEVICE_ID" unique="PRIMARY_KEY" >
-				<column name="ID" />
-			</index>
-		</table>
 		<table name="DEVICE_EQUIP" >
 			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_1EFB9908_A0B4_4FE9_B7A8_B905FEBBFEC4)</defo>
@@ -49,7 +27,7 @@
 			<index name="IDX_FK_DEVICE_EQUIP_NETWORK" unique="NORMAL" >
 				<column name="NETWORK" />
 			</index>
-			<fk name="FK_DEVICE_EQUIPMENT_DEVICE" to_schema="PUBLIC" to_table="DEVICE" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_DEVICE_EQUIPMENT_DEVICE" to_schema="PUBLIC" to_table="EDGE" delete_action="restrict" update_action="cascade" >
 				<fk_column name="DEVICE" pk="ID" />
 			</fk>
 			<fk name="FK_DEVICE_EQUIP_EQUIP" to_schema="PUBLIC" to_table="EQUIPMENT" delete_action="cascade" update_action="cascade" >
@@ -59,12 +37,35 @@
 				<fk_column name="NETWORK" pk="ID" />
 			</fk>
 		</table>
+		<table name="EDGE" >
+			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" >
+				<defo>RANDOM_UUID()</defo>
+			</column>
+			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" >
+				<comment><![CDATA[Device Code]]></comment>
+			</column>
+			<column name="CUSTOMER_CODE" type="varchar" length="31" decimal="0" jt="12" mandatory="y" />
+			<column name="SITE_CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
+			<column name="DATA_VERSION" type="varchar" length="15" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;0.0.2&#039;</defo>
+				<comment><![CDATA[Legacy version: startswith 0.0.x. 0.0.1: default lowdb - 0.0.2: migrate point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` and `schedule`]]></comment>
+			</column>
+			<column name="METADATA_JSON" type="clob" length="2147483647" decimal="0" jt="2005" >
+				<comment><![CDATA[Extra information]]></comment>
+			</column>
+			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<index name="PK_DEVICE_ID" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+		</table>
 		<table name="EQUIPMENT" >
 			<comment><![CDATA[Equipment]]></comment>
 			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" >
 				<comment><![CDATA[Equipment code from manufacturer]]></comment>
 			</column>
+			<column name="NAME" type="varchar" length="127" jt="12" />
 			<column name="LABEL" type="varchar" length="1000" decimal="0" jt="12" />
 			<column name="EQUIP_TYPE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" >
 				<comment><![CDATA[For example: HVAC | Fire Detection | Lightning | Water]]></comment>
@@ -143,7 +144,7 @@
 			<index name="IDX_NETWORK_DEVICE" unique="NORMAL" >
 				<column name="DEVICE" />
 			</index>
-			<fk name="FK_NETWORK_DEVICE" to_schema="PUBLIC" to_table="DEVICE" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_NETWORK_DEVICE" to_schema="PUBLIC" to_table="EDGE" delete_action="cascade" update_action="cascade" >
 				<fk_column name="DEVICE" pk="ID" />
 			</fk>
 		</table>
@@ -202,7 +203,7 @@
 			<index name="IDX_FK_POINT_TRANSDUCER" unique="NORMAL" >
 				<column name="TRANSDUCER" />
 			</index>
-			<fk name="FK_POINT_DEVICE" to_schema="PUBLIC" to_table="DEVICE" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_POINT_DEVICE" to_schema="PUBLIC" to_table="EDGE" delete_action="restrict" update_action="cascade" >
 				<fk_column name="DEVICE" pk="ID" />
 			</fk>
 			<fk name="FK_POINT_MEASURE_UNIT" to_schema="PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
@@ -444,22 +445,22 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="0" instance="C:/projects/nubeio/iot-engine/edge/module/datapoint/model/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="384" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="48" y="240" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="BED3F4" x="368" y="96" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" color="BED3F4" x="640" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="320" y="576" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="576" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="592" y="528" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="C7F4BE" x="864" y="576" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="1072" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="FFCCE6" x="1312" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="848" y="352" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="C7F4BE" x="1152" y="368" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE_EQUIP" color="C7F4BE" x="1184" y="576" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EQUIPMENT" color="C7F4BE" x="1392" y="432" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCE6" x="848" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="48" y="128" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="272" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="448" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="304" y="640" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" color="BED3F4" x="672" y="240" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="BED3F4" x="368" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="848" y="176" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="496" y="592" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="80" y="640" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE_EQUIP" color="C7F4BE" x="1376" y="656" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="FFCCE6" x="1056" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="C7F4BE" x="1216" y="384" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="848" y="400" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCE6" x="1328" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EQUIPMENT" color="C7F4BE" x="1536" y="400" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" color="C7F4BE" x="944" y="640" />
 		<group name="POINT" color="ECF0F7" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" />
@@ -470,9 +471,9 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" />
 		</group>
-		<group name="THING" color="EEF7EC" >
+		<group name="DEVICE" color="EEF7EC" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" />
-			<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE_EQUIP" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="EQUIPMENT" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" />

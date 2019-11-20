@@ -28,11 +28,11 @@ import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
-public class DeviceServiceTest extends BaseDataPointServiceTest {
+public class EdgeServiceTest extends BaseDataPointServiceTest {
 
     @Override
     protected JsonObject testData() {
-        return MockData.data_Device_Network();
+        return MockData.data_Edge_Network();
     }
 
     @Test
@@ -42,29 +42,27 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_get_device(TestContext context) {
+    public void test_get_edge(TestContext context) {
         JsonObject userAgent = new JsonObject(
             "{\"__data_sync__\":{\"clientConfig\":{\"userAgent\":\"nubeio.edge.datapoint/1.0.0 " +
-            UUID64.uuidToBase64(PrimaryKey.DEVICE) + "\"}}}");
-        JsonObject expected = JsonPojo.from(MockData.DEVICE)
+            UUID64.uuidToBase64(PrimaryKey.EDGE) + "\"}}}");
+        JsonObject expected = JsonPojo.from(MockData.EDGE)
                                       .toJson()
                                       .put("metadata", userAgent)
                                       .put("data_version", "0.0.2");
         RequestData req = RequestData.builder()
-                                     .body(new JsonObject().put("device_id", UUID64.uuidToBase64(PrimaryKey.DEVICE)))
+                                     .body(new JsonObject().put("edge_id", UUID64.uuidToBase64(PrimaryKey.EDGE)))
                                      .build();
-        asserter(context, true, expected, DeviceService.class.getName(), EventAction.GET_ONE, req);
+        asserter(context, true, expected, EdgeService.class.getName(), EventAction.GET_ONE, req);
     }
 
     @Test
-    public void test_get_device_with_audit(TestContext context) {
-        RequestData req = RequestData.builder()
-                                     .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString()))
+    public void test_get_edge_with_audit(TestContext context) {
+        RequestData req = RequestData.builder().body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString()))
                                      .filter(new JsonObject().put(Filters.AUDIT, true))
                                      .build();
         DeliveryEvent event = DeliveryEvent.builder()
-                                           .action(EventAction.GET_ONE)
-                                           .address(DeviceService.class.getName())
+                                           .action(EventAction.GET_ONE).address(EdgeService.class.getName())
                                            .addPayload(req)
                                            .build();
         controller().fire(event, EventbusHelper.replyAsserter(context, registerAsserter(context)));
@@ -87,7 +85,7 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_list_network(TestContext context) {
-        Network def = new Network().setDevice(PrimaryKey.DEVICE).setCode("DEFAULT");
+        Network def = new Network().setEdge(PrimaryKey.EDGE).setCode("DEFAULT");
         JsonObject expected = new JsonObject().put("networks",
                                                    new JsonArray().add(JsonPojo.from(MockData.NETWORK).toJson())
                                                                   .add(JsonPojo.from(def).toJson()));
@@ -96,15 +94,14 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_get_network_by_device(TestContext context) {
+    public void test_get_network_by_edge(TestContext context) {
         JsonObject expected = JsonPojo.from(MockData.NETWORK)
                                       .toJson()
                                       .put("protocol", Protocol.UNKNOWN.type())
                                       .put("state", State.NONE);
-        expected.remove("device");
-        RequestData req = RequestData.builder()
-                                     .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString())
-                                                           .put("network_id", PrimaryKey.NETWORK.toString()))
+        expected.remove("edge");
+        RequestData req = RequestData.builder().body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
+                                                                     .put("network_id", PrimaryKey.NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, NetworkService.class.getName(), EventAction.GET_ONE, req);
     }

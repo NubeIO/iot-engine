@@ -15,7 +15,7 @@ import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 
-public class DeviceEquipServiceTest extends BaseDataPointServiceTest {
+public class EdgeEquipServiceTest extends BaseDataPointServiceTest {
 
     @Override
     protected JsonObject testData() {
@@ -23,38 +23,37 @@ public class DeviceEquipServiceTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_get_list_equip_by_device(TestContext context) {
+    public void test_get_list_equip_by_edge(TestContext context) {
         JsonObject expected = new JsonObject(
             "{\"equipments\":[{\"id\":1,\"equipment\":{\"id\":\"" + PrimaryKey.EQUIP_DROPLET +
             "\",\"code\":\"DROPLET_01\",\"type\":\"DROPLET\",\"manufacturer\":\"NubeIO\"}}," +
             "{\"id\":2,\"network\":\"01fbb11e-45a6-479b-91a4-003534770c1c\",\"equipment\":{\"id\":\"" +
             PrimaryKey.EQUIP_HVAC + "\",\"code\":\"HVAC_XYZ\",\"type\":\"HVAC\",\"manufacturer\":\"Lennox\"}}]}");
-        RequestData req = RequestData.builder()
-                                     .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString()))
+        RequestData req = RequestData.builder().body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString()))
                                      .build();
-        asserter(context, true, expected, EquipmentByDevice.class.getName(), EventAction.GET_LIST, req);
+        asserter(context, true, expected, EquipmentByEdge.class.getName(), EventAction.GET_LIST, req);
     }
 
     @Test
-    public void test_create_equip_by_device_invalid_request(TestContext context) {
+    public void test_create_equip_by_edge_invalid_request(TestContext context) {
         JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
                                               .put("message", "Missing equipment data");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("code", "DROPLET_02")
                                                            .put("type", "DROPLET")
                                                            .put("manufacturer", "NubeIO")
-                                                           .put("device_id", PrimaryKey.DEVICE.toString()))
+                                                           .put("edge_id", PrimaryKey.EDGE.toString()))
                                      .build();
-        asserter(context, false, expected, EquipmentByDevice.class.getName(), EventAction.CREATE, req);
+        asserter(context, false, expected, EquipmentByEdge.class.getName(), EventAction.CREATE, req);
     }
 
     @Test
-    public void test_create_equip_by_device(TestContext context) {
+    public void test_create_equip_by_edge(TestContext context) {
         final String id = UUID.randomUUID().toString();
         final JsonObject data = new JsonObject(
             "{\"id\":3,\"network\":null,\"address\":null,\"equipment\":{\"id\":\"" + id +
-            "\",\"code\":\"DROPLET_02\"," +
-            "\"label\":null,\"type\":\"DROPLET\",\"manufacturer\":\"NubeIO\",\"metadata\":null}}");
+            "\",\"code\":\"DROPLET_02\",\"name\":null,\"label\":null,\"type\":\"DROPLET\"," +
+            "\"manufacturer\":\"NubeIO\",\"metadata\":null}}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", data);
@@ -64,9 +63,9 @@ public class DeviceEquipServiceTest extends BaseDataPointServiceTest {
                                                                                              .put("type", "DROPLET")
                                                                                              .put("manufacturer",
                                                                                                   "NubeIO"))
-                                                           .put("device_id", PrimaryKey.DEVICE.toString()))
+                                                           .put("edge_id", PrimaryKey.EDGE.toString()))
                                      .build();
-        asserter(context, true, expected, EquipmentByDevice.class.getName(), EventAction.CREATE, req);
+        asserter(context, true, expected, EquipmentByEdge.class.getName(), EventAction.CREATE, req);
     }
 
 }
