@@ -1,6 +1,5 @@
 package com.nubeiot.edge.module.scheduler.service;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -18,10 +17,10 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.ErrorMessage;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
+import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
@@ -64,10 +63,7 @@ abstract class JobTriggerCompositeService
 
     @Override
     public final Set<EventMethodDefinition> definitions() {
-        final String servicePath = Urls.combinePath(
-            Urls.capturePath(reference().singularKeyName(), reference().requestKeyName()),
-            resource().singularKeyName());
-        return Collections.singleton(EventMethodDefinition.createDefault(servicePath, resource().requestKeyName()));
+        return EntityHttpService.createCRUDDefinitions(resource(), reference());
     }
 
     @Override

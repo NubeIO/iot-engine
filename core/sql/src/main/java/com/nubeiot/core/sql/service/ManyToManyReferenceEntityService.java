@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import com.nubeiot.core.sql.CompositeMetadata;
-import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.ManyToManyEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
@@ -35,24 +34,6 @@ public interface ManyToManyReferenceEntityService<P extends CompositePojo, M ext
      */
     @Override
     @NonNull CompositeValidation validation();
-
-    /**
-     * Represents logical database entity
-     *
-     * @return logical entity metadata
-     * @apiNote Represents one reference table in {@code many-to-many} relationship that is actual {@code service
-     *     resource context}
-     */
-    @NonNull EntityMetadata reference();
-
-    /**
-     * Represents presentation resource of service
-     *
-     * @return presentation entity metadata
-     * @apiNote Represents one reference table in {@code many-to-many} relationship that is {@code service resource
-     *     presentation}
-     */
-    @NonNull EntityMetadata resource();
 
     @Override
     @SuppressWarnings("unchecked")

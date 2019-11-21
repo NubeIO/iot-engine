@@ -1,5 +1,7 @@
 package com.nubeiot.core.sql.service;
 
+import java.util.stream.Stream;
+
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
@@ -28,6 +30,11 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     public @NonNull CompositeValidation validation() { return this.context(); }
 
     @Override
+    public @NonNull EntityMetadata resourceMetadata() {
+        return resource();
+    }
+
+    @Override
     public @NonNull ComplexQueryExecutor<P> queryExecutor() {
         return ManyToManyReferenceEntityService.super.queryExecutor();
     }
@@ -36,42 +43,43 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     public @NonNull ManyToManyEntityTransformer transformer() { return this; }
 
     @Override
-    public @NonNull EntityMetadata resourceMetadata() {
-        return resource();
-    }
-
-    @Override
-    public EntityReferences entityReferences() {
-        return new EntityReferences().add(reference()).add(resource());
+    @SuppressWarnings("unchecked")
+    protected Single<?> doInsert(@NonNull RequestData reqData) {
+        return queryExecutor().insertReturningPrimary((P) validation().onCreating(reqData), reqData);
     }
 
     @Override
     @NonNull
     public RequestData onCreatingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, reference()));
+        return recomputeRequestData(requestData, convertKey(requestData, references()));
     }
 
     @Override
     @NonNull
     public RequestData onModifyingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, reference(), resource()));
+        return recomputeRequestData(requestData, convertKey(requestData,
+                                                            Stream.concat(references().stream(), Stream.of(resource()))
+                                                                  .toArray(EntityMetadata[]::new)));
     }
 
     @Override
     @NonNull
     public RequestData onReadingManyResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, reference()));
+        return recomputeRequestData(requestData, convertKey(requestData, references()));
     }
 
     @Override
     public @NonNull RequestData onReadingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, reference(), resource()));
+        return recomputeRequestData(requestData, convertKey(requestData,
+                                                            Stream.concat(references().stream(), Stream.of(resource()))
+                                                                  .toArray(EntityMetadata[]::new)));
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected Single<?> doInsert(@NonNull RequestData reqData) {
-        return queryExecutor().insertReturningPrimary((P) validation().onCreating(reqData), reqData);
+    public EntityReferences entityReferences() {
+        final EntityReferences entityReferences = new EntityReferences();
+        references().forEach(entityReferences::add);
+        return entityReferences.add(resource());
     }
 
 }

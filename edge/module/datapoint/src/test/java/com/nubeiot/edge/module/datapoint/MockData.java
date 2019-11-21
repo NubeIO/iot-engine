@@ -322,7 +322,7 @@ public final class MockData {
                           .put(NetworkMetadata.INSTANCE.singularKeyName(), NETWORK.toJson());
     }
 
-    public static JsonObject data_Equip_Thing() {
+    public static JsonObject data_Device_Equip_Thing() {
         return data_Edge_Network().put(DeviceMetadata.INSTANCE.singularKeyName(), data(DEVICES))
                                   .put(EdgeDeviceMetadata.INSTANCE.singularKeyName(), data(EDGE_EQUIPS))
                                   .put(TransducerMetadata.INSTANCE.singularKeyName(), data(TRANSDUCERS))
@@ -330,12 +330,12 @@ public final class MockData {
     }
 
     public static JsonObject data_Point_Setting_Tag() {
-        return data_Equip_Thing().put(PointMetadata.INSTANCE.singularKeyName(), data(POINTS))
-                                 .put(TagPointMetadata.INSTANCE.singularKeyName(), data(TAGS))
-                                 .put(PointValueMetadata.INSTANCE.singularKeyName(), data(POINT_DATA))
-                                 .put(HistorySettingMetadata.INSTANCE.singularKeyName(), data(HISTORY_SETTINGS))
-                                 .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA))
-                                 .put(RealtimeSettingMetadata.INSTANCE.singularKeyName(), data(RT_SETTINGS));
+        return data_Device_Equip_Thing().put(PointMetadata.INSTANCE.singularKeyName(), data(POINTS))
+                                        .put(TagPointMetadata.INSTANCE.singularKeyName(), data(TAGS))
+                                        .put(PointValueMetadata.INSTANCE.singularKeyName(), data(POINT_DATA))
+                                        .put(HistorySettingMetadata.INSTANCE.singularKeyName(), data(HISTORY_SETTINGS))
+                                        .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA))
+                                        .put(RealtimeSettingMetadata.INSTANCE.singularKeyName(), data(RT_SETTINGS));
     }
 
     public static JsonObject data_Protocol_Dispatcher() {

@@ -4,8 +4,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -19,6 +17,7 @@ import com.nubeiot.core.exceptions.DesiredException;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
@@ -49,10 +48,8 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        final EventMethodDefinition definition = EventMethodDefinition.create("/point/:point_id/rt-data",
-                                                                              "/:" + context().requestKeyName(),
-                                                                              ActionMethodMapping.READ_MAP);
-        return Stream.of(definition).collect(Collectors.toSet());
+        return EntityHttpService.createDefinitions(ActionMethodMapping.READ_MAP, this::servicePath,
+                                                   context()::requestKeyName, PointMetadata.INSTANCE);
     }
 
     @Override

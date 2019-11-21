@@ -17,7 +17,7 @@ public class ProtocolDispatcherVerticle extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_tag_by_point_and_id(TestContext context) {
+    public void test_get_protocols(TestContext context) {
         assertRestByClient(context, HttpMethod.POST, "/api/s/protocol-dispatcher", 410, new JsonObject(
             "{\"message\":\"Not found '/protocol-dispatcher' with HTTP method POST\",\"code\":\"NOT_FOUND\"}"));
     }

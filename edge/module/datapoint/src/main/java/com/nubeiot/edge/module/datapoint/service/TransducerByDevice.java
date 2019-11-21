@@ -5,6 +5,7 @@ import java.util.Set;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceThingMetadata;
@@ -45,7 +46,7 @@ public final class TransducerByDevice extends AbstractManyToManyEntityService<Th
 
     @Override
     public final Set<EventMethodDefinition> definitions() {
-        return DataPointService.definitionsForMany(getAvailableEvents(), reference(), resource());
+        return EntityHttpService.createDefinitions(getAvailableEvents(), resource(), reference());
     }
 
 }

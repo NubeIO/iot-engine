@@ -15,7 +15,7 @@ public class TransducerDeviceServiceTest extends BaseDataPointServiceTest {
 
     @Override
     protected JsonObject testData() {
-        return MockData.data_Equip_Thing();
+        return MockData.data_Device_Equip_Thing();
     }
 
     @Test

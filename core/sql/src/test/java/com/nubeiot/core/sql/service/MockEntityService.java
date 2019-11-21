@@ -24,7 +24,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-interface MockEntityService {
+public interface MockEntityService {
 
     @SuppressWarnings("unchecked")
     interface Metadata {
@@ -32,10 +32,15 @@ interface MockEntityService {
         @NoArgsConstructor(access = AccessLevel.PRIVATE)
         final class AuthorMetadata implements SerialKeyEntity<Author, AuthorRecord, AuthorDao> {
 
-            static final AuthorMetadata INSTANCE = new AuthorMetadata();
+            public static final AuthorMetadata INSTANCE = new AuthorMetadata();
 
             @Override
             public boolean enableTimeAudit() { return false; }
+
+            @Override
+            public @NonNull JsonTable<AuthorRecord> table() {
+                return Tables.AUTHOR;
+            }
 
             @Override
             public @NonNull Class<Author> modelClass() {
@@ -47,21 +52,21 @@ interface MockEntityService {
                 return AuthorDao.class;
             }
 
-            @Override
-            public @NonNull JsonTable<AuthorRecord> table() {
-                return Tables.AUTHOR;
-            }
-
         }
 
 
         @NoArgsConstructor(access = AccessLevel.PRIVATE)
         final class BookMetadata implements SerialKeyEntity<Book, BookRecord, BookDao> {
 
-            static final BookMetadata INSTANCE = new BookMetadata();
+            public static final BookMetadata INSTANCE = new BookMetadata();
 
             @Override
             public boolean enableTimeAudit() { return false; }
+
+            @Override
+            public @NonNull JsonTable<BookRecord> table() {
+                return Tables.BOOK;
+            }
 
             @Override
             public @NonNull Class<Book> modelClass() {
@@ -71,11 +76,6 @@ interface MockEntityService {
             @Override
             public @NonNull Class<BookDao> daoClass() {
                 return BookDao.class;
-            }
-
-            @Override
-            public @NonNull JsonTable<BookRecord> table() {
-                return Tables.BOOK;
             }
 
         }

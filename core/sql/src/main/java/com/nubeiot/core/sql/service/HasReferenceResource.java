@@ -13,6 +13,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
@@ -75,8 +76,12 @@ public interface HasReferenceResource {
         }
 
         private Object getValue(@NonNull JsonObject body, Entry<EntityMetadata, String> entry) {
-            final Object value = body.getValue(entry.getKey().requestKeyName());
-            return Objects.isNull(value) ? null : JsonData.checkAndConvert(entry.getKey().parseKey(value.toString()));
+            final EntityMetadata metadata = entry.getKey();
+            final Object value = body.getValue(metadata.requestKeyName());
+            return Objects.isNull(value)
+                   ? null
+                   : Functions.getOrThrow(() -> JsonData.checkAndConvert(metadata.parseKey(value.toString())),
+                                          t -> new IllegalArgumentException("Invalid " + metadata.requestKeyName(), t));
         }
 
     }

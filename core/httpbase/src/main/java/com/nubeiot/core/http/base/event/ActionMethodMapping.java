@@ -1,10 +1,12 @@
 package com.nubeiot.core.http.base.event;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import io.vertx.core.http.HttpMethod;
 
@@ -36,6 +38,16 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
 
     static ActionMethodMapping create(@NonNull Map<EventAction, HttpMethod> map) {
         return () -> Collections.unmodifiableMap(map);
+    }
+
+    static ActionMethodMapping byCRUD(@NonNull Collection<EventAction> available) {
+        return by(CRUD_MAP, available);
+    }
+
+    static ActionMethodMapping by(@NonNull ActionMethodMapping base, @NonNull Collection<EventAction> available) {
+        Map<EventAction, HttpMethod> baseMap = base.get();
+        return ActionMethodMapping.create(
+            available.stream().filter(baseMap::containsKey).collect(Collectors.toMap(e -> e, baseMap::get)));
     }
 
     static Map<EventAction, HttpMethod> defaultCRUDMap() {
