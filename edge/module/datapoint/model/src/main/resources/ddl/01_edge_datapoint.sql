@@ -37,10 +37,14 @@ COMMENT ON COLUMN NETWORK.CODE IS 'Network Code should be subnet name or Network
 CREATE TABLE IF NOT EXISTS DEVICE (
 	ID                   uuid   NOT NULL,
 	CODE                 varchar(63)   NOT NULL,
-	NAME                 varchar(127)    ,
-	LABEL                varchar(1000)   ,
 	DEVICE_TYPE          varchar(63)   NOT NULL,
-	MANUFACTURER         varchar(500)   ,
+	PROTOCOL             varchar(31)   DEFAULT 'UNKNOWN' NOT NULL,
+	NAME                 varchar(127)    ,
+	MANUFACTURER         varchar(255)    ,
+	MODEL                varchar(255)    ,
+	VERSION              varchar(127)    ,
+	STATE                varchar(31)     ,
+	LABEL                varchar(1000)   ,
 	METADATA_JSON        clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
@@ -49,7 +53,7 @@ CREATE TABLE IF NOT EXISTS DEVICE (
  );
 
 COMMENT ON TABLE DEVICE IS 'Remote Device is connected and managed by NubeIO Edge';
-COMMENT ON COLUMN DEVICE.CODE IS 'Device code from manufacturer';
+COMMENT ON COLUMN DEVICE.CODE IS 'Device code that is identified in communication protocol network';
 COMMENT ON COLUMN DEVICE.DEVICE_TYPE IS 'For example: GATEWAY | CONTROLLER | HVAC | Fire Detection | Lightning | Water';
 COMMENT ON COLUMN DEVICE.MANUFACTURER IS 'Manufacturing company';
 COMMENT ON COLUMN DEVICE.METADATA_JSON IS 'Extra information';
@@ -88,7 +92,7 @@ CREATE TABLE IF NOT EXISTS EDGE_DEVICE (
 	EDGE_ID              uuid   NOT NULL,
 	DEVICE_ID            uuid   NOT NULL,
 	NETWORK_ID           uuid   ,
-	ADDRESS              varchar(500)   ,
+	ADDRESS_JSON         clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
 	CONSTRAINT IDX_UQ_EDGE_DEVICE UNIQUE ( EDGE_ID, DEVICE_ID ) ,

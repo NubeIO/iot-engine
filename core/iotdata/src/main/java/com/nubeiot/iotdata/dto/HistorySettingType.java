@@ -5,7 +5,7 @@ import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 import com.nubeiot.core.dto.PlainType;
 
-public final class HistorySettingType extends AbstractEnumType implements PlainType {
+public final class HistorySettingType extends AbstractEnumType implements PlainType, IoTNotion {
 
     public static final HistorySettingType COV = new HistorySettingType("COV");
     public static final HistorySettingType PERIOD = new HistorySettingType("PERIOD", "PERIODIC");

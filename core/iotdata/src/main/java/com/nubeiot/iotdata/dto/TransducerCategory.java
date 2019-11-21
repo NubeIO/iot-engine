@@ -5,7 +5,7 @@ import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 import com.nubeiot.core.dto.PlainType;
 
-public final class TransducerCategory extends AbstractEnumType implements PlainType {
+public final class TransducerCategory extends AbstractEnumType implements PlainType, IoTNotion {
 
     public static final TransducerCategory TEMP = new TransducerCategory("TEMP");
     public static final TransducerCategory HUMIDITY = new TransducerCategory("HUMIDITY");

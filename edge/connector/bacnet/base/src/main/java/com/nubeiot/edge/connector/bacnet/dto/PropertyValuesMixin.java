@@ -1,14 +1,12 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
 
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.mixin.BACnetMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.EncodableSerializer;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.error.ErrorClassAndCode;
@@ -44,18 +42,12 @@ public final class PropertyValuesMixin implements BACnetMixin {
         return new PropertyValuesMixin(objId, map);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> T get(@NonNull PropertyIdentifier propertyIdentifier) {
-        final Encodable value = values.get(propertyIdentifier);
-        if (Objects.isNull(value)) {
-            return null;
-        }
-        return (T) BACnetMixin.MAPPER.convertValue(Collections.singletonMap(propertyIdentifier, value),
-                                                   JsonObject.class)
-                                     .stream()
-                                     .map(Entry::getValue)
-                                     .findFirst()
-                                     .orElse(null);
+    public Encodable get(@NonNull PropertyIdentifier propertyIdentifier) {
+        return values.get(propertyIdentifier);
+    }
+
+    public <T> T getAndCast(@NonNull PropertyIdentifier propertyIdentifier) {
+        return EncodableSerializer.encode(get(propertyIdentifier));
     }
 
     @Override
