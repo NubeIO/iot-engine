@@ -13,6 +13,7 @@ import static com.nubeiot.dashboard.helpers.MultiTenantRepresentationHelper.user
 import static com.nubeiot.dashboard.utils.DispatchUtils.dispatchRequests;
 import static com.nubeiot.dashboard.utils.UserUtils.getCompanyId;
 import static com.nubeiot.dashboard.utils.UserUtils.getRole;
+import static com.nubeiot.dashboard.utils.UserUtils.getSiteId;
 import static com.nubeiot.dashboard.utils.UserUtils.hasClientLevelRole;
 import static com.nubeiot.dashboard.utils.UserUtils.hasUserLevelRole;
 
@@ -759,7 +760,10 @@ public class MultiTenantUserController implements RestApi {
                 userRepresentation(mongoClient, getUserQuery, future);
             }, throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         } else if (role == Role.MANAGER) {
-            userRepresentation(mongoClient, new JsonObject().put("associated_company_id", companyId), future);
+            JsonObject roleFilter = new JsonObject().put("$in", new JsonArray().add(Role.USER.toString())
+                                                                               .add(Role.GUEST.toString()));
+            userRepresentation(mongoClient, new JsonObject().put("site_id", getSiteId(user)).put("role", roleFilter),
+                               future);
         } else {
             future.complete(ResponseDataHelper.forbidden());
         }

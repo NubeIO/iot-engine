@@ -1,6 +1,5 @@
 package com.nubeiot.dashboard.controllers;
 
-import static com.nubeiot.dashboard.Role.ADMIN;
 import static com.nubeiot.dashboard.constants.Collection.MENU;
 import static com.nubeiot.dashboard.utils.UserUtils.getRole;
 
@@ -80,16 +79,18 @@ public class MenuController implements RestApi {
         Future<ResponseData> future = Future.future();
         JsonObject user = ctx.user().principal();
 
-        Single.just(getRole(user)).flatMap(role -> {
-                if (role == Role.SUPER_ADMIN || role == ADMIN) {
-                    String siteId = ctx.request().getParam("id");
-                    return mongoClient.rxFindOne(MENU, new JsonObject().put("site_id", siteId), null)
-                        .map(menu -> menu != null ? menu : new JsonObject());
-                } else {
-                    throw HttpException.forbidden();
-                }
-        }).subscribe(menu -> future.complete(ResponseDataWriter.serializeResponseData(menu.toString())),
-                       throwable -> future.complete(ResponseDataConverter.convert(throwable)));
+        Single.just(getRole(user))
+              .flatMap(role -> {
+                  if (role == Role.SUPER_ADMIN || role == Role.ADMIN || role == Role.MANAGER) {
+                      String siteId = ctx.request().getParam("id");
+                      return mongoClient.rxFindOne(MENU, new JsonObject().put("site_id", siteId), null)
+                                        .map(menu -> menu != null ? menu : new JsonObject());
+                  } else {
+                      throw HttpException.forbidden();
+                  }
+              })
+              .subscribe(menu -> future.complete(ResponseDataWriter.serializeResponseData(menu.toString())),
+                         throwable -> future.complete(ResponseDataConverter.convert(throwable)));
         return future;
     }
 
@@ -129,8 +130,8 @@ public class MenuController implements RestApi {
         JsonObject query = new JsonObject().put("site_id", siteId).put("id", id).put("menu.id", menuId);
         JsonObject update = new JsonObject().put("$set", new JsonObject().put("menu.$", body));
         mongoClient.rxUpdateCollection(collection, query, update)
-            .subscribe(ignored -> future.complete(new ResponseData()),
-                       throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
+                   .subscribe(ignored -> future.complete(new ResponseData()), throwable -> future.complete(
+                       ResponseDataHelper.internalServerError(throwable.getMessage())));
     }
 
     private Future<ResponseData> handleDelete(RoutingContext ctx, MongoClient mongoClient, String collection) {
@@ -168,8 +169,8 @@ public class MenuController implements RestApi {
         JsonObject update = new JsonObject().put("$pull",
                                                  new JsonObject().put("menu", new JsonObject().put("id", menuId)));
         mongoClient.rxUpdateCollection(collection, query, update)
-            .subscribe(ignored -> future.complete(new ResponseData()),
-                       throwable -> future.complete(ResponseDataHelper.internalServerError(throwable.getMessage())));
+                   .subscribe(ignored -> future.complete(new ResponseData()), throwable -> future.complete(
+                       ResponseDataHelper.internalServerError(throwable.getMessage())));
     }
 
 }
