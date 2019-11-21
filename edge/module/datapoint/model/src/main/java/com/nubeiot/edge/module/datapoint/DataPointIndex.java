@@ -34,9 +34,9 @@ import com.nubeiot.edge.module.datapoint.model.pojos.ThingComposite;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.edge.model.Tables;
+import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDao;
-import com.nubeiot.iotdata.edge.model.tables.daos.EdgeEquipDao;
-import com.nubeiot.iotdata.edge.model.tables.daos.EquipmentDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.HistorySettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.MeasureUnitDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.NetworkDao;
@@ -50,9 +50,9 @@ import com.nubeiot.iotdata.edge.model.tables.daos.RealtimeSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ThingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.TransducerDao;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
-import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeEquip;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
+import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
 import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
@@ -66,9 +66,9 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
-import com.nubeiot.iotdata.edge.model.tables.records.EdgeEquipRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.DeviceRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.EdgeDeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EdgeRecord;
-import com.nubeiot.iotdata.edge.model.tables.records.EquipmentRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.HistorySettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.MeasureUnitRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.NetworkRecord;
@@ -102,11 +102,11 @@ public interface DataPointIndex extends MetadataIndex {
         Map<EntityMetadata, Integer> map = new HashMap<>();
         map.put(MeasureUnitMetadata.INSTANCE, 10);
         map.put(EdgeMetadata.INSTANCE, 10);
-        map.put(EquipmentMetadata.INSTANCE, 10);
+        map.put(DeviceMetadata.INSTANCE, 10);
         map.put(TransducerMetadata.INSTANCE, 10);
         map.put(NetworkMetadata.INSTANCE, 20);
         map.put(ThingMetadata.INSTANCE, 20);
-        map.put(EdgeEquipMetadata.INSTANCE, 30);
+        map.put(EdgeDeviceMetadata.INSTANCE, 30);
         map.put(PointMetadata.INSTANCE, 40);
         return map;
     }
@@ -117,31 +117,31 @@ public interface DataPointIndex extends MetadataIndex {
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class EquipmentMetadata implements UUIDKeyEntity<Equipment, EquipmentRecord, EquipmentDao> {
+    final class DeviceMetadata implements UUIDKeyEntity<Device, DeviceRecord, DeviceDao> {
 
-        public static final EquipmentMetadata INSTANCE = new EquipmentMetadata();
+        public static final DeviceMetadata INSTANCE = new DeviceMetadata();
 
         @Override
-        public @NonNull JsonTable<EquipmentRecord> table() {
-            return Tables.EQUIPMENT;
+        public @NonNull JsonTable<DeviceRecord> table() {
+            return Tables.DEVICE;
         }
 
         @Override
-        public @NonNull Class<Equipment> modelClass() {
-            return Equipment.class;
+        public @NonNull Class<Device> modelClass() {
+            return Device.class;
         }
 
         @Override
-        public @NonNull Class<EquipmentDao> daoClass() {
-            return EquipmentDao.class;
+        public @NonNull Class<DeviceDao> daoClass() {
+            return DeviceDao.class;
         }
 
         @Override
-        public @NonNull Equipment onCreating(RequestData reqData) throws IllegalArgumentException {
-            Equipment equip = parseFromRequest(reqData.body());
-            Strings.requireNotBlank(equip.getCode(), "Equipment code is mandatory");
-            Strings.requireNotBlank(equip.getType(), "Equipment type is mandatory");
-            return equip.setId(Optional.ofNullable(equip.getId()).orElseGet(UUID::randomUUID));
+        public @NonNull Device onCreating(RequestData reqData) throws IllegalArgumentException {
+            Device device = parseFromRequest(reqData.body());
+            Strings.requireNotBlank(device.getCode(), "Device code is mandatory");
+            Strings.requireNotBlank(device.getType(), "Device type is mandatory");
+            return device.setId(Optional.ofNullable(device.getId()).orElseGet(UUID::randomUUID));
         }
 
     }
@@ -717,34 +717,34 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class EdgeEquipMetadata implements BigSerialKeyEntity<EdgeEquip, EdgeEquipRecord, EdgeEquipDao> {
+    final class EdgeDeviceMetadata implements BigSerialKeyEntity<EdgeDevice, EdgeDeviceRecord, EdgeDeviceDao> {
 
-        public static final EdgeEquipMetadata INSTANCE = new EdgeEquipMetadata();
+        public static final EdgeDeviceMetadata INSTANCE = new EdgeDeviceMetadata();
 
         @Override
-        public @NonNull JsonTable<EdgeEquipRecord> table() {
-            return Tables.EDGE_EQUIP;
+        public @NonNull JsonTable<EdgeDeviceRecord> table() {
+            return Tables.EDGE_DEVICE;
         }
 
         @Override
-        public @NonNull Class<EdgeEquip> modelClass() {
-            return EdgeEquip.class;
+        public @NonNull Class<EdgeDevice> modelClass() {
+            return EdgeDevice.class;
         }
 
         @Override
-        public @NonNull Class<EdgeEquipDao> daoClass() {
-            return EdgeEquipDao.class;
+        public @NonNull Class<EdgeDeviceDao> daoClass() {
+            return EdgeDeviceDao.class;
         }
 
     }
 
 
-    final class EquipThingMetadata
+    final class DeviceThingMetadata
         extends AbstractCompositeMetadata<Integer, Thing, ThingRecord, ThingDao, ThingComposite>
         implements SerialKeyEntity<Thing, ThingRecord, ThingDao> {
 
-        public static final EquipThingMetadata INSTANCE = new EquipThingMetadata().addSubItem(
-            EquipmentMetadata.INSTANCE, TransducerMetadata.INSTANCE);
+        public static final DeviceThingMetadata INSTANCE = new DeviceThingMetadata().addSubItem(DeviceMetadata.INSTANCE,
+                                                                                                TransducerMetadata.INSTANCE);
 
         @Override
         public @NonNull Class<Thing> rawClass() {
@@ -769,16 +769,16 @@ public interface DataPointIndex extends MetadataIndex {
     }
 
 
-    final class EdgeEquipCompositeMetadata
-        extends AbstractCompositeMetadata<Long, EdgeEquip, EdgeEquipRecord, EdgeEquipDao, EdgeComposite>
-        implements BigSerialKeyEntity<EdgeEquip, EdgeEquipRecord, EdgeEquipDao> {
+    final class EdgeDeviceCompositeMetadata
+        extends AbstractCompositeMetadata<Long, EdgeDevice, EdgeDeviceRecord, EdgeDeviceDao, EdgeComposite>
+        implements BigSerialKeyEntity<EdgeDevice, EdgeDeviceRecord, EdgeDeviceDao> {
 
-        public static final EdgeEquipCompositeMetadata INSTANCE = new EdgeEquipCompositeMetadata().addSubItem(
-            EquipmentMetadata.INSTANCE, EdgeMetadata.INSTANCE);
+        public static final EdgeDeviceCompositeMetadata INSTANCE = new EdgeDeviceCompositeMetadata().addSubItem(
+            DeviceMetadata.INSTANCE, EdgeMetadata.INSTANCE);
 
         @Override
-        public @NonNull Class<EdgeEquip> rawClass() {
-            return EdgeEquip.class;
+        public @NonNull Class<EdgeDevice> rawClass() {
+            return EdgeDevice.class;
         }
 
         @Override
@@ -787,13 +787,13 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull com.nubeiot.iotdata.edge.model.tables.EdgeEquip table() {
-            return Tables.EDGE_EQUIP;
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.EdgeDevice table() {
+            return Tables.EDGE_DEVICE;
         }
 
         @Override
-        public @NonNull Class<EdgeEquipDao> daoClass() {
-            return EdgeEquipDao.class;
+        public @NonNull Class<EdgeDeviceDao> daoClass() {
+            return EdgeDeviceDao.class;
         }
 
     }

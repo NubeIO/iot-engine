@@ -1,14 +1,14 @@
 package com.nubeiot.edge.module.datapoint.model.ditto;
 
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel.AbstractDittoModel;
-import com.nubeiot.iotdata.edge.model.tables.interfaces.IEquipment;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
+import com.nubeiot.iotdata.edge.model.tables.interfaces.IDevice;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 
 import lombok.NonNull;
 
-public final class DittoEquipment extends AbstractDittoModel<IEquipment> {
+public final class DittoDevice extends AbstractDittoModel<IDevice> {
 
-    public DittoEquipment(@NonNull Equipment data) {
+    public DittoDevice(@NonNull Device data) {
         super(data);
     }
 

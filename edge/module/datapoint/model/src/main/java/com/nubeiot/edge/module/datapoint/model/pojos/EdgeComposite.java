@@ -7,11 +7,11 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeEquip;
+import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
 
 import lombok.NonNull;
 
-public final class EdgeComposite extends EdgeEquip implements CompositePojo<EdgeEquip, EdgeComposite> {
+public final class EdgeComposite extends EdgeDevice implements CompositePojo<EdgeDevice, EdgeComposite> {
 
     private final Map<String, VertxPojo> other = new HashMap<>();
 
@@ -21,7 +21,7 @@ public final class EdgeComposite extends EdgeEquip implements CompositePojo<Edge
     }
 
     @Override
-    public EdgeComposite wrap(@NonNull EdgeEquip pojo) {
+    public EdgeComposite wrap(@NonNull EdgeDevice pojo) {
         this.from(pojo);
         return this;
     }

@@ -69,7 +69,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
     public Single<EventMessage> initData() {
         Map<Table, Field<UUID>> map = new HashMap<>();
         map.put(Tables.EDGE, Tables.EDGE.ID);
-        map.put(Tables.EQUIPMENT, Tables.EQUIPMENT.ID);
+        map.put(Tables.DEVICE, Tables.DEVICE.ID);
         map.put(Tables.NETWORK, Tables.NETWORK.ID);
         map.put(Tables.POINT, Tables.POINT.ID);
         map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
