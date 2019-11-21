@@ -37,7 +37,7 @@ public class IDittoModelTest {
                             .filter(metadata -> metadata instanceof PointCompositeMetadata ||
                                                 !(metadata instanceof CompositeMetadata ||
                                                   metadata instanceof PointMetadata))
-                            .filter(metadata -> !(Tables.EDGE_EQUIP.equals(metadata.table()) ||
+                            .filter(metadata -> !(Tables.EDGE_DEVICE.equals(metadata.table()) ||
                                                   Tables.THING.equals(metadata.table()) ||
                                                   Tables.PROTOCOL_DISPATCHER.equals(metadata.table())))
                             .map(IDittoModel::find)
@@ -55,19 +55,6 @@ public class IDittoModelTest {
                                                                                                         getClass().getName(),
                                                                                                         DataCacheInitializer.SYNC_CONFIG_CACHE);
         Assert.assertNotNull(cache.get(PointCompositeMetadata.INSTANCE));
-        Assert.assertNotNull(cache.get(PointCompositeMetadata.INSTANCE));
-    }
-
-    private String blockingLoad(String id) {
-
-        // Simulate a blocking action
-        try {
-            Thread.sleep(100);
-            return "someData for " + id + " on thread " + Thread.currentThread().getName();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
 }

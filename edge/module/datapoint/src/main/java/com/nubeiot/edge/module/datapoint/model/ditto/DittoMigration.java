@@ -35,7 +35,7 @@ public final class DittoMigration {
         MAP.put(DittoHistorySetting.class,
                 POINT_JQ_EXPR + " | to_entries | map({code: .key, historySettings: .value.historySettings})");
         MAP.put(DittoHistoryData.class, THING_FEATURES_JQ_EXPR + ".histories.properties");
-        MAP.put(DittoEquipment.class, THING_FEATURES_JQ_EXPR + ".sensorList.properties.list");
+        MAP.put(DittoDevice.class, THING_FEATURES_JQ_EXPR + ".sensorList.properties.list");
     }
 
     private final Scope rootScope;

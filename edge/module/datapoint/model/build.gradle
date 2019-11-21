@@ -14,11 +14,11 @@ dependencies {
 task jooqGen(type: JooqGenerateTask) {
     packageName = "com.nubeiot.iotdata.edge.model"
     enumTypes = project(':core:sql').ext.enumTypes
-    renameFields = ["history_setting_type|point_type|equip_type|transducer_type|measure_type": "type",
-                    "point_category|measure_category|transducer_category"                    : "category",
-                    "measure_unit_alias"                                                     : "unit_alias",
-                    "point_kind"                                                             : "kind",
-                    "offset_val"                                                             : "offset"]
+    renameFields = ["history_setting_type|point_type|device_type|transducer_type|measure_type": "type",
+                    "point_category|measure_category|transducer_category"                     : "category",
+                    "measure_unit_alias"                                                      : "unit_alias",
+                    "point_kind"                                                              : "kind",
+                    "offset_val"                                                              : "offset"]
     dbTypes = project(':core:sql').ext.dbTypes + [
         new ForcedType(userType: "com.nubeiot.iotdata.dto.HistorySettingType",
                        types: DB.TYPES.varchar,
@@ -48,10 +48,10 @@ task jooqGen(type: JooqGenerateTask) {
                        types: DB.TYPES.array,
                        expression: Strings.toRegexIgnoreCase("weekdays"),
                        converter: "com.nubeiot.iotdata.converter.WeekDaysConverter"),
-        new ForcedType(userType: "com.nubeiot.iotdata.dto.EquipType",
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.DeviceType",
                        types: DB.TYPES.varchar,
-                       expression: Strings.toRegexIgnoreCase("equip_type"),
-                       converter: "com.nubeiot.iotdata.converter.EquipTypeConverter"),
+                       expression: Strings.toRegexIgnoreCase("device_type"),
+                       converter: "com.nubeiot.iotdata.converter.DeviceTypeConverter"),
         new ForcedType(userType: "com.nubeiot.iotdata.dto.TransducerCategory",
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("transducer_category"),
@@ -89,9 +89,9 @@ task jooqGen(type: JooqGenerateTask) {
                          converter: "%s.type()",
                          parser: "com.nubeiot.iotdata.dto.TransducerType.factory((String)%s)",
                          defVal: "com.nubeiot.iotdata.dto.TransducerType.def()"),
-        new JsonDataType(className: "com.nubeiot.iotdata.dto.EquipType",
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.DeviceType",
                          converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.EquipType.factory((String)%s)"),
+                         parser: "com.nubeiot.iotdata.dto.DeviceType.factory((String)%s)"),
         new JsonDataType(className: "com.nubeiot.iotdata.dto.PointPriorityValue",
                          converter: "%s.toJson()",
                          parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.dto.PointPriorityValue.class)"),

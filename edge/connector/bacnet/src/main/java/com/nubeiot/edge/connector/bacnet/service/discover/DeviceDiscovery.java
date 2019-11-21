@@ -20,9 +20,9 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.dto.RemoteDeviceMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierSerializer;
-import com.nubeiot.iotdata.dto.EquipType;
+import com.nubeiot.iotdata.dto.DeviceType;
 import com.nubeiot.iotdata.dto.Protocol;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
@@ -75,12 +75,12 @@ public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implem
 
     @Override
     public Single<JsonObject> persist(RequestData reqData) {
-        return doGet(reqData).map(rd -> new Equipment().setCode(ObjectIdentifierSerializer.serialize(rd.getObjectId()))
-                                                       .setType(EquipType.factory(Protocol.BACNET.type()))
-                                                       .setManufacturer(
+        return doGet(reqData).map(rd -> new Device().setCode(ObjectIdentifierSerializer.serialize(rd.getObjectId()))
+                                                    .setType(DeviceType.factory(Protocol.BACNET.type()))
+                                                    .setManufacturer(
                                                            rd.getPropertyValues().get(PropertyIdentifier.vendorName))
-                                                       .setMetadata(rd.toJson()))
-                             .flatMap(equipment -> execute(equipment.toJson()));
+                                                    .setMetadata(rd.toJson()))
+                             .flatMap(device -> execute(device.toJson()));
     }
 
     @Override

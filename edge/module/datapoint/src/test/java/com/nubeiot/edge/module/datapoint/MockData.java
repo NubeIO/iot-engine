@@ -18,9 +18,9 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.Label;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeEquipMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.EquipmentMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
@@ -31,7 +31,7 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.TagPointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.TransducerMetadata;
-import com.nubeiot.iotdata.dto.EquipType;
+import com.nubeiot.iotdata.dto.DeviceType;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
@@ -39,9 +39,9 @@ import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.dto.TransducerCategory;
 import com.nubeiot.iotdata.dto.TransducerType;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
-import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeEquip;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Equipment;
+import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
 import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
@@ -64,9 +64,9 @@ public final class MockData {
                                               .setSiteCode("SYDNEY-00001");
     public static final JsonObject MEASURE_UNITS = measures();
     public static final Network NETWORK = network();
-    public static final List<Equipment> EQUIPS = equips();
+    public static final List<Device> DEVICES = devices();
     public static final List<Transducer> TRANSDUCERS = transducers();
-    public static final List<EdgeEquip> EDGE_EQUIPS = edgeEquips();
+    public static final List<EdgeDevice> EDGE_EQUIPS = edgeEquips();
     public static final List<Thing> THINGS = things();
     public static final List<Point> POINTS = points();
     public static final List<PointTag> TAGS = tags();
@@ -80,9 +80,10 @@ public final class MockData {
         return Arrays.asList(new ProtocolDispatcher().setProtocol(Protocol.BACNET).setAction(EventAction.CREATE)
                                                      .setEntity(NetworkMetadata.INSTANCE.singularKeyName())
                                                      .setAddress("bacnet.dispatcher.network"),
-                             new ProtocolDispatcher().setProtocol(Protocol.BACNET).setAction(EventAction.CREATE)
-                                                     .setEntity(EquipmentMetadata.INSTANCE.singularKeyName())
-                                                     .setAddress("bacnet.dispatcher.equipment"),
+                             new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                                                     .setAction(EventAction.CREATE)
+                                                     .setEntity(DeviceMetadata.INSTANCE.singularKeyName())
+                                                     .setAddress("bacnet.dispatcher.device"),
                              new ProtocolDispatcher().setProtocol(Protocol.BACNET).setAction(EventAction.CREATE)
                                                      .setEntity(PointMetadata.INSTANCE.singularKeyName())
                                                      .setAddress("bacnet.dispatcher.point"));
@@ -163,20 +164,21 @@ public final class MockData {
         return new Network().setId(PrimaryKey.NETWORK).setCode("network-1").setEdge(EDGE.getId()).setMetadata(metadata);
     }
 
-    private static List<Equipment> equips() {
-        return Arrays.asList(new Equipment().setId(PrimaryKey.EQUIP_DROPLET)
-                                            .setCode("DROPLET_01")
-                                            .setManufacturer("NubeIO")
-                                            .setType(EquipType.DROPLET), new Equipment().setId(PrimaryKey.EQUIP_HVAC)
-                                                                                        .setCode("HVAC_XYZ")
-                                                                                        .setManufacturer("Lennox")
-                                                                                        .setType(EquipType.HVAC));
+    private static List<Device> devices() {
+        return Arrays.asList(new Device().setId(PrimaryKey.DEVICE_DROPLET)
+                                         .setCode("DROPLET_01")
+                                         .setManufacturer("NubeIO")
+                                         .setType(DeviceType.DROPLET), new Device().setId(PrimaryKey.DEVICE_HVAC)
+                                                                                   .setCode("HVAC_XYZ")
+                                                                                   .setManufacturer("Lennox")
+                                                                                   .setType(DeviceType.HVAC));
     }
 
     private static List<Point> points() {
         final Point p1 = new Point().setId(PrimaryKey.P_GPIO_HUMIDITY)
                                     .setCode("2CB2B763_HUMIDITY")
-                                    .setProtocol(Protocol.GPIO).setEdge(EDGE.getId())
+                                    .setProtocol(Protocol.GPIO)
+                                    .setEdge(EDGE.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(Base.PERCENTAGE.type())
@@ -188,7 +190,8 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p2 = new Point().setId(PrimaryKey.P_GPIO_TEMP)
                                     .setCode("2CB2B763_TEMP")
-                                    .setProtocol(Protocol.GPIO).setEdge(EDGE.getId())
+                                    .setProtocol(Protocol.GPIO)
+                                    .setEdge(EDGE.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
@@ -198,7 +201,8 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p3 = new Point().setId(PrimaryKey.P_BACNET_TEMP)
                                     .setCode("HVAC_01_TEMP")
-                                    .setProtocol(Protocol.BACNET).setEdge(EDGE.getId())
+                                    .setProtocol(Protocol.BACNET)
+                                    .setEdge(EDGE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
@@ -209,7 +213,8 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p4 = new Point().setId(PrimaryKey.P_BACNET_FAN)
                                     .setCode("HVAC_01_FAN")
-                                    .setProtocol(Protocol.BACNET).setEdge(EDGE.getId())
+                                    .setProtocol(Protocol.BACNET)
+                                    .setEdge(EDGE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
@@ -219,7 +224,8 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p5 = new Point().setId(PrimaryKey.P_BACNET_SWITCH)
                                     .setCode("HVAC_01_FAN_CONTROL")
-                                    .setProtocol(Protocol.BACNET).setEdge(EDGE.getId())
+                                    .setProtocol(Protocol.BACNET)
+                                    .setEdge(EDGE.getId())
                                     .setNetwork(NETWORK.getId())
                                     .setKind(PointKind.OUTPUT)
                                     .setType(PointType.DIGITAL)
@@ -247,11 +253,11 @@ public final class MockData {
                               "\"symbol\":\"mph\"}]}");
     }
 
-    private static List<EdgeEquip> edgeEquips() {
-        return Arrays.asList(new EdgeEquip().setEdge(EDGE.getId()).setEquip(PrimaryKey.EQUIP_DROPLET),
-                             new EdgeEquip().setEdge(EDGE.getId())
-                                            .setEquip(PrimaryKey.EQUIP_HVAC)
-                                            .setNetwork(NETWORK.getId()));
+    private static List<EdgeDevice> edgeEquips() {
+        return Arrays.asList(new EdgeDevice().setEdgeId(EDGE.getId()).setDeviceId(PrimaryKey.DEVICE_DROPLET),
+                             new EdgeDevice().setEdgeId(EDGE.getId())
+                                             .setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                             .setNetworkId(NETWORK.getId()));
     }
 
     private static List<Transducer> transducers() {
@@ -275,27 +281,27 @@ public final class MockData {
     }
 
     private static List<Thing> things() {
-        final Thing t1 = new Thing().setEquip(PrimaryKey.EQUIP_DROPLET)
+        final Thing t1 = new Thing().setDevice(PrimaryKey.DEVICE_DROPLET)
                                     .setTransducer(PrimaryKey.TRANS_HUMIDITY)
                                     .setMeasureUnit(Base.PERCENTAGE.type())
                                     .setProductCode("DROPLET-2CB2B763-H")
                                     .setProductLabel(Label.builder().label("Droplet Humidity").build());
-        final Thing t2 = new Thing().setEquip(PrimaryKey.EQUIP_DROPLET)
+        final Thing t2 = new Thing().setDevice(PrimaryKey.DEVICE_DROPLET)
                                     .setTransducer(PrimaryKey.TRANS_TEMP)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("DROPLET-2CB2B763-T")
                                     .setProductLabel(Label.builder().label("Droplet Temp").build());
-        final Thing t3 = new Thing().setEquip(PrimaryKey.EQUIP_HVAC)
+        final Thing t3 = new Thing().setDevice(PrimaryKey.DEVICE_HVAC)
                                     .setTransducer(PrimaryKey.TRANS_TEMP)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("HVAC-XYZ-TEMP")
                                     .setProductLabel(Label.builder().label("HVAC Temp").build());
-        final Thing t4 = new Thing().setEquip(PrimaryKey.EQUIP_HVAC)
+        final Thing t4 = new Thing().setDevice(PrimaryKey.DEVICE_HVAC)
                                     .setTransducer(PrimaryKey.TRANS_FAN)
                                     .setMeasureUnit(AngularVelocity.RPM.type())
                                     .setProductCode("HVAC-XYZ-FAN")
                                     .setProductLabel(Label.builder().label("HVAC Fan").build());
-        final Thing t5 = new Thing().setEquip(PrimaryKey.EQUIP_HVAC)
+        final Thing t5 = new Thing().setDevice(PrimaryKey.DEVICE_HVAC)
                                     .setTransducer(PrimaryKey.TRANS_SWITCH)
                                     .setMeasureUnit(Base.BOOLEAN.type())
                                     .setProductCode("HVAC-XYZ-FAN-CONTROL")
@@ -312,14 +318,13 @@ public final class MockData {
     }
 
     public static JsonObject data_Edge_Network() {
-        return BuiltinData.def()
-                          .toJson().put(EdgeMetadata.INSTANCE.singularKeyName(), EDGE.toJson())
+        return BuiltinData.def().toJson().put(EdgeMetadata.INSTANCE.singularKeyName(), EDGE.toJson())
                           .put(NetworkMetadata.INSTANCE.singularKeyName(), NETWORK.toJson());
     }
 
     public static JsonObject data_Equip_Thing() {
-        return data_Edge_Network().put(EquipmentMetadata.INSTANCE.singularKeyName(), data(EQUIPS))
-                                  .put(EdgeEquipMetadata.INSTANCE.singularKeyName(), data(EDGE_EQUIPS))
+        return data_Edge_Network().put(DeviceMetadata.INSTANCE.singularKeyName(), data(DEVICES))
+                                  .put(EdgeDeviceMetadata.INSTANCE.singularKeyName(), data(EDGE_EQUIPS))
                                   .put(TransducerMetadata.INSTANCE.singularKeyName(), data(TRANSDUCERS))
                                   .put(ThingMetadata.INSTANCE.singularKeyName(), data(THINGS));
     }
@@ -360,8 +365,8 @@ public final class MockData {
         public static final UUID TRANS_SWITCH = UUID.fromString("76d34f4e-3b20-4776-99c7-d93d79d5b4a6");
         public static final UUID TRANS_HUMIDITY = UUID.fromString("5eb7da66-8013-4cc4-9608-ead768eca665");
         public static final UUID TRANS_FAN = UUID.fromString("388519ef-797f-49ca-a613-204b4587ef28");
-        public static final UUID EQUIP_DROPLET = UUID.fromString("e43aa03a-4746-4fb5-815d-ee62f709b535");
-        public static final UUID EQUIP_HVAC = UUID.fromString("28a4ba1b-154d-4bbf-8537-320be70e50e5");
+        public static final UUID DEVICE_DROPLET = UUID.fromString("e43aa03a-4746-4fb5-815d-ee62f709b535");
+        public static final UUID DEVICE_HVAC = UUID.fromString("28a4ba1b-154d-4bbf-8537-320be70e50e5");
         public static final UUID NETWORK = UUID.fromString("01fbb11e-45a6-479b-91a4-003534770c1c");
 
     }
