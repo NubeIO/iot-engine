@@ -118,7 +118,7 @@ public class MultiTenantUserGroupController implements RestApi {
                     return byAdminCompanyGetManagerSelectionListQuery(mongoClient, companyId).flatMap(
                         query -> mongoClient.rxFind(USER_GROUP, query));
                 } else if (role == Role.MANAGER) {
-                    return mongoClient.rxFind(USER_GROUP, new JsonObject().put("associated_company_id", companyId));
+                    return mongoClient.rxFind(USER_GROUP, new JsonObject().put("site_id", getSiteId(user)));
                 } else {
                     return mongoClient.rxFind(USER_GROUP, new JsonObject().put("_id", user.getString("group_id")));
                 }
