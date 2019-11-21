@@ -5,7 +5,7 @@ import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 import com.nubeiot.core.dto.PlainType;
 
-public final class PointKind extends AbstractEnumType implements PlainType {
+public final class PointKind extends AbstractEnumType implements PlainType, IoTNotion {
 
     public static final PointKind INPUT = new PointKind("INPUT");
     public static final PointKind OUTPUT = new PointKind("OUTPUT");

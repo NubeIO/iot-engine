@@ -11,7 +11,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
 
 import lombok.NonNull;
 
-public final class EdgeComposite extends EdgeDevice implements CompositePojo<EdgeDevice, EdgeComposite> {
+public final class EdgeDeviceComposite extends EdgeDevice implements CompositePojo<EdgeDevice, EdgeDeviceComposite> {
 
     private final Map<String, VertxPojo> other = new HashMap<>();
 
@@ -21,7 +21,7 @@ public final class EdgeComposite extends EdgeDevice implements CompositePojo<Edg
     }
 
     @Override
-    public EdgeComposite wrap(@NonNull EdgeDevice pojo) {
+    public EdgeDeviceComposite wrap(@NonNull EdgeDevice pojo) {
         this.from(pojo);
         return this;
     }

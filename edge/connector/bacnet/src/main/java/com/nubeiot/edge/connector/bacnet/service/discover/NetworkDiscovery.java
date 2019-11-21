@@ -6,7 +6,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.enums.State;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
@@ -15,8 +14,7 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
-import com.nubeiot.iotdata.dto.Protocol;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
+import com.nubeiot.edge.connector.bacnet.translator.BACnetNetworkTranslator;
 
 import lombok.NonNull;
 
@@ -63,12 +61,7 @@ public final class NetworkDiscovery extends AbstractBACnetDiscoveryService imple
 
     @Override
     public Single<JsonObject> persist(RequestData reqData) {
-        final CommunicationProtocol requestProtocol = parseProtocol(reqData);
-        final Network network = new Network().setProtocol(Protocol.BACNET)
-                                             .setCode(requestProtocol.identifier())
-                                             .setState(State.ENABLED)
-                                             .setMetadata(requestProtocol.toJson());
-        return execute(network.toJson());
+        return execute(new BACnetNetworkTranslator().to(parseProtocol(reqData)).toJson());
     }
 
     @Override

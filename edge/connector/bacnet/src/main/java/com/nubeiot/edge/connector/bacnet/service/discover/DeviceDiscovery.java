@@ -19,13 +19,9 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.dto.RemoteDeviceMixin;
-import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierSerializer;
-import com.nubeiot.iotdata.dto.DeviceType;
-import com.nubeiot.iotdata.dto.Protocol;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
+import com.nubeiot.edge.connector.bacnet.translator.BACnetDeviceTranslator;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
-import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.NonNull;
@@ -75,11 +71,7 @@ public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implem
 
     @Override
     public Single<JsonObject> persist(RequestData reqData) {
-        return doGet(reqData).map(rd -> new Device().setCode(ObjectIdentifierSerializer.serialize(rd.getObjectId()))
-                                                    .setType(DeviceType.factory(Protocol.BACNET.type()))
-                                                    .setManufacturer(
-                                                           rd.getPropertyValues().get(PropertyIdentifier.vendorName))
-                                                    .setMetadata(rd.toJson()))
+        return doGet(reqData).map(rd -> new BACnetDeviceTranslator().to(rd))
                              .flatMap(device -> execute(device.toJson()));
     }
 

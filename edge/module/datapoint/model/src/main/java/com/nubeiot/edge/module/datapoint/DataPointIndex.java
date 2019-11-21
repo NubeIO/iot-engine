@@ -28,7 +28,7 @@ import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.module.datapoint.model.pojos.EdgeComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.ThingComposite;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
@@ -770,7 +770,7 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     final class EdgeDeviceCompositeMetadata
-        extends AbstractCompositeMetadata<Long, EdgeDevice, EdgeDeviceRecord, EdgeDeviceDao, EdgeComposite>
+        extends AbstractCompositeMetadata<Long, EdgeDevice, EdgeDeviceRecord, EdgeDeviceDao, EdgeDeviceComposite>
         implements BigSerialKeyEntity<EdgeDevice, EdgeDeviceRecord, EdgeDeviceDao> {
 
         public static final EdgeDeviceCompositeMetadata INSTANCE = new EdgeDeviceCompositeMetadata().addSubItem(
@@ -782,8 +782,8 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull Class<EdgeComposite> modelClass() {
-            return EdgeComposite.class;
+        public @NonNull Class<EdgeDeviceComposite> modelClass() {
+            return EdgeDeviceComposite.class;
         }
 
         @Override

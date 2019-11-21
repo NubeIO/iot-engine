@@ -15,14 +15,14 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.model.pojos.EdgeComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.iotdata.edge.model.tables.EdgeDevice;
 
 import lombok.NonNull;
 
 public final class DeviceByNetworkService
-    extends AbstractManyToManyEntityService<EdgeComposite, EdgeDeviceCompositeMetadata>
-    implements DataPointService<EdgeComposite, EdgeDeviceCompositeMetadata> {
+    extends AbstractManyToManyEntityService<EdgeDeviceComposite, EdgeDeviceCompositeMetadata>
+    implements DataPointService<EdgeDeviceComposite, EdgeDeviceCompositeMetadata> {
 
     public DeviceByNetworkService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);

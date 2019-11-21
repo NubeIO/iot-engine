@@ -1,7 +1,11 @@
 package com.nubeiot.edge.connector.bacnet.mixin;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map.Entry;
+import java.util.Objects;
 
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -20,6 +24,18 @@ public abstract class EncodableSerializer<T extends Encodable> extends StdSerial
 
     EncodableSerializer(@NonNull Class<T> clazz) {
         super(clazz);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T encode(Encodable encodable) {
+        if (Objects.isNull(encodable)) {
+            return null;
+        }
+        return (T) BACnetMixin.MAPPER.convertValue(Collections.singletonMap("encode", encodable), JsonObject.class)
+                                     .stream()
+                                     .map(Entry::getValue)
+                                     .findFirst()
+                                     .orElse(null);
     }
 
     @Override
