@@ -1,8 +1,12 @@
 package com.nubeiot.core.sql.service;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -16,6 +20,7 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.ReferenceEntityTransformer;
 import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
+import com.nubeiot.core.utils.Functions;
 
 import lombok.NonNull;
 
@@ -35,6 +40,13 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
     @Override
     public @NonNull ReferenceEntityTransformer transformer() {
         return this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected Single<?> doInsert(@NonNull RequestData reqData) {
+        final P p = (P) validation().onCreating(reqData);
+        return validateReferenceEntity(reqData).flatMapSingle(b -> queryExecutor().insertReturningPrimary(p, reqData));
     }
 
     @Override
@@ -68,13 +80,6 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
         return recomputeRequestData(requestData, convertKey(requestData, context()));
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    protected Single<?> doInsert(@NonNull RequestData reqData) {
-        final P p = (P) validation().onCreating(reqData);
-        return validateReferenceEntity(reqData).flatMapSingle(b -> queryExecutor().insertReturningPrimary(p, reqData));
-    }
-
     protected Maybe<Boolean> validateReferenceEntity(@NonNull RequestData reqData) {
         return queryExecutor().mustExists(reqData, ref());
     }
@@ -89,8 +94,7 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
                                          : requestData.getFilter().mergeIn(filter, true);
         return RequestData.builder()
                           .body(body)
-                          .headers(requestData.headers())
-                          .filter(combineFilter).sort(requestData.getSort())
+                          .headers(requestData.headers()).filter(combineFilter).sort(requestData.getSort())
                           .pagination(requestData.getPagination())
                           .build();
     }
@@ -105,14 +109,22 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
         return extra;
     }
 
-    JsonObject convertKey(@NonNull RequestData requestData, EntityMetadata... metadata) {
+    JsonObject convertKey(@NonNull RequestData reqData, EntityMetadata... metadata) {
+        return convertKey(reqData, Arrays.asList(metadata));
+    }
+
+    JsonObject convertKey(@NonNull RequestData reqData, List<EntityMetadata> metadata) {
         JsonObject object = new JsonObject();
-        Stream.of(metadata)
-              .filter(Objects::nonNull)
-              .forEach(meta -> object.put(context().requestKeyName().equals(meta.requestKeyName())
-                                          ? context().jsonKeyName()
-                                          : meta.requestKeyName(),
-                                          JsonData.checkAndConvert(meta.parseKey(requestData))));
+        Function<EntityMetadata, Object> valFunc = meta -> JsonData.checkAndConvert(meta.parseKey(reqData));
+        Function<EntityMetadata, String> keyFunc = meta -> context().requestKeyName().equals(meta.requestKeyName())
+                                                           ? context().jsonKeyName()
+                                                           : meta.requestKeyName();
+        metadata.stream()
+                .filter(Objects::nonNull)
+                .map(meta -> new SimpleEntry<>(keyFunc.apply(meta),
+                                               Functions.getIfThrow(() -> valFunc.apply(meta)).orElse(null)))
+                .filter(entry -> Objects.nonNull(entry.getValue()))
+                .forEach(entry -> object.put(entry.getKey(), entry.getValue()));
         return object;
     }
 

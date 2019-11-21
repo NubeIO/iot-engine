@@ -296,7 +296,9 @@ public final class Reflections {
         }
 
         private static NubeException handleError(@NonNull Method method, ReflectiveOperationException e) {
-            logger.debug("Cannot execute method {}", e, method.getName());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Cannot execute method {}", e, method.getName());
+            }
             if (e instanceof InvocationTargetException) {
                 Throwable targetException = ((InvocationTargetException) e).getTargetException();
                 if (targetException instanceof NubeException) {

@@ -1,9 +1,5 @@
 package com.nubeiot.edge.module.scheduler.service;
 
-import java.util.Collections;
-import java.util.Set;
-
-import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.JobEntityMetadata;
@@ -27,12 +23,6 @@ public final class JobEntityService extends AbstractEntityService<JobEntity, Job
     @Override
     public JobEntityMetadata context() {
         return JobEntityMetadata.INSTANCE;
-    }
-
-    @Override
-    public Set<EventMethodDefinition> definitions() {
-        return Collections.singleton(
-            EventMethodDefinition.createDefault(context().singularKeyName(), context().requestKeyName()));
     }
 
 }

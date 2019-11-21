@@ -8,6 +8,7 @@ import io.reactivex.Observable;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
@@ -45,6 +46,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
             .registerSuccessHandler(v -> successHandler());
     }
 
+    @SuppressWarnings("unchecked")
     private void successHandler() {
         EventbusClient controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
         ServiceDiscoveryController discovery = microCtx.getLocalController();
@@ -54,8 +56,8 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
                                               .ifPresent(service -> controller.register(service.address(), service)))
                        .filter(s -> Objects.nonNull(s.definitions()))
                        .flatMap(s -> Observable.fromIterable(s.definitions())
-                                               .flatMapSingle(
-                                                   e -> discovery.addEventMessageRecord(s.api(), s.address(), e)))
+                                               .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(),
+                                                                                                   (EventMethodDefinition) e)))
                        .subscribe();
         //TODO Need to merge with above
         entityHandler.register(schedulerCtx).subscribe();

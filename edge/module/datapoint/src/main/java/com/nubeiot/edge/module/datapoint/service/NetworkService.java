@@ -6,7 +6,9 @@ import java.util.stream.Stream;
 
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.service.EdgeService.EdgeExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
@@ -27,8 +29,10 @@ public final class NetworkService extends AbstractOneToManyEntityService<Network
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        EventMethodDefinition d = EventMethodDefinition.createDefault("/edge/:edge_id/network", "/:network_id");
-        return Stream.concat(DataPointService.super.definitions().stream(), Stream.of(d)).collect(Collectors.toSet());
+        return Stream.concat(DataPointService.super.definitions().stream(),
+                             EntityHttpService.createDefinitions(getAvailableEvents(), context(),
+                                                                 DeviceMetadata.INSTANCE).stream())
+                     .collect(Collectors.toSet());
     }
 
 }

@@ -14,16 +14,15 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
 
     @Override
     protected JsonObject testData() {
-        return MockData.data_Equip_Thing();
+        return MockData.data_Device_Equip_Thing();
     }
 
     @Test
     public void test_get_list_equip(TestContext context) {
-        JsonObject expected = new JsonObject("{\"devices\":[{\"id\":\"e43aa03a-4746-4fb5-815d-ee62f709b535\"," +
-                                             "\"code\":\"DROPLET_01\",\"type\":\"DROPLET\"," +
-                                             "\"manufacturer\":\"NubeIO\"}," +
-                                             "{\"id\":\"28a4ba1b-154d-4bbf-8537-320be70e50e5\",\"code\":\"HVAC_XYZ\"," +
-                                             "\"type\":\"HVAC\",\"manufacturer\":\"Lennox\"}]}");
+        JsonObject expected = new JsonObject(
+            "{\"devices\":[{\"id\":\"e43aa03a-4746-4fb5-815d-ee62f709b535\",\"code\":\"DROPLET_01\"," +
+            "\"type\":\"DROPLET\",\"manufacturer\":\"NubeIO\"},{\"id\":\"28a4ba1b-154d-4bbf-8537-320be70e50e5\"," +
+            "\"code\":\"HVAC_XYZ\",\"type\":\"HVAC\",\"manufacturer\":\"Lennox\"}]}");
         asserter(context, true, expected, DeviceService.class.getName(), EventAction.GET_LIST,
                  RequestData.builder().build());
     }

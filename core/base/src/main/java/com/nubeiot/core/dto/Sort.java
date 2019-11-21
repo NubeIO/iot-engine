@@ -32,8 +32,10 @@ public final class Sort implements Serializable, JsonData {
         }
         return Sort.builder()
                    .items(Stream.of(requestParam.split(","))
-                                .filter(Strings::isNotBlank).map(Sort::each)
-                                .filter(Objects::nonNull).collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
+                                .filter(Strings::isNotBlank)
+                                .map(Sort::each)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
                    .build();
     }
 

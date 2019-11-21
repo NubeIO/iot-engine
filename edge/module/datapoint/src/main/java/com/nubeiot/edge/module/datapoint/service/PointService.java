@@ -12,6 +12,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
@@ -130,10 +131,9 @@ public final class PointService
     @Override
     public Set<EventMethodDefinition> definitions() {
         return Stream.concat(DataPointService.super.definitions().stream(),
-                             Stream.of(EventMethodDefinition.createDefault("/network/:network_id/point", "/:point_id"),
-                                       EventMethodDefinition.createDefault("/edge/:edge_id/point", "/:point_id"),
-                                       EventMethodDefinition.createDefault("/edge/:edge_id/network/:network_id/point",
-                                                                           "/:point_id"))).collect(Collectors.toSet());
+                             EntityHttpService.createDefinitions(getAvailableEvents(), PointMetadata.INSTANCE,
+                                                                 EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE)
+                                              .stream()).collect(Collectors.toSet());
     }
 
     public interface PointExtension extends HasReferenceResource {

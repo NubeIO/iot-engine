@@ -6,8 +6,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -22,9 +20,11 @@ import com.nubeiot.core.exceptions.DesiredException;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.cache.PointHistoryCache;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
@@ -53,10 +53,7 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        final EventMethodDefinition definition = EventMethodDefinition.create("/point/:point_id/histories",
-                                                                              context().requestKeyName(),
-                                                                              ActionMethodMapping.READ_MAP);
-        return Stream.of(definition).collect(Collectors.toSet());
+        return EntityHttpService.createDefinitions(ActionMethodMapping.READ_MAP, context(), PointMetadata.INSTANCE);
     }
 
     @Override

@@ -18,6 +18,12 @@ public class PointVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
+    public void test_get_points_with_invalid_key(TestContext context) {
+        assertRestByClient(context, HttpMethod.GET, "/api/s/network/xxx/point/" + PrimaryKey.P_GPIO_TEMP, 400,
+                           new JsonObject("{\"message\":\"Invalid key\",\"code\":\"INVALID_ARGUMENT\"}"));
+    }
+
+    @Test
     public void test_get_list_tags_by_point(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "/tags", 200,
                            new JsonObject("{\"tags\":[{\"id\":1,\"tag_name\":\"sensor\",\"tag_value\":\"temp\"}," +
