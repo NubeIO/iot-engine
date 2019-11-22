@@ -47,7 +47,7 @@ public class EdgeServiceTest extends BaseDataPointServiceTest {
             "{\"__data_sync__\":{\"clientConfig\":{\"userAgent\":\"nubeio.edge.datapoint/1.0.0 " +
             UUID64.uuidToBase64(PrimaryKey.EDGE) + "\"}}}");
         JsonObject expected = JsonPojo.from(MockData.EDGE)
-                                      .toJson()
+                                      .toJson().put("model", "Nube EdgeIO-28").put("firmware_version", "v2")
                                       .put("metadata", userAgent)
                                       .put("data_version", "0.0.2");
         RequestData req = RequestData.builder()
@@ -61,8 +61,7 @@ public class EdgeServiceTest extends BaseDataPointServiceTest {
         RequestData req = RequestData.builder().body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString()))
                                      .filter(new JsonObject().put(Filters.AUDIT, true))
                                      .build();
-        DeliveryEvent event = DeliveryEvent.builder()
-                                           .action(EventAction.GET_ONE).address(EdgeService.class.getName())
+        DeliveryEvent event = DeliveryEvent.builder().action(EventAction.GET_ONE).address(EdgeService.class.getName())
                                            .addPayload(req)
                                            .build();
         controller().fire(event, EventbusHelper.replyAsserter(context, registerAsserter(context)));
@@ -100,8 +99,9 @@ public class EdgeServiceTest extends BaseDataPointServiceTest {
                                       .put("protocol", Protocol.UNKNOWN.type())
                                       .put("state", State.NONE);
         expected.remove("edge");
-        RequestData req = RequestData.builder().body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
-                                                                     .put("network_id", PrimaryKey.NETWORK.toString()))
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
+                                                           .put("network_id", PrimaryKey.NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, NetworkService.class.getName(), EventAction.GET_ONE, req);
     }

@@ -16,6 +16,7 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceCompositeMetad
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
+import com.nubeiot.edge.module.datapoint.service.EdgeService.EdgeExtension;
 import com.nubeiot.iotdata.edge.model.tables.EdgeDevice;
 
 import lombok.NonNull;
@@ -71,8 +72,7 @@ public final class DeviceByNetworkService
     @Override
     public Set<String> ignoreFields(@NonNull RequestData requestData) {
         final Set<String> ignores = super.ignoreFields(requestData);
-        final EdgeDevice table = context().table();
-        ignores.add(table.getJsonField(table.EDGE_ID));
+        ignores.add(getEdgeField());
         return ignores;
     }
 
@@ -83,14 +83,15 @@ public final class DeviceByNetworkService
     }
 
     private RequestData optimizeRequestData(@NonNull RequestData requestData) {
-        final String edgeId = entityHandler().sharedData(DataPointIndex.EDGE_ID);
-        final String edgeField = context().table().getJsonField(context().table().EDGE_ID);
-        if (!requestData.body().containsKey(edgeField)) {
-            requestData.body().put(edgeField, edgeId);
-        }
+        EdgeExtension.optimizeReqData(entityHandler(), requestData, getEdgeField());
         DataPointIndex.NetworkMetadata.optimizeAlias(requestData.body());
         DataPointIndex.NetworkMetadata.optimizeAlias(requestData.getFilter());
         return requestData;
+    }
+
+    private String getEdgeField() {
+        final @NonNull EdgeDevice table = context().table();
+        return table.getJsonField(table.EDGE_ID);
     }
 
 }

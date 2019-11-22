@@ -1,25 +1,29 @@
 CREATE SCHEMA IF NOT EXISTS PUBLIC;
 
 CREATE TABLE IF NOT EXISTS EDGE (
-	ID                   uuid NOT NULL,
+	ID                   uuid          NOT NULL,
 	CODE                 varchar(63)   NOT NULL,
 	CUSTOMER_CODE        varchar(31)   NOT NULL,
 	SITE_CODE            varchar(63)   NOT NULL,
-    DATA_VERSION         varchar(15)   DEFAULT '0.0.2' NOT NULL,
+	MODEL                varchar(255)  DEFAULT 'Nube EdgeIO-28' NOT NULL,
+	FIRMWARE_VERSION     varchar(127)  DEFAULT 'v2' NOT NULL,
+	OS_VERSION           varchar(127)   ,
+	SOFTWARE_VERSION     varchar(127)   ,
+	DATA_VERSION         varchar(15)  DEFAULT '0.0.2' NOT NULL,
 	METADATA_JSON        clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
 	CONSTRAINT PK_EDGE_ID PRIMARY KEY ( ID )
  );
 
-COMMENT ON COLUMN EDGE.CODE IS 'Device Code';
+COMMENT ON COLUMN EDGE.CODE IS 'Edge Code';
 COMMENT ON COLUMN EDGE.DATA_VERSION IS 'Legacy version: startswith 0.0.x. 0.0.1: default lowdb - 0.0.2: migrate point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` and `schedule`';
 COMMENT ON COLUMN EDGE.METADATA_JSON IS 'Extra information';
 
 CREATE TABLE IF NOT EXISTS NETWORK (
-	ID                   uuid   NOT NULL,
-	CODE                 varchar(63)   NOT NULL,
-	EDGE                 uuid   NOT NULL,
+	ID                   uuid           NOT NULL,
+	CODE                 varchar(63)    NOT NULL,
+	EDGE                 uuid           NOT NULL,
 	PROTOCOL             varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
 	STATE                varchar(31)  DEFAULT 'NONE' NOT NULL,
 	LABEL                varchar(1000)   ,
@@ -35,16 +39,17 @@ CREATE INDEX IDX_NETWORK_EDGE ON PUBLIC.NETWORK ( EDGE );
 COMMENT ON COLUMN NETWORK.CODE IS 'Network Code should be subnet name or Network card interface name';
 
 CREATE TABLE IF NOT EXISTS DEVICE (
-	ID                   uuid   NOT NULL,
+	ID                   uuid          NOT NULL,
 	CODE                 varchar(63)   NOT NULL,
 	DEVICE_TYPE          varchar(63)   NOT NULL,
 	PROTOCOL             varchar(31)   DEFAULT 'UNKNOWN' NOT NULL,
-	NAME                 varchar(127)    ,
-	MANUFACTURER         varchar(255)    ,
-	MODEL                varchar(255)    ,
-	VERSION              varchar(127)    ,
-	STATE                varchar(31)     ,
-	LABEL                varchar(1000)   ,
+	STATE                varchar(31)   DEFAULT 'NONE' NOT NULL,
+	NAME                 varchar(127)   ,
+	MANUFACTURER         varchar(500)   ,
+	MODEL                varchar(255)   ,
+	FIRMWARE_VERSION     varchar(127)   ,
+	SOFTWARE_VERSION     varchar(127)   ,
+	LABEL                varchar(1000)  ,
 	METADATA_JSON        clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
@@ -107,27 +112,27 @@ CREATE INDEX IDX_FK_EDGE_DEVICE_NETWORK ON EDGE_DEVICE ( NETWORK_ID );
 
 CREATE TABLE THING (
 	ID                   integer GENERATED ALWAYS AS IDENTITY  NOT NULL,
-	DEVICE               uuid   NOT NULL,
-	TRANSDUCER           uuid   NOT NULL,
+	DEVICE_ID            uuid   NOT NULL,
+	TRANSDUCER_ID        uuid   NOT NULL,
 	PRODUCT_CODE         varchar(127)   ,
 	PRODUCT_LABEL        varchar(1000)   ,
 	MEASURE_UNIT         varchar(63)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
-	CONSTRAINT IDX_UQ_DEVICE_THING_CODE UNIQUE ( DEVICE, PRODUCT_CODE ) ,
-	CONSTRAINT IDX_UQ_THING UNIQUE ( DEVICE, TRANSDUCER ) ,
+	CONSTRAINT IDX_UQ_DEVICE_THING_CODE UNIQUE ( DEVICE_ID, PRODUCT_CODE ) ,
+	CONSTRAINT IDX_UQ_THING UNIQUE ( DEVICE_ID, TRANSDUCER_ID ) ,
 	CONSTRAINT PK_THING PRIMARY KEY ( ID )
  );
 
-CREATE INDEX IDX_FK_THING_DEVICE ON THING ( DEVICE );
+CREATE INDEX IDX_FK_THING_DEVICE ON THING ( DEVICE_ID );
 
 CREATE INDEX IDX_FK_THING_MEASURE ON THING ( MEASURE_UNIT );
 
-CREATE INDEX IDX_FK_THING_TRANSDUCER ON THING ( TRANSDUCER );
+CREATE INDEX IDX_FK_THING_TRANSDUCER ON THING ( TRANSDUCER_ID );
 
 COMMENT ON TABLE THING IS 'Real Thing that represents from Device and Transducer';
-COMMENT ON COLUMN THING.PRODUCT_CODE IS 'Manufacturer product transducer code depends on equipment';
-COMMENT ON COLUMN THING.PRODUCT_LABEL IS 'Manufacturer transducer label depends on equipment';
+COMMENT ON COLUMN THING.PRODUCT_CODE IS 'Manufacturer product transducer code depends on device';
+COMMENT ON COLUMN THING.PRODUCT_LABEL IS 'Manufacturer transducer label depends on device';
 COMMENT ON COLUMN THING.MEASURE_UNIT IS 'Standard manufacturer transducer measure unit';
 
 CREATE TABLE IF NOT EXISTS POINT ( 
@@ -303,8 +308,8 @@ ALTER TABLE REALTIME_SETTING ADD CONSTRAINT FK_REALTIME_SETTING_POINT FOREIGN KE
 
 ALTER TABLE SCHEDULE_SETTING ADD CONSTRAINT FK_SCHEDULE_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE THING ADD CONSTRAINT FK_THING_DEVICE FOREIGN KEY ( DEVICE ) REFERENCES DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE THING ADD CONSTRAINT FK_THING_DEVICE FOREIGN KEY ( DEVICE_ID ) REFERENCES DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER_ID ) REFERENCES TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;

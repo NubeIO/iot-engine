@@ -4,6 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -55,6 +56,14 @@ public final class EdgeService extends AbstractEntityService<Edge, EdgeMetadata>
     }
 
     public interface EdgeExtension extends HasReferenceResource {
+
+        static void optimizeReqData(@NonNull EntityHandler handler, @NonNull RequestData requestData,
+                                    @NonNull String edgeField) {
+            final String edgeId = handler.sharedData(DataPointIndex.EDGE_ID);
+            if (Objects.nonNull(requestData.body()) && !requestData.body().containsKey(edgeField)) {
+                requestData.body().put(edgeField, edgeId);
+            }
+        }
 
         @Override
         default EntityReferences entityReferences() {

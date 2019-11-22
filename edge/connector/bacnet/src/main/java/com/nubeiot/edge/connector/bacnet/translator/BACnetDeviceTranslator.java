@@ -33,12 +33,14 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
         final DeviceType deviceType = getDeviceType(values);
         final State state = new BACnetStateTranslator().to((DeviceStatus) values.get(PropertyIdentifier.systemStatus));
         final Device device = new Device().setCode(ObjectIdentifierSerializer.serialize(object.getObjectId()))
-                                          .setProtocol(protocol())
                                           .setType(deviceType)
+                                          .setProtocol(protocol())
                                           .setName(values.getAndCast(PropertyIdentifier.objectName))
                                           .setManufacturer(manufacturer)
                                           .setModel(values.getAndCast(PropertyIdentifier.modelName))
-                                          .setVersion(values.getAndCast(PropertyIdentifier.applicationSoftwareVersion))
+                                          .setFirmwareVersion(values.getAndCast(PropertyIdentifier.firmwareRevision))
+                                          .setSoftwareVersion(
+                                              values.getAndCast(PropertyIdentifier.applicationSoftwareVersion))
                                           .setState(state)
                                           .setMetadata(object.toJson());
         return new EdgeDeviceComposite().wrap(new EdgeDevice().setAddress(object.getAddress()))

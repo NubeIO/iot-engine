@@ -281,28 +281,23 @@ public final class MockData {
     }
 
     private static List<Thing> things() {
-        final Thing t1 = new Thing().setDevice(PrimaryKey.DEVICE_DROPLET)
-                                    .setTransducer(PrimaryKey.TRANS_HUMIDITY)
+        final Thing t1 = new Thing().setDeviceId(PrimaryKey.DEVICE_DROPLET).setTransducerId(PrimaryKey.TRANS_HUMIDITY)
                                     .setMeasureUnit(Base.PERCENTAGE.type())
                                     .setProductCode("DROPLET-2CB2B763-H")
                                     .setProductLabel(Label.builder().label("Droplet Humidity").build());
-        final Thing t2 = new Thing().setDevice(PrimaryKey.DEVICE_DROPLET)
-                                    .setTransducer(PrimaryKey.TRANS_TEMP)
+        final Thing t2 = new Thing().setDeviceId(PrimaryKey.DEVICE_DROPLET).setTransducerId(PrimaryKey.TRANS_TEMP)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("DROPLET-2CB2B763-T")
                                     .setProductLabel(Label.builder().label("Droplet Temp").build());
-        final Thing t3 = new Thing().setDevice(PrimaryKey.DEVICE_HVAC)
-                                    .setTransducer(PrimaryKey.TRANS_TEMP)
+        final Thing t3 = new Thing().setDeviceId(PrimaryKey.DEVICE_HVAC).setTransducerId(PrimaryKey.TRANS_TEMP)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("HVAC-XYZ-TEMP")
                                     .setProductLabel(Label.builder().label("HVAC Temp").build());
-        final Thing t4 = new Thing().setDevice(PrimaryKey.DEVICE_HVAC)
-                                    .setTransducer(PrimaryKey.TRANS_FAN)
+        final Thing t4 = new Thing().setDeviceId(PrimaryKey.DEVICE_HVAC).setTransducerId(PrimaryKey.TRANS_FAN)
                                     .setMeasureUnit(AngularVelocity.RPM.type())
                                     .setProductCode("HVAC-XYZ-FAN")
                                     .setProductLabel(Label.builder().label("HVAC Fan").build());
-        final Thing t5 = new Thing().setDevice(PrimaryKey.DEVICE_HVAC)
-                                    .setTransducer(PrimaryKey.TRANS_SWITCH)
+        final Thing t5 = new Thing().setDeviceId(PrimaryKey.DEVICE_HVAC).setTransducerId(PrimaryKey.TRANS_SWITCH)
                                     .setMeasureUnit(Base.BOOLEAN.type())
                                     .setProductCode("HVAC-XYZ-FAN-CONTROL")
                                     .setProductLabel(Label.builder().label("HVAC Fan Control").build());
