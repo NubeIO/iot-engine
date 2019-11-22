@@ -24,9 +24,10 @@ public class DeviceByNetworkServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_list_device_by_edge(TestContext context) {
-        JsonObject expected = new JsonObject("{\"devices\":[{\"id\":2,\"device\":{\"id\":\"" + PrimaryKey.DEVICE_HVAC +
-                                             "\",\"code\":\"HVAC_XYZ\",\"type\":\"HVAC\"," +
-                                             "\"manufacturer\":\"Lennox\"}}]}");
+        JsonObject expected = new JsonObject(
+            "{\"devices\":[{\"id\":2," + "\"device\":{\"id\":\"28a4ba1b-154d-4bbf-8537-320be70e50e5\"," +
+            "\"code\":\"HVAC_XYZ\",\"type\":\"HVAC\"," + "\"protocol\":\"UNKNOWN\",\"state\":\"NONE\"," +
+            "\"manufacturer\":\"Lennox\"}}]}");
         RequestData req = RequestData.builder().body(new JsonObject().put("network_id", PrimaryKey.NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, DeviceByNetworkService.class.getName(), EventAction.GET_LIST, req);
@@ -38,7 +39,8 @@ public class DeviceByNetworkServiceTest extends BaseDataPointServiceTest {
                                               .put("message", "Missing key network_id");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("code", "DROPLET_02")
-                                                           .put("type", "DROPLET").put("manufacturer", "NubeIO"))
+                                                           .put("type", "DROPLET")
+                                                           .put("manufacturer", "NubeIO"))
                                      .build();
         asserter(context, false, expected, DeviceByNetworkService.class.getName(), EventAction.CREATE, req);
     }
@@ -46,18 +48,21 @@ public class DeviceByNetworkServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_create_device_by_edge(TestContext context) {
         final String id = UUID.randomUUID().toString();
-        final JsonObject resource = new JsonObject("{\"id\":3,\"address\":null,\"device\":{\"id\":\"" + id + "\"," +
-                                                   "\"code\":\"DROPLET_02\",\"name\":null,\"label\":null," +
-                                                   "\"type\":\"DROPLET\",\"manufacturer\":\"NubeIO\"," +
-                                                   "\"metadata\":null}}");
+        final JsonObject resource = new JsonObject(
+            "{\"id\":3,\"address\":{\"hostAddress\":\"xxx\"},\"device\":{\"id\":\"" + id + "\"," +
+            "\"code\":\"DROPLET_02\",\"type\":\"DROPLET\",\"protocol\":\"UNKNOWN\",\"name\":null,\"state\":\"NONE\"," +
+            "\"manufacturer\":\"NubeIO\",\"model\":null,\"firmware_version\":null,\"software_version\":null," +
+            "\"label\":null,\"metadata\":null}}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
-                                              .put("status", Status.SUCCESS).put("resource", resource);
+                                              .put("status", Status.SUCCESS)
+                                              .put("resource", resource);
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device", new JsonObject().put("id", id)
                                                                                           .put("code", "DROPLET_02")
                                                                                           .put("type", "DROPLET")
                                                                                           .put("manufacturer",
                                                                                                "NubeIO"))
+                                                           .put("address", new JsonObject().put("hostAddress", "xxx"))
                                                            .put("network_id", PrimaryKey.NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, DeviceByNetworkService.class.getName(), EventAction.CREATE, req);

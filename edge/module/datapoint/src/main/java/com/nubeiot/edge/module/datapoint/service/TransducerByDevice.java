@@ -30,8 +30,8 @@ public final class TransducerByDevice extends AbstractManyToManyEntityService<Th
     @Override
     public EntityReferences entityReferences() {
         final @NonNull Thing table = context().table();
-        return new EntityReferences().add(reference(), table.getJsonField(table.DEVICE))
-                                     .add(resource(), table.getJsonField(table.TRANSDUCER));
+        return new EntityReferences().add(reference(), table.getJsonField(table.DEVICE_ID))
+                                     .add(resource(), table.getJsonField(table.TRANSDUCER_ID));
     }
 
     @Override

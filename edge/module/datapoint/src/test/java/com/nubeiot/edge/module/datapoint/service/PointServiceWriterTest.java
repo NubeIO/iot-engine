@@ -33,9 +33,9 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_create_without_edge(TestContext context) {
+    public void test_create_without_measure_unit(TestContext context) {
         JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
-                                              .put("message", "Point must be assigned to Edge");
+                                              .put("message", "Point measure unit is mandatory");
         final UUID id = UUID.randomUUID();
         final Point p1 = new Point().setId(id).setCode("TET_01");
         RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();

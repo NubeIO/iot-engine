@@ -10,19 +10,25 @@
 			<column name="DEVICE_TYPE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" >
 				<comment><![CDATA[For example: HVAC | Fire Detection | Lightning | Water]]></comment>
 			</column>
+			<column name="PROTOCOL" type="varchar" length="31" jt="12" mandatory="y" >
+				<defo>&#039;UNKNOWN&#039;</defo>
+			</column>
+			<column name="STATE" type="varchar" length="31" jt="12" mandatory="y" >
+				<defo>&#039;NONE&#039;</defo>
+			</column>
 			<column name="NAME" type="varchar" length="127" jt="12" />
-			<column name="STATE" type="varchar" length="31" jt="12" />
 			<column name="MANUFACTURER" type="varchar" length="500" decimal="0" jt="12" >
 				<comment><![CDATA[Manufacturing company]]></comment>
 			</column>
 			<column name="MODEL" type="varchar" length="255" jt="12" />
-			<column name="VERSION" type="varchar" length="127" jt="12" />
+			<column name="FIRMWARE_VERSION" type="varchar" length="127" jt="12" />
+			<column name="SOFTWARE_VERSION" type="varchar" length="127" jt="12" />
 			<column name="LABEL" type="varchar" length="1000" decimal="0" jt="12" />
 			<column name="METADATA_JSON" type="clob" length="2147483647" decimal="0" jt="2005" >
 				<comment><![CDATA[Extra information]]></comment>
 			</column>
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
 			<index name="PK_EQUIPMENT" unique="PRIMARY_KEY" >
 				<column name="ID" />
 			</index>
@@ -36,10 +42,18 @@
 				<defo>RANDOM_UUID()</defo>
 			</column>
 			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" >
-				<comment><![CDATA[Device Code]]></comment>
+				<comment><![CDATA[Edge Code]]></comment>
 			</column>
 			<column name="CUSTOMER_CODE" type="varchar" length="31" decimal="0" jt="12" mandatory="y" />
 			<column name="SITE_CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
+			<column name="MODEL" type="varchar" length="255" jt="12" mandatory="y" >
+				<defo>&#039;Nube EdgeIO-28&#039;</defo>
+			</column>
+			<column name="FIRMWARE_VERSION" type="varchar" length="127" jt="12" mandatory="y" >
+				<defo>&#039;v2&#039;</defo>
+			</column>
+			<column name="OS_VERSION" type="varchar" length="127" jt="12" />
+			<column name="SOFTWARE_VERSION" type="varchar" length="127" jt="12" />
 			<column name="DATA_VERSION" type="varchar" length="15" decimal="0" jt="12" mandatory="y" >
 				<defo>&#039;0.0.2&#039;</defo>
 				<comment><![CDATA[Legacy version: startswith 0.0.x. 0.0.1: default lowdb - 0.0.2: migrate point - 0.0.3: migrate equipment. 1.0.0: production with fully support `alert` and `schedule`]]></comment>
@@ -48,7 +62,7 @@
 				<comment><![CDATA[Extra information]]></comment>
 			</column>
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
 			<index name="PK_DEVICE_ID" unique="PRIMARY_KEY" >
 				<column name="ID" />
 			</index>
@@ -125,7 +139,7 @@
 			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" >
 				<comment><![CDATA[Network Code should be subnet name or Network card interface name]]></comment>
 			</column>
-			<column name="DEVICE" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="EDGE" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="PROTOCOL" type="varchar" length="31" jt="12" mandatory="y" >
 				<defo>&#039;UNKNOWN&#039;</defo>
 				<comment><![CDATA[GPIO | BACNET | MODBUS | UNKNOWN]]></comment>
@@ -142,13 +156,13 @@
 			</index>
 			<index name="IDX_UQ_NETWORK_INDEX_9" unique="UNIQUE" >
 				<column name="CODE" />
-				<column name="DEVICE" />
+				<column name="EDGE" />
 			</index>
 			<index name="IDX_NETWORK_DEVICE" unique="NORMAL" >
-				<column name="DEVICE" />
+				<column name="EDGE" />
 			</index>
 			<fk name="FK_NETWORK_DEVICE" to_schema="PUBLIC" to_table="EDGE" delete_action="cascade" update_action="cascade" >
-				<fk_column name="DEVICE" pk="ID" />
+				<fk_column name="EDGE" pk="ID" />
 			</fk>
 		</table>
 		<table name="POINT" >
@@ -157,7 +171,7 @@
 - Virtual point if category is not GPIO]]></comment>
 			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
-			<column name="DEVICE" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="EDGE" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="TRANSDUCER" type="uuid" length="2147483647" decimal="0" jt="-2" />
 			<column name="NETWORK" type="uuid" length="2147483647" decimal="0" jt="-2" />
 			<column name="LABEL" type="varchar" length="1000" decimal="0" jt="12" />
@@ -191,11 +205,11 @@
 			</index>
 			<index name="IDX_UQ_POINT" unique="UNIQUE" >
 				<column name="CODE" />
-				<column name="DEVICE" />
+				<column name="EDGE" />
 				<column name="NETWORK" />
 			</index>
 			<index name="IDX_FK_POINT_DEVICE" unique="NORMAL" >
-				<column name="DEVICE" />
+				<column name="EDGE" />
 			</index>
 			<index name="IDX_FK_POINT_MEASURE_UNIT" unique="NORMAL" >
 				<column name="MEASURE_UNIT" />
@@ -207,7 +221,7 @@
 				<column name="TRANSDUCER" />
 			</index>
 			<fk name="FK_POINT_DEVICE" to_schema="PUBLIC" to_table="EDGE" delete_action="restrict" update_action="cascade" >
-				<fk_column name="DEVICE" pk="ID" />
+				<fk_column name="EDGE" pk="ID" />
 			</fk>
 			<fk name="FK_POINT_MEASURE_UNIT" to_schema="PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
 				<fk_column name="MEASURE_UNIT" pk="MEASURE_TYPE" />
@@ -373,50 +387,48 @@
 		</table>
 		<table name="THING" >
 			<comment><![CDATA[Real Thing that represents from Equipment and Transducer]]></comment>
-			<column name="ID" type="integer" length="10" decimal="0" jt="4" mandatory="y" >
-				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_4FF36861_2980_4995_93AD_83BA5CC08AA0)</defo>
-			</column>
-			<column name="DEVICE" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
-			<column name="TRANSDUCER" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="ID" type="integer" jt="4" mandatory="y" autoincrement="y" />
+			<column name="DEVICE_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="TRANSDUCER_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="PRODUCT_CODE" type="varchar" length="127" decimal="0" jt="12" >
-				<comment><![CDATA[Manufacturer product transducer code depends on equipment]]></comment>
+				<comment><![CDATA[Manufacturer product transducer code depends on device]]></comment>
 			</column>
 			<column name="PRODUCT_LABEL" type="varchar" length="1000" decimal="0" jt="12" >
-				<comment><![CDATA[Manufacturer transducer label depends on equipment]]></comment>
+				<comment><![CDATA[Manufacturer transducer label depends on device]]></comment>
 			</column>
 			<column name="MEASURE_UNIT" type="varchar" length="63" jt="12" >
 				<comment><![CDATA[Standard manufacturer transducer measure unit]]></comment>
 			</column>
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="SYNC_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
 			<index name="CONSTRAINT_4" unique="PRIMARY_KEY" >
 				<column name="ID" />
 			</index>
-			<index name="IDX_UQ_EQUIP_THING_CODE_INDEX_4" unique="UNIQUE" >
-				<column name="DEVICE" />
+			<index name="IDX_UQ_DEVICE_THING_CODE" unique="UNIQUE" >
+				<column name="DEVICE_ID" />
 				<column name="PRODUCT_CODE" />
 			</index>
-			<index name="IDX_UQ_THING_INDEX_4" unique="UNIQUE" >
-				<column name="DEVICE" />
-				<column name="TRANSDUCER" />
+			<index name="IDX_UQ_THING" unique="UNIQUE" >
+				<column name="DEVICE_ID" />
+				<column name="TRANSDUCER_ID" />
 			</index>
 			<index name="IDX_FK_THING_EQUIP" unique="NORMAL" >
-				<column name="DEVICE" />
+				<column name="DEVICE_ID" />
 			</index>
 			<index name="IDX_FK_THING_MEASURE" unique="NORMAL" >
 				<column name="MEASURE_UNIT" />
 			</index>
 			<index name="IDX_FK_THING_TRANSDUCER" unique="NORMAL" >
-				<column name="TRANSDUCER" />
+				<column name="TRANSDUCER_ID" />
 			</index>
 			<fk name="FK_THING_EQUIP" to_schema="PUBLIC" to_table="DEVICE" delete_action="restrict" update_action="cascade" >
-				<fk_column name="DEVICE" pk="ID" />
+				<fk_column name="DEVICE_ID" pk="ID" />
 			</fk>
 			<fk name="FK_THING_MEASURE" to_schema="PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
 				<fk_column name="MEASURE_UNIT" pk="MEASURE_TYPE" />
 			</fk>
 			<fk name="FK_THING_TRANSDUCER" to_schema="PUBLIC" to_table="TRANSDUCER" delete_action="restrict" update_action="cascade" >
-				<fk_column name="TRANSDUCER" pk="ID" />
+				<fk_column name="TRANSDUCER_ID" pk="ID" />
 			</fk>
 		</table>
 		<table name="TRANSDUCER" >
@@ -453,17 +465,17 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="448" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="304" y="640" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" color="BED3F4" x="672" y="240" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="BED3F4" x="368" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="848" y="176" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="496" y="592" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="80" y="640" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="848" y="400" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCE6" x="1408" y="96" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" color="C7F4BE" x="944" y="640" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="C7F4BE" x="1216" y="384" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" color="C7F4BE" x="1376" y="656" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="848" y="144" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" color="C7F4BE" x="1360" y="656" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="848" y="384" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="BED3F4" x="368" y="80" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="FFCCE6" x="1056" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="C7F4BE" x="1536" y="400" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="C7F4BE" x="1200" y="352" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCE6" x="1296" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" color="C7F4BE" x="944" y="576" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="C7F4BE" x="1520" y="368" />
 		<group name="POINT" color="ECF0F7" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" />
@@ -488,6 +500,28 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 		</group>
 		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
 			<string><![CDATA[DROP INDEX IDX_UQ_PROTOCOL_DISPATCHER]]></string>
+		</script>
+		<script name="DEVICE_001" id="Editor_39a48d2" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.DEVICE ( 
+	ID                   uuid(2147483647)   NOT NULL,
+	CODE                 varchar(63)   NOT NULL,
+	DEVICE_TYPE          varchar(63)   NOT NULL,
+	NAME                 varchar(127)   ,
+	STATE                varchar(31)   ,
+	MANUFACTURER         varchar(500)   ,
+	MODEL                varchar(255)   ,
+	FIRMWARE_VERSION     varchar(127)   ,
+	SOFTWARE_VERSION     varchar(127)   ,
+	LABEL                varchar(1000)   ,
+	METADATA_JSON        clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_EQUIPMENT PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_EQUIPMENT_INDEX_E UNIQUE ( CODE, DEVICE_TYPE ) 
+ );
+
+COMMENT ON TABLE PUBLIC.DEVICE IS 'Remote Device is connected and managed by NubeIO Edge';
+]]></string>
 		</script>
 		<script name="POINT" id="Editor_37a712" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.POINT ( 
@@ -1141,6 +1175,36 @@ ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_EQUIP FOREIGN KEY ( EQUIP ) REF
 ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+]]></string>
+		</script>
+		<script name="THING" id="Editor_5a7978d" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.THING ( 
+	ID                   integer  DEFAULT (NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_4FF36861_2980_4995_93AD_83BA5CC08AA0) NOT NULL,
+	DEVICE_ID            uuid(2147483647)   NOT NULL,
+	TRANSDUCER_ID        uuid(2147483647)   NOT NULL,
+	PRODUCT_CODE         varchar(127)   ,
+	PRODUCT_LABEL        varchar(1000)   ,
+	MEASURE_UNIT         varchar(63)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT CONSTRAINT_4 PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_EQUIP_THING_CODE_INDEX_4 UNIQUE ( DEVICE_ID, PRODUCT_CODE ) ,
+	CONSTRAINT IDX_UQ_THING_INDEX_4 UNIQUE ( DEVICE_ID, TRANSDUCER_ID ) 
+ );
+
+CREATE INDEX IDX_FK_THING_EQUIP ON PUBLIC.THING ( DEVICE_ID );
+
+CREATE INDEX IDX_FK_THING_MEASURE ON PUBLIC.THING ( MEASURE_UNIT );
+
+CREATE INDEX IDX_FK_THING_TRANSDUCER ON PUBLIC.THING ( TRANSDUCER_ID );
+
+COMMENT ON TABLE PUBLIC.THING IS 'Real Thing that represents from Equipment and Transducer';
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_EQUIP FOREIGN KEY ( DEVICE_ID ) REFERENCES PUBLIC.DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER_ID ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
 ]]></string>
 		</script>
 	</layout>
