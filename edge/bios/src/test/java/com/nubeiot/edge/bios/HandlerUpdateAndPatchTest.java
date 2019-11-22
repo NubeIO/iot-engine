@@ -1,7 +1,6 @@
 package com.nubeiot.edge.bios;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
@@ -13,11 +12,11 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
+import com.nubeiot.edge.bios.mock.MockEdgeBiosVerticle;
 import com.nubeiot.edge.installer.InstallerVerticle;
 import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
 
-@Ignore
 public class HandlerUpdateAndPatchTest extends BaseInstallerVerticleTest {
 
     @Before
@@ -35,7 +34,7 @@ public class HandlerUpdateAndPatchTest extends BaseInstallerVerticleTest {
 
     @Override
     protected InstallerVerticle initMockupVerticle(TestContext context) {
-        return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context));
+        return new MockEdgeBiosVerticle(DeploymentAsserter.init(vertx, context));
     }
 
     @Test
@@ -82,7 +81,7 @@ public class HandlerUpdateAndPatchTest extends BaseInstallerVerticleTest {
 
         executeThenAssert(EventAction.UPDATE, context, body, response -> {
             context.assertEquals(response.getString("status"), Status.FAILED.name());
-            context.assertEquals(response.getJsonObject("error").getString("message"), "State is required!");
+            context.assertEquals(response.getJsonObject("error").getString("message"), "Service state is mandatory");
         });
     }
 

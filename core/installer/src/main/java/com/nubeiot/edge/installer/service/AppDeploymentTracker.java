@@ -40,8 +40,8 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class AppDeploymentTracker implements DeploymentService {
+@RequiredArgsConstructor(access = AccessLevel.PUBLIC)
+public class AppDeploymentTracker implements DeploymentService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentTracker.class);
     private final InstallerEntityHandler entityHandler;

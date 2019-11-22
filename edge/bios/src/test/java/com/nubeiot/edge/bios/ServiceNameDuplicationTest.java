@@ -1,7 +1,6 @@
 package com.nubeiot.edge.bios;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
@@ -12,11 +11,11 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
+import com.nubeiot.edge.bios.mock.MockEdgeBiosVerticle;
 import com.nubeiot.edge.installer.InstallerVerticle;
 import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
 
-@Ignore
 public class ServiceNameDuplicationTest extends BaseInstallerVerticleTest {
 
     @Before
@@ -34,22 +33,18 @@ public class ServiceNameDuplicationTest extends BaseInstallerVerticleTest {
 
     @Override
     protected InstallerVerticle initMockupVerticle(TestContext context) {
-        return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context));
+        return new MockEdgeBiosVerticle(DeploymentAsserter.init(vertx, context));
     }
 
     @Test
     public void test_create_with_service_name_duplicated(TestContext context) {
-        JsonObject appConfig = new JsonObject().put("", "");
         JsonObject metadata = new JsonObject().put("state", State.ENABLED)
                                               .put("version", VERSION)
                                               .put("service_name", SERVICE_NAME);
-        JsonObject body = new JsonObject().put("service_id", MODULE_ID + "test")
-                                          .put("metadata", metadata)
-                                          .put("appConfig", appConfig);
+        JsonObject body = new JsonObject().put("service_id", MODULE_ID + "test").put("metadata", metadata);
 
-        executeThenAssert(EventAction.CREATE, context, body, response -> {
-            context.assertEquals(response.getString("status"), Status.FAILED.name());
-        });
+        executeThenAssert(EventAction.CREATE, context, body,
+                          response -> context.assertEquals(response.getString("status"), Status.FAILED.name()));
     }
 
 }

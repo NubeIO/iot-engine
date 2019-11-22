@@ -117,28 +117,12 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
                                     "\"modified_at\":\"2019-05-02T09:15:37.230Z\",\"deploy_id\":null," +
                                     "\"deploy_config\":{}," + "\"deploy_location\":null}")));
 
-        Single<Integer> insert10 = tblModuleDao.insert(new TblModule().setServiceId("pending-but-failed-module")
-                                                                      .setServiceName("service10")
-                                                                      .setServiceType(ModuleType.JAVA)
-                                                                      .setVersion("1.0.0")
-                                                                      .setState(State.PENDING)
-                                                                      .setCreatedAt(DateTimes.now())
-                                                                      .setModifiedAt(DateTimes.now()));
-
-        Single<Integer> insertTransaction10 = tblTransactionDao.insert(
-            new TblTransaction().setTransactionId(UUID.randomUUID().toString())
-                                .setModuleId("pending-but-failed-module")
-                                .setStatus(Status.FAILED)
-                                .setEvent(EventAction.CREATE)
-                                .setModifiedAt(OffsetDateTime.of(2019, 5, 3, 12, 20, 30, 0, ZoneOffset.UTC)));
-
-        final Single<Integer> insertModules = Single.zip(insert05, insert06, insert07, insert09, insert10,
-                                                         (r1, r2, r3, r4, r5) -> r1 + r2 + r3 + r4 + r5);
+        final Single<Integer> insertModules = Single.zip(insert05, insert06, insert07, insert09,
+                                                         (r1, r2, r3, r4) -> r1 + r2 + r3 + r4);
 
         final Single<Integer> insertTransactions = Single.zip(insertTransaction05, insertTransaction06,
                                                               insertTransaction09_1, insertTransaction09_2,
-                                                              insertTransaction10,
-                                                              (r1, r2, r3, r4, r5) -> r1 + r2 + r3 + r4 + r5);
+                                                              (r1, r2, r3, r4) -> r1 + r2 + r3 + r4);
         return Single.zip(insertModules, insertTransactions, Integer::sum);
     }
 

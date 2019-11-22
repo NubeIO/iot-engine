@@ -25,6 +25,7 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
+import com.nubeiot.edge.bios.mock.MockEdgeBiosVerticle;
 import com.nubeiot.edge.bios.service.BiosModuleService;
 import com.nubeiot.edge.installer.InstallerVerticle;
 import com.nubeiot.edge.installer.loader.ModuleType;
@@ -48,7 +49,7 @@ public class HandlerDeleteTest extends BaseInstallerVerticleTest {
 
     @Override
     protected InstallerVerticle initMockupVerticle(TestContext context) {
-        return new MockBiosEdgeVerticle(DeploymentAsserter.init(vertx, context));
+        return new MockEdgeBiosVerticle(DeploymentAsserter.init(vertx, context));
     }
 
     @Test
@@ -57,12 +58,13 @@ public class HandlerDeleteTest extends BaseInstallerVerticleTest {
         Async async = context.async();
         installerVerticle.getEventController()
                          .request(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE,
-                                                     EventAction.REMOVE, RequestData.builder().body(body).build().toJson()),
-                             EventbusHelper.replyAsserter(context, resp -> {
-                                 System.out.println(resp);
-                                 context.assertEquals(resp.getString("status"), Status.SUCCESS.name());
-                                 TestHelper.testComplete(async);
-                             }));
+                                                     EventAction.REMOVE,
+                                                     RequestData.builder().body(body).build().toJson()),
+                                  EventbusHelper.replyAsserter(context, resp -> {
+                                      System.out.println(resp);
+                                      context.assertEquals(resp.getString("status"), Status.SUCCESS.name());
+                                      TestHelper.testComplete(async);
+                                  }));
         CountDownLatch latch = new CountDownLatch(2);
         Async async2 = context.async(2);
         //Event module is deployed/updated successfully, we still have a gap for DB update.
@@ -83,16 +85,16 @@ public class HandlerDeleteTest extends BaseInstallerVerticleTest {
             installerVerticle.getEntityHandler().transDao()
                              .findManyByModuleId(Collections.singletonList(MODULE_ID))
                              .subscribe(result -> {
-                            if (!Objects.nonNull(result) || result.isEmpty() ||
-                                result.get(0).getStatus() != Status.WIP) {
-                                TestHelper.testComplete(async2);
-                                latch.countDown();
-                            }
-                        }, error -> {
-                            latch.countDown();
-                            context.fail(error);
-                            TestHelper.testComplete(async2);
-                        });
+                                 if (!Objects.nonNull(result) || result.isEmpty() ||
+                                     result.get(0).getStatus() != Status.WIP) {
+                                     TestHelper.testComplete(async2);
+                                     latch.countDown();
+                                 }
+                             }, error -> {
+                                 latch.countDown();
+                                 context.fail(error);
+                                 TestHelper.testComplete(async2);
+                             });
         });
         stopTimer(context, latch, timer);
     }

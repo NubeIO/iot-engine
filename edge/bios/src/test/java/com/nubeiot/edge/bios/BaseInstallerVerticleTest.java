@@ -46,7 +46,6 @@ import lombok.NonNull;
 /**
  * {@link HandlerCreateTest#test_create_should_success(TestContext)}
  */
-//FIXME: MUST REWRITE/REFACTOR SHIT CODE. IT IS ASSERTING SUCCESS EVEN RAISE EXCEPTION
 @RunWith(VertxUnitRunner.class)
 public abstract class BaseInstallerVerticleTest {
 
@@ -86,10 +85,15 @@ public abstract class BaseInstallerVerticleTest {
         this.vertx.deployVerticle(this.installerVerticle, options,
                                   context.asyncAssertSuccess(result -> TestHelper.testComplete(async)));
         async.awaitSuccess();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @After
-    public void after(TestContext context) {
+    public void after() {
         this.vertx.close();
     }
 
@@ -113,6 +117,10 @@ public abstract class BaseInstallerVerticleTest {
         return nubeConfig;
     }
 
+    private @NonNull String getJdbcUrl() {
+        return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString();
+    }
+
     protected void insertModule(TestContext context, TblModule module) {
         Async async = context.async(1);
         installerVerticle.getEntityHandler().moduleDao().insert(module).subscribe(result -> {
@@ -125,41 +133,20 @@ public abstract class BaseInstallerVerticleTest {
         async.awaitSuccess();
     }
 
-    private @NonNull String getJdbcUrl() {
-        return "jdbc:h2:mem:dbh2mem-" + UUID.randomUUID().toString();
+    protected void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus) {
+        testingDBUpdated(context, expectedModuleState, expectedTransactionStatus, new JsonObject());
     }
 
     protected void testingDBUpdated(TestContext context, State expectedModuleState, Status expectedTransactionStatus,
                                     JsonObject expectedConfig) {
         CountDownLatch latch = new CountDownLatch(2);
         Async async = context.async(2);
-        //Event module is deployed/updated successfully, we still have a gap for DB update.
+        // Event module is deployed/updated successfully, we still have a gap for DB update.
         long timer = this.vertx.setPeriodic(1000, event -> {
             assertModule(context, expectedModuleState, expectedConfig, async, latch);
             assertTransaction(context, expectedTransactionStatus, async, latch);
         });
         stopTimer(context, latch, timer);
-    }
-
-    private void assertTransaction(TestContext context, Status expectedTransactionStatus, Async async,
-                                   CountDownLatch latch) {
-        installerVerticle.getEntityHandler().transDao()
-                         .findManyByModuleId(Collections.singletonList(BaseInstallerVerticleTest.MODULE_ID))
-                         .subscribe(result -> {
-                             context.assertNotNull(result);
-                             context.assertFalse(result.isEmpty());
-                             context.assertEquals(result.size(), 1);
-                             if (result.get(0).getStatus() != Status.WIP) {
-                                 latch.countDown();
-                                 System.out.println("Ready. Testing transaction");
-                                 context.assertEquals(result.get(0).getStatus(), expectedTransactionStatus);
-                                 TestHelper.testComplete(async);
-                             }
-                         }, error -> {
-                             latch.countDown();
-                             context.fail(error);
-                             TestHelper.testComplete(async);
-                         });
     }
 
     private void assertModule(TestContext context, State expectedModuleState, JsonObject expectedConfig, Async async,
@@ -171,12 +158,34 @@ public abstract class BaseInstallerVerticleTest {
                              context.assertNotNull(tblModule);
                              if (tblModule.getState() != State.PENDING) {
                                  latch.countDown();
-                                 System.out.println("Ready. Testing module");
+                                 System.out.println("Testing module...");
                                  context.assertEquals(tblModule.getState(), expectedModuleState);
                                  JsonObject actualConfig = IConfig.from(tblModule.getAppConfig(), AppConfig.class)
                                                                   .toJson();
                                  JsonHelper.assertJson(context, async, expectedConfig, actualConfig,
                                                        JSONCompareMode.STRICT);
+                                 TestHelper.testComplete(async);
+                             }
+                         }, error -> {
+                             latch.countDown();
+                             context.fail(error);
+                             TestHelper.testComplete(async);
+                         });
+    }
+
+    private void assertTransaction(TestContext context, Status expectedTransactionStatus, Async async,
+                                   CountDownLatch latch) {
+        installerVerticle.getEntityHandler()
+                         .transDao()
+                         .findManyByModuleId(Collections.singletonList(BaseInstallerVerticleTest.MODULE_ID))
+                         .subscribe(result -> {
+                             context.assertNotNull(result);
+                             context.assertFalse(result.isEmpty());
+                             context.assertEquals(result.size(), 1);
+                             if (result.get(0).getStatus() != Status.WIP) {
+                                 latch.countDown();
+                                 System.out.println("Testing transaction...");
+                                 context.assertEquals(result.get(0).getStatus(), expectedTransactionStatus);
                                  TestHelper.testComplete(async);
                              }
                          }, error -> {

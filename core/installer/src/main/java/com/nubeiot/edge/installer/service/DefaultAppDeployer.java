@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-final class DefaultAppDeployer implements AppDeployer {
+public class DefaultAppDeployer implements AppDeployer {
 
     @NonNull
     private final EventModel loaderEvent;

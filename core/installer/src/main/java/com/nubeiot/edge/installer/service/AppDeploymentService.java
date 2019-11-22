@@ -31,14 +31,14 @@ import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
 
 import lombok.NonNull;
 
-class AppDeploymentService implements DeploymentService {
+public class AppDeploymentService implements DeploymentService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentService.class);
     private final Vertx vertx;
     private final Function<String, Object> sharedDataFunc;
     private final WorkerExecutor worker;
 
-    AppDeploymentService(@NonNull InstallerEntityHandler entityHandler) {
+    public AppDeploymentService(@NonNull InstallerEntityHandler entityHandler) {
         this.vertx = entityHandler.vertx();
         this.sharedDataFunc = entityHandler::sharedData;
         this.worker = vertx.createSharedWorkerExecutor("installer", 1, 3, TimeUnit.MINUTES);
