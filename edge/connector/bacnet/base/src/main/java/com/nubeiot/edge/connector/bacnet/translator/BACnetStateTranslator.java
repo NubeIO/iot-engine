@@ -5,7 +5,7 @@ import java.util.Objects;
 import com.nubeiot.core.enums.State;
 import com.serotonin.bacnet4j.type.enumerated.DeviceStatus;
 
-public class BACnetStateTranslator implements BACnetTranslator<State, DeviceStatus> {
+public final class BACnetStateTranslator implements BACnetTranslator<State, DeviceStatus> {
 
     @Override
     public DeviceStatus from(State concept) {
