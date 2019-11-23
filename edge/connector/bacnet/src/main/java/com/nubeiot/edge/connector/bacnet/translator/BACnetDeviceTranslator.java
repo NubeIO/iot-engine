@@ -22,11 +22,21 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
 
     @Override
     public RemoteDeviceMixin from(EdgeDeviceComposite entity) {
+        if (Objects.isNull(entity)) {
+            return null;
+        }
+        final Device device = entity.getOther(DeviceMetadata.INSTANCE.singularKeyName());
+        if (Objects.isNull(device)) {
+            return null;
+        }
         return null;
     }
 
     @Override
     public EdgeDeviceComposite to(RemoteDeviceMixin object) {
+        if (Objects.isNull(object)) {
+            return null;
+        }
         final PropertyValuesMixin values = object.getPropertyValues();
         final String manufacturer = Strings.toString(values.getAndCast(PropertyIdentifier.vendorIdentifier)) + "-" +
                                     Strings.toString(values.getAndCast(PropertyIdentifier.vendorName));
@@ -44,7 +54,7 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
                                           .setState(state)
                                           .setMetadata(object.toJson());
         return new EdgeDeviceComposite().wrap(new EdgeDevice().setAddress(object.getAddress()))
-                                        .put(DeviceMetadata.INSTANCE.requestKeyName(), device);
+                                        .put(DeviceMetadata.INSTANCE.singularKeyName(), device);
     }
 
     @Override

@@ -36,8 +36,8 @@ public final class RemoteDeviceMixin implements BACnetMixin {
         return create(device.getObjectIdentifier(), device.getName(), device.getAddress(), values);
     }
 
-    static RemoteDeviceMixin create(@NonNull ObjectIdentifier objectId, String name, @NonNull Address address,
-                                    @NonNull PropertyValuesMixin values) {
+    public static RemoteDeviceMixin create(@NonNull ObjectIdentifier objectId, String name, @NonNull Address address,
+                                           @NonNull PropertyValuesMixin values) {
         return new RemoteDeviceMixin(objectId, objectId.getInstanceNumber(), name, AddressSerializer.serialize(address),
                                      values);
     }

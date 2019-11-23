@@ -9,16 +9,22 @@ public final class BACnetStateTranslator implements BACnetTranslator<State, Devi
 
     @Override
     public DeviceStatus from(State concept) {
-        return null;
+        if (Objects.isNull(concept) || concept.equals(State.UNAVAILABLE) || concept.equals(State.NONE)) {
+            return null;
+        }
+        if (State.DISABLED.equals(concept)) {
+            return DeviceStatus.nonOperational;
+        }
+        if (State.PENDING.equals(concept)) {
+            return DeviceStatus.downloadInProgress;
+        }
+        return DeviceStatus.operational;
     }
 
     @Override
     public State to(DeviceStatus object) {
         if (Objects.isNull(object)) {
-            return State.UNAVAILABLE;
-        }
-        if (DeviceStatus.operational.equals(object) || DeviceStatus.operationalReadOnly.equals(object)) {
-            return State.ENABLED;
+            return State.NONE;
         }
         if (DeviceStatus.nonOperational.equals(object)) {
             return State.DISABLED;
@@ -26,7 +32,7 @@ public final class BACnetStateTranslator implements BACnetTranslator<State, Devi
         if (DeviceStatus.backupInProgress.equals(object) || DeviceStatus.downloadInProgress.equals(object)) {
             return State.PENDING;
         }
-        return State.NONE;
+        return State.ENABLED;
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.translator;
 
+import java.util.Objects;
+
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
@@ -10,7 +12,10 @@ public final class BACnetNetworkTranslator
 
     @Override
     public CommunicationProtocol from(Network concept) {
-        return null;
+        if (Objects.isNull(concept) || !protocol().equals(concept.getProtocol())) {
+            return null;
+        }
+        return CommunicationProtocol.parse(concept.getMetadata().getMap());
     }
 
     @Override
