@@ -78,14 +78,14 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
         return Future.succeededFuture();
     }
 
-    private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, BACnetDiscoveryService s) {
-        return Observable.fromIterable(s.definitions())
-                         .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
-    }
-
     @Override
     protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
         return new BACnetDiscoverFinisher();
+    }
+
+    private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, BACnetDiscoveryService s) {
+        return Observable.fromIterable(s.definitions())
+                         .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
     }
 
 }

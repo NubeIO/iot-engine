@@ -10,6 +10,9 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
@@ -37,8 +40,8 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
     }
 
     protected void successHandler(@NonNull C config) {
-        ExecutorHelpers.blocking(getVertx(), this::createDiscoverCompletionHandler)
-                       .map(handler -> getEventbusClient().register(config.getCompleteDiscoverAddress(), handler))
+        ExecutorHelpers.blocking(getVertx(), this::getEventbusClient)
+                       .map(c -> c.register(config.getCompleteDiscoverAddress(), createDiscoverCompletionHandler()))
                        .flatMapMaybe(ignore -> registerServices(config))
                        .defaultIfEmpty(new JsonObject().put("message", "No BACnet services"))
                        .doOnSuccess(logger::info)
@@ -51,8 +54,15 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
                        .map(this::onEachStartup)
                        .map(BACnetDevice::asyncStart)
                        .count()
-                       .doOnSuccess(total -> logger.info("Start {} BACnet devices", total))
-                       .subscribe();
+                       .map(total -> new JsonObject().put("total", total))
+                       .subscribe((d, e) -> readinessHandler(config, d, e));
+    }
+
+    private void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {
+        final EventMessage message = Objects.isNull(e)
+                                     ? EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(d).build())
+                                     : EventMessage.error(EventAction.NOTIFY, e);
+        getEventbusClient().publish(config.getReadinessAddress(), message);
     }
 
     /**
@@ -85,6 +95,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
 
     protected abstract Future<Void> stopBACnet();
 
+    @NonNull
     protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
         return new DiscoverCompletionHandler();
     }
