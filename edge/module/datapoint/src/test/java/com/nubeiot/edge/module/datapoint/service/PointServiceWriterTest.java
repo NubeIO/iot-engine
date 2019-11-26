@@ -35,8 +35,8 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_create_with_new_unit(TestContext context) {
-        JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
-                                              .put("message", "Point measure unit is mandatory");
+        JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+                                              .put("message", "Not found resource with unit_type=xx");
         final UUID id = UUID.randomUUID();
         final DataType dt = DataType.factory("xx", "ab");
         final Point p1 = new Point().setId(id).setCode("TET_01");
