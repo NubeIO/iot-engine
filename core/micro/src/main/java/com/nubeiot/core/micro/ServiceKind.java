@@ -1,10 +1,10 @@
 package com.nubeiot.core.micro;
 
-public enum ServiceDiscoveryKind {
+public enum ServiceKind {
 
     LOCAL, CLUSTER;
 
-    static ServiceDiscoveryKind parse(String scope) {
+    static ServiceKind parse(String scope) {
         if (CLUSTER.name().equalsIgnoreCase(scope)) {
             return CLUSTER;
         }

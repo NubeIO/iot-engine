@@ -30,6 +30,8 @@ import lombok.NonNull;
 /**
  * It helps define a mapping between dynamic route by {@code regex path} and {@code HttpMethod} with {@code EventAction}
  * that used by specific {@code EventBus address}
+ *
+ * @see EventMethodMapping
  */
 @Getter
 @Builder(builderClassName = "Builder")

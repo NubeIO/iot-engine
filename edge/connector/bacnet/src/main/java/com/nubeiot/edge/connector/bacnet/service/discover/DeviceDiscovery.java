@@ -8,6 +8,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
@@ -20,6 +21,8 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.dto.RemoteDeviceMixin;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetDeviceTranslator;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
@@ -71,13 +74,13 @@ public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implem
 
     @Override
     public Single<JsonObject> persist(RequestData reqData) {
-        return doGet(reqData).map(rd -> new BACnetDeviceTranslator().to(rd))
-                             .flatMap(device -> execute(device.toJson()));
+        return doGet(reqData).map(rd -> new BACnetDeviceTranslator().serialize(rd))
+                             .flatMap(device -> doPersist(EventAction.CREATE, device.toJson()));
     }
 
     @Override
     public String destination() {
-        return null;
+        return DataPointIndex.lookupApiName(DeviceMetadata.INSTANCE);
     }
 
     private Single<RemoteDeviceMixin> parseRemoteDevice(@NonNull LocalDevice ld, @NonNull RemoteDevice rd,

@@ -11,19 +11,22 @@ public final class BACnetNetworkTranslator
     implements BACnetTranslator<Network, CommunicationProtocol>, IoTEntityTranslator<Network, CommunicationProtocol> {
 
     @Override
-    public CommunicationProtocol from(Network concept) {
-        if (Objects.isNull(concept) || !protocol().equals(concept.getProtocol())) {
-            return null;
+    public Network serialize(CommunicationProtocol object) {
+        if (Objects.isNull(object)) {
+            throw new IllegalArgumentException("Invalid protocol");
         }
-        return CommunicationProtocol.parse(concept.getMetadata().getMap());
-    }
-
-    @Override
-    public Network to(CommunicationProtocol object) {
         return new Network().setProtocol(protocol())
                             .setCode(object.identifier())
                             .setState(State.ENABLED)
                             .setMetadata(object.toJson());
+    }
+
+    @Override
+    public CommunicationProtocol deserialize(Network concept) {
+        if (Objects.isNull(concept) || !protocol().equals(concept.getProtocol())) {
+            throw new IllegalArgumentException("Invalid network");
+        }
+        return CommunicationProtocol.parse(concept.getMetadata().getMap());
     }
 
     @Override

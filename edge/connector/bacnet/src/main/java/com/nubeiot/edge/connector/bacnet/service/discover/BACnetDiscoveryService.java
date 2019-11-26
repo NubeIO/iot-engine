@@ -11,13 +11,13 @@ import java.util.stream.Collectors;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.micro.discovery.RemoteDiscoverService;
+import com.nubeiot.core.micro.discovery.RemoteServiceInvoker;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.edge.connector.bacnet.service.BACnetService;
 
 import lombok.NonNull;
 
-public interface BACnetDiscoveryService extends BACnetService, RemoteDiscoverService {
+public interface BACnetDiscoveryService extends BACnetService {
 
     static Set<? extends BACnetDiscoveryService> createServices(@NonNull Vertx vertx, @NonNull String sharedKey) {
         final Map<Class, Object> inputs = new LinkedHashMap<>();
@@ -40,8 +40,6 @@ public interface BACnetDiscoveryService extends BACnetService, RemoteDiscoverSer
         return "bacnet.discover." + getClass().getSimpleName();
     }
 
-    default RemoteDiscoverService persistence() {
-        return this;
-    }
+    RemoteServiceInvoker persistence();
 
 }

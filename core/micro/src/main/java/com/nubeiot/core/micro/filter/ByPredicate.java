@@ -17,14 +17,14 @@ public interface ByPredicate {
 
     @RequiredArgsConstructor
     enum ByPredicateEnum implements ByPredicate {
-        REGISTRATION("REGISTRATION", null, id -> record -> id.equalsIgnoreCase(record.getRegistration())),
+        REGISTRATION("REGISTRATION", null, id -> r -> id.equalsIgnoreCase(r.getRegistration())),
         GROUP_MANY("GROUP", EventAction.GET_LIST, id -> r -> r.getName().toLowerCase().startsWith(id.toLowerCase())),
-        GROUP_ONE("GROUP", EventAction.GET_ONE, id -> record -> {
-            final int idx = record.getName().lastIndexOf(".");
-            return idx != -1 && record.getName().substring(0, idx).equalsIgnoreCase(id.toLowerCase());
+        GROUP_ONE("GROUP", EventAction.GET_ONE, id -> r -> {
+            final int idx = r.getName().lastIndexOf(".");
+            return idx != -1 && r.getName().substring(0, idx).equalsIgnoreCase(id.toLowerCase());
         }),
         NAME_MANY("NAME", EventAction.GET_LIST, id -> r -> r.getName().toLowerCase().contains(id.toLowerCase())),
-        NAME_ONE("NAME", EventAction.GET_ONE, id -> record -> record.getName().equalsIgnoreCase(id.toLowerCase())),
+        NAME_ONE("NAME", EventAction.GET_ONE, id -> r -> r.getName().equalsIgnoreCase(id.toLowerCase())),
         PATH("PATH", null, id -> record -> ByPathPredicate.predicate(record, id));
 
         private final String type;

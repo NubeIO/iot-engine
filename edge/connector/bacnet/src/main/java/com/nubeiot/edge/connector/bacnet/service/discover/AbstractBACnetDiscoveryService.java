@@ -20,6 +20,7 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
+import com.nubeiot.core.micro.discovery.RemoteServiceInvoker;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
@@ -46,7 +47,7 @@ import lombok.NonNull;
  * Defines public service to expose HTTP API for end-user and/or nube-io service
  */
 abstract class AbstractBACnetDiscoveryService extends AbstractSharedDataDelegate<AbstractBACnetDiscoveryService>
-    implements BACnetDiscoveryService {
+    implements BACnetDiscoveryService, RemoteServiceInvoker {
 
     AbstractBACnetDiscoveryService(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx);
@@ -87,8 +88,8 @@ abstract class AbstractBACnetDiscoveryService extends AbstractSharedDataDelegate
     }
 
     @Override
-    public final String requestService() {
-        return Protocol.BACNET.type();
+    public final String requester() {
+        return "service/" + Protocol.BACNET.type();
     }
 
     @Override
@@ -97,8 +98,17 @@ abstract class AbstractBACnetDiscoveryService extends AbstractSharedDataDelegate
     }
 
     @Override
-    public EventAction action() {
-        return EventAction.UPDATE;
+    public final String serviceLabel() {
+        return "Edge data-point service";
+    }
+
+    @Override
+    public RemoteServiceInvoker persistence() {
+        return this;
+    }
+
+    final Single<JsonObject> doPersist(@NonNull EventAction action, @NonNull JsonObject data) {
+        return persistence().execute(action, data);
     }
 
     final DiscoverOptions parseDiscoverOptions(@NonNull RequestData reqData) {

@@ -3,6 +3,7 @@ package com.nubeiot.edge.connector.bacnet.cache;
 import java.util.function.Supplier;
 
 import com.nubeiot.core.cache.CacheInitializer;
+import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 import com.nubeiot.edge.connector.bacnet.BacnetConfig;
 
@@ -20,7 +21,8 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
 
     @Override
     public BACnetCacheInitializer init(@NonNull BACnetVerticle context) {
-        context.addSharedData(GATEWAY_ADDRESS, config.getGatewayDiscoverAddress());
+        context.addSharedData(GATEWAY_ADDRESS,
+                              Strings.requireNotBlank(config.getGatewayAddress(), "Missing gateway address config"));
         addBlockingCache(context, EDGE_NETWORK_CACHE, BACnetNetworkCache::init);
         addBlockingCache(context, BACNET_DEVICE_CACHE,
                          () -> BACnetDeviceCache.init(context.getVertx(), context.getSharedKey()));

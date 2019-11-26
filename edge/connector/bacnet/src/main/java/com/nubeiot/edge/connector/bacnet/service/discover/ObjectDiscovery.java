@@ -6,6 +6,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.protocol.CommunicationProtocol;
@@ -21,6 +22,9 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.dto.ObjectPropertyValues;
 import com.nubeiot.edge.connector.bacnet.dto.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierSerializer;
+import com.nubeiot.edge.connector.bacnet.translator.BACnetPointTranslator;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
@@ -62,6 +66,35 @@ public final class ObjectDiscovery extends AbstractBACnetDiscoveryService implem
 
     @Override
     public Single<JsonObject> get(RequestData reqData) {
+        return doGet(reqData).map(PropertyValuesMixin::toJson);
+    }
+
+    @Override
+    public Single<JsonObject> batchPersist(RequestData reqData) {
+        return Single.just(new JsonObject());
+    }
+
+    @Override
+    public Single<JsonObject> persist(RequestData reqData) {
+        return doGet(reqData).map(properties -> new BACnetPointTranslator().serialize(properties))
+                             .flatMap(point -> doPersist(EventAction.CREATE, point.toJson()));
+    }
+
+    @Override
+    public String destination() {
+        return DataPointIndex.lookupApiName(PointCompositeMetadata.INSTANCE);
+    }
+
+    private Single<ObjectPropertyValues> getRemoteObjects(@NonNull LocalDevice local, @NonNull RemoteDevice rd,
+                                                          boolean detail) {
+        return Observable.fromIterable(Functions.getOrThrow(t -> new NubeException(ErrorCode.ENGINE_ERROR, t),
+                                                            () -> RequestUtils.getObjectList(local, rd)))
+                         .filter(objId -> objId.getObjectType() != ObjectType.device)
+                         .flatMapSingle(objId -> parseRemoteObject(local, rd, objId, detail, false))
+                         .collect(ObjectPropertyValues::new, ObjectPropertyValues::add);
+    }
+
+    private Single<PropertyValuesMixin> doGet(RequestData reqData) {
         final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.OBJECT);
         final DiscoverOptions options = parseDiscoverOptions(reqData);
         final CommunicationProtocol protocol = parseNetworkProtocol(request);
@@ -72,32 +105,7 @@ public final class ObjectDiscovery extends AbstractBACnetDiscoveryService implem
         final ObjectIdentifier objId = ObjectIdentifierSerializer.deserialize(request.getObjectCode());
         return device.discoverRemoteDevice(request.getDeviceCode(), options)
                      .flatMap(rd -> parseRemoteObject(device.getLocalDevice(), rd, objId, true, options.isDetail()))
-                     .map(PropertyValuesMixin::toJson)
                      .doFinally(device::stop);
-    }
-
-    @Override
-    public Single<JsonObject> batchPersist(RequestData reqData) {
-        return Single.just(new JsonObject());
-    }
-
-    @Override
-    public Single<JsonObject> persist(RequestData reqData) {
-        return Single.just(new JsonObject());
-    }
-
-    @Override
-    public String destination() {
-        return null;
-    }
-
-    private Single<ObjectPropertyValues> getRemoteObjects(@NonNull LocalDevice local, @NonNull RemoteDevice rd,
-                                                          boolean detail) {
-        return Observable.fromIterable(Functions.getOrThrow(t -> new NubeException(ErrorCode.ENGINE_ERROR, t),
-                                                            () -> RequestUtils.getObjectList(local, rd)))
-                         .filter(objId -> objId.getObjectType() != ObjectType.device)
-                         .flatMapSingle(objId -> parseRemoteObject(local, rd, objId, detail, false))
-                         .collect(ObjectPropertyValues::new, ObjectPropertyValues::add);
     }
 
 }

@@ -271,6 +271,7 @@ CREATE TABLE IF NOT EXISTS PROTOCOL_DISPATCHER (
 	ENTITY               varchar(127)   NOT NULL,
 	ACTION               varchar(31)    NOT NULL,
 	ADDRESS              varchar(255)   NOT NULL,
+	GLOBAL               boolean  DEFAULT FALSE NOT NULL,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
     CONSTRAINT PK_PROTOCOL_DISPATCHER PRIMARY KEY ( ID ),

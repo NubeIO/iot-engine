@@ -13,7 +13,7 @@ final class LocalSDController extends ServiceDiscoveryController {
 
     LocalSDController(Vertx vertx, LocalServiceDiscoveryConfig config, String sharedKey,
                       CircuitBreakerController circuitController) {
-        super(config, sharedKey, createServiceDiscovery(vertx, config, ServiceDiscoveryKind.LOCAL, v -> true),
+        super(config, sharedKey, createServiceDiscovery(vertx, config, ServiceKind.LOCAL, v -> true),
               circuitController);
     }
 
@@ -28,8 +28,8 @@ final class LocalSDController extends ServiceDiscoveryController {
     }
 
     @Override
-    ServiceDiscoveryKind kind() {
-        return ServiceDiscoveryKind.LOCAL;
+    ServiceKind kind() {
+        return ServiceKind.LOCAL;
     }
 
     @Override
