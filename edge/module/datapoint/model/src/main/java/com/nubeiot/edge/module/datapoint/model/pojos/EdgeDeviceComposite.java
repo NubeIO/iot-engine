@@ -7,6 +7,8 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.pojos.CompositePojo;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
 
 import lombok.NonNull;
@@ -29,6 +31,11 @@ public final class EdgeDeviceComposite extends EdgeDevice implements CompositePo
     @Override
     public JsonObject toJson() {
         return super.toJson().mergeIn(otherToJson(), true);
+    }
+
+    public EdgeDeviceComposite addDevice(Device device) {
+        this.other.put(DeviceMetadata.INSTANCE.singularKeyName(), device);
+        return this;
     }
 
 }

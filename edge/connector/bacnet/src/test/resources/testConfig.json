@@ -3,7 +3,8 @@
     "__bacnet__": {
       "deviceName": "NubeIO-Edge28",
       "deviceId": 123456,
-      "readinessAddress": "com.nubeiot.edge.connector.bacnet.readiness"
+      "readinessAddress": "mock.bacnet.readiness",
+      "gatewayAddress": "mock.gateway.api"
     }
   }
 }

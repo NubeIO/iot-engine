@@ -12,6 +12,11 @@ import com.nubeiot.core.transport.Transporter;
 
 import lombok.NonNull;
 
+/**
+ * Represents client for event bus.
+ * <p>
+ * It helps registering {@code listener} for specified address or send message to specified address
+ */
 public interface EventbusClient extends Shareable, Transporter {
 
     /**
@@ -36,15 +41,31 @@ public interface EventbusClient extends Shareable, Transporter {
      * @param deliveryOptions Delivery options
      * @see EventPattern#REQUEST_RESPONSE
      */
-    default void request(@NonNull String address, @NonNull EventMessage message,
-                         @NonNull Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions) {
+    default void request(@NonNull String address, @NonNull EventMessage message, @NonNull Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions) {
         fire(address, EventPattern.REQUEST_RESPONSE, message, replyHandler, deliveryOptions);
     }
 
+    /**
+     * Send message then return single response message
+     *
+     * @param address Address
+     * @param message Event message
+     * @return response message
+     * @see EventMessage
+     */
     default Single<EventMessage> request(@NonNull String address, @NonNull EventMessage message) {
         return request(address, message, (DeliveryOptions) null);
     }
 
+    /**
+     * Send message with delivery options then return single response message
+     *
+     * @param address Address
+     * @param message Event message
+     * @return response message
+     * @see EventMessage
+     * @see DeliveryOptions
+     */
     Single<EventMessage> request(@NonNull String address, @NonNull EventMessage message,
                                  DeliveryOptions deliveryOptions);
 
@@ -166,8 +187,7 @@ public interface EventbusClient extends Shareable, Transporter {
      * @param deliveryOptions Delivery options
      * @see #fire(String, EventPattern, JsonObject, Handler, DeliveryOptions)
      */
-    default void fire(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
-                      Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions) {
+    default void fire(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message, Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions) {
         fire(address, pattern, message.toJson(), replyHandler, deliveryOptions);
     }
 
@@ -180,8 +200,7 @@ public interface EventbusClient extends Shareable, Transporter {
      * @param replyHandler    Reply message handler
      * @param deliveryOptions Delivery options
      */
-    void fire(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
-              Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions);
+    void fire(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data, Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions);
 
     /**
      * Register event listener with event model.

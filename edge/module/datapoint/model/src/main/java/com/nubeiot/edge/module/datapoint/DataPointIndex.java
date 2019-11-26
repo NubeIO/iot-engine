@@ -111,6 +111,10 @@ public interface DataPointIndex extends MetadataIndex {
         return map;
     }
 
+    static String lookupApiName(@NonNull EntityMetadata metadata) {
+        return "bios.datapoint." + metadata.modelClass().getSimpleName();
+    }
+
     @Override
     default List<EntityMetadata> index() {
         return INDEX;
@@ -438,7 +442,7 @@ public interface DataPointIndex extends MetadataIndex {
             Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
             MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
             if (Objects.isNull(other)) {
-                point.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), new MeasureUnit().setType(
+                point.addMeasureUnit(new MeasureUnit().setType(
                     Strings.requireNotBlank(point.getMeasureUnit(), "Point measure unit is mandatory")));
             } else {
                 point.setMeasureUnit(other.getType());

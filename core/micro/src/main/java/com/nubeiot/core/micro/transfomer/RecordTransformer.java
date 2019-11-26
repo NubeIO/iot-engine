@@ -17,6 +17,7 @@ public interface RecordTransformer {
     @NonNull JsonObject transform(@NonNull Record record);
 
     enum RecordView {
+
         END_USER, TECHNICAL;
 
         public static RecordView parse(String view) {

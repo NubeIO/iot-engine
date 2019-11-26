@@ -7,6 +7,8 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.pojos.CompositePojo;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
+import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
 import lombok.NonNull;
@@ -29,6 +31,11 @@ public final class PointComposite extends Point implements CompositePojo<Point, 
     @Override
     public JsonObject toJson() {
         return super.toJson().mergeIn(otherToJson(), true);
+    }
+
+    public PointComposite addMeasureUnit(MeasureUnit unit) {
+        this.other.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), unit);
+        return this;
     }
 
 }

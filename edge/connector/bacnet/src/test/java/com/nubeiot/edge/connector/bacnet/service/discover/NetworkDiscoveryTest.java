@@ -13,7 +13,6 @@ import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.Status;
-import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.NetworkException;
@@ -42,26 +41,22 @@ public class NetworkDiscoveryTest extends BACnetVerticleTest {
                 TestHelper.testComplete(async);
             }
         };
-        busClient.fire(DeliveryEvent.builder()
-                                    .address(NetworkDiscovery.class.getName())
-                                    .action(EventAction.GET_LIST)
-                                    .payload(new JsonObject())
-                                    .build(), EventbusHelper.replyAsserter(context, handler));
+        busClient.request(NetworkDiscovery.class.getName(),
+                          EventMessage.initial(EventAction.GET_LIST, new JsonObject()),
+                          EventbusHelper.replyAsserter(context, handler));
     }
 
     @Test
     public void test_get_missing_network_code(TestContext context) {
-        Async async = context.async();
+        final Async async = context.async();
         final BACnetIP dockerIp = BACnetIP.builder().subnet("192.168.16.1/20").label("docker").build();
         final JsonObject body = new JsonObject().put("network", dockerIp.toJson());
         final JsonObject expected = new JsonObject(
             "{\"status\":\"FAILED\",\"action\":\"GET_ONE\",\"error\":{\"code\":\"INVALID_ARGUMENT\"," +
             "\"message\":\"Missing BACnet network code\"}}");
-        busClient.fire(DeliveryEvent.builder()
-                                    .address(NetworkDiscovery.class.getName())
-                                    .action(EventAction.GET_ONE)
-                                    .addPayload(RequestData.builder().body(body).build())
-                                    .build(), EventbusHelper.replyAsserter(context, async, expected));
+        busClient.request(NetworkDiscovery.class.getName(),
+                          EventMessage.initial(EventAction.GET_ONE, RequestData.builder().body(body).build()),
+                          EventbusHelper.replyAsserter(context, async, expected));
     }
 
     @Test
@@ -70,19 +65,18 @@ public class NetworkDiscoveryTest extends BACnetVerticleTest {
                                              .stream()
                                              .findFirst()
                                              .orElseThrow(() -> new NetworkException("Failed"));
-        Async async = context.async();
+        final Async async = context.async();
         final JsonObject request = new JsonObject().put("networkCode", network.identifier());
         final JsonObject response = new JsonObject().put("network", UdpProtocol.builder()
                                                                                .ip(network)
-                                                                               .port(47808).canReusePort(true)
+                                                                               .port(47808)
+                                                                               .canReusePort(true)
                                                                                .build()
                                                                                .toJson());
         final JsonObject expected = EventMessage.success(EventAction.GET_ONE, response).toJson();
-        busClient.fire(DeliveryEvent.builder()
-                                    .address(NetworkDiscovery.class.getName())
-                                    .action(EventAction.GET_ONE)
-                                    .addPayload(RequestData.builder().body(request).build())
-                                    .build(), EventbusHelper.replyAsserter(context, async, expected));
+        busClient.request(NetworkDiscovery.class.getName(),
+                          EventMessage.initial(EventAction.GET_ONE, RequestData.builder().body(request).build()),
+                          EventbusHelper.replyAsserter(context, async, expected));
     }
 
 }

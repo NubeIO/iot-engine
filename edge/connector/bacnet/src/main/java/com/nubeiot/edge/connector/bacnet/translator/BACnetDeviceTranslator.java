@@ -21,27 +21,16 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
                                                      IoTEntityTranslator<EdgeDeviceComposite, RemoteDeviceMixin> {
 
     @Override
-    public RemoteDeviceMixin from(EdgeDeviceComposite entity) {
-        if (Objects.isNull(entity)) {
-            return null;
-        }
-        final Device device = entity.getOther(DeviceMetadata.INSTANCE.singularKeyName());
-        if (Objects.isNull(device)) {
-            return null;
-        }
-        return null;
-    }
-
-    @Override
-    public EdgeDeviceComposite to(RemoteDeviceMixin object) {
+    public EdgeDeviceComposite serialize(RemoteDeviceMixin object) {
         if (Objects.isNull(object)) {
-            return null;
+            throw new IllegalArgumentException("Remote device is invalid. Cannot convert to persistence data");
         }
         final PropertyValuesMixin values = object.getPropertyValues();
         final String manufacturer = Strings.toString(values.getAndCast(PropertyIdentifier.vendorIdentifier)) + "-" +
                                     Strings.toString(values.getAndCast(PropertyIdentifier.vendorName));
         final DeviceType deviceType = getDeviceType(values);
-        final State state = new BACnetStateTranslator().to((DeviceStatus) values.get(PropertyIdentifier.systemStatus));
+        final State state = new BACnetStateTranslator().serialize(
+            (DeviceStatus) values.get(PropertyIdentifier.systemStatus));
         final Device device = new Device().setCode(ObjectIdentifierSerializer.serialize(object.getObjectId()))
                                           .setType(deviceType)
                                           .setProtocol(protocol())
@@ -53,8 +42,19 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
                                               values.getAndCast(PropertyIdentifier.applicationSoftwareVersion))
                                           .setState(state)
                                           .setMetadata(object.toJson());
-        return new EdgeDeviceComposite().wrap(new EdgeDevice().setAddress(object.getAddress()))
-                                        .put(DeviceMetadata.INSTANCE.singularKeyName(), device);
+        return new EdgeDeviceComposite().wrap(new EdgeDevice().setAddress(object.getAddress())).addDevice(device);
+    }
+
+    @Override
+    public RemoteDeviceMixin deserialize(EdgeDeviceComposite entity) {
+        if (Objects.isNull(entity)) {
+            return null;
+        }
+        final Device device = entity.getOther(DeviceMetadata.INSTANCE.singularKeyName());
+        if (Objects.isNull(device)) {
+            return null;
+        }
+        return null;
     }
 
     @Override
@@ -68,7 +68,8 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
     }
 
     private DeviceType getDeviceType(PropertyValuesMixin values) {
-        return Optional.ofNullable(new BACnetDeviceTypeTranslator().to(values.get(PropertyIdentifier.deviceType)))
+        return Optional.ofNullable(
+            new BACnetDeviceTypeTranslator().serialize(values.get(PropertyIdentifier.deviceType)))
                        .orElse(Objects.isNull(values.getAndCast(PropertyIdentifier.deviceAddressBinding))
                                ? DeviceType.EQUIPMENT
                                : DeviceType.GATEWAY);

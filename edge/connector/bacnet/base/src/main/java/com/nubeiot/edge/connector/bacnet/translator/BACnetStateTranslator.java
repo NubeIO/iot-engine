@@ -8,21 +8,7 @@ import com.serotonin.bacnet4j.type.enumerated.DeviceStatus;
 public final class BACnetStateTranslator implements BACnetTranslator<State, DeviceStatus> {
 
     @Override
-    public DeviceStatus from(State concept) {
-        if (Objects.isNull(concept) || concept.equals(State.UNAVAILABLE) || concept.equals(State.NONE)) {
-            return null;
-        }
-        if (State.DISABLED.equals(concept)) {
-            return DeviceStatus.nonOperational;
-        }
-        if (State.PENDING.equals(concept)) {
-            return DeviceStatus.downloadInProgress;
-        }
-        return DeviceStatus.operational;
-    }
-
-    @Override
-    public State to(DeviceStatus object) {
+    public State serialize(DeviceStatus object) {
         if (Objects.isNull(object)) {
             return State.NONE;
         }
@@ -33,6 +19,20 @@ public final class BACnetStateTranslator implements BACnetTranslator<State, Devi
             return State.PENDING;
         }
         return State.ENABLED;
+    }
+
+    @Override
+    public DeviceStatus deserialize(State concept) {
+        if (Objects.isNull(concept) || concept.equals(State.UNAVAILABLE) || concept.equals(State.NONE)) {
+            return null;
+        }
+        if (State.DISABLED.equals(concept)) {
+            return DeviceStatus.nonOperational;
+        }
+        if (State.PENDING.equals(concept)) {
+            return DeviceStatus.downloadInProgress;
+        }
+        return DeviceStatus.operational;
     }
 
     @Override

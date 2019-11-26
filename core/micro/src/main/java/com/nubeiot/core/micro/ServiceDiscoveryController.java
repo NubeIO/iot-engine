@@ -58,8 +58,8 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
     private final CircuitBreakerController circuitController;
     private final Map<String, Record> registrationMap = new ConcurrentHashMap<>();
 
-    static ServiceDiscovery createServiceDiscovery(Vertx vertx, ServiceDiscoveryConfig config,
-                                                   ServiceDiscoveryKind kind, Predicate<Vertx> predicate) {
+    static ServiceDiscovery createServiceDiscovery(Vertx vertx, ServiceDiscoveryConfig config, ServiceKind kind,
+                                                   Predicate<Vertx> predicate) {
         if (!config.isEnabled() || !predicate.test(vertx)) {
             logger.info("Skip setup {} Service Discovery", kind);
             return null;
@@ -75,7 +75,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     abstract <T extends ServiceGatewayUsageMonitor> void subscribe(EventBus eventBus, @NonNull T usageMonitor);
 
-    abstract ServiceDiscoveryKind kind();
+    abstract ServiceKind kind();
 
     abstract String computeINet(String host);
 

@@ -2,6 +2,7 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 import org.junit.After;
 import org.junit.Before;
@@ -18,6 +19,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
@@ -26,6 +28,10 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.micro.MicroConfig;
+import com.nubeiot.core.micro.MicroContext;
+import com.nubeiot.core.micro.Microservice;
+import com.nubeiot.core.micro.MicroserviceProvider;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -47,13 +53,13 @@ public abstract class BACnetVerticleTest {
     @Before
     public void before(TestContext context) {
         this.vertx = Vertx.vertx();
-        final DeploymentOptions options = new DeploymentOptions().setConfig(getNubeConfig().toJson());
+        final BacnetConfig bacnetCfg = getBACnetConfig();
         final BACnetVerticle verticle = new BACnetVerticle();
-        final Async async = context.async(2);
-        VertxHelper.deploy(vertx, context, options, verticle, event -> {
+        final Async async = context.async(getMicroConfig().isPresent() ? 4 : 2);
+        VertxHelper.deploy(vertx, context, getDeploymentOptions(bacnetCfg), verticle, event -> {
+            deployMicroservice(vertx, context, async);
             busClient = verticle.getEventbusClient()
-                                .register("com.nubeiot.edge.connector.bacnet.readiness",
-                                          createReadinessHandler(context, async));
+                                .register(bacnetCfg.getReadinessAddress(), createReadinessHandler(context, async));
             TestHelper.testComplete(async);
         });
     }
@@ -67,8 +73,32 @@ public abstract class BACnetVerticleTest {
         return new TestReadinessHandler(context, async, new JsonObject("{\"total\":0}"));
     }
 
-    protected NubeConfig getNubeConfig() {
-        return IConfig.fromClasspath("testConfig.json", NubeConfig.class);
+    protected BacnetConfig getBACnetConfig() {
+        return IConfig.fromClasspath("testConfig.json", BacnetConfig.class);
+    }
+
+    protected Optional<MicroConfig> getMicroConfig() {
+        return Optional.empty();
+    }
+
+    protected void deployMicroservice(Vertx vertx, TestContext context, Async async) {
+        getMicroConfig().ifPresent(cfg -> {
+            final Microservice verticle = new MicroserviceProvider().get();
+            VertxHelper.deploy(vertx, context, getDeploymentOptions(cfg), verticle, event1 -> {
+                registerMockGatewayService(context, async, verticle.getContext());
+                TestHelper.testComplete(async);
+            });
+        });
+    }
+
+    protected void registerMockGatewayService(TestContext context, Async async, MicroContext microContext) {
+
+    }
+
+    private DeploymentOptions getDeploymentOptions(@NonNull IConfig cfg) {
+        final NubeConfig nubeConfig = IConfig.from(
+            new JsonObject().put(AppConfig.NAME, new JsonObject().put(cfg.key(), cfg.toJson())), NubeConfig.class);
+        return new DeploymentOptions().setConfig(nubeConfig.toJson());
     }
 
     @RequiredArgsConstructor

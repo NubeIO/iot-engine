@@ -19,6 +19,7 @@ import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
+import com.nubeiot.iotdata.unit.DataType;
 import com.nubeiot.iotdata.unit.DataTypeCategory.AngularVelocity;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
@@ -33,12 +34,13 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_create_without_measure_unit(TestContext context) {
+    public void test_create_with_new_unit(TestContext context) {
         JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
                                               .put("message", "Point measure unit is mandatory");
         final UUID id = UUID.randomUUID();
+        final DataType dt = DataType.factory("xx", "ab");
         final Point p1 = new Point().setId(id).setCode("TET_01");
-        RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();
+        RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson().put("unit", dt.toJson())).build();
         asserter(context, false, expected, PointService.class.getName(), EventAction.CREATE, req);
     }
 
@@ -91,8 +93,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", data);
-        Point p1 = new Point().setId(id)
-                              .setCode("TET_01").setEdge(PrimaryKey.EDGE)
+        Point p1 = new Point().setId(id).setCode("TET_01").setEdge(PrimaryKey.EDGE)
                               .setKind(PointKind.INPUT)
                               .setType(PointType.DIGITAL)
                               .setProtocol(Protocol.GPIO)
@@ -141,8 +142,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                               .setProtocol(Protocol.BACNET)
                               .setMeasureUnit(Temperature.FAHRENHEIT.type());
         RequestData req = RequestData.builder()
-                                     .body(JsonPojo.from(p1)
-                                                   .toJson().put("edge_id", PrimaryKey.EDGE.toString())
+                                     .body(JsonPojo.from(p1).toJson().put("edge_id", PrimaryKey.EDGE.toString())
                                                    .put("network_id", PrimaryKey.NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.CREATE, req);
@@ -158,8 +158,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", body);
-        final Point p1 = new Point().setCode("NUBE_HUMIDITY")
-                                    .setProtocol(Protocol.BACNET).setEdge(PrimaryKey.EDGE)
+        final Point p1 = new Point().setCode("NUBE_HUMIDITY").setProtocol(Protocol.BACNET).setEdge(PrimaryKey.EDGE)
                                     .setNetwork(PrimaryKey.NETWORK)
                                     .setKind(PointKind.OUTPUT)
                                     .setType(PointType.THERMISTOR_10K)

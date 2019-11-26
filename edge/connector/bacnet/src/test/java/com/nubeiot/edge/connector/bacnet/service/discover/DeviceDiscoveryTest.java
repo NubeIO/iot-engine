@@ -9,7 +9,6 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.protocol.network.Ipv4Network;
@@ -26,11 +25,9 @@ public class DeviceDiscoveryTest extends BACnetVerticleTest {
         final JsonObject expected = EventMessage.success(EventAction.GET_LIST,
                                                          new JsonObject().put("remoteDevices", new JsonArray()))
                                                 .toJson();
-        busClient.fire(DeliveryEvent.builder()
-                                    .address(DeviceDiscovery.class.getName())
-                                    .action(EventAction.GET_LIST)
-                                    .addPayload(RequestData.builder().body(body).build())
-                                    .build(), EventbusHelper.replyAsserter(context, async, expected));
+        busClient.request(DeviceDiscovery.class.getName(),
+                          EventMessage.initial(EventAction.GET_LIST, RequestData.builder().body(body).build()),
+                          EventbusHelper.replyAsserter(context, async, expected));
     }
 
 }

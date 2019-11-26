@@ -8,12 +8,12 @@ public final class BACnetDataTypeTranslator
     implements BACnetTranslator<DataType, EngineeringUnits>, DataTypeTranslator<DataType, EngineeringUnits> {
 
     @Override
-    public EngineeringUnits from(DataType dataType) {
+    public DataType serialize(EngineeringUnits unit) {
         return null;
     }
 
     @Override
-    public DataType to(EngineeringUnits unit) {
+    public EngineeringUnits deserialize(DataType dataType) {
         return null;
     }
 

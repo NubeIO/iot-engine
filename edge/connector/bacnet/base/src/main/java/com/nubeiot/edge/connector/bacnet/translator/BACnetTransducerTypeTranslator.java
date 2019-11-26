@@ -7,12 +7,12 @@ import com.serotonin.bacnet4j.type.Encodable;
 public class BACnetTransducerTypeTranslator implements BACnetIoTNotionTranslator<TransducerType, Encodable> {
 
     @Override
-    public Encodable from(TransducerType concept) {
+    public TransducerType serialize(Encodable object) {
         return null;
     }
 
     @Override
-    public TransducerType to(Encodable object) {
+    public Encodable deserialize(TransducerType concept) {
         return null;
     }
 

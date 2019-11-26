@@ -12,16 +12,16 @@ import com.serotonin.bacnet4j.type.error.ErrorClassAndCode;
 public final class BACnetDeviceTypeTranslator implements BACnetIoTNotionTranslator<DeviceType, Encodable> {
 
     @Override
-    public Encodable from(DeviceType concept) {
-        return null;
-    }
-
-    @Override
-    public DeviceType to(Encodable object) {
+    public DeviceType serialize(Encodable object) {
         if (Objects.isNull(object) || object instanceof ErrorClassAndCode) {
             return null;
         }
         return DeviceType.factory(Strings.toString(EncodableSerializer.encode(object)));
+    }
+
+    @Override
+    public Encodable deserialize(DeviceType concept) {
+        return null;
     }
 
     @Override

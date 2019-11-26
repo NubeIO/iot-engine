@@ -333,6 +333,9 @@
 			<column name="ENTITY" type="varchar" length="127" jt="12" mandatory="y" />
 			<column name="ACTION" type="varchar" length="31" jt="12" mandatory="y" />
 			<column name="ADDRESS" type="varchar" length="255" jt="12" mandatory="y" />
+			<column name="GLOBAL" type="boolean" jt="16" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<column name="TIME_AUDIT" type="varchar" length="500" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
 			<index name="PK_PROTOCOL_DISPATCHER" unique="PRIMARY_KEY" >
@@ -460,22 +463,22 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="0" instance="C:/projects/nubeio/iot-engine/edge/module/datapoint/model/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="48" y="128" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="272" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="48" y="448" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="304" y="640" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" color="BED3F4" x="672" y="240" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="496" y="592" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="80" y="640" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="848" y="144" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" color="C7F4BE" x="1360" y="656" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="848" y="384" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="BED3F4" x="368" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="FFCCE6" x="1056" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="C7F4BE" x="1200" y="352" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCE6" x="1296" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" color="C7F4BE" x="944" y="576" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="C7F4BE" x="1520" y="368" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCFF" x="832" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="FFCCFF" x="1104" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="48" y="256" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="432" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="BED3F4" x="368" y="128" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" color="BED3F4" x="656" y="288" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" color="C7F4BE" x="1152" y="656" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="592" y="592" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="C7F4BE" x="1504" y="528" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="880" y="384" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" color="C7F4BE" x="832" y="576" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCFF" x="1376" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="C7F4BE" x="1296" y="352" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="384" y="640" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="48" y="640" />
 		<group name="POINT" color="ECF0F7" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" />
@@ -486,17 +489,17 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" />
 		</group>
-		<group name="DEVICE" color="EEF7EC" >
+		<group name="THING" color="EEF7EC" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" />
 		</group>
-		<group name="Common" color="FFCCE6" >
-			<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" />
+		<group name="COMMON" color="FFCCFF" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" />
 		</group>
 		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
 			<string><![CDATA[DROP INDEX IDX_UQ_PROTOCOL_DISPATCHER]]></string>
@@ -520,8 +523,7 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 	CONSTRAINT IDX_UQ_EQUIPMENT_INDEX_E UNIQUE ( CODE, DEVICE_TYPE ) 
  );
 
-COMMENT ON TABLE PUBLIC.DEVICE IS 'Remote Device is connected and managed by NubeIO Edge';
-]]></string>
+COMMENT ON TABLE PUBLIC.DEVICE IS 'Remote Device is connected and managed by NubeIO Edge';]]></string>
 		</script>
 		<script name="POINT" id="Editor_37a712" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.POINT ( 
@@ -1204,8 +1206,7 @@ ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_EQUIP FOREIGN KEY ( DEVICE_ID )
 
 ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER_ID ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
-]]></string>
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER_ID ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;]]></string>
 		</script>
 	</layout>
 </project>

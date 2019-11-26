@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.translator;
 
+import java.util.Objects;
+
 import com.nubeiot.edge.connector.bacnet.dto.PropertyValuesMixin;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.iotdata.translator.IoTEntityTranslator;
@@ -8,12 +10,15 @@ public class BACnetPointTranslator implements BACnetTranslator<PointComposite, P
                                               IoTEntityTranslator<PointComposite, PropertyValuesMixin> {
 
     @Override
-    public PropertyValuesMixin from(PointComposite concept) {
+    public PointComposite serialize(PropertyValuesMixin object) {
+        if (Objects.isNull(object)) {
+            throw new IllegalArgumentException("Invalid object properties. Cannot convert to persistence data");
+        }
         return null;
     }
 
     @Override
-    public PointComposite to(PropertyValuesMixin object) {
+    public PropertyValuesMixin deserialize(PointComposite concept) {
         return null;
     }
 

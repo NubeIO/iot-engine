@@ -1,11 +1,13 @@
 package com.nubeiot.edge.connector.bacnet;
 
 import lombok.Getter;
+import lombok.NonNull;
 
 @Getter
 public final class BacnetConfig extends AbstractBACnetConfig {
 
-    private String gatewayDiscoverAddress;
+    @NonNull
+    private String gatewayAddress;
 
     @Override
     protected int maxDeviceId() {
