@@ -1,0 +1,52 @@
+{
+  "dataDir": "/data",
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "NONE",
+      "ssl": false,
+      "clustered": false
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "__http__": {
+      "port": 8000,
+      "publicScheme": "HTTP",
+      "__rest__": {
+        "enabled": true,
+        "rootApi": "/api"
+      },
+      "__static__": {
+        "enabled": true,
+        "webPath": ""
+      },
+      "__cors__": {
+        "allowedHeaders": [
+          "Access-Control-Request-Method",
+          "Access-Control-Allow-Credentials",
+          "Access-Control-Allow-Origin",
+          "Access-Control-Allow-Headers",
+          "Content-Type",
+          "origin",
+          "x-requested-with",
+          "accept",
+          "Authorization"
+        ]
+      }
+    },
+    "__sql__": {
+      "dialect": "H2",
+      "__hikari__": {
+        "jdbcUrl": "jdbc:h2:file:./edge-dashboard",
+        "minimumIdle": 1,
+        "maximumPoolSize": 2,
+        "connectionTimeout": 30000,
+        "idleTimeout": 180000,
+        "maxLifetime": 300000
+      }
+    },
+    "__edge_dashboard_connection__": {}
+  }
+}

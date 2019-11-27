@@ -177,10 +177,12 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
             return;
         }
         final StaticHandler staticHandler = StaticHandler.create();
+        String webDir;
         if (webConfig.isInResource()) {
-            staticHandler.setWebRoot(webConfig.getWebRoot());
+            webDir = webConfig.getWebRoot();
+            staticHandler.setWebRoot(webDir);
         } else {
-            String webDir = FileUtils.createFolder(dataDir, webConfig.getWebRoot());
+            webDir = FileUtils.createFolder(dataDir, webConfig.getWebRoot());
             logger.info("Static web dir {}", webDir);
             staticHandler.setEnableRangeSupport(true)
                          .setSendVaryHeader(true)
@@ -191,6 +193,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         }
         mainRouter.route(Urls.combinePath(webConfig.getWebPath(), ApiConstants.WILDCARDS_ANY_PATH))
                   .handler(staticHandler);
+        mainRouter.route("/*").handler(ctx -> ctx.response().sendFile(Urls.combinePath(webDir, "index.html")));
     }
 
     private Router initRestRouter(Router mainRouter, RestConfig restConfig) {
