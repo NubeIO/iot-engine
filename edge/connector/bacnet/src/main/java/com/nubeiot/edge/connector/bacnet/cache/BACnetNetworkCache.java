@@ -27,12 +27,12 @@ public final class BACnetNetworkCache extends AbstractLocalCache<String, Communi
     }
 
     @Override
-    protected String keyClass() {
+    protected String keyLabel() {
         return String.class.getName();
     }
 
     @Override
-    protected String valueClass() {
+    protected String valueLabel() {
         return CommunicationProtocol.class.getSimpleName();
     }
 

@@ -1,10 +1,8 @@
 package com.nubeiot.edge.module.datapoint.service;
 
 import java.time.OffsetDateTime;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -13,7 +11,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
@@ -26,6 +23,8 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.core.sql.service.workflow.CreationStep;
+import com.nubeiot.core.sql.service.workflow.ModificationStep;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeDataMetadata;
@@ -98,21 +97,25 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     }
 
     @Override
-    protected Single<Entry<?, ? extends VertxPojo>> afterCreateOrUpdate(@NonNull RequestData reqData,
-                                                                        @NonNull EventAction action,
-                                                                        @NonNull Object primaryKey) {
-        return doLookupByPrimaryKey(primaryKey).doOnSuccess(p -> syncPointValue(reqData, action, (PointValueData) p))
-                                               .doOnEvent((p, e) -> invokeAsyncTask(reqData, action, p, e))
-                                               .map(pojo -> new SimpleEntry<>(primaryKey, pojo));
+    protected CreationStep getCreationStep() {
+        return super.getCreationStep()
+                    .onSuccess((action, kv) -> syncPointValue((PointValueData) kv.request(), action,
+                                                              (PointValueData) kv.pojo()));
     }
 
-    private void syncPointValue(@NonNull RequestData reqData, @NonNull EventAction action,
+    @Override
+    protected ModificationStep getModificationStep(EventAction action) {
+        return super.getModificationStep(action)
+                    .onSuccess((reqData, act, output) -> syncPointValue(context().parseFromRequest(reqData.body()), act,
+                                                                        (PointValueData) output.pojo()));
+    }
+
+    private void syncPointValue(@NonNull PointValueData prev, @NonNull EventAction action,
                                 @NonNull PointValueData pointValue) {
         final OffsetDateTime createdTime = action == EventAction.CREATE
                                            ? pointValue.getTimeAudit().getCreatedTime()
                                            : pointValue.getTimeAudit().getLastModifiedTime();
-        final PointValueData reqValue = context().parseFromRequest(reqData.body());
-        final PointValue requestValue = new PointValue(reqValue.getPriority(), reqValue.getValue());
+        final PointValue requestValue = new PointValue(prev.getPriority(), prev.getValue());
         createHistoryData(pointValue, requestValue, createdTime);
         createRealtimeData(pointValue, requestValue, createdTime);
     }

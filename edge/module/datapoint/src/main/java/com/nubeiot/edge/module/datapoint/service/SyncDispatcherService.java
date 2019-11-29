@@ -11,17 +11,16 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractEntityService;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.SyncDispatcherMetadata;
 import com.nubeiot.edge.module.datapoint.task.remote.ProtocolDispatcherTask;
-import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
+import com.nubeiot.iotdata.edge.model.tables.pojos.SyncDispatcher;
 
 import lombok.NonNull;
 
-public final class ProtocolDispatcherService
-    extends AbstractEntityService<ProtocolDispatcher, ProtocolDispatcherMetadata>
-    implements DataPointService<ProtocolDispatcher, ProtocolDispatcherMetadata> {
+public final class SyncDispatcherService extends AbstractEntityService<SyncDispatcher, SyncDispatcherMetadata>
+    implements DataPointService<SyncDispatcher, SyncDispatcherMetadata> {
 
-    public ProtocolDispatcherService(EntityHandler entityHandler) {
+    public SyncDispatcherService(EntityHandler entityHandler) {
         super(entityHandler);
     }
 
@@ -41,8 +40,8 @@ public final class ProtocolDispatcherService
     }
 
     @Override
-    public ProtocolDispatcherMetadata context() {
-        return ProtocolDispatcherMetadata.INSTANCE;
+    public SyncDispatcherMetadata context() {
+        return SyncDispatcherMetadata.INSTANCE;
     }
 
 }

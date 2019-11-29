@@ -16,7 +16,6 @@ import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
-import com.nubeiot.core.sql.service.task.EntityTaskData;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
@@ -114,18 +113,6 @@ public final class PointService
     @Override
     protected Single<PointComposite> doGetOne(RequestData reqData) {
         return groupQuery().findOneByKey(reqData);
-    }
-
-    @Override
-    protected EntityTaskData<VertxPojo> asyncTaskData(@NonNull RequestData reqData, @NonNull EventAction action,
-                                                      VertxPojo pojo, Throwable t) {
-        return EntityTaskData.builder()
-                             .originReqData(reqData)
-                             .originReqAction(action)
-                             .metadata(contextGroup())
-                             .data(pojo)
-                             .throwable(t)
-                             .build();
     }
 
     private JsonObject convertResource(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {

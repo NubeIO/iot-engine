@@ -4,16 +4,19 @@ import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Maybe;
-import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.GroupEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
+import com.nubeiot.core.sql.service.workflow.CreationStep;
+import com.nubeiot.core.sql.service.workflow.DeletionStep;
+import com.nubeiot.core.sql.service.workflow.ModificationStep;
+import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 
@@ -29,6 +32,12 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     @Override
     public @NonNull GroupEntityTransformer transformer() {
         return this;
+    }
+
+    @Override
+    protected OperationValidator getCreationValidator() {
+        return OperationValidator.create(
+            (req, pojo) -> groupQuery().mustExists(req, ref()).map(b -> contextGroup().onCreating(req)));
     }
 
     @Override
@@ -54,20 +63,17 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected Single<?> doInsert(@NonNull RequestData reqData) {
-        final CP p = (CP) contextGroup().onCreating(reqData);
-        return validateReferenceEntity(reqData).flatMapSingle(b -> groupQuery().insertReturningPrimary(p, reqData));
+    protected CreationStep getCreationStep() {
+        return CreationStep.builder().queryExecutor(groupQuery()).build();
+    }
+
+    protected ModificationStep getModificationStep(EventAction action) {
+        return ModificationStep.builder().action(action).queryExecutor(groupQuery()).build();
     }
 
     @Override
-    protected Maybe<Boolean> validateReferenceEntity(@NonNull RequestData reqData) {
-        return groupQuery().mustExists(reqData, ref());
-    }
-
-    @Override
-    public Single<? extends VertxPojo> doLookupByPrimaryKey(@NonNull Object key) {
-        return groupQuery().lookupByPrimaryKey(key);
+    protected DeletionStep getDeletionStep() {
+        return DeletionStep.builder().queryExecutor(groupQuery()).build();
     }
 
 }

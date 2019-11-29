@@ -1,7 +1,5 @@
 package com.nubeiot.edge.module.datapoint.task.remote;
 
-import java.util.function.Function;
-
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.EntityHandler;
@@ -18,16 +16,6 @@ public final class ProtocolTaskContext implements EntityTaskContext<EventbusClie
     @Override
     public @NonNull EntityHandler handler() {
         return handler;
-    }
-
-    @Override
-    public boolean isConcurrent() {
-        return true;
-    }
-
-    @Override
-    public ProtocolTaskContext registerSharedData(@NonNull Function<String, Object> sharedDataFunc) {
-        return this;
     }
 
     @Override

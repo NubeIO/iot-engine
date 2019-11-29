@@ -1,7 +1,6 @@
 package com.nubeiot.edge.module.datapoint.task.sync;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
@@ -32,16 +31,6 @@ final class DittoTaskContext extends AbstractEnumType implements EntityTaskConte
     @Override
     public final @NonNull EntityHandler handler() {
         return handler;
-    }
-
-    @Override
-    public final boolean isConcurrent() {
-        return true;
-    }
-
-    @Override
-    public final DittoTaskContext registerSharedData(@NonNull Function<String, Object> sharedDataFunc) {
-        return this;
     }
 
     @Override

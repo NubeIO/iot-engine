@@ -1,6 +1,5 @@
 package com.nubeiot.core.sql.query;
 
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.jooq.Condition;
@@ -27,6 +26,7 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
+import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 
@@ -105,19 +105,20 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      *
      * @param requestData Request data
      * @param action      Event action
-     * @param validator   Compare and convert function between {@code database resource} and {@code requested resource}
+     * @param validator   modification validator
      * @return primary key
      */
     Single<?> modifyReturningPrimary(@NonNull RequestData requestData, @NonNull EventAction action,
-                                     BiFunction<VertxPojo, RequestData, Single<P>> validator);
+                                     @NonNull OperationValidator validator);
 
     /**
      * Do delete data by primary
      *
      * @param requestData Request data
+     * @param validator   deletion validator
      * @return deleted resource
      */
-    Single<P> deleteOneByKey(RequestData requestData);
+    Single<P> deleteOneByKey(@NonNull RequestData requestData, @NonNull OperationValidator validator);
 
     /**
      * Check resource is able to delete by scanning reference resource to this resource

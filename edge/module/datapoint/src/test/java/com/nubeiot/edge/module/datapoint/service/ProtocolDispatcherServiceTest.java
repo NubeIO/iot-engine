@@ -21,10 +21,12 @@ public class ProtocolDispatcherServiceTest extends BaseDataPointServiceTest {
     public void test_get_list_protocols(TestContext context) {
         JsonObject expected = new JsonObject(
             "{\"protocol_dispatchers\":[{\"id\":1,\"protocol\":\"BACNET\",\"entity\":\"network\"," +
-            "\"action\":\"CREATE\",\"address\":\"bacnet.dispatcher.network\",\"global\":false},{\"id\":2," +
-            "\"protocol\":\"BACNET\",\"entity\":\"device\",\"action\":\"CREATE\",\"address\":\"bacnet.dispatcher" +
-            ".device\",\"global\":false},{\"id\":3,\"protocol\":\"BACNET\",\"entity\":\"point\"," +
-            "\"action\":\"CREATE\",\"address\":\"bacnet.dispatcher.point\",\"global\":false}]}");
+            "\"action\":\"CREATE\",\"address\":\"bacnet.dispatcher.network\",\"global\":false,\"state\":\"ENABLED\"}," +
+            "{\"id\":2,\"protocol\":\"BACNET\",\"entity\":\"device\",\"action\":\"CREATE\",\"address\":\"bacnet" +
+            ".dispatcher.device\",\"global\":false,\"state\":\"DISABLED\"},{\"id\":3,\"protocol\":\"BACNET\"," +
+            "\"entity\":\"point\",\"action\":\"CREATE\",\"address\":\"bacnet.dispatcher.point\",\"global\":false," +
+            "\"state\":\"ENABLED\"},{\"id\":4,\"protocol\":\"BACNET\",\"entity\":\"tag\",\"action\":\"CREATE\"," +
+            "\"address\":\"bacnet.dispatcher.tag\",\"global\":true,\"state\":\"ENABLED\"}]}");
         asserter(context, true, expected, ProtocolDispatcherService.class.getName(), EventAction.GET_LIST,
                  RequestData.builder().build());
     }

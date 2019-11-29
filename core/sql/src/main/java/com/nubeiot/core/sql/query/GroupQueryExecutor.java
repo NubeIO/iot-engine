@@ -7,7 +7,6 @@ import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -34,27 +33,28 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
     @Override
     Single<CP> findOneByKey(RequestData requestData);
 
-    default Maybe<Boolean> mustExists(@NonNull RequestData reqData, @NonNull GroupReferenceResource groupRef) {
+    default Single<Boolean> mustExists(@NonNull RequestData reqData, @NonNull GroupReferenceResource groupRef) {
         final EntityReferences references = groupRef.groupReferences();
         final JsonObject body = reqData.body();
-        Maybe<Boolean> ref = ReferenceQueryExecutor.super.mustExists(reqData, groupRef);
-        Maybe<Boolean> group = Observable.fromIterable(references.getFields().entrySet())
-                                         .filter(Objects::nonNull)
-                                         .flatMapMaybe(entry -> {
-                                             EntityMetadata m = entry.getKey();
-                                             Optional key = Optional.ofNullable(body.getJsonObject(m.singularKeyName()))
-                                                                    .flatMap(b -> Optional.ofNullable(
-                                                                        b.getValue(m.jsonKeyName()))
-                                                                                          .map(Object::toString)
-                                                                                          .map(m::parseKey));
-                                             if (!key.isPresent()) {
-                                                 return Maybe.just(true);
-                                             }
-                                             return fetchExists(queryBuilder().exist(m, key.get())).switchIfEmpty(
-                                                 Maybe.error(m.notFound(key.get())));
-                                         })
-                                         .reduce((b1, b2) -> b1 && b2);
-        return ref.zipWith(group, (b1, b2) -> b1 && b2);
+        Single<Boolean> ref = ReferenceQueryExecutor.super.mustExists(reqData, groupRef);
+        Single<Boolean> group = Observable.fromIterable(references.getFields().entrySet())
+                                          .filter(Objects::nonNull)
+                                          .flatMapSingle(entry -> {
+                                              EntityMetadata m = entry.getKey();
+                                              Optional key = Optional.ofNullable(
+                                                  body.getJsonObject(m.singularKeyName()))
+                                                                     .flatMap(b -> Optional.ofNullable(
+                                                                         b.getValue(m.jsonKeyName()))
+                                                                                           .map(Object::toString)
+                                                                                           .map(m::parseKey));
+                                              if (!key.isPresent()) {
+                                                  return Single.just(true);
+                                              }
+                                              return fetchExists(queryBuilder().exist(m, key.get())).switchIfEmpty(
+                                                  Single.error(m.notFound(key.get())));
+                                          })
+                                          .all(aBoolean -> aBoolean);
+        return ref.concatWith(group).all(aBoolean -> aBoolean);
     }
 
 }

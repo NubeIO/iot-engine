@@ -143,6 +143,10 @@ public interface RemoteServiceInvoker {
         final EventbusClient client = eventClient();
         final EventAction action = dataMsg.getAction();
         return client.request(gatewayAddress(), EventMessage.initial(EventAction.GET_ONE, findReqData))
+                     .onErrorReturn(t -> {
+                         throw new ServiceNotFoundException(
+                             serviceLabel() + " is not found or out of service. Try again later", t);
+                     })
                      .map(msg -> {
                          if (msg.isError()) {
                              final ErrorMessage errorMsg = msg.getError();

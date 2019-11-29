@@ -22,6 +22,7 @@ import lombok.experimental.Accessors;
 public abstract class AbstractLocalCache<K, V, C extends AbstractLocalCache> implements LocalCache<K, V> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    //TODO implement cache policy to allow soft concurrent map beside hard concurrent map for better performance
     private final ConcurrentMap<K, V> cache = new ConcurrentHashMap<>();
     private Function<K, V> discover;
 
@@ -30,14 +31,14 @@ public abstract class AbstractLocalCache<K, V, C extends AbstractLocalCache> imp
         V val = cache.get(key);
         if (Objects.isNull(discover) || Objects.nonNull(val)) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Get {} by {} from cache", valueClass(),
+                logger.debug("Get {} by {} from cache", valueLabel(),
                              key instanceof JsonData ? ((JsonData) key).toJson() : key);
             }
 
             return val;
         }
         if (logger.isDebugEnabled()) {
-            logger.debug("Find {} by {} then put into cache", valueClass(),
+            logger.debug("Find {} by {} then put into cache", valueLabel(),
                          key instanceof JsonData ? ((JsonData) key).toJson() : key);
         }
         return cache.computeIfAbsent(key, discover);
@@ -60,8 +61,8 @@ public abstract class AbstractLocalCache<K, V, C extends AbstractLocalCache> imp
         return (C) this;
     }
 
-    protected abstract String keyClass();
+    protected abstract String keyLabel();
 
-    protected abstract String valueClass();
+    protected abstract String valueLabel();
 
 }

@@ -35,12 +35,12 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     @Override
-    default Optional<ProtocolDispatcherTask> taskBeforePersist() {
+    default Optional<ProtocolDispatcherTask> prePersistTask() {
         return Optional.of(new ProtocolDispatcherTask(entityHandler()));
     }
 
     @Override
-    default Optional<SyncTask> asyncTaskAfterPersist() {
+    default Optional<SyncTask> postPersistAsyncTask() {
         return SyncServiceFactory.get(entityHandler(), entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG));
     }
 

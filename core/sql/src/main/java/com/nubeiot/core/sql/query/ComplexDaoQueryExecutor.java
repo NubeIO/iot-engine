@@ -3,7 +3,6 @@ package com.nubeiot.core.sql.query;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 import org.jooq.Condition;
@@ -28,6 +27,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.service.HasReferenceResource.EntityReferences;
+import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
@@ -154,9 +154,9 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     @Override
-    public Single<?> modifyReturningPrimary(RequestData req, EventAction action,
-                                            BiFunction<VertxPojo, RequestData, Single<CP>> validator) {
-        return findOneByKey(req).flatMap(db -> validator.apply(db, req))
+    public Single<?> modifyReturningPrimary(@NonNull RequestData req, @NonNull EventAction action,
+                                            @NonNull OperationValidator validator) {
+        return findOneByKey(req).flatMap(db -> validator.validate(req, db)).map(p -> (CP) p)
                                 .flatMap(p -> Optional.ofNullable(p.getOther(resource.singularKeyName()))
                                                       .map(VertxPojo.class::cast)
                                                       .map(r -> (Single) dao(resource).update(
@@ -167,7 +167,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     @Override
-    public Single<CP> deleteOneByKey(RequestData reqData) {
+    public Single<CP> deleteOneByKey(RequestData reqData, OperationValidator validator) {
         return findOneByKey(reqData).flatMap(
             dbPojo -> isAbleToDelete(dbPojo, base, pojo -> base.msg(pojo.toJson(), references.getFields().keySet())))
                                     .flatMap(pojo -> doDelete(reqData, pojo));

@@ -26,12 +26,12 @@ public final class BACnetDeviceCache extends AbstractLocalCache<CommunicationPro
     }
 
     @Override
-    protected String keyClass() {
+    protected String keyLabel() {
         return CommunicationProtocol.class.getName();
     }
 
     @Override
-    protected String valueClass() {
+    protected String valueLabel() {
         return BACnetDevice.class.getSimpleName();
     }
 

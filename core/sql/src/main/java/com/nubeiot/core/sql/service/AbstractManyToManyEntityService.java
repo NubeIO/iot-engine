@@ -12,6 +12,7 @@ import com.nubeiot.core.sql.decorator.ManyToManyEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.sql.validation.CompositeValidation;
+import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 
@@ -43,9 +44,8 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     public @NonNull ManyToManyEntityTransformer transformer() { return this; }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected Single<?> doInsert(@NonNull RequestData reqData) {
-        return queryExecutor().insertReturningPrimary((P) validation().onCreating(reqData), reqData);
+    protected OperationValidator getCreationValidator() {
+        return OperationValidator.create((req, pojo) -> Single.just(context().onCreating(req)));
     }
 
     @Override

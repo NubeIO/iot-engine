@@ -39,7 +39,8 @@ public class IDittoModelTest {
                                                   metadata instanceof PointMetadata))
                             .filter(metadata -> !(Tables.EDGE_DEVICE.equals(metadata.table()) ||
                                                   Tables.THING.equals(metadata.table()) ||
-                                                  Tables.PROTOCOL_DISPATCHER.equals(metadata.table())))
+                                                  Tables.PROTOCOL_DISPATCHER.equals(metadata.table()) ||
+                                                  Tables.SYNC_DISPATCHER.equals(metadata.table())))
                             .map(IDittoModel::find)
                             .forEach(Assert::assertNotNull);
     }

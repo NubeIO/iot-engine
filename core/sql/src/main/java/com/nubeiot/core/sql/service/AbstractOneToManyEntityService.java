@@ -10,8 +10,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Maybe;
-import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
@@ -20,6 +18,7 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.ReferenceEntityTransformer;
 import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
+import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.utils.Functions;
 
 import lombok.NonNull;
@@ -42,11 +41,9 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
         return this;
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    protected Single<?> doInsert(@NonNull RequestData reqData) {
-        final P p = (P) validation().onCreating(reqData);
-        return validateReferenceEntity(reqData).flatMapSingle(b -> queryExecutor().insertReturningPrimary(p, reqData));
+    protected OperationValidator getCreationValidator() {
+        return OperationValidator.create(
+            (req, pojo) -> queryExecutor().mustExists(req, ref()).map(b -> validation().onCreating(req)));
     }
 
     @Override
@@ -80,10 +77,6 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
         return recomputeRequestData(requestData, convertKey(requestData, context()));
     }
 
-    protected Maybe<Boolean> validateReferenceEntity(@NonNull RequestData reqData) {
-        return queryExecutor().mustExists(reqData, ref());
-    }
-
     protected RequestData recomputeRequestData(@NonNull RequestData requestData, JsonObject extra) {
         JsonObject body = Optional.ofNullable(requestData.body()).orElseGet(JsonObject::new);
         JsonObject filter = new JsonObject(entityReferences().computeRequest(body));
@@ -94,7 +87,9 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
                                          : requestData.getFilter().mergeIn(filter, true);
         return RequestData.builder()
                           .body(body)
-                          .headers(requestData.headers()).filter(combineFilter).sort(requestData.getSort())
+                          .headers(requestData.headers())
+                          .filter(combineFilter)
+                          .sort(requestData.getSort())
                           .pagination(requestData.getPagination())
                           .build();
     }

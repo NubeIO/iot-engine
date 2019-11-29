@@ -60,6 +60,11 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
         return (PP) request;
     }
 
+    @Override
+    default <PP extends P> PP onDeleting(@NonNull RequestData reqData) throws IllegalArgumentException {
+        return (PP) context().parseFromRequest(reqData.body());
+    }
+
     default String msg(@NonNull JsonObject data, @NonNull Collection<EntityMetadata> references) {
         return references.stream()
                          .filter(Objects::nonNull)
