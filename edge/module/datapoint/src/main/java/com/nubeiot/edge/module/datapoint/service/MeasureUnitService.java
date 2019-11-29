@@ -28,12 +28,12 @@ public final class MeasureUnitService extends AbstractEntityService<MeasureUnit,
     }
 
     @Override
-    public Optional<ProtocolDispatcherTask> taskBeforePersist() {
+    public Optional<ProtocolDispatcherTask> prePersistTask() {
         return Optional.empty();
     }
 
     @Override
-    public Optional<SyncTask> asyncTaskAfterPersist() {
+    public Optional<SyncTask> postPersistAsyncTask() {
         return Optional.empty();
     }
 

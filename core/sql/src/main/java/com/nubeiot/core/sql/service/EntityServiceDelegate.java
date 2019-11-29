@@ -55,13 +55,13 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public Optional<? extends EntityTask> taskBeforePersist() {
-        return unwrap().taskBeforePersist();
+    public Optional<? extends EntityTask> prePersistTask() {
+        return unwrap().prePersistTask();
     }
 
     @Override
-    public Optional<? extends EntityTask> asyncTaskAfterPersist() {
-        return unwrap().asyncTaskAfterPersist();
+    public Optional<? extends EntityTask> postPersistAsyncTask() {
+        return unwrap().postPersistAsyncTask();
     }
 
     @Override

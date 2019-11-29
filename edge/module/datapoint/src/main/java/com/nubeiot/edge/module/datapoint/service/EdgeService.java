@@ -1,14 +1,10 @@
 package com.nubeiot.edge.module.datapoint.service;
 
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
@@ -16,6 +12,8 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.core.sql.service.HasReferenceResource;
+import com.nubeiot.core.sql.service.workflow.CreationStep;
+import com.nubeiot.core.sql.service.workflow.ModificationStep;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
@@ -40,12 +38,15 @@ public final class EdgeService extends AbstractEntityService<Edge, EdgeMetadata>
         return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.PATCH);
     }
 
-    protected Single<Entry<?, ? extends VertxPojo>> afterCreateOrUpdate(@NonNull RequestData reqData,
-                                                                        @NonNull EventAction action,
-                                                                        @NonNull Object primaryKey) {
-        return doLookupByPrimaryKey(primaryKey).doOnSuccess(pojo -> cacheConfig((Edge) pojo))
-                                               .doOnEvent((p, e) -> invokeAsyncTask(reqData, action, p, e))
-                                               .map(pojo -> new SimpleEntry<>(primaryKey, pojo));
+    @Override
+    protected CreationStep getCreationStep() {
+        return super.getCreationStep().onSuccess((action, keyPojo) -> cacheConfig((Edge) keyPojo.pojo()));
+    }
+
+    @Override
+    protected ModificationStep getModificationStep(EventAction action) {
+        return super.getModificationStep(action)
+                    .onSuccess((reqData, act, keyPojo) -> cacheConfig((Edge) keyPojo.pojo()));
     }
 
     private void cacheConfig(Edge edge) {

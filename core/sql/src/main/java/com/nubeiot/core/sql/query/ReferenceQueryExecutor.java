@@ -7,8 +7,8 @@ import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Maybe;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
@@ -26,19 +26,19 @@ public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQuery
     }
 
     @SuppressWarnings("unchecked")
-    default Maybe<Boolean> mustExists(@NonNull RequestData reqData, @NonNull HasReferenceResource ref) {
+    default Single<Boolean> mustExists(@NonNull RequestData reqData, @NonNull HasReferenceResource ref) {
         final EntityReferences references = ref.entityReferences();
-        return Observable.fromIterable(references.getFields().entrySet()).flatMapMaybe(entry -> {
+        return Observable.fromIterable(references.getFields().entrySet()).flatMapSingle(entry -> {
             final EntityMetadata meta = entry.getKey();
             Object key = meta.getKey(reqData)
                              .orElse(Optional.ofNullable(reqData.body().getValue(entry.getValue().toLowerCase()))
                                              .map(k -> meta.parseKey(k.toString()))
                                              .orElse(null));
             if (Objects.isNull(key)) {
-                return Maybe.just(true);
+                return Single.just(true);
             }
-            return fetchExists(queryBuilder().exist(meta, key)).switchIfEmpty(Maybe.error(meta.notFound(key)));
-        }).reduce((b1, b2) -> b1 && b2);
+            return fetchExists(queryBuilder().exist(meta, key)).switchIfEmpty(Single.error(meta.notFound(key)));
+        }).all(aBoolean -> aBoolean);
     }
 
 }

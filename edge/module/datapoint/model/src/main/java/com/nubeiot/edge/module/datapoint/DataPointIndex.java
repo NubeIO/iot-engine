@@ -29,10 +29,12 @@ import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.ThingComposite;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
+import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDao;
@@ -48,6 +50,7 @@ import com.nubeiot.iotdata.edge.model.tables.daos.PointValueDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ProtocolDispatcherDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.RealtimeSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.SyncDispatcherDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ThingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.TransducerDao;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
@@ -64,6 +67,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
+import com.nubeiot.iotdata.edge.model.tables.pojos.SyncDispatcher;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 import com.nubeiot.iotdata.edge.model.tables.records.DeviceRecord;
@@ -80,6 +84,7 @@ import com.nubeiot.iotdata.edge.model.tables.records.PointValueDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ProtocolDispatcherRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.RealtimeSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ScheduleSettingRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.SyncDispatcherRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ThingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.TransducerRecord;
 import com.nubeiot.iotdata.unit.DataType;
@@ -121,7 +126,7 @@ public interface DataPointIndex extends MetadataIndex {
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class DeviceMetadata implements UUIDKeyEntity<Device, DeviceRecord, DeviceDao> {
+    final class DeviceMetadata implements UUIDKeyEntity<Device, DeviceRecord, DeviceDao>, HasProtocol<Device> {
 
         public static final DeviceMetadata INSTANCE = new DeviceMetadata();
 
@@ -146,6 +151,11 @@ public interface DataPointIndex extends MetadataIndex {
             Strings.requireNotBlank(device.getCode(), "Device code is mandatory");
             Strings.requireNotBlank(device.getType(), "Device type is mandatory");
             return device.setId(Optional.ofNullable(device.getId()).orElseGet(UUID::randomUUID));
+        }
+
+        @Override
+        public Protocol getProtocol(@NonNull Device pojo) {
+            return pojo.getProtocol();
         }
 
     }
@@ -342,7 +352,7 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class NetworkMetadata implements UUIDKeyEntity<Network, NetworkRecord, NetworkDao> {
+    final class NetworkMetadata implements UUIDKeyEntity<Network, NetworkRecord, NetworkDao>, HasProtocol<Network> {
 
         public static final NetworkMetadata INSTANCE = new NetworkMetadata();
 
@@ -380,11 +390,16 @@ public interface DataPointIndex extends MetadataIndex {
             return network.setId(Optional.ofNullable(network.getId()).orElseGet(UUID::randomUUID));
         }
 
+        @Override
+        public Protocol getProtocol(@NonNull Network pojo) {
+            return pojo.getProtocol();
+        }
+
     }
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class PointMetadata implements UUIDKeyEntity<Point, PointRecord, PointDao> {
+    final class PointMetadata implements UUIDKeyEntity<Point, PointRecord, PointDao>, HasProtocol<Point> {
 
         public static final PointMetadata INSTANCE = new PointMetadata();
 
@@ -411,13 +426,18 @@ public interface DataPointIndex extends MetadataIndex {
             return point.setId(Optional.ofNullable(point.getId()).orElseGet(UUID::randomUUID));
         }
 
+        @Override
+        public Protocol getProtocol(@NonNull Point pojo) {
+            return pojo.getProtocol();
+        }
+
     }
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     final class PointCompositeMetadata
         extends AbstractCompositeMetadata<UUID, Point, PointRecord, PointDao, PointComposite>
-        implements UUIDKeyEntity<Point, PointRecord, PointDao> {
+        implements UUIDKeyEntity<Point, PointRecord, PointDao>, HasProtocol<Point> {
 
         public static final PointCompositeMetadata INSTANCE = new PointCompositeMetadata().addSubItem(
             MeasureUnitMetadata.INSTANCE);
@@ -449,6 +469,11 @@ public interface DataPointIndex extends MetadataIndex {
             }
             point.setId(Optional.ofNullable(point.getId()).orElseGet(UUID::randomUUID));
             return point;
+        }
+
+        @Override
+        public Protocol getProtocol(@NonNull Point pojo) {
+            return pojo.getProtocol();
         }
 
     }
@@ -821,6 +846,29 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<ProtocolDispatcherDao> daoClass() {
             return ProtocolDispatcherDao.class;
+        }
+
+    }
+
+
+    final class SyncDispatcherMetadata
+        implements SerialKeyEntity<SyncDispatcher, SyncDispatcherRecord, SyncDispatcherDao> {
+
+        public static final SyncDispatcherMetadata INSTANCE = new SyncDispatcherMetadata();
+
+        @Override
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.SyncDispatcher table() {
+            return Tables.SYNC_DISPATCHER;
+        }
+
+        @Override
+        public @NonNull Class<SyncDispatcher> modelClass() {
+            return SyncDispatcher.class;
+        }
+
+        @Override
+        public @NonNull Class<SyncDispatcherDao> daoClass() {
+            return SyncDispatcherDao.class;
         }
 
     }

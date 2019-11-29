@@ -3,7 +3,6 @@ package com.nubeiot.core.sql.query;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.jooq.DSLContext;
@@ -23,6 +22,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
+import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
@@ -73,12 +73,12 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     }
 
     @Override
-    public Single<?> modifyReturningPrimary(RequestData reqData, EventAction action,
-                                            BiFunction<VertxPojo, RequestData, Single<P>> validator) {
+    public Single<?> modifyReturningPrimary(@NonNull RequestData reqData, @NonNull EventAction action,
+                                            @NonNull OperationValidator validator) {
         final Object pk = metadata.parseKey(reqData);
         final VertxDAO dao = entityHandler().dao(metadata.daoClass());
         //TODO validate unique keys
-        return findOneByKey(reqData).flatMap(db -> validator.apply(db, reqData).map(p -> new SimpleEntry<>(db, p)))
+        return findOneByKey(reqData).flatMap(db -> validator.validate(reqData, db).map(p -> new SimpleEntry<>(db, p)))
                                     .map(pojo -> AuditDecorator.addModifiedAudit(reqData, metadata, pojo.getKey(),
                                                                                  pojo.getValue()))
                                     .flatMap(p -> (Single<Integer>) dao.update(p))
@@ -88,7 +88,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     }
 
     @Override
-    public Single<P> deleteOneByKey(RequestData reqData) {
+    public Single<P> deleteOneByKey(RequestData reqData, OperationValidator validator) {
         final Object pk = metadata.parseKey(reqData);
         final VertxDAO dao = entityHandler().dao(metadata.daoClass());
         return findOneByKey(reqData).flatMap(dbPojo -> isAbleToDelete(dbPojo, metadata, this::pojoKeyMsg))

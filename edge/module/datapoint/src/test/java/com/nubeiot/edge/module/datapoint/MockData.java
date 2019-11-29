@@ -14,6 +14,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.Label;
@@ -77,16 +78,27 @@ public final class MockData {
     public static final List<ProtocolDispatcher> PROTOCOL_DISPATCHERS = protocolDispatchers();
 
     private static List<ProtocolDispatcher> protocolDispatchers() {
-        return Arrays.asList(new ProtocolDispatcher().setProtocol(Protocol.BACNET).setAction(EventAction.CREATE)
+        return Arrays.asList(new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                                                     .setAction(EventAction.CREATE)
                                                      .setEntity(NetworkMetadata.INSTANCE.singularKeyName())
-                                                     .setAddress("bacnet.dispatcher.network"),
+                                                     .setAddress(ProtocolDispatcherAddress.NETWORK)
+                                                     .setState(State.ENABLED),
                              new ProtocolDispatcher().setProtocol(Protocol.BACNET)
                                                      .setAction(EventAction.CREATE)
                                                      .setEntity(DeviceMetadata.INSTANCE.singularKeyName())
-                                                     .setAddress("bacnet.dispatcher.device"),
-                             new ProtocolDispatcher().setProtocol(Protocol.BACNET).setAction(EventAction.CREATE)
+                                                     .setAddress(ProtocolDispatcherAddress.DEVICE)
+                                                     .setState(State.DISABLED),
+                             new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                                                     .setAction(EventAction.CREATE)
                                                      .setEntity(PointMetadata.INSTANCE.singularKeyName())
-                                                     .setAddress("bacnet.dispatcher.point"));
+                                                     .setAddress(ProtocolDispatcherAddress.POINT)
+                                                     .setState(State.ENABLED),
+                             new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                                                     .setAction(EventAction.CREATE)
+                                                     .setEntity(TagPointMetadata.INSTANCE.singularKeyName())
+                                                     .setAddress(ProtocolDispatcherAddress.TAG)
+                                                     .setGlobal(true)
+                                                     .setState(State.ENABLED));
     }
 
     private static List<RealtimeSetting> rtSettings() {
@@ -363,6 +375,16 @@ public final class MockData {
         public static final UUID DEVICE_DROPLET = UUID.fromString("e43aa03a-4746-4fb5-815d-ee62f709b535");
         public static final UUID DEVICE_HVAC = UUID.fromString("28a4ba1b-154d-4bbf-8537-320be70e50e5");
         public static final UUID NETWORK = UUID.fromString("01fbb11e-45a6-479b-91a4-003534770c1c");
+
+    }
+
+
+    public static final class ProtocolDispatcherAddress {
+
+        public static final String NETWORK = "bacnet.dispatcher.network";
+        public static final String DEVICE = "bacnet.dispatcher.device";
+        public static final String POINT = "bacnet.dispatcher.point";
+        public static final String TAG = "bacnet.dispatcher.tag";
 
     }
 

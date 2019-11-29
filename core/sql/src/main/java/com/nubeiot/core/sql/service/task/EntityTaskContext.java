@@ -1,5 +1,7 @@
 package com.nubeiot.core.sql.service.task;
 
+import java.util.function.Function;
+
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.sql.EntityHandler;
@@ -18,8 +20,18 @@ public interface EntityTaskContext<T extends Transporter> extends TaskDefinition
     }
 
     @Override
+    default boolean isConcurrent() {
+        return true;
+    }
+
+    @Override
     default <D> D getSharedDataValue(String dataKey) {
         return handler().sharedData(dataKey);
+    }
+
+    @Override
+    default TaskDefinitionContext<T> registerSharedData(@NonNull Function<String, Object> sharedDataFunc) {
+        return this;
     }
 
 }

@@ -26,7 +26,7 @@ public class ProtocolDispatcherVerticle extends BaseDataPointVerticleTest {
     public void test_get_protocol_dispatcher(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/protocol-dispatcher/1", 200, new JsonObject(
             "{\"protocol\":\"BACNET\",\"address\":\"bacnet.dispatcher.network\",\"action\":\"CREATE\"," +
-            "\"global\":false,\"id\":1,\"entity\":\"network\"}"));
+            "\"global\":false,\"id\":1,\"state\":\"ENABLED\",\"entity\":\"network\"}"));
     }
 
 }

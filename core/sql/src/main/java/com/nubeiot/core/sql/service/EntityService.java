@@ -69,22 +69,22 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
     @NonNull EntityTransformer transformer();
 
     /**
-     * Defines {@code task} after validation and before {@code persisting} entity resource in database
+     * Defines {@code task} is run before the entity manager persist operation is actually executed
      *
      * @return post task
      * @see EntityTask
      */
-    default Optional<? extends EntityTask> taskBeforePersist() {
+    default Optional<? extends EntityTask> prePersistTask() {
         return Optional.empty();
     }
 
     /**
-     * Defines {@code async task} after {@code persisting} entity resource in database
+     * Defines {@code async task} is run after the entity manager persist operation is actually executed
      *
      * @return post task
      * @see EntityTask
      */
-    default Optional<? extends EntityTask> asyncTaskAfterPersist() {
+    default Optional<? extends EntityTask> postPersistAsyncTask() {
         return Optional.empty();
     }
 

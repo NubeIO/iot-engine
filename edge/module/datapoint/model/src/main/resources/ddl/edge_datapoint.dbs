@@ -329,12 +329,15 @@
 		</table>
 		<table name="PROTOCOL_DISPATCHER" >
 			<column name="ID" type="integer" jt="4" mandatory="y" autoincrement="y" />
-			<column name="PROTOCOL" type="varchar" length="31" jt="12" mandatory="y" />
 			<column name="ENTITY" type="varchar" length="127" jt="12" mandatory="y" />
 			<column name="ACTION" type="varchar" length="31" jt="12" mandatory="y" />
+			<column name="PROTOCOL" type="varchar" length="31" jt="12" mandatory="y" />
 			<column name="ADDRESS" type="varchar" length="255" jt="12" mandatory="y" />
 			<column name="GLOBAL" type="boolean" jt="16" mandatory="y" >
 				<defo>false</defo>
+			</column>
+			<column name="STATE" type="varchar" length="31" jt="12" mandatory="y" >
+				<defo>&#039;NONE&#039;</defo>
 			</column>
 			<column name="TIME_AUDIT" type="varchar" length="500" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
@@ -342,9 +345,9 @@
 				<column name="ID" />
 			</index>
 			<index name="IDX_UQ_PROTOCOL_DISPATCHER" unique="UNIQUE" >
-				<column name="PROTOCOL" />
 				<column name="ENTITY" />
 				<column name="ACTION" />
+				<column name="PROTOCOL" />
 			</index>
 		</table>
 		<table name="REALTIME_SETTING" >
@@ -387,6 +390,22 @@
 			<fk name="FK_SCHEDULE_POINT" to_schema="PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
 			</fk>
+		</table>
+		<table name="SYNC_DISPATCHER" >
+			<column name="ID" type="integer" jt="4" mandatory="y" autoincrement="y" />
+			<column name="SYNC_TYPE" type="varchar" length="31" jt="12" mandatory="y" />
+			<column name="STATE" type="varchar" length="31" jt="12" mandatory="y" >
+				<defo>&#039;NONE&#039;</defo>
+			</column>
+			<column name="CONFIGURATION_JSON" type="clob" length="2147483647" jt="2005" />
+			<column name="TIME_AUDIT" type="varchar" length="500" jt="12" />
+			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
+			<index name="PK_SYNC_DISPATCHER_ID" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_SYNC_DISPATCHER" unique="UNIQUE" >
+				<column name="SYNC_TYPE" />
+			</index>
 		</table>
 		<table name="THING" >
 			<comment><![CDATA[Real Thing that represents from Equipment and Transducer]]></comment>
@@ -464,7 +483,6 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="0" instance="C:/projects/nubeio/iot-engine/edge/module/datapoint/model/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCFF" x="832" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="FFCCFF" x="1104" y="80" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="48" y="256" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="432" />
@@ -472,13 +490,15 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" color="BED3F4" x="656" y="288" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" color="C7F4BE" x="1152" y="656" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="592" y="592" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="C7F4BE" x="1504" y="528" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="880" y="384" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" color="C7F4BE" x="832" y="576" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCFF" x="1376" y="80" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="C7F4BE" x="1296" y="352" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="384" y="640" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="48" y="640" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="C7F4BE" x="1504" y="528" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="880" y="384" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="FFCCFF" x="1072" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SYNC_DISPATCHER" color="FFCCFF" x="1504" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCFF" x="1280" y="80" />
 		<group name="POINT" color="ECF0F7" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" />
@@ -496,10 +516,11 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" />
 		</group>
-		<group name="COMMON" color="FFCCFF" >
+		<group name="SYSTEM" color="FFCCFF" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="SYNC_DISPATCHER" />
 		</group>
 		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
 			<string><![CDATA[DROP INDEX IDX_UQ_PROTOCOL_DISPATCHER]]></string>
@@ -1177,6 +1198,18 @@ ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_EQUIP FOREIGN KEY ( EQUIP ) REF
 ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+]]></string>
+		</script>
+		<script name="SYNC_DISPATCHER" id="Editor_2516967" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.SYNC_DISPATCHER ( 
+	ID                   integer GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	SYNC_TYPE            integer   NOT NULL,
+	STATE                varchar(31)  DEFAULT 'NONE' NOT NULL,
+	CONFIGURATION_JSON   clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           clob(2147483647)   ,
+	CONSTRAINT PK_SYNC_DISPATCHER_ID PRIMARY KEY ( ID )
+ );
 ]]></string>
 		</script>
 		<script name="THING" id="Editor_5a7978d" language="SQL" >

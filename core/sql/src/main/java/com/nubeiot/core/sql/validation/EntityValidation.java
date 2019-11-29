@@ -14,7 +14,7 @@ import com.nubeiot.core.utils.Strings;
 import lombok.NonNull;
 
 /**
- * Entity validation for simple case
+ * Entity validation for request input
  *
  * @param <P> Pojo type
  */
@@ -72,8 +72,10 @@ public interface EntityValidation<P extends VertxPojo> {
         return (PP) context().parseFromRequest(JsonPojo.merge(dbData, body));
     }
 
-    default Object onDeleting(@NonNull RequestData reqData) throws IllegalArgumentException {
-        return context().parseKey(reqData);
+    default <PP extends P> PP onDeleting(@NonNull RequestData reqData) throws IllegalArgumentException {
+        final Object key = context().parseKey(reqData);
+        return (PP) context().parseFromRequest(
+            new JsonObject().put(context().jsonKeyName(), JsonData.checkAndConvert(key)));
     }
 
     /**

@@ -39,7 +39,8 @@ public final class NetworkService extends AbstractOneToManyEntityService<Network
 
     @Override
     protected RequestData recomputeRequestData(@NonNull RequestData requestData, JsonObject extra) {
-        EdgeExtension.optimizeReqData(entityHandler(), requestData, context().table().EDGE.getName());
+        final com.nubeiot.iotdata.edge.model.tables.@NonNull Network table = context().table();
+        EdgeExtension.optimizeReqData(entityHandler(), requestData, table.getJsonField(table.EDGE));
         return super.recomputeRequestData(requestData, extra);
     }
 

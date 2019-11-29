@@ -12,7 +12,6 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.dto.Sort.SortType;
 import com.nubeiot.core.event.EventAction;
@@ -22,6 +21,9 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.core.sql.service.workflow.CreationStep;
+import com.nubeiot.core.sql.service.workflow.ModificationStep;
+import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
@@ -62,22 +64,33 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     }
 
     @Override
-    protected Single<?> doInsert(@NonNull RequestData reqData) {
-        final PointHistoryData his = (PointHistoryData) validation().onCreating(reqData);
-        return validateReferenceEntity(reqData).flatMap(b -> isAbleToInsertByCov(his))
-                                               .filter(b -> b)
-                                               .switchIfEmpty(Single.error(new DesiredException(
-                                                   "COV of point " + his.getPoint() +
-                                                   " doesn't meet setting requirement")))
-                                               .flatMap(b -> queryExecutor().insertReturningPrimary(his, reqData))
-                                               .doOnSuccess(pk -> putIntoCache(his));
+    protected CreationStep getCreationStep() {
+        return super.getCreationStep().onSuccess((action, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.pojo()));
     }
 
-    private Maybe<Boolean> isAbleToInsertByCov(PointHistoryData his) {
+    @Override
+    protected ModificationStep getModificationStep(EventAction action) {
+        return super.getModificationStep(action)
+                    .onSuccess((reqData, event, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.pojo()));
+    }
+
+    @Override
+    protected OperationValidator getCreationValidator() {
+        return OperationValidator.create((req, prev) -> queryExecutor().mustExists(req, ref())
+                                                                       .map(b -> validation().onCreating(req))
+                                                                       .flatMap(h -> isAbleToInsertByCov(
+                                                                           (PointHistoryData) h)));
+    }
+
+    private Single<PointHistoryData> isAbleToInsertByCov(@NonNull PointHistoryData his) {
         final UUID point = his.getPoint();
         return getHistorySetting(point).filter(this::isTolerance)
                                        .flatMap(s -> getLastHistory(point).map(p -> validateCOV(his, p, s)))
-                                       .defaultIfEmpty(true);
+                                       .switchIfEmpty(Single.just(true))
+                                       .filter(b -> b)
+                                       .switchIfEmpty(Single.error(new DesiredException(
+                                           "COV of point " + his.getPoint() + " doesn't meet setting requirement")))
+                                       .map(b -> his);
     }
 
     private Maybe<PointHistoryData> getLastHistory(@NonNull UUID point) {
