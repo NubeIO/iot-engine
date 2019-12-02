@@ -60,10 +60,10 @@
                 "url": "http://nexus:8081/repository/maven-central/"
               },
               {
-                "url": "https://maven.mangoautomation.net/repository/ias-snapshot/"
+                "url": "http://45.63.30.129:8081/repository/maven-releases/"
               },
               {
-                "url": "https://maven.mangoautomation.net/repository/ias-release/"
+                "url": "http://45.63.30.129:8081/repository/maven-releases/"
               }
             ]
           }
@@ -138,10 +138,10 @@
                         "url": "http://nexus:8081/repository/maven-central/"
                       },
                       {
-                        "url": "https://maven.mangoautomation.net/repository/ias-snapshot/"
+                        "url": "http://45.63.30.129:8081/repository/maven-releases/"
                       },
                       {
-                        "url": "https://maven.mangoautomation.net/repository/ias-release/"
+                        "url": "http://45.63.30.129:8081/repository/maven-releases/"
                       }
                     ]
                   }
