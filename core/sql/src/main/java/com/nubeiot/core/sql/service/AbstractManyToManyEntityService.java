@@ -44,7 +44,7 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     public @NonNull ManyToManyEntityTransformer transformer() { return this; }
 
     @Override
-    protected OperationValidator getCreationValidator() {
+    protected OperationValidator initCreationValidator() {
         return OperationValidator.create((req, pojo) -> Single.just(context().onCreating(req)));
     }
 

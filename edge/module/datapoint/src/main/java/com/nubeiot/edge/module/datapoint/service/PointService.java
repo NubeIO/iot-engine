@@ -63,7 +63,7 @@ public final class PointService
     }
 
     @Override
-    public Single<JsonObject> afterEachList(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    public Single<JsonObject> onEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return Single.just(JsonPojo.from(pojo).toJson(showGroupFields(requestData)));
     }
 
@@ -108,11 +108,6 @@ public final class PointService
         DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body());
         DataPointIndex.NetworkMetadata.optimizeAlias(reqData.getFilter());
         return super.recomputeRequestData(reqData, extra);
-    }
-
-    @Override
-    protected Single<PointComposite> doGetOne(RequestData reqData) {
-        return groupQuery().findOneByKey(reqData);
     }
 
     private JsonObject convertResource(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {

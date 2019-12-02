@@ -78,22 +78,22 @@ public interface EntityTransformer {
      * @see #afterUpdate(Object, VertxPojo, RequestData)
      * @see #afterPatch(Object, VertxPojo, RequestData)
      * @see #afterGet(VertxPojo, RequestData)
-     * @see #afterEachList(VertxPojo, RequestData)
+     * @see #onEach(VertxPojo, RequestData)
      */
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
         return requestData.hasAudit() ? Collections.emptySet() : AUDIT_FIELDS;
     }
 
     /**
-     * Do any transform each resource in list item
+     * Do any transformation on each resource in database entities
      *
-     * @param pojo        item
+     * @param pojo        database entity
      * @param requestData request data
      * @return transformer item
      * @apiNote By default, result omits {@code null} fields
      */
     @NonNull
-    default Single<JsonObject> afterEachList(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    default Single<JsonObject> onEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return Single.just(JsonPojo.from(pojo).toJson(ignoreFields(requestData)));
     }
 
@@ -104,8 +104,8 @@ public interface EntityTransformer {
      * @return json object of list data
      */
     @NonNull
-    default JsonObject wrapListData(@NonNull JsonArray results) {
-        return new JsonObject().put(resourceMetadata().pluralKeyName(), results);
+    default Single<JsonObject> onMany(@NonNull JsonArray results) {
+        return Single.just(new JsonObject().put(resourceMetadata().pluralKeyName(), results));
     }
 
     /**

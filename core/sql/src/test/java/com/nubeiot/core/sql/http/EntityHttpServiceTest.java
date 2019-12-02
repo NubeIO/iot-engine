@@ -35,7 +35,7 @@ public class EntityHttpServiceTest {
 
     @Test
     public void test_one_resource_none_full_crud() throws JSONException {
-        final Set<EventAction> events = ActionMethodMapping.defaultReadMap().keySet();
+        final Set<EventAction> events = ActionMethodMapping.defaultDQLMap().keySet();
         final Set<EventMethodDefinition> definitions = EntityHttpService.createDefinitions(ActionMethodMapping.CRUD_MAP,
                                                                                            events,
                                                                                            AuthorMetadata.INSTANCE);
@@ -48,7 +48,7 @@ public class EntityHttpServiceTest {
 
     @Test
     public void test_one_resource_one_reference() throws JSONException {
-        final Set<EventMethodDefinition> definitions = EntityHttpService.createDefinitions(ActionMethodMapping.READ_MAP,
+        final Set<EventMethodDefinition> definitions = EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP,
                                                                                            BookMetadata.INSTANCE,
                                                                                            AuthorMetadata.INSTANCE);
         final JsonObject expected = new JsonObject(
@@ -62,7 +62,7 @@ public class EntityHttpServiceTest {
 
     @Test
     public void test_one_resource_more_than_one_reference() throws JSONException {
-        final Set<EventMethodDefinition> definitions = EntityHttpService.createDefinitions(ActionMethodMapping.READ_MAP,
+        final Set<EventMethodDefinition> definitions = EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP,
                                                                                            AuthorMetadata.INSTANCE,
                                                                                            AuthorMetadata.INSTANCE,
                                                                                            BookMetadata.INSTANCE);

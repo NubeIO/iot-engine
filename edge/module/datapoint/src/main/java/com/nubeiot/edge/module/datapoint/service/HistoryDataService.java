@@ -55,7 +55,7 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        return EntityHttpService.createDefinitions(ActionMethodMapping.READ_MAP, context(), PointMetadata.INSTANCE);
+        return EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, context(), PointMetadata.INSTANCE);
     }
 
     @Override
@@ -64,18 +64,18 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
     }
 
     @Override
-    protected CreationStep getCreationStep() {
-        return super.getCreationStep().onSuccess((action, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.pojo()));
+    protected CreationStep initCreationStep() {
+        return super.initCreationStep().onSuccess((action, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.pojo()));
     }
 
     @Override
-    protected ModificationStep getModificationStep(EventAction action) {
-        return super.getModificationStep(action)
+    protected ModificationStep initModificationStep(EventAction action) {
+        return super.initModificationStep(action)
                     .onSuccess((reqData, event, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.pojo()));
     }
 
     @Override
-    protected OperationValidator getCreationValidator() {
+    protected OperationValidator initCreationValidator() {
         return OperationValidator.create((req, prev) -> queryExecutor().mustExists(req, ref())
                                                                        .map(b -> validation().onCreating(req))
                                                                        .flatMap(h -> isAbleToInsertByCov(

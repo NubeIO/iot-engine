@@ -21,6 +21,12 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
+/**
+ * Entity validation for request input
+ *
+ * @param <P> Vertx pojo type
+ * @param <C> Composite pojo that extends from Vertx pojo type
+ */
 @SuppressWarnings("unchecked")
 public interface CompositeValidation<P extends VertxPojo, C extends CompositePojo<P, C>> extends EntityValidation<P> {
 
@@ -37,9 +43,8 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
             if (Objects.isNull(sub)) {
                 continue;
             }
-            request.put(key, Functions.getOrThrow(
-                () -> metadata.onCreating(RequestData.builder().body(reqData.body().getJsonObject(key)).build()),
-                NubeExceptionConverter::from));
+            request.put(key, Functions.getOrThrow(() -> metadata.onCreating(RequestData.builder().body(reqData.body().getJsonObject(key)).build()),
+                                                  NubeExceptionConverter::from));
         }
         return request;
     }
@@ -61,8 +66,8 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     }
 
     @Override
-    default <PP extends P> PP onDeleting(@NonNull RequestData reqData) throws IllegalArgumentException {
-        return (PP) context().parseFromRequest(reqData.body());
+    default <PP extends P> PP onDeleting(P dbData, @NonNull RequestData reqData) throws IllegalArgumentException {
+        return (PP) dbData;
     }
 
     default String msg(@NonNull JsonObject data, @NonNull Collection<EntityMetadata> references) {

@@ -97,15 +97,15 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     }
 
     @Override
-    protected CreationStep getCreationStep() {
-        return super.getCreationStep()
+    protected CreationStep initCreationStep() {
+        return super.initCreationStep()
                     .onSuccess((action, kv) -> syncPointValue((PointValueData) kv.request(), action,
                                                               (PointValueData) kv.pojo()));
     }
 
     @Override
-    protected ModificationStep getModificationStep(EventAction action) {
-        return super.getModificationStep(action)
+    protected ModificationStep initModificationStep(EventAction action) {
+        return super.initModificationStep(action)
                     .onSuccess((reqData, act, output) -> syncPointValue(context().parseFromRequest(reqData.body()), act,
                                                                         (PointValueData) output.pojo()));
     }

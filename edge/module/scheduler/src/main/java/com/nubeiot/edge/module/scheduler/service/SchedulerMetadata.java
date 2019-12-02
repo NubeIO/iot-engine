@@ -95,11 +95,6 @@ public interface SchedulerMetadata extends MetadataIndex {
             return parseFromEntity(JsonPojo.merge(dbData, JobConverter.convert(job.toJson().mergeIn(body))));
         }
 
-        @Override
-        public JobEntity onDeleting(@NonNull RequestData reqData) throws IllegalArgumentException {
-            return new JobEntity().setId(parseKey(reqData));
-        }
-
     }
 
 
@@ -154,11 +149,6 @@ public interface SchedulerMetadata extends MetadataIndex {
             final JsonObject body = reqData.body().copy();
             body.remove(requestKeyName());
             return parseFromEntity(JsonPojo.merge(dbData, TriggerConverter.convert(trigger.toJson().mergeIn(body))));
-        }
-
-        @Override
-        public TriggerEntity onDeleting(@NonNull RequestData reqData) throws IllegalArgumentException {
-            return new TriggerEntity().setId(parseKey(reqData));
         }
 
     }

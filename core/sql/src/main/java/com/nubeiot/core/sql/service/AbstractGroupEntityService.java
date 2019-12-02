@@ -15,6 +15,7 @@ import com.nubeiot.core.sql.decorator.GroupEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.service.workflow.CreationStep;
 import com.nubeiot.core.sql.service.workflow.DeletionStep;
+import com.nubeiot.core.sql.service.workflow.GetOneStep;
 import com.nubeiot.core.sql.service.workflow.ModificationStep;
 import com.nubeiot.core.sql.validation.OperationValidator;
 
@@ -32,12 +33,6 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     @Override
     public @NonNull GroupEntityTransformer transformer() {
         return this;
-    }
-
-    @Override
-    protected OperationValidator getCreationValidator() {
-        return OperationValidator.create(
-            (req, pojo) -> groupQuery().mustExists(req, ref()).map(b -> contextGroup().onCreating(req)));
     }
 
     @Override
@@ -62,18 +57,29 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
         return recomputeRequestData(requestData, extra.mergeIn(convertKey(requestData, stream), true));
     }
 
-    @Override
-    protected CreationStep getCreationStep() {
-        return CreationStep.builder().queryExecutor(groupQuery()).build();
+    @SuppressWarnings("unchecked")
+    protected GetOneStep<CP> initGetOneStep() {
+        return GetOneStep.<CP>builder().action(EventAction.GET_ONE).queryExecutor(groupQuery()).build();
     }
 
-    protected ModificationStep getModificationStep(EventAction action) {
+    @Override
+    protected CreationStep initCreationStep() {
+        return CreationStep.builder().action(EventAction.CREATE).queryExecutor(groupQuery()).build();
+    }
+
+    protected ModificationStep initModificationStep(EventAction action) {
         return ModificationStep.builder().action(action).queryExecutor(groupQuery()).build();
     }
 
     @Override
-    protected DeletionStep getDeletionStep() {
-        return DeletionStep.builder().queryExecutor(groupQuery()).build();
+    protected DeletionStep initDeletionStep() {
+        return DeletionStep.builder().action(EventAction.REMOVE).queryExecutor(groupQuery()).build();
+    }
+
+    @Override
+    protected OperationValidator initCreationValidator() {
+        return OperationValidator.create(
+            (req, pojo) -> groupQuery().mustExists(req, ref()).map(b -> contextGroup().onCreating(req)));
     }
 
 }

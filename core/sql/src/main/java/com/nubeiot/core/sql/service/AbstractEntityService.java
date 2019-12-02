@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -17,10 +16,13 @@ import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.SimpleQueryExecutor;
 import com.nubeiot.core.sql.service.workflow.CreationStep;
 import com.nubeiot.core.sql.service.workflow.DefaultDMLWorkflow;
+import com.nubeiot.core.sql.service.workflow.DefaultDQLWorkflow;
 import com.nubeiot.core.sql.service.workflow.DeletionStep;
+import com.nubeiot.core.sql.service.workflow.EntityTaskWorkflow.AsyncEntityTaskWorkflow;
+import com.nubeiot.core.sql.service.workflow.EntityTaskWorkflow.BlockingEntityTaskWorkflow;
+import com.nubeiot.core.sql.service.workflow.GetManyStep;
+import com.nubeiot.core.sql.service.workflow.GetOneStep;
 import com.nubeiot.core.sql.service.workflow.ModificationStep;
-import com.nubeiot.core.sql.service.workflow.TaskWorkflow.AsyncTaskWorkflow;
-import com.nubeiot.core.sql.service.workflow.TaskWorkflow.BlockingTaskWorkflow;
 import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.sql.validation.OperationValidator;
 
@@ -31,6 +33,7 @@ import lombok.RequiredArgsConstructor;
  * Abstract service to implement {@code CRUD} listeners for entity
  */
 @RequiredArgsConstructor
+@SuppressWarnings("unchecked")
 public abstract class AbstractEntityService<P extends VertxPojo, M extends EntityMetadata>
     implements SimpleEntityService<P, M>, EntityTransformer {
 
@@ -57,10 +60,16 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
      */
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(RequestData requestData) {
-        RequestData reqData = onReadingManyResource(requestData);
-        return doGetMany(reqData).flatMapSingle(m -> transformer().afterEachList(m, reqData))
-                                 .collect(JsonArray::new, JsonArray::add)
-                                 .map(transformer()::wrapListData);
+        return DefaultDQLWorkflow.<JsonArray>builder().action(EventAction.GET_LIST)
+                                                      .metadata(context())
+                                                      .normalize(this::onReadingManyResource)
+                                                      .validator(initGetOneValidator())
+                                                      .prePersist(initPrePersistWorkflow())
+                                                      .query(initGetManyStep())
+                                                      .postAsyncPersist(initPostAsyncPersistWorkflow())
+                                                      .transformer((req, res) -> transformer().onMany(res))
+                                                      .build()
+                                                      .execute(requestData);
     }
 
     /**
@@ -68,8 +77,16 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
      */
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> get(RequestData requestData) {
-        RequestData reqData = onReadingOneResource(requestData);
-        return doGetOne(reqData).flatMap(pojo -> transformer().afterGet(pojo, reqData));
+        return DefaultDQLWorkflow.<P>builder().action(EventAction.GET_ONE)
+                                              .metadata(context())
+                                              .normalize(this::onReadingOneResource)
+                                              .validator(initGetOneValidator())
+                                              .prePersist(initPrePersistWorkflow())
+                                              .query(initGetOneStep())
+                                              .postAsyncPersist(initPostAsyncPersistWorkflow())
+                                              .transformer((req, res) -> transformer().afterGet(res, req))
+                                              .build()
+                                              .execute(requestData);
     }
 
     /**
@@ -81,10 +98,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .action(EventAction.CREATE)
                                  .metadata(context())
                                  .normalize(this::onCreatingOneResource)
-                                 .validator(getCreationValidator())
-                                 .prePersist(BlockingTaskWorkflow.create(prePersistTask().orElse(null)))
-                                 .persist(getCreationStep())
-                                 .postAsyncPersist(AsyncTaskWorkflow.create(postPersistAsyncTask().orElse(null)))
+                                 .validator(initCreationValidator())
+                                 .prePersist(initPrePersistWorkflow())
+                                 .persist(initCreationStep())
+                                 .postAsyncPersist(initPostAsyncPersistWorkflow())
                                  .transformer((req, res) -> transformer().afterCreate(res.key(), res.pojo(), req))
                                  .build()
                                  .execute(requestData);
@@ -99,10 +116,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .action(EventAction.UPDATE)
                                  .metadata(context())
                                  .normalize(this::onModifyingOneResource)
-                                 .validator(getUpdateValidator())
-                                 .prePersist(BlockingTaskWorkflow.create(prePersistTask().orElse(null)))
-                                 .persist(getModificationStep(EventAction.UPDATE))
-                                 .postAsyncPersist(AsyncTaskWorkflow.create(postPersistAsyncTask().orElse(null)))
+                                 .validator(initUpdateValidator())
+                                 .prePersist(initPrePersistWorkflow())
+                                 .persist(initModificationStep(EventAction.UPDATE))
+                                 .postAsyncPersist(initPostAsyncPersistWorkflow())
                                  .transformer((req, res) -> transformer().afterUpdate(res.key(), res.pojo(), req))
                                  .build()
                                  .execute(requestData);
@@ -117,10 +134,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .action(EventAction.PATCH)
                                  .metadata(context())
                                  .normalize(this::onModifyingOneResource)
-                                 .validator(getPatchValidator())
-                                 .prePersist(BlockingTaskWorkflow.create(prePersistTask().orElse(null)))
-                                 .persist(getModificationStep(EventAction.PATCH))
-                                 .postAsyncPersist(AsyncTaskWorkflow.create(postPersistAsyncTask().orElse(null)))
+                                 .validator(initPatchValidator())
+                                 .prePersist(initPrePersistWorkflow())
+                                 .persist(initModificationStep(EventAction.PATCH))
+                                 .postAsyncPersist(initPostAsyncPersistWorkflow())
                                  .transformer((req, re) -> transformer().afterPatch(re.key(), re.pojo(), req))
                                  .build()
                                  .execute(requestData);
@@ -135,10 +152,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .action(EventAction.REMOVE)
                                  .metadata(context())
                                  .normalize(this::onModifyingOneResource)
-                                 .validator(getDeletionValidator())
-                                 .prePersist(BlockingTaskWorkflow.create(prePersistTask().orElse(null)))
-                                 .persist(getDeletionStep())
-                                 .postAsyncPersist(AsyncTaskWorkflow.create(postPersistAsyncTask().orElse(null)))
+                                 .validator(initDeletionValidator())
+                                 .prePersist(initPrePersistWorkflow())
+                                 .persist(initDeletionStep())
+                                 .postAsyncPersist(initPostAsyncPersistWorkflow())
                                  .transformer((req, re) -> transformer().afterDelete(re.pojo(), req))
                                  .build()
                                  .execute(requestData);
@@ -149,40 +166,56 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return context();
     }
 
-    protected Observable<? extends VertxPojo> doGetMany(RequestData reqData) {
-        return queryExecutor().findMany(reqData);
+    protected BlockingEntityTaskWorkflow initPrePersistWorkflow() {
+        return BlockingEntityTaskWorkflow.create(prePersistTask().orElse(null));
     }
 
-    protected Single<? extends VertxPojo> doGetOne(RequestData reqData) {
-        return queryExecutor().findOneByKey(reqData);
+    protected AsyncEntityTaskWorkflow initPostAsyncPersistWorkflow() {
+        return AsyncEntityTaskWorkflow.create(postPersistAsyncTask().orElse(null));
     }
 
-    protected OperationValidator getCreationValidator() {
+    protected GetManyStep initGetManyStep() {
+        return GetManyStep.builder()
+                          .action(EventAction.GET_LIST)
+                          .queryExecutor(queryExecutor())
+                          .transformFunction(transformer()::onEach)
+                          .build();
+    }
+
+    protected OperationValidator initGetOneValidator() {
+        return OperationValidator.create((req, pojo) -> Single.just(pojo));
+    }
+
+    protected <PP extends P> GetOneStep<PP> initGetOneStep() {
+        return GetOneStep.<PP>builder().action(EventAction.GET_ONE).queryExecutor(queryExecutor()).build();
+    }
+
+    protected OperationValidator initCreationValidator() {
         return OperationValidator.create((req, dbEntity) -> Single.just(context().onCreating(req)));
     }
 
-    protected CreationStep getCreationStep() {
-        return CreationStep.builder().queryExecutor(queryExecutor()).build();
+    protected CreationStep initCreationStep() {
+        return CreationStep.builder().action(EventAction.CREATE).queryExecutor(queryExecutor()).build();
     }
 
-    protected OperationValidator getPatchValidator() {
+    protected OperationValidator initPatchValidator() {
         return OperationValidator.create((req, dbEntity) -> Single.just(validation().onPatching(dbEntity, req)));
     }
 
-    protected OperationValidator getUpdateValidator() {
+    protected OperationValidator initUpdateValidator() {
         return OperationValidator.create((req, dbEntity) -> Single.just(validation().onUpdating(dbEntity, req)));
     }
 
-    protected ModificationStep getModificationStep(EventAction action) {
+    protected ModificationStep initModificationStep(@NonNull EventAction action) {
         return ModificationStep.builder().action(action).queryExecutor(queryExecutor()).build();
     }
 
-    protected OperationValidator getDeletionValidator() {
-        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onDeleting(req)));
+    protected OperationValidator initDeletionValidator() {
+        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onDeleting(dbEntity, req)));
     }
 
-    protected DeletionStep getDeletionStep() {
-        return DeletionStep.builder().queryExecutor(queryExecutor()).build();
+    protected DeletionStep initDeletionStep() {
+        return DeletionStep.builder().action(EventAction.REMOVE).queryExecutor(queryExecutor()).build();
     }
 
 }

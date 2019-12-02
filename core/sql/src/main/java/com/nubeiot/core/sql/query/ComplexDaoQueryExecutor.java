@@ -3,6 +3,7 @@ package com.nubeiot.core.sql.query;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.jooq.Condition;
@@ -156,7 +157,8 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     @Override
     public Single<?> modifyReturningPrimary(@NonNull RequestData req, @NonNull EventAction action,
                                             @NonNull OperationValidator validator) {
-        return findOneByKey(req).flatMap(db -> validator.validate(req, db)).map(p -> (CP) p)
+        return findOneByKey(req).flatMap(db -> validator.validate(req, db))
+                                .map(p -> (CP) p)
                                 .flatMap(p -> Optional.ofNullable(p.getOther(resource.singularKeyName()))
                                                       .map(VertxPojo.class::cast)
                                                       .map(r -> (Single) dao(resource).update(
@@ -168,9 +170,11 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
 
     @Override
     public Single<CP> deleteOneByKey(RequestData reqData, OperationValidator validator) {
-        return findOneByKey(reqData).flatMap(
-            dbPojo -> isAbleToDelete(dbPojo, base, pojo -> base.msg(pojo.toJson(), references.getFields().keySet())))
-                                    .flatMap(pojo -> doDelete(reqData, pojo));
+        final Function<VertxPojo, String> function = pojo -> base.msg(pojo.toJson(), references.getFields().keySet());
+        return findOneByKey(reqData).flatMap(dbEntity -> isAbleToDelete(dbEntity, base, function))
+                                    .flatMap(dbEntity -> validator.validate(reqData, dbEntity))
+                                    .map(dbEntity -> (CP) dbEntity)
+                                    .flatMap(dbEntity -> doDelete(reqData, dbEntity));
     }
 
     @Override

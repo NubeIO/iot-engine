@@ -72,10 +72,9 @@ public interface EntityValidation<P extends VertxPojo> {
         return (PP) context().parseFromRequest(JsonPojo.merge(dbData, body));
     }
 
-    default <PP extends P> PP onDeleting(@NonNull RequestData reqData) throws IllegalArgumentException {
-        final Object key = context().parseKey(reqData);
-        return (PP) context().parseFromRequest(
-            new JsonObject().put(context().jsonKeyName(), JsonData.checkAndConvert(key)));
+    default <PP extends P> PP onDeleting(@NonNull P dbData, @NonNull RequestData reqData)
+        throws IllegalArgumentException {
+        return (PP) dbData;
     }
 
     /**
