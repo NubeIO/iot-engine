@@ -84,6 +84,11 @@ public final class MockData {
                                                      .setAddress(ProtocolDispatcherAddress.NETWORK)
                                                      .setState(State.ENABLED),
                              new ProtocolDispatcher().setProtocol(Protocol.BACNET)
+                                                     .setAction(EventAction.REMOVE)
+                                                     .setEntity(NetworkMetadata.INSTANCE.singularKeyName())
+                                                     .setAddress(ProtocolDispatcherAddress.NETWORK)
+                                                     .setState(State.ENABLED),
+                             new ProtocolDispatcher().setProtocol(Protocol.BACNET)
                                                      .setAction(EventAction.CREATE)
                                                      .setEntity(DeviceMetadata.INSTANCE.singularKeyName())
                                                      .setAddress(ProtocolDispatcherAddress.DEVICE)
@@ -293,23 +298,28 @@ public final class MockData {
     }
 
     private static List<Thing> things() {
-        final Thing t1 = new Thing().setDeviceId(PrimaryKey.DEVICE_DROPLET).setTransducerId(PrimaryKey.TRANS_HUMIDITY)
+        final Thing t1 = new Thing().setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                    .setTransducerId(PrimaryKey.TRANS_HUMIDITY)
                                     .setMeasureUnit(Base.PERCENTAGE.type())
                                     .setProductCode("DROPLET-2CB2B763-H")
                                     .setProductLabel(Label.builder().label("Droplet Humidity").build());
-        final Thing t2 = new Thing().setDeviceId(PrimaryKey.DEVICE_DROPLET).setTransducerId(PrimaryKey.TRANS_TEMP)
+        final Thing t2 = new Thing().setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                    .setTransducerId(PrimaryKey.TRANS_TEMP)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("DROPLET-2CB2B763-T")
                                     .setProductLabel(Label.builder().label("Droplet Temp").build());
-        final Thing t3 = new Thing().setDeviceId(PrimaryKey.DEVICE_HVAC).setTransducerId(PrimaryKey.TRANS_TEMP)
+        final Thing t3 = new Thing().setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                    .setTransducerId(PrimaryKey.TRANS_TEMP)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
                                     .setProductCode("HVAC-XYZ-TEMP")
                                     .setProductLabel(Label.builder().label("HVAC Temp").build());
-        final Thing t4 = new Thing().setDeviceId(PrimaryKey.DEVICE_HVAC).setTransducerId(PrimaryKey.TRANS_FAN)
+        final Thing t4 = new Thing().setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                    .setTransducerId(PrimaryKey.TRANS_FAN)
                                     .setMeasureUnit(AngularVelocity.RPM.type())
                                     .setProductCode("HVAC-XYZ-FAN")
                                     .setProductLabel(Label.builder().label("HVAC Fan").build());
-        final Thing t5 = new Thing().setDeviceId(PrimaryKey.DEVICE_HVAC).setTransducerId(PrimaryKey.TRANS_SWITCH)
+        final Thing t5 = new Thing().setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                    .setTransducerId(PrimaryKey.TRANS_SWITCH)
                                     .setMeasureUnit(Base.BOOLEAN.type())
                                     .setProductCode("HVAC-XYZ-FAN-CONTROL")
                                     .setProductLabel(Label.builder().label("HVAC Fan Control").build());
@@ -325,7 +335,9 @@ public final class MockData {
     }
 
     public static JsonObject data_Edge_Network() {
-        return BuiltinData.def().toJson().put(EdgeMetadata.INSTANCE.singularKeyName(), EDGE.toJson())
+        return BuiltinData.def()
+                          .toJson()
+                          .put(EdgeMetadata.INSTANCE.singularKeyName(), EDGE.toJson())
                           .put(NetworkMetadata.INSTANCE.singularKeyName(), NETWORK.toJson());
     }
 

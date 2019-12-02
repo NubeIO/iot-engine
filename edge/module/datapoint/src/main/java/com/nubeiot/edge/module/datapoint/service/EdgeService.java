@@ -39,13 +39,13 @@ public final class EdgeService extends AbstractEntityService<Edge, EdgeMetadata>
     }
 
     @Override
-    protected CreationStep getCreationStep() {
-        return super.getCreationStep().onSuccess((action, keyPojo) -> cacheConfig((Edge) keyPojo.pojo()));
+    protected CreationStep initCreationStep() {
+        return super.initCreationStep().onSuccess((action, keyPojo) -> cacheConfig((Edge) keyPojo.pojo()));
     }
 
     @Override
-    protected ModificationStep getModificationStep(EventAction action) {
-        return super.getModificationStep(action)
+    protected ModificationStep initModificationStep(EventAction action) {
+        return super.initModificationStep(action)
                     .onSuccess((reqData, act, keyPojo) -> cacheConfig((Edge) keyPojo.pojo()));
     }
 

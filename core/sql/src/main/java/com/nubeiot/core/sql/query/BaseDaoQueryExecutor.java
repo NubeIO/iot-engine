@@ -59,7 +59,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     }
 
     @Override
-    public Single<?> insertReturningPrimary(VertxPojo pojo, RequestData reqData) {
+    public Single<?> insertReturningPrimary(@NonNull VertxPojo pojo, @NonNull RequestData reqData) {
         final @NonNull Optional<?> opt = Optional.ofNullable(pojo.toJson().getValue(metadata.jsonKeyName()))
                                                  .map(k -> metadata.parseKey(k.toString()));
         final VertxDAO dao = entityHandler().dao(metadata.daoClass());
@@ -88,10 +88,11 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     }
 
     @Override
-    public Single<P> deleteOneByKey(RequestData reqData, OperationValidator validator) {
+    public Single<P> deleteOneByKey(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
         final Object pk = metadata.parseKey(reqData);
         final VertxDAO dao = entityHandler().dao(metadata.daoClass());
         return findOneByKey(reqData).flatMap(dbPojo -> isAbleToDelete(dbPojo, metadata, this::pojoKeyMsg))
+                                    .flatMap(dbPojo -> validator.validate(reqData, dbPojo))
                                     .flatMapMaybe(
                                         pj -> ((Single<Integer>) dao.deleteById(pk)).filter(r -> r > 0).map(r -> pj))
                                     .switchIfEmpty(

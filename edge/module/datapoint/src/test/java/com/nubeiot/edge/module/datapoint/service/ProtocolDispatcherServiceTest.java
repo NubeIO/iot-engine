@@ -20,13 +20,15 @@ public class ProtocolDispatcherServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_list_protocols(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"protocol_dispatchers\":[{\"id\":1,\"protocol\":\"BACNET\",\"entity\":\"network\"," +
-            "\"action\":\"CREATE\",\"address\":\"bacnet.dispatcher.network\",\"global\":false,\"state\":\"ENABLED\"}," +
-            "{\"id\":2,\"protocol\":\"BACNET\",\"entity\":\"device\",\"action\":\"CREATE\",\"address\":\"bacnet" +
-            ".dispatcher.device\",\"global\":false,\"state\":\"DISABLED\"},{\"id\":3,\"protocol\":\"BACNET\"," +
-            "\"entity\":\"point\",\"action\":\"CREATE\",\"address\":\"bacnet.dispatcher.point\",\"global\":false," +
-            "\"state\":\"ENABLED\"},{\"id\":4,\"protocol\":\"BACNET\",\"entity\":\"tag\",\"action\":\"CREATE\"," +
-            "\"address\":\"bacnet.dispatcher.tag\",\"global\":true,\"state\":\"ENABLED\"}]}");
+            "{\"protocol_dispatchers\":[{\"id\":1,\"entity\":\"network\",\"action\":\"CREATE\"," +
+            "\"protocol\":\"BACNET\",\"address\":\"bacnet.dispatcher.network\",\"global\":false," +
+            "\"state\":\"ENABLED\"},{\"id\":2,\"entity\":\"network\",\"action\":\"REMOVE\",\"protocol\":\"BACNET\"," +
+            "\"address\":\"bacnet.dispatcher.network\",\"global\":false,\"state\":\"ENABLED\"},{\"id\":3," +
+            "\"entity\":\"device\",\"action\":\"CREATE\",\"protocol\":\"BACNET\",\"address\":\"bacnet.dispatcher" +
+            ".device\",\"global\":false,\"state\":\"DISABLED\"},{\"id\":4,\"entity\":\"point\",\"action\":\"CREATE\"," +
+            "\"protocol\":\"BACNET\",\"address\":\"bacnet.dispatcher.point\",\"global\":false,\"state\":\"ENABLED\"}," +
+            "{\"id\":5,\"entity\":\"tag\",\"action\":\"CREATE\",\"protocol\":\"BACNET\",\"address\":\"bacnet" +
+            ".dispatcher.tag\",\"global\":true,\"state\":\"ENABLED\"}]}");
         asserter(context, true, expected, ProtocolDispatcherService.class.getName(), EventAction.GET_LIST,
                  RequestData.builder().build());
     }

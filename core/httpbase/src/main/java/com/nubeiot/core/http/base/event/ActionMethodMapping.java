@@ -26,15 +26,15 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
     /**
      * Default mapping for common {@code CREATE | UPDATE | DELETE} operations
      *
-     * @see #defaultCUDMap()
+     * @see #defaultDMLMap()
      */
-    ActionMethodMapping CUD_MAP = ActionMethodMapping.create(defaultCUDMap());
+    ActionMethodMapping DML_MAP = ActionMethodMapping.create(defaultDMLMap());
     /**
      * Default mapping for reading {@code GET | GET_LIST} operations
      *
-     * @see #defaultReadMap()
+     * @see #defaultDQLMap()
      */
-    ActionMethodMapping READ_MAP = ActionMethodMapping.create(defaultReadMap());
+    ActionMethodMapping DQL_MAP = ActionMethodMapping.create(defaultDQLMap());
 
     static ActionMethodMapping create(@NonNull Map<EventAction, HttpMethod> map) {
         return () -> Collections.unmodifiableMap(map);
@@ -61,7 +61,7 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
         return map;
     }
 
-    static Map<EventAction, HttpMethod> defaultCUDMap() {
+    static Map<EventAction, HttpMethod> defaultDMLMap() {
         Map<EventAction, HttpMethod> map = new HashMap<>();
         map.put(EventAction.CREATE, HttpMethod.POST);
         map.put(EventAction.UPDATE, HttpMethod.PUT);
@@ -70,7 +70,7 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
         return map;
     }
 
-    static Map<EventAction, HttpMethod> defaultReadMap() {
+    static Map<EventAction, HttpMethod> defaultDQLMap() {
         Map<EventAction, HttpMethod> map = new HashMap<>();
         map.put(EventAction.GET_LIST, HttpMethod.GET);
         map.put(EventAction.GET_ONE, HttpMethod.GET);

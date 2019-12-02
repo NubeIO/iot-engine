@@ -93,7 +93,9 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", data);
-        Point p1 = new Point().setId(id).setCode("TET_01").setEdge(PrimaryKey.EDGE)
+        Point p1 = new Point().setId(id)
+                              .setCode("TET_01")
+                              .setEdge(PrimaryKey.EDGE)
                               .setKind(PointKind.INPUT)
                               .setType(PointType.DIGITAL)
                               .setProtocol(Protocol.GPIO)
@@ -142,7 +144,9 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                               .setProtocol(Protocol.BACNET)
                               .setMeasureUnit(Temperature.FAHRENHEIT.type());
         RequestData req = RequestData.builder()
-                                     .body(JsonPojo.from(p1).toJson().put("edge_id", PrimaryKey.EDGE.toString())
+                                     .body(JsonPojo.from(p1)
+                                                   .toJson()
+                                                   .put("edge_id", PrimaryKey.EDGE.toString())
                                                    .put("network_id", PrimaryKey.NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.CREATE, req);
@@ -158,7 +162,9 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", body);
-        final Point p1 = new Point().setCode("NUBE_HUMIDITY").setProtocol(Protocol.BACNET).setEdge(PrimaryKey.EDGE)
+        final Point p1 = new Point().setCode("NUBE_HUMIDITY")
+                                    .setProtocol(Protocol.BACNET)
+                                    .setEdge(PrimaryKey.EDGE)
                                     .setNetwork(PrimaryKey.NETWORK)
                                     .setKind(PointKind.OUTPUT)
                                     .setType(PointType.THERMISTOR_10K)

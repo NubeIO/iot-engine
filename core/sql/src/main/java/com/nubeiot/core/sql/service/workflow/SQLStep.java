@@ -8,19 +8,44 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.KeyPojo;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
 import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.workflow.Workflow;
 
 import lombok.NonNull;
 
-public interface PersistStep extends Workflow {
+/**
+ * Represents a direct execution step into database
+ */
+public interface SQLStep extends Workflow {
 
     @NonNull EventAction action();
 
     @NonNull EntityQueryExecutor queryExecutor();
 
-    Single<KeyPojo> execute(@NonNull RequestData reqData, OperationValidator validator);
+    /**
+     * Represents a {@code DML} step
+     */
+    interface DMLStep extends SQLStep {
 
+        Single<KeyPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator);
+
+    }
+
+
+    /**
+     * Represents a {@code DQL} step
+     */
+    interface DQLStep<T> extends SQLStep {
+
+        Single<T> query(@NonNull RequestData reqData, @NonNull OperationValidator validator);
+
+    }
+
+
+    /**
+     * Represents a {@code create} or {@code update} step
+     */
     @SuppressWarnings("unchecked")
-    interface CreateOrUpdateStep extends PersistStep {
+    interface CreateOrUpdateStep extends DMLStep {
 
         /**
          * Lookup created or modified entity by primary key
