@@ -21,6 +21,7 @@ public enum EventAction implements Serializable {
     REMOVE,
     GET_ONE,
     GET_LIST,
+    CREATE_OR_UPDATE,
     RETURN,
     MIGRATE,
     UNKNOWN,
@@ -32,7 +33,8 @@ public enum EventAction implements Serializable {
     SYNC,
     BATCH_CREATE,
     BATCH_UPDATE,
-    BATCH_PATCH, BATCH_DELETE;
+    BATCH_PATCH,
+    BATCH_DELETE;
 
     public static EventAction parse(String action) {
         return Strings.isBlank(action)

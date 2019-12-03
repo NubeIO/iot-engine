@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
@@ -22,6 +21,7 @@ import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
 import com.nubeiot.edge.connector.bacnet.service.discover.BACnetDiscoveryService;
+import com.nubeiot.edge.connector.bacnet.service.rpc.BACnetRpcClientHelper;
 
 import lombok.NonNull;
 
@@ -50,8 +50,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
     }
 
     @Override
-    protected Maybe<JsonObject> registerServices(@NonNull BacnetConfig config) {
-        final EventbusClient client = getEventbusClient();
+    protected @NonNull Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull BacnetConfig config) {
         return Observable.fromIterable(BACnetDiscoveryService.createServices(getVertx(), getSharedKey()))
                          .doOnEach(s -> Optional.ofNullable(s.getValue())
                                                 .ifPresent(service -> client.register(service.address(), service)))
@@ -59,18 +58,31 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
                          .flatMap(s -> registerEndpoint(microContext.getLocalController(), s))
                          .map(Record::toJson)
                          .count()
-                         .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet service(s)"))
-                         .toMaybe();
+                         .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet APIs"))
+                         .doOnSuccess(logger::info);
+    }
+
+    @Override
+    protected @NonNull Single<JsonObject> registerSubscriber(@NonNull EventbusClient client,
+                                                             @NonNull BacnetConfig config) {
+        return Observable.fromIterable(BACnetRpcClientHelper.createSubscribers(getVertx(), getSharedKey()))
+                         .map(subscriber -> client.register(subscriber.address(), subscriber))
+                         .count()
+                         .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet Subscribers"))
+                         .doOnSuccess(logger::info);
+    }
+
+    @Override
+    protected BACnetDevice addListenerOnEachDevice(BACnetDevice device) {
+        return device.addListener(new WhoIsListener());
     }
 
     @Override
     protected @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull BacnetConfig config) {
-        return Single.just(new ArrayList<>());
-    }
-
-    @Override
-    protected BACnetDevice onEachStartup(BACnetDevice device) {
-        return device.addListener(new WhoIsListener());
+        return BACnetRpcClientHelper.createScanner(getVertx(), getSharedKey()).scan().onErrorResumeNext(t -> {
+            logger.warn("Failed to connect to remote service", t);
+            return Single.fromCallable(ArrayList::new);
+        });
     }
 
     @Override

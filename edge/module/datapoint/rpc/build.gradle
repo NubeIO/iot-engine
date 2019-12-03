@@ -1,0 +1,9 @@
+dependencies {
+    compile project(':core:base')
+    compile project(':core:protocol')
+    compile project(':core:httpbase')
+    compile project(':core:micro')
+    compile project(':edge:module:datapoint:model')
+
+    testCompile project(":core:base").sourceSets.test.output
+}

@@ -82,9 +82,10 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                                                        .timeout(metadata.getMaxTimeoutInMS())
                                                        .timeUnit(TimeUnit.MILLISECONDS)
                                                        .build();
-        scanRemoteDevices(options).subscribe(discoverer -> client.publish(metadata.getDiscoverCompletionAddress(),
-                                                                          createDiscoverCompletionMessage(discoverer)),
-                                             logger::error);
+        scanRemoteDevices(options).doOnError(logger::error)
+                                  .doOnSuccess(discoverer -> client.publish(metadata.getDiscoverCompletionAddress(),
+                                                                            createDiscoverCompletionMsg(discoverer)))
+                                  .subscribe();
         return this;
     }
 
@@ -123,7 +124,7 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
         });
     }
 
-    private EventMessage createDiscoverCompletionMessage(RemoteDeviceScanner scanner) {
+    private EventMessage createDiscoverCompletionMsg(RemoteDeviceScanner scanner) {
         final List<RemoteDeviceMixin> remotes = scanner.getRemoteDevices()
                                                        .stream()
                                                        .map(RemoteDeviceMixin::create)

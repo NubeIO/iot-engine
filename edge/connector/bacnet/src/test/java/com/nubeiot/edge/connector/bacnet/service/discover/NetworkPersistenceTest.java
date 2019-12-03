@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.junit.Test;
@@ -41,7 +41,7 @@ public class NetworkPersistenceTest extends BACnetVerticleTest {
     @Override
     protected void registerMockGatewayService(TestContext context, Async async, MicroContext microContext) {
         final EventMethodDefinition definition = EventMethodDefinition.create("/api/test", ActionMethodMapping.byCRUD(
-            Collections.singleton(EventAction.CREATE)));
+            Arrays.asList(EventAction.CREATE, EventAction.GET_LIST)));
         microContext.getLocalController()
                     .addEventMessageRecord(apiName, address, definition)
                     .subscribe(r -> TestHelper.testComplete(async), context::fail);

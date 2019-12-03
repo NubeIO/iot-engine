@@ -1,6 +1,5 @@
 package com.nubeiot.core.sql.service;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -11,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
+import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
@@ -40,8 +40,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      */
     @NonNull
     default Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.CREATE, EventAction.UPDATE, EventAction.PATCH, EventAction.REMOVE,
-                             EventAction.GET_ONE, EventAction.GET_LIST);
+        return ActionMethodMapping.CRUD_MAP.get().keySet();
     }
 
     /**
@@ -111,7 +110,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      *
      * @param requestData Request data
      * @return json object that includes status message
-     * @see EventAction#UPDATE
+     * @see EventAction#CREATE
      */
     Single<JsonObject> create(RequestData requestData);
 

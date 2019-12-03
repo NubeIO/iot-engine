@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import io.reactivex.Single;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
@@ -25,6 +26,11 @@ public class NetworkPersistService implements EventListener {
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData reqData) {
         return Single.just(JsonPojo.from(new Network().fromJson(reqData.body())).toJson());
+    }
+
+    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
+    public Single<JsonObject> list(RequestData reqData) {
+        return Single.just(new JsonObject().put("networks", new JsonArray()));
     }
 
 }
