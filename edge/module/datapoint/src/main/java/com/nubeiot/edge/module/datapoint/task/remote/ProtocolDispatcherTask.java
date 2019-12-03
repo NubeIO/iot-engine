@@ -1,13 +1,16 @@
 package com.nubeiot.edge.module.datapoint.task.remote;
 
+import java.util.Optional;
+
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.exceptions.ErrorMessage;
-import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.exceptions.ErrorMessageConverter;
 import com.nubeiot.core.exceptions.ServiceNotFoundException;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.task.EntityTask;
@@ -50,15 +53,15 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
     private Single<VertxPojo> dispatch(@NonNull String address, @NonNull EntityTaskData<VertxPojo> taskData) {
         final EventMessage req = EventMessage.initial(taskData.getOriginReqAction(),
                                                       RequestData.builder().body(taskData.getData().toJson()).build());
-        return definition().handler().eventClient().request(address, req).onErrorReturn(error -> {
-            throw new ServiceNotFoundException("Protocol service is out of service. Try again later", error);
-        }).map(msg -> {
-            if (msg.isError()) {
-                final ErrorMessage errorMsg = msg.getError();
-                throw new NubeException(errorMsg.getCode(), errorMsg.getMessage());
-            }
-            return msg.getData();
-        }).map(taskData.getMetadata()::parseFromRequest);
+        final EventbusClient client = definition().handler().eventClient();
+        return client.request(address, req)
+                     .onErrorReturn(err -> {
+                         throw new ServiceNotFoundException("Protocol service is out of service. Try again later", err);
+                     })
+                     .flatMap(msg -> msg.isError()
+                                     ? Single.error(ErrorMessageConverter.from(msg.getError()))
+                                     : Single.just(Optional.ofNullable(msg.getData()).orElse(new JsonObject())))
+                     .map(taskData.getMetadata()::parseFromRequest);
     }
 
     @SuppressWarnings("unchecked")

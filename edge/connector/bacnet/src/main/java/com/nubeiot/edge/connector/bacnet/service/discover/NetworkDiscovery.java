@@ -6,8 +6,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.protocol.CommunicationProtocol;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
@@ -16,12 +16,11 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetNetworkTranslator;
-import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 
 import lombok.NonNull;
 
-public final class NetworkDiscovery extends AbstractBACnetDiscoveryService implements BACnetDiscoveryService {
+public final class NetworkDiscovery extends AbstractDiscoveryService implements BACnetDiscoveryService {
 
     public NetworkDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
@@ -58,18 +57,18 @@ public final class NetworkDiscovery extends AbstractBACnetDiscoveryService imple
     }
 
     @Override
-    public Single<JsonObject> batchPersist(RequestData reqData) {
-        return Single.just(new JsonObject());
+    public Single<JsonObject> discoverThenDoBatch(RequestData reqData) {
+        return doBatch(reqData.body());
     }
 
     @Override
-    public Single<JsonObject> persist(RequestData reqData) {
-        return doPersist(EventAction.CREATE, new BACnetNetworkTranslator().serialize(parseProtocol(reqData)).toJson());
+    public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
+        return doPersist(new BACnetNetworkTranslator().serialize(parseProtocol(reqData)).toJson());
     }
 
     @Override
-    public String destination() {
-        return DataPointIndex.lookupApiName(NetworkMetadata.INSTANCE);
+    public @NonNull EntityMetadata representation() {
+        return NetworkMetadata.INSTANCE;
     }
 
     private CommunicationProtocol parseProtocol(RequestData reqData) {

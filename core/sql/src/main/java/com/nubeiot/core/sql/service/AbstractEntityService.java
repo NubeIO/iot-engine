@@ -191,7 +191,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     }
 
     protected OperationValidator initCreationValidator() {
-        return OperationValidator.create((req, dbEntity) -> Single.just(context().onCreating(req)));
+        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onCreating(req)));
     }
 
     protected CreationStep initCreationStep() {

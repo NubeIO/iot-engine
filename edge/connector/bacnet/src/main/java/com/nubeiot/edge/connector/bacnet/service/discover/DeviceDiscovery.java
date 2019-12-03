@@ -8,8 +8,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.protocol.CommunicationProtocol;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
@@ -21,7 +21,6 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.dto.RemoteDeviceMixin;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetDeviceTranslator;
-import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
@@ -29,7 +28,7 @@ import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.NonNull;
 
-public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implements BACnetDiscoveryService {
+public final class DeviceDiscovery extends AbstractDiscoveryService implements BACnetDiscoveryService {
 
     DeviceDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
@@ -68,19 +67,19 @@ public final class DeviceDiscovery extends AbstractBACnetDiscoveryService implem
     }
 
     @Override
-    public Single<JsonObject> batchPersist(RequestData reqData) {
-        return Single.just(new JsonObject());
+    public Single<JsonObject> discoverThenDoBatch(RequestData reqData) {
+        return doBatch(reqData.body());
     }
 
     @Override
-    public Single<JsonObject> persist(RequestData reqData) {
+    public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
         return doGet(reqData).map(rd -> new BACnetDeviceTranslator().serialize(rd))
-                             .flatMap(device -> doPersist(EventAction.CREATE, device.toJson()));
+                             .flatMap(device -> doPersist(device.toJson()));
     }
 
     @Override
-    public String destination() {
-        return DataPointIndex.lookupApiName(DeviceMetadata.INSTANCE);
+    public @NonNull EntityMetadata representation() {
+        return DeviceMetadata.INSTANCE;
     }
 
     private Single<RemoteDeviceMixin> parseRemoteDevice(@NonNull LocalDevice ld, @NonNull RemoteDevice rd,

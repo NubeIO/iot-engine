@@ -12,9 +12,9 @@ import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.DataTransferObject.Headers;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.exceptions.ServiceException;
-import com.nubeiot.core.exceptions.ServiceNotFoundException;
 import com.nubeiot.core.micro.BaseMicroServiceTest;
 import com.nubeiot.core.micro.discovery.mock.MockServiceInvoker;
 import com.nubeiot.core.micro.discovery.mock.MockServiceListener;
@@ -34,12 +34,12 @@ public class RemoteServiceInvokerTest extends BaseMicroServiceTest {
                                                             EVENT_RECORD_1 + "...");
         invoker.execute(EventAction.CREATE, RequestData.builder().build())
                .subscribe(d -> TestHelper.testComplete(async), t -> {
-                   context.assertTrue(t instanceof ServiceNotFoundException);
-                   assert t instanceof ServiceNotFoundException;
-                   ServiceNotFoundException e = (ServiceNotFoundException) t;
+                   context.assertTrue(t instanceof NubeException);
+                   assert t instanceof NubeException;
+                   NubeException e = (NubeException) t;
                    context.assertEquals(ErrorCode.SERVICE_NOT_FOUND, e.getErrorCode());
                    context.assertEquals(invoker.serviceLabel() +
-                                        " is not found or out of service. Try again later | Cause: SERVICE_NOT_FOUND",
+                                        " is not found or out of service. Try again later | Error: SERVICE_NOT_FOUND",
                                         e.getMessage());
                    TestHelper.testComplete(async);
                });

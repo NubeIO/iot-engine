@@ -17,10 +17,8 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.micro.discovery.RemoteServiceInvoker;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
@@ -30,7 +28,6 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.dto.PropertyValuesMixin;
-import com.nubeiot.iotdata.dto.Protocol;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
@@ -46,10 +43,10 @@ import lombok.NonNull;
 /**
  * Defines public service to expose HTTP API for end-user and/or nube-io service
  */
-abstract class AbstractBACnetDiscoveryService extends AbstractSharedDataDelegate<AbstractBACnetDiscoveryService>
-    implements BACnetDiscoveryService, RemoteServiceInvoker {
+abstract class AbstractDiscoveryService extends AbstractSharedDataDelegate<AbstractDiscoveryService>
+    implements BACnetDiscoveryService {
 
-    AbstractBACnetDiscoveryService(@NonNull Vertx vertx, @NonNull String sharedKey) {
+    AbstractDiscoveryService(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx);
         registerSharedKey(sharedKey);
     }
@@ -77,39 +74,10 @@ abstract class AbstractBACnetDiscoveryService extends AbstractSharedDataDelegate
     public abstract Single<JsonObject> get(RequestData reqData);
 
     @EventContractor(action = EventAction.BATCH_CREATE, returnType = Single.class)
-    public abstract Single<JsonObject> batchPersist(RequestData reqData);
+    public abstract Single<JsonObject> discoverThenDoBatch(RequestData reqData);
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
-    public abstract Single<JsonObject> persist(RequestData reqData);
-
-    @Override
-    public final String gatewayAddress() {
-        return getSharedDataValue(BACnetCacheInitializer.GATEWAY_ADDRESS);
-    }
-
-    @Override
-    public final String requester() {
-        return "service/" + Protocol.BACNET.type();
-    }
-
-    @Override
-    public final EventbusClient eventClient() {
-        return getSharedDataValue(SHARED_EVENTBUS);
-    }
-
-    @Override
-    public final String serviceLabel() {
-        return "Edge data-point service";
-    }
-
-    @Override
-    public RemoteServiceInvoker persistence() {
-        return this;
-    }
-
-    final Single<JsonObject> doPersist(@NonNull EventAction action, @NonNull JsonObject data) {
-        return persistence().execute(action, data);
-    }
+    public abstract Single<JsonObject> discoverThenDoPersist(RequestData reqData);
 
     final DiscoverOptions parseDiscoverOptions(@NonNull RequestData reqData) {
         final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);

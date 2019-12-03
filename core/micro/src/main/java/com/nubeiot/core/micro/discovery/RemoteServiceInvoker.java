@@ -1,5 +1,7 @@
 package com.nubeiot.core.micro.discovery;
 
+import java.util.Optional;
+
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Status;
@@ -10,20 +12,22 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.EventbusClient;
-import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.exceptions.ErrorMessageConverter;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.exceptions.ServiceException;
 import com.nubeiot.core.exceptions.ServiceNotFoundException;
 import com.nubeiot.core.micro.ServiceGatewayIndex.Params;
 import com.nubeiot.core.micro.ServiceKind;
 import com.nubeiot.core.micro.ServiceScope;
 import com.nubeiot.core.micro.transfomer.RecordTransformer.RecordView;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
 /**
  * Helps invoking event service by delegating to {@code service gateway} finds service by name then executes with given
  * {@code event action} and {@code request data}
+ *
+ * @see <a href="https://en.wikipedia.org/wiki/Remote_procedure_call">Remote procedure call</a>
  */
 public interface RemoteServiceInvoker {
 
@@ -90,7 +94,7 @@ public interface RemoteServiceInvoker {
     /**
      * Destination name
      *
-     * @return destination address
+     * @return destination name
      */
     @NonNull String destination();
 
@@ -142,26 +146,21 @@ public interface RemoteServiceInvoker {
                                                    .build();
         final EventbusClient client = eventClient();
         final EventAction action = dataMsg.getAction();
+        final String err = serviceLabel() + " is not found or out of service. Try again later";
         return client.request(gatewayAddress(), EventMessage.initial(EventAction.GET_ONE, findReqData))
                      .onErrorReturn(t -> {
-                         throw new ServiceNotFoundException(
-                             serviceLabel() + " is not found or out of service. Try again later", t);
+                         throw new ServiceNotFoundException(err, t);
                      })
-                     .map(msg -> {
-                         if (msg.isError()) {
-                             final ErrorMessage errorMsg = msg.getError();
-                             final String error = Strings.format(
-                                 "{0} is not found or out of service. Try again later | Cause: {1}", serviceLabel(),
-                                 errorMsg.getCode());
-                             throw new ServiceNotFoundException(error);
-                         }
-                         return msg.getData();
-                     })
+                     .flatMap(msg -> msg.isError()
+                                     ? Single.error(
+                         ErrorMessageConverter.from(msg.getError(), ErrorCode.SERVICE_NOT_FOUND, err))
+                                     : Single.just(Optional.ofNullable(msg.getData()).orElse(new JsonObject())))
                      .filter(json -> json.getJsonArray("endpoints")
                                          .stream()
                                          .map(JsonObject.class::cast)
                                          .anyMatch(o -> action.name().equalsIgnoreCase(o.getString("action"))))
-                     .switchIfEmpty(Single.error(new ServiceException(action + " is unsupported in " + serviceLabel())))
+                     .switchIfEmpty(Single.error(new ServiceException(
+                         action + " is unsupported at destination " + destination() + " in " + serviceLabel())))
                      .flatMap(json -> client.request(json.getString("location"), dataMsg))
                      .map(msg -> msg.isError() ? msg.getError().toJson() : msg.getData());
     }

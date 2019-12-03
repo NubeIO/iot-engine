@@ -34,7 +34,6 @@ public abstract class AbstractLocalCache<K, V, C extends AbstractLocalCache> imp
                 logger.debug("Get {} by {} from cache", valueLabel(),
                              key instanceof JsonData ? ((JsonData) key).toJson() : key);
             }
-
             return val;
         }
         if (logger.isDebugEnabled()) {

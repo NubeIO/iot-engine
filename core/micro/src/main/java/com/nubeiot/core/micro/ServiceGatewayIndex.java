@@ -40,7 +40,8 @@ public final class ServiceGatewayIndex implements EventListener {
         filter.remove(Filters.PRETTY);
         final ServiceDiscoveryController controller = getController(filter);
         final RecordView view = RecordView.parse((String) filter.remove(Params.VIEW));
-        final String identifier = Optional.ofNullable(requestData.body()).map(body -> body.getString(Params.IDENTIFIER))
+        final String identifier = Optional.ofNullable(requestData.body())
+                                          .map(body -> body.getString(Params.IDENTIFIER))
                                           .orElse(null);
         filter.put(Params.IDENTIFIER, Strings.requireNotBlank(identifier, "Missing record identifier"));
         return controller.getRx()
@@ -56,7 +57,8 @@ public final class ServiceGatewayIndex implements EventListener {
         filter.remove(Filters.PRETTY);
         ServiceDiscoveryController controller = getController(filter);
         RecordTransformer transformer = RecordTransformer.create(RecordView.END_USER);
-        return controller.getRx().rxGetRecords(RecordPredicate.filter(filter, EventAction.GET_LIST))
+        return controller.getRx()
+                         .rxGetRecords(RecordPredicate.filter(filter, EventAction.GET_LIST))
                          .flatMap(records -> Observable.fromIterable(records).map(transformer::transform).toList())
                          .map(records -> new JsonObject().put("apis", new JsonArray(records)));
     }
@@ -66,7 +68,7 @@ public final class ServiceGatewayIndex implements EventListener {
         return ServiceKind.LOCAL == scope ? context.getLocalController() : context.getClusterController();
     }
 
-    public static class Params {
+    public static final class Params {
 
         public static final String IDENTIFIER = "identifier";
         public static final String TYPE = "type";
