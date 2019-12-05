@@ -56,8 +56,9 @@ public class RemoteServiceInvokerTest extends BaseMicroServiceTest {
                    assert t instanceof ServiceException;
                    ServiceException e = (ServiceException) t;
                    context.assertEquals(ErrorCode.SERVICE_ERROR, e.getErrorCode());
-                   context.assertEquals(EventAction.UNKNOWN + " is unsupported in " + invoker.serviceLabel(),
-                                        e.getMessage());
+                   context.assertEquals(
+                       "Unsupported '" + EventAction.UNKNOWN + "' at destination '" + EVENT_RECORD_1 + "' under '" +
+                       invoker.serviceLabel() + "'", e.getMessage());
                    TestHelper.testComplete(async);
                });
     }

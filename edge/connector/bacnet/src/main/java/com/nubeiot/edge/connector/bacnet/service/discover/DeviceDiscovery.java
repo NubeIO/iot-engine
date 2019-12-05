@@ -36,7 +36,7 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
 
     @Override
     public @NonNull String servicePath() {
-        return "/discovery/bacnet/network/:" + Fields.networkCode + "/device";
+        return "/network/:" + Fields.networkCode + "/device";
     }
 
     @Override

@@ -51,10 +51,12 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
     }
 
     private Single<VertxPojo> dispatch(@NonNull String address, @NonNull EntityTaskData<VertxPojo> taskData) {
-        final EventMessage req = EventMessage.initial(taskData.getOriginReqAction(),
-                                                      RequestData.builder().body(taskData.getData().toJson()).build());
+        final RequestData reqData = RequestData.builder()
+                                               .body(taskData.getData().toJson())
+                                               .headers(taskData.getOriginReqData().headers())
+                                               .build();
         final EventbusClient client = definition().handler().eventClient();
-        return client.request(address, req)
+        return client.request(address, EventMessage.initial(taskData.getOriginReqAction(), reqData))
                      .onErrorReturn(err -> {
                          throw new ServiceNotFoundException("Protocol service is out of service. Try again later", err);
                      })

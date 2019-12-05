@@ -58,6 +58,13 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
         return JsonData.from(data, Ipv4Network.class);
     }
 
+    /**
+     * Parse IP network
+     *
+     * @param identifier IP network identifier
+     * @return IP network instance
+     * @throws NotFoundException if interface name is not found
+     */
     public static IpNetwork parse(@NonNull String identifier) {
         String[] splitter = identifier.split(SPLIT_CHAR, 2);
         if (splitter[0].equalsIgnoreCase("ipv4")) {

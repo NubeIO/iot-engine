@@ -13,9 +13,9 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.protocol.network.UdpProtocol;
-import com.nubeiot.edge.connector.bacnet.BACnetVerticleTest;
+import com.nubeiot.edge.connector.bacnet.BACnetWithoutGatewayTest;
 
-public class DeviceDiscoveryTest extends BACnetVerticleTest {
+public class DeviceDiscoveryTest extends BACnetWithoutGatewayTest {
 
     @Test
     public void test_network_without_device(TestContext context) {

@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 @Getter
-public final class BacnetConfig extends AbstractBACnetConfig {
+public final class BACnetConfig extends AbstractBACnetConfig {
 
     @NonNull
     private String gatewayAddress;

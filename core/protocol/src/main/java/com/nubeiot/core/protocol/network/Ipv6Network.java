@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
+import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.utils.Functions;
 
 import inet.ipaddr.IPAddressString;
@@ -55,6 +56,13 @@ public final class Ipv6Network extends IpNetwork<Ipv6Network> implements Etherne
         return getActiveInterfaces(networkInterface -> true, IS_V6, Ipv6Network::from);
     }
 
+    /**
+     * Find active IPv6 by interface name
+     *
+     * @param interfaceName interface name
+     * @return IPv6 network
+     * @throws NotFoundException if interface name is not found
+     */
     public static Ipv6Network getActiveIpByName(String interfaceName) {
         return getActiveIpByName(interfaceName, IS_V6, Ipv6Network::from);
     }

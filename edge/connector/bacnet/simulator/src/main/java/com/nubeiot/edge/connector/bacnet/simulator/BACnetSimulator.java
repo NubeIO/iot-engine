@@ -57,8 +57,8 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     }
 
     @Override
-    protected BACnetDevice addListenerOnEachDevice(BACnetDevice device) {
-        return device.addListener(new WhoIsListener());
+    protected void addListenerOnEachDevice(BACnetDevice device) {
+        device.addListener(new WhoIsListener());
     }
 
     @Override

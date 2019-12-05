@@ -23,13 +23,15 @@ public interface DataPointRpcClient<T extends DataPointRpcClient>
     String GATEWAY_ADDRESS = "GATEWAY_ADDRESS";
 
     @Override
-    default @NonNull String gatewayAddress() {
+    @NonNull
+    default String gatewayAddress() {
         return getSharedDataValue(GATEWAY_ADDRESS);
     }
 
     @Override
+    @NonNull
     default String requester() {
-        return "service/" + protocol().type();
+        return requestBy();
     }
 
     @Override

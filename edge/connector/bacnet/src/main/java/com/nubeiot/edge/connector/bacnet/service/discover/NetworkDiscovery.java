@@ -22,13 +22,13 @@ import lombok.NonNull;
 
 public final class NetworkDiscovery extends AbstractDiscoveryService implements BACnetDiscoveryService {
 
-    public NetworkDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
+    NetworkDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
     }
 
     @Override
     public @NonNull String servicePath() {
-        return "/discovery/bacnet/network";
+        return "/network";
     }
 
     @Override

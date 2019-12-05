@@ -4,8 +4,8 @@ import java.util.function.Supplier;
 
 import com.nubeiot.core.cache.CacheInitializer;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
-import com.nubeiot.edge.connector.bacnet.BacnetConfig;
 import com.nubeiot.edge.connector.bacnet.service.BACnetRpcClient;
 
 import lombok.NonNull;
@@ -17,7 +17,7 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
     public static final String EDGE_NETWORK_CACHE = "EDGE_NETWORK_CACHE";
     public static final String BACNET_DEVICE_CACHE = "BACNET_DEVICE_CACHE";
     @NonNull
-    private final BacnetConfig config;
+    private final BACnetConfig config;
 
     @Override
     public BACnetCacheInitializer init(@NonNull BACnetVerticle context) {

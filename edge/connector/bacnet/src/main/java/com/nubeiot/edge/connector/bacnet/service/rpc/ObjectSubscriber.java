@@ -4,7 +4,9 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.rpc.AbstractSubscriber;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
@@ -14,6 +16,11 @@ public final class ObjectSubscriber extends AbstractSubscriber<Point> implements
 
     ObjectSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
+    }
+
+    @Override
+    public @NonNull EntityMetadata metadata() {
+        return PointCompositeMetadata.INSTANCE;
     }
 
     @Override

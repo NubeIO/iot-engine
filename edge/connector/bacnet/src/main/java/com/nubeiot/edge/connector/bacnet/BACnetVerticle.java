@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -11,6 +11,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
@@ -20,7 +21,9 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
+import com.nubeiot.edge.connector.bacnet.service.BACnetRpcClient;
 import com.nubeiot.edge.connector.bacnet.service.discover.BACnetDiscoveryService;
+import com.nubeiot.edge.connector.bacnet.service.rpc.BACnetDispatcherRegister;
 import com.nubeiot.edge.connector.bacnet.service.rpc.BACnetRpcClientHelper;
 
 import lombok.NonNull;
@@ -28,7 +31,7 @@ import lombok.NonNull;
 /*
  * Main BACnetInstance verticle
  */
-public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
+public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     private MicroContext microContext;
 
@@ -39,18 +42,18 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
     }
 
     @Override
-    protected void successHandler(@NonNull BacnetConfig config) {
+    protected void successHandler(@NonNull BACnetConfig config) {
         new BACnetCacheInitializer(config).init(this);
         super.successHandler(config);
     }
 
     @Override
-    protected @NonNull Class<BacnetConfig> bacnetConfigClass() {
-        return BacnetConfig.class;
+    protected @NonNull Class<BACnetConfig> bacnetConfigClass() {
+        return BACnetConfig.class;
     }
 
     @Override
-    protected @NonNull Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull BacnetConfig config) {
+    protected @NonNull Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull BACnetConfig config) {
         return Observable.fromIterable(BACnetDiscoveryService.createServices(getVertx(), getSharedKey()))
                          .doOnEach(s -> Optional.ofNullable(s.getValue())
                                                 .ifPresent(service -> client.register(service.address(), service)))
@@ -64,24 +67,27 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
 
     @Override
     protected @NonNull Single<JsonObject> registerSubscriber(@NonNull EventbusClient client,
-                                                             @NonNull BacnetConfig config) {
+                                                             @NonNull BACnetConfig config) {
+        final BACnetDispatcherRegister register = new BACnetDispatcherRegister(getVertx(), getSharedKey(),
+                                                                               config.isAllowSlave());
         return Observable.fromIterable(BACnetRpcClientHelper.createSubscribers(getVertx(), getSharedKey()))
-                         .map(subscriber -> client.register(subscriber.address(), subscriber))
+                         .doOnNext(subscriber -> client.register(subscriber.address(), subscriber))
+                         .flatMapSingle(register::doRegister)
                          .count()
                          .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet Subscribers"))
                          .doOnSuccess(logger::info);
     }
 
     @Override
-    protected BACnetDevice addListenerOnEachDevice(BACnetDevice device) {
-        return device.addListener(new WhoIsListener());
+    protected void addListenerOnEachDevice(BACnetDevice device) {
+        device.addListener(new WhoIsListener());
     }
 
     @Override
-    protected @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull BacnetConfig config) {
-        return BACnetRpcClientHelper.createScanner(getVertx(), getSharedKey()).scan().onErrorResumeNext(t -> {
-            logger.warn("Failed to connect to remote service", t);
-            return Single.fromCallable(ArrayList::new);
+    protected @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull BACnetConfig config) {
+        return BACnetRpcClientHelper.createScanner(getVertx(), getSharedKey()).scan().onErrorReturn(t -> {
+            BACnetRpcClient.sneakyThrowable(logger, t, config.isAllowSlave());
+            return Collections.emptyList();
         });
     }
 
@@ -92,7 +98,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
 
     @Override
     protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
-        return new BACnetDiscoverFinisher();
+        return new BACnetDiscoverFinisher(s -> SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(), s));
     }
 
     private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, BACnetDiscoveryService s) {

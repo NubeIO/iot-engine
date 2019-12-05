@@ -23,6 +23,7 @@ public abstract class AbstractBACnetConfig implements IConfig {
     private int deviceId;
     private String modelName = "NubeIO-Edge28";
     private String deviceName;
+    @Setter(value = AccessLevel.PACKAGE)
     private boolean allowSlave = true;
     @Setter(value = AccessLevel.PACKAGE)
     private long maxDiscoverTimeout = 6;

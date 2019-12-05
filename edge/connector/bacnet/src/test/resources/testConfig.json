@@ -4,7 +4,8 @@
       "deviceName": "NubeIO-Edge28",
       "deviceId": 123456,
       "readinessAddress": "mock.bacnet.readiness",
-      "gatewayAddress": "mock.gateway.api"
+      "gatewayAddress": "mock.gateway.api",
+      "allowSlave": false
     }
   }
 }

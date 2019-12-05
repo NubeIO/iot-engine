@@ -9,6 +9,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
+import com.nubeiot.core.sql.EntityMetadata;
 
 import lombok.NonNull;
 
@@ -21,6 +22,13 @@ import lombok.NonNull;
  * @see VertxPojo
  */
 public interface DataPointSubscriber<P extends VertxPojo> extends EventListener, RpcProtocol {
+
+    /**
+     * Declares entity metadata
+     *
+     * @return entity metadata
+     */
+    @NonNull EntityMetadata metadata();
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
@@ -37,13 +45,25 @@ public interface DataPointSubscriber<P extends VertxPojo> extends EventListener,
     }
 
     /**
+     * Defines whether listening global event in {@code declared entity} regardless if entity protocol isn't matched
+     * with declared protocol
+     *
+     * @return {@code true} if global
+     * @see #protocol() Declared Entity Protocol
+     * @see #metadata() Declared Entity Metadata
+     */
+    default boolean isGlobal() {
+        return false;
+    }
+
+    /**
      * Defines listener for updating existing resource by primary key
      *
      * @param requestData Request data
      * @return json object that includes status message
      * @see EventAction#CREATE
      */
-    @NonNull Single<P> create(RequestData requestData);
+    @NonNull Single<P> create(@NonNull RequestData requestData);
 
     /**
      * Defines listener for updating existing resource by primary key
@@ -52,7 +72,7 @@ public interface DataPointSubscriber<P extends VertxPojo> extends EventListener,
      * @return json object that includes status message
      * @see EventAction#UPDATE
      */
-    @NonNull Single<P> update(RequestData requestData);
+    @NonNull Single<P> update(@NonNull RequestData requestData);
 
     /**
      * Defines listener for patching existing resource by primary key
@@ -61,7 +81,7 @@ public interface DataPointSubscriber<P extends VertxPojo> extends EventListener,
      * @return json object that includes status message
      * @see EventAction#PATCH
      */
-    @NonNull Single<P> patch(RequestData requestData);
+    @NonNull Single<P> patch(@NonNull RequestData requestData);
 
     /**
      * Defines listener for deleting existing resource by primary key
@@ -70,6 +90,6 @@ public interface DataPointSubscriber<P extends VertxPojo> extends EventListener,
      * @return json object that includes status message
      * @see EventAction#REMOVE
      */
-    @NonNull Single<P> delete(RequestData requestData);
+    @NonNull Single<P> delete(@NonNull RequestData requestData);
 
 }

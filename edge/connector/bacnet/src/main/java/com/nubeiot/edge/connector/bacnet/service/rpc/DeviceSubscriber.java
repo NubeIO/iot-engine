@@ -4,7 +4,9 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.rpc.AbstractSubscriber;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 
@@ -17,22 +19,27 @@ public final class DeviceSubscriber extends AbstractSubscriber<Device> implement
     }
 
     @Override
-    public Single<Device> create(RequestData requestData) {
+    public @NonNull EntityMetadata metadata() {
+        return DeviceMetadata.INSTANCE;
+    }
+
+    @Override
+    public Single<Device> create(@NonNull RequestData requestData) {
         return null;
     }
 
     @Override
-    public Single<Device> update(RequestData requestData) {
+    public Single<Device> update(@NonNull RequestData requestData) {
         return null;
     }
 
     @Override
-    public Single<Device> patch(RequestData requestData) {
+    public Single<Device> patch(@NonNull RequestData requestData) {
         return null;
     }
 
     @Override
-    public Single<Device> delete(RequestData requestData) {
+    public Single<Device> delete(@NonNull RequestData requestData) {
         return null;
     }
 

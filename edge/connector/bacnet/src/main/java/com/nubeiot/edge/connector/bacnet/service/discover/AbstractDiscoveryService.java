@@ -1,10 +1,8 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -18,7 +16,6 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
-import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
@@ -52,20 +49,14 @@ abstract class AbstractDiscoveryService extends AbstractSharedDataDelegate<Abstr
     }
 
     @Override
-    public Set<EventMethodDefinition> definitions() {
+    public @NonNull ActionMethodMapping eventMethodMap() {
         Map<EventAction, HttpMethod> methods = new HashMap<>();
         methods.put(EventAction.GET_LIST, HttpMethod.GET);
         methods.put(EventAction.GET_ONE, HttpMethod.GET);
         methods.put(EventAction.BATCH_CREATE, HttpMethod.POST);
         methods.put(EventAction.CREATE, HttpMethod.PUT);
-        return Collections.singleton(
-            EventMethodDefinition.create(servicePath(), paramPath(), ActionMethodMapping.create(methods)));
+        return ActionMethodMapping.create(methods);
     }
-
-    @NonNull
-    protected abstract String servicePath();
-
-    protected abstract String paramPath();
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public abstract Single<JsonObject> list(RequestData reqData);

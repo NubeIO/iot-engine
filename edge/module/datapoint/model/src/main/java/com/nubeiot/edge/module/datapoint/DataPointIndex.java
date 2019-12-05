@@ -848,6 +848,26 @@ public interface DataPointIndex extends MetadataIndex {
             return ProtocolDispatcherDao.class;
         }
 
+        @Override
+        public @NonNull String requestKeyName() {
+            return "dispatcher_id";
+        }
+
+        @Override
+        public @NonNull String singularKeyName() {
+            return "dispatcher";
+        }
+
+        @Override
+        public @NonNull ProtocolDispatcher onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
+            final ProtocolDispatcher dispatcher = SerialKeyEntity.super.onCreating(reqData);
+            Objects.requireNonNull(dispatcher.getProtocol(), "Missing dispatcher protocol");
+            Objects.requireNonNull(dispatcher.getAction(), "Missing dispatcher action");
+            Objects.requireNonNull(dispatcher.getEntity(), "Missing dispatcher entity");
+            Objects.requireNonNull(dispatcher.getAddress(), "Missing dispatcher address");
+            return dispatcher;
+        }
+
     }
 
 
