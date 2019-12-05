@@ -13,7 +13,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventbusClient;
-import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.exceptions.ErrorData;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
@@ -53,19 +53,23 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
                        .doOnSuccess(protocols -> logger.info("Found {} BACnet networks", protocols.size()))
                        .flattenAsObservable(protocols -> protocols)
                        .filter(Objects::nonNull)
-                       .map(protocol -> new BACnetDevice(getVertx(), getSharedKey(), protocol))
-                       .map(this::addListenerOnEachDevice)
-                       .map(BACnetDevice::asyncStart)
+                       .map(protocol -> BACnetDeviceInitializer.builder()
+                                                               .vertx(getVertx())
+                                                               .sharedKey(getSharedKey())
+                                                               .preFunction(this::addListenerOnEachDevice)
+                                                               .build()
+                                                               .asyncStart(protocol))
                        .count()
                        .map(total -> new JsonObject().put("total", total))
                        .subscribe((d, e) -> readinessHandler(config, d, e));
     }
 
     private void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {
-        final RequestData reqData = Objects.isNull(e)
-                                    ? RequestData.builder().body(d).build()
-                                    : RequestData.builder().body(ErrorMessage.parse(e).toJson()).build();
-        getEventbusClient().publish(config.getReadinessAddress(), EventMessage.initial(EventAction.NOTIFY, reqData));
+        final EventMessage msg = Objects.nonNull(e)
+                                 ? EventMessage.initial(EventAction.NOTIFY_ERROR,
+                                                        ErrorData.builder().throwable(e).build())
+                                 : EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(d).build());
+        getEventbusClient().publish(config.getReadinessAddress(), msg);
     }
 
     /**
@@ -102,12 +106,10 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
      * Add one or more {@code BACnet listeners} after each {@code BACnet device} on each network starts
      *
      * @param device BACnet device
-     * @return BACnet device for fluent API
      * @see DeviceEventListener
      * @see BACnetNotifier
      */
-    @NonNull
-    protected abstract BACnetDevice addListenerOnEachDevice(@NonNull BACnetDevice device);
+    protected abstract void addListenerOnEachDevice(@NonNull BACnetDevice device);
 
     /**
      * Provide available BACnet networks

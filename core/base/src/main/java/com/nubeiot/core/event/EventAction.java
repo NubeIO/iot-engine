@@ -30,6 +30,7 @@ public enum EventAction implements Serializable {
     MONITOR,
     DISCOVER,
     NOTIFY,
+    NOTIFY_ERROR,
     SYNC,
     BATCH_CREATE,
     BATCH_UPDATE,

@@ -17,6 +17,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.exceptions.ErrorData;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.ExecutorHelpers;
@@ -50,7 +51,7 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     @Getter
     private final LocalDevice localDevice;
 
-    public BACnetDevice(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull CommunicationProtocol protocol) {
+    BACnetDevice(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull CommunicationProtocol protocol) {
         this(vertx, sharedKey, TransportProvider.byProtocol(protocol));
     }
 
@@ -76,16 +77,12 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     }
 
     BACnetDevice asyncStart() {
-        final EventbusClient client = getSharedDataValue(SHARED_EVENTBUS);
         final DiscoverOptions options = DiscoverOptions.builder()
                                                        .force(true)
                                                        .timeout(metadata.getMaxTimeoutInMS())
                                                        .timeUnit(TimeUnit.MILLISECONDS)
                                                        .build();
-        scanRemoteDevices(options).doOnError(logger::error)
-                                  .doOnSuccess(discoverer -> client.publish(metadata.getDiscoverCompletionAddress(),
-                                                                            createDiscoverCompletionMsg(discoverer)))
-                                  .subscribe();
+        scanRemoteDevices(options).subscribe(this::handleAfterScan);
         return this;
     }
 
@@ -124,7 +121,13 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
         });
     }
 
-    private EventMessage createDiscoverCompletionMsg(RemoteDeviceScanner scanner) {
+    private void handleAfterScan(RemoteDeviceScanner scanner, Throwable t) {
+        final EventbusClient client = getSharedDataValue(SHARED_EVENTBUS);
+        final EventMessage msg = Objects.isNull(t) ? createSuccessDiscoverMsg(scanner) : createErrorDiscoverMsg(t);
+        client.publish(metadata.getDiscoverCompletionAddress(), msg);
+    }
+
+    private EventMessage createSuccessDiscoverMsg(@NonNull RemoteDeviceScanner scanner) {
         final List<RemoteDeviceMixin> remotes = scanner.getRemoteDevices()
                                                        .stream()
                                                        .map(RemoteDeviceMixin::create)
@@ -136,6 +139,16 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                                                 .build()
                                                 .toJson();
         return EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(body).build().toJson());
+    }
+
+    private EventMessage createErrorDiscoverMsg(@NonNull Throwable t) {
+        final JsonObject extraInfo = DiscoverResponse.builder()
+                                                     .network(transportProvider.protocol())
+                                                     .localDevice(metadata)
+                                                     .build()
+                                                     .toJson();
+        return EventMessage.initial(EventAction.NOTIFY_ERROR,
+                                    ErrorData.builder().throwable(t).extraInfo(extraInfo).build());
     }
 
 }

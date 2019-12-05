@@ -38,4 +38,8 @@ public final class EdgeDeviceComposite extends EdgeDevice implements CompositePo
         return this;
     }
 
+    public Device getDevice() {
+        return this.getOther(DeviceMetadata.INSTANCE.singularKeyName());
+    }
+
 }

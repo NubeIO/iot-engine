@@ -26,6 +26,7 @@ public interface DataPointDiscovery<T extends DataPointDiscovery> extends DataPo
         return EventAction.CREATE;
     }
 
+    @NonNull
     default Single<JsonObject> doBatch(@NonNull JsonObject data) {
         return Single.error(new UnsupportedOperationException("Not yet supported batch service"));
     }
@@ -36,6 +37,7 @@ public interface DataPointDiscovery<T extends DataPointDiscovery> extends DataPo
      * @param data given data
      * @return json result in {@link Single}
      */
+    @NonNull
     default Single<JsonObject> doPersist(@NonNull JsonObject data) {
         return this.execute(persistAction(), data);
     }

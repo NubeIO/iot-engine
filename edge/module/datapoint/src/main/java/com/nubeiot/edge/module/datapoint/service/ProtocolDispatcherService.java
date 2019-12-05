@@ -5,11 +5,18 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
+import io.reactivex.Single;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
 import com.nubeiot.edge.module.datapoint.task.remote.ProtocolDispatcherTask;
@@ -27,7 +34,7 @@ public final class ProtocolDispatcherService
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.GET_ONE, EventAction.GET_LIST, EventAction.CREATE, EventAction.UPDATE);
+        return Arrays.asList(EventAction.GET_ONE, EventAction.GET_LIST, EventAction.CREATE_OR_UPDATE);
     }
 
     @Override
@@ -43,6 +50,26 @@ public final class ProtocolDispatcherService
     @Override
     public ProtocolDispatcherMetadata context() {
         return ProtocolDispatcherMetadata.INSTANCE;
+    }
+
+    @EventContractor(action = EventAction.CREATE_OR_UPDATE, returnType = Single.class)
+    public Single<JsonObject> createOrUpdate(RequestData requestData) {
+        final ProtocolDispatcher req = context().onCreating(requestData);
+        final ProtocolDispatcher filter = new ProtocolDispatcher().setAction(req.getAction())
+                                                                  .setEntity(req.getEntity())
+                                                                  .setProtocol(req.getProtocol());
+        final RequestData reqFilter = RequestData.builder().filter(JsonPojo.from(filter).toJson()).build();
+        return list(reqFilter).map(json -> json.getJsonArray(context().pluralKeyName()))
+                              .filter(array -> !array.isEmpty())
+                              .flatMapSingleElement(array -> patch(toUpdateRequest(req, array)))
+                              .switchIfEmpty(create(requestData));
+    }
+
+    private RequestData toUpdateRequest(ProtocolDispatcher req, JsonArray array) {
+        ProtocolDispatcher db = context().parseFromRequest(array.getJsonObject(0));
+        return RequestData.builder()
+                          .body(JsonPojo.from(req).toJson().put(context().requestKeyName(), db.getId()))
+                          .build();
     }
 
 }

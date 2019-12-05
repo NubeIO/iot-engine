@@ -358,8 +358,8 @@ public final class MockData {
     }
 
     public static JsonObject data_Protocol_Dispatcher() {
-        return data_Point_Setting_Tag().put(ProtocolDispatcherMetadata.INSTANCE.singularKeyName(),
-                                            data(PROTOCOL_DISPATCHERS));
+        return data_Edge_Network().put(ProtocolDispatcherMetadata.INSTANCE.singularKeyName(),
+                                       data(PROTOCOL_DISPATCHERS));
     }
 
     public static <T extends VertxPojo> List<JsonObject> data(List<T> list) {

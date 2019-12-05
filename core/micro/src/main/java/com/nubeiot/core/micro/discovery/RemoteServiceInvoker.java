@@ -146,21 +146,22 @@ public interface RemoteServiceInvoker {
                                                    .build();
         final EventbusClient client = eventClient();
         final EventAction action = dataMsg.getAction();
-        final String err = serviceLabel() + " is not found or out of service. Try again later";
+        final String notFoundMsg = serviceLabel() + " is not found or out of service. Try again later";
+        final String unsupportedMsg = "Unsupported '" + action + "' at destination '" + destination() + "' under '" +
+                                      serviceLabel() + "'";
         return client.request(gatewayAddress(), EventMessage.initial(EventAction.GET_ONE, findReqData))
                      .onErrorReturn(t -> {
-                         throw new ServiceNotFoundException(err, t);
+                         throw new ServiceNotFoundException(notFoundMsg, t);
                      })
                      .flatMap(msg -> msg.isError()
                                      ? Single.error(
-                         ErrorMessageConverter.from(msg.getError(), ErrorCode.SERVICE_NOT_FOUND, err))
+                         ErrorMessageConverter.from(msg.getError(), ErrorCode.SERVICE_NOT_FOUND, notFoundMsg))
                                      : Single.just(Optional.ofNullable(msg.getData()).orElse(new JsonObject())))
                      .filter(json -> json.getJsonArray("endpoints")
                                          .stream()
                                          .map(JsonObject.class::cast)
                                          .anyMatch(o -> action.name().equalsIgnoreCase(o.getString("action"))))
-                     .switchIfEmpty(Single.error(new ServiceException(
-                         action + " is unsupported at destination " + destination() + " in " + serviceLabel())))
+                     .switchIfEmpty(Single.error(new ServiceException(unsupportedMsg)))
                      .flatMap(json -> client.request(json.getString("location"), dataMsg))
                      .map(msg -> msg.isError() ? msg.getError().toJson() : msg.getData());
     }

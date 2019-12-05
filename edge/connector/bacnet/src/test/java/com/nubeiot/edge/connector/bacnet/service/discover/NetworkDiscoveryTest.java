@@ -19,10 +19,10 @@ import com.nubeiot.core.exceptions.NetworkException;
 import com.nubeiot.core.protocol.network.IpNetwork;
 import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.protocol.network.UdpProtocol;
-import com.nubeiot.edge.connector.bacnet.BACnetVerticleTest;
+import com.nubeiot.edge.connector.bacnet.BACnetWithoutGatewayTest;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetIP;
 
-public class NetworkDiscoveryTest extends BACnetVerticleTest {
+public class NetworkDiscoveryTest extends BACnetWithoutGatewayTest {
 
     @Test
     public void test_get_networks(TestContext context) {

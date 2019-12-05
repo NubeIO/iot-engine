@@ -21,26 +21,18 @@ public abstract class AbstractSubscriber<P extends VertxPojo> extends AbstractSh
 
     @Override
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
-    public Single<P> create(RequestData requestData) {
-        return null;
-    }
+    public abstract Single<P> create(@NonNull RequestData requestData);
 
     @Override
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
-    public Single<P> update(RequestData requestData) {
-        return null;
-    }
+    public abstract Single<P> update(@NonNull RequestData requestData);
 
     @Override
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
-    public Single<P> patch(RequestData requestData) {
-        return null;
-    }
+    public abstract Single<P> patch(@NonNull RequestData requestData);
 
     @Override
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
-    public Single<P> delete(RequestData requestData) {
-        return null;
-    }
+    public abstract Single<P> delete(@NonNull RequestData requestData);
 
 }

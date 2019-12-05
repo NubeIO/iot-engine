@@ -37,7 +37,8 @@ public class NubeException extends RuntimeException {
         DESIRED_ERROR,
         INVALID_ARGUMENT,
         ALREADY_EXIST,
-        NOT_FOUND, SERVICE_NOT_FOUND,
+        NOT_FOUND,
+        SERVICE_NOT_FOUND,
         SECURITY_ERROR,
         AUTHENTICATION_ERROR,
         INSUFFICIENT_PERMISSION_ERROR,
@@ -49,7 +50,9 @@ public class NubeException extends RuntimeException {
         EVENT_ERROR,
         DATABASE_ERROR,
         STATE_ERROR,
-        TIMEOUT_ERROR, NETWORK_ERROR, COMMUNICATION_PROTOCOL_ERROR,
+        TIMEOUT_ERROR,
+        NETWORK_ERROR,
+        COMMUNICATION_PROTOCOL_ERROR,
         UNKNOWN_ERROR
     }
 

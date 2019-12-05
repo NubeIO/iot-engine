@@ -1,5 +1,8 @@
 package com.nubeiot.core.component;
 
+/**
+ * Application probe
+ */
 public interface ApplicationProbe {
 
     /**

@@ -100,7 +100,8 @@ final class AnnotationHandler<T extends EventListener> {
 
     Single<EventMessage> execute(@NonNull EventMessage message) {
         final EventAction action = message.getAction();
-        eventHandler.logger().debug("Executing action '{}' in listener '{}'", action, eventHandler.getClass());
+        eventHandler.logger()
+                    .debug("Executing action '{}' in listener '{}'", action, eventHandler.getClass().getName());
         try {
             if (!eventHandler.getAvailableEvents().contains(action)) {
                 throw new StateException("Unsupported event " + action);

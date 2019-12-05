@@ -1,0 +1,135 @@
+{
+  "max-info-frames": 1,
+  "max-master": 127,
+  "align-intervals": true,
+  "interval-offset": 0,
+  "last-restart-reason": "unknown",
+  "model-name": "Niagara4 Station",
+  "number-of-apdu-retries": 3,
+  "apdu-segment-timeout": 2000,
+  "restart-notification-recipients": [],
+  "protocol-revision": 14,
+  "apdu-timeout": 3000,
+  "object-identifier": "device:432324",
+  "time-of-device-restart": {
+    "choice": {},
+    "application-software-version": "Tridium 4.4.93.40.6",
+    "object-list": [
+      "device:432324"
+    ],
+    "time-synchronization-interval": 1440,
+    "object-name": "Ciper_50_432324",
+    "utc-time-synchronization-recipients": [],
+    "object-type": "device",
+    "backup-and-restore-state": "idle",
+    "backup-preparation-time": 60,
+    "restore-completion-time": 180,
+    "restore-preparation-time": 60,
+    "daylight-savings-status": true,
+    "active-cov-subscriptions": [],
+    "backup-failure-timeout": 180,
+    "configuration-files": [],
+    "database-revision": 652,
+    "description": "Local BACnet Device object",
+    "last-restore-time": {
+      "choice": {},
+      "device-address-binding": [
+        {
+          "device-object-identifier": "device:0",
+          "device-address": {
+            "hostAddress": "192.168.15.55:47808",
+            "networkNumber": 0,
+            "macAddress": "C0-A8-0F-37-BA-C0"
+          }
+        },
+        {
+          "device-object-identifier": "device:1315",
+          "device-address": {
+            "hostAddress": "15",
+            "networkNumber": 3,
+            "macAddress": "0F"
+          }
+        },
+        {
+          "device-object-identifier": "device:60000",
+          "device-address": {
+            "hostAddress": "192.168.15.222:47808",
+            "networkNumber": 1,
+            "macAddress": "C0-A8-0F-DE-BA-C0"
+          }
+        },
+        {
+          "device-object-identifier": "device:3321",
+          "device-address": {
+            "hostAddress": "7",
+            "networkNumber": 3,
+            "macAddress": "07"
+          }
+        }
+      ],
+      "protocol-object-types-supported": {},
+      "protocol-services-supported": {
+        "get-enrollment-summary": true,
+        "vt-open": false,
+        "atomic-read-file": true,
+        "utc-time-synchronization": true,
+        "get-event-information": true,
+        "write-group": false,
+        "get-alarm-summary": true,
+        "read-property-multiple": true,
+        "unconfirmed-cov-notification-multiple": false,
+        "remove-list-element": true,
+        "unconfirmed-cov-notification": true,
+        "life-safety-operation": false,
+        "create-object": false,
+        "confirmed-event-notification": true,
+        "confirmed-cov-notification": true,
+        "unconfirmed-text-message": false,
+        "unconfirmed-private-transfer": true,
+        "i-have": true,
+        "i-am": true,
+        "vt-data": false,
+        "who-is": true,
+        "who-has": true,
+        "vt-close": false,
+        "reinitialize-device": true,
+        "confirmed-text-message": false,
+        "add-list-element": true,
+        "subscribe-cov": true,
+        "subscribe-cov-property-multiple": false,
+        "delete-object": false,
+        "confirmed-private-transfer": true,
+        "read-property": true,
+        "subscribe-cov-property": true,
+        "read-range": true,
+        "atomic-write-file": true,
+        "time-synchronization": true,
+        "device-communication-control": true,
+        "write-property-multiple": true,
+        "unconfirmed-event-notification": true,
+        "write-property": true,
+        "confirmed-cov-notification-multiple": false,
+        "acknowledge-alarm": true
+      },
+      "protocol-version": 1,
+      "max-segments-accepted": 255,
+      "segmentation-supported": "segmented-both",
+      "firmware-revision": "4.4.93.40.6",
+      "system-status": "operational",
+      "time-synchronization-recipients": [],
+      "serial-number": "WEBX-0000-0000-0052-64C8",
+      "utc-offset": -600,
+      "vendor-identifier": 36,
+      "local-date": "2019-11-19Z",
+      "vendor-name": "Tridium",
+      "local-time": "21:19:39.000000054Z",
+      "location": "unknown",
+      "max-apdu-length-accepted": 1476
+    }
+  },
+  "address": {
+    "hostAddress": "192.168.15.125:47808",
+    "networkNumber": 0,
+    "macAddress": "C0-A8-0F-7D-BA-C0"
+  }
+}
