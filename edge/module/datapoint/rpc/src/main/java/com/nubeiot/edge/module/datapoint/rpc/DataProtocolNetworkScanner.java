@@ -22,7 +22,7 @@ import lombok.NonNull;
  * Represents a service that scans {@code network} in {@code Data Point repository} when startup the specified {@code
  * protocol application}
  */
-public interface DataPointNetworkScanner<T extends DataPointNetworkScanner> extends DataPointRpcClient<T> {
+public interface DataProtocolNetworkScanner<T extends DataProtocolNetworkScanner> extends DataProtocolRpcClient<T> {
 
     @Override
     default @NonNull NetworkMetadata representation() {

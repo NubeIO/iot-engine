@@ -23,8 +23,8 @@ import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
 import com.nubeiot.edge.connector.bacnet.service.BACnetRpcClient;
 import com.nubeiot.edge.connector.bacnet.service.discover.BACnetDiscoveryService;
-import com.nubeiot.edge.connector.bacnet.service.rpc.BACnetDispatcherRegister;
 import com.nubeiot.edge.connector.bacnet.service.rpc.BACnetRpcClientHelper;
+import com.nubeiot.edge.connector.bacnet.service.rpc.BACnetSubscription;
 
 import lombok.NonNull;
 
@@ -68,8 +68,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     @Override
     protected @NonNull Single<JsonObject> registerSubscriber(@NonNull EventbusClient client,
                                                              @NonNull BACnetConfig config) {
-        final BACnetDispatcherRegister register = new BACnetDispatcherRegister(getVertx(), getSharedKey(),
-                                                                               config.isAllowSlave());
+        final BACnetSubscription register = new BACnetSubscription(getVertx(), getSharedKey(), config.isAllowSlave());
         return Observable.fromIterable(BACnetRpcClientHelper.createSubscribers(getVertx(), getSharedKey()))
                          .doOnNext(subscriber -> client.register(subscriber.address(), subscriber))
                          .flatMapSingle(register::doRegister)

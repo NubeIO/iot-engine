@@ -7,12 +7,12 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
-import com.nubeiot.edge.module.datapoint.rpc.AbstractSubscriber;
+import com.nubeiot.edge.module.datapoint.rpc.AbstractProtocolSubscriber;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 
 import lombok.NonNull;
 
-public final class PointValueSubscriber extends AbstractSubscriber<PointValueData>
+public final class PointValueSubscriber extends AbstractProtocolSubscriber<PointValueData>
     implements BACnetSubscriber<PointValueData> {
 
     PointValueSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {

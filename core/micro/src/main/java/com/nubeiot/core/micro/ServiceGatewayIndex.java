@@ -16,6 +16,7 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.ServiceNotFoundException;
 import com.nubeiot.core.micro.filter.RecordPredicate;
+import com.nubeiot.core.micro.transfomer.RecordOutput;
 import com.nubeiot.core.micro.transfomer.RecordTransformer;
 import com.nubeiot.core.micro.transfomer.RecordTransformer.RecordView;
 import com.nubeiot.core.utils.Strings;
@@ -47,6 +48,7 @@ public final class ServiceGatewayIndex implements EventListener {
         return controller.getRx()
                          .rxGetRecord(RecordPredicate.filter(filter, EventAction.GET_ONE))
                          .map(RecordTransformer.create(view)::transform)
+                         .map(RecordOutput::toJson)
                          .switchIfEmpty(
                              Single.error(new ServiceNotFoundException("Not found service by given parameters")));
     }
@@ -59,8 +61,10 @@ public final class ServiceGatewayIndex implements EventListener {
         RecordTransformer transformer = RecordTransformer.create(RecordView.END_USER);
         return controller.getRx()
                          .rxGetRecords(RecordPredicate.filter(filter, EventAction.GET_LIST))
-                         .flatMap(records -> Observable.fromIterable(records).map(transformer::transform).toList())
-                         .map(records -> new JsonObject().put("apis", new JsonArray(records)));
+                         .flatMapObservable(records -> Observable.fromIterable(records).map(transformer::transform))
+                         .map(RecordOutput::toJson)
+                         .collect(JsonArray::new, JsonArray::add)
+                         .map(records -> new JsonObject().put("apis", records));
     }
 
     private ServiceDiscoveryController getController(JsonObject filter) {
@@ -77,6 +81,8 @@ public final class ServiceGatewayIndex implements EventListener {
         public static final String BY = "by";
         public static final String VIEW = "view";
         public static final String KIND = "kind";
+
+        public static final String ACTION = "_action";
 
     }
 

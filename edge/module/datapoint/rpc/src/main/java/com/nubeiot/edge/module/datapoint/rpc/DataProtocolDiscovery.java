@@ -12,9 +12,9 @@ import lombok.NonNull;
  * by {@code RPC client}
  *
  * @param <T> Type of discovery client
- * @see DataPointRpcClient
+ * @see DataProtocolRpcClient
  */
-public interface DataPointDiscovery<T extends DataPointDiscovery> extends DataPointRpcClient<T> {
+public interface DataProtocolDiscovery<T extends DataProtocolDiscovery> extends DataProtocolRpcClient<T> {
 
     @NonNull
     default EventAction batchPersistAction() {

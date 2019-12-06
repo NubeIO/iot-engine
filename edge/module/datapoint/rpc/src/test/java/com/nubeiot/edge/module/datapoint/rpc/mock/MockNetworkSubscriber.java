@@ -7,14 +7,15 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.MockData.ProtocolDispatcherAddress;
-import com.nubeiot.edge.module.datapoint.rpc.AbstractSubscriber;
-import com.nubeiot.edge.module.datapoint.rpc.DataPointSubscriber;
+import com.nubeiot.edge.module.datapoint.rpc.AbstractProtocolSubscriber;
+import com.nubeiot.edge.module.datapoint.rpc.DataProtocolSubscriber;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 import lombok.NonNull;
 
-public class MockNetworkSubscriber extends AbstractSubscriber<Network> implements DataPointSubscriber<Network> {
+public class MockNetworkSubscriber extends AbstractProtocolSubscriber<Network>
+    implements DataProtocolSubscriber<Network> {
 
     private final JsonObject metadata;
 

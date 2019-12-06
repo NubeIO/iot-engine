@@ -100,8 +100,7 @@ public class MicroContextTest {
              .subscribe(record -> {
                  final JsonObject indexExpected = new JsonObject(
                      "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"apis\":[{\"name\":\"test\"," +
-                     "\"type\":\"eventbus-service-proxy\",\"status\":\"UP\"," +
-                     "\"location\":{\"endpoint\":\"address1\"}}]}}");
+                     "\"type\":\"eventbus-service-proxy\",\"status\":\"UP\",\"location\":\"address1\"}]}}");
                  final JsonObject payload = RequestData.builder()
                                                        .filter(new JsonObject().put("scope", ServiceScope.INTERNAL))
                                                        .build()
@@ -128,16 +127,17 @@ public class MicroContextTest {
         EventbusClient controller = SharedDataDelegate.getEventController(vertx, MicroContext.class.getName());
         micro.getLocalController()
              .addHttpRecord("http.test", new HttpLocation().setHost("123.456.0.1").setPort(1234).setRoot("/api"),
-                            new JsonObject().put("meta", "test")).subscribe(record -> {
-            final JsonObject indexExpected = new JsonObject(
-                "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"apis\":[{\"name\":\"http.test\"," +
-                "\"status\":\"UP\",\"type\":\"http-endpoint\",\"location\":\"http://123.456.0.1:1234/api\"}]}}");
-            controller.fire(DeliveryEvent.builder()
-                                         .address(config.getGatewayConfig().getIndexAddress())
-                                         .payload(RequestData.builder().build().toJson())
-                                         .action(EventAction.GET_LIST)
-                                         .build(), EventbusHelper.replyAsserter(context, async, indexExpected));
-        });
+                            new JsonObject().put("meta", "test"))
+             .subscribe(record -> {
+                 final JsonObject indexExpected = new JsonObject(
+                     "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"apis\":[{\"name\":\"http.test\"," +
+                     "\"status\":\"UP\",\"type\":\"http-endpoint\",\"location\":\"http://123.456.0.1:1234/api\"}]}}");
+                 controller.fire(DeliveryEvent.builder()
+                                              .address(config.getGatewayConfig().getIndexAddress())
+                                              .payload(RequestData.builder().build().toJson())
+                                              .action(EventAction.GET_LIST)
+                                              .build(), EventbusHelper.replyAsserter(context, async, indexExpected));
+             });
     }
 
     @Test
@@ -176,8 +176,8 @@ public class MicroContextTest {
                                               .address(config.getGatewayConfig().getIndexAddress())
                                               .payload(RequestData.builder().build().toJson())
                                               .action(EventAction.GET_LIST)
-                                              .build(), EventbusHelper.replyAsserter(context, async, indexExpected,
-                                                                 JSONCompareMode.LENIENT));
+                                              .build(),
+                                 EventbusHelper.replyAsserter(context, async, indexExpected, JSONCompareMode.LENIENT));
              });
     }
 

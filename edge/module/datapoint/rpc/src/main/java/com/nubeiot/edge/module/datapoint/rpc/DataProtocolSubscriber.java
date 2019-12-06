@@ -21,7 +21,7 @@ import lombok.NonNull;
  * @see EventListener
  * @see VertxPojo
  */
-public interface DataPointSubscriber<P extends VertxPojo> extends EventListener, RpcProtocol {
+public interface DataProtocolSubscriber<P extends VertxPojo> extends EventListener, RpcProtocol {
 
     /**
      * Declares entity metadata

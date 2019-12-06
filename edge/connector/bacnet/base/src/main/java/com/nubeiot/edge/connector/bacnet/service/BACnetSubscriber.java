@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.service;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 
-import com.nubeiot.edge.module.datapoint.rpc.DataPointSubscriber;
+import com.nubeiot.edge.module.datapoint.rpc.DataProtocolSubscriber;
 import com.nubeiot.iotdata.dto.Protocol;
 
 /**
@@ -10,9 +10,9 @@ import com.nubeiot.iotdata.dto.Protocol;
  * to {@code BACnet Device}
  *
  * @see VertxPojo
- * @see DataPointSubscriber
+ * @see DataProtocolSubscriber
  */
-public interface BACnetSubscriber<P extends VertxPojo> extends DataPointSubscriber<P> {
+public interface BACnetSubscriber<P extends VertxPojo> extends DataProtocolSubscriber<P> {
 
     @Override
     default Protocol protocol() {

@@ -5,6 +5,6 @@ package com.nubeiot.edge.module.datapoint.rpc;
  * {@code Data Point service}
  *
  * @param <T> Type of notifier client
- * @see DataPointRpcClient
+ * @see DataProtocolRpcClient
  */
-public interface DataPointNotifier<T extends DataPointNotifier> extends DataPointRpcClient<T> {}
+public interface DataProtocolNotifier<T extends DataProtocolNotifier> extends DataProtocolRpcClient<T> {}
