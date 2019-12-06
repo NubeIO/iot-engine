@@ -14,11 +14,11 @@ import lombok.NonNull;
  * Represents for {@code Discovery APIs} that expose as public endpoints
  *
  * @param <T> Type of Discovery APIs
- * @see DataPointDiscovery
+ * @see DataProtocolDiscovery
  * @see EventHttpService
  */
-public interface DataPointDiscoveryApis<T extends DataPointDiscoveryApis>
-    extends DataPointDiscovery<T>, EventHttpService {
+public interface DataProtocolDiscoveryApis<T extends DataProtocolDiscoveryApis>
+    extends DataProtocolDiscovery<T>, EventHttpService {
 
     /**
      * Base Discovery path

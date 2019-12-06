@@ -3,11 +3,11 @@ ext {
 }
 
 dependencies {
+    compile project(":core:auth")
     compile project(":core:cache")
-    compile project(":core:iotdata")
     compile project(":core:micro")
     compile project(":core:httpclient")
-    compile project(":core:auth")
+    compile project(":core:iotdata")
     compile project(":edge:module:datapoint:model")
     compile 'net.thisptr:jackson-jq:0.0.10'
 

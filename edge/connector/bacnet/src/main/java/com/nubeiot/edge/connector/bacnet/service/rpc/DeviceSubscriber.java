@@ -7,12 +7,12 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
-import com.nubeiot.edge.module.datapoint.rpc.AbstractSubscriber;
+import com.nubeiot.edge.module.datapoint.rpc.AbstractProtocolSubscriber;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 
 import lombok.NonNull;
 
-public final class DeviceSubscriber extends AbstractSubscriber<Device> implements BACnetSubscriber<Device> {
+public final class DeviceSubscriber extends AbstractProtocolSubscriber<Device> implements BACnetSubscriber<Device> {
 
     DeviceSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);

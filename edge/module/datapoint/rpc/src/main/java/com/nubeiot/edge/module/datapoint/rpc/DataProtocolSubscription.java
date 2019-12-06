@@ -21,16 +21,16 @@ import lombok.NonNull;
  * Represents a register service that registers {@code Subscriber} in {@code Data Point repository} when startup the
  * particular {@code protocol application}
  *
- * @see DataPointSubscriber
+ * @see DataProtocolSubscriber
  */
-public interface ProtocolDispatcherRegister<T extends ProtocolDispatcherRegister> extends DataPointRpcClient<T> {
+public interface DataProtocolSubscription<T extends DataProtocolSubscription> extends DataProtocolRpcClient<T> {
 
     @Override
     default @NonNull ProtocolDispatcherMetadata representation() {
         return ProtocolDispatcherMetadata.INSTANCE;
     }
 
-    default Single<JsonObject> register(@NonNull DataPointSubscriber<VertxPojo> subscriber) {
+    default Single<JsonObject> register(@NonNull DataProtocolSubscriber<VertxPojo> subscriber) {
         final @NonNull Collection<EventAction> actions = subscriber.getAvailableEvents();
         return Observable.fromIterable(actions.stream()
                                               .map(action -> new ProtocolDispatcher().setState(State.ENABLED)

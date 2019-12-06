@@ -11,10 +11,10 @@ import com.nubeiot.core.event.EventContractor;
 
 import lombok.NonNull;
 
-public abstract class AbstractSubscriber<P extends VertxPojo> extends AbstractSharedDataDelegate<AbstractSubscriber>
-    implements DataPointSubscriber<P> {
+public abstract class AbstractProtocolSubscriber<P extends VertxPojo>
+    extends AbstractSharedDataDelegate<AbstractProtocolSubscriber> implements DataProtocolSubscriber<P> {
 
-    protected AbstractSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
+    protected AbstractProtocolSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx);
         this.registerSharedKey(sharedKey);
     }

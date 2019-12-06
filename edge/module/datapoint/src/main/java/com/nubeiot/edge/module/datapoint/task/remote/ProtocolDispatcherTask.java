@@ -7,11 +7,13 @@ import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.DataTransferObject.Headers;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.ErrorMessageConverter;
-import com.nubeiot.core.exceptions.ServiceNotFoundException;
+import com.nubeiot.core.micro.discovery.RemoteServiceInvoker;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.service.task.EntityTaskData;
@@ -44,10 +46,18 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
 
     @Override
     public @NonNull Maybe<VertxPojo> execute(@NonNull EntityTaskData<VertxPojo> taskData) {
-        return fromCache(taskData).map(ProtocolDispatcher::getAddress)
-                                  .filter(Strings::isNotBlank)
+        return fromCache(taskData).filter(pojo -> isNotRoundRobin(pojo, taskData.getOriginReqData()))
+                                  .map(ProtocolDispatcher::getAddress)
                                   .flatMapSingleElement(address -> dispatch(address, taskData))
                                   .defaultIfEmpty(taskData.getData());
+    }
+
+    private boolean isNotRoundRobin(@NonNull ProtocolDispatcher pojo, @NonNull RequestData originReqData) {
+        String requestBy = Optional.ofNullable(originReqData.headers())
+                                   .map(h -> h.getString(Headers.X_REQUEST_BY))
+                                   .orElse(null);
+        return Strings.isNotBlank(pojo.getAddress()) &&
+               !RemoteServiceInvoker.requestBy(pojo.getProtocol().type()).equals(requestBy);
     }
 
     private Single<VertxPojo> dispatch(@NonNull String address, @NonNull EntityTaskData<VertxPojo> taskData) {
@@ -56,14 +66,12 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
                                                .headers(taskData.getOriginReqData().headers())
                                                .build();
         final EventbusClient client = definition().handler().eventClient();
-        return client.request(address, EventMessage.initial(taskData.getOriginReqAction(), reqData))
-                     .onErrorReturn(err -> {
-                         throw new ServiceNotFoundException("Protocol service is out of service. Try again later", err);
-                     })
-                     .flatMap(msg -> msg.isError()
-                                     ? Single.error(ErrorMessageConverter.from(msg.getError()))
-                                     : Single.just(Optional.ofNullable(msg.getData()).orElse(new JsonObject())))
-                     .map(taskData.getMetadata()::parseFromRequest);
+        final EventAction action = taskData.getOriginReqAction();
+        final Single<EventMessage> invoker = new ProtocolDispatcherRpcClient(client).invoke(address, action, reqData);
+        return invoker.flatMap(msg -> msg.isError()
+                                      ? Single.error(ErrorMessageConverter.from(msg.getError()))
+                                      : Single.just(Optional.ofNullable(msg.getData()).orElse(new JsonObject())))
+                      .map(taskData.getMetadata()::parseFromRequest);
     }
 
     @SuppressWarnings("unchecked")

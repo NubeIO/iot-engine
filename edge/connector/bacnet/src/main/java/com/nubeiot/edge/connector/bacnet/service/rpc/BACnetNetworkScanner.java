@@ -6,7 +6,7 @@ import com.nubeiot.core.component.SharedDataDelegate.AbstractSharedDataDelegate;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.service.BACnetRpcClient;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetNetworkTranslator;
-import com.nubeiot.edge.module.datapoint.rpc.DataPointNetworkScanner;
+import com.nubeiot.edge.module.datapoint.rpc.DataProtocolNetworkScanner;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 import com.nubeiot.iotdata.translator.IoTEntityTranslator;
 
@@ -16,7 +16,7 @@ import lombok.NonNull;
  * Represents a service that scans network in {@code Data Point repository} when startup {@code BACnet application}
  */
 public final class BACnetNetworkScanner extends AbstractSharedDataDelegate<BACnetNetworkScanner>
-    implements DataPointNetworkScanner<BACnetNetworkScanner>, BACnetRpcClient<BACnetNetworkScanner> {
+    implements DataProtocolNetworkScanner<BACnetNetworkScanner>, BACnetRpcClient<BACnetNetworkScanner> {
 
     private final BACnetNetworkTranslator translator;
 

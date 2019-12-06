@@ -1,13 +1,13 @@
 package com.nubeiot.core.micro.discovery.mock;
 
 import com.nubeiot.core.event.EventbusClient;
-import com.nubeiot.core.micro.discovery.RemoteServiceInvoker;
+import com.nubeiot.core.micro.discovery.GatewayServiceInvoker;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class MockServiceInvoker implements RemoteServiceInvoker {
+public final class MockServiceInvoker implements GatewayServiceInvoker {
 
     private final String gatewayAddress;
     private final EventbusClient client;
