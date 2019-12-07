@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
-import com.nubeiot.edge.connector.bacnet.dto.ObjectPropertyValues;
-import com.nubeiot.edge.connector.bacnet.dto.PropertyValuesMixin;
-import com.nubeiot.edge.connector.bacnet.dto.RemoteDeviceMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.ObjectPropertyValues;
+import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 
 import lombok.Builder;
 import lombok.Getter;

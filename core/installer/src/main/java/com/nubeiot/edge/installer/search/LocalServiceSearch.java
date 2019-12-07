@@ -24,6 +24,7 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
+import com.nubeiot.core.utils.DateTimes.Iso8601Parser;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.loader.ModuleType;
@@ -76,10 +77,10 @@ public final class LocalServiceSearch implements IServiceSearch {
         String from = filter.getString("from");
         String to = filter.getString("to");
         if (Strings.isNotBlank(from)) {
-            sqlData.put("from", DateTimes.parseISO8601(from));
+            sqlData.put("from", Iso8601Parser.parse(from));
         }
         if (Strings.isNotBlank(to)) {
-            sqlData.put("to", DateTimes.parseISO8601(to));
+            sqlData.put("to", Iso8601Parser.parse(to));
         }
         return sqlData;
     }

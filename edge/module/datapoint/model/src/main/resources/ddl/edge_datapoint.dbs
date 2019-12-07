@@ -93,13 +93,13 @@
 			<index name="IDX_FK_DEVICE_EQUIP_NETWORK" unique="NORMAL" >
 				<column name="NETWORK_ID" />
 			</index>
-			<fk name="FK_DEVICE_EQUIPMENT_DEVICE" to_schema="PUBLIC" to_table="EDGE" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_DEVICE_EQUIPMENT_DEVICE" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="EDGE" delete_action="restrict" update_action="cascade" >
 				<fk_column name="EDGE_ID" pk="ID" />
 			</fk>
-			<fk name="FK_DEVICE_EQUIP_EQUIP" to_schema="PUBLIC" to_table="DEVICE" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_DEVICE_EQUIP_EQUIP" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="DEVICE" delete_action="cascade" update_action="cascade" >
 				<fk_column name="DEVICE_ID" pk="ID" />
 			</fk>
-			<fk name="FK_DEVICE_EQUIP_NETWORK" to_schema="PUBLIC" to_table="NETWORK" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_DEVICE_EQUIP_NETWORK" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="NETWORK" delete_action="cascade" update_action="cascade" >
 				<fk_column name="NETWORK_ID" pk="ID" />
 			</fk>
 		</table>
@@ -114,7 +114,7 @@
 			<index name="PK_HISTORY_SETTING" unique="PRIMARY_KEY" >
 				<column name="POINT" />
 			</index>
-			<fk name="FK_HISTORY_SETTING_POINT" to_schema="PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_HISTORY_SETTING_POINT" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
 			</fk>
 		</table>
@@ -154,14 +154,16 @@
 			<index name="PK_NETWORK_ID" unique="PRIMARY_KEY" >
 				<column name="ID" />
 			</index>
-			<index name="IDX_UQ_NETWORK_INDEX_9" unique="UNIQUE" >
+			<index name="IDX_UQ_NETWORK" unique="UNIQUE" >
 				<column name="CODE" />
 				<column name="EDGE" />
+				<column name="PROTOCOL" />
 			</index>
-			<index name="IDX_NETWORK_DEVICE" unique="NORMAL" >
+			<index name="IDX_NETWORK_EDGE_PROTOCOL" unique="NORMAL" >
 				<column name="EDGE" />
+				<column name="PROTOCOL" />
 			</index>
-			<fk name="FK_NETWORK_DEVICE" to_schema="PUBLIC" to_table="EDGE" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_NETWORK_DEVICE" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="EDGE" delete_action="cascade" update_action="cascade" >
 				<fk_column name="EDGE" pk="ID" />
 			</fk>
 		</table>
@@ -220,16 +222,16 @@
 			<index name="IDX_FK_POINT_TRANSDUCER" unique="NORMAL" >
 				<column name="TRANSDUCER" />
 			</index>
-			<fk name="FK_POINT_DEVICE" to_schema="PUBLIC" to_table="EDGE" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_POINT_DEVICE" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="EDGE" delete_action="restrict" update_action="cascade" >
 				<fk_column name="EDGE" pk="ID" />
 			</fk>
-			<fk name="FK_POINT_MEASURE_UNIT" to_schema="PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_POINT_MEASURE_UNIT" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
 				<fk_column name="MEASURE_UNIT" pk="MEASURE_TYPE" />
 			</fk>
-			<fk name="FK_POINT_NETWORK" to_schema="PUBLIC" to_table="NETWORK" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_POINT_NETWORK" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="NETWORK" delete_action="restrict" update_action="cascade" >
 				<fk_column name="NETWORK" pk="ID" />
 			</fk>
-			<fk name="FK_POINT_TRANSDUCER" to_schema="PUBLIC" to_table="TRANSDUCER" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_POINT_TRANSDUCER" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="TRANSDUCER" delete_action="restrict" update_action="cascade" >
 				<fk_column name="TRANSDUCER" pk="ID" />
 			</fk>
 		</table>
@@ -256,7 +258,7 @@
 			<index name="IDX_POINT_HISTORY_DATA_TIME" unique="NORMAL" >
 				<column name="TIME" />
 			</index>
-			<fk name="FK_HISTORY_DATA_POINT" to_schema="PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_HISTORY_DATA_POINT" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
 			</fk>
 		</table>
@@ -283,7 +285,7 @@
 			<index name="IDX_POINT_REALTIME_DATA_TIME" unique="NORMAL" >
 				<column name="TIME" />
 			</index>
-			<fk name="FK_POINT_REALTIME_DATA_POINT" to_schema="PUBLIC" to_table="POINT" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_POINT_REALTIME_DATA_POINT" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="POINT" delete_action="restrict" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
 			</fk>
 		</table>
@@ -309,7 +311,7 @@
 			<index name="IDX_TAG_BY_POINT" unique="NORMAL" >
 				<column name="TAG_NAME" />
 			</index>
-			<fk name="FK_TAG_POINT" to_schema="PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_TAG_POINT" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
 			</fk>
 		</table>
@@ -323,7 +325,7 @@
 			<index name="PK_POINT_VALUE_DATA" unique="PRIMARY_KEY" >
 				<column name="POINT" />
 			</index>
-			<fk name="FK_VALUE_POINT" to_schema="PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_VALUE_POINT" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
 			</fk>
 		</table>
@@ -361,7 +363,7 @@
 			<index name="PK_REALTIME_SETTING" unique="PRIMARY_KEY" >
 				<column name="POINT" />
 			</index>
-			<fk name="FK_REALTIME_SETTING_POINT" to_schema="PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_REALTIME_SETTING_POINT" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
 			</fk>
 		</table>
@@ -387,7 +389,7 @@
 			<index name="IDX_FK_SCHEDULE_POINT" unique="NORMAL" >
 				<column name="POINT" />
 			</index>
-			<fk name="FK_SCHEDULE_POINT" to_schema="PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
+			<fk name="FK_SCHEDULE_POINT" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
 			</fk>
 		</table>
@@ -443,13 +445,13 @@
 			<index name="IDX_FK_THING_TRANSDUCER" unique="NORMAL" >
 				<column name="TRANSDUCER_ID" />
 			</index>
-			<fk name="FK_THING_EQUIP" to_schema="PUBLIC" to_table="DEVICE" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_THING_EQUIP" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="DEVICE" delete_action="restrict" update_action="cascade" >
 				<fk_column name="DEVICE_ID" pk="ID" />
 			</fk>
-			<fk name="FK_THING_MEASURE" to_schema="PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_THING_MEASURE" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="MEASURE_UNIT" delete_action="restrict" update_action="cascade" >
 				<fk_column name="MEASURE_UNIT" pk="MEASURE_TYPE" />
 			</fk>
-			<fk name="FK_THING_TRANSDUCER" to_schema="PUBLIC" to_table="TRANSDUCER" delete_action="restrict" update_action="cascade" >
+			<fk name="FK_THING_TRANSDUCER" to_schema="01_edge_datapoint.sql.PUBLIC" to_table="TRANSDUCER" delete_action="restrict" update_action="cascade" >
 				<fk_column name="TRANSDUCER_ID" pk="ID" />
 			</fk>
 		</table>
@@ -482,24 +484,29 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="0" instance="C:/projects/nubeio/iot-engine/edge/module/datapoint/model/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCFF" x="832" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" color="BED3F4" x="48" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" color="BED3F4" x="48" y="256" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_REALTIME_DATA" color="BED3F4" x="48" y="432" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="BED3F4" x="368" y="128" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" color="BED3F4" x="656" y="288" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" color="C7F4BE" x="1152" y="656" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" color="BED3F4" x="592" y="592" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" color="C7F4BE" x="832" y="576" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="C7F4BE" x="1296" y="352" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" color="BED3F4" x="384" y="640" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" color="BED3F4" x="48" y="640" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="C7F4BE" x="1504" y="528" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="C7F4BE" x="880" y="384" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="FFCCFF" x="1072" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SYNC_DISPATCHER" color="FFCCFF" x="1504" y="80" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCFF" x="1280" y="80" />
-		<group name="POINT" color="ECF0F7" >
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="672" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SYNC_DISPATCHER" color="FFCCE6" x="912" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" color="CCE6FF" x="688" y="352" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" color="CCE6FF" x="672" y="656" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" color="CCE6FF" x="1040" y="736" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="CCE6FF" x="1264" y="624" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="CCE6FF" x="1264" y="336" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" color="C7F4BE" x="400" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="C7F4BE" x="368" y="336" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_VALUE_DATA" color="C7F4BE" x="368" y="768" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_HISTORY_DATA" color="C7F4BE" x="48" y="736" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_REALTIME_DATA" color="C7F4BE" x="48" y="560" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" color="C7F4BE" x="240" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" color="C7F4BE" x="48" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" color="C7F4BE" x="48" y="368" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFCCE6" x="1200" y="80" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="CCE6FF" x="992" y="416" />
+		<group name="SYSTEM" color="FFCCE6" >
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="SYNC_DISPATCHER" />
+			<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" />
+		</group>
+		<group name="POINT" color="EEF7EC" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="HISTORY_SETTING" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_TAG" />
@@ -509,18 +516,13 @@ It can be differenced by type: `SENSOR | ACTUATOR` and categorized by SENSOR kin
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="REALTIME_SETTING" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="SCHEDULE_SETTING" />
 		</group>
-		<group name="THING" color="EEF7EC" >
+		<group name="EDGE" color="CCE6FF" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="TRANSDUCER" />
-		</group>
-		<group name="SYSTEM" color="FFCCFF" >
-			<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" />
-			<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" />
-			<entity schema="01_edge_datapoint.sql.PUBLIC" name="SYNC_DISPATCHER" />
 		</group>
 		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
 			<string><![CDATA[DROP INDEX IDX_UQ_PROTOCOL_DISPATCHER]]></string>
@@ -1209,8 +1211,7 @@ ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSD
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
 	CONSTRAINT PK_SYNC_DISPATCHER_ID PRIMARY KEY ( ID )
- );
-]]></string>
+ );]]></string>
 		</script>
 		<script name="THING" id="Editor_5a7978d" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.THING ( 

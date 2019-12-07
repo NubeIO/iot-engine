@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.translator;
 
 import java.util.Objects;
 
-import com.nubeiot.edge.connector.bacnet.dto.PropertyValuesMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.iotdata.translator.IoTEntityTranslator;
 

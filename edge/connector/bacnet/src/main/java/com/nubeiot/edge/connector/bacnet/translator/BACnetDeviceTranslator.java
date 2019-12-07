@@ -1,21 +1,28 @@
 package com.nubeiot.edge.connector.bacnet.translator;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.enums.State;
+import com.nubeiot.core.sql.type.Label;
+import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.connector.bacnet.dto.PropertyValuesMixin;
-import com.nubeiot.edge.connector.bacnet.dto.RemoteDeviceMixin;
-import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierSerializer;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.iotdata.dto.DeviceType;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
 import com.nubeiot.iotdata.translator.IoTEntityTranslator;
-import com.serotonin.bacnet4j.type.enumerated.DeviceStatus;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDeviceComposite, RemoteDeviceMixin>,
                                                      IoTEntityTranslator<EdgeDeviceComposite, RemoteDeviceMixin> {
@@ -29,20 +36,26 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
         final String manufacturer = Strings.toString(values.getAndCast(PropertyIdentifier.vendorIdentifier)) + "-" +
                                     Strings.toString(values.getAndCast(PropertyIdentifier.vendorName));
         final DeviceType deviceType = getDeviceType(values);
-        final State state = new BACnetStateTranslator().serialize(
-            (DeviceStatus) values.get(PropertyIdentifier.systemStatus));
-        final Device device = new Device().setCode(ObjectIdentifierSerializer.serialize(object.getObjectId()))
+        final State state = new BACnetStateTranslator().serialize(values.getAndCast(PropertyIdentifier.systemStatus));
+        final Label label = Label.builder()
+                                 .description(values.getAndCast(PropertyIdentifier.description))
+                                 .label(Optional.ofNullable((String) values.getAndCast(PropertyIdentifier.objectName))
+                                                .orElse(object.getName()))
+                                 .build();
+        final Device device = new Device().setCode(ObjectIdentifierMixin.serialize(object.getObjectId()))
                                           .setType(deviceType)
                                           .setProtocol(protocol())
-                                          .setName(values.getAndCast(PropertyIdentifier.objectName))
+                                          .setName(object.getName())
                                           .setManufacturer(manufacturer)
                                           .setModel(values.getAndCast(PropertyIdentifier.modelName))
                                           .setFirmwareVersion(values.getAndCast(PropertyIdentifier.firmwareRevision))
                                           .setSoftwareVersion(
                                               values.getAndCast(PropertyIdentifier.applicationSoftwareVersion))
                                           .setState(state)
-                                          .setMetadata(object.toJson());
-        return new EdgeDeviceComposite().wrap(new EdgeDevice().setAddress(object.getAddress())).addDevice(device);
+                                          .setLabel(label)
+                                          .setMetadata(object.getPropertyValues().toJson());
+        return new EdgeDeviceComposite().wrap(new EdgeDevice().setAddress(object.getAddress().toJson()))
+                                        .addDevice(device);
     }
 
     @Override
@@ -54,7 +67,17 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
         if (Objects.isNull(device)) {
             return null;
         }
-        return null;
+        if (!protocol().equals(device.getProtocol())) {
+            throw new IllegalArgumentException("Invalid BACnet device");
+        }
+        final JsonObject properties = Optional.ofNullable(device.getMetadata()).orElse(new JsonObject());
+        final ObjectIdentifier identifier = Functions.getOrDefault(
+            () -> ObjectIdentifierMixin.deserialize(device.getCode()), () -> ObjectIdentifierMixin.deserialize(
+                properties.getString(PropertyIdentifier.objectIdentifier.toString())));
+        final String name = Optional.ofNullable(device.getName())
+                                    .orElse(properties.getString(PropertyIdentifier.objectName.toString()));
+        final JsonObject props = toProperties(device, identifier);
+        return RemoteDeviceMixin.create(identifier, name, entity.getAddress(), properties.mergeIn(props, true));
     }
 
     @Override
@@ -73,6 +96,24 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
                        .orElse(Objects.isNull(values.getAndCast(PropertyIdentifier.deviceAddressBinding))
                                ? DeviceType.EQUIPMENT
                                : DeviceType.GATEWAY);
+    }
+
+    private JsonObject toProperties(Device device, ObjectIdentifier identifier) {
+        final String vendor = device.getManufacturer();
+        final Integer vendorId = Functions.getOrDefault((Integer) null,
+                                                        () -> Functions.toInt().apply(vendor.split("-", 2)[0]));
+        final String vendorName = Functions.getOrDefault((String) null, () -> vendor.split("-", 2)[1]);
+        final Map<PropertyIdentifier, Object> values = new HashMap<>();
+        values.put(PropertyIdentifier.objectIdentifier, identifier);
+        values.put(PropertyIdentifier.vendorIdentifier, vendorId);
+        values.put(PropertyIdentifier.vendorName, vendorName);
+        values.put(PropertyIdentifier.modelName, device.getModel());
+        values.put(PropertyIdentifier.firmwareRevision, device.getFirmwareVersion());
+        values.put(PropertyIdentifier.applicationSoftwareVersion, device.getSoftwareVersion());
+        values.put(PropertyIdentifier.systemStatus, new BACnetStateTranslator().deserialize(device.getState()));
+        values.put(PropertyIdentifier.description,
+                   Optional.ofNullable(device.getLabel()).map(Label::getDescription).orElse(null));
+        return BACnetMixin.MAPPER.convertValue(values, JsonObject.class);
     }
 
 }

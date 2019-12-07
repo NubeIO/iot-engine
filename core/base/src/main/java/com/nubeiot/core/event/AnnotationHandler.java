@@ -107,9 +107,9 @@ final class AnnotationHandler<T extends EventListener> {
                 throw new StateException("Unsupported event " + action);
             }
             MethodInfo methodInfo = getMethodByAnnotation(eventHandler.getClass(), action);
-            Object response = ReflectionMethod.executeMethod(eventHandler, methodInfo.getMethod(),
-                                                             methodInfo.getOutput(), methodInfo.getParams().values(),
-                                                             parseMessage(message, methodInfo.getParams()));
+            Object response = ReflectionMethod.execute(eventHandler, methodInfo.getMethod(), methodInfo.getOutput(),
+                                                       methodInfo.getParams().values(),
+                                                       parseMessage(message, methodInfo.getParams()));
             return convertResult(response).map(data -> EventMessage.success(action, data))
                                           .onErrorReturn(t -> convertError(t, action, eventHandler.logger()));
         } catch (Exception e) {
