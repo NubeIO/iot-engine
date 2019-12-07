@@ -35,7 +35,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.EventbusClient;
-import com.nubeiot.core.utils.DateTimes;
+import com.nubeiot.core.utils.DateTimes.Iso8601Parser;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.scheduler.MockEventScheduler.FailureProcessEventSchedulerListener;
 import com.nubeiot.scheduler.MockEventScheduler.MockJobModel;
@@ -260,7 +260,8 @@ public class QuartzSchedulerUnitTest {
             context.assertNotNull(fft);
             context.assertTrue(Strings.isNotBlank(fft.getString("local")));
             context.assertTrue(Strings.isNotBlank(fft.getString("utc")));
-            context.assertTrue(DateTimes.parseISO8601ToZone(fft.getString("utc")).getOffset().equals(ZoneOffset.UTC));
+            context.assertTrue(
+                Iso8601Parser.parseZonedDateTime(fft.getString("utc")).getOffset().equals(ZoneOffset.UTC));
         };
     }
 

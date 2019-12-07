@@ -7,7 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierSerializer;
+import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
@@ -54,7 +54,7 @@ public class BACnetDataConversions {
     public static JsonObject deviceObjectList(List<Pair<ObjectPropertyReference, Encodable>> list) {
         JsonObject data = new JsonObject();
         list.forEach(objectPropertyReferenceEncodablePair -> {
-            String key = ObjectIdentifierSerializer.serialize(
+            String key = ObjectIdentifierMixin.serialize(
                 objectPropertyReferenceEncodablePair.getLeft().getObjectIdentifier());
 
             if (objectPropertyReferenceEncodablePair.getRight() instanceof ErrorClassAndCode) {
@@ -100,7 +100,7 @@ public class BACnetDataConversions {
         JsonObject json = new JsonObject();
         values.forEach(objectPropertyReference -> {
             try {
-                json.put(ObjectIdentifierSerializer.serialize(objectPropertyReference.getObjectIdentifier()),
+                json.put(ObjectIdentifierMixin.serialize(objectPropertyReference.getObjectIdentifier()),
                          encodableToPrimitive(values.get(objectPropertyReference)));
             } catch (Exception e) {
             }

@@ -86,9 +86,10 @@ public class ProtocolDispatcherTaskTest extends BaseDataPointServiceTest {
     public void test_protocol_dispatcher_enable_but_unreachable(TestContext context) {
         final JsonObject resource = new JsonObject().put("code", ErrorCode.SERVICE_NOT_FOUND)
                                                     .put("message",
-                                                         "Protocol service is out of service. Try again later | " +
-                                                         "Cause: Service unavailable - Error Code: SERVICE_ERROR | " +
-                                                         "Cause: Service unavailable - Error Code: SERVICE_ERROR");
+                                                         "Data Protocol subscriber is not found or out of service. " +
+                                                         "Try again later" +
+                                                         " | Cause: Service unavailable - Error Code: SERVICE_ERROR" +
+                                                         " | Cause: Service unavailable - Error Code: SERVICE_ERROR");
         // TODO recheck response of EventListener when no handler for address
         //        JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
         //                                              .put("status", Status.FAILED)

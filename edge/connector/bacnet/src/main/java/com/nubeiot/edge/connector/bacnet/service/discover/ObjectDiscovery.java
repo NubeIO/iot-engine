@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
+import java.util.AbstractMap.SimpleEntry;
+
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -19,9 +21,9 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
-import com.nubeiot.edge.connector.bacnet.dto.ObjectPropertyValues;
-import com.nubeiot.edge.connector.bacnet.dto.PropertyValuesMixin;
-import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierSerializer;
+import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.ObjectPropertyValues;
+import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetPointTranslator;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.serotonin.bacnet4j.LocalDevice;
@@ -89,8 +91,10 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
         return Observable.fromIterable(Functions.getOrThrow(t -> new NubeException(ErrorCode.ENGINE_ERROR, t),
                                                             () -> RequestUtils.getObjectList(local, rd)))
                          .filter(objId -> objId.getObjectType() != ObjectType.device)
-                         .flatMapSingle(objId -> parseRemoteObject(local, rd, objId, detail, false))
-                         .collect(ObjectPropertyValues::new, ObjectPropertyValues::add);
+                         .flatMapSingle(objId -> parseRemoteObject(local, rd, objId, detail, false).map(
+                             props -> new SimpleEntry<>(objId, props)))
+                         .collect(ObjectPropertyValues::new,
+                                  (values, entry) -> values.add(entry.getKey(), entry.getValue()));
     }
 
     private Single<PropertyValuesMixin> doGet(RequestData reqData) {
@@ -101,7 +105,7 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
                     request.getDeviceCode(), protocol.toJson());
         final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
         final BACnetDevice device = cache.get(protocol);
-        final ObjectIdentifier objId = ObjectIdentifierSerializer.deserialize(request.getObjectCode());
+        final ObjectIdentifier objId = ObjectIdentifierMixin.deserialize(request.getObjectCode());
         return device.discoverRemoteDevice(request.getDeviceCode(), options)
                      .flatMap(rd -> parseRemoteObject(device.getLocalDevice(), rd, objId, true, options.isDetail()))
                      .doFinally(device::stop);

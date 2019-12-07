@@ -19,7 +19,7 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
-import com.nubeiot.edge.connector.bacnet.dto.RemoteDeviceMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetDeviceTranslator;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.serotonin.bacnet4j.LocalDevice;

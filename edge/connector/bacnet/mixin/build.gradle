@@ -1,0 +1,12 @@
+dependencies {
+    compile project(':core:base')
+    compile project(':core:protocol')
+
+    compile "com.infiniteautomation:bacnet4j:5.0.2"
+    compile group: 'ai.serotonin.oss', name: 'sero-warp', version: '1.0.0'
+    compile group: 'ai.serotonin.oss', name: 'sero-scheduler', version: '1.1.0'
+    //TODO Remove it
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
+
+    testCompile project(":core:base").sourceSets.test.output
+}
