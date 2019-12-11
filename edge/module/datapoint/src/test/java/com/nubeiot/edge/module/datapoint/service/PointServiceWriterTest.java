@@ -170,7 +170,6 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                                     .setType(PointType.THERMISTOR_10K)
                                     .setMeasureUnit(Base.BOOLEAN.type())
                                     .setUnitAlias(new UnitAlias().add("=1", "ON").add("=0", "OFF"))
-                                    .setTransducer(null)
                                     .setEnabled(false);
         RequestData req = RequestData.builder()
                                      .body(p1.toJson().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))

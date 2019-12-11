@@ -25,10 +25,11 @@ public class DeviceByNetworkServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_list_device_by_edge(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"devices\":[{\"id\":2," + "\"device\":{\"id\":\"28a4ba1b-154d-4bbf-8537-320be70e50e5\"," +
-            "\"code\":\"HVAC_XYZ\",\"type\":\"HVAC\"," + "\"protocol\":\"UNKNOWN\",\"state\":\"NONE\"," +
+            "{\"devices\":[{\"id\":2,\"device\":{\"id\":\"" + PrimaryKey.DEVICE_HVAC + "\"," +
+            "\"code\":\"HVAC_XYZ\",\"type\":\"HVAC\",\"protocol\":\"UNKNOWN\",\"state\":\"NONE\"," +
             "\"manufacturer\":\"Lennox\"}}]}");
-        RequestData req = RequestData.builder().body(new JsonObject().put("network_id", PrimaryKey.NETWORK.toString()))
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("network_id", PrimaryKey.NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, DeviceByNetworkService.class.getName(), EventAction.GET_LIST, req);
     }

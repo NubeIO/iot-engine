@@ -29,7 +29,6 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.AbstractEntityHandler;
-import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
@@ -72,7 +71,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         map.put(Tables.DEVICE, Tables.DEVICE.ID);
         map.put(Tables.NETWORK, Tables.NETWORK.ID);
         map.put(Tables.POINT, Tables.POINT.ID);
-        map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
+        map.put(Tables.THING, Tables.THING.ID);
         return Single.fromCallable(() -> createDefaultUUID(map))
                      .doOnSuccess(i -> logger.info("Updated {} tables with random_uuid function", map.size()))
                      .flatMap(i -> initDataFromConfig(EventAction.INIT))
@@ -99,7 +98,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                        .put(NetworkMetadata.INSTANCE.singularKeyName(),
                                             initNetwork(cfgData, edge.getId()));
         return Single.merge(index().stream()
-                                   .filter(meta -> !(meta instanceof CompositeMetadata) &&
+                                   .filter(meta -> !(meta instanceof PointCompositeMetadata) &&
                                                    data.containsKey(meta.singularKeyName()))
                                    .sorted(Comparator.comparingInt(m -> dep.getOrDefault(m, 999)))
                                    .map(m -> insert(m, data.getValue(m.singularKeyName())))

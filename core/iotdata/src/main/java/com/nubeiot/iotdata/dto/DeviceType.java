@@ -7,6 +7,7 @@ import com.nubeiot.core.dto.PlainType;
 
 public final class DeviceType extends AbstractEnumType implements PlainType, IoTNotion {
 
+    public static final DeviceType MACHINE = new DeviceType("MACHINE");
     public static final DeviceType GATEWAY = new DeviceType("GATEWAY");
     public static final DeviceType EQUIPMENT = new DeviceType("EQUIPMENT");
     public static final DeviceType HVAC = new DeviceType("HVAC");

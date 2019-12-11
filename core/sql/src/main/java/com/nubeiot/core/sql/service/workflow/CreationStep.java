@@ -29,8 +29,8 @@ public final class CreationStep extends AbstractSQLStep implements CreateOrUpdat
     @Override
     public Single<KeyPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
         final Single<KeyPojo> result = validator.validate(reqData, null)
-                                                .flatMap(req -> queryExecutor().insertReturningPrimary(req, reqData)
-                                                                               .flatMap(pk -> lookup(req, pk)));
+                                                .flatMap(pojo -> queryExecutor().insertReturningPrimary(pojo, reqData)
+                                                                                .flatMap(pk -> lookup(pojo, pk)));
         if (Objects.nonNull(onSuccess)) {
             return result.doOnSuccess(keyPojo -> onSuccess.accept(action(), keyPojo));
         }
