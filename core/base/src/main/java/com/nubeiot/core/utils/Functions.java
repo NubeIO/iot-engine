@@ -68,8 +68,12 @@ public final class Functions {
                                    @NonNull Function<Throwable, ? extends RuntimeException> override) {
         try {
             return supplier.get();
-        } catch (Exception t) {
-            throw override.apply(t);
+        } catch (Exception e) {
+            final RuntimeException t = override.apply(e);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Root error cause", t);
+            }
+            throw t;
         }
     }
 

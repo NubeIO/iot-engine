@@ -6,7 +6,9 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.type.Encodable;
+import com.serotonin.bacnet4j.type.constructed.PriorityArray;
 import com.serotonin.bacnet4j.type.primitive.BitString;
 import com.serotonin.bacnet4j.type.primitive.Enumerated;
 
@@ -25,14 +27,21 @@ public final class EncodableDeserializerRegistry {
     }
 
     @NonNull
+    public static EncodableDeserializer lookup(@NonNull PropertyTypeDefinition definition) {
+        final Class<? extends Encodable> clazz = definition.getClazz();
+        if (clazz == PriorityArray.class) {
+            return new PriorityArrayDeserializer(definition);
+        }
+        return lookup(clazz);
+    }
+
+    @NonNull
     public static EncodableDeserializer lookup(@NonNull Class<? extends Encodable> clazz) {
         final EncodableDeserializer deserializer = DESERIALIZERS.get(clazz);
         if (Objects.nonNull(deserializer)) {
             return deserializer;
         }
-        return DESERIALIZERS.entrySet()
-                            .stream()
-                            .filter(entry -> ReflectionClass.assertDataType(clazz, entry.getKey()))
+        return DESERIALIZERS.entrySet().stream().filter(entry -> ReflectionClass.assertDataType(clazz, entry.getKey()))
                             .map(Entry::getValue)
                             .findFirst()
                             .orElseGet(() -> fallback(clazz));

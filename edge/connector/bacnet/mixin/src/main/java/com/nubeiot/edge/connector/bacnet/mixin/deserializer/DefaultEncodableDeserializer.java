@@ -4,6 +4,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.utils.Functions;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.type.Encodable;
@@ -18,6 +21,12 @@ final class DefaultEncodableDeserializer implements EncodableDeserializer<Encoda
     private final Class<? extends Encodable> actualEncodableClass;
 
     static byte[] serialize(Object obj) throws IOException {
+        if (obj instanceof JsonObject) {
+            return ((JsonObject) obj).toBuffer().getBytes();
+        }
+        if (obj instanceof JsonArray) {
+            return ((JsonArray) obj).toBuffer().getBytes();
+        }
         try (ByteArrayOutputStream b = new ByteArrayOutputStream()) {
             try (ObjectOutputStream o = new ObjectOutputStream(b)) {
                 o.writeObject(obj);

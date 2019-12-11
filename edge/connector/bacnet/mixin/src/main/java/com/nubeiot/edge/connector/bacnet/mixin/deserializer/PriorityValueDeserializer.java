@@ -4,7 +4,7 @@ import com.serotonin.bacnet4j.type.constructed.PriorityValue;
 
 import lombok.NonNull;
 
-public final class PriorityValueDeserializer implements EncodableDeserializer<PriorityValue, String> {
+final class PriorityValueDeserializer implements EncodableDeserializer<PriorityValue, Object> {
 
     @Override
     public @NonNull Class<PriorityValue> encodableClass() {
@@ -12,12 +12,12 @@ public final class PriorityValueDeserializer implements EncodableDeserializer<Pr
     }
 
     @Override
-    public @NonNull Class<String> fromClass() {
-        return String.class;
+    public @NonNull Class<Object> fromClass() {
+        return Object.class;
     }
 
     @Override
-    public PriorityValue parse(@NonNull String value) {
+    public PriorityValue parse(@NonNull Object value) {
         //TODO implement it
         return null;
     }

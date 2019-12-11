@@ -8,7 +8,6 @@ import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 import io.vertx.core.json.JsonObject;
 
@@ -22,6 +21,7 @@ import com.serotonin.bacnet4j.enums.Month;
 import com.serotonin.bacnet4j.type.constructed.AssignedLandingCalls.LandingCall;
 import com.serotonin.bacnet4j.type.constructed.DateTime;
 import com.serotonin.bacnet4j.type.constructed.NameValue;
+import com.serotonin.bacnet4j.type.constructed.PriorityArray;
 import com.serotonin.bacnet4j.type.constructed.PriorityValue;
 import com.serotonin.bacnet4j.type.constructed.Recipient;
 import com.serotonin.bacnet4j.type.constructed.StatusFlags;
@@ -45,15 +45,12 @@ import com.serotonin.bacnet4j.type.primitive.Unsigned8;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 import com.serotonin.bacnet4j.util.PropertyValues;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-
 public class PropertyValuesMixinTest {
 
     @BeforeClass
     public static void setup() {
         TestHelper.setup();
-        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.TRACE);
+        //        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.TRACE);
     }
 
     private final ObjectIdentifier oid = new ObjectIdentifier(ObjectType.device, 111);
@@ -162,6 +159,32 @@ public class PropertyValuesMixinTest {
         entries.remove("address");
         final PropertyValuesMixin mixin = JsonData.convert(entries, PropertyValuesMixin.class, BACnetMixin.MAPPER);
         JsonHelper.assertJson(entries, mixin.toJson());
+    }
+
+    @Test
+    public void test_serialize_priority_array() throws JSONException {
+        final PropertyValues pvs = new PropertyValues();
+        final PriorityArray array = new PriorityArray();
+        array.put(1, new PriorityValue(new CharacterString("xxx")));
+        array.put(2, new PriorityValue(new UnsignedInteger(10)));
+        pvs.add(oid, PropertyIdentifier.objectIdentifier, null, oid);
+        pvs.add(oid, PropertyIdentifier.priorityArray, null, array);
+        final PropertyValuesMixin pvJson = PropertyValuesMixin.create(oid, pvs, false);
+        final JsonObject expected = new JsonObject(
+            "{\"priority-array\":{\"1\":\"xxx\",\"2\":10,\"3\":\"Null\",\"4\":\"Null\",\"5\":\"Null\",\"6\":\"Null\"," +
+            "\"7\":\"Null\",\"8\":\"Null\",\"9\":\"Null\",\"10\":\"Null\",\"11\":\"Null\",\"12\":\"Null\"," +
+            "\"13\":\"Null\",\"14\":\"Null\",\"15\":\"Null\",\"16\":\"Null\"},\"object-identifier\":\"device:111\"}");
+        JsonHelper.assertJson(expected, pvJson.toJson());
+    }
+
+    @Test
+    public void test_deserialize_priority_array() throws JSONException {
+        final JsonObject expected = new JsonObject(
+            "{\"priority-array\":{\"1\":\"xxx\",\"2\":10,\"3\":\"Null\",\"4\":\"Null\",\"5\":\"Null\",\"6\":\"Null\"," +
+            "\"7\":\"Null\",\"8\":\"Null\",\"9\":\"Null\",\"10\":\"Null\",\"11\":\"Null\",\"12\":\"Null\"," +
+            "\"13\":\"Null\",\"14\":\"Null\",\"15\":\"Null\",\"16\":\"Null\"},\"object-identifier\":\"device:111\"}");
+        final PropertyValuesMixin mixin = JsonData.convert(expected, PropertyValuesMixin.class, BACnetMixin.MAPPER);
+        //        JsonHelper.assertJson(expected, mixin.toJson());
     }
 
     private void assertBACnetTime(JsonObject expected, JsonObject actual, String key) {
