@@ -21,8 +21,9 @@ import lombok.NonNull;
 public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQueryExecutor<P> {
 
     static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> ReferenceQueryExecutor create(
-        @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata) {
-        return new ReferenceDaoQueryExecutor<>(handler, metadata);
+        @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
+        @NonNull EntityReferences references) {
+        return new ReferenceDaoQueryExecutor<>(handler, metadata, references);
     }
 
     @SuppressWarnings("unchecked")

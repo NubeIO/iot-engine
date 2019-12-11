@@ -7,11 +7,11 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointThing;
 
 import lombok.NonNull;
 
-public final class ThingComposite extends Thing implements CompositePojo<Thing, ThingComposite> {
+public final class ThingComposite extends PointThing implements CompositePojo<PointThing, ThingComposite> {
 
     private final Map<String, VertxPojo> other = new HashMap<>();
 
@@ -21,7 +21,7 @@ public final class ThingComposite extends Thing implements CompositePojo<Thing, 
     }
 
     @Override
-    public ThingComposite wrap(@NonNull Thing pojo) {
+    public ThingComposite wrap(@NonNull PointThing pojo) {
         this.from(pojo);
         return this;
     }

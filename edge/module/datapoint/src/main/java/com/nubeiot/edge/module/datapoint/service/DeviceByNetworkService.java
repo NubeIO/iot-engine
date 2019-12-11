@@ -12,7 +12,7 @@ import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceCompositeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
@@ -22,16 +22,16 @@ import com.nubeiot.iotdata.edge.model.tables.EdgeDevice;
 import lombok.NonNull;
 
 public final class DeviceByNetworkService
-    extends AbstractManyToManyEntityService<EdgeDeviceComposite, EdgeDeviceCompositeMetadata>
-    implements DataPointService<EdgeDeviceComposite, EdgeDeviceCompositeMetadata> {
+    extends AbstractManyToManyEntityService<EdgeDeviceComposite, EdgeDeviceMetadata>
+    implements DataPointService<EdgeDeviceComposite, EdgeDeviceMetadata> {
 
     public DeviceByNetworkService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public EdgeDeviceCompositeMetadata context() {
-        return EdgeDeviceCompositeMetadata.INSTANCE;
+    public EdgeDeviceMetadata context() {
+        return EdgeDeviceMetadata.INSTANCE;
     }
 
     @Override
@@ -78,8 +78,8 @@ public final class DeviceByNetworkService
 
     @Override
     public final Set<EventMethodDefinition> definitions() {
-        return EntityHttpService.createDefinitions(getAvailableEvents(), resource(), NetworkMetadata.INSTANCE,
-                                                   EdgeMetadata.INSTANCE);
+        return EntityHttpService.createDefinitions(getAvailableEvents(), resource(), EdgeMetadata.INSTANCE,
+                                                   NetworkMetadata.INSTANCE);
     }
 
     private RequestData optimizeRequestData(@NonNull RequestData requestData) {

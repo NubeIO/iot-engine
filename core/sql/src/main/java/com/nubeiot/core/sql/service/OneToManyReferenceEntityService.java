@@ -18,12 +18,12 @@ import lombok.NonNull;
  * @param <M> Metadata Type
  */
 public interface OneToManyReferenceEntityService<P extends VertxPojo, M extends EntityMetadata>
-    extends SimpleEntityService<P, M> {
+    extends SimpleEntityService<P, M>, HasReferenceResource {
 
     @Override
     @SuppressWarnings("unchecked")
     default @NonNull ReferenceQueryExecutor<P> queryExecutor() {
-        return ReferenceQueryExecutor.create(entityHandler(), context());
+        return ReferenceQueryExecutor.create(entityHandler(), context(), entityReferences());
     }
 
     @Override

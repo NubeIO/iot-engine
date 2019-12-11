@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.jooq.OrderField;
+import org.jooq.TableField;
 
 import io.vertx.core.json.JsonObject;
 
@@ -46,13 +47,13 @@ import com.nubeiot.iotdata.edge.model.tables.daos.PointDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointHistoryDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointRealtimeDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointTagDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.PointThingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointValueDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ProtocolDispatcherDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.RealtimeSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.SyncDispatcherDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ThingDao;
-import com.nubeiot.iotdata.edge.model.tables.daos.TransducerDao;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
@@ -63,13 +64,13 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointThing;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.SyncDispatcher;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 import com.nubeiot.iotdata.edge.model.tables.records.DeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EdgeDeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EdgeRecord;
@@ -80,13 +81,13 @@ import com.nubeiot.iotdata.edge.model.tables.records.PointHistoryDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointRealtimeDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointTagRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.PointThingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointValueDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ProtocolDispatcherRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.RealtimeSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ScheduleSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.SyncDispatcherRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ThingRecord;
-import com.nubeiot.iotdata.edge.model.tables.records.TransducerRecord;
 import com.nubeiot.iotdata.unit.DataType;
 
 import lombok.AccessLevel;
@@ -108,11 +109,11 @@ public interface DataPointIndex extends MetadataIndex {
         map.put(MeasureUnitMetadata.INSTANCE, 10);
         map.put(EdgeMetadata.INSTANCE, 10);
         map.put(DeviceMetadata.INSTANCE, 10);
-        map.put(TransducerMetadata.INSTANCE, 10);
         map.put(NetworkMetadata.INSTANCE, 20);
         map.put(ThingMetadata.INSTANCE, 20);
         map.put(EdgeDeviceMetadata.INSTANCE, 30);
         map.put(PointMetadata.INSTANCE, 40);
+        map.put(PointThingMetadata.INSTANCE, 50);
         return map;
     }
 
@@ -692,12 +693,12 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class ThingMetadata implements SerialKeyEntity<Thing, ThingRecord, ThingDao> {
+    final class ThingMetadata implements UUIDKeyEntity<Thing, ThingRecord, ThingDao> {
 
         public static final ThingMetadata INSTANCE = new ThingMetadata();
 
         @Override
-        public @NonNull JsonTable<ThingRecord> table() {
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.Thing table() {
             return Tables.THING;
         }
 
@@ -711,73 +712,36 @@ public interface DataPointIndex extends MetadataIndex {
             return ThingDao.class;
         }
 
-    }
-
-
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class TransducerMetadata implements UUIDKeyEntity<Transducer, TransducerRecord, TransducerDao> {
-
-        public static final TransducerMetadata INSTANCE = new TransducerMetadata();
-
         @Override
-        public @NonNull JsonTable<TransducerRecord> table() {
-            return Tables.TRANSDUCER;
-        }
-
-        @Override
-        public @NonNull Class<Transducer> modelClass() {
-            return Transducer.class;
-        }
-
-        @Override
-        public @NonNull Class<TransducerDao> daoClass() {
-            return TransducerDao.class;
-        }
-
-        @Override
-        public @NonNull Transducer onCreating(RequestData reqData) throws IllegalArgumentException {
-            Transducer transducer = parseFromRequest(reqData.body());
-            Strings.requireNotBlank(transducer.getCode(), "Transducer code is mandatory");
-            Strings.requireNotBlank(transducer.getCategory(), "Transducer category is mandatory");
-            return transducer.setId(Optional.ofNullable(transducer.getId()).orElseGet(UUID::randomUUID));
+        public @NonNull Thing onCreating(RequestData reqData) throws IllegalArgumentException {
+            Thing thing = parseFromRequest(reqData.body());
+            Strings.requireNotBlank(thing.getCode(), "Thing code is mandatory");
+            Strings.requireNotBlank(thing.getType(), "Thing type is mandatory");
+            Strings.requireNotBlank(thing.getCategory(), "Thing category is mandatory");
+            return thing.setId(Optional.ofNullable(thing.getId()).orElseGet(UUID::randomUUID));
         }
 
     }
 
 
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class EdgeDeviceMetadata implements BigSerialKeyEntity<EdgeDevice, EdgeDeviceRecord, EdgeDeviceDao> {
+    final class PointThingMetadata
+        extends AbstractCompositeMetadata<Long, PointThing, PointThingRecord, PointThingDao, ThingComposite>
+        implements BigSerialKeyEntity<PointThing, PointThingRecord, PointThingDao> {
 
-        public static final EdgeDeviceMetadata INSTANCE = new EdgeDeviceMetadata();
+        public static final PointThingMetadata INSTANCE = new PointThingMetadata().addSubItem(
+            PointCompositeMetadata.INSTANCE, ThingMetadata.INSTANCE);
 
         @Override
-        public @NonNull JsonTable<EdgeDeviceRecord> table() {
-            return Tables.EDGE_DEVICE;
+        public @NonNull Class<PointThing> rawClass() {
+            return PointThing.class;
         }
 
         @Override
-        public @NonNull Class<EdgeDevice> modelClass() {
-            return EdgeDevice.class;
-        }
-
-        @Override
-        public @NonNull Class<EdgeDeviceDao> daoClass() {
-            return EdgeDeviceDao.class;
-        }
-
-    }
-
-
-    final class DeviceThingMetadata
-        extends AbstractCompositeMetadata<Integer, Thing, ThingRecord, ThingDao, ThingComposite>
-        implements SerialKeyEntity<Thing, ThingRecord, ThingDao> {
-
-        public static final DeviceThingMetadata INSTANCE = new DeviceThingMetadata().addSubItem(DeviceMetadata.INSTANCE,
-                                                                                                TransducerMetadata.INSTANCE);
-
-        @Override
-        public @NonNull Class<Thing> rawClass() {
-            return Thing.class;
+        public ThingComposite onCreating(RequestData reqData) throws IllegalArgumentException {
+            ThingComposite thing = super.onCreating(reqData);
+            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
+            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
+            return thing;
         }
 
         @Override
@@ -786,24 +750,47 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull com.nubeiot.iotdata.edge.model.tables.Thing table() {
-            return Tables.THING;
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.PointThing table() {
+            return Tables.POINT_THING;
         }
 
         @Override
-        public @NonNull Class<ThingDao> daoClass() {
-            return ThingDao.class;
+        public @NonNull Class<PointThingDao> daoClass() {
+            return PointThingDao.class;
+        }
+
+        @Override
+        public @NonNull ThingComposite onUpdating(@NonNull PointThing dbData, RequestData reqData)
+            throws IllegalArgumentException {
+            ThingComposite thing = super.onUpdating(dbData, reqData);
+            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
+            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
+            return thing;
+        }
+
+        @Override
+        public @NonNull ThingComposite onPatching(@NonNull PointThing dbData, RequestData reqData)
+            throws IllegalArgumentException {
+            ThingComposite thing = super.onPatching(dbData, reqData);
+            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
+            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
+            return thing;
+        }
+
+        private String tempMsg(@NonNull TableField field) {
+            return "Provide " + table().getJsonField(field) + " temporarily. " +
+                   "See ticket: https://github.com/NubeIO/iot-engine/issues/242";
         }
 
     }
 
 
-    final class EdgeDeviceCompositeMetadata
+    final class EdgeDeviceMetadata
         extends AbstractCompositeMetadata<Long, EdgeDevice, EdgeDeviceRecord, EdgeDeviceDao, EdgeDeviceComposite>
         implements BigSerialKeyEntity<EdgeDevice, EdgeDeviceRecord, EdgeDeviceDao> {
 
-        public static final EdgeDeviceCompositeMetadata INSTANCE = new EdgeDeviceCompositeMetadata().addSubItem(
-            DeviceMetadata.INSTANCE, EdgeMetadata.INSTANCE);
+        public static final EdgeDeviceMetadata INSTANCE = new EdgeDeviceMetadata().addSubItem(DeviceMetadata.INSTANCE,
+                                                                                              EdgeMetadata.INSTANCE);
 
         @Override
         public @NonNull Class<EdgeDevice> rawClass() {
