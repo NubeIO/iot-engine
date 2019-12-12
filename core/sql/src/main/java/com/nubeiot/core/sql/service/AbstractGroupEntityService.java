@@ -55,22 +55,26 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
         return this;
     }
 
+    /**
+     * @return group reference marker
+     * @see GroupReferenceMarker
+     */
     @Override
-    protected OperationValidator initCreationValidator() {
-        return OperationValidator.create(
-            (req, pojo) -> groupQuery().mustExists(req, ref()).map(b -> contextGroup().onCreating(req)));
+    public GroupReferenceMarker marker() {
+        return this;
     }
 
     @Override
-    public GroupReferenceResource ref() {
-        return this;
+    protected OperationValidator initCreationValidator() {
+        return OperationValidator.create(
+            (req, pojo) -> groupQuery().mustExists(req).map(b -> contextGroup().onCreating(req)));
     }
 
     @Override
     public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
         final Stream<Entry<EntityMetadata, String>> stream = Stream.of(
-            ref().entityReferences().getFields().entrySet().stream(),
-            ref().groupReferences().getFields().entrySet().stream()).flatMap(s -> s);
+            marker().entityReferences().getFields().entrySet().stream(),
+            marker().groupReferences().getFields().entrySet().stream()).flatMap(s -> s);
         return recomputeRequestData(requestData, convertKey(requestData, stream));
     }
 
@@ -78,8 +82,8 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     public @NonNull RequestData onModifyingOneResource(@NonNull RequestData requestData) {
         final JsonObject extra = convertKey(requestData, context());
         final Stream<Entry<EntityMetadata, String>> stream = Stream.of(
-            ref().entityReferences().getFields().entrySet().stream(),
-            ref().groupReferences().getFields().entrySet().stream()).flatMap(s -> s);
+            marker().entityReferences().getFields().entrySet().stream(),
+            marker().groupReferences().getFields().entrySet().stream()).flatMap(s -> s);
         return recomputeRequestData(requestData, extra.mergeIn(convertKey(requestData, stream), true));
     }
 

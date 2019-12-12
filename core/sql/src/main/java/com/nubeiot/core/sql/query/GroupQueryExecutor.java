@@ -16,8 +16,8 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.sql.service.GroupReferenceResource;
-import com.nubeiot.core.sql.service.HasReferenceResource.EntityReferences;
+import com.nubeiot.core.sql.service.GroupReferenceMarker;
+import com.nubeiot.core.sql.service.HasReferenceMarker.EntityReferences;
 
 import lombok.NonNull;
 
@@ -26,7 +26,7 @@ import lombok.NonNull;
  *
  * @param <P>  Type of {@code VertxPojo}
  * @param <CP> Type of {@code CompositePojo}
- * @see GroupReferenceResource
+ * @see GroupReferenceMarker
  * @since 1.0.0
  */
 public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePojo> extends ReferenceQueryExecutor<CP> {
@@ -42,6 +42,7 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
      * @param handler           the entity handler
      * @param metadata          the metadata
      * @param compositeMetadata the composite metadata
+     * @param marker            the group entity marker
      * @return the group query executor
      * @see EntityHandler
      * @since 1.0.0
@@ -49,25 +50,29 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
     static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
                CP extends CompositePojo<P, CP>> GroupQueryExecutor<P, CP> create(
         @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
-        @NonNull CompositeMetadata<K, P, R, D, CP> compositeMetadata) {
-        return new GroupDaoQueryExecutor<>(handler, metadata, compositeMetadata);
+        @NonNull CompositeMetadata<K, P, R, D, CP> compositeMetadata, @NonNull GroupReferenceMarker marker) {
+        return new GroupDaoQueryExecutor<>(handler, metadata, compositeMetadata, marker);
     }
 
+    /**
+     * @return the group reference marker
+     * @see GroupReferenceMarker
+     * @since 1.0.0
+     */
     @Override
-    Single<CP> findOneByKey(RequestData requestData);
+    @NonNull GroupReferenceMarker marker();
 
     /**
      * Verify {@code entity} whether exists or not.
      *
-     * @param reqData  the request data
-     * @param groupRef the group reference
+     * @param reqData the request data
      * @return the single
      * @since 1.0.0
      */
-    default Single<Boolean> mustExists(@NonNull RequestData reqData, @NonNull GroupReferenceResource groupRef) {
-        final EntityReferences references = groupRef.groupReferences();
+    default Single<Boolean> mustExists(@NonNull RequestData reqData) {
+        final EntityReferences references = marker().groupReferences();
         final JsonObject body = reqData.body();
-        Single<Boolean> ref = ReferenceQueryExecutor.super.mustExists(reqData, groupRef);
+        Single<Boolean> ref = ReferenceQueryExecutor.super.mustExists(reqData);
         Single<Boolean> group = Observable.fromIterable(references.getFields().entrySet())
                                           .filter(Objects::nonNull)
                                           .flatMapSingle(entry -> {
@@ -87,5 +92,8 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
                                           .all(aBoolean -> aBoolean);
         return ref.concatWith(group).all(aBoolean -> aBoolean);
     }
+
+    @Override
+    Single<CP> findOneByKey(RequestData requestData);
 
 }

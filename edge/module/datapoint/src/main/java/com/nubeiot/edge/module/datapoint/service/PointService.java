@@ -15,7 +15,7 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
-import com.nubeiot.core.sql.service.HasReferenceResource;
+import com.nubeiot.core.sql.service.HasReferenceMarker;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
@@ -120,7 +120,7 @@ public final class PointService
                        .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.factory(unit, unitAlias).toJson());
     }
 
-    public interface PointExtension extends HasReferenceResource {
+    public interface PointExtension extends HasReferenceMarker {
 
         @Override
         default EntityReferences entityReferences() {

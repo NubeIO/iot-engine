@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.sql.service.HasReferenceResource;
+import com.nubeiot.core.sql.service.HasReferenceMarker;
 
 import lombok.NonNull;
 
@@ -22,13 +22,13 @@ import lombok.NonNull;
 public interface ReferenceEntityTransformer extends EntityTransformer {
 
     /**
-     * Ref has reference resource.
+     * Declares {@code has reference} marker.
      *
      * @return the has reference resource
-     * @see HasReferenceResource
+     * @see HasReferenceMarker
      * @since 1.0.0
      */
-    HasReferenceResource ref();
+    HasReferenceMarker marker();
 
     @Override
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
@@ -55,10 +55,10 @@ public interface ReferenceEntityTransformer extends EntityTransformer {
      */
     default Stream<String> refStream(@NonNull RequestData requestData) {
         final JsonObject filter = Optional.ofNullable(requestData.filter()).orElseGet(JsonObject::new);
-        return ref().ignoreFields()
-                    .stream()
-                    .filter(s -> filter.fieldNames().contains(s))
-                    .filter(excludeResourceField());
+        return marker().ignoreFields()
+                       .stream()
+                       .filter(s -> filter.fieldNames().contains(s))
+                       .filter(excludeResourceField());
     }
 
     /**

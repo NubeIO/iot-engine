@@ -8,10 +8,10 @@ import java.util.Set;
  * It manifests one {@code resource entity} has one or more {@code references} to other resources and also includes the
  * {@code reference entity} into itself
  *
- * @see HasReferenceResource
+ * @see HasReferenceMarker
  * @since 1.0.0
  */
-public interface GroupReferenceResource extends HasReferenceResource {
+public interface GroupReferenceMarker extends HasReferenceMarker {
 
     /**
      * Declares {@code group references} for references entities.

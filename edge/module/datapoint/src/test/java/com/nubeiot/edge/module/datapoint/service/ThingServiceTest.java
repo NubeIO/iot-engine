@@ -62,14 +62,32 @@ public class ThingServiceTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_get_thing_by_ref_network(TestContext context) {
+    public void test_get_things_by_device_n_transitive_network(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"code\":\"HVAC-XYZ-FAN\",\"id\":\"" + PrimaryKey.THING_FAN_HVAC + "\",\"category\":\"VELOCITY\"," +
-            "\"label\":{\"label\":\"HVAC Fan\"},\"type\":\"SENSOR\",\"measure_unit\":\"revolutions_per_minute\"}");
+            "{\"things\":[{\"id\":\"" + PrimaryKey.THING_TEMP_HVAC + "\",\"code\":\"HVAC-XYZ-TEMP-01\"," +
+            "\"type\":\"SENSOR\",\"category\":\"TEMP\",\"label\":{\"label\":\"HVAC Temp\"}," +
+            "\"measure_unit\":\"celsius\"},{\"id\":\"" + PrimaryKey.THING_FAN_HVAC + "\"," +
+            "\"code\":\"HVAC-XYZ-FAN\",\"type\":\"SENSOR\",\"category\":\"VELOCITY\",\"label\":{\"label\":\"HVAC " +
+            "Fan\"},\"measure_unit\":\"revolutions_per_minute\"},{\"id\":\"" + PrimaryKey.THING_SWITCH_HVAC + "\"," +
+            "\"code\":\"HVAC-XYZ-FAN-CONTROL\",\"type\":\"ACTUATOR\",\"category\":\"SWITCH\"," +
+            "\"label\":{\"label\":\"HVAC Fan Control\"},\"measure_unit\":\"bool\"}]}");
         RequestData req = RequestData.builder()
-                                     .filter(new JsonObject().put("device.network_id", PrimaryKey.NETWORK.toString()))
+                                     .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_HVAC.toString())
+                                                           .put("network_id", PrimaryKey.NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, ThingService.class.getName(), EventAction.GET_LIST, req);
+    }
+
+    @Test
+    public void test_get_things_by_device_not_associated_transitive_network(TestContext context) {
+        JsonObject expected = new JsonObject(
+            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with device_id=" + PrimaryKey.DEVICE_DROPLET +
+            "\"}");
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_DROPLET.toString())
+                                                           .put("network_id", PrimaryKey.NETWORK.toString()))
+                                     .build();
+        asserter(context, false, expected, ThingService.class.getName(), EventAction.GET_LIST, req);
     }
 
 }

@@ -20,12 +20,12 @@ import lombok.NonNull;
  * @see CompositePojo
  * @see CompositeMetadata
  * @see EntityService
- * @see GroupReferenceResource
+ * @see GroupReferenceMarker
  * @since 1.0.0
  */
 public interface GroupEntityService<P extends VertxPojo, M extends EntityMetadata, CP extends CompositePojo<P, CP>,
                                        CM extends CompositeMetadata>
-    extends BaseEntityService<M>, GroupReferenceResource {
+    extends BaseEntityService<M>, GroupReferenceMarker {
 
     /**
      * Declares context group pojo.
@@ -45,7 +45,7 @@ public interface GroupEntityService<P extends VertxPojo, M extends EntityMetadat
      */
     @SuppressWarnings("unchecked")
     default GroupQueryExecutor<P, CP> groupQuery() {
-        return GroupQueryExecutor.create(entityHandler(), context(), contextGroup());
+        return GroupQueryExecutor.create(entityHandler(), context(), contextGroup(), this);
     }
 
     /**

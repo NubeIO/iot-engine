@@ -54,7 +54,7 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
     }
 
     protected OperationValidator initCreationValidator() {
-        return OperationValidator.create((req, prev) -> queryExecutor().mustExists(req, ref())
+        return OperationValidator.create((req, prev) -> queryExecutor().mustExists(req)
                                                                        .map(b -> validation().onCreating(req))
                                                                        .map(PointRealtimeData.class::cast)
                                                                        .flatMap(this::isAbleToCreate)

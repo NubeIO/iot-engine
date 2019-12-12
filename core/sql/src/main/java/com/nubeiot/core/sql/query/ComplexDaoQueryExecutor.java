@@ -27,7 +27,8 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.sql.service.HasReferenceResource.EntityReferences;
+import com.nubeiot.core.sql.service.HasReferenceMarker;
+import com.nubeiot.core.sql.service.HasReferenceMarker.EntityReferences;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.utils.Strings;
 
@@ -175,6 +176,11 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
                                     .flatMap(dbEntity -> validator.validate(reqData, dbEntity))
                                     .map(dbEntity -> (CP) dbEntity)
                                     .flatMap(dbEntity -> doDelete(reqData, dbEntity));
+    }
+
+    @Override
+    public @NonNull HasReferenceMarker marker() {
+        throw new UnsupportedOperationException("Not using it in case of many-to-many");
     }
 
     @Override
