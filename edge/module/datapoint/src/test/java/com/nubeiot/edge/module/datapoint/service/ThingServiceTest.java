@@ -90,4 +90,31 @@ public class ThingServiceTest extends BaseDataPointServiceTest {
         asserter(context, false, expected, ThingService.class.getName(), EventAction.GET_LIST, req);
     }
 
+    @Test
+    public void test_get_one_thing_by_device_n_transitive_network(TestContext context) {
+        JsonObject expected = new JsonObject(
+            "{\"code\":\"HVAC-XYZ-TEMP-01\",\"id\":\"" + PrimaryKey.THING_TEMP_HVAC + "\"," +
+            "\"label\":{\"label\":\"HVAC Temp\"},\"type\":\"SENSOR\",\"category\":\"TEMP\"," +
+            "\"measure_unit\":\"celsius\"}");
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_HVAC.toString())
+                                                           .put("network_id", PrimaryKey.NETWORK.toString())
+                                                           .put("thing_id", PrimaryKey.THING_TEMP_HVAC.toString()))
+                                     .build();
+        asserter(context, true, expected, ThingService.class.getName(), EventAction.GET_ONE, req);
+    }
+
+    @Test
+    public void test_get_one_thing_by_device_not_associated_transitive_network(TestContext context) {
+        JsonObject expected = new JsonObject(
+            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with device_id=" + PrimaryKey.DEVICE_DROPLET +
+            "\"}");
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_DROPLET.toString())
+                                                           .put("network_id", PrimaryKey.NETWORK.toString())
+                                                           .put("thing_id", PrimaryKey.THING_TEMP_HVAC.toString()))
+                                     .build();
+        asserter(context, false, expected, ThingService.class.getName(), EventAction.GET_ONE, req);
+    }
+
 }

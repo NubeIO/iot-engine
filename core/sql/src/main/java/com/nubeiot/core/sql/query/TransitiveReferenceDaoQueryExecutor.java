@@ -18,7 +18,6 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.HasReferenceMarker.EntityReferences;
@@ -28,7 +27,8 @@ import com.nubeiot.core.sql.service.TransitiveReferenceMarker.TransitiveEntity;
 import lombok.NonNull;
 
 @SuppressWarnings("unchecked")
-final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>>
+final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>,
+                                                   D extends VertxDAO<R, P, K>>
     extends SimpleDaoQueryExecutor<K, P, R, D> implements TransitiveReferenceQueryExecutor<P> {
 
     private final TransitiveReferenceMarker marker;
@@ -59,13 +59,15 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
     @SuppressWarnings("unchecked")
     public Single<P> findOneByKey(RequestData reqData) {
         K pk = metadata().parseKey(reqData);
-        final JsonObject filter = reqData.filter();
-        final Sort sort = reqData.sort();
-        return entityHandler().dao(metadata().daoClass())
-                              .queryExecutor()
-                              .findOne((Function<DSLContext, ResultQuery<R>>) queryBuilder().viewOne(filter, sort))
-                              .flatMap(o -> o.map(Single::just).orElse(Single.error(metadata().notFound(pk))))
-                              .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError);
+        final Function<DSLContext, ResultQuery<R>> viewOneFunc
+            = (Function<DSLContext, ResultQuery<R>>) queryBuilder().viewOne(reqData.filter(), reqData.sort());
+        final EntityHandler handler = entityHandler();
+        return mustExists(reqData).flatMap(ig -> handler.dao(metadata().daoClass())
+                                                        .queryExecutor()
+                                                        .findOne(viewOneFunc)
+                                                        .flatMap(o -> o.map(Single::just)
+                                                                       .orElse(Single.error(metadata().notFound(pk))))
+                                                        .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError));
     }
 
     @Override
