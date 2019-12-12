@@ -23,10 +23,24 @@ import com.nubeiot.core.utils.Functions;
 
 import lombok.NonNull;
 
+/**
+ * Abstract service to implement {@code CRUD} listeners for the {@code one-to-many entity}
+ *
+ * @param <P> Type of {@code VertxPojo}
+ * @param <M> Type of {@code EntityMetadata}
+ * @see OneToManyReferenceEntityService
+ * @see ReferenceEntityTransformer
+ * @since 1.0.0
+ */
 public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M extends EntityMetadata>
-    extends AbstractEntityService<P, M>
-    implements OneToManyReferenceEntityService<P, M>, ReferenceEntityTransformer, HasReferenceResource {
+    extends AbstractEntityService<P, M> implements OneToManyReferenceEntityService<P, M>, ReferenceEntityTransformer {
 
+    /**
+     * Instantiates a new Abstract one to many entity service.
+     *
+     * @param entityHandler the entity handler
+     * @since 1.0.0
+     */
     public AbstractOneToManyEntityService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
@@ -82,15 +96,15 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
         JsonObject filter = new JsonObject(entityReferences().computeRequest(body));
         Optional.ofNullable(extra).ifPresent(e -> filter.mergeIn(e, true));
         body = body.mergeIn(filter, true);
-        final JsonObject combineFilter = Objects.isNull(requestData.getFilter())
+        final JsonObject combineFilter = Objects.isNull(requestData.filter())
                                          ? filter
-                                         : requestData.getFilter().mergeIn(filter, true);
+                                         : requestData.filter().mergeIn(filter, true);
         return RequestData.builder()
                           .body(body)
                           .headers(requestData.headers())
                           .filter(combineFilter)
-                          .sort(requestData.getSort())
-                          .pagination(requestData.getPagination())
+                          .sort(requestData.sort())
+                          .pagination(requestData.pagination())
                           .build();
     }
 

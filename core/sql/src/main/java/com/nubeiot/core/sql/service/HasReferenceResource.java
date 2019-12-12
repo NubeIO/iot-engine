@@ -21,39 +21,79 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Mark {@code EntityService} as representing {@code resource} has one or more {@code reference} to other resources. It
- * makes {@code EntityService} is available in a case that is lookup {@code current entity} from another reference
- * entity.
+ * Represents for an {@code database entity} marker.
  * <p>
- * It contains reference fields (a.k.a {@code foreign key} to other table of this entity) that are used for computing
- * {@code request data} to filter exactly request key then make {@code sql query} in persistence layer
+ * It manifests {@code resource entity} has one or more {@code reference} to other resources. In {@code database layer}
+ * it can be understand as {@code one table} has reference fields (a.k.a {@code foreign key}) to other {@code tables}.
+ * <p>
+ * A marker declares a list of {@code reference fields} that are used for computing {@code request data} to filter
+ * exactly request key then make {@code SQL query}
  *
- * @see EntityService
+ * @since 1.0.0
  */
 public interface HasReferenceResource {
 
     /**
-     * Defines mapping between {@code json request field} in {@code request body} and {@code database foreign key}
+     * Defines mapping between {@code json field} in {@code request body} and {@code resource field} as {@code foreign
+     * key}** in database
      *
-     * @return a mapping between {@code json request field} and {@code database foreign key}
+     * @return entity references
+     * @see EntityReferences
+     * @since 1.0.0
      */
-    EntityReferences entityReferences();
+    @NonNull EntityReferences entityReferences();
 
+    /**
+     * Defines ignore fields in {@code response} based on {@code request data} and {@code reference fields}
+     *
+     * @return ignore fields
+     * @since 1.0.0
+     */
+    @NonNull
     default Set<String> ignoreFields() {
         return entityReferences().ignoreFields();
     }
 
+    /**
+     * Represents mapping between {@code json field} and {@code resource field}.
+     * <p>
+     * In most case, {@code json field} will be similar to {@code resource field}. For examples:
+     * <table summary="">
+     *  <tr><th>Json Field</th><th>Resource field</th></tr>
+     *  <tr><td>device_id</td><td>DEVICE_ID</td></tr>
+     *  <tr><td>device_id</td><td>DEVICE</td></tr>
+     *  <tr><td>device</td><td>DEVICE</td></tr>
+     * </table>
+     *
+     * @since 1.0.0
+     */
     @Getter
     @RequiredArgsConstructor
     class EntityReferences {
 
         private final Map<EntityMetadata, String> fields = new LinkedHashMap<>();
 
+        /**
+         * Add entity references.
+         *
+         * @param metadata the metadata
+         * @return the entity references
+         * @since 1.0.0
+         */
         public EntityReferences add(@NonNull EntityMetadata metadata) {
             fields.put(metadata, metadata.requestKeyName());
             return this;
         }
 
+        /**
+         * Add entity references.
+         *
+         * @param metadata the metadata
+         * @param fkField  the foreign key field. If it is {@code blank}, it will fallback to {@link
+         *                 EntityMetadata#requestKeyName()}
+         * @return the entity references
+         * @since 1.0.0
+         */
         public EntityReferences add(@NonNull EntityMetadata metadata, String fkField) {
             fields.put(metadata, Strings.isBlank(fkField) ? metadata.requestKeyName() : fkField);
             return this;

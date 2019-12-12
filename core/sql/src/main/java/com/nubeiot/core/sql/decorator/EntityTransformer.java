@@ -23,7 +23,9 @@ import com.nubeiot.core.sql.pojos.JsonPojo;
 import lombok.NonNull;
 
 /**
- * Transformer entity resource before response to client
+ * A {@code transformer} that transform {@code entity resource} before response to client
+ *
+ * @since 1.0.0
  */
 public interface EntityTransformer {
 
@@ -37,22 +39,41 @@ public interface EntityTransformer {
      *
      * @param action Event action
      * @param result Result data
-     * @return response
+     * @return response json object
+     * @since 1.0.0
      */
     static JsonObject fullResponse(@NonNull EventAction action, @NonNull JsonObject result) {
         return new JsonObject().put("resource", result).put("action", action).put("status", Status.SUCCESS);
     }
 
+    /**
+     * Key response json object.
+     *
+     * @param keyName  the key name
+     * @param keyValue the key value
+     * @return the json object
+     * @since 1.0.0
+     */
     static JsonObject keyResponse(@NonNull String keyName, @NonNull Object keyValue) {
         return new JsonObject().put(keyName, JsonData.checkAndConvert(keyValue));
     }
 
+    /**
+     * Gets data.
+     *
+     * @param responseData the response data
+     * @return the data
+     * @since 1.0.0
+     */
     static JsonObject getData(@NonNull JsonObject responseData) {
         return responseData.getJsonObject("resource");
     }
 
     /**
+     * Resource metadata entity metadata.
+     *
      * @return resource metadata
+     * @since 1.0.0
      */
     @NonNull EntityMetadata resourceMetadata();
 
@@ -61,6 +82,7 @@ public interface EntityTransformer {
      * {@code primary key} of resource.
      *
      * @return {@code true} if enable full resource in response
+     * @since 1.0.0
      */
     default boolean enableFullResourceInCUDResponse() {
         return true;
@@ -79,6 +101,7 @@ public interface EntityTransformer {
      * @see #afterPatch(Object, VertxPojo, RequestData)
      * @see #afterGet(VertxPojo, RequestData)
      * @see #onEach(VertxPojo, RequestData)
+     * @since 1.0.0
      */
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
         return requestData.hasAudit() ? Collections.emptySet() : AUDIT_FIELDS;
@@ -91,6 +114,7 @@ public interface EntityTransformer {
      * @param requestData request data
      * @return transformer item
      * @apiNote By default, result omits {@code null} fields
+     * @since 1.0.0
      */
     @NonNull
     default Single<JsonObject> onEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
@@ -102,6 +126,7 @@ public interface EntityTransformer {
      *
      * @param results given results
      * @return json object of list data
+     * @since 1.0.0
      */
     @NonNull
     default Single<JsonObject> onMany(@NonNull JsonArray results) {
@@ -115,6 +140,7 @@ public interface EntityTransformer {
      * @param requestData request data
      * @return transformer item
      * @apiNote By default, result omits {@code null} fields
+     * @since 1.0.0
      */
     @NonNull
     default Single<JsonObject> afterGet(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
@@ -130,6 +156,7 @@ public interface EntityTransformer {
      * @param reqData request data
      * @return transformer item
      * @apiNote By default, result doesn't omits {@code null} fields
+     * @since 1.0.0
      */
     @NonNull
     default Single<JsonObject> afterCreate(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
@@ -146,6 +173,7 @@ public interface EntityTransformer {
      * @param reqData request data
      * @return transformer item
      * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
+     * @since 1.0.0
      */
     default @NonNull Single<JsonObject> afterUpdate(@NonNull Object key, @NonNull VertxPojo pojo,
                                                     @NonNull RequestData reqData) {
@@ -162,6 +190,7 @@ public interface EntityTransformer {
      * @param reqData request data
      * @return transformer item
      * @apiNote By default, result omits {@code null} fields and {@link #AUDIT_FIELDS}
+     * @since 1.0.0
      */
     @NonNull
     default Single<JsonObject> afterPatch(@NonNull Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
@@ -177,6 +206,7 @@ public interface EntityTransformer {
      * @param reqData request data
      * @return transformer item
      * @apiNote By default, result doesn't omits {@code null} fields
+     * @since 1.0.0
      */
     @NonNull
     default Single<JsonObject> afterDelete(@NonNull VertxPojo pojo, @NonNull RequestData reqData) {
@@ -185,12 +215,34 @@ public interface EntityTransformer {
                                        JsonObject::new));
     }
 
+    /**
+     * Do transform json object.
+     *
+     * @param action    the action
+     * @param key       the key
+     * @param pojo      the pojo
+     * @param reqData   the req data
+     * @param converter the converter
+     * @return the json object
+     * @since 1.0.0
+     */
     default JsonObject doTransform(EventAction action, Object key, VertxPojo pojo, RequestData reqData,
                                    BiFunction<VertxPojo, RequestData, JsonObject> converter) {
         return doTransform(action, pojo, reqData, converter,
                            () -> keyResponse(resourceMetadata().requestKeyName(), key));
     }
 
+    /**
+     * Do transform json object.
+     *
+     * @param action    the action
+     * @param pojo      the pojo
+     * @param reqData   the req data
+     * @param converter the converter
+     * @param ifNotFull the if not full
+     * @return the json object
+     * @since 1.0.0
+     */
     default JsonObject doTransform(EventAction action, VertxPojo pojo, RequestData reqData,
                                    BiFunction<VertxPojo, RequestData, JsonObject> converter,
                                    Supplier<JsonObject> ifNotFull) {

@@ -10,8 +10,17 @@ import com.nubeiot.core.sql.service.GroupReferenceResource;
 
 import lombok.NonNull;
 
+/**
+ * The interface Group entity transformer.
+ *
+ * @see ReferenceEntityTransformer
+ * @since 1.0.0
+ */
 public interface GroupEntityTransformer extends ReferenceEntityTransformer {
 
+    /**
+     * @see GroupReferenceResource
+     */
     GroupReferenceResource ref();
 
     /**
@@ -37,6 +46,7 @@ public interface GroupEntityTransformer extends ReferenceEntityTransformer {
      *
      * @param requestData request data
      * @return ignore fields
+     * @since 1.0.0
      */
     default Set<String> showGroupFields(@NonNull RequestData requestData) {
         return ReferenceEntityTransformer.super.ignoreFields(requestData);

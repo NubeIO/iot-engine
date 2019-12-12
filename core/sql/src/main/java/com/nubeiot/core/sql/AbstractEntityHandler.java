@@ -29,6 +29,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 
+/**
+ * Represents for Abstract entity handler.
+ *
+ * @since 1.0.0
+ */
 public abstract class AbstractEntityHandler implements EntityHandler {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -37,6 +42,13 @@ public abstract class AbstractEntityHandler implements EntityHandler {
     @Getter(value = AccessLevel.PROTECTED)
     private String sharedKey = getClass().getName();
 
+    /**
+     * Instantiates a new Abstract entity handler.
+     *
+     * @param jooqConfig the jooq config
+     * @param vertx      the vertx
+     * @since 1.0.0
+     */
     public AbstractEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         this.jooqConfig = jooqConfig;
         this.vertx = vertx;
@@ -73,8 +85,7 @@ public abstract class AbstractEntityHandler implements EntityHandler {
     }
 
     @Override
-    public <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(
-        Class<D> daoClass) {
+    public <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(Class<D> daoClass) {
         Map<Class, Object> input = new LinkedHashMap<>();
         input.put(Configuration.class, jooqConfig);
         input.put(io.vertx.reactivex.core.Vertx.class, io.vertx.reactivex.core.Vertx.newInstance(vertx()));

@@ -49,7 +49,7 @@ final class HttpClientDelegateImpl extends ClientDelegate implements HttpClientD
             Handler<HttpClientResponse> respHandler = HttpLightResponseHandler.create(emitter, swallowError,
                                                                                       cfg.getHttpLightBodyHandlerClass());
             HttpErrorHandler errHandler = HttpErrorHandler.create(emitter, hostInfo, cfg.getHttpErrorHandlerClass());
-            String query = HttpRequests.serializeQuery(reqData.getFilter());
+            String query = HttpRequests.serializeQuery(reqData.filter());
             HttpClientRequest req = get().request(method, Urls.buildURL(path, query), respHandler)
                                          .exceptionHandler(errHandler);
             if (logger.isDebugEnabled()) {

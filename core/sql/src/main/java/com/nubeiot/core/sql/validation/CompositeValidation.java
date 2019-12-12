@@ -11,6 +11,7 @@ import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -22,14 +23,20 @@ import com.nubeiot.core.utils.Strings;
 import lombok.NonNull;
 
 /**
- * Entity validation for request input
+ * Represents for composite entity validation
  *
- * @param <P> Vertx pojo type
- * @param <C> Composite pojo that extends from Vertx pojo type
+ * @param <P> Type of {@code VertxPojo}
+ * @param <C> Type of {@code Composite Pojo} that extends from Vertx pojo type
+ * @see CompositePojo
+ * @see EntityValidation
+ * @since 1.0.0
  */
 @SuppressWarnings("unchecked")
 public interface CompositeValidation<P extends VertxPojo, C extends CompositePojo<P, C>> extends EntityValidation<P> {
 
+    /**
+     * @see CompositeMetadata
+     */
     @Override
     CompositeMetadata context();
 
@@ -43,8 +50,9 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
             if (Objects.isNull(sub)) {
                 continue;
             }
-            request.put(key, Functions.getOrThrow(() -> metadata.onCreating(RequestData.builder().body(reqData.body().getJsonObject(key)).build()),
-                                                  NubeExceptionConverter::from));
+            request.put(key, Functions.getOrThrow(
+                () -> metadata.onCreating(RequestData.builder().body(reqData.body().getJsonObject(key)).build()),
+                NubeExceptionConverter::from));
         }
         return request;
     }
@@ -53,7 +61,8 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     default <PP extends P> @NonNull PP onUpdating(@NonNull P dbData, RequestData reqData)
         throws IllegalArgumentException {
         C request = (C) context().parseFromRequest(reqData.body());
-        validateSubItems((C) dbData, request, (metadata, requestData, pojo) -> metadata.onUpdating(pojo, requestData));
+        validateSubMetadata((C) dbData, request,
+                            (metadata, requestData, pojo) -> metadata.onUpdating(pojo, requestData));
         return (PP) request;
     }
 
@@ -61,7 +70,8 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     default <PP extends P> @NonNull PP onPatching(@NonNull P dbData, RequestData reqData)
         throws IllegalArgumentException {
         C request = (C) context().parseFromEntity(JsonPojo.merge(dbData, context().parseFromRequest(reqData.body())));
-        validateSubItems((C) dbData, request, (metadata, requestData, pojo) -> metadata.onPatching(pojo, requestData));
+        validateSubMetadata((C) dbData, request,
+                            (metadata, requestData, pojo) -> metadata.onPatching(pojo, requestData));
         return (PP) request;
     }
 
@@ -70,6 +80,14 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
         return (PP) dbData;
     }
 
+    /**
+     * Construct error message.
+     *
+     * @param data       the data
+     * @param references the references
+     * @return error message
+     * @since 1.0.0
+     */
     default String msg(@NonNull JsonObject data, @NonNull Collection<EntityMetadata> references) {
         return references.stream()
                          .filter(Objects::nonNull)
@@ -79,8 +97,17 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
                          .collect(Collectors.joining(" and "));
     }
 
-    default void validateSubItems(@NonNull C dbData, @NonNull C request,
-                                  Function3<EntityMetadata, RequestData, VertxPojo, VertxPojo> validator) {
+    /**
+     * Validate sub entity metadata.
+     *
+     * @param dbData    the db data
+     * @param request   the request
+     * @param validator the validator
+     * @throws NubeException if catching any invalid value
+     * @since 1.0.0
+     */
+    default void validateSubMetadata(@NonNull C dbData, @NonNull C request,
+                                     Function3<EntityMetadata, RequestData, VertxPojo, VertxPojo> validator) {
         for (EntityMetadata metadata : ((List<EntityMetadata>) context().subItems())) {
             String key = metadata.singularKeyName();
             final VertxPojo sub = request.getOther(key);

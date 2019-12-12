@@ -20,39 +20,131 @@ import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 
+/**
+ * Represents Entity handler.
+ *
+ * @since 1.0.0
+ */
 public interface EntityHandler {
 
+    /**
+     * Parse pojo.
+     *
+     * @param <P>        Type of {@code VertxPojo}
+     * @param modelClass the model class
+     * @param pojo       the pojo
+     * @return the pojo
+     * @since 1.0.0
+     */
     @SuppressWarnings("unchecked")
-    static <POJO extends VertxPojo> POJO parse(@NonNull Class<POJO> modelClass, @NonNull JsonObject pojo) {
-        return (POJO) ReflectionClass.createObject(modelClass).fromJson(pojo);
+    static <P extends VertxPojo> P parse(@NonNull Class<P> modelClass, @NonNull JsonObject pojo) {
+        return (P) ReflectionClass.createObject(modelClass).fromJson(pojo);
     }
 
-    static <POJO extends VertxPojo> POJO parse(@NonNull Class<POJO> pojoClass, @NonNull Object data) {
+    /**
+     * Parse pojo.
+     *
+     * @param <P>       Type of {@code VertxPojo}
+     * @param pojoClass the pojo class
+     * @param data      the data
+     * @return the pojo
+     * @since 1.0.0
+     */
+    static <P extends VertxPojo> P parse(@NonNull Class<P> pojoClass, @NonNull Object data) {
         return parse(pojoClass, JsonData.tryParse(data).toJson());
     }
 
+    /**
+     * Get Vertx.
+     *
+     * @return the vertx
+     * @since 1.0.0
+     */
     Vertx vertx();
 
+    /**
+     * Get eventbus client.
+     *
+     * @return the eventbus client
+     * @see EventbusClient
+     * @since 1.0.0
+     */
     EventbusClient eventClient();
 
+    /**
+     * Data dir path.
+     *
+     * @return the path
+     * @since 1.0.0
+     */
     Path dataDir();
 
+    /**
+     * Get shared data by {@code data key}.
+     *
+     * @param <D>     Type of {@code expectation result}
+     * @param dataKey the data key
+     * @return the result
+     * @since 1.0.0
+     */
     <D> D sharedData(String dataKey);
 
+    /**
+     * Add shared data.
+     *
+     * @param <D>     Type of {@code expectation result}
+     * @param dataKey the data key
+     * @param data    the data
+     * @return the result
+     * @since 1.0.0
+     */
     <D> D addSharedData(String dataKey, D data);
 
+    /**
+     * Get {@code dsl context}.
+     *
+     * @return the dsl context
+     * @see DSLContext
+     * @since 1.0.0
+     */
     DSLContext dsl();
 
+    /**
+     * Create {@code DAO} by given {@code daoClass}.
+     *
+     * @param <K>      Type of {@code primary key}
+     * @param <M>      Type of {@code VertxPojo}
+     * @param <R>      Type of {@code UpdatableRecord}
+     * @param <D>      Type of {@code VertxDAO}
+     * @param daoClass the dao class
+     * @return the instance of DAO
+     * @since 1.0.0
+     */
     <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(Class<D> daoClass);
 
+    /**
+     * Get generic query executor.
+     *
+     * @return the generic query executor
+     * @see JDBCRXGenericQueryExecutor
+     * @since 1.0.0
+     */
     JDBCRXGenericQueryExecutor genericQuery();
 
+    /**
+     * Get complex query executor.
+     *
+     * @return the complex query executor
+     * @see ComplexQueryExecutor
+     * @since 1.0.0
+     */
     ComplexQueryExecutor complexQuery();
 
     /**
      * Execute any task before setup database
      *
      * @return single of reference to this, so the API can be used fluently
+     * @since 1.0.0
      */
     Single<EntityHandler> before();
 
@@ -64,6 +156,7 @@ public interface EntityHandler {
      *
      * @return {@code true} if new database, else otherwise
      * @see <a href="https://github.com/jOOQ/jOOQ/issues/8038">https://github.com/jOOQ/jOOQ/issues/8038</a>
+     * @since 1.0.0
      */
     boolean isNew();
 
@@ -72,6 +165,7 @@ public interface EntityHandler {
      *
      * @return event message to know the process is success or not.
      * @see EventMessage
+     * @since 1.0.0
      */
     Single<EventMessage> initData();
 
@@ -80,6 +174,7 @@ public interface EntityHandler {
      *
      * @return event message to know the process is success or not.
      * @see EventMessage
+     * @since 1.0.0
      */
     Single<EventMessage> migrate();
 

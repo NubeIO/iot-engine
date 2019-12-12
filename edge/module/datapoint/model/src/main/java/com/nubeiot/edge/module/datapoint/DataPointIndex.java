@@ -737,14 +737,6 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public ThingComposite onCreating(RequestData reqData) throws IllegalArgumentException {
-            ThingComposite thing = super.onCreating(reqData);
-            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
-            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
-            return thing;
-        }
-
-        @Override
         public @NonNull Class<ThingComposite> modelClass() {
             return ThingComposite.class;
         }
@@ -757,6 +749,14 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<PointThingDao> daoClass() {
             return PointThingDao.class;
+        }
+
+        @Override
+        public ThingComposite onCreating(RequestData reqData) throws IllegalArgumentException {
+            ThingComposite thing = super.onCreating(reqData);
+            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
+            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
+            return thing;
         }
 
         @Override

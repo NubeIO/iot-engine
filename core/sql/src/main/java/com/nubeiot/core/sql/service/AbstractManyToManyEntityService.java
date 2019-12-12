@@ -16,10 +16,25 @@ import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 
+/**
+ * Abstract service to implement {@code CRUD} listeners for the {@code many-to-many entity}.
+ *
+ * @param <P> Type of {@code CompositePojo}
+ * @param <M> Type of {@code CompositeMetadata}
+ * @see ManyToManyReferenceEntityService
+ * @see ManyToManyEntityTransformer
+ * @since 1.0.0
+ */
 public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M extends CompositeMetadata>
     extends AbstractOneToManyEntityService<P, M>
     implements ManyToManyReferenceEntityService<P, M>, ManyToManyEntityTransformer {
 
+    /**
+     * Instantiates a new Abstract many to many entity service.
+     *
+     * @param entityHandler the entity handler
+     * @since 1.0.0
+     */
     public AbstractManyToManyEntityService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }

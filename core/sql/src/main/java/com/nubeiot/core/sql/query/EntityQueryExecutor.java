@@ -30,10 +30,23 @@ import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 
+/**
+ * Represents for a {@code sql executor} do {@code DML} or {@code DQL} on {@code entity}.
+ *
+ * @param <P> Type of {@code VertxPojo}
+ * @since 1.0.0
+ */
 //TODO lack unique keys validation
 public interface EntityQueryExecutor<P extends VertxPojo> {
 
-    static Single wrapDatabaseError(Throwable throwable) {
+    /**
+     * Sneaky throw database error in single type.
+     *
+     * @param throwable the throwable
+     * @return error single
+     * @since 1.0.0
+     */
+    static Single sneakyThrowDBError(@NonNull Throwable throwable) {
         if (throwable instanceof TooManyRowsException) {
             return Single.error(new ImplementationError(ErrorCode.DATABASE_ERROR,
                                                         "Query is not correct, the result contains more than one " +
@@ -42,24 +55,56 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
         return Single.error(throwable);
     }
 
+    /**
+     * Sneaky throw database error in case of {@code unable delete} entity.
+     *
+     * @param clue the clue
+     * @return error single
+     * @since 1.0.0
+     */
     static Single unableDelete(String clue) {
         return Single.error(
             new NubeException("Cannot delete record", new HiddenException(ErrorCode.DATABASE_ERROR, clue)));
     }
 
+    /**
+     * Declares entity handler.
+     *
+     * @return the entity handler
+     * @see EntityHandler
+     * @since 1.0.0
+     */
     EntityHandler entityHandler();
 
+    /**
+     * Declares query builder.
+     *
+     * @return the query builder
+     * @see QueryBuilder
+     * @since 1.0.0
+     */
     QueryBuilder queryBuilder();
 
+    /**
+     * Create {@code DAO} based on given {@code dao class}.
+     *
+     * @param <K>      Type of {@code primary key}
+     * @param <R>      Type of {@code UpdatableRecord}
+     * @param <D>      Type of {@code VertxDAO}
+     * @param daoClass the dao class
+     * @return instance of {@code DAO}
+     * @since 1.0.0
+     */
     default <K, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(Class<D> daoClass) {
         return entityHandler().dao(daoClass);
     }
 
     /**
-     * Find many entity resources
+     * Find many entity resources.
      *
      * @param requestData Request data
      * @return list pojo entities
+     * @since 1.0.0
      */
     Observable<P> findMany(RequestData requestData);
 
@@ -68,6 +113,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      *
      * @param requestData Request data
      * @return single pojo
+     * @since 1.0.0
      */
     Single<P> findOneByKey(RequestData requestData);
 
@@ -77,6 +123,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @param query Given query
      * @return empty if resource is not existed or {@code true}
      * @see QueryBuilder#exist(Table, Condition)
+     * @since 1.0.0
      */
     default Maybe<Boolean> fetchExists(@NonNull Function<DSLContext, Boolean> query) {
         return executeAny(query).filter(b -> b).switchIfEmpty(Maybe.empty());
@@ -88,6 +135,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @param primaryKey Given primary key
      * @return one single data source if found else throw {@code not found exception}
      * @see EntityMetadata#notFound(Object)
+     * @since 1.0.0
      */
     Single<P> lookupByPrimaryKey(@NonNull Object primaryKey);
 
@@ -97,6 +145,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @param pojo        new resource
      * @param requestData request data
      * @return primary key
+     * @since 1.0.0
      */
     Single<?> insertReturningPrimary(@NonNull P pojo, @NonNull RequestData requestData);
 
@@ -107,6 +156,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @param action      Event action
      * @param validator   modification validator
      * @return primary key
+     * @since 1.0.0
      */
     Single<?> modifyReturningPrimary(@NonNull RequestData requestData, @NonNull EventAction action,
                                      @NonNull OperationValidator validator);
@@ -117,6 +167,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @param requestData Request data
      * @param validator   deletion validator
      * @return deleted resource
+     * @since 1.0.0
      */
     Single<P> deleteOneByKey(@NonNull RequestData requestData, @NonNull OperationValidator validator);
 
@@ -125,9 +176,10 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      *
      * @param pojo        Resource
      * @param metadata    Entity metadata
-     * @param keyProvider key provider to search
+     * @param keyProvider function to search key from resource
      * @return single pojo or single existed error
      * @see EntityMetadata#unableDeleteDueUsing(String)
+     * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
     default Single<P> isAbleToDelete(@NonNull P pojo, @NonNull EntityMetadata metadata,
@@ -148,13 +200,14 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
     /**
      * Execute any function
      *
+     * @param <X>      Type of {@code result}
      * @param function query function
-     * @param <X>      Result type
-     * @return single of result
+     * @return result single
      * @apiNote Only using it in very complex case or special case
      * @see QueryBuilder#view(JsonObject, Sort, Pagination)
      * @see QueryBuilder#viewOne(JsonObject, Sort)
      * @see QueryBuilder#exist(Table, Condition)
+     * @since 1.0.0
      */
     <X> Single<X> executeAny(@NonNull Function<DSLContext, X> function);
 

@@ -37,7 +37,7 @@ public final class ServiceGatewayIndex implements EventListener {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> get(@NonNull RequestData requestData) {
-        final JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElse(new JsonObject()).copy();
+        final JsonObject filter = Optional.ofNullable(requestData.filter()).orElse(new JsonObject()).copy();
         filter.remove(Filters.PRETTY);
         final ServiceDiscoveryController controller = getController(filter);
         final RecordView view = RecordView.parse((String) filter.remove(Params.VIEW));
@@ -55,7 +55,7 @@ public final class ServiceGatewayIndex implements EventListener {
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(@NonNull RequestData requestData) {
-        JsonObject filter = Optional.ofNullable(requestData.getFilter()).orElse(new JsonObject()).copy();
+        JsonObject filter = Optional.ofNullable(requestData.filter()).orElse(new JsonObject()).copy();
         filter.remove(Filters.PRETTY);
         ServiceDiscoveryController controller = getController(filter);
         RecordTransformer transformer = RecordTransformer.create(RecordView.END_USER);
