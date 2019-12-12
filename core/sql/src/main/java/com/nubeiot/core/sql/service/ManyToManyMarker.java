@@ -16,10 +16,10 @@ import lombok.NonNull;
  *
  * @since 1.0.0
  */
-public interface ManyToManyResource {
+public interface ManyToManyMarker {
 
     /**
-     * Represents physical database entity
+     * Declares physical database entity
      *
      * @return physical entity metadata
      * @apiNote It represents for a joining table in {@code many-to-many} relationship
@@ -28,7 +28,7 @@ public interface ManyToManyResource {
     @NonNull CompositeMetadata context();
 
     /**
-     * Represents logical database entity
+     * Declares logical database entity
      *
      * @return logical entity metadata
      * @apiNote Represents one reference table in {@code many-to-many} relationship that is actual {@code service
@@ -38,7 +38,7 @@ public interface ManyToManyResource {
     @NonNull EntityMetadata reference();
 
     /**
-     * Represents logical database entities
+     * Declares logical database entities
      *
      * @return logical entities metadata
      * @apiNote Represents list of reference tables in {@code many-to-many} relationship that is actual {@code
@@ -50,7 +50,7 @@ public interface ManyToManyResource {
     }
 
     /**
-     * Represents presentation resource of service
+     * Declares service presentation resource
      *
      * @return presentation entity metadata
      * @apiNote Represents one reference table in {@code many-to-many} relationship that is {@code service resource

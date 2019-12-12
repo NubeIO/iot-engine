@@ -17,11 +17,11 @@ import lombok.NonNull;
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
  * @see EntityService
- * @see HasReferenceResource
+ * @see HasReferenceMarker
  * @since 1.0.0
  */
 public interface OneToManyReferenceEntityService<P extends VertxPojo, M extends EntityMetadata>
-    extends SimpleEntityService<P, M>, HasReferenceResource {
+    extends SimpleEntityService<P, M>, HasReferenceMarker {
 
     /**
      * @return reference query executor
@@ -30,7 +30,7 @@ public interface OneToManyReferenceEntityService<P extends VertxPojo, M extends 
     @Override
     @SuppressWarnings("unchecked")
     default @NonNull ReferenceQueryExecutor<P> queryExecutor() {
-        return ReferenceQueryExecutor.create(entityHandler(), context());
+        return ReferenceQueryExecutor.create(entityHandler(), context(), this);
     }
 
     /**

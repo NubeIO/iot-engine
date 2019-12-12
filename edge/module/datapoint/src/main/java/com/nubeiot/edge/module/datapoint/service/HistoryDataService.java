@@ -76,7 +76,7 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
 
     @Override
     protected OperationValidator initCreationValidator() {
-        return OperationValidator.create((req, prev) -> queryExecutor().mustExists(req, ref())
+        return OperationValidator.create((req, prev) -> queryExecutor().mustExists(req)
                                                                        .map(b -> validation().onCreating(req))
                                                                        .flatMap(h -> isAbleToInsertByCov(
                                                                            (PointHistoryData) h)));

@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
  *
  * @since 1.0.0
  */
-public interface HasReferenceResource {
+public interface HasReferenceMarker {
 
     /**
      * Defines mapping between {@code json field} in {@code request body} and {@code resource field} as {@code foreign

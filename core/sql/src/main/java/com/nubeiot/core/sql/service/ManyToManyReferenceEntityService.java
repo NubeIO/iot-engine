@@ -17,11 +17,11 @@ import lombok.NonNull;
  *
  * @param <CP> Type of {@code CompositePojo}
  * @param <CM> Type of {@code CompositeMetadata}
- * @see ManyToManyResource
+ * @see ManyToManyMarker
  * @since 1.0.0
  */
 public interface ManyToManyReferenceEntityService<CP extends CompositePojo, CM extends CompositeMetadata>
-    extends OneToManyReferenceEntityService<CP, CM>, ManyToManyResource {
+    extends OneToManyReferenceEntityService<CP, CM>, ManyToManyMarker {
 
     /**
      * Represents physical database entity
@@ -51,7 +51,7 @@ public interface ManyToManyReferenceEntityService<CP extends CompositePojo, CM e
                               .from(context())
                               .context(reference())
                               .with(resource())
-                              .references(transformer().ref().entityReferences());
+                              .references(transformer().marker().entityReferences());
     }
 
     /**

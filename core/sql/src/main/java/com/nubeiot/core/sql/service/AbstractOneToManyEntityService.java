@@ -24,7 +24,7 @@ import com.nubeiot.core.utils.Functions;
 import lombok.NonNull;
 
 /**
- * Abstract service to implement {@code CRUD} listeners for the {@code one-to-many entity}
+ * Abstract service to implement {@code CRUD} listeners for the {@code one-to-many entity}.
  *
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
@@ -55,27 +55,30 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
         return this;
     }
 
-    protected OperationValidator initCreationValidator() {
-        return OperationValidator.create(
-            (req, pojo) -> queryExecutor().mustExists(req, ref()).map(b -> validation().onCreating(req)));
+    @Override
+    public HasReferenceMarker marker() {
+        return this;
     }
 
-    @Override
-    public HasReferenceResource ref() {
-        return this;
+    protected OperationValidator initCreationValidator() {
+        return OperationValidator.create(
+            (req, pojo) -> queryExecutor().mustExists(req).map(b -> validation().onCreating(req)));
     }
 
     @Override
     public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData,
-                                    convertKey(requestData, ref().entityReferences().getFields().entrySet().stream()));
+        return recomputeRequestData(requestData, convertKey(requestData, marker().entityReferences()
+                                                                                 .getFields()
+                                                                                 .entrySet()
+                                                                                 .stream()));
     }
 
     @Override
     @NonNull
     public RequestData onModifyingOneResource(@NonNull RequestData requestData) {
         final JsonObject extra = convertKey(requestData, context());
-        final JsonObject refExtra = convertKey(requestData, ref().entityReferences().getFields().entrySet().stream());
+        final JsonObject refExtra = convertKey(requestData,
+                                               marker().entityReferences().getFields().entrySet().stream());
         return recomputeRequestData(requestData, extra.mergeIn(refExtra, true));
     }
 

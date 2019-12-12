@@ -15,19 +15,19 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.service.HasReferenceMarker;
 
 import lombok.NonNull;
 
 final class ReferenceDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>>
     extends SimpleDaoQueryExecutor<K, P, R, D> implements ReferenceQueryExecutor<P> {
 
-    ReferenceDaoQueryExecutor(@NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata) {
-        super(handler, metadata);
-    }
+    private final HasReferenceMarker marker;
 
-    @Override
-    public QueryBuilder queryBuilder() {
-        return new QueryBuilder(metadata());
+    ReferenceDaoQueryExecutor(@NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
+                              @NonNull HasReferenceMarker marker) {
+        super(handler, metadata);
+        this.marker = marker;
     }
 
     @Override
@@ -41,6 +41,11 @@ final class ReferenceDaoQueryExecutor<K, P extends VertxPojo, R extends Updatabl
                               .findOne((Function<DSLContext, ResultQuery<R>>) queryBuilder().viewOne(filter, sort))
                               .flatMap(o -> o.map(Single::just).orElse(Single.error(metadata().notFound(pk))))
                               .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError);
+    }
+
+    @Override
+    public @NonNull HasReferenceMarker marker() {
+        return marker;
     }
 
 }

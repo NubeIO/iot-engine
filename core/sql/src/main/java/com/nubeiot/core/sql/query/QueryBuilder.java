@@ -145,7 +145,7 @@ public final class QueryBuilder {
      * @return query function
      * @see Sort
      * @see Pagination
-     * @see RequestData#getFilter()
+     * @see RequestData#filter() RequestData#filter()
      * @see Filters
      * @since 1.0.0
      */
@@ -172,7 +172,7 @@ public final class QueryBuilder {
      * @param sort   Sort
      * @return query function
      * @see Sort
-     * @see RequestData#getFilter()
+     * @see RequestData#filter() RequestData#filter()
      * @since 1.0.0
      */
     public Function<DSLContext, ? extends ResultQuery<? extends Record>> viewOne(JsonObject filter, Sort sort) {
@@ -180,10 +180,10 @@ public final class QueryBuilder {
     }
 
     /**
-     * Exist function.
+     * Create Exist function by {@code primary key}
      *
      * @param metadata the metadata
-     * @param key      the key
+     * @param key      the primary key
      * @return the function
      * @since 1.0.0
      */
@@ -192,24 +192,35 @@ public final class QueryBuilder {
     }
 
     /**
-     * Exist query by join function.
+     * Create Exist function by {@code filter}
+     *
+     * @param metadata the metadata
+     * @param filter   the filter
+     * @return the function
+     * @since 1.0.0
+     */
+    public Function<DSLContext, Boolean> exist(@NonNull EntityMetadata metadata, @NonNull JsonObject filter) {
+        return dsl -> dsl.fetchExists(metadata.table(), condition(metadata, filter));
+    }
+
+    /**
+     * Create Exist function by join with filter.
      *
      * @param filter the filter
      * @return the function
      * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
-    public Function<DSLContext, ? extends ResultQuery<? extends Record>> existQueryByJoin(JsonObject filter) {
+    public Function<DSLContext, ? extends ResultQuery<? extends Record>> existQueryByJoin(@NonNull JsonObject filter) {
         final @NonNull JsonTable<? extends Record> table = base.table();
         final JsonObject nullable = new JsonObject();
         return context -> {
             final SelectJoinStep<Record> query = context.select(onlyPrimaryKeys()).from(table);
             if (Objects.nonNull(references)) {
-                references.stream()
-                          .peek(meta -> {
-                              if (!predicate.test(meta)) {
-                                  nullable.put(meta.requestKeyName(), filter.getValue(meta.requestKeyName()));
-                              }
+                references.stream().peek(meta -> {
+                    if (!predicate.test(meta)) {
+                        nullable.put(meta.requestKeyName(), filter.getValue(meta.requestKeyName()));
+                    }
                           })
                           .filter(predicate)
                           .forEach(meta -> doJoin(query, meta, new JsonObject().put(meta.jsonKeyName(), filter.getValue(
@@ -320,7 +331,8 @@ public final class QueryBuilder {
                                                                                                        .getPrimaryKey()
                                                                                                        .getFieldsArray())
                                                                                     .flatMap(Stream::of))
-                                                                         .orElse(Stream.empty())).collect(Collectors.toList());
+                                                                         .orElse(Stream.empty()))
+                     .collect(Collectors.toList());
     }
 
     private void doJoin(SelectJoinStep<Record> query, EntityMetadata meta, JsonObject filter, JoinType joinType) {

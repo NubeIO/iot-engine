@@ -15,18 +15,23 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
+import com.nubeiot.core.sql.service.GroupReferenceMarker;
 
 import lombok.NonNull;
 
-final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>, CP extends CompositePojo<P, CP>>
+final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
+                                     CP extends CompositePojo<P, CP>>
     extends BaseDaoQueryExecutor<CP> implements GroupQueryExecutor<P, CP> {
 
     private final CompositeMetadata<K, P, R, D, CP> groupMetadata;
+    private final GroupReferenceMarker marker;
 
     GroupDaoQueryExecutor(@NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
-                          @NonNull CompositeMetadata<K, P, R, D, CP> groupMetadata) {
+                          @NonNull CompositeMetadata<K, P, R, D, CP> groupMetadata,
+                          @NonNull GroupReferenceMarker marker) {
         super(handler, metadata);
         this.groupMetadata = groupMetadata;
+        this.marker = marker;
     }
 
     @Override
@@ -38,6 +43,11 @@ final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRec
     public Observable<CP> findMany(RequestData requestData) {
         return super.findMany(requestData)
                     .map(pojo -> CompositePojo.create(pojo, groupMetadata.rawClass(), groupMetadata.modelClass()));
+    }
+
+    @Override
+    public @NonNull GroupReferenceMarker marker() {
+        return marker;
     }
 
     @Override
