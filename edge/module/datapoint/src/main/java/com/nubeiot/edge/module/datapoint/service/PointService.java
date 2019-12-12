@@ -106,7 +106,7 @@ public final class PointService
     protected RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
         EdgeExtension.optimizeReqData(entityHandler(), reqData, context().table().getJsonField(context().table().EDGE));
         DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body());
-        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.getFilter());
+        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.filter());
         return super.recomputeRequestData(reqData, extra);
     }
 

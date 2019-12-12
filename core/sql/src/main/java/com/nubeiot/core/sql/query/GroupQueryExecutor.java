@@ -21,8 +21,31 @@ import com.nubeiot.core.sql.service.HasReferenceResource.EntityReferences;
 
 import lombok.NonNull;
 
+/**
+ * Represents for a {@code sql executor} do {@code DML} or {@code DQL} on {@code group entity}.
+ *
+ * @param <P>  Type of {@code VertxPojo}
+ * @param <CP> Type of {@code CompositePojo}
+ * @see GroupReferenceResource
+ * @since 1.0.0
+ */
 public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePojo> extends ReferenceQueryExecutor<CP> {
 
+    /**
+     * Create group query executor.
+     *
+     * @param <K>               Type of {@code primary key}
+     * @param <P>               Type of {@code VertxPojo}
+     * @param <R>               Type of {@code UpdatableRecord}
+     * @param <D>               Type of {@code VertxDAO}
+     * @param <CP>              Type of {@code CompositePojo}
+     * @param handler           the entity handler
+     * @param metadata          the metadata
+     * @param compositeMetadata the composite metadata
+     * @return the group query executor
+     * @see EntityHandler
+     * @since 1.0.0
+     */
     static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
                CP extends CompositePojo<P, CP>> GroupQueryExecutor<P, CP> create(
         @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
@@ -33,6 +56,14 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
     @Override
     Single<CP> findOneByKey(RequestData requestData);
 
+    /**
+     * Verify {@code entity} whether exists or not.
+     *
+     * @param reqData  the request data
+     * @param groupRef the group reference
+     * @return the single
+     * @since 1.0.0
+     */
     default Single<Boolean> mustExists(@NonNull RequestData reqData, @NonNull GroupReferenceResource groupRef) {
         final EntityReferences references = groupRef.groupReferences();
         final JsonObject body = reqData.body();

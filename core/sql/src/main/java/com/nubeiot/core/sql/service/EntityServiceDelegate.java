@@ -23,6 +23,19 @@ import com.nubeiot.core.sql.validation.EntityValidation;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Entity Service Delegate wraps actual {@code entity service} in case it cannot {@code extends} directly default {@code
+ * entity service}*
+ *
+ * @param <P> Type of {@code VertxPojo}
+ * @param <M> Type of {@code EntityMetadata}
+ * @param <S> Type of {@code EntityService}
+ * @see EntityService
+ * @see OneToManyReferenceEntityService
+ * @see GroupEntityService
+ * @see ManyToManyReferenceEntityService
+ * @since 1.0.0
+ */
 @RequiredArgsConstructor
 public abstract class EntityServiceDelegate<P extends VertxPojo, M extends EntityMetadata, S extends EntityService<P, M>>
     implements EntityService<P, M> {

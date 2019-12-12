@@ -3,11 +3,22 @@ package com.nubeiot.core.sql.service;
 import java.util.Set;
 
 /**
- * Mark {@code EntityService} as representing {@code resource} contains one or more other resources. It makes {@code
- * EntityService} is holder one or more reference entity.
+ * Represents for an {@code database entity} marker.
+ * <p>
+ * It manifests one {@code resource entity} has one or more {@code references} to other resources and also includes the
+ * {@code reference entity} into itself
+ *
+ * @see HasReferenceResource
+ * @since 1.0.0
  */
 public interface GroupReferenceResource extends HasReferenceResource {
 
+    /**
+     * Declares {@code group references} for references entities.
+     *
+     * @return the entity references
+     * @since 1.0.0
+     */
     EntityReferences groupReferences();
 
     @Override

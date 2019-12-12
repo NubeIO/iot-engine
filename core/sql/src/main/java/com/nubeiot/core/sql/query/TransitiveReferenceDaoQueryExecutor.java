@@ -15,14 +15,20 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.service.HasReferenceResource.EntityReferences;
 
 import lombok.NonNull;
 
-final class ReferenceDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>>
-    extends SimpleDaoQueryExecutor<K, P, R, D> implements ReferenceQueryExecutor<P> {
+final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>,
+                                                   D extends VertxDAO<R, P, K>>
+    extends SimpleDaoQueryExecutor<K, P, R, D> implements TransitiveReferenceQueryExecutor<P> {
 
-    ReferenceDaoQueryExecutor(@NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata) {
+    private final EntityReferences references;
+
+    TransitiveReferenceDaoQueryExecutor(@NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
+                                        @NonNull EntityReferences references) {
         super(handler, metadata);
+        this.references = references;
     }
 
     @Override

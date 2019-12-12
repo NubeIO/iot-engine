@@ -23,9 +23,9 @@ public class RequestDataTest {
                                              .filter(new JsonObject().put("x", "test"))
                                              .build();
         assertEquals("hello", requestData.body().getString("name"));
-        assertEquals("test", requestData.getFilter().getString("x"));
-        assertEquals(1, requestData.getPagination().getPage());
-        assertEquals(20, requestData.getPagination().getPerPage());
+        assertEquals("test", requestData.filter().getString("x"));
+        assertEquals(1, requestData.pagination().getPage());
+        assertEquals(20, requestData.pagination().getPerPage());
         assertEquals("{\"headers\":{},\"body\":{\"name\":\"hello\"},\"filter\":{\"x\":\"test\"}," +
                      "\"pagination\":{\"page\":1,\"perPage\":20}}", requestData.toJson().encode());
     }
@@ -37,8 +37,8 @@ public class RequestDataTest {
                                              .filter(new JsonObject().put("x", "test"))
                                              .build();
         assertEquals("hello", requestData.body().getString("name"));
-        assertEquals("test", requestData.getFilter().getString("x"));
-        assertNull(requestData.getPagination());
+        assertEquals("test", requestData.filter().getString("x"));
+        assertNull(requestData.pagination());
         assertEquals("{\"headers\":{},\"body\":{\"name\":\"hello\"},\"filter\":{\"x\":\"test\"}}",
                      requestData.toJson().encode());
     }
@@ -51,10 +51,10 @@ public class RequestDataTest {
                                                 .put("filter", new JsonObject());
         final RequestData requestData = data.mapTo(RequestData.class);
         assertTrue(requestData.body().isEmpty());
-        assertTrue(requestData.getFilter().isEmpty());
-        assertNotNull(requestData.getPagination());
-        assertEquals(5, requestData.getPagination().getPage());
-        assertEquals(10, requestData.getPagination().getPerPage());
+        assertTrue(requestData.filter().isEmpty());
+        assertNotNull(requestData.pagination());
+        assertEquals(5, requestData.pagination().getPage());
+        assertEquals(10, requestData.pagination().getPerPage());
     }
 
     @Test

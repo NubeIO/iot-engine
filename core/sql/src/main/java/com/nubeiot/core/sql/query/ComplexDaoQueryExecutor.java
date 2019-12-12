@@ -94,20 +94,20 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
 
     @Override
     public Observable<CP> findMany(RequestData reqData) {
-        return executeAny(queryBuilder().view(reqData.getFilter(), reqData.getSort(), reqData.getPagination())).map(
+        return executeAny(queryBuilder().view(reqData.filter(), reqData.sort(), reqData.pagination())).map(
             r -> r.fetch(toMapper())).flattenAsObservable(s -> s);
     }
 
     @Override
     public Single<CP> findOneByKey(RequestData reqData) {
-        final JsonObject filter = reqData.getFilter();
+        final JsonObject filter = reqData.filter();
         final Single<? extends ResultQuery<? extends Record>> result = executeAny(
-            queryBuilder().viewOne(filter, reqData.getSort()));
+            queryBuilder().viewOne(filter, reqData.sort()));
         return result.map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
                      .filter(Optional::isPresent)
                      .switchIfEmpty(Single.error(base.notFound(base.msg(filter, references.getFields().keySet()))))
                      .map(Optional::get)
-                     .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
+                     .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError);
     }
 
     @Override
@@ -134,11 +134,11 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
             if (Objects.isNull(sKey)) {
                 throw new IllegalArgumentException("Missing " + resource.singularKeyName() + " data");
             }
-            final JsonObject filter = reqData.getFilter();
+            final JsonObject filter = reqData.filter();
             return isExist(cKey, sKey, filter).filter(p -> Objects.isNull(p.prop(context.requestKeyName())))
                                               .switchIfEmpty(Single.error(base.alreadyExisted(
                                                   base.msg(filter, references.getFields().keySet()))))
-                                              .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError)
+                                              .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError)
                                               .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo))
                                               .flatMap(p -> (Single) dao(base).insertReturningPrimary(pojo));
         }
@@ -215,7 +215,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
         return result.filter(r -> r > 0)
                      .map(r -> pojo)
                      .switchIfEmpty(EntityQueryExecutor.unableDelete(
-                         base.msg(requestData.getFilter(), references.getFields().keySet())));
+                         base.msg(requestData.filter(), references.getFields().keySet())));
     }
 
     private Single<?> doInsertReturnKey(@NonNull EntityMetadata metadata, @NonNull VertxPojo pojo, Object sKey) {

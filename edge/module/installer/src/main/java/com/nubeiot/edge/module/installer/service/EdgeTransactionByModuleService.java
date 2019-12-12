@@ -27,7 +27,7 @@ public final class EdgeTransactionByModuleService implements EdgeInstallerServic
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getList(RequestData data) {
-        JsonObject filter = data.getFilter();
+        JsonObject filter = data.filter();
         boolean lastTransaction = Boolean.parseBoolean(filter.getString("last"));
         ITblTransaction transaction = new TblTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getModuleId())) {

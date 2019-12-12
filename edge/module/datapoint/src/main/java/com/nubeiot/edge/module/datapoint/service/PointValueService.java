@@ -65,7 +65,7 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
 
     @NonNull
     private RequestData recomputeRequestData(RequestData reqData) {
-        JsonObject filter = Optional.ofNullable(reqData.getFilter()).orElse(new JsonObject());
+        JsonObject filter = Optional.ofNullable(reqData.filter()).orElse(new JsonObject());
         if (!filter.getBoolean(Filters.AUDIT, false)) {
             filter.put(Filters.TEMP_AUDIT, true);
         }
@@ -74,8 +74,8 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
                           .headers(reqData.headers())
                           .body(reqData.body())
                           .filter(filter)
-                          .sort(reqData.getSort())
-                          .pagination(reqData.getPagination())
+                          .sort(reqData.sort())
+                          .pagination(reqData.pagination())
                           .build();
     }
 
@@ -90,8 +90,8 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     @Override
     public JsonObject doTransform(EventAction action, Object key, VertxPojo pojo, RequestData reqData,
                                   BiFunction<VertxPojo, RequestData, JsonObject> converter) {
-        if (Objects.nonNull(reqData.getFilter()) && reqData.getFilter().getBoolean(Filters.TEMP_AUDIT, false)) {
-            reqData.getFilter().remove(Filters.AUDIT);
+        if (Objects.nonNull(reqData.filter()) && reqData.filter().getBoolean(Filters.TEMP_AUDIT, false)) {
+            reqData.filter().remove(Filters.AUDIT);
         }
         return super.doTransform(action, key, pojo, reqData, converter);
     }

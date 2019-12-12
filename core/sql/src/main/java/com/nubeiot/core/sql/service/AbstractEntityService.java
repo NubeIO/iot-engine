@@ -30,7 +30,13 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Abstract service to implement {@code CRUD} listeners for entity
+ * Abstract service to implement {@code CRUD} listeners for {@code database entity}
+ *
+ * @param <P> Type of {@code VertxPojo}
+ * @param <M> Type of {@code EntityMetadata}
+ * @see EntityService
+ * @see EntityTransformer
+ * @since 1.0.0
  */
 @RequiredArgsConstructor
 @SuppressWarnings("unchecked")
@@ -55,9 +61,6 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @Override
     public @NonNull EntityTransformer transformer() { return this; }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(RequestData requestData) {
         return DefaultDQLWorkflow.<JsonArray>builder().action(EventAction.GET_LIST)
@@ -72,9 +75,6 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                                       .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> get(RequestData requestData) {
         return DefaultDQLWorkflow.<P>builder().action(EventAction.GET_ONE)
@@ -89,9 +89,6 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                               .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData requestData) {
         return DefaultDMLWorkflow.builder()
@@ -107,9 +104,6 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData requestData) {
         return DefaultDMLWorkflow.builder()
@@ -125,9 +119,6 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData requestData) {
         return DefaultDMLWorkflow.builder()
@@ -143,9 +134,6 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData requestData) {
         return DefaultDMLWorkflow.builder()

@@ -21,11 +21,31 @@ import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 
+/**
+ * Abstract service to implement {@code CRUD} listeners for the {@code Group entity}.
+ *
+ * @param <P>  Type of {@code VertxPojo}
+ * @param <M>  Type of {@code EntityMetadata}
+ * @param <CP> Type of {@code CompositePojo}
+ * @param <CM> Type of {@code CompositeMetadata}
+ * @see VertxPojo
+ * @see EntityMetadata
+ * @see CompositePojo
+ * @see CompositeMetadata
+ * @see GroupEntityService
+ * @see GroupEntityTransformer
+ * @since 1.0.0
+ */
 public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends EntityMetadata,
                                                     CP extends CompositePojo<P, CP>, CM extends CompositeMetadata>
-    extends AbstractOneToManyEntityService<P, M>
-    implements GroupEntityService<P, M, CP, CM>, GroupEntityTransformer, GroupReferenceResource {
+    extends AbstractOneToManyEntityService<P, M> implements GroupEntityService<P, M, CP, CM>, GroupEntityTransformer {
 
+    /**
+     * Instantiates a new Abstract group entity service.
+     *
+     * @param entityHandler the entity handler
+     * @since 1.0.0
+     */
     public AbstractGroupEntityService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
@@ -33,6 +53,12 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     @Override
     public @NonNull GroupEntityTransformer transformer() {
         return this;
+    }
+
+    @Override
+    protected OperationValidator initCreationValidator() {
+        return OperationValidator.create(
+            (req, pojo) -> groupQuery().mustExists(req, ref()).map(b -> contextGroup().onCreating(req)));
     }
 
     @Override
@@ -74,12 +100,6 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     @Override
     protected DeletionStep initDeletionStep() {
         return DeletionStep.builder().action(EventAction.REMOVE).queryExecutor(groupQuery()).build();
-    }
-
-    @Override
-    protected OperationValidator initCreationValidator() {
-        return OperationValidator.create(
-            (req, pojo) -> groupQuery().mustExists(req, ref()).map(b -> contextGroup().onCreating(req)));
     }
 
 }

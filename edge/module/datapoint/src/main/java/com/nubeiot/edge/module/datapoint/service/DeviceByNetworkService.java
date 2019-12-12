@@ -85,7 +85,7 @@ public final class DeviceByNetworkService
     private RequestData optimizeRequestData(@NonNull RequestData requestData) {
         EdgeExtension.optimizeReqData(entityHandler(), requestData, getEdgeField());
         DataPointIndex.NetworkMetadata.optimizeAlias(requestData.body());
-        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.getFilter());
+        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.filter());
         return requestData;
     }
 
