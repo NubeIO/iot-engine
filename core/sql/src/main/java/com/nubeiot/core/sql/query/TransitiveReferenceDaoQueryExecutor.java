@@ -23,6 +23,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.HasReferenceMarker.EntityReferences;
 import com.nubeiot.core.sql.service.TransitiveReferenceMarker;
 import com.nubeiot.core.sql.service.TransitiveReferenceMarker.TransitiveEntity;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -49,10 +50,11 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
         final Function<DSLContext, ResultQuery<R>> viewFunc
             = (Function<DSLContext, ResultQuery<R>>) queryBuilder().view(reqData.filter(), reqData.sort(), paging);
-        return mustExists(reqData).flatMapObservable(ignore -> entityHandler().dao(metadata().daoClass())
-                                                                              .queryExecutor()
-                                                                              .findMany(viewFunc)
-                                                                              .flattenAsObservable(rs -> rs));
+        final EntityHandler handler = entityHandler();
+        return checkReferenceExistence(reqData).flatMapObservable(ignore -> handler.dao(metadata().daoClass())
+                                                                                   .queryExecutor()
+                                                                                   .findMany(viewFunc)
+                                                                                   .flattenAsObservable(rs -> rs));
     }
 
     @Override
@@ -62,63 +64,50 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
         final Function<DSLContext, ResultQuery<R>> viewOneFunc
             = (Function<DSLContext, ResultQuery<R>>) queryBuilder().viewOne(reqData.filter(), reqData.sort());
         final EntityHandler handler = entityHandler();
-        return mustExists(reqData).flatMap(ig -> handler.dao(metadata().daoClass())
-                                                        .queryExecutor()
-                                                        .findOne(viewOneFunc)
-                                                        .flatMap(o -> o.map(Single::just)
-                                                                       .orElse(Single.error(metadata().notFound(pk))))
-                                                        .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError));
+        return checkReferenceExistence(reqData).flatMap(i -> handler.dao(metadata().daoClass())
+                                                                    .queryExecutor()
+                                                                    .findOne(viewOneFunc)
+                                                                    .flatMap(o -> o.map(Single::just)
+                                                                                   .orElse(Single.error(
+                                                                                       metadata().notFound(pk))))
+                                                                    .onErrorResumeNext(
+                                                                        EntityQueryExecutor::sneakyThrowDBError));
     }
 
     @Override
-    public Single<Boolean> mustExists(@NonNull RequestData reqData) {
+    public Single<Boolean> checkReferenceExistence(@NonNull RequestData reqData) {
         final EntityReferences references = marker().entityReferences();
+        final QueryBuilder queryBuilder = queryBuilder();
         return Observable.fromIterable(references.getFields().entrySet()).flatMapSingle(entry -> {
             final EntityMetadata refMeta = entry.getKey();
             final String refField = entry.getValue();
-            final Object key = findKey(reqData, refMeta, refField);
+            final Object key = findReferenceKey(reqData, refMeta, refField);
             final TransitiveEntity transitive = marker().transitiveReferences().get(refMeta);
             if (Objects.isNull(key)) {
-                if (Objects.nonNull(transitive)) {
-                    return Single.error(new IllegalArgumentException("Missing " + refField));
-                }
                 return Single.just(true);
             }
             if (Objects.isNull(transitive)) {
-                return fetchExists(queryBuilder().exist(refMeta, key)).switchIfEmpty(
-                    Single.error(refMeta.notFound(key)));
+                return fetchExists(queryBuilder.exist(refMeta, key)).switchIfEmpty(Single.error(refMeta.notFound(key)));
             }
-            return checkExistByTransitive(reqData, refMeta, key, transitive);
+            return checkTransitiveExistence(reqData, refMeta, key, transitive);
         }).all(aBoolean -> aBoolean);
     }
 
-    private Single<Boolean> checkExistByTransitive(@NonNull RequestData reqData, @NonNull EntityMetadata refMeta,
-                                                   @NonNull Object key, @NonNull TransitiveEntity transitiveEntity) {
-        final EntityReferences references = transitiveEntity.getReferences();
+    private Single<Boolean> checkTransitiveExistence(@NonNull RequestData reqData, @NonNull EntityMetadata reference,
+                                                     @NonNull Object referenceKey,
+                                                     @NonNull TransitiveEntity transitiveEntity) {
+        final QueryBuilder queryBuilder = queryBuilder();
         final EntityMetadata context = transitiveEntity.getContext();
-        final String refField = context.equals(refMeta) ? refMeta.jsonKeyName() : refMeta.requestKeyName();
-        return Observable.fromIterable(references.getFields().entrySet())
-                         .flatMap(refEntry -> {
-                             final EntityMetadata transitiveMeta = refEntry.getKey();
-                             final String transitiveField = refEntry.getValue();
-                             final Object transitiveKey = findKey(reqData, transitiveMeta, transitiveField);
-                             if (Objects.isNull(transitiveKey)) {
-                                 return Observable.empty();
-                             }
-                             return Observable.just(
-                                 new SimpleEntry<>(transitiveField, JsonData.checkAndConvert(transitiveKey)));
-                         })
-                         .collectInto(new JsonObject(), (o, o2) -> o.put(o2.getKey(), o2.getValue()))
-                         .map(json -> json.put(refField, JsonData.checkAndConvert(key)))
-                         .flatMapMaybe(filter -> fetchExists(queryBuilder().exist(context, filter)))
-                         .switchIfEmpty(Single.error(refMeta.notFound(key)));
-    }
-
-    private Object findKey(@NonNull RequestData reqData, @NonNull EntityMetadata meta, @NonNull String refMetaField) {
-        return meta.getKey(reqData)
-                   .orElse(Optional.ofNullable(reqData.body().getValue(refMetaField))
-                                   .map(k -> meta.parseKey(k.toString()))
-                                   .orElse(null));
+        final String refField = context.equals(reference) ? reference.jsonKeyName() : reference.requestKeyName();
+        return Observable.fromIterable(transitiveEntity.getReferences().getFields().entrySet())
+                         .flatMap(ent -> Optional.ofNullable(findReferenceKey(reqData, ent.getKey(), ent.getValue()))
+                                                 .map(tk -> Observable.just(new SimpleEntry<>(ent.getValue(), tk)))
+                                                 .orElseGet(Observable::empty))
+                         .collectInto(new JsonObject(),
+                                      (json, obj) -> json.put(obj.getKey(), JsonData.checkAndConvert(obj.getValue())))
+                         .map(json -> json.put(refField, JsonData.checkAndConvert(referenceKey)))
+                         .flatMap(filter -> fetchExists(queryBuilder.exist(context, filter)).switchIfEmpty(
+                             Single.error(reference.notFound(Strings.kvMsg(filter)))));
     }
 
 }

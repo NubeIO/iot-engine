@@ -89,7 +89,7 @@ public interface HasReferenceMarker {
          * Add entity references.
          *
          * @param metadata the metadata
-         * @param fkField  the foreign key field. If it is {@code blank}, it will fallback to {@link
+         * @param fkField  the json foreign key field. If it is {@code blank}, it will fallback to {@link
          *                 EntityMetadata#requestKeyName()}
          * @return the entity references
          * @since 1.0.0

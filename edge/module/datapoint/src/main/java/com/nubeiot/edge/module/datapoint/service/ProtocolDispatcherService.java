@@ -44,7 +44,7 @@ public final class ProtocolDispatcherService
 
     public Set<EventMethodDefinition> definitions() {
         return EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, this::servicePath,
-                                                   context()::requestKeyName);
+                                                   context()::requestKeyName, false);
     }
 
     @Override

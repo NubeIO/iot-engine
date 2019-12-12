@@ -62,7 +62,7 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
 
     protected OperationValidator initCreationValidator() {
         return OperationValidator.create(
-            (req, pojo) -> queryExecutor().mustExists(req).map(b -> validation().onCreating(req)));
+            (req, pojo) -> queryExecutor().checkReferenceExistence(req).map(b -> validation().onCreating(req)));
     }
 
     @Override

@@ -94,16 +94,16 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     @Override
-    public Observable<CP> findMany(RequestData reqData) {
-        return executeAny(queryBuilder().view(reqData.filter(), reqData.sort(), reqData.pagination())).map(
+    public Observable<CP> findMany(@NonNull RequestData requestData) {
+        return executeAny(queryBuilder().view(requestData.filter(), requestData.sort(), requestData.pagination())).map(
             r -> r.fetch(toMapper())).flattenAsObservable(s -> s);
     }
 
     @Override
-    public Single<CP> findOneByKey(RequestData reqData) {
-        final JsonObject filter = reqData.filter();
+    public Single<CP> findOneByKey(@NonNull RequestData requestData) {
+        final JsonObject filter = requestData.filter();
         final Single<? extends ResultQuery<? extends Record>> result = executeAny(
-            queryBuilder().viewOne(filter, reqData.sort()));
+            queryBuilder().viewOne(filter, requestData.sort()));
         return result.map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
                      .filter(Optional::isPresent)
                      .switchIfEmpty(Single.error(base.notFound(base.msg(filter, references.getFields().keySet()))))

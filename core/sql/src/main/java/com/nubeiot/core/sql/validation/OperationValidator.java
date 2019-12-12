@@ -25,6 +25,7 @@ public interface OperationValidator {
      * @return the operation validator
      * @since 1.0.0
      */
+    @NonNull
     static OperationValidator create(BiFunction<RequestData, VertxPojo, Single<VertxPojo>> validate) {
         return DefaultOperationValidator.builder().validate(validate).build();
     }
@@ -37,7 +38,7 @@ public interface OperationValidator {
      * @return entity after validate
      * @since 1.0.0
      */
-    Single<VertxPojo> validate(@NonNull RequestData reqData, VertxPojo dbEntity);
+    @NonNull Single<VertxPojo> validate(@NonNull RequestData reqData, VertxPojo dbEntity);
 
     /**
      * Defines action after validating
@@ -46,6 +47,6 @@ public interface OperationValidator {
      * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    OperationValidator andThen(BiFunction<RequestData, VertxPojo, Single<VertxPojo>> andThen);
+    @NonNull OperationValidator andThen(BiFunction<RequestData, VertxPojo, Single<VertxPojo>> andThen);
 
 }

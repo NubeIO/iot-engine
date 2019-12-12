@@ -1,5 +1,6 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -40,9 +41,11 @@ public final class ThingService extends AbstractTransitiveEntityService<Thing, T
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        return Stream.concat(DataPointService.super.definitions().stream(),
-                             EntityHttpService.createDefinitions(getAvailableEvents(), context(),
-                                                                 DeviceMetadata.INSTANCE).stream())
+        return Stream.of(DataPointService.super.definitions(),
+                         EntityHttpService.createDefinitions(getAvailableEvents(), context(), DeviceMetadata.INSTANCE),
+                         EntityHttpService.createDefinitions(getAvailableEvents(), context(), true,
+                                                             NetworkMetadata.INSTANCE, DeviceMetadata.INSTANCE))
+                     .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }
 

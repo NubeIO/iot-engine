@@ -36,7 +36,7 @@ public final class SyncDispatcherService extends AbstractEntityService<SyncDispa
 
     public Set<EventMethodDefinition> definitions() {
         return EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, this::servicePath,
-                                                   context()::requestKeyName);
+                                                   context()::requestKeyName, false);
     }
 
     @Override

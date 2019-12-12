@@ -59,24 +59,27 @@ public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQuery
      * Verify {@code entity} whether exists or not.
      *
      * @param reqData the request data
-     * @return boolean single
-     * @see HasReferenceMarker
+     * @return error single if not found any {@code reference entity}, otherwise {@code true} single
      * @since 1.0.0
      */
-    @SuppressWarnings("unchecked")
-    default Single<Boolean> mustExists(@NonNull RequestData reqData) {
+    default Single<Boolean> checkReferenceExistence(@NonNull RequestData reqData) {
         final EntityReferences references = marker().entityReferences();
         return Observable.fromIterable(references.getFields().entrySet()).flatMapSingle(entry -> {
             final EntityMetadata meta = entry.getKey();
-            Object key = meta.getKey(reqData)
-                             .orElse(Optional.ofNullable(reqData.body().getValue(entry.getValue().toLowerCase()))
-                                             .map(k -> meta.parseKey(k.toString()))
-                                             .orElse(null));
-            if (Objects.isNull(key)) {
-                return Single.just(true);
-            }
-            return fetchExists(queryBuilder().exist(meta, key)).switchIfEmpty(Single.error(meta.notFound(key)));
+            final Object key = findReferenceKey(reqData, meta, entry.getValue());
+            return Objects.isNull(key)
+                   ? Single.just(true)
+                   : fetchExists(queryBuilder().exist(meta, key)).switchIfEmpty(Single.error(meta.notFound(key)));
         }).all(aBoolean -> aBoolean);
+    }
+
+    @SuppressWarnings("unchecked")
+    default Object findReferenceKey(@NonNull RequestData reqData, @NonNull EntityMetadata metadata,
+                                    @NonNull String refField) {
+        return metadata.getKey(reqData)
+                       .orElse(Optional.ofNullable(reqData.body().getValue(refField))
+                                       .map(k -> metadata.parseKey(k.toString()))
+                                       .orElse(null));
     }
 
 }

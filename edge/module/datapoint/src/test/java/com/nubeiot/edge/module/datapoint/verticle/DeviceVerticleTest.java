@@ -18,7 +18,7 @@ public class DeviceVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_devices(TestContext context) {
+    public void test_get_devices_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"devices\":[{\"id\":1,\"device\":{\"id\":\"" + PrimaryKey.DEVICE_DROPLET + "\"," +
             "\"code\":\"DROPLET_01\",\"type\":\"DROPLET\",\"protocol\":\"UNKNOWN\",\"state\":\"NONE\"," +
