@@ -81,8 +81,8 @@ public class ThingServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_things_by_device_not_associated_transitive_network(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with device_id=" + PrimaryKey.DEVICE_DROPLET +
-            "\"}");
+            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with network_id=" + PrimaryKey.NETWORK +
+            " and device_id=" + PrimaryKey.DEVICE_DROPLET + "\"}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_DROPLET.toString())
                                                            .put("network_id", PrimaryKey.NETWORK.toString()))
@@ -107,8 +107,8 @@ public class ThingServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_one_thing_by_device_not_associated_transitive_network(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with device_id=" + PrimaryKey.DEVICE_DROPLET +
-            "\"}");
+            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with network_id=" + PrimaryKey.NETWORK +
+            " and device_id" + "=" + PrimaryKey.DEVICE_DROPLET + "\"}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_DROPLET.toString())
                                                            .put("network_id", PrimaryKey.NETWORK.toString())

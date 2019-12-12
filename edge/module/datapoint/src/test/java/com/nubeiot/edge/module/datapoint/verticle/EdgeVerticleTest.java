@@ -26,7 +26,7 @@ public class EdgeVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_edge(TestContext context) {
+    public void test_get_edge_200(TestContext context) {
         final JsonObject syncConfig = new JsonObject("{\"type\":\"DITTO\",\"enabled\":false," +
                                                      "\"clientConfig\":{\"userAgent\":\"nubeio.edge.datapoint/1.0.0 " +
                                                      UUID64.uuidToBase64(PrimaryKey.EDGE) + "\",\"hostInfo\":{}," +
@@ -41,13 +41,13 @@ public class EdgeVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_measure_unit(TestContext context) {
+    public void test_get_measure_unit_200(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/measure-unit", 200, MockData.MEASURE_UNITS,
                            JSONCompareMode.LENIENT);
     }
 
     @Test
-    public void test_patch_edge_readOnly_field(TestContext context) {
+    public void test_patch_edge_readOnly_field_400(TestContext context) {
         assertRestByClient(context, HttpMethod.PATCH, "/api/s/edge/" + PrimaryKey.EDGE,
                            RequestData.builder().body(new JsonObject().put("customer_code", "123")).build(),
                            ExpectedResponse.builder()

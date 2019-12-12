@@ -99,7 +99,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      *
      * @param requestData Request data
      * @return Json object includes list data
-     * @see EventAction#GET_LIST EventAction#GET_LISTEventAction#GET_LISTEventAction#GET_LIST
+     * @see EventAction#GET_LIST
      * @since 1.0.0
      */
     Single<JsonObject> list(RequestData requestData);
@@ -109,7 +109,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      *
      * @param requestData Request data
      * @return Json object represents resource data
-     * @see EventAction#GET_ONE EventAction#GET_ONEEventAction#GET_ONEEventAction#GET_ONE
+     * @see EventAction#GET_ONE
      * @since 1.0.0
      */
     Single<JsonObject> get(RequestData requestData);
@@ -119,7 +119,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      *
      * @param requestData Request data
      * @return json object that includes status message
-     * @see EventAction#CREATE EventAction#CREATEEventAction#CREATEEventAction#CREATE
+     * @see EventAction#CREATE
      * @since 1.0.0
      */
     Single<JsonObject> create(RequestData requestData);
@@ -129,7 +129,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      *
      * @param requestData Request data
      * @return json object that includes status message
-     * @see EventAction#UPDATE EventAction#UPDATEEventAction#UPDATEEventAction#UPDATE
+     * @see EventAction#UPDATE
      * @since 1.0.0
      */
     Single<JsonObject> update(RequestData requestData);
@@ -139,7 +139,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      *
      * @param requestData Request data
      * @return json object that includes status message
-     * @see EventAction#PATCH EventAction#PATCHEventAction#PATCHEventAction#PATCH
+     * @see EventAction#PATCH
      * @since 1.0.0
      */
     Single<JsonObject> patch(RequestData requestData);
@@ -149,7 +149,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      *
      * @param requestData Request data
      * @return json object that includes status message
-     * @see EventAction#REMOVE EventAction#REMOVEEventAction#REMOVEEventAction#REMOVE
+     * @see EventAction#REMOVE
      * @since 1.0.0
      */
     Single<JsonObject> delete(RequestData requestData);

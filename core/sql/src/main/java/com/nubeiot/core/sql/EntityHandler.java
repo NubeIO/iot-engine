@@ -60,7 +60,7 @@ public interface EntityHandler {
      * @return the vertx
      * @since 1.0.0
      */
-    Vertx vertx();
+    @NonNull Vertx vertx();
 
     /**
      * Get eventbus client.
@@ -69,7 +69,7 @@ public interface EntityHandler {
      * @see EventbusClient
      * @since 1.0.0
      */
-    EventbusClient eventClient();
+    @NonNull EventbusClient eventClient();
 
     /**
      * Data dir path.
@@ -77,7 +77,7 @@ public interface EntityHandler {
      * @return the path
      * @since 1.0.0
      */
-    Path dataDir();
+    @NonNull Path dataDir();
 
     /**
      * Get shared data by {@code data key}.
@@ -107,7 +107,7 @@ public interface EntityHandler {
      * @see DSLContext
      * @since 1.0.0
      */
-    DSLContext dsl();
+    @NonNull DSLContext dsl();
 
     /**
      * Create {@code DAO} by given {@code daoClass}.
@@ -120,7 +120,8 @@ public interface EntityHandler {
      * @return the instance of DAO
      * @since 1.0.0
      */
-    <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(Class<D> daoClass);
+    <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(
+        @NonNull Class<D> daoClass);
 
     /**
      * Get generic query executor.
@@ -129,7 +130,7 @@ public interface EntityHandler {
      * @see JDBCRXGenericQueryExecutor
      * @since 1.0.0
      */
-    JDBCRXGenericQueryExecutor genericQuery();
+    @NonNull JDBCRXGenericQueryExecutor genericQuery();
 
     /**
      * Get complex query executor.
@@ -138,7 +139,7 @@ public interface EntityHandler {
      * @see ComplexQueryExecutor
      * @since 1.0.0
      */
-    ComplexQueryExecutor complexQuery();
+    @NonNull ComplexQueryExecutor complexQuery();
 
     /**
      * Execute any task before setup database
@@ -146,7 +147,7 @@ public interface EntityHandler {
      * @return single of reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    Single<EntityHandler> before();
+    @NonNull Single<EntityHandler> before();
 
     /**
      * Check database is new or not. Normally just checking one specific table is existed or not.
@@ -167,7 +168,7 @@ public interface EntityHandler {
      * @see EventMessage
      * @since 1.0.0
      */
-    Single<EventMessage> initData();
+    @NonNull Single<EventMessage> initData();
 
     /**
      * Migrate data in case of existed database
@@ -176,6 +177,6 @@ public interface EntityHandler {
      * @see EventMessage
      * @since 1.0.0
      */
-    Single<EventMessage> migrate();
+    @NonNull Single<EventMessage> migrate();
 
 }

@@ -50,11 +50,11 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
     @Override
     public Set<EventMethodDefinition> definitions() {
         return EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, this::servicePath,
-                                                   context()::requestKeyName, PointMetadata.INSTANCE);
+                                                   context()::requestKeyName, false, PointMetadata.INSTANCE);
     }
 
     protected OperationValidator initCreationValidator() {
-        return OperationValidator.create((req, prev) -> queryExecutor().mustExists(req)
+        return OperationValidator.create((req, prev) -> queryExecutor().checkReferenceExistence(req)
                                                                        .map(b -> validation().onCreating(req))
                                                                        .map(PointRealtimeData.class::cast)
                                                                        .flatMap(this::isAbleToCreate)

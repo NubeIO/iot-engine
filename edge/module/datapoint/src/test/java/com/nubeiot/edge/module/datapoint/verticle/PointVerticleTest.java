@@ -18,26 +18,26 @@ public class PointVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_points_with_invalid_key(TestContext context) {
+    public void test_get_points_with_invalid_key_400(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/network/xxx/point/" + PrimaryKey.P_GPIO_TEMP, 400,
                            new JsonObject("{\"message\":\"Invalid key\",\"code\":\"INVALID_ARGUMENT\"}"));
     }
 
     @Test
-    public void test_get_list_tags_by_point(TestContext context) {
+    public void test_get_list_tags_by_point_200(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "/tags", 200,
                            new JsonObject("{\"tags\":[{\"id\":1,\"tag_name\":\"sensor\",\"tag_value\":\"temp\"}," +
                                           "{\"id\":2,\"tag_name\":\"source\",\"tag_value\":\"droplet\"}]}"));
     }
 
     @Test
-    public void test_get_tag_by_point_and_id(TestContext context) {
+    public void test_get_tag_by_point_and_id_200(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "/tags/2", 200,
                            new JsonObject("{\"id\":2,\"tag_name\":\"source\",\"tag_value\":\"droplet\"}"));
     }
 
     @Test
-    public void test_get_list_tags(TestContext context) {
+    public void test_get_list_tags_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"tags\":[{\"id\":1,\"tag_name\":\"sensor\",\"point\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\"," +
             "\"tag_value\":\"temp\"},{\"id\":2,\"tag_name\":\"source\"," +
@@ -50,7 +50,7 @@ public class PointVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_tag_by_id(TestContext context) {
+    public void test_get_tag_by_id_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"id\":1,\"tag_name\":\"sensor\",\"point\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\"," +
             "\"tag_value\":\"temp\"}");

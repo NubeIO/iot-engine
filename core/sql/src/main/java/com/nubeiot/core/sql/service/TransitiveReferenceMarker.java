@@ -27,7 +27,7 @@ public interface TransitiveReferenceMarker extends HasReferenceMarker {
      * Declares transitive references mapping.
      * <p>
      * Each mapping key is one of entity metadata in {@link #entityReferences()}, and a corresponding mapping value is
-     * reference of this metadata
+     * transitive reference of this metadata
      *
      * @return transitive references
      * @see EntityMetadata
@@ -46,7 +46,7 @@ public interface TransitiveReferenceMarker extends HasReferenceMarker {
     class TransitiveEntity {
 
         /**
-         * Defines search entity context
+         * Defines {@code search entity context}
          *
          * @since 1.0.0
          */

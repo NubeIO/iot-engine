@@ -67,7 +67,7 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     @Override
     protected OperationValidator initCreationValidator() {
         return OperationValidator.create(
-            (req, pojo) -> groupQuery().mustExists(req).map(b -> contextGroup().onCreating(req)));
+            (req, pojo) -> groupQuery().checkReferenceExistence(req).map(b -> contextGroup().onCreating(req)));
     }
 
     @Override

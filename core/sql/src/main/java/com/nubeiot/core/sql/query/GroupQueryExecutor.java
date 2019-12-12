@@ -69,28 +69,29 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
      * @return the single
      * @since 1.0.0
      */
-    default Single<Boolean> mustExists(@NonNull RequestData reqData) {
+    default Single<Boolean> checkReferenceExistence(@NonNull RequestData reqData) {
+        return ReferenceQueryExecutor.super.checkReferenceExistence(reqData)
+                                           .concatWith(checkGroupExistence(reqData))
+                                           .all(aBoolean -> aBoolean);
+    }
+
+    default Single<Boolean> checkGroupExistence(@NonNull RequestData reqData) {
         final EntityReferences references = marker().groupReferences();
         final JsonObject body = reqData.body();
-        Single<Boolean> ref = ReferenceQueryExecutor.super.mustExists(reqData);
-        Single<Boolean> group = Observable.fromIterable(references.getFields().entrySet())
-                                          .filter(Objects::nonNull)
-                                          .flatMapSingle(entry -> {
-                                              EntityMetadata m = entry.getKey();
-                                              Optional key = Optional.ofNullable(
-                                                  body.getJsonObject(m.singularKeyName()))
-                                                                     .flatMap(b -> Optional.ofNullable(
-                                                                         b.getValue(m.jsonKeyName()))
-                                                                                           .map(Object::toString)
-                                                                                           .map(m::parseKey));
-                                              if (!key.isPresent()) {
-                                                  return Single.just(true);
-                                              }
-                                              return fetchExists(queryBuilder().exist(m, key.get())).switchIfEmpty(
-                                                  Single.error(m.notFound(key.get())));
-                                          })
-                                          .all(aBoolean -> aBoolean);
-        return ref.concatWith(group).all(aBoolean -> aBoolean);
+        return Observable.fromIterable(references.getFields().entrySet())
+                         .filter(Objects::nonNull)
+                         .flatMapSingle(entry -> {
+                             EntityMetadata m = entry.getKey();
+                             Optional key = Optional.ofNullable(body.getJsonObject(m.singularKeyName()))
+                                                    .flatMap(b -> Optional.ofNullable(b.getValue(m.jsonKeyName()))
+                                                                          .map(Object::toString)
+                                                                          .map(m::parseKey));
+                             return !key.isPresent()
+                                    ? Single.just(true)
+                                    : fetchExists(queryBuilder().exist(m, key.get())).switchIfEmpty(
+                                        Single.error(m.notFound(key.get())));
+                         })
+                         .all(aBoolean -> aBoolean);
     }
 
     @Override

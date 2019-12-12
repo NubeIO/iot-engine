@@ -49,7 +49,23 @@ public interface EntityHttpService {
     static Set<EventMethodDefinition> createDefinitions(@NonNull Collection<EventAction> events,
                                                         @NonNull EntityMetadata resource,
                                                         EntityMetadata... references) {
-        return createDefinitions(ActionMethodMapping.CRUD_MAP, events, resource, references);
+        return createDefinitions(events, resource, false, references);
+    }
+
+    /**
+     * Create definitions set.
+     *
+     * @param events      the events
+     * @param resource    the resource
+     * @param onlyCombine the only combine
+     * @param references  the references
+     * @return the set
+     * @since 1.0.0
+     */
+    static Set<EventMethodDefinition> createDefinitions(@NonNull Collection<EventAction> events,
+                                                        @NonNull EntityMetadata resource, boolean onlyCombine,
+                                                        EntityMetadata... references) {
+        return createDefinitions(ActionMethodMapping.CRUD_MAP, events, resource, onlyCombine, references);
     }
 
     /**
@@ -66,7 +82,25 @@ public interface EntityHttpService {
                                                         @NonNull Collection<EventAction> availableEvents,
                                                         @NonNull EntityMetadata resource,
                                                         EntityMetadata... references) {
-        return createDefinitions(ActionMethodMapping.by(base, availableEvents), resource, references);
+        return createDefinitions(base, availableEvents, resource, false, references);
+    }
+
+    /**
+     * Create definitions set.
+     *
+     * @param base            the base
+     * @param availableEvents the available events
+     * @param resource        the resource
+     * @param onlyCombine     the only combine
+     * @param references      the references
+     * @return the set
+     * @since 1.0.0
+     */
+    static Set<EventMethodDefinition> createDefinitions(@NonNull ActionMethodMapping base,
+                                                        @NonNull Collection<EventAction> availableEvents,
+                                                        @NonNull EntityMetadata resource, boolean onlyCombine,
+                                                        EntityMetadata... references) {
+        return createDefinitions(ActionMethodMapping.by(base, availableEvents), resource, onlyCombine, references);
     }
 
     /**
@@ -81,7 +115,24 @@ public interface EntityHttpService {
     static Set<EventMethodDefinition> createDefinitions(@NonNull ActionMethodMapping available,
                                                         @NonNull EntityMetadata resource,
                                                         EntityMetadata... references) {
-        return createDefinitions(available, resource::singularKeyName, resource::requestKeyName, references);
+        return createDefinitions(available, resource, false, references);
+    }
+
+    /**
+     * Create definitions set.
+     *
+     * @param available   the available
+     * @param resource    the resource
+     * @param onlyCombine the only combine
+     * @param references  the references
+     * @return the set
+     * @since 1.0.0
+     */
+    static Set<EventMethodDefinition> createDefinitions(@NonNull ActionMethodMapping available,
+                                                        @NonNull EntityMetadata resource, boolean onlyCombine,
+                                                        EntityMetadata... references) {
+        return createDefinitions(available, resource::singularKeyName, resource::requestKeyName, onlyCombine,
+                                 references);
     }
 
     /**
@@ -99,7 +150,7 @@ public interface EntityHttpService {
                                                         @NonNull Supplier<String> resourceRequestKeyName,
                                                         EntityMetadata... references) {
         return createDefinitions(ActionMethodMapping.by(ActionMethodMapping.CRUD_MAP, availableEvents), resourceKeyName,
-                                 resourceRequestKeyName, references);
+                                 resourceRequestKeyName, false, references);
     }
 
     /**
@@ -108,6 +159,7 @@ public interface EntityHttpService {
      * @param available              the available
      * @param resourceKeyName        the resource key name
      * @param resourceRequestKeyName the resource request key name
+     * @param onlyCombine            the only combine
      * @param references             the references
      * @return the set
      * @since 1.0.0
@@ -115,15 +167,18 @@ public interface EntityHttpService {
     static Set<EventMethodDefinition> createDefinitions(@NonNull ActionMethodMapping available,
                                                         @NonNull Supplier<String> resourceKeyName,
                                                         @NonNull Supplier<String> resourceRequestKeyName,
-                                                        EntityMetadata... references) {
+                                                        boolean onlyCombine, EntityMetadata... references) {
         final List<String> servicePaths = Stream.of(references)
                                                 .filter(Objects::nonNull)
                                                 .map(EntityHttpService::toCapturePath)
                                                 .collect(Collectors.toList());
-        return Stream.concat(servicePaths.stream().map(path -> Urls.combinePath(path, resourceKeyName.get())),
-                             Stream.of(Urls.combinePath(String.join(Urls.PATH_SEP_CHAR, servicePaths),
-                                                        resourceKeyName.get())))
-                     .map(path -> EventMethodDefinition.create(path, resourceRequestKeyName.get(), available))
+        Stream<String> stream = Stream.of(
+            Urls.combinePath(String.join(Urls.PATH_SEP_CHAR, servicePaths), resourceKeyName.get()));
+        if (!onlyCombine) {
+            stream = Stream.concat(servicePaths.stream().map(path -> Urls.combinePath(path, resourceKeyName.get())),
+                                   stream);
+        }
+        return stream.map(path -> EventMethodDefinition.create(path, resourceRequestKeyName.get(), available))
                      .collect(Collectors.toSet());
     }
 
