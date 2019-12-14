@@ -49,7 +49,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     }
 
     @Override
-    public Observable<P> findMany(RequestData reqData) {
+    public Observable<P> findMany(@NonNull RequestData reqData) {
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
         final Function<DSLContext, ? extends ResultQuery<? extends Record>> query = queryBuilder().view(
             reqData.filter(), reqData.sort(), paging);

@@ -754,8 +754,8 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public ThingComposite onCreating(RequestData reqData) throws IllegalArgumentException {
             ThingComposite thing = super.onCreating(reqData);
-            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
-            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
+            //            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
+            //            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
             return thing;
         }
 
