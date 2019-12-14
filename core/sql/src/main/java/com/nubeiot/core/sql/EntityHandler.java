@@ -13,7 +13,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
@@ -21,7 +20,7 @@ import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import lombok.NonNull;
 
 /**
- * Represents Entity handler.
+ * Represents for Entity handler.
  *
  * @since 1.0.0
  */
@@ -150,33 +149,12 @@ public interface EntityHandler {
     @NonNull Single<EntityHandler> before();
 
     /**
-     * Check database is new or not. Normally just checking one specific table is existed or not.
-     * <p>
-     * Currently, it has not yet supported officially from {@code jooq}. So {@code NubeIO} supports 2 kinds: {@code H2}
-     * and {@code PostgreSQL}. Other options, must be implemented by yourself.
+     * Get {@code Schema handler}.
      *
-     * @return {@code true} if new database, else otherwise
-     * @see <a href="https://github.com/jOOQ/jOOQ/issues/8038">https://github.com/jOOQ/jOOQ/issues/8038</a>
+     * @return the schema handler
+     * @see SchemaHandler
      * @since 1.0.0
      */
-    boolean isNew();
-
-    /**
-     * Init data in case of new database
-     *
-     * @return event message to know the process is success or not.
-     * @see EventMessage
-     * @since 1.0.0
-     */
-    @NonNull Single<EventMessage> initData();
-
-    /**
-     * Migrate data in case of existed database
-     *
-     * @return event message to know the process is success or not.
-     * @see EventMessage
-     * @since 1.0.0
-     */
-    @NonNull Single<EventMessage> migrate();
+    @NonNull SchemaHandler schemaHandler();
 
 }

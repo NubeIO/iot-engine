@@ -8,6 +8,7 @@ import com.nubeiot.iotdata.unit.DataType;
  * @param <T> Nube IoT data type object type
  * @param <U> Protocol data type object type
  * @see DataType
+ * @since 1.0.0
  */
 public interface DataTypeTranslator<T extends DataType, U> extends IoTTranslator<T, U> {
 

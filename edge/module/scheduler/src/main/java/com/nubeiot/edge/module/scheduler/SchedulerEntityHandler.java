@@ -6,18 +6,17 @@ import org.jooq.Configuration;
 
 import io.reactivex.Notification;
 import io.reactivex.Observable;
-import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.edge.module.scheduler.pojos.JobTriggerComposite;
@@ -25,7 +24,6 @@ import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.JobConverter;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.TriggerConverter;
 import com.nubeiot.iotdata.scheduler.model.Keys;
-import com.nubeiot.iotdata.scheduler.model.Tables;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobEntity;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.TriggerEntity;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
@@ -43,18 +41,8 @@ class SchedulerEntityHandler extends AbstractEntityHandler
     }
 
     @Override
-    public boolean isNew() {
-        return isNew(Tables.JOB_TRIGGER);
-    }
-
-    @Override
-    public Single<EventMessage> initData() {
-        return Single.just(EventMessage.success(EventAction.INIT));
-    }
-
-    @Override
-    public Single<EventMessage> migrate() {
-        return Single.just(EventMessage.success(EventAction.MIGRATE));
+    public @NonNull SchemaHandler schemaHandler() {
+        return new SchedulerSchemaHandler();
     }
 
     @Override
@@ -92,7 +80,9 @@ class SchedulerEntityHandler extends AbstractEntityHandler
 
     private ReplyEventHandler replyHandler(DeliveryEvent event) {
         return ReplyEventHandler.builder()
-                                .system("EDGE_SCHEDULER").address(event.getAddress()).action(event.getAction())
+                                .system("EDGE_SCHEDULER")
+                                .address(event.getAddress())
+                                .action(event.getAction())
                                 .success(msg -> logger.info(msg.toJson()))
                                 .error(error -> logger.error(error.toJson()))
                                 .build();

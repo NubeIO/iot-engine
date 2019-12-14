@@ -2,7 +2,6 @@ package com.nubeiot.edge.module.datapoint;
 
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -11,9 +10,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jooq.Configuration;
-import org.jooq.Field;
-import org.jooq.Table;
-import org.jooq.impl.DSL;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -27,10 +23,10 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
@@ -38,10 +34,8 @@ import com.nubeiot.core.sql.service.task.EntityTaskData;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.workflow.TaskExecuter;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
-import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.edge.model.Keys;
-import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
@@ -60,39 +54,13 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
     }
 
     @Override
-    public boolean isNew() {
-        return isNew(Tables.EDGE);
+    public @NonNull SchemaHandler schemaHandler() {
+        return new DataPointSchemaHandler();
     }
 
-    @Override
-    public Single<EventMessage> initData() {
-        Map<Table, Field<UUID>> map = new HashMap<>();
-        map.put(Tables.EDGE, Tables.EDGE.ID);
-        map.put(Tables.DEVICE, Tables.DEVICE.ID);
-        map.put(Tables.NETWORK, Tables.NETWORK.ID);
-        map.put(Tables.POINT, Tables.POINT.ID);
-        map.put(Tables.THING, Tables.THING.ID);
-        return Single.fromCallable(() -> createDefaultUUID(map))
-                     .doOnSuccess(i -> logger.info("Updated {} tables with random_uuid function", map.size()))
-                     .flatMap(i -> initDataFromConfig(EventAction.INIT))
-                     .doOnSuccess(ignore -> new DataCacheInitializer().init(this));
-    }
-
-    @Override
-    public Single<EventMessage> migrate() {
-        return EdgeMetadata.INSTANCE.dao(this)
-                                    .findOneByCondition(DSL.trueCondition())
-                                    .filter(Optional::isPresent)
-                                    .map(Optional::get)
-                                    .map(this::cacheEdge)
-                                    .map(edge -> EventMessage.initial(EventAction.MIGRATE))
-                                    .switchIfEmpty(initDataFromConfig(EventAction.MIGRATE))
-                                    .doOnSuccess(ignore -> new DataCacheInitializer().init(this));
-    }
-
-    private Single<EventMessage> initDataFromConfig(EventAction action) {
-        Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
-        JsonObject cfgData = configData();
+    Single<JsonObject> initDataFromConfig(EventAction action) {
+        final Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
+        final JsonObject cfgData = configData();
         final Edge edge = cacheEdge(initEdge(cfgData));
         final JsonObject data = cfgData.put(EdgeMetadata.INSTANCE.singularKeyName(), edge.toJson())
                                        .put(NetworkMetadata.INSTANCE.singularKeyName(),
@@ -106,11 +74,21 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                      .buffer(5)
                      .reduce(0, (i, r) -> i + r.stream().reduce(0, Integer::sum))
                      .doOnSuccess(r -> syncData(action, edge))
-                     .map(r -> EventMessage.success(action, new JsonObject().put("records", r)));
+                     .map(r -> new JsonObject().put("records", r));
+    }
+
+    Edge cacheEdge(@NonNull Edge edge) {
+        addSharedData(EDGE_ID, edge.getId().toString());
+        addSharedData(CUSTOMER_CODE, edge.getCustomerCode());
+        addSharedData(SITE_CODE, edge.getSiteCode());
+        addSharedData(DATA_SYNC_CFG,
+                      DataSyncConfig.update(edge.getMetadata().getJsonObject(DataSyncConfig.NAME, new JsonObject()),
+                                            "1.0.0", edge.getId()));
+        return edge;
     }
 
     private JsonObject configData() {
-        JsonObject data = SharedDataDelegate.removeLocalDataValue(vertx(), getSharedKey(), BUILTIN_DATA);
+        final JsonObject data = SharedDataDelegate.removeLocalDataValue(vertx(), getSharedKey(), BUILTIN_DATA);
         return Optional.ofNullable(data).orElseGet(JsonObject::new);
     }
 
@@ -202,16 +180,6 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                              .metadata(EdgeMetadata.INSTANCE)
                                              .data(edge)
                                              .build();
-    }
-
-    private Edge cacheEdge(@NonNull Edge edge) {
-        addSharedData(EDGE_ID, edge.getId().toString());
-        addSharedData(CUSTOMER_CODE, edge.getCustomerCode());
-        addSharedData(SITE_CODE, edge.getSiteCode());
-        addSharedData(DATA_SYNC_CFG,
-                      DataSyncConfig.update(edge.getMetadata().getJsonObject(DataSyncConfig.NAME, new JsonObject()),
-                                            "1.0.0", edge.getId()));
-        return edge;
     }
 
 }
