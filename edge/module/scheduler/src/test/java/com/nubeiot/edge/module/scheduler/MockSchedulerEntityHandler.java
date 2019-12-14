@@ -13,8 +13,9 @@ import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
-import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.sql.SchemaHandler;
+import com.nubeiot.core.sql.SchemaInitializer;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.JobConverter;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.TriggerConverter;
 import com.nubeiot.iotdata.scheduler.model.tables.daos.JobEntityDao;
@@ -91,21 +92,34 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
     }
 
     @Override
-    public Single<EventMessage> initData() {
+    public @NonNull SchemaHandler schemaHandler() {
         eventClient().register("scheduler.1", new MockSchedulerListener());
-        final JobEntityDao jobDao = dao(JobEntityDao.class);
-        final TriggerEntityDao triggerDao = dao(TriggerEntityDao.class);
-        final JobTriggerDao jobTriggerDao = dao(JobTriggerDao.class);
-        return Single.concatArray(jobDao.insert(JobConverter.convert(JOB_1).setId(1)),
-                                  jobDao.insert(JobConverter.convert(JOB_3).setId(2)),
-                                  triggerDao.insert(TriggerConverter.convert(TRIGGER_1).setId(1)),
-                                  triggerDao.insert(TriggerConverter.convert(TRIGGER_3).setId(2)),
-                                  triggerDao.insert(TriggerConverter.convert(TRIGGER_4).setId(4)),
-                                  jobTriggerDao.insert(new JobTrigger().setJobId(1).setTriggerId(1)),
-                                  jobTriggerDao.insert(new JobTrigger().setJobId(1).setTriggerId(2).setEnabled(false)))
-                     .reduce(0, Integer::sum)
-                     .map(r -> EventMessage.success(EventAction.INIT, new JsonObject().put("records", r)));
+        return new MockSchedulerSchemaHandler();
     }
+
+    private static class MockSchedulerSchemaHandler extends SchedulerSchemaHandler {
+
+        @Override
+        public @NonNull SchemaInitializer initializer() {
+            return entityHandler -> {
+                final JobEntityDao jobDao = entityHandler.dao(JobEntityDao.class);
+                final TriggerEntityDao triggerDao = entityHandler.dao(TriggerEntityDao.class);
+                final JobTriggerDao jobTriggerDao = entityHandler.dao(JobTriggerDao.class);
+                return Single.concatArray(jobDao.insert(JobConverter.convert(JOB_1).setId(1)),
+                                          jobDao.insert(JobConverter.convert(JOB_3).setId(2)),
+                                          triggerDao.insert(TriggerConverter.convert(TRIGGER_1).setId(1)),
+                                          triggerDao.insert(TriggerConverter.convert(TRIGGER_3).setId(2)),
+                                          triggerDao.insert(TriggerConverter.convert(TRIGGER_4).setId(4)),
+                                          jobTriggerDao.insert(new JobTrigger().setJobId(1).setTriggerId(1)),
+                                          jobTriggerDao.insert(
+                                              new JobTrigger().setJobId(1).setTriggerId(2).setEnabled(false)))
+                             .reduce(0, Integer::sum)
+                             .map(r -> new JsonObject().put("records", r));
+            };
+        }
+
+    }
+
 
     public static class MockSchedulerListener implements EventListener {
 

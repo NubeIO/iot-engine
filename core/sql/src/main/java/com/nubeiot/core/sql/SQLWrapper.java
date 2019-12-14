@@ -62,7 +62,8 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
         this.start();
         logger.info("Creating Hikari datasource from application configuration...");
         ExecutorHelpers.blocking(vertx, () -> this.dataSource = new HikariDataSource(config.getHikariConfig()))
-                       .flatMap(ds -> createSchemaThenData(new DefaultConfiguration().set(ds).set(config.getDialect())))
+                       .map(ds -> new DefaultConfiguration().set(ds).set(config.getDialect()))
+                       .flatMap(this::createSchemaThenData)
                        .map(this::validateInitOrMigrationData)
                        .subscribe(result -> complete(future, result), t -> future.fail(NubeExceptionConverter.from(t)));
     }
@@ -93,12 +94,9 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
     private Single<EventMessage> createSchemaThenData(Configuration jooqConfig) {
         final String k = getSharedKey();
         final T handler = ((AbstractEntityHandler) getContext().createHandler(jooqConfig, vertx)).registerSharedKey(k);
-        return handler.before().flatMap(h -> Single.just(h.isNew()).flatMap(b -> {
-                          if (b) {
-                              return Single.just(createNewDatabase(jooqConfig)).flatMap(cfg -> h.initData());
-                          }
-                          return h.migrate();
-                      }))
+        return handler.before()
+                      .map(EntityHandler::schemaHandler)
+                      .flatMap(schemaHandler -> schemaHandler.execute(handler, catalog))
                       .onErrorResumeNext(throwable -> Single.error(
                           new InitializerError("Unknown error when initializing database", throwable)));
     }

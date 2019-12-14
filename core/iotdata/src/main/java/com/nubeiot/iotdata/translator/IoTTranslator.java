@@ -13,14 +13,16 @@ import lombok.NonNull;
  * @param <T> Nube IoT concept type
  * @param <U> Protocol object type
  * @see Protocol
+ * @since 1.0.0
  */
 public interface IoTTranslator<T, U> extends Serializable {
 
     /**
      * Defines translator for which protocol
      *
-     * @return protocol
+     * @return protocol protocol
      * @see Protocol
+     * @since 1.0.0
      */
     @NonNull Protocol protocol();
 
@@ -31,6 +33,7 @@ public interface IoTTranslator<T, U> extends Serializable {
      * @return The Nube IoT concept
      * @apiNote if cannot translate, output can be {@code null} or throw {@link IllegalArgumentException} depends on
      *     detail implementation
+     * @since 1.0.0
      */
     T serialize(U object);
 
@@ -41,16 +44,23 @@ public interface IoTTranslator<T, U> extends Serializable {
      * @return The protocol object
      * @apiNote if cannot translate, output can be {@code null} or throw {@link IllegalArgumentException} depends on
      *     detail implementation
+     * @since 1.0.0
      */
     U deserialize(T concept);
 
     /**
      * The {@code Nube IoT concept} type
+     *
+     * @return the class
+     * @since 1.0.0
      */
     @NonNull Class<T> fromType();
 
     /**
      * The {@code protocol} object type
+     *
+     * @return the class
+     * @since 1.0.0
      */
     @NonNull Class<U> toType();
 
