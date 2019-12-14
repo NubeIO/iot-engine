@@ -355,11 +355,15 @@ public final class MockData {
     }
 
     public static Point search(UUID pointKey) {
-        return POINTS.stream().filter(p -> p.getId().equals(pointKey)).findFirst().orElse(null);
+        return POINTS.stream().filter(p -> p.getId().equals(pointKey)).findFirst().map(Point::new).orElse(null);
     }
 
     public static PointValueData searchData(UUID pointKey) {
-        return POINT_DATA.stream().filter(p -> p.getPoint().equals(pointKey)).findFirst().orElse(null);
+        return POINT_DATA.stream()
+                         .filter(p -> p.getPoint().equals(pointKey))
+                         .findFirst()
+                         .map(PointValueData::new)
+                         .orElse(null);
     }
 
     public static JsonObject data_Edge_Network() {

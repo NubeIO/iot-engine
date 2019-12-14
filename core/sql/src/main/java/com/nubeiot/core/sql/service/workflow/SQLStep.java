@@ -14,18 +14,43 @@ import lombok.NonNull;
 
 /**
  * Represents a direct execution step into database
+ *
+ * @since 1.0.0
  */
 public interface SQLStep extends Workflow {
 
+    /**
+     * Declares event action.
+     *
+     * @return the event action
+     * @since 1.0.0
+     */
     @NonNull EventAction action();
 
+    /**
+     * Declares entity query executor.
+     *
+     * @return the entity query executor
+     * @see EntityQueryExecutor
+     * @since 1.0.0
+     */
     @NonNull EntityQueryExecutor queryExecutor();
 
     /**
      * Represents a {@code DML} step
+     *
+     * @since 1.0.0
      */
     interface DMLStep extends SQLStep {
 
+        /**
+         * Execute single.
+         *
+         * @param reqData   the req data
+         * @param validator the validator
+         * @return the single
+         * @since 1.0.0
+         */
         Single<KeyPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator);
 
     }
@@ -33,9 +58,20 @@ public interface SQLStep extends Workflow {
 
     /**
      * Represents a {@code DQL} step
+     *
+     * @param <T> Type of {@code parameter}
+     * @since 1.0.0
      */
     interface DQLStep<T> extends SQLStep {
 
+        /**
+         * Query single.
+         *
+         * @param reqData   the req data
+         * @param validator the validator
+         * @return the single
+         * @since 1.0.0
+         */
         Single<T> query(@NonNull RequestData reqData, @NonNull OperationValidator validator);
 
     }
@@ -43,6 +79,8 @@ public interface SQLStep extends Workflow {
 
     /**
      * Represents a {@code create} or {@code update} step
+     *
+     * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
     interface CreateOrUpdateStep extends DMLStep {
@@ -53,6 +91,7 @@ public interface SQLStep extends Workflow {
          * @param request    Request pojo
          * @param primaryKey primary key
          * @return wrapper pojo
+         * @since 1.0.0
          */
         default Single<KeyPojo> lookup(VertxPojo request, @NonNull Object primaryKey) {
             return queryExecutor().lookupByPrimaryKey(primaryKey)

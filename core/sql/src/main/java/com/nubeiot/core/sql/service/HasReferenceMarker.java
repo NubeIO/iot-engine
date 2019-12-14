@@ -35,7 +35,7 @@ public interface HasReferenceMarker {
 
     /**
      * Defines mapping between {@code json field} in {@code request body} and {@code resource field} as {@code foreign
-     * key}** in database
+     * key} in database
      *
      * @return entity references
      * @see EntityReferences

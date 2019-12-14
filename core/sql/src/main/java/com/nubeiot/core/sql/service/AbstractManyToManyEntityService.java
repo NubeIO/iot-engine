@@ -40,17 +40,6 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     }
 
     @Override
-    public abstract M context();
-
-    @Override
-    public @NonNull CompositeValidation validation() { return this.context(); }
-
-    @Override
-    public @NonNull EntityMetadata resourceMetadata() {
-        return resource();
-    }
-
-    @Override
     public @NonNull ComplexQueryExecutor<P> queryExecutor() {
         return ManyToManyReferenceEntityService.super.queryExecutor();
     }
@@ -88,6 +77,17 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
         return recomputeRequestData(requestData, convertKey(requestData,
                                                             Stream.concat(references().stream(), Stream.of(resource()))
                                                                   .toArray(EntityMetadata[]::new)));
+    }
+
+    @Override
+    public abstract M context();
+
+    @Override
+    public @NonNull CompositeValidation validation() { return this.context(); }
+
+    @Override
+    public @NonNull EntityMetadata resourceMetadata() {
+        return resource();
     }
 
     @Override

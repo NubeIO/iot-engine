@@ -122,7 +122,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     @Override
-    public Single<?> insertReturningPrimary(CP pojo, RequestData reqData) {
+    public Single<?> insertReturningPrimary(@NonNull CP pojo, @NonNull RequestData reqData) {
         final VertxPojo src = pojo.safeGetOther(resource.singularKeyName(), resource.modelClass());
         final Object sKey = Optional.ofNullable(src)
                                     .map(r -> getKey(r.toJson(), resource))
@@ -170,7 +170,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     @Override
-    public Single<CP> deleteOneByKey(RequestData reqData, OperationValidator validator) {
+    public Single<CP> deleteOneByKey(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
         final Function<VertxPojo, String> function = pojo -> base.msg(pojo.toJson(), references.getFields().keySet());
         return findOneByKey(reqData).flatMap(dbEntity -> isAbleToDelete(dbEntity, base, function))
                                     .flatMap(dbEntity -> validator.validate(reqData, dbEntity))
