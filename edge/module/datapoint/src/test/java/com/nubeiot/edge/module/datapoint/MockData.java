@@ -32,7 +32,6 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetada
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.TagPointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
-import com.nubeiot.edge.module.datapoint.service.PointByThingService;
 import com.nubeiot.iotdata.dto.DeviceType;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointKind;
@@ -320,37 +319,37 @@ public final class MockData {
                                               .setDeviceId(PrimaryKey.DEVICE_DROPLET)
                                               .setNetworkId(null)
                                               .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointByThingService.genComputedThing(ThingType.SENSOR,
-                                                                                                     PrimaryKey.THING_HUMIDITY_DROPLET));
+                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
+                                                                                                    PrimaryKey.THING_HUMIDITY_DROPLET));
         final PointThing t2 = new PointThing().setPointId(PrimaryKey.P_GPIO_TEMP)
                                               .setThingId(PrimaryKey.THING_TEMP_DROPLET)
                                               .setDeviceId(PrimaryKey.DEVICE_DROPLET)
                                               .setNetworkId(null)
                                               .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointByThingService.genComputedThing(ThingType.SENSOR,
-                                                                                                     PrimaryKey.THING_TEMP_DROPLET));
+                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
+                                                                                                    PrimaryKey.THING_TEMP_DROPLET));
         final PointThing t3 = new PointThing().setPointId(PrimaryKey.P_BACNET_TEMP)
                                               .setThingId(PrimaryKey.THING_TEMP_HVAC)
                                               .setDeviceId(PrimaryKey.DEVICE_HVAC)
                                               .setNetworkId(PrimaryKey.NETWORK)
                                               .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointByThingService.genComputedThing(ThingType.SENSOR,
-                                                                                                     PrimaryKey.THING_TEMP_HVAC));
+                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
+                                                                                                    PrimaryKey.THING_TEMP_HVAC));
         final PointThing t4 = new PointThing().setPointId(PrimaryKey.P_BACNET_FAN)
                                               .setThingId(PrimaryKey.THING_FAN_HVAC)
                                               .setDeviceId(PrimaryKey.DEVICE_HVAC)
                                               .setNetworkId(PrimaryKey.NETWORK)
                                               .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointByThingService.genComputedThing(ThingType.ACTUATOR,
-                                                                                                     PrimaryKey.THING_FAN_HVAC));
+                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
+                                                                                                    PrimaryKey.THING_FAN_HVAC));
         final PointThing t5 = new PointThing().setPointId(PrimaryKey.P_BACNET_SWITCH)
                                               .setThingId(PrimaryKey.THING_SWITCH_HVAC)
                                               .setDeviceId(PrimaryKey.DEVICE_HVAC)
                                               .setDeviceId(PrimaryKey.DEVICE_HVAC)
                                               .setNetworkId(PrimaryKey.NETWORK)
                                               .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointByThingService.genComputedThing(ThingType.ACTUATOR,
-                                                                                                     PrimaryKey.THING_SWITCH_HVAC));
+                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.ACTUATOR,
+                                                                                                    PrimaryKey.THING_SWITCH_HVAC));
         return Arrays.asList(t1, t2, t3, t4, t5);
     }
 
