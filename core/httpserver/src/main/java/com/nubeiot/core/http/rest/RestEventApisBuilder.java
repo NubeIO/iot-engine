@@ -13,7 +13,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.HttpServer;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
@@ -84,7 +84,7 @@ public final class RestEventApisBuilder {
 
     private void createRouter(RestEventApiMetadata metadata, RestEventApi api) {
         final EventMethodDefinition definition = metadata.getDefinition();
-        EventbusClient controller = (EventbusClient) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
+        EventController controller = (EventController) sharedDataFunc.apply(SharedDataDelegate.SHARED_EVENTBUS);
         for (EventMethodMapping mapping : definition.getMapping()) {
             RestEventApiDispatcher restHandler = RestEventApiDispatcher.create(api.dispatcher(), controller,
                                                                                metadata.getAddress(),

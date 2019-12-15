@@ -58,13 +58,6 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
         return JsonData.from(data, Ipv4Network.class);
     }
 
-    /**
-     * Parse IP network
-     *
-     * @param identifier IP network identifier
-     * @return IP network instance
-     * @throws NotFoundException if interface name is not found
-     */
     public static IpNetwork parse(@NonNull String identifier) {
         String[] splitter = identifier.split(SPLIT_CHAR, 2);
         if (splitter[0].equalsIgnoreCase("ipv4")) {
@@ -135,22 +128,20 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
     }
 
     static String mac(@NonNull NetworkInterface networkInterface) {
+        final byte[] mac;
         try {
-            return mac(networkInterface.getHardwareAddress());
+            mac = networkInterface.getHardwareAddress();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < mac.length; i++) {
+                sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+            }
+            return sb.toString();
         } catch (SocketException | NullPointerException e) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.warn("Cannot compute MAC address");
             }
             return null;
         }
-    }
-
-    public static String mac(byte[] mac) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < mac.length; i++) {
-            sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
-        }
-        return sb.toString();
     }
 
     public static boolean isIpv6(String address) {

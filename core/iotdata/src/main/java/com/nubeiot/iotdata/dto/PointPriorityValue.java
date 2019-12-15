@@ -22,7 +22,7 @@ import lombok.NonNull;
  * @see <a href="https://store.chipkin.com/articles/bacnet-what-is-a-bacnet-priority-array/">BACNet priority array</a>
  */
 @NoArgsConstructor
-public final class PointPriorityValue implements JsonData, IoTNotion {
+public final class PointPriorityValue implements JsonData {
 
     public static final int DEFAULT_PRIORITY = 16;
     private static final String INVALID_PRIORITY = "Priority is only in range [1, 17]";

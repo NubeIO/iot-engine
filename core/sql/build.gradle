@@ -88,13 +88,11 @@ dependencies {
     compile project.deps.database.jooq
     compile project.deps.database.jooqMeta
     compile project(":ext:rx-jdbc")
-    compileOnly project(":core:httpbase")
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project.deps.database.h2
     testCompile project.deps.database.pgsql
     testCompile "com.opentable.components:otj-pg-embedded:0.13.1"
-    testCompile project(":core:httpbase")
 }
 
 task jooqGen1(type: JooqGenerateTask) {

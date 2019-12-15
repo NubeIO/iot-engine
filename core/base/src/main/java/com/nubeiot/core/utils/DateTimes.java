@@ -30,86 +30,6 @@ public final class DateTimes {
 
     private static final Logger logger = LoggerFactory.getLogger(DateTimes.class);
 
-
-    /**
-     * Utilities class for parsing {@code date/time/datetime} in {@code iso8601} to appropriate {@code java data type}
-     *
-     * @see <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO_8601</a>
-     */
-    public static class Iso8601Parser {
-
-        public static Instant parse(@NonNull String datetime) {
-            return Instant.from(parseFromISO8601(datetime, DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-        }
-
-        public static ZonedDateTime parseZonedDateTime(@NonNull String datetime) {
-            return ZonedDateTime.from(parseFromISO8601(datetime, DateTimeFormatter.ISO_ZONED_DATE_TIME));
-        }
-
-        public static OffsetDateTime parseDateTime(@NonNull String datetime) {
-            return OffsetDateTime.from(parseFromISO8601(datetime, DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-        }
-
-        public static OffsetDateTime parseDate(@NonNull String date) {
-            return OffsetDateTime.from(parseFromISO8601(date, DateTimeFormatter.ISO_OFFSET_DATE));
-        }
-
-        public static OffsetTime parseTime(@NonNull String time) {
-            return OffsetTime.from(parseFromISO8601(time, DateTimeFormatter.ISO_TIME));
-        }
-
-        private static TemporalAccessor parseFromISO8601(String datetime, @NonNull DateTimeFormatter formatter) {
-            try {
-                return formatter.parse(Strings.requireNotBlank(datetime));
-            } catch (DateTimeParseException e) {
-                logger.debug("Invalid date :{}", datetime, e);
-                throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid date", e);
-            }
-        }
-
-    }
-
-
-    /**
-     * Utilities class for formatting {@code date/time/datetime} in {@code java data type} to {@code iso8601}
-     *
-     * @see <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO_8601</a>
-     */
-    public static class Iso8601Formatter {
-
-        public static String formatDate(@NonNull ZonedDateTime zonedDate) {
-            return zonedDate.format(DateTimeFormatter.ISO_OFFSET_DATE);
-        }
-
-        public static String formatDate(@NonNull OffsetDateTime offsetDate) {
-            return offsetDate.format(DateTimeFormatter.ISO_OFFSET_DATE);
-        }
-
-        public static String formatTime(@NonNull OffsetTime value) {
-            return DateTimeFormatter.ISO_TIME.format(value);
-        }
-
-        public static String format(@NonNull ZonedDateTime zonedDateTime) {
-            return zonedDateTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
-        }
-
-        public static String format(@NonNull OffsetDateTime offsetDateTime) {
-            return offsetDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-        }
-
-        public static JsonObject format(@NonNull Date date) {
-            return format(date, null);
-        }
-
-        public static JsonObject format(@NonNull Date date, TimeZone timeZone) {
-            final ZoneId zoneId = Objects.isNull(timeZone) ? ZoneId.systemDefault() : timeZone.toZoneId();
-            final ZonedDateTime zonedDateTime = date.toInstant().atZone(zoneId);
-            final ZonedDateTime utcTime = toUTC(zonedDateTime);
-            return new JsonObject().put("local", format(zonedDateTime)).put("utc", format(utcTime));
-        }
-
-    }
-
     public static LocalDateTime nowUTC() {
         return fromUTC(Instant.now());
     }
@@ -152,6 +72,54 @@ public final class DateTimes {
 
     public static OffsetDateTime from(@NonNull Instant instant) {
         return OffsetDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    public static ZonedDateTime parseISO8601ToZone(String datetime) {
+        return ZonedDateTime.from(parseFromISO8601(datetime));
+    }
+
+    public static Instant parseISO8601(String datetime) {
+        return Instant.from(parseFromISO8601(datetime));
+    }
+
+    public static String formatDate(@NonNull ZonedDateTime offsetDate) {
+        return offsetDate.format(DateTimeFormatter.ISO_OFFSET_DATE);
+    }
+
+    public static String formatDate(@NonNull OffsetDateTime offsetDate) {
+        return offsetDate.format(DateTimeFormatter.ISO_OFFSET_DATE);
+    }
+
+    public static String formatTime(@NonNull OffsetTime value) {
+        return DateTimeFormatter.ISO_TIME.format(value);
+    }
+
+    public static String format(@NonNull ZonedDateTime zonedDateTime) {
+        return zonedDateTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
+    }
+
+    public static String format(@NonNull OffsetDateTime offsetDateTime) {
+        return offsetDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
+
+    public static JsonObject format(@NonNull Date date) {
+        return format(date, null);
+    }
+
+    public static JsonObject format(@NonNull Date date, TimeZone timeZone) {
+        final ZoneId zoneId = Objects.isNull(timeZone) ? ZoneId.systemDefault() : timeZone.toZoneId();
+        final ZonedDateTime zonedDateTime = date.toInstant().atZone(zoneId);
+        final ZonedDateTime utcTime = toUTC(zonedDateTime);
+        return new JsonObject().put("local", format(zonedDateTime)).put("utc", format(utcTime));
+    }
+
+    private static TemporalAccessor parseFromISO8601(String datetime) {
+        try {
+            return DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(Strings.requireNotBlank(datetime));
+        } catch (DateTimeParseException e) {
+            logger.debug("Invalid date :{}", datetime, e);
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid date", e);
+        }
     }
 
 }

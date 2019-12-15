@@ -8,10 +8,8 @@ import java.util.Arrays;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -63,7 +61,7 @@ public final class Strings {
      * @return {@code True} if blank, else otherwise
      */
     public static boolean isBlank(String text) {
-        return text == null || "".equals(text.trim());
+        return text == null || "" .equals(text.trim());
     }
 
     /**
@@ -298,18 +296,10 @@ public final class Strings {
         return null;
     }
 
-    public static String kvMsg(@NonNull Object key, @NonNull Object value) {
+    public static String kvMsg(Object key, Object value) {
         return key + "=" + value;
     }
 
-    public static String kvMsg(@NonNull JsonObject json) {
-        return json.stream()
-                   .filter(entry -> Objects.nonNull(entry.getValue()))
-                   .map(kvMsg())
-                   .collect(Collectors.joining(" and "));
-    }
-
-    @NonNull
     public static Function<Entry, String> kvMsg() {
         return entry -> kvMsg(entry.getKey(), entry.getValue());
     }

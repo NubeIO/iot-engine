@@ -19,7 +19,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.utils.Configs;
 
 import ch.qos.logback.classic.Level;
@@ -66,7 +66,7 @@ public abstract class BaseSqlTest {
 
     protected void setup(TestContext context) { }
 
-    protected EventbusClient controller() {
+    protected EventController controller() {
         return SharedDataDelegate.getEventController(vertx, sharedKey);
     }
 

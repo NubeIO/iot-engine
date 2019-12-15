@@ -8,10 +8,10 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
 
@@ -23,7 +23,7 @@ public class WebsocketEventExecutor {
 
     private static final String WEBSOCKET_SERVER = "WEBSOCKET_SERVER";
     private static final Logger logger = LoggerFactory.getLogger(WebsocketEventExecutor.class);
-    private final EventbusClient controller;
+    private final EventController controller;
 
     public void execute(@NonNull WebsocketEventMessage socketMessage, @NonNull WebsocketServerEventMetadata metadata,
                         @NonNull Consumer<EventMessage> callback) {
@@ -37,9 +37,9 @@ public class WebsocketEventExecutor {
                                                          .action(msg.getAction())
                                                          .success(callback(metadata.getPublisher(), callback))
                                                          .build();
-            controller.fire(processor.getAddress(), processor.getPattern(), msg, handler);
+            controller.request(processor.getAddress(), processor.getPattern(), msg, handler);
         } else {
-            controller.fire(processor.getAddress(), processor.getPattern(), msg);
+            controller.request(processor.getAddress(), processor.getPattern(), msg);
             callback.accept(EventMessage.success(EventAction.RETURN));
         }
     }
@@ -48,7 +48,7 @@ public class WebsocketEventExecutor {
         if (Objects.isNull(publisher)) {
             return defCallback;
         }
-        return eventMessage -> controller.fire(publisher.getAddress(), publisher.getPattern(), eventMessage);
+        return eventMessage -> controller.response(publisher.getAddress(), publisher.getPattern(), eventMessage, null);
     }
 
 }

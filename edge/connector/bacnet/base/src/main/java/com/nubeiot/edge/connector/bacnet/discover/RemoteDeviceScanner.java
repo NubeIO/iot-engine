@@ -5,9 +5,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 import com.nubeiot.edge.connector.bacnet.listener.ReceiveIAmListener;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
@@ -22,8 +19,6 @@ import lombok.NonNull;
 @Builder(builderClassName = "Builder")
 public final class RemoteDeviceScanner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDeviceScanner.class);
-
     @NonNull
     private final LocalDevice localDevice;
     private final int minDevice;
@@ -31,7 +26,8 @@ public final class RemoteDeviceScanner {
     private final ReceiveIAmListener listener;
 
     public static RemoteDeviceScanner create(@NonNull LocalDevice localDevice, @NonNull DiscoverOptions options) {
-        final RemoteEntityCachePolicy policy = Optional.ofNullable(options.getDuration()).map(TimedExpiry::new)
+        final RemoteEntityCachePolicy policy = Optional.ofNullable(options.getDuration())
+                                                       .map(TimedExpiry::new)
                                                        .map(RemoteEntityCachePolicy.class::cast)
                                                        .orElse(RemoteEntityCachePolicy.NEVER_EXPIRE);
         Consumer<RemoteDevice> consumer = remoteDevice -> localDevice.getRemoteDeviceCache()
@@ -47,7 +43,6 @@ public final class RemoteDeviceScanner {
     }
 
     public RemoteDeviceScanner start() {
-        LOGGER.info("Send Global broadcast then capture remote device {}-{}", minDevice, maxDevice);
         localDevice.getEventHandler().addListener(listener);
         localDevice.sendGlobalBroadcast(new WhoIsRequest(minDevice, maxDevice));
         return this;

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
-import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
@@ -44,14 +43,6 @@ public abstract class TransportProtocol implements Ethernet {
         throw new IllegalArgumentException("Unsupported protocol " + type);
     }
 
-    /**
-     * Parse Transport protocol
-     *
-     * @param identifier IP network identifier
-     * @return IP network instance
-     * @throws IllegalArgumentException if any invalid data
-     * @throws NotFoundException        if interface name is not found
-     */
     public static TransportProtocol parse(@NonNull String identifier) {
         final String[] splitter = identifier.split(SPLIT_CHAR, 2);
         if (!splitter[0].matches("(?i)(udp|tcp)([46])?")) {

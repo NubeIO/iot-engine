@@ -6,7 +6,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.micro.ServiceGatewayIndex.Params;
 import com.nubeiot.core.micro.filter.ByPredicate.ByPredicateEnum;
 import com.nubeiot.core.utils.Strings;
 
@@ -20,11 +19,11 @@ final class IdentifierPredicate implements RecordPredicate {
 
     @Override
     public @NonNull Predicate<Record> apply(@NonNull JsonObject filter) {
-        String identifier = filter.getString(Params.IDENTIFIER);
+        String identifier = filter.getString(IDENTIFIER);
         if (Strings.isBlank(identifier)) {
             return r -> true;
         }
-        return ByPredicateEnum.parse(action, filter.getString(Params.BY)).by(identifier);
+        return ByPredicateEnum.parse(action, filter.getString(BY)).by(identifier);
     }
 
 }

@@ -28,7 +28,7 @@ import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.AlreadyExistException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.utils.DateTimes.Iso8601Formatter;
+import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.scheduler.job.JobModel;
 import com.nubeiot.scheduler.trigger.TriggerModel;
 
@@ -119,9 +119,9 @@ final class RegisterScheduleListener implements EventListener {
         }
         if (trigger instanceof CronTrigger) {
             final TimeZone timeZone = ((CronTrigger) trigger).getTimeZone();
-            return Iso8601Formatter.format(fireTime, timeZone);
+            return DateTimes.format(fireTime, timeZone);
         }
-        return Iso8601Formatter.format(fireTime, null);
+        return DateTimes.format(fireTime, null);
     }
 
 }

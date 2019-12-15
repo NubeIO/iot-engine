@@ -7,7 +7,7 @@ import com.nubeiot.core.event.DeliveryEvent;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class EventbusServiceRecord implements ServiceRecord {
+public class EventbusServiceRecord implements ServiceRecord {
 
     private final JsonObject location;
     private final JsonObject metadata;

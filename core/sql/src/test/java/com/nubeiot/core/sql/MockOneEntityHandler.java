@@ -7,15 +7,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jooq.Configuration;
-import org.jooq.Table;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.mock.oneschema.Keys;
-import com.nubeiot.core.sql.mock.oneschema.Tables;
 import com.nubeiot.core.sql.mock.oneschema.tables.daos.AuthorDao;
 import com.nubeiot.core.sql.mock.oneschema.tables.daos.BookDao;
 import com.nubeiot.core.sql.mock.oneschema.tables.daos.BookToBookStoreDao;
@@ -47,25 +47,6 @@ public class MockOneEntityHandler extends AbstractEntityHandler implements Entit
         this.bookStoreDao = dao(BookToBookStoreDao.class);
     }
 
-    static SchemaHandler createSchemaHandler(SchemaInitializer initializer, SchemaMigrator migrator) {
-        return new SchemaHandler() {
-            @Override
-            public @NonNull Table table() {
-                return Tables.AUTHOR;
-            }
-
-            @Override
-            public @NonNull SchemaInitializer initializer() {
-                return initializer;
-            }
-
-            @Override
-            public @NonNull SchemaMigrator migrator() {
-                return migrator;
-            }
-        };
-    }
-
     public Configuration getJooq() {
         return this.jooqConfig;
     }
@@ -76,17 +57,26 @@ public class MockOneEntityHandler extends AbstractEntityHandler implements Entit
     }
 
     @Override
-    public @NonNull SchemaHandler schemaHandler() {
-        return createSchemaHandler(entityHandler -> {
-            Single<Integer> insert00 = languageDao.insert(lang());
-            Single<Integer> insert01 = authorDao.insert(author());
-            Single<Integer> insert02 = bookDao.insert(book());
-            //TODO Recheck it
-            //        Single<Integer> insert03 = bookStoreDao.insert(bookStore(), true);
-            return Single.concatArray(insert00, insert01, insert02)
-                         .reduce(0, Integer::sum)
-                         .map(r -> new JsonObject().put("records", r));
-        }, SchemaMigrator.NON_MIGRATOR);
+    public boolean isNew() {
+        return isNew(com.nubeiot.core.sql.mock.oneschema.tables.Author.AUTHOR);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Single<EventMessage> initData() {
+        Single<Integer> insert00 = languageDao.insert(lang());
+        Single<Integer> insert01 = authorDao.insert(author());
+        Single<Integer> insert02 = bookDao.insert(book());
+        //TODO Recheck it
+        //        Single<Integer> insert03 = bookStoreDao.insert(bookStore(), true);
+        return Single.concatArray(insert00, insert01, insert02)
+                     .reduce(0, Integer::sum)
+                     .map(r -> EventMessage.success(EventAction.INIT, new JsonObject().put("records", r)));
+    }
+
+    @Override
+    public Single<EventMessage> migrate() {
+        return Single.just(EventMessage.success(EventAction.MIGRATE));
     }
 
     private List<Language> lang() {

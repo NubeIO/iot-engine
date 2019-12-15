@@ -9,7 +9,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
@@ -28,7 +28,7 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
     /**
      * Data key for EventBus controller
      *
-     * @see EventbusClient
+     * @see EventController
      */
     String SHARED_EVENTBUS = "EVENTBUS_CLIENT";
     String SHARED_DATADIR = "DATADIR";
@@ -61,13 +61,13 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
             k -> vertx.sharedData().getLocalMap(Strings.requireNotBlank(sharedKey)).remove(k), dataKey);
     }
 
-    static EventbusClient getEventController(@NonNull Vertx vertx, String sharedKey) {
-        final EventbusClient eventbusClient = getLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS);
-        if (Objects.nonNull(eventbusClient)) {
-            return eventbusClient;
+    static EventController getEventController(@NonNull Vertx vertx, String sharedKey) {
+        final EventController eventController = getLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS);
+        if (Objects.nonNull(eventController)) {
+            return eventController;
         }
-        synchronized (EventbusClient.class) {
-            final EventbusClient controller = new DefaultEventClient(vertx);
+        synchronized (EventController.class) {
+            final EventController controller = new DefaultEventClient(vertx);
             addLocalDataValue(vertx, sharedKey, SHARED_EVENTBUS, controller);
             return controller;
         }

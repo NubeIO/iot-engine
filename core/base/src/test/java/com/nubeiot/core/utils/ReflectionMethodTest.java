@@ -17,26 +17,26 @@ public class ReflectionMethodTest {
 
     @Test(expected = NullPointerException.class)
     public void test_execute_method_instance_null() {
-        ReflectionMethod.execute(null, null, JsonObject.class, Collections.singletonList(String.class), "s");
+        ReflectionMethod.executeMethod(null, null, JsonObject.class, Collections.singletonList(String.class), "s");
     }
 
     @Test(expected = NullPointerException.class)
     public void test_execute_method_method_null() {
-        ReflectionMethod.execute("", null, JsonObject.class, Collections.singletonList(String.class), "s");
+        ReflectionMethod.executeMethod("", null, JsonObject.class, Collections.singletonList(String.class), "s");
     }
 
     @Test(expected = NullPointerException.class)
     public void test_execute_method_output_null() throws NoSuchMethodException {
         final MockReflection mock = new MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("getId");
-        ReflectionMethod.execute(mock, method, null, Collections.singleton(JsonObject.class), new JsonObject());
+        ReflectionMethod.executeMethod(mock, method, null, Collections.singleton(JsonObject.class), new JsonObject());
     }
 
     @Test
     public void test_execute_method() throws NoSuchMethodException {
         final MockReflection mock = new MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("setName", String.class);
-        ReflectionMethod.execute(mock, method, Void.class, String.class, "xxx");
+        ReflectionMethod.executeMethod(mock, method, Void.class, String.class, "xxx");
         Assert.assertEquals("xxx", mock.getName());
     }
 
@@ -44,7 +44,7 @@ public class ReflectionMethodTest {
     public void test_execute_method_noArgument() throws NoSuchMethodException {
         final MockReflection mock = new MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("methodNoArgument");
-        ReflectionMethod.execute(mock, method, Void.class, String.class, "xxx");
+        ReflectionMethod.executeMethod(mock, method, Void.class, String.class, "xxx");
     }
 
     @Test(expected = NubeException.class)
@@ -52,7 +52,7 @@ public class ReflectionMethodTest {
         final MockReflection mock = new MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("throwNubeException", String.class);
         try {
-            ReflectionMethod.execute(mock, method, Void.class, Collections.singletonList(String.class), "hey");
+            ReflectionMethod.executeMethod(mock, method, Void.class, Collections.singletonList(String.class), "hey");
         } catch (NubeException e) {
             Assert.assertEquals("hey", e.getMessage());
             Assert.assertEquals(ErrorCode.SERVICE_ERROR, e.getErrorCode());
@@ -66,7 +66,7 @@ public class ReflectionMethodTest {
         final MockReflection mock = new MockReflection("abc");
         final Method method = mock.getClass().getDeclaredMethod("throwUnknownException", String.class);
         try {
-            ReflectionMethod.execute(mock, method, Void.class, Collections.singletonList(String.class), "hey");
+            ReflectionMethod.executeMethod(mock, method, Void.class, Collections.singletonList(String.class), "hey");
         } catch (NubeException e) {
             Assert.assertNull(e.getMessage());
             Assert.assertEquals(ErrorCode.UNKNOWN_ERROR, e.getErrorCode());

@@ -7,9 +7,9 @@ import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.kafka.KafkaConfig.ConsumerCfg;
 import com.nubeiot.core.kafka.supplier.KafkaConsumerProvider;
 
@@ -25,13 +25,13 @@ public class MockKafkaConsumer {
     private KafkaConsumer<String, EventMessage> consumer;
 
     public void start() {
-        EventbusClient controller = SharedDataDelegate.getEventController(vertx, this.getClass().getName());
+        EventController controller = SharedDataDelegate.getEventController(vertx, this.getClass().getName());
         consumer = KafkaConsumerProvider.create(vertx, consumerCfg, String.class, EventMessage.class);
         consumer.handler(record -> {
             System.err.println("CONSUMER Topic: " + record.topic());
             System.err.println(record.value().toJson().encodePrettily());
             EventModel eventModel = eventModelSupplier.get();
-            controller.fire(eventModel.getAddress(), eventModel.getPattern(), record.value());
+            controller.response(eventModel.getAddress(), eventModel.getPattern(), record.value(), null);
         }).exceptionHandler(Throwable::printStackTrace);
         consumer.subscribe(Collections.singleton(topic));
     }

@@ -4,9 +4,9 @@ import java.util.UUID;
 
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.HttpServerProvider;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
@@ -42,7 +42,7 @@ public final class DashboardKafkaDemo extends ContainerVerticle {
     }
 
     @Override
-    public void registerEventbus(EventbusClient eventClient) {
+    public void registerEventbus(EventController eventClient) {
         eventClient.register(KAFKA_ENABLED, new EnableKafkaEventListener());
     }
 

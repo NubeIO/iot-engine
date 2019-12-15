@@ -31,18 +31,16 @@ import lombok.NonNull;
  *
  * @see HasSyncAudit
  * @see SyncAudit
- * @since 1.0.0
  */
 public interface EntitySyncHandler extends EntityHandler {
 
     /**
      * Force not synced audit on creating if current entity is child of {@link HasSyncAudit}
      *
-     * @param <P>  Pojo type
      * @param pojo Given entity
+     * @param <P>  Pojo type
      * @return modified pojo for fluent API
      * @see SyncAudit#notYetSynced(String)
-     * @since 1.0.0
      */
     static <P extends VertxPojo> P markNotSyncedOnCreating(@NonNull P pojo) {
         if (pojo instanceof HasSyncAudit) {
@@ -54,11 +52,10 @@ public interface EntitySyncHandler extends EntityHandler {
     /**
      * Force not synced audit on creating if current entity is child of {@link HasSyncAudit}
      *
-     * @param <P>  Type of {@code VertxPojo}
      * @param pojo Given entity
+     * @param <P>  Pojo type
      * @return modified pojo for fluent API
      * @see SyncAudit#notYetSynced(SyncAudit, String)
-     * @since 1.0.0
      */
     static <P extends VertxPojo> P markNotSyncedOnModified(@NonNull P pojo) {
         if (pojo instanceof HasSyncAudit) {
@@ -74,17 +71,6 @@ public interface EntitySyncHandler extends EntityHandler {
         return pojo;
     }
 
-    /**
-     * Updates Sync success status.
-     *
-     * @param <P>      Type of {@code VertxPojo}
-     * @param metadata the metadata
-     * @param pojo     the pojo
-     * @param response the response
-     * @param by       the by
-     * @return json result in maybe
-     * @since 1.0.0
-     */
     default <P extends VertxPojo> Maybe<JsonObject> syncSuccess(@NonNull EntityMetadata metadata, @NonNull P pojo,
                                                                 JsonObject response, String by) {
         if (!(pojo instanceof HasSyncAudit)) {
@@ -95,17 +81,6 @@ public interface EntitySyncHandler extends EntityHandler {
         return updateSyncedStatus(metadata, pojo, syncAudit);
     }
 
-    /**
-     * Updates Sync failed status.
-     *
-     * @param <P>      Type of {@code VertxPojo}
-     * @param metadata the metadata
-     * @param pojo     the pojo
-     * @param t        the t
-     * @param by       the by
-     * @return json result in maybe
-     * @since 1.0.0
-     */
     default <P extends VertxPojo> Maybe<JsonObject> syncFailed(@NonNull EntityMetadata metadata, @NonNull P pojo,
                                                                @NonNull Throwable t, String by) {
         if (!(pojo instanceof HasSyncAudit)) {
@@ -116,16 +91,6 @@ public interface EntitySyncHandler extends EntityHandler {
         return updateSyncedStatus(metadata, pojo, syncAudit);
     }
 
-    /**
-     * Updates synced status.
-     *
-     * @param <P>       Type of {@code VertxPojo}
-     * @param metadata  the metadata
-     * @param pojo      the pojo
-     * @param syncAudit the sync audit
-     * @return json result in maybe
-     * @since 1.0.0
-     */
     @SuppressWarnings("unchecked")
     default <P extends VertxPojo> Maybe<JsonObject> updateSyncedStatus(@NonNull EntityMetadata metadata,
                                                                        @NonNull P pojo, @NonNull SyncAudit syncAudit) {

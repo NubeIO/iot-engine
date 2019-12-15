@@ -7,7 +7,7 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor;
 import com.nubeiot.eventbus.edge.gateway.GatewayEventBus;
@@ -20,9 +20,9 @@ final class ServiceAnnounceForwarder extends ServiceGatewayAnnounceMonitor {
 
     @Override
     protected void handle(Record record) {
-        EventbusClient eventClient = SharedDataDelegate.getEventController(getVertx(), getSharedKey());
-        eventClient.fire(DeliveryEvent.from(GatewayEventBus.ROUTER_ANNOUNCEMENT, EventAction.MONITOR,
-                                            RequestData.builder().body(record.toJson()).build().toJson()));
+        EventController eventClient = SharedDataDelegate.getEventController(getVertx(), getSharedKey());
+        eventClient.request(DeliveryEvent.from(GatewayEventBus.ROUTER_ANNOUNCEMENT, EventAction.MONITOR,
+                                               RequestData.builder().body(record.toJson()).build().toJson()));
     }
 
 }

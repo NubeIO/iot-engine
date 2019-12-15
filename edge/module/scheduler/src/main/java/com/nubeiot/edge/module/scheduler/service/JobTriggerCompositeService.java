@@ -1,5 +1,6 @@
 package com.nubeiot.edge.module.scheduler.service;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -12,15 +13,15 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
-import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
@@ -63,11 +64,14 @@ abstract class JobTriggerCompositeService
 
     @Override
     public final Set<EventMethodDefinition> definitions() {
-        return EntityHttpService.createCRUDDefinitions(resource(), reference());
+        final String servicePath = Urls.combinePath(
+            Urls.capturePath(reference().singularKeyName(), reference().requestKeyName()),
+            resource().singularKeyName());
+        return Collections.singleton(EventMethodDefinition.createDefault(servicePath, resource().requestKeyName()));
     }
 
     @Override
-    public @NonNull Single<JsonObject> onEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    public @NonNull Single<JsonObject> afterEachList(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return Single.just(JsonPojo.from(pojo)
                                    .toJson(Stream.concat(ignoreFields(requestData).stream(),
                                                          Stream.of(reference().singularKeyName()))
@@ -81,8 +85,8 @@ abstract class JobTriggerCompositeService
             return super.afterGet(pojo, reqData);
         }
         final DeliveryEvent event = createDeliveryEvent(composite, EventAction.GET_ONE);
-        final EventbusClient client = entityHandler().eventClient();
-        return Single.create(emitter -> client.fire(event, replyHandler(event, msg -> emitter.onSuccess(
+        final EventController client = entityHandler().eventClient();
+        return Single.create(emitter -> client.request(event, replyHandler(event, msg -> emitter.onSuccess(
             onSuccess(composite, reqData, msg)), error -> emitter.onError(error.getThrowable()))));
     }
 
@@ -97,8 +101,8 @@ abstract class JobTriggerCompositeService
             return Single.just(EntityTransformer.keyResponse(resourceMetadata().requestKeyName(), key));
         }
         final DeliveryEvent event = createDeliveryEvent(composite, EventAction.CREATE);
-        final EventbusClient client = entityHandler().eventClient();
-        return Single.create(emitter -> client.fire(event, replyHandler(event, msg -> emitter.onSuccess(
+        final EventController client = entityHandler().eventClient();
+        return Single.create(emitter -> client.request(event, replyHandler(event, msg -> emitter.onSuccess(
             cudResponse(composite, reqData, msg)), error -> emitter.onError(error.getThrowable()))));
     }
 
@@ -131,9 +135,7 @@ abstract class JobTriggerCompositeService
     private ReplyEventHandler replyHandler(DeliveryEvent event, Consumer<EventMessage> response,
                                            Consumer<ErrorMessage> onError) {
         return ReplyEventHandler.builder()
-                                .system("EDGE_SCHEDULER")
-                                .address(event.getAddress())
-                                .action(event.getAction())
+                                .system("EDGE_SCHEDULER").address(event.getAddress()).action(event.getAction())
                                 .success(response)
                                 .error(onError)
                                 .build();

@@ -3,7 +3,6 @@ package com.nubeiot.edge.module.datapoint.model.ditto;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassRefTypeSignature;
@@ -12,10 +11,10 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.cache.ClassGraphCache;
-import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.HasSyncAudit;
 import com.nubeiot.core.sql.pojos.JsonPojo;
+import com.nubeiot.core.sql.service.EntityPostService.EntitySyncData;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
@@ -29,7 +28,7 @@ import lombok.RequiredArgsConstructor;
  * @param <V> Pojo class that represents for data entity
  */
 @SuppressWarnings("unchecked")
-public interface IDittoModel<V extends VertxPojo> extends Supplier<V>, JsonData {
+public interface IDittoModel<V extends VertxPojo> extends EntitySyncData<V> {
 
     static Class<IDittoModel> find(@NonNull EntityMetadata metadata) {
         final @NonNull JsonTable table = metadata.table();
@@ -74,7 +73,7 @@ public interface IDittoModel<V extends VertxPojo> extends Supplier<V>, JsonData 
      *
      * @return request data
      */
-    JsonObject toJson();
+    JsonObject body();
 
     @RequiredArgsConstructor
     abstract class AbstractDittoModel<V extends VertxPojo> implements IDittoModel<V> {
@@ -93,7 +92,7 @@ public interface IDittoModel<V extends VertxPojo> extends Supplier<V>, JsonData 
         }
 
         @Override
-        public JsonObject toJson() {
+        public JsonObject body() {
             if (get() instanceof HasSyncAudit) {
                 return JsonPojo.from(((HasSyncAudit) get()).setSyncAudit(null)).toJson();
             }

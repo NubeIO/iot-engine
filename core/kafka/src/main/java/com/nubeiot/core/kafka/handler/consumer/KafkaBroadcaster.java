@@ -3,10 +3,10 @@ package com.nubeiot.core.kafka.handler.consumer;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Strings;
@@ -18,7 +18,7 @@ import lombok.NonNull;
  *
  * @see AbstractKafkaConsumerHandler
  * @see EventMessage
- * @see EventbusClient
+ * @see EventController
  */
 public final class KafkaBroadcaster<K, V, T extends KafkaBroadcasterTransformer<K, V>>
     extends AbstractKafkaConsumerHandler<K, V, T, EventMessage> {
@@ -39,8 +39,8 @@ public final class KafkaBroadcaster<K, V, T extends KafkaBroadcasterTransformer<
 
     @Override
     public void execute(EventMessage result) {
-        EventbusClient controller = getSharedDataValue(SharedDataDelegate.SHARED_EVENTBUS);
-        controller.fire(model.getAddress(), model.getPattern(), result);
+        EventController controller = getSharedDataValue(SharedDataDelegate.SHARED_EVENTBUS);
+        controller.fire(model.getAddress(), model.getPattern(), result, null);
     }
 
 }

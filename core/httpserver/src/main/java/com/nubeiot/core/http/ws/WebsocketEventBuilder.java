@@ -18,8 +18,8 @@ import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
 import com.nubeiot.core.component.SharedDataDelegate;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.HttpConfig.WebsocketConfig;
@@ -92,7 +92,7 @@ public final class WebsocketEventBuilder {
 
     public Router build() {
         SockJSHandler sockJSHandler = SockJSHandler.create(vertx, config().getSockjsOptions());
-        EventbusClient controller = SharedDataDelegate.getEventController(vertx, sharedKey);
+        EventController controller = SharedDataDelegate.getEventController(vertx, sharedKey);
         validate().forEach((path, socketMapping) -> {
             String fullPath = Urls.combinePath(rootWs, path, ApiConstants.WILDCARDS_ANY_PATH);
             router.route(fullPath)
@@ -127,10 +127,10 @@ public final class WebsocketEventBuilder {
         return opts;
     }
 
-    private WebsocketBridgeEventHandler createHandler(EventbusClient controller,
+    private WebsocketBridgeEventHandler createHandler(EventController controller,
                                                       List<WebsocketServerEventMetadata> socketMapping) {
         Map<Class, Object> map = new LinkedHashMap<>();
-        map.put(EventbusClient.class, controller);
+        map.put(EventController.class, controller);
         map.put(List.class, socketMapping);
         WebsocketBridgeEventHandler handler = ReflectionClass.createObject(bridgeHandlerClass, map);
         return Objects.isNull(handler) ? new WebsocketBridgeEventHandler(controller, socketMapping) : handler;

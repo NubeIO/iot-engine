@@ -24,7 +24,6 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.core.utils.DateTimes.Iso8601Parser;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.loader.ModuleType;
@@ -46,11 +45,10 @@ public final class LocalServiceSearch implements IServiceSearch {
 
     @Override
     public Single<JsonObject> search(RequestData requestData) throws NubeException {
-        logger.info("Start executing local service searching {}", requestData.filter());
+        logger.info("Start executing local service searching {}", requestData.getFilter());
         return this.entityHandler.genericQuery()
-                                 .executeAny(
-                                     context -> filter(validateFilter(requestData.filter()), requestData.pagination(),
-                                                       context))
+                                 .executeAny(context -> filter(validateFilter(requestData.getFilter()),
+                                                               requestData.getPagination(), context))
                                  .flattenAsObservable(records -> records)
                                  .flatMapSingle(this::excludeData)
                                  .collect(JsonArray::new, JsonArray::add)
@@ -78,10 +76,10 @@ public final class LocalServiceSearch implements IServiceSearch {
         String from = filter.getString("from");
         String to = filter.getString("to");
         if (Strings.isNotBlank(from)) {
-            sqlData.put("from", Iso8601Parser.parse(from));
+            sqlData.put("from", DateTimes.parseISO8601(from));
         }
         if (Strings.isNotBlank(to)) {
-            sqlData.put("to", Iso8601Parser.parse(to));
+            sqlData.put("to", DateTimes.parseISO8601(to));
         }
         return sqlData;
     }

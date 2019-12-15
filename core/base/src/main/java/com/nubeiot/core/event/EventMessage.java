@@ -38,7 +38,6 @@ public final class EventMessage implements Serializable, JsonData {
     private final EventAction action;
     @Getter
     private final EventAction prevAction;
-    //TODO should replace to DataTransferObject
     private final Map<String, Object> data;
     @JsonIgnore
     private final Class<? extends JsonData> dataClass;

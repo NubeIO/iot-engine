@@ -6,22 +6,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.sql.service.GroupReferenceMarker;
+import com.nubeiot.core.sql.service.GroupReferenceResource;
 
 import lombok.NonNull;
 
-/**
- * The interface Group entity transformer.
- *
- * @see ReferenceEntityTransformer
- * @since 1.0.0
- */
 public interface GroupEntityTransformer extends ReferenceEntityTransformer {
 
-    /**
-     * @see GroupReferenceMarker
-     */
-    GroupReferenceMarker marker();
+    GroupReferenceResource ref();
 
     /**
      * Ignore fields that includes {@code audit field}, {@code reference field} and {@code group field}
@@ -31,10 +22,10 @@ public interface GroupEntityTransformer extends ReferenceEntityTransformer {
      */
     @Override
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
-        final Stream<String> groupStream = marker().ignoreFields()
-                                                   .stream()
-                                                   .filter(Objects::nonNull)
-                                                   .filter(excludeResourceField());
+        final Stream<String> groupStream = ref().ignoreFields()
+                                                .stream()
+                                                .filter(Objects::nonNull)
+                                                .filter(excludeResourceField());
         return Stream.of(ReferenceEntityTransformer.super.ignoreFields(requestData).stream(), groupStream)
                      .flatMap(s -> s)
                      .map(String::toLowerCase)
@@ -46,7 +37,6 @@ public interface GroupEntityTransformer extends ReferenceEntityTransformer {
      *
      * @param requestData request data
      * @return ignore fields
-     * @since 1.0.0
      */
     default Set<String> showGroupFields(@NonNull RequestData requestData) {
         return ReferenceEntityTransformer.super.ignoreFields(requestData);

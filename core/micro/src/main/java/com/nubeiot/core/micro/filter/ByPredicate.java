@@ -15,23 +15,17 @@ public interface ByPredicate {
 
     Predicate<Record> by(@NonNull String identifier);
 
-    String BY_PATH = "PATH";
-    String BY_NAME = "NAME";
-    String BY_GROUP = "GROUP";
-    String BY_REGISTRATION = "REGISTRATION";
-
-
     @RequiredArgsConstructor
     enum ByPredicateEnum implements ByPredicate {
-        REGISTRATION(BY_REGISTRATION, null, id -> r -> id.equalsIgnoreCase(r.getRegistration())),
-        GROUP_MANY(BY_GROUP, EventAction.GET_LIST, id -> r -> r.getName().toLowerCase().startsWith(id.toLowerCase())),
-        GROUP_ONE(BY_GROUP, EventAction.GET_ONE, id -> r -> {
-            final int idx = r.getName().lastIndexOf(".");
-            return idx != -1 && r.getName().substring(0, idx).equalsIgnoreCase(id.toLowerCase());
+        REGISTRATION("REGISTRATION", null, id -> record -> id.equalsIgnoreCase(record.getRegistration())),
+        GROUP_MANY("GROUP", EventAction.GET_LIST, id -> r -> r.getName().toLowerCase().startsWith(id.toLowerCase())),
+        GROUP_ONE("GROUP", EventAction.GET_ONE, id -> record -> {
+            final int idx = record.getName().lastIndexOf(".");
+            return idx != -1 && record.getName().substring(0, idx).equalsIgnoreCase(id.toLowerCase());
         }),
-        NAME_MANY(BY_NAME, EventAction.GET_LIST, id -> r -> r.getName().toLowerCase().contains(id.toLowerCase())),
-        NAME_ONE(BY_NAME, EventAction.GET_ONE, id -> r -> r.getName().equalsIgnoreCase(id.toLowerCase())),
-        PATH(BY_PATH, null, id -> record -> ByPathPredicate.predicate(record, id));
+        NAME_MANY("NAME", EventAction.GET_LIST, id -> r -> r.getName().toLowerCase().contains(id.toLowerCase())),
+        NAME_ONE("NAME", EventAction.GET_ONE, id -> record -> record.getName().equalsIgnoreCase(id.toLowerCase())),
+        PATH("PATH", null, id -> record -> ByPathPredicate.predicate(record, id));
 
         private final String type;
         private final EventAction action;

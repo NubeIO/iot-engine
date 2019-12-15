@@ -3,12 +3,12 @@ package com.nubeiot.core.cache;
 public final class ClassGraphCache<K, T> extends AbstractLocalCache<K, Class<T>, ClassGraphCache> {
 
     @Override
-    protected String keyLabel() {
+    protected String keyClass() {
         return null;
     }
 
     @Override
-    protected String valueLabel() {
+    protected String valueClass() {
         return "class";
     }
 

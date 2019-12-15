@@ -1,14 +1,12 @@
 package com.nubeiot.edge.connector.bacnet.discover;
 
-import java.util.List;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
-import com.nubeiot.edge.connector.bacnet.mixin.ObjectPropertyValues;
-import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
-import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -21,10 +19,10 @@ public final class DiscoverResponse implements JsonData {
 
     private CommunicationProtocol network;
     private LocalDeviceMetadata localDevice;
-    private List<RemoteDeviceMixin> remoteDevices;
-    private RemoteDeviceMixin remoteDevice;
-    private ObjectPropertyValues objects;
-    private PropertyValuesMixin object;
+    private JsonArray remoteDevices;
+    private JsonObject remoteDevice;
+    private JsonArray objects;
+    private JsonObject object;
 
 
     @JsonPOJOBuilder(withPrefix = "")

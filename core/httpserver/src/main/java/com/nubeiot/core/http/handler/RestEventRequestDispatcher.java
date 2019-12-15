@@ -4,14 +4,14 @@ import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
 
 public interface RestEventRequestDispatcher extends Handler<RoutingContext> {
 
-    EventbusClient getController();
+    EventController getController();
 
     default void dispatch(RoutingContext context, String system, String address, EventPattern pattern,
                           EventMessage message) {
@@ -24,7 +24,7 @@ public interface RestEventRequestDispatcher extends Handler<RoutingContext> {
                                                      })
                                                      .exception(context::fail)
                                                      .build();
-        getController().fire(address, pattern, message, handler);
+        getController().request(address, pattern, message, handler);
     }
 
 }

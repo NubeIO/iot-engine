@@ -3,7 +3,7 @@ package com.nubeiot.core.http.client;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.event.WebsocketClientEventMetadata;
 
@@ -83,6 +83,6 @@ public interface WebsocketClientDelegate extends IClientDelegate {
      */
     void asyncOpen(WebsocketClientEventMetadata metadata, MultiMap headers);
 
-    EventbusClient getEventClient();
+    EventController getEventController();
 
 }

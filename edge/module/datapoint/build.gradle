@@ -1,20 +1,118 @@
+import org.jooq.meta.jaxb.ForcedType
+
+import com.nubeiot.buildscript.Strings
+import com.nubeiot.buildscript.jooq.DB
+import com.nubeiot.buildscript.jooq.JooqGenerateTask
+import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
+
 ext {
     specifiedLog = project.loggers["sql"] + ["h2database": "info"]
 }
 
 dependencies {
-    compile project(":core:auth")
     compile project(":core:cache")
+    compile project(":core:iotdata")
+    compile project(":core:sql")
+    compile project.deps.database.h2
     compile project(":core:micro")
     compile project(":core:httpclient")
-    compile project(":core:iotdata")
-    compile project(":edge:module:datapoint:model")
+    compile project(":core:auth")
     compile 'net.thisptr:jackson-jq:0.0.10'
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:sql").sourceSets.test.output
     testCompile project(":core:httpserver")
     testCompile project(":core:httpserver").sourceSets.test.output
+}
+
+task jooqGen(type: JooqGenerateTask) {
+    packageName = "com.nubeiot.iotdata.edge.model"
+    enumTypes = project(':core:sql').ext.enumTypes
+    renameFields = ["history_setting_type|point_type|equip_type|transducer_type|measure_type": "type",
+                    "point_category|measure_category|transducer_category"                    : "category",
+                    "measure_unit_alias"                                                     : "unit_alias",
+                    "point_kind"                                                             : "kind",
+                    "offset_val"                                                             : "offset"]
+    dbTypes = project(':core:sql').ext.dbTypes + [
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.HistorySettingType",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("history_setting_type"),
+                       converter: "com.nubeiot.iotdata.converter.HistorySettingTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.Protocol",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("protocol"),
+                       converter: "com.nubeiot.iotdata.converter.ProtocolConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.PointKind",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("point_kind"),
+                       converter: "com.nubeiot.iotdata.converter.PointKindConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.PointType",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("point_type"),
+                       converter: "com.nubeiot.iotdata.converter.PointTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.PointPriorityValue",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("priority_values"),
+                       converter: "com.nubeiot.iotdata.converter.PointPriorityValueConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.unit.UnitAlias",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("measure_unit_alias"),
+                       converter: "com.nubeiot.iotdata.converter.UnitAliasConverter"),
+        new ForcedType(userType: "io.vertx.core.json.JsonArray",
+                       types: DB.TYPES.array,
+                       expression: Strings.toRegexIgnoreCase("weekdays"),
+                       converter: "com.nubeiot.iotdata.converter.WeekDaysConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.EquipType",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("equip_type"),
+                       converter: "com.nubeiot.iotdata.converter.EquipTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.TransducerCategory",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("transducer_category"),
+                       converter: "com.nubeiot.iotdata.converter.TransducerCategoryConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.TransducerType",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("transducer_type"),
+                       converter: "com.nubeiot.iotdata.converter.TransducerTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.core.sql.type.Label",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("product_label"),
+                       converter: "com.nubeiot.core.sql.converter.LabelConverter")
+    ]
+    javaTypes = project(':core:sql').ext.javaTypes + [
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.HistorySettingType",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.iotdata.dto.HistorySettingType.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.dto.HistorySettingType.def()"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.Protocol",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.iotdata.dto.Protocol.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.dto.Protocol.def()"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointKind",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.iotdata.dto.PointKind.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.dto.PointKind.def()"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointType",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.iotdata.dto.PointType.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.dto.PointType.def()"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.TransducerCategory",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.iotdata.dto.TransducerCategory.factory((String)%s)"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.TransducerType",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.iotdata.dto.TransducerType.factory((String)%s)",
+                         defVal: "com.nubeiot.iotdata.dto.TransducerType.def()"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.EquipType",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.iotdata.dto.EquipType.factory((String)%s)"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.PointPriorityValue",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.dto.PointPriorityValue.class)"),
+        new JsonDataType(className: "com.nubeiot.iotdata.unit.UnitAlias",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.unit.UnitAlias.class)")
+    ]
 }
 
 test {

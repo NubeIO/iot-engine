@@ -14,7 +14,6 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.TestHelper;
-import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.ExpectedResponse;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
@@ -26,8 +25,10 @@ import ch.qos.logback.classic.Logger;
 
 public abstract class EdgeSchedulerVerticleTest extends DynamicServiceTestBase {
 
-    static final Function<String, Customization> UTC_DATE = timeKey -> JsonHelper.ignore(timeKey + ".utc");
-    static final Function<String, Customization> LOCAL_DATE = timeKey -> JsonHelper.ignore(timeKey + ".local");
+    static final Function<String, Customization> UTC_DATE = timeKey -> new Customization(timeKey + ".utc",
+                                                                                         (o1, o2) -> true);
+    static final Function<String, Customization> LOCAL_DATE = timeKey -> new Customization(timeKey + ".local",
+                                                                                           (o1, o2) -> true);
 
     @BeforeClass
     public static void beforeSuite() {

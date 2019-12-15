@@ -29,7 +29,7 @@ public abstract class TransactionService implements InstallerService {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
-        JsonObject filter = data.filter();
+        JsonObject filter = data.getFilter();
         boolean systemCfg = Boolean.parseBoolean(filter.getString("system_cfg"));
         ITblTransaction transaction = new TblTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getTransactionId())) {

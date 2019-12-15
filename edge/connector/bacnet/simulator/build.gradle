@@ -1,3 +1,8 @@
+repositories {
+    project.repos
+    maven { url "https://maven.mangoautomation.net/repository/ias-release/" }
+}
+
 dependencies {
     compile project(':core:base')
     compile project(':edge:connector:bacnet:base')

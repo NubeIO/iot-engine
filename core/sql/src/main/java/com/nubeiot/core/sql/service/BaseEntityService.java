@@ -11,7 +11,6 @@ interface BaseEntityService<M extends EntityMetadata> {
      * Entity handler
      *
      * @return entity handler
-     * @since 1.0.0
      */
     @NonNull EntityHandler entityHandler();
 
@@ -20,7 +19,6 @@ interface BaseEntityService<M extends EntityMetadata> {
      *
      * @return entity metadata
      * @see EntityMetadata
-     * @since 1.0.0
      */
     @NonNull M context();
 

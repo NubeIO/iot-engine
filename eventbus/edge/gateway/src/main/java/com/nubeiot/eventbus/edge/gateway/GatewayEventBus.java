@@ -18,7 +18,8 @@ public final class GatewayEventBus {
                                                                    .local(true)
                                                                    .build();
 
-    public static final EventModel ROUTER_ANNOUNCEMENT = EventModel.builder().pattern(EventPattern.POINT_2_POINT)
+    public static final EventModel ROUTER_ANNOUNCEMENT = EventModel.builder()
+                                                                   .pattern(EventPattern.PUBLISH_SUBSCRIBE)
                                                                    .event(EventAction.MONITOR)
                                                                    .address(GatewayEventBus.class.getName() +
                                                                             ".announcement")

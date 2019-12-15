@@ -1,8 +1,8 @@
 package com.nubeiot.edge.module.datapoint.service;
 
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -11,27 +11,20 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
-import com.nubeiot.core.sql.service.workflow.CreationStep;
-import com.nubeiot.core.sql.service.workflow.ModificationStep;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeDataMetadata;
+import com.nubeiot.core.sql.service.EntityPostService;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointValueMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
-import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
-import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
-import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
+import com.nubeiot.edge.module.datapoint.sync.PointValueSyncService;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 
 import lombok.NonNull;
@@ -54,6 +47,11 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     }
 
     @Override
+    public @NonNull EntityPostService asyncPostService() {
+        return new PointValueSyncService(DataPointService.super.asyncPostService());
+    }
+
+    @Override
     public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
         return recomputeRequestData(super.onCreatingOneResource(requestData));
     }
@@ -65,7 +63,7 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
 
     @NonNull
     private RequestData recomputeRequestData(RequestData reqData) {
-        JsonObject filter = Optional.ofNullable(reqData.filter()).orElse(new JsonObject());
+        JsonObject filter = Optional.ofNullable(reqData.getFilter()).orElse(new JsonObject());
         if (!filter.getBoolean(Filters.AUDIT, false)) {
             filter.put(Filters.TEMP_AUDIT, true);
         }
@@ -74,73 +72,28 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
                           .headers(reqData.headers())
                           .body(reqData.body())
                           .filter(filter)
-                          .sort(reqData.sort())
-                          .pagination(reqData.pagination())
+                          .sort(reqData.getSort())
+                          .pagination(reqData.getPagination())
                           .build();
     }
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        final EventMethodDefinition d = EventMethodDefinition.create(
-            Urls.combinePath(EntityHttpService.toCapturePath(PointMetadata.INSTANCE), servicePath()),
-            ActionMethodMapping.byCRUD(getAvailableEvents()));
-        return Stream.concat(DataPointService.super.definitions().stream(), Stream.of(d)).collect(Collectors.toSet());
+        Map<EventAction, HttpMethod> crud = ActionMethodMapping.CRUD_MAP.get();
+        ActionMethodMapping map = ActionMethodMapping.create(
+            getAvailableEvents().stream().filter(crud::containsKey).collect(Collectors.toMap(e -> e, crud::get)));
+        return Stream.concat(DataPointService.super.definitions().stream(),
+                             Stream.of(EventMethodDefinition.create("/point/:point_id/data", map)))
+                     .collect(Collectors.toSet());
     }
 
     @Override
     public JsonObject doTransform(EventAction action, Object key, VertxPojo pojo, RequestData reqData,
                                   BiFunction<VertxPojo, RequestData, JsonObject> converter) {
-        if (Objects.nonNull(reqData.filter()) && reqData.filter().getBoolean(Filters.TEMP_AUDIT, false)) {
-            reqData.filter().remove(Filters.AUDIT);
+        if (Objects.nonNull(reqData.getFilter()) && reqData.getFilter().getBoolean(Filters.TEMP_AUDIT, false)) {
+            reqData.getFilter().remove(Filters.AUDIT);
         }
         return super.doTransform(action, key, pojo, reqData, converter);
-    }
-
-    @Override
-    protected CreationStep initCreationStep() {
-        return super.initCreationStep()
-                    .onSuccess((action, kv) -> syncPointValue((PointValueData) kv.request(), action,
-                                                              (PointValueData) kv.pojo()));
-    }
-
-    @Override
-    protected ModificationStep initModificationStep(EventAction action) {
-        return super.initModificationStep(action)
-                    .onSuccess((reqData, act, output) -> syncPointValue(context().parseFromRequest(reqData.body()), act,
-                                                                        (PointValueData) output.pojo()));
-    }
-
-    private void syncPointValue(@NonNull PointValueData prev, @NonNull EventAction action,
-                                @NonNull PointValueData pointValue) {
-        final OffsetDateTime createdTime = action == EventAction.CREATE
-                                           ? pointValue.getTimeAudit().getCreatedTime()
-                                           : pointValue.getTimeAudit().getLastModifiedTime();
-        final PointValue requestValue = new PointValue(prev.getPriority(), prev.getValue());
-        createHistoryData(pointValue, requestValue, createdTime);
-        createRealtimeData(pointValue, requestValue, createdTime);
-    }
-
-    private void createRealtimeData(@NonNull PointValueData pv, @NonNull PointValue requestValue,
-                                    @NonNull OffsetDateTime createdTime) {
-        final JsonObject rtValue = RealtimeDataMetadata.simpleValue(requestValue.getValue(),
-                                                                    requestValue.getPriority());
-        send(RealtimeDataService.class,
-             new PointRealtimeData().setPoint(pv.getPoint()).setValue(rtValue).setTime(createdTime).toJson());
-    }
-
-    private void createHistoryData(@NonNull PointValueData pv, @NonNull PointValue requestValue,
-                                   @NonNull OffsetDateTime createdTime) {
-        send(HistoryDataService.class, new PointHistoryData().setPoint(pv.getPoint())
-                                                             .setValue(requestValue.getValue())
-                                                             .setPriority(requestValue.getPriority())
-                                                             .setTime(createdTime)
-                                                             .toJson());
-    }
-
-    private void send(@NonNull Class<? extends DataPointService> serviceName, @NonNull JsonObject body) {
-        entityHandler().eventClient()
-                       .send(serviceName.getName(),
-                             EventMessage.initial(EventAction.CREATE, RequestData.builder().body(body).build()));
     }
 
 }

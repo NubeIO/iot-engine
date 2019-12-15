@@ -40,7 +40,7 @@ public final class DittoHistoryData extends AbstractDittoModel<IPointHistoryData
     }
 
     @Override
-    public JsonObject toJson() {
+    public JsonObject body() {
         return JsonPojo.from(get().setId(null).setPoint(null).setSyncAudit(null)).toJson();
     }
 

@@ -23,7 +23,7 @@ public final class DittoRealtimeData extends AbstractDittoModel<IPointRealtimeDa
     }
 
     @Override
-    public JsonObject toJson() {
+    public JsonObject body() {
         return JsonPojo.from(get().setId(null).setPoint(null).setSyncAudit(null)).toJson();
     }
 

@@ -22,9 +22,9 @@ import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
@@ -42,7 +42,6 @@ import com.nubeiot.edge.installer.service.AppDeployer;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
 
 public abstract class InstallerEntityHandler extends AbstractEntityHandler {
 
@@ -57,17 +56,30 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
     }
 
     @Override
-    public @NonNull SchemaHandler schemaHandler() {
-        return new InstallerSchemaHandler();
-    }
-
-    @Override
     public final Single<EntityHandler> before() {
         InstallerConfig installerCfg = sharedData(SHARED_INSTALLER_CFG);
         return super.before().map(handler -> {
             InstallerRepository.create(handler).setup(installerCfg.getRepoConfig(), dataDir());
             return handler;
         });
+    }
+
+    @Override
+    public final boolean isNew() {
+        final boolean isNew = isNew(Tables.TBL_MODULE);
+        bootstrap = isNew ? EventAction.INIT : EventAction.MIGRATE;
+        return isNew;
+    }
+
+    @Override
+    public final Single<EventMessage> initData() {
+        final InstallerConfig config = sharedData(SHARED_INSTALLER_CFG);
+        return addBuiltinApps(config).map(results -> EventMessage.success(EventAction.INIT, results));
+    }
+
+    @Override
+    public final Single<EventMessage> migrate() {
+        return transitionPendingModules().map(r -> EventMessage.success(EventAction.MIGRATE, r));
     }
 
     public final TblModuleDao moduleDao() {
@@ -97,8 +109,7 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
         return module.setCreatedAt(now).setModifiedAt(now);
     }
 
-    Single<JsonObject> addBuiltinApps(InstallerConfig config) {
-        bootstrap = EventAction.INIT;
+    private Single<JsonObject> addBuiltinApps(InstallerConfig config) {
         if (config.getBuiltinApps().isEmpty()) {
             return Single.just(new JsonObject().put("status", Status.SUCCESS));
         }
@@ -118,8 +129,7 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
         return (TblModule) rule.parse(dataDir, tblModule, appConfig).setState(State.NONE);
     }
 
-    Single<JsonObject> transitionPendingModules() {
-        bootstrap = EventAction.MIGRATE;
+    private Single<JsonObject> transitionPendingModules() {
         final TblModuleDao dao = moduleDao();
         return dao.findManyByState(Collections.singletonList(State.PENDING))
                   .flattenAsObservable(pendingModules -> pendingModules)

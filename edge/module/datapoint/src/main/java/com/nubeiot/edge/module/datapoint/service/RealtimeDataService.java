@@ -4,26 +4,28 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.DesiredException;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
-import com.nubeiot.core.sql.validation.OperationValidator;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeDataMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.RealtimeDataMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointIndex.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
 import com.nubeiot.iotdata.unit.DataType;
@@ -49,19 +51,23 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        return EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, this::servicePath,
-                                                   context()::requestKeyName, false, PointMetadata.INSTANCE);
+        final EventMethodDefinition definition = EventMethodDefinition.create("/point/:point_id/rt-data",
+                                                                              "/:" + context().requestKeyName(),
+                                                                              ActionMethodMapping.READ_MAP);
+        return Stream.of(definition).collect(Collectors.toSet());
     }
 
-    protected OperationValidator initCreationValidator() {
-        return OperationValidator.create((req, prev) -> queryExecutor().checkReferenceExistence(req)
-                                                                       .map(b -> validation().onCreating(req))
-                                                                       .map(PointRealtimeData.class::cast)
-                                                                       .flatMap(this::isAbleToCreate)
-                                                                       .flatMap(this::addDataType));
+    @Override
+    protected Single<?> doInsert(@NonNull RequestData reqData) {
+        final PointRealtimeData rtData = (PointRealtimeData) validation().onCreating(reqData);
+        return validateReferenceEntity(reqData).flatMapSingle(b -> isAbleToCreate(rtData))
+                                               .flatMap(b -> findDataType(rtData))
+                                               .map(unit -> rtData.setValue(
+                                                   RealtimeDataMetadata.fullValue(rtData.getValue(), unit)))
+                                               .flatMap(rt -> queryExecutor().insertReturningPrimary(rt, reqData));
     }
 
-    private Single<PointRealtimeData> isAbleToCreate(@NonNull PointRealtimeData rtData) {
+    private Single<Boolean> isAbleToCreate(@NonNull PointRealtimeData rtData) {
         return entityHandler().dao(RealtimeSettingMetadata.INSTANCE.daoClass())
                               .findOneById(rtData.getPoint())
                               .filter(Optional::isPresent)
@@ -69,25 +75,29 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
                               .map(s -> Optional.ofNullable(s.getEnabled()).orElse(false))
                               .defaultIfEmpty(false)
                               .filter(b -> b)
-                              .map(b -> rtData)
                               .switchIfEmpty(Single.error(new DesiredException(
                                   "Realtime setting of point " + rtData.getPoint() + " is disabled")));
     }
 
-    private Single<PointRealtimeData> addDataType(PointRealtimeData rt) {
-        return findDataType(rt).map(unit -> rt.setValue(RealtimeDataMetadata.fullValue(rt.getValue(), unit)));
-    }
-
     private Single<DataType> findDataType(@NonNull PointRealtimeData rtData) {
-        final EventbusClient client = entityHandler().eventClient();
+        final EventController client = entityHandler().eventClient();
         final RequestData reqData = RequestData.builder()
                                                .body(new JsonObject().put(PointMetadata.INSTANCE.requestKeyName(),
                                                                           rtData.getPoint().toString()))
                                                .build();
-        return client.request(PointService.class.getName(), EventMessage.initial(EventAction.GET_ONE, reqData.toJson()))
-                     .map(EventMessage::getData)
-                     .map(json -> json.getJsonObject(MeasureUnitMetadata.INSTANCE.singularKeyName(), new JsonObject()))
-                     .map(unit -> JsonData.convert(unit, DataType.class));
+        final DeliveryEvent event = DeliveryEvent.builder()
+                                                 .address(PointService.class.getName())
+                                                 .action(EventAction.GET_ONE)
+                                                 .addPayload(reqData)
+                                                 .build();
+        return Single.<EventMessage>create(emitter -> {
+            client.request(event, ReplyEventHandler.builder().action(EventAction.GET_ONE).address(event.getAddress())
+                                                   .success(emitter::onSuccess)
+                                                   .exception(emitter::onError)
+                                                   .build());
+        }).map(EventMessage::getData)
+          .map(json -> json.getJsonObject(MeasureUnitMetadata.INSTANCE.singularKeyName(), new JsonObject()))
+          .map(unit -> JsonData.convert(unit, DataType.class));
     }
 
 }

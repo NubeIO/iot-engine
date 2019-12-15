@@ -10,6 +10,7 @@ import io.vertx.servicediscovery.types.AbstractServiceReference;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 
 import lombok.NonNull;
@@ -38,7 +39,7 @@ public class EventMessageServiceImpl implements EventMessageService {
             return new Pusher(SharedDataDelegate.getEventController(vertx, sharedKey),
                               JsonData.from(this.record().getMetadata().getJsonObject(EVENT_METHOD_CONFIG),
                                             EventMethodDefinition.class), config,
-                              record().getLocation().getString(Record.ENDPOINT));
+                              record().getLocation().getString(Record.ENDPOINT), EventPattern.REQUEST_RESPONSE);
         }
 
     }

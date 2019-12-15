@@ -2,7 +2,7 @@ package com.nubeiot.core.http.dynamic.mock;
 
 import io.reactivex.Single;
 
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
@@ -10,7 +10,7 @@ import com.nubeiot.core.micro.ServiceDiscoveryController;
 public class MockEventOneApiMultiLocService extends MockEventOneApiOneLocService {
 
     @Override
-    public void registerEventbus(EventbusClient controller) {
+    public void registerEventbus(EventController controller) {
         controller.register(MockEventServiceListener.TEST_EVENT_4, MockEventServiceListener.TEST_EVENT_LISTENER_4);
     }
 

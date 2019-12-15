@@ -22,7 +22,7 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
@@ -103,11 +103,11 @@ class AppDeploymentService implements DeploymentService {
     }
 
     private void publishResult(PreDeploymentResult preResult, AsyncResult<String> async) {
-        final EventbusClient client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
+        final EventController client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
         final AppDeployer deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
         final JsonObject error = async.succeeded() ? new JsonObject() : ErrorMessage.parse(async.cause()).toJson();
         final PostDeploymentResult pr = PostDeploymentResult.from(preResult, async.result(), error);
-        client.fire(DeliveryEvent.from(deployer.getTrackerEvent(), new JsonObject().put("result", pr.toJson())));
+        client.request(DeliveryEvent.from(deployer.getTrackerEvent(), new JsonObject().put("result", pr.toJson())));
     }
 
     @Override

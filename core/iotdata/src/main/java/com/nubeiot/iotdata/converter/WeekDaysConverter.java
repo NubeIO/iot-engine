@@ -1,25 +1,17 @@
 package com.nubeiot.iotdata.converter;
 
-import java.time.DayOfWeek;
-import java.util.Locale;
-import java.util.Objects;
-
 import com.nubeiot.core.sql.converter.ArrayConverter;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.iotdata.dto.WeekDay;
 
-public final class WeekDaysConverter extends ArrayConverter<DayOfWeek> {
+public final class WeekDaysConverter extends ArrayConverter<WeekDay> {
 
     @Override
-    public DayOfWeek parse(Object object) {
-        if (Objects.isNull(object)) {
-            return null;
-        }
-        return DayOfWeek.valueOf(Strings.toString(object).toUpperCase(Locale.ENGLISH));
+    public WeekDay parse(Object object) {
+        return WeekDay.valueOf(object.toString());
     }
 
     @Override
-    public Class<DayOfWeek> itemClass() {
-        return DayOfWeek.class;
+    public Class<WeekDay> itemClass() {
+        return WeekDay.class;
     }
-
 }

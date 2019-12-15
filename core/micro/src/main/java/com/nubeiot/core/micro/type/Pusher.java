@@ -8,37 +8,39 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 
-import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+@RequiredArgsConstructor
 class Pusher implements EventMessagePusher {
 
     @NonNull
-    private final EventbusClient controller;
+    private final EventController controller;
     @NonNull
     private final EventMethodDefinition definition;
     @NonNull
     private final DeliveryOptions options;
     @NonNull
     private final String address;
+    private final EventPattern pattern;
 
     @Override
     public void execute(String path, HttpMethod httpMethod, JsonObject requestData, Consumer<ResponseData> dataConsumer,
                         Consumer<Throwable> errorConsumer) {
         EventAction action = definition.search(path, httpMethod);
-        ReplyEventHandler handler = ReplyEventHandler.builder().system("SERVICE_DISCOVERY").address(address)
+        ReplyEventHandler handler = ReplyEventHandler.builder()
+                                                     .system("SERVICE_DISCOVERY").address(address)
                                                      .action(EventAction.RETURN)
                                                      .success(msg -> dataConsumer.accept(ResponseData.from(msg)))
                                                      .exception(errorConsumer)
                                                      .build();
-        controller.request(address, EventMessage.initial(action, requestData), handler, options);
+        controller.request(address, pattern, EventMessage.initial(action, requestData), handler, options);
     }
 
 }

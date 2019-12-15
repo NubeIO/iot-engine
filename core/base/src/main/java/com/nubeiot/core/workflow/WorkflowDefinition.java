@@ -39,18 +39,18 @@ public interface WorkflowDefinition<A extends ServiceRecord, E extends WorkflowE
      * @return Workflow step
      */
     @JsonProperty(value = "step", required = true)
-    @NonNull A task();
+    @NonNull A step();
 
     @NonNull Class<E> executorClass();
 
     /**
-     * Define action run after the main {@link #task()} when workflow is executed
+     * Define action run after the main {@link #step()} when workflow is executed
      *
      * @param <W> Type of Workflow definition
      * @return post-workflow definition
      */
     @JsonProperty(value = "postStep", required = true)
-    <W extends ServiceRecord> W postTask();
+    <W extends ServiceRecord> W postStep();
 
     /**
      * Define {@code main action} result will be passed to {@code post step} in {@code another worker} or {@code same
@@ -63,8 +63,8 @@ public interface WorkflowDefinition<A extends ServiceRecord, E extends WorkflowE
      * </ul>
      *
      * @return {@code true} {@code post step} in {@code another worker}
-     * @see #task()
-     * @see #postTask()
+     * @see #step()
+     * @see #postStep()
      */
     boolean isConcurrent();
 

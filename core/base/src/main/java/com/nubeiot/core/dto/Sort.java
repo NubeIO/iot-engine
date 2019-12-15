@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
@@ -33,10 +32,8 @@ public final class Sort implements Serializable, JsonData {
         }
         return Sort.builder()
                    .items(Stream.of(requestParam.split(","))
-                                .filter(Strings::isNotBlank)
-                                .map(Sort::each)
-                                .filter(Objects::nonNull)
-                                .collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
+                                .filter(Strings::isNotBlank).map(Sort::each)
+                                .filter(Objects::nonNull).collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
                    .build();
     }
 
@@ -98,9 +95,5 @@ public final class Sort implements Serializable, JsonData {
             return Stream.of(SortType.values()).filter(t -> t.name().equalsIgnoreCase(type)).findFirst().orElse(null);
         }
     }
-
-
-    @JsonPOJOBuilder(withPrefix = "")
-    public static class Builder {}
 
 }

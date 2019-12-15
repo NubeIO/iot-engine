@@ -26,7 +26,7 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.mock.MockEventbusService;
 import com.nubeiot.core.micro.type.EventMessageService;
@@ -94,22 +94,23 @@ public class MicroContextTest {
                                              "\"type\":\"eventbus-service-proxy\"}");
         EventbusHelper.assertReceivedData(vertx, async, micro.getLocalController().getConfig().getAnnounceAddress(),
                                           JsonHelper.asserter(context, async, expected));
-        EventbusClient controller = SharedDataDelegate.getEventController(vertx, MicroContext.class.getName());
+        EventController controller = SharedDataDelegate.getEventController(vertx, MicroContext.class.getName());
         micro.getLocalController()
              .addRecord(EventBusService.createRecord("test", "address1", MockEventbusService.class))
              .subscribe(record -> {
                  final JsonObject indexExpected = new JsonObject(
                      "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"apis\":[{\"name\":\"test\"," +
-                     "\"type\":\"eventbus-service-proxy\",\"status\":\"UP\",\"location\":\"address1\"}]}}");
+                     "\"type\":\"eventbus-service-proxy\",\"status\":\"UP\"," +
+                     "\"location\":{\"endpoint\":\"address1\"}}]}}");
                  final JsonObject payload = RequestData.builder()
                                                        .filter(new JsonObject().put("scope", ServiceScope.INTERNAL))
                                                        .build()
                                                        .toJson();
-                 controller.fire(DeliveryEvent.builder()
-                                              .address(config.getGatewayConfig().getIndexAddress())
-                                              .payload(payload)
-                                              .action(EventAction.GET_LIST)
-                                              .build(), EventbusHelper.replyAsserter(context, async, indexExpected));
+                 controller.request(DeliveryEvent.builder()
+                                                 .address(config.getGatewayConfig().getIndexAddress())
+                                                 .payload(payload)
+                                                 .action(EventAction.GET_LIST)
+                                                 .build(), EventbusHelper.replyAsserter(context, async, indexExpected));
              });
     }
 
@@ -124,20 +125,19 @@ public class MicroContextTest {
                                              "\"status\":\"UP\",\"type\":\"http-endpoint\"}");
         EventbusHelper.assertReceivedData(vertx, async, micro.getLocalController().getConfig().getAnnounceAddress(),
                                           JsonHelper.asserter(context, async, expected));
-        EventbusClient controller = SharedDataDelegate.getEventController(vertx, MicroContext.class.getName());
+        EventController controller = SharedDataDelegate.getEventController(vertx, MicroContext.class.getName());
         micro.getLocalController()
              .addHttpRecord("http.test", new HttpLocation().setHost("123.456.0.1").setPort(1234).setRoot("/api"),
-                            new JsonObject().put("meta", "test"))
-             .subscribe(record -> {
-                 final JsonObject indexExpected = new JsonObject(
-                     "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"apis\":[{\"name\":\"http.test\"," +
-                     "\"status\":\"UP\",\"type\":\"http-endpoint\",\"location\":\"http://123.456.0.1:1234/api\"}]}}");
-                 controller.fire(DeliveryEvent.builder()
-                                              .address(config.getGatewayConfig().getIndexAddress())
-                                              .payload(RequestData.builder().build().toJson())
-                                              .action(EventAction.GET_LIST)
-                                              .build(), EventbusHelper.replyAsserter(context, async, indexExpected));
-             });
+                            new JsonObject().put("meta", "test")).subscribe(record -> {
+            final JsonObject indexExpected = new JsonObject(
+                "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"apis\":[{\"name\":\"http.test\"," +
+                "\"status\":\"UP\",\"type\":\"http-endpoint\",\"location\":\"http://123.456.0.1:1234/api\"}]}}");
+            controller.request(DeliveryEvent.builder()
+                                            .address(config.getGatewayConfig().getIndexAddress())
+                                            .payload(RequestData.builder().build().toJson())
+                                            .action(EventAction.GET_LIST)
+                                            .build(), EventbusHelper.replyAsserter(context, async, indexExpected));
+        });
     }
 
     @Test
@@ -157,7 +157,7 @@ public class MicroContextTest {
             "\"name\":\"event-message\",\"status\":\"UP\",\"type\":\"eventbus-message-service\"}");
         EventbusHelper.assertReceivedData(vertx, async, micro.getLocalController().getConfig().getAnnounceAddress(),
                                           JsonHelper.asserter(context, async, expected, JSONCompareMode.LENIENT));
-        EventbusClient controller = SharedDataDelegate.getEventController(vertx, MicroContext.class.getName());
+        EventController controller = SharedDataDelegate.getEventController(vertx, MicroContext.class.getName());
         micro.getLocalController()
              .addRecord(EventMessageService.createRecord("event-message", "address.1",
                                                          EventMethodDefinition.createDefault("/path", "/:param")))
@@ -172,12 +172,12 @@ public class MicroContextTest {
                                                                  "\"path\":\"/path\"},{\"method\":\"DELETE\"," +
                                                                  "\"path\":\"/path/:param\"},{\"method\":\"GET\"," +
                                                                  "\"path\":\"/path/:param\"}]}]}}");
-                 controller.fire(DeliveryEvent.builder()
-                                              .address(config.getGatewayConfig().getIndexAddress())
-                                              .payload(RequestData.builder().build().toJson())
-                                              .action(EventAction.GET_LIST)
-                                              .build(),
-                                 EventbusHelper.replyAsserter(context, async, indexExpected, JSONCompareMode.LENIENT));
+                 controller.request(DeliveryEvent.builder()
+                                                 .address(config.getGatewayConfig().getIndexAddress())
+                                                 .payload(RequestData.builder().build().toJson())
+                                                 .action(EventAction.GET_LIST).build(),
+                                    EventbusHelper.replyAsserter(context, async, indexExpected,
+                                                                 JSONCompareMode.LENIENT));
              });
     }
 

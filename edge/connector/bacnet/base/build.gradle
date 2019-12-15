@@ -1,9 +1,14 @@
+repositories {
+    project.repos
+    maven { url "https://maven.mangoautomation.net/repository/ias-release/" }
+}
+
 dependencies {
+    compile project(':core:base')
     compile project(':core:cache')
     compile project(':core:iotdata')
     compile project(':core:protocol')
-    compile project(':edge:connector:bacnet:mixin')
-    compileOnly project(':edge:module:datapoint:rpc')
+    compile "com.infiniteautomation:bacnet4j:5.0.2"
 
     testCompile project(":core:base").sourceSets.test.output
 }

@@ -3,7 +3,7 @@ package com.nubeiot.core.http.dynamic.mock;
 import io.reactivex.Single;
 
 import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
@@ -20,7 +20,7 @@ public class MockEventOneApiOneLocService extends ContainerVerticle {
     }
 
     @Override
-    public void registerEventbus(EventbusClient controller) {
+    public void registerEventbus(EventController controller) {
         controller.register(MockEventServiceListener.TEST_EVENT_1, MockEventServiceListener.TEST_EVENT_LISTENER_1);
         controller.register(MockEventServiceListener.TEST_EVENT_2, MockEventServiceListener.TEST_EVENT_LISTENER_2);
         controller.register(MockEventServiceListener.TEST_EVENT_3, MockEventServiceListener.TEST_EVENT_LISTENER_3);

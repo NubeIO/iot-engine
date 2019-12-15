@@ -10,7 +10,7 @@ import lombok.NonNull;
 
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class NumberDataType implements InternalDataType, DataType {
+public class NumberDataType implements InternalDataType {
 
     @Getter
     @Include

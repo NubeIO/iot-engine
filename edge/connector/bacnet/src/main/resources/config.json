@@ -29,7 +29,7 @@
       "maxDiscoverTimeout": 6,
       "maxDiscoverTimeoutUnit": "SECONDS",
       "allowSlave": true,
-      "gatewayAddress": ""
+      "gatewayDiscoverAddress": ""
     }
   }
 }

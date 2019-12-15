@@ -22,7 +22,8 @@ public class ReflectionFieldTest {
 
     @Test
     public void test_non_null_predicate() {
-        Stream<Field> fields = ReflectionField.stream(MockReflection.class, field -> "id".equals(field.getName()));
+        Stream<Field> fields = ReflectionField.findToStream(MockReflection.class,
+                                                            field -> "id".equals(field.getName()));
         Assert.assertTrue(fields.allMatch(item -> "id".equals(item.getName())));
     }
 

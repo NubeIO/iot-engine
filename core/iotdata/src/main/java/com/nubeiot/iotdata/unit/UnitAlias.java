@@ -16,7 +16,6 @@ import io.vertx.core.json.JsonObject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.iotdata.dto.IoTNotion;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -26,7 +25,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @NoArgsConstructor
-public final class UnitAlias implements JsonData, IoTNotion {
+public final class UnitAlias implements JsonData {
 
     private static final Comparator<Node> COMPARATOR = Comparator.comparingInt((Node n) -> n.op.priority)
                                                                  .thenComparingDouble((Node n) -> n.with);

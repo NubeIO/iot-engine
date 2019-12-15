@@ -8,8 +8,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.Getter;
@@ -23,26 +23,26 @@ public abstract class WsResponseErrorHandler implements Handler<Throwable> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     @NonNull
-    private final EventbusClient controller;
+    private final EventController controller;
     @NonNull
     private final EventModel listener;
 
     @SuppressWarnings("unchecked")
-    public static <T extends WsResponseErrorHandler> T create(@NonNull EventbusClient controller,
+    public static <T extends WsResponseErrorHandler> T create(@NonNull EventController controller,
                                                               @NonNull EventModel listener,
                                                               @NonNull Class<T> errorHandlerClass) {
         if (Objects.isNull(errorHandlerClass) || WsResponseErrorHandler.class.equals(errorHandlerClass)) {
             return (T) new IgnoreWsResponseError(controller, listener) {};
         }
         Map<Class, Object> params = new LinkedHashMap<>();
-        params.put(EventbusClient.class, controller);
+        params.put(EventController.class, controller);
         params.put(EventModel.class, listener);
         return ReflectionClass.createObject(errorHandlerClass, params);
     }
 
     public static class IgnoreWsResponseError extends WsResponseErrorHandler {
 
-        IgnoreWsResponseError(@NonNull EventbusClient controller, @NonNull EventModel listener) {
+        IgnoreWsResponseError(@NonNull EventController controller, @NonNull EventModel listener) {
             super(controller, listener);
         }
 

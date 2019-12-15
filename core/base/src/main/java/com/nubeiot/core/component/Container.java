@@ -6,9 +6,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 
 import com.nubeiot.core.NubeConfig;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventModel;
-import com.nubeiot.core.event.EventbusClient;
 
 /**
  * Represents a container consists a list of {@code Verticle unit} to startup application
@@ -37,11 +37,11 @@ public interface Container extends HasConfig<NubeConfig> {
      * Register eventbus consumer
      *
      * @param eventClient EventController
-     * @see EventbusClient#register(EventModel, EventListener)
-     * @see EventbusClient#register(String, EventListener)
-     * @see EventbusClient#register(String, boolean, EventListener)
+     * @see EventController#register(EventModel, EventListener)
+     * @see EventController#register(String, EventListener)
+     * @see EventController#register(String, boolean, EventListener)
      */
-    void registerEventbus(EventbusClient eventClient);
+    void registerEventbus(EventController eventClient);
 
     /**
      * Add local shared data to between different verticles

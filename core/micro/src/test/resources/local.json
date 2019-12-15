@@ -2,8 +2,7 @@
   "__app__": {
     "__micro__": {
       "__gateway__": {
-        "enabled": true,
-        "indexAddress": "mock.gateway.index"
+        "enabled": true
       },
       "__serviceDiscovery__": {
         "announceAddress": "nubeio.service.discovery.announce",

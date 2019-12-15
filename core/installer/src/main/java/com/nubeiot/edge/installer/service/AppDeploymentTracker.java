@@ -23,7 +23,7 @@ import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventContractor.Param;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
@@ -56,9 +56,9 @@ class AppDeploymentTracker implements DeploymentService {
         Single<PostDeploymentResult> last = Status.FAILED == result.getStatus()
                                             ? handleError(result)
                                             : handleSuccess(result);
-        final EventbusClient client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
+        final EventController client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
         final AppDeployer deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
-        return last.doOnSuccess(res -> client.fire(
+        return last.doOnSuccess(res -> client.request(
             DeliveryEvent.from(deployer.getFinisherEvent(), new JsonObject().put("result", res.toJson()))));
     }
 

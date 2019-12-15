@@ -48,13 +48,15 @@ public class BACnetSimulatorTest {
                                                      .port(47808)
                                                      .canReusePort(true)
                                                      .build();
-        final JsonObject localDevice = new JsonObject(
-            "{\"vendorId\":1173,\"vendorName\":\"Nube iO Operations Pty Ltd\",\"deviceNumber\":222,\"slave\":false," +
-            "\"modelName\":\"NubeIO-Edge28\",\"objectName\":\"NubeIOSimulator\",\"maxTimeoutInMS\":1000," +
-            "\"discoverCompletionAddress\":\"com.nubeiot.edge.connector.bacnet.discover.complete\"}");
         final JsonObject expected = new JsonObject().put("network", firstActiveIp.toJson())
                                                     .put("remoteDevices", new JsonArray())
-                                                    .put("localDevice", localDevice);
+                                                    .put("localDevice", new JsonObject(
+                                                        "{\"vendorId\":1173,\"vendorName\":\"Nube iO " +
+                                                        "Operations Pty Ltd\",\"deviceNumber\":222," +
+                                                        "\"modelName\":\"NubeIO-Edge28\"," +
+                                                        "\"objectName\":\"NubeIOSimulator\",\"slave\":false," +
+                                                        "\"maxTimeoutInMS\":1000,\"discoverCompletionAddress\":\"com" +
+                                                        ".nubeiot.edge.connector.bacnet.discover.complete\"}"));
         final SimulatorCompletionAsserter handler = new SimulatorCompletionAsserter(context, async, expected);
         final DeploymentOptions options = new DeploymentOptions().setConfig(
             IConfig.fromClasspath("test-config.json", NubeConfig.class).toJson());

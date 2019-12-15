@@ -19,8 +19,8 @@ public final class EventJob extends AbstractVertxJob<EventJobModel> {
                                        .error(errorMonitor(jobModel))
                                        .build();
         }
-        controller.fire(jobModel.getProcess().getAddress(), jobModel.getProcess().getPattern(),
-                        jobModel.getProcess().payload(), handler);
+        controller.request(jobModel.getProcess().getAddress(), jobModel.getProcess().getPattern(),
+                           jobModel.getProcess().payload(), handler);
     }
 
 }

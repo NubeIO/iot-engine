@@ -1,33 +1,32 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.component.SharedDataDelegate.AbstractSharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventbusClient;
-import com.nubeiot.core.exceptions.ErrorData;
+import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.core.utils.Functions;
+import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.dto.TransportProvider;
-import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
@@ -51,7 +50,7 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     @Getter
     private final LocalDevice localDevice;
 
-    BACnetDevice(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull CommunicationProtocol protocol) {
+    public BACnetDevice(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull CommunicationProtocol protocol) {
         this(vertx, sharedKey, TransportProvider.byProtocol(protocol));
     }
 
@@ -77,12 +76,14 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     }
 
     BACnetDevice asyncStart() {
+        final EventController client = getSharedDataValue(SHARED_EVENTBUS);
         final DiscoverOptions options = DiscoverOptions.builder()
                                                        .force(true)
                                                        .timeout(metadata.getMaxTimeoutInMS())
                                                        .timeUnit(TimeUnit.MILLISECONDS)
                                                        .build();
-        scanRemoteDevices(options).subscribe(this::handleAfterScan);
+        scanRemoteDevices(options).subscribe(discoverer -> client.request(publishDiscoverCompletion(discoverer)),
+                                             logger::error);
         return this;
     }
 
@@ -121,34 +122,23 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
         });
     }
 
-    private void handleAfterScan(RemoteDeviceScanner scanner, Throwable t) {
-        final EventbusClient client = getSharedDataValue(SHARED_EVENTBUS);
-        final EventMessage msg = Objects.isNull(t) ? createSuccessDiscoverMsg(scanner) : createErrorDiscoverMsg(t);
-        client.publish(metadata.getDiscoverCompletionAddress(), msg);
-    }
-
-    private EventMessage createSuccessDiscoverMsg(@NonNull RemoteDeviceScanner scanner) {
-        final List<RemoteDeviceMixin> remotes = scanner.getRemoteDevices()
-                                                       .stream()
-                                                       .map(RemoteDeviceMixin::create)
-                                                       .collect(Collectors.toList());
+    private DeliveryEvent publishDiscoverCompletion(RemoteDeviceScanner scanner) {
+        final JsonArray remotes = scanner.getRemoteDevices()
+                                         .stream()
+                                         .map(BACnetDataConversions::deviceMinimal)
+                                         .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
         final JsonObject body = DiscoverResponse.builder()
                                                 .network(transportProvider.protocol())
                                                 .localDevice(metadata)
                                                 .remoteDevices(remotes)
                                                 .build()
                                                 .toJson();
-        return EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(body).build().toJson());
-    }
-
-    private EventMessage createErrorDiscoverMsg(@NonNull Throwable t) {
-        final JsonObject extraInfo = DiscoverResponse.builder()
-                                                     .network(transportProvider.protocol())
-                                                     .localDevice(metadata)
-                                                     .build()
-                                                     .toJson();
-        return EventMessage.initial(EventAction.NOTIFY_ERROR,
-                                    ErrorData.builder().throwable(t).extraInfo(extraInfo).build());
+        return DeliveryEvent.builder()
+                            .action(EventAction.NOTIFY)
+                            .address(metadata.getDiscoverCompletionAddress())
+                            .pattern(EventPattern.PUBLISH_SUBSCRIBE)
+                            .addPayload(RequestData.builder().body(body).build())
+                            .build();
     }
 
 }

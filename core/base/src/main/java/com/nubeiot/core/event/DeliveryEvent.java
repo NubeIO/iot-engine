@@ -19,23 +19,23 @@ import lombok.ToString;
 /**
  * It bundles all information for single event to delivery
  */
+@Getter
 @EqualsAndHashCode(doNotUseGetters = true, onlyExplicitlyIncluded = true)
 @Builder(builderClassName = "Builder")
 @ToString(onlyExplicitlyIncluded = true)
 @JsonDeserialize(builder = DeliveryEvent.Builder.class)
 public final class DeliveryEvent implements JsonData {
 
-    @Getter
     @NonNull
     @EqualsAndHashCode.Include
     @ToString.Include
     private final String address;
-    @Getter
+
     @Default
     @EqualsAndHashCode.Include
     @ToString.Include
     private final EventPattern pattern = EventPattern.REQUEST_RESPONSE;
-    @Getter
+
     @NonNull
     @EqualsAndHashCode.Include
     @ToString.Include

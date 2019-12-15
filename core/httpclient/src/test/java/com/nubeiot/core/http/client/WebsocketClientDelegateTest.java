@@ -82,12 +82,13 @@ public class WebsocketClientDelegateTest {
     public void test_connect_and_send(TestContext context) throws InterruptedException {
         Async async = context.async();
         WebsocketClientDelegate client = WebsocketClientDelegate.create(vertx, config, hostInfo);
-        client.getEventClient()
+        client.getEventController()
               .register(LISTENER, new EventAsserter(LISTENER, context, async, new JsonObject().put("k", 1)));
         client.open(WebsocketClientEventMetadata.create("/echo", LISTENER, PUBLISHER_ADDRESS), null);
         Thread.sleep(1000);
-        client.getEventClient()
-              .publish(PUBLISHER_ADDRESS, EventMessage.initial(EventAction.SEND, new JsonObject().put("k", 1)));
+        client.getEventController()
+              .request(PUBLISHER_ADDRESS, EventPattern.PUBLISH_SUBSCRIBE,
+                       EventMessage.initial(EventAction.SEND, new JsonObject().put("k", 1)));
     }
 
     @Test(expected = HttpException.class)

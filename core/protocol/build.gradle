@@ -1,6 +1,6 @@
 dependencies {
     compile project(":core:base")
-    compile 'com.github.seancfoley:ipaddress:5.1.0'
+    implementation 'com.github.seancfoley:ipaddress:5.1.0'
 
     testCompile project(":core:base").sourceSets.test.output
 }

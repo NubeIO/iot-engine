@@ -14,44 +14,25 @@ import com.nubeiot.core.utils.Strings;
 import lombok.NonNull;
 
 /**
- * Entity validation for request input
+ * Entity validation for simple case
  *
- * @param <P> Type of {@code VertxPojo}
- * @since 1.0.0
+ * @param <P> Pojo type
  */
 @SuppressWarnings("unchecked")
 public interface EntityValidation<P extends VertxPojo> {
 
-    /**
-     * The constant NOT_FOUND_MSG.
-     */
     String NOT_FOUND_MSG = "Not found resource with {0}";
-    /**
-     * The constant ALREADY_EXISTED_MSG.
-     */
     String ALREADY_EXISTED_MSG = "Already existed resource with {0}";
-    /**
-     * The constant RESOURCE_IS_USING_MSG.
-     */
     String RESOURCE_IS_USING_MSG = "Resource with {0} is using by another resource";
 
-    /**
-     * Context entity metadata.
-     *
-     * @return the entity metadata
-     * @see EntityMetadata
-     * @since 1.0.0
-     */
     EntityMetadata context();
 
     /**
      * Validate when creating new resource
      *
-     * @param <PP>    Type of {@code VertxPojo}
      * @param reqData given request resource object
      * @return instance for fluent API
      * @throws IllegalArgumentException if any invalid parameter
-     * @since 1.0.0
      */
     @NonNull
     default <PP extends P> PP onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
@@ -61,12 +42,10 @@ public interface EntityValidation<P extends VertxPojo> {
     /**
      * Validate when updating resource
      *
-     * @param <PP>    Type of {@code VertxPojo}
      * @param dbData  existing resource object from database
      * @param reqData given request resource object
      * @return pojo instance for fluent API
      * @throws IllegalArgumentException if any invalid parameter
-     * @since 1.0.0
      */
     @NonNull
     default <PP extends P> PP onUpdating(@NonNull P dbData, @NonNull RequestData reqData)
@@ -79,12 +58,10 @@ public interface EntityValidation<P extends VertxPojo> {
     /**
      * Validate when patching resource
      *
-     * @param <PP>    Type of {@code VertxPojo}
      * @param dbData  existing resource object from database
      * @param reqData given request resource object
      * @return pojo instance for fluent API
      * @throws IllegalArgumentException if any invalid parameter
-     * @since 1.0.0
      */
     @NonNull
     default <PP extends P> PP onPatching(@NonNull P dbData, @NonNull RequestData reqData)
@@ -95,28 +72,15 @@ public interface EntityValidation<P extends VertxPojo> {
         return (PP) context().parseFromRequest(JsonPojo.merge(dbData, body));
     }
 
-    /**
-     * On deleting pp.
-     *
-     * @param <PP>    Type of {@code VertxPojo}
-     * @param dbData  the db data
-     * @param reqData the req data
-     * @return the pp
-     * @throws IllegalArgumentException the illegal argument exception
-     * @since 1.0.0
-     */
-    default <PP extends P> PP onDeleting(@NonNull P dbData, @NonNull RequestData reqData)
-        throws IllegalArgumentException {
-        return (PP) dbData;
+    default Object onDeleting(@NonNull RequestData reqData) throws IllegalArgumentException {
+        return context().parseKey(reqData);
     }
 
     /**
      * Construct {@code NotFound exception} by {@code primary key}
      *
      * @param primaryKey Given primary key
-     * @return not found exception
-     * @see NotFoundException
-     * @since 1.0.0
+     * @return NotFoundException
      */
     default NotFoundException notFound(@NonNull Object primaryKey) {
         return notFound(Strings.kvMsg(context().requestKeyName(), primaryKey));
@@ -126,9 +90,7 @@ public interface EntityValidation<P extends VertxPojo> {
      * Construct {@code NotFound exception} by {@code entity key}
      *
      * @param pojoKey Given pojo key value
-     * @return not found exception
-     * @see NotFoundException
-     * @since 1.0.0
+     * @return NotFoundException
      */
     default NotFoundException notFound(@NonNull String pojoKey) {
         return new NotFoundException(Strings.format(NOT_FOUND_MSG, pojoKey));
@@ -138,9 +100,7 @@ public interface EntityValidation<P extends VertxPojo> {
      * Construct {@code AlreadyExist exception} by {@code entity key}
      *
      * @param pojoKey Given primary key
-     * @return already exist exception
-     * @see AlreadyExistException
-     * @since 1.0.0
+     * @return AlreadyExistException
      */
     default AlreadyExistException alreadyExisted(String pojoKey) {
         return new AlreadyExistException(Strings.format(ALREADY_EXISTED_MSG, pojoKey));
@@ -150,9 +110,7 @@ public interface EntityValidation<P extends VertxPojo> {
      * Construct {@code AlreadyExistException exception} by {@code entity key}
      *
      * @param pojoKey Given pojo key value
-     * @return already exist exception
-     * @see AlreadyExistException
-     * @since 1.0.0
+     * @return NotFoundException
      */
     default AlreadyExistException unableDeleteDueUsing(String pojoKey) {
         return new AlreadyExistException(Strings.format(RESOURCE_IS_USING_MSG, pojoKey));

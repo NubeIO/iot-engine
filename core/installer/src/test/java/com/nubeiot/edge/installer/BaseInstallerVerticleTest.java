@@ -17,7 +17,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.event.EventController;
 import com.nubeiot.edge.installer.mock.MockInstallerVerticle;
 
 import ch.qos.logback.classic.Level;
@@ -29,7 +29,7 @@ public abstract class BaseInstallerVerticleTest {
 
     protected Vertx vertx;
     protected String sharedKey;
-    protected EventbusClient eventClient;
+    protected EventController eventClient;
 
     @BeforeClass
     public static void beforeSuite() {

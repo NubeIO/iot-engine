@@ -18,12 +18,6 @@ import lombok.EqualsAndHashCode.Include;
 import lombok.Getter;
 import lombok.NonNull;
 
-/**
- * Represents for a relationship between {@code EventAction}, {@code HttpMethod} and {@code url capture path}
- *
- * @see EventAction
- * @see HttpMethod
- */
 @Getter
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

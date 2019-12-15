@@ -103,7 +103,7 @@ public final class AppDeploymentWorkflow {
         LOGGER.info("INSTALLER trigger deploying for {}::::{}", action, preDeployResult.getServiceId());
         preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
         entityHandler.eventClient()
-                     .fire(DeliveryEvent.from(deployer.getLoaderEvent(), action, preDeployResult.toRequestData()));
+                     .request(DeliveryEvent.from(deployer.getLoaderEvent(), action, preDeployResult.toRequestData()));
     }
 
     private PreDeploymentResult createPreDeployResult(ITblModule module, String transactionId, EventAction action,

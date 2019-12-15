@@ -9,34 +9,23 @@ import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
 import lombok.NonNull;
 
 /**
- * Represents service that holds a {@code Resource entity} contains one or more {@code reference} to other resources.
+ * Represents service that holds a {@code resource} contains one or more {@code reference} to other resources.
  * <p>
  * It means the {@code service context resource} is in {@code one-to-one} or {@code one-to-many} relationship to another
  * resource. In mapping to database layer, context table has reference key to another table
  *
- * @param <P> Type of {@code VertxPojo}
- * @param <M> Type of {@code EntityMetadata}
- * @see EntityService
- * @see HasReferenceMarker
- * @since 1.0.0
+ * @param <P> Pojo type
+ * @param <M> Metadata Type
  */
 public interface OneToManyReferenceEntityService<P extends VertxPojo, M extends EntityMetadata>
-    extends SimpleEntityService<P, M>, HasReferenceMarker {
+    extends SimpleEntityService<P, M> {
 
-    /**
-     * @return reference query executor
-     * @see ReferenceQueryExecutor
-     */
     @Override
     @SuppressWarnings("unchecked")
     default @NonNull ReferenceQueryExecutor<P> queryExecutor() {
-        return ReferenceQueryExecutor.create(entityHandler(), context(), this);
+        return ReferenceQueryExecutor.create(entityHandler(), context());
     }
 
-    /**
-     * @return reference entity transformer
-     * @see ReferenceEntityTransformer
-     */
     @Override
     @NonNull ReferenceEntityTransformer transformer();
 

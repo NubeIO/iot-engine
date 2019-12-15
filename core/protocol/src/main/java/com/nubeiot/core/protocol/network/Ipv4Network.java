@@ -14,7 +14,6 @@ import io.vertx.core.logging.LoggerFactory;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
-import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.utils.Networks;
 import com.nubeiot.core.utils.Strings;
 
@@ -52,13 +51,6 @@ public final class Ipv4Network extends IpNetwork<Ipv4Network> implements Etherne
         return getActiveInterfaces(networkInterface -> true, Networks.IS_V4, Ipv4Network::from);
     }
 
-    /**
-     * Find active IPv4 by interface name
-     *
-     * @param interfaceName interface name
-     * @return IPv4 network
-     * @throws NotFoundException if interface name is not found
-     */
     public static Ipv4Network getActiveIpByName(String interfaceName) {
         return getActiveIpByName(interfaceName, Networks.IS_V4, Ipv4Network::from);
     }
