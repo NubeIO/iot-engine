@@ -15,18 +15,23 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
+import com.nubeiot.core.sql.service.GroupReferenceMarker;
 
 import lombok.NonNull;
 
-final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>, CP extends CompositePojo<P, CP>>
+final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
+                                     CP extends CompositePojo<P, CP>>
     extends BaseDaoQueryExecutor<CP> implements GroupQueryExecutor<P, CP> {
 
     private final CompositeMetadata<K, P, R, D, CP> groupMetadata;
+    private final GroupReferenceMarker marker;
 
     GroupDaoQueryExecutor(@NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
-                          @NonNull CompositeMetadata<K, P, R, D, CP> groupMetadata) {
+                          @NonNull CompositeMetadata<K, P, R, D, CP> groupMetadata,
+                          @NonNull GroupReferenceMarker marker) {
         super(handler, metadata);
         this.groupMetadata = groupMetadata;
+        this.marker = marker;
     }
 
     @Override
@@ -41,14 +46,19 @@ final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRec
     }
 
     @Override
+    public @NonNull GroupReferenceMarker marker() {
+        return marker;
+    }
+
+    @Override
     public Single<CP> findOneByKey(RequestData requestData) {
         return entityHandler().genericQuery()
-                              .executeAny(queryBuilder().viewOne(requestData.getFilter(), requestData.getSort()))
+                              .executeAny(queryBuilder().viewOne(requestData.filter(), requestData.sort()))
                               .map(r -> Optional.ofNullable(r.fetchOne(groupMetadata.mapper())))
                               .filter(Optional::isPresent)
                               .switchIfEmpty(Single.error(getMetadata().notFound(getMetadata().parseKey(requestData))))
                               .map(Optional::get)
-                              .onErrorResumeNext(EntityQueryExecutor::wrapDatabaseError);
+                              .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError);
     }
 
     @Override

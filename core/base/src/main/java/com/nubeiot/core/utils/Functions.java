@@ -68,8 +68,12 @@ public final class Functions {
                                    @NonNull Function<Throwable, ? extends RuntimeException> override) {
         try {
             return supplier.get();
-        } catch (Exception t) {
-            throw override.apply(t);
+        } catch (Exception e) {
+            final RuntimeException t = override.apply(e);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Root error cause", t);
+            }
+            throw t;
         }
     }
 
@@ -129,6 +133,14 @@ public final class Functions {
     public interface Provider<T> {
 
         T get() throws Exception;
+
+    }
+
+
+    @FunctionalInterface
+    public interface TripleConsumer<T1, T2, T3> {
+
+        void accept(T1 t1, T2 t2, T3 t3);
 
     }
 

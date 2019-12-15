@@ -10,7 +10,7 @@ import io.vertx.core.Vertx;
 import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.utils.ExecutorHelpers;
@@ -29,7 +29,7 @@ public final class EventHttpServiceRegister<T extends EventHttpService> {
     private final Supplier<Set<T>> eventServices;
 
     public Observable<Record> publish(@NonNull ServiceDiscoveryController discovery) {
-        final EventController client = SharedDataDelegate.getEventController(vertx, sharedKey);
+        final EventbusClient client = SharedDataDelegate.getEventController(vertx, sharedKey);
         return ExecutorHelpers.blocking(vertx, eventServices::get)
                               .flattenAsObservable(s -> s)
                               .doOnEach(s -> Optional.ofNullable(s.getValue())

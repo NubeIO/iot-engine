@@ -1,5 +1,7 @@
 package com.nubeiot.core.http.converter;
 
+import java.util.Optional;
+
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -28,8 +30,11 @@ public final class RequestDataConverter {
     }
 
     public static JsonObject body(RoutingContext context) {
-        JsonObject body = JsonObject.mapFrom(context.pathParams());
-        return body.mergeIn(JsonData.tryParse(context.getBody()).toJson(), true);
+        JsonObject params = JsonObject.mapFrom(context.pathParams());
+        final JsonObject body = Optional.ofNullable(context.getBody())
+                                        .map(b -> JsonData.tryParse(b).toJson())
+                                        .orElseGet(JsonObject::new);
+        return params.mergeIn(body, true);
     }
 
     public static RequestData convert(ServerWebSocket context) {

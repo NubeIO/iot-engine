@@ -50,6 +50,11 @@ public interface SchedulerMetadata extends MetadataIndex {
         public static final JobEntityMetadata INSTANCE = new JobEntityMetadata();
 
         @Override
+        public @NonNull com.nubeiot.iotdata.scheduler.model.tables.JobEntity table() {
+            return Tables.JOB_ENTITY;
+        }
+
+        @Override
         public @NonNull Class<JobEntity> modelClass() {
             return JobEntity.class;
         }
@@ -60,8 +65,8 @@ public interface SchedulerMetadata extends MetadataIndex {
         }
 
         @Override
-        public @NonNull com.nubeiot.iotdata.scheduler.model.tables.JobEntity table() {
-            return Tables.JOB_ENTITY;
+        public JobEntity parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
+            return JobConverter.convert(request);
         }
 
         @Override
@@ -71,8 +76,8 @@ public interface SchedulerMetadata extends MetadataIndex {
         public @NonNull String singularKeyName() { return "job"; }
 
         @Override
-        public JobEntity parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
-            return JobConverter.convert(request);
+        public @NonNull List<OrderField<?>> orderFields() {
+            return Arrays.asList(table().GROUP.asc(), table().NAME.asc());
         }
 
         @Override
@@ -90,11 +95,6 @@ public interface SchedulerMetadata extends MetadataIndex {
             return parseFromEntity(JsonPojo.merge(dbData, JobConverter.convert(job.toJson().mergeIn(body))));
         }
 
-        @Override
-        public @NonNull List<OrderField<?>> orderFields() {
-            return Arrays.asList(table().GROUP.asc(), table().NAME.asc());
-        }
-
     }
 
 
@@ -102,6 +102,11 @@ public interface SchedulerMetadata extends MetadataIndex {
     final class TriggerEntityMetadata implements SerialKeyEntity<TriggerEntity, TriggerEntityRecord, TriggerEntityDao> {
 
         public static final TriggerEntityMetadata INSTANCE = new TriggerEntityMetadata();
+
+        @Override
+        public @NonNull com.nubeiot.iotdata.scheduler.model.tables.TriggerEntity table() {
+            return Tables.TRIGGER_ENTITY;
+        }
 
         @Override
         public @NonNull Class<TriggerEntity> modelClass() {
@@ -114,8 +119,8 @@ public interface SchedulerMetadata extends MetadataIndex {
         }
 
         @Override
-        public @NonNull com.nubeiot.iotdata.scheduler.model.tables.TriggerEntity table() {
-            return Tables.TRIGGER_ENTITY;
+        public TriggerEntity parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
+            return TriggerConverter.convert(request);
         }
 
         @Override
@@ -125,8 +130,8 @@ public interface SchedulerMetadata extends MetadataIndex {
         public @NonNull String singularKeyName() { return "trigger"; }
 
         @Override
-        public TriggerEntity parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
-            return TriggerConverter.convert(request);
+        public @NonNull List<OrderField<?>> orderFields() {
+            return Arrays.asList(table().GROUP.asc(), table().NAME.asc());
         }
 
         @Override
@@ -146,11 +151,6 @@ public interface SchedulerMetadata extends MetadataIndex {
             return parseFromEntity(JsonPojo.merge(dbData, TriggerConverter.convert(trigger.toJson().mergeIn(body))));
         }
 
-        @Override
-        public @NonNull List<OrderField<?>> orderFields() {
-            return Arrays.asList(table().GROUP.asc(), table().NAME.asc());
-        }
-
     }
 
 
@@ -166,15 +166,10 @@ public interface SchedulerMetadata extends MetadataIndex {
         public final @NonNull Class<JobTriggerComposite> modelClass() { return JobTriggerComposite.class; }
 
         @Override
-        public final @NonNull Class<JobTriggerDao> daoClass() { return JobTriggerDao.class; }
-
-        @Override
         public final @NonNull com.nubeiot.iotdata.scheduler.model.tables.JobTrigger table() { return Tables.JOB_TRIGGER; }
 
         @Override
-        public @NonNull Class<JobTrigger> rawClass() {
-            return JobTrigger.class;
-        }
+        public final @NonNull Class<JobTriggerDao> daoClass() { return JobTriggerDao.class; }
 
         @Override
         public @NonNull String singularKeyName() {
@@ -184,6 +179,11 @@ public interface SchedulerMetadata extends MetadataIndex {
         @Override
         public @NonNull List<OrderField<?>> orderFields() {
             return Arrays.asList(table().ENABLED.desc(), table().TRIGGER_ID.asc(), table().JOB_ID.asc());
+        }
+
+        @Override
+        public @NonNull Class<JobTrigger> rawClass() {
+            return JobTrigger.class;
         }
 
     }

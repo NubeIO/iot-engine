@@ -47,7 +47,7 @@ public abstract class ModuleService implements InstallerService {
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getList(RequestData data) {
-        JsonObject filter = data.getFilter();
+        JsonObject filter = data.filter();
         if (filter.getBoolean("available", Boolean.FALSE)) {
             return Single.just(new JsonObject());
         }

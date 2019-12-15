@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.protocol.CommunicationProtocol;
+import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
@@ -14,18 +15,20 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
+import com.nubeiot.edge.connector.bacnet.translator.BACnetNetworkTranslator;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 
 import lombok.NonNull;
 
-public final class NetworkDiscovery extends AbstractBACnetDiscoveryService implements BACnetDiscoveryService {
+public final class NetworkDiscovery extends AbstractDiscoveryService implements BACnetDiscoveryService {
 
-    public NetworkDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
+    NetworkDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
     }
 
     @Override
     public @NonNull String servicePath() {
-        return "/discovery/bacnet/network";
+        return "/network";
     }
 
     @Override
@@ -50,26 +53,26 @@ public final class NetworkDiscovery extends AbstractBACnetDiscoveryService imple
 
     @Override
     public Single<JsonObject> get(RequestData reqData) {
-        final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.NETWORK);
-        final DiscoverOptions options = parseDiscoverOptions(reqData);
-        final CommunicationProtocol requestProtocol = parseNetworkProtocol(request);
-        logger.info("Request network {}", requestProtocol.toJson());
-        return Single.just(DiscoverResponse.builder().network(requestProtocol).build().toJson());
+        return Single.just(DiscoverResponse.builder().network(parseProtocol(reqData)).build().toJson());
     }
 
     @Override
-    public Single<JsonObject> batchPersist(RequestData reqData) {
-        return Single.just(new JsonObject());
+    public Single<JsonObject> discoverThenDoBatch(RequestData reqData) {
+        return doBatch(reqData.body());
     }
 
     @Override
-    public Single<JsonObject> persist(RequestData reqData) {
-        return Single.just(new JsonObject());
+    public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
+        return doPersist(new BACnetNetworkTranslator().serialize(parseProtocol(reqData)).toJson());
     }
 
     @Override
-    public String destination() {
-        return null;
+    public @NonNull EntityMetadata representation() {
+        return NetworkMetadata.INSTANCE;
+    }
+
+    private CommunicationProtocol parseProtocol(RequestData reqData) {
+        return parseNetworkProtocol(DiscoverRequest.from(reqData, DiscoverLevel.NETWORK));
     }
 
 }

@@ -12,17 +12,18 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
-import com.nubeiot.core.sql.service.EntityPostService;
-import com.nubeiot.core.sql.service.HasReferenceResource;
+import com.nubeiot.core.sql.service.HasReferenceMarker;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.DeviceMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.MeasureUnitMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointCompositeMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.sync.PointSyncService;
+import com.nubeiot.edge.module.datapoint.service.EdgeService.EdgeExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.unit.DataType;
@@ -49,16 +50,9 @@ public final class PointService
     }
 
     @Override
-    public RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
-        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body());
-        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.getFilter());
-        return super.recomputeRequestData(reqData, extra);
-    }
-
-    @Override
     public EntityReferences entityReferences() {
         final com.nubeiot.iotdata.edge.model.tables.Point table = context().table();
-        return new EntityReferences().add(DeviceMetadata.INSTANCE, table.getJsonField(table.DEVICE))
+        return new EntityReferences().add(EdgeMetadata.INSTANCE, table.getJsonField(table.EDGE))
                                      .add(NetworkMetadata.INSTANCE, table.getJsonField(table.NETWORK));
     }
 
@@ -69,17 +63,7 @@ public final class PointService
     }
 
     @Override
-    public @NonNull EntityPostService asyncPostService() {
-        return new PointSyncService(DataPointService.super.asyncPostService());
-    }
-
-    @Override
-    protected Single<PointComposite> doGetOne(RequestData reqData) {
-        return groupQuery().findOneByKey(reqData);
-    }
-
-    @Override
-    public Single<JsonObject> afterEachList(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    public Single<JsonObject> onEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return Single.just(JsonPojo.from(pojo).toJson(showGroupFields(requestData)));
     }
 
@@ -110,6 +94,22 @@ public final class PointService
         return ignoreFields;
     }
 
+    @Override
+    public Set<EventMethodDefinition> definitions() {
+        return Stream.concat(DataPointService.super.definitions().stream(),
+                             EntityHttpService.createDefinitions(getAvailableEvents(), PointMetadata.INSTANCE,
+                                                                 EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE)
+                                              .stream()).collect(Collectors.toSet());
+    }
+
+    @Override
+    protected RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
+        EdgeExtension.optimizeReqData(entityHandler(), reqData, context().table().getJsonField(context().table().EDGE));
+        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body());
+        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.filter());
+        return super.recomputeRequestData(reqData, extra);
+    }
+
     private JsonObject convertResource(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         PointComposite p = (PointComposite) pojo;
         final UnitAlias unitAlias = p.getUnitAlias();
@@ -120,17 +120,7 @@ public final class PointService
                        .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.factory(unit, unitAlias).toJson());
     }
 
-    @Override
-    public Set<EventMethodDefinition> definitions() {
-        return Stream.concat(DataPointService.super.definitions().stream(),
-                             Stream.of(EventMethodDefinition.createDefault("/network/:network_id/point", "/:point_id"),
-                                       EventMethodDefinition.createDefault("/device/:device_id/point", "/:point_id"),
-                                       EventMethodDefinition.createDefault(
-                                           "/device/:device_id/network/:network_id/point", "/:point_id")))
-                     .collect(Collectors.toSet());
-    }
-
-    public interface PointExtension extends HasReferenceResource {
+    public interface PointExtension extends HasReferenceMarker {
 
         @Override
         default EntityReferences entityReferences() {

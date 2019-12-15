@@ -1,9 +1,5 @@
 package com.nubeiot.edge.module.scheduler.service;
 
-import java.util.Collections;
-import java.util.Set;
-
-import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.TriggerEntityMetadata;
@@ -28,12 +24,6 @@ public final class TriggerEntityService extends AbstractEntityService<TriggerEnt
     @Override
     public TriggerEntityMetadata context() {
         return TriggerEntityMetadata.INSTANCE;
-    }
-
-    @Override
-    public Set<EventMethodDefinition> definitions() {
-        return Collections.singleton(
-            EventMethodDefinition.createDefault(context().singularKeyName(), context().requestKeyName()));
     }
 
 }

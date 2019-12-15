@@ -7,9 +7,8 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.service.BaseSqlServiceTest;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
 import com.nubeiot.iotdata.edge.model.DefaultCatalog;
 
@@ -20,7 +19,7 @@ public abstract class BaseDataPointServiceTest extends BaseSqlServiceTest {
         SharedDataDelegate.addLocalDataValue(vertx, sharedKey, DataPointIndex.BUILTIN_DATA, testData());
         DataPointEntityHandler entityHandler = startSQL(context, DefaultCatalog.DEFAULT_CATALOG,
                                                         DataPointEntityHandler.class);
-        EventController controller = controller();
+        EventbusClient controller = controller();
         DataPointService.createServices(entityHandler)
                         .forEach(service -> controller.register(service.address(), service));
     }

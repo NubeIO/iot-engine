@@ -30,12 +30,12 @@ public final class DittoMigration {
     private static final Map<Class<? extends IDittoModel>, String> MAP = new LinkedHashMap<>();
 
     static {
-        MAP.put(DittoDevice.class, ".thing.attributes");
+        MAP.put(DittoEdge.class, ".thing.attributes");
         MAP.put(DittoPoint.class, POINT_JQ_EXPR);
         MAP.put(DittoHistorySetting.class,
                 POINT_JQ_EXPR + " | to_entries | map({code: .key, historySettings: .value.historySettings})");
         MAP.put(DittoHistoryData.class, THING_FEATURES_JQ_EXPR + ".histories.properties");
-        MAP.put(DittoEquipment.class, THING_FEATURES_JQ_EXPR + ".sensorList.properties.list");
+        MAP.put(DittoDevice.class, THING_FEATURES_JQ_EXPR + ".sensorList.properties.list");
     }
 
     private final Scope rootScope;

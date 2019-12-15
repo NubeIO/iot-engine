@@ -6,6 +6,7 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.exceptions.ErrorData;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 
 import lombok.NonNull;
@@ -22,8 +23,14 @@ public final class SimulatorCompletionAsserter extends DiscoverCompletionHandler
     private final JsonObject expected;
 
     @Override
-    public boolean receive(RequestData requestData) {
+    public boolean success(@NonNull RequestData requestData) {
         JsonHelper.assertJson(context, async, expected, requestData.body());
+        return true;
+    }
+
+    @Override
+    public boolean error(@NonNull ErrorData error) {
+        JsonHelper.assertJson(context, async, expected, error.toJson());
         return true;
     }
 

@@ -45,7 +45,7 @@ public class H2LocalTest extends BaseSqlTest {
         startSQL(context, SchemaTest.ManySchema.CATALOG, MockManyNoData.class);
         stopSQL(context);
         startSQLFailed(context, SchemaTest.ManySchema.CATALOG, MockManyErrorData.class,
-                       t -> context.assertTrue(t instanceof MigrationError));
+                       t -> context.assertTrue(t.getCause() instanceof MigrationError));
     }
 
 }

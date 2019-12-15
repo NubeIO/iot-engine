@@ -23,9 +23,9 @@ import com.nubeiot.core.TestHelper.VertxHelper;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.connector.bacnet.AbstractBACnetConfig;
 import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
@@ -37,7 +37,7 @@ import com.serotonin.bacnet4j.util.sero.ThreadUtils;
 public class SimulatorIntegrationTest {
 
     static Vertx vertx;
-    static EventController eventController;
+    static EventbusClient eventbusClient;
     static BACnetSimulator verticle;
     static AbstractBACnetConfig simConfig;
     static AbstractBACnetConfig masterBACnetConfig;
@@ -55,8 +55,8 @@ public class SimulatorIntegrationTest {
         TestHelper.setup();
         verticle = new BACnetSimulator();
         vertx = Vertx.vertx();
-        eventController = SharedDataDelegate.getEventController(vertx.getDelegate(),
-                                                                SimulatorIntegrationTest.class.getName());
+        eventbusClient = SharedDataDelegate.getEventController(vertx.getDelegate(),
+                                                               SimulatorIntegrationTest.class.getName());
         JsonObject masterConfig = IConfig.fromClasspath("master.json", NubeConfig.class).toJson();
         masterBACnetConfig = IConfig.from(masterConfig, AbstractBACnetConfig.class);
         VertxHelper.deploy(vertx.getDelegate(), context, new DeploymentOptions().setConfig(masterConfig), verticle);
@@ -69,8 +69,8 @@ public class SimulatorIntegrationTest {
     @Test
     public void deviceDiscoveryTest(TestContext context) throws Exception {
         Async async = context.async();
-        eventController.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_LIST, addNetworkToJson(new JsonObject())),
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.GET_LIST, addNetworkToJson(new JsonObject())),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body(), true);
                                  context.assertTrue(message.isSuccess());
@@ -82,8 +82,8 @@ public class SimulatorIntegrationTest {
     @Test
     public void deviceExtendedInfoTest(TestContext context) throws Exception {
         Async async = context.async();
-        eventController.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_ONE,
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.GET_ONE,
                                                   addNetworkToJson(new JsonObject()).put("deviceId",
                                                                                          remoteDeviceId.toString())),
                              messageAsyncResult -> {
@@ -99,8 +99,8 @@ public class SimulatorIntegrationTest {
     public void deviceExtendedInfoNotFoundExceptionTest(TestContext context) throws Exception {
         Async async = context.async();
         Integer id = remoteDeviceId + 1;
-        eventController.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_ONE,
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.GET_ONE,
                                                   addNetworkToJson(new JsonObject()).put("deviceId", id.toString())),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
@@ -119,7 +119,7 @@ public class SimulatorIntegrationTest {
                                          addNetworkToJson(new JsonObject()).put("deviceId", remoteDeviceId.toString()))
                                      .build();
 
-        eventController.fire(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_LIST, req),
+        eventbusClient.fire(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_LIST, req),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  JsonObject data = message.getData();
@@ -145,8 +145,8 @@ public class SimulatorIntegrationTest {
                                                                                                             "1"))
                                                                .build();
 
-                                 eventController.fire(address, EventPattern.REQUEST_RESPONSE,
-                                                      EventMessage.initial(EventAction.GET_LIST, req2),
+                                 eventbusClient.fire(address, EventPattern.REQUEST_RESPONSE,
+                                                     EventMessage.initial(EventAction.GET_LIST, req2),
                                                       messageAsyncResult2 -> {
                                                           EventMessage message2 = EventMessage.tryParse(
                                                               messageAsyncResult2.result().body());
@@ -184,8 +184,8 @@ public class SimulatorIntegrationTest {
                                                                                       p1)))
                                      .build();
 
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points-info", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_ONE, req), messageAsyncResult -> {
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points-info", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.GET_ONE, req), messageAsyncResult -> {
                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                 context.assertTrue(message.isSuccess());
 
@@ -202,8 +202,8 @@ public class SimulatorIntegrationTest {
     public void readSinglePointNotFound(TestContext context) throws Exception {
         Async async = context.async();
         String p1 = "UI991";
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points-info", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_ONE, RequestData.builder()
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points-info", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.GET_ONE, RequestData.builder()
                                                                                   .body(
                                                                                       addNetworkToJson(new JsonObject())
                                                                                           .put("deviceId",
@@ -231,8 +231,8 @@ public class SimulatorIntegrationTest {
                                                                                       p1)))
                                      .build();
 
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_ONE, req), messageAsyncResult -> {
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.GET_ONE, req), messageAsyncResult -> {
                 EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                 context.assertTrue(message.isSuccess());
 
@@ -265,7 +265,7 @@ public class SimulatorIntegrationTest {
                                      .filter(new JsonObject().put("objectIds", objectIds))
                                      .build();
 
-        eventController.fire(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_LIST, req),
+        eventbusClient.fire(address, EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_LIST, req),
                              messageAsyncResult -> {
                                  EventMessage message = EventMessage.tryParse(messageAsyncResult.result().body());
                                  JsonObject data = message.getData();
@@ -303,12 +303,12 @@ public class SimulatorIntegrationTest {
                                                                              .put("value", !val))
                                      .build();
 
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
 
                 context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isSuccess());
-                eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                                     EventMessage.initial(EventAction.GET_ONE, RequestData.builder()
+                eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                                    EventMessage.initial(EventAction.GET_ONE, RequestData.builder()
                                                                                           .body(addNetworkToJson(
                                                                                               new JsonObject()).put(
                                                                                               "deviceId",
@@ -317,7 +317,7 @@ public class SimulatorIntegrationTest {
                                                                                                                    "objectId",
                                                                                                                    pointId))
                                                                                           .build()),
-                                     messageAsyncResult2 -> {
+                                    messageAsyncResult2 -> {
                                          EventMessage message2 = EventMessage.tryParse(
                                              messageAsyncResult2.result().body());
                                          context.assertTrue(message2.isSuccess());
@@ -327,10 +327,10 @@ public class SimulatorIntegrationTest {
                                          //RESET
                                          req.body().remove("value");
                                          req.body().put("value", val);
-                                         eventController.fire("nubeiot.edge.connector.bacnet.device.points",
-                                                              EventPattern.REQUEST_RESPONSE,
-                                                              EventMessage.initial(EventAction.PATCH, req), m -> {},
-                                                              null);
+                                        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points",
+                                                            EventPattern.REQUEST_RESPONSE,
+                                                            EventMessage.initial(EventAction.PATCH, req), m -> {},
+                                                            null);
 
                                          TestHelper.testComplete(async);
                                      }, null);
@@ -349,12 +349,12 @@ public class SimulatorIntegrationTest {
                                                                              .put("value", !val))
                                      .build();
 
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
 
                 context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isSuccess());
-                eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                                     EventMessage.initial(EventAction.GET_ONE, RequestData.builder()
+                eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                                    EventMessage.initial(EventAction.GET_ONE, RequestData.builder()
                                                                                           .body(addNetworkToJson(
                                                                                               new JsonObject()).put(
                                                                                               "deviceId",
@@ -363,7 +363,7 @@ public class SimulatorIntegrationTest {
                                                                                                                    "objectId",
                                                                                                                    pointId))
                                                                                           .build()),
-                                     messageAsyncResult2 -> {
+                                    messageAsyncResult2 -> {
                                          EventMessage message2 = EventMessage.tryParse(
                                              messageAsyncResult2.result().body());
                                          context.assertTrue(message2.isSuccess());
@@ -373,10 +373,10 @@ public class SimulatorIntegrationTest {
                                          //RESET
                                          req.body().remove("value");
                                          req.body().put("value", val);
-                                         eventController.fire("nubeiot.edge.connector.bacnet.device.points",
-                                                              EventPattern.REQUEST_RESPONSE,
-                                                              EventMessage.initial(EventAction.PATCH, req), m -> {},
-                                                              null);
+                                        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points",
+                                                            EventPattern.REQUEST_RESPONSE,
+                                                            EventMessage.initial(EventAction.PATCH, req), m -> {},
+                                                            null);
 
                                          TestHelper.testComplete(async);
                                      }, null);
@@ -396,19 +396,19 @@ public class SimulatorIntegrationTest {
                                                                              .put("value", !val))
                                      .build();
 
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
 
                 context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isSuccess());
                 req.body().remove("value");
                 req.body().put("value", "null");
 
-                eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                                     EventMessage.initial(EventAction.PATCH, req), messageAsyncResult2 -> {
+                eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                                    EventMessage.initial(EventAction.PATCH, req), messageAsyncResult2 -> {
 
                         context.assertTrue(EventMessage.tryParse(messageAsyncResult2.result().body()).isSuccess());
-                        eventController.fire("nubeiot.edge.connector.bacnet.device.points-info",
-                                             EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_ONE,
+                        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points-info",
+                                            EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_ONE,
                                                                                                  RequestData.builder()
                                                                                                             .body(
                                                                                                                 addNetworkToJson(
@@ -421,7 +421,7 @@ public class SimulatorIntegrationTest {
                                                                                                                         "objectId",
                                                                                                                         pointId))
                                                                                                             .build()),
-                                             messageAsyncResult3 -> {
+                                            messageAsyncResult3 -> {
                                                  EventMessage message3 = EventMessage.tryParse(
                                                      messageAsyncResult3.result().body());
                                                  context.assertTrue(message3.isSuccess());
@@ -447,19 +447,19 @@ public class SimulatorIntegrationTest {
                                                                              .put("value", val))
                                      .build();
 
-        eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
+        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                            EventMessage.initial(EventAction.PATCH, req), messageAsyncResult -> {
 
                 context.assertTrue(EventMessage.tryParse(messageAsyncResult.result().body()).isSuccess());
                 req.body().remove("value");
                 req.body().put("value", "null");
 
-                eventController.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
-                                     EventMessage.initial(EventAction.PATCH, req), messageAsyncResult2 -> {
+                eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points", EventPattern.REQUEST_RESPONSE,
+                                    EventMessage.initial(EventAction.PATCH, req), messageAsyncResult2 -> {
 
                         context.assertTrue(EventMessage.tryParse(messageAsyncResult2.result().body()).isSuccess());
-                        eventController.fire("nubeiot.edge.connector.bacnet.device.points-info",
-                                             EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_ONE,
+                        eventbusClient.fire("nubeiot.edge.connector.bacnet.device.points-info",
+                                            EventPattern.REQUEST_RESPONSE, EventMessage.initial(EventAction.GET_ONE,
                                                                                                  RequestData.builder()
                                                                                                             .body(
                                                                                                                 addNetworkToJson(
@@ -472,7 +472,7 @@ public class SimulatorIntegrationTest {
                                                                                                                         "objectId",
                                                                                                                         pointId))
                                                                                                             .build()),
-                                             messageAsyncResult3 -> {
+                                            messageAsyncResult3 -> {
                                                  EventMessage message3 = EventMessage.tryParse(
                                                      messageAsyncResult3.result().body());
                                                  context.assertTrue(message3.isSuccess());

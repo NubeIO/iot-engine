@@ -9,8 +9,8 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.base.event.WebsocketClientEventMetadata;
 import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
@@ -23,7 +23,7 @@ import com.nubeiot.core.http.client.handler.WsResponseErrorHandler;
 final class WebsocketClientDelegateImpl extends ClientDelegate implements WebsocketClientDelegate {
 
     private final int connTimeout;
-    private final EventController controller;
+    private final EventbusClient controller;
 
     WebsocketClientDelegateImpl(Vertx vertx, HttpClientConfig config) {
         super(vertx, config);
@@ -69,7 +69,7 @@ final class WebsocketClientDelegateImpl extends ClientDelegate implements Websoc
     }
 
     @Override
-    public EventController getEventController() {
+    public EventbusClient getEventClient() {
         return controller;
     }
 

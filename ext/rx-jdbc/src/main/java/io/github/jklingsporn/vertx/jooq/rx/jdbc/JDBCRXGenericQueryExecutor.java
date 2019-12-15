@@ -23,6 +23,8 @@ import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.exceptions.DatabaseException;
 import com.nubeiot.core.exceptions.HiddenException;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.utils.Functions;
 
 import lombok.Getter;
 
@@ -51,6 +53,12 @@ public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
             try {
                 blockingCodeHandler.handle((Future<X>) event);
             } catch (DataAccessException e) {
+                Throwable cause = Functions.getIfThrow(() -> e.getCause().getCause().getCause()).orElse(null);
+                if (cause instanceof NubeException) {
+                    throw new DatabaseException(
+                        "Database error. Code: " + e.sqlStateClass() + " | Cause:" + cause.getMessage(),
+                        new HiddenException(e.getCause()));
+                }
                 throw new DatabaseException("Database error. Code: " + e.sqlStateClass(), new HiddenException(e));
             }
         }).switchIfEmpty(Observable.empty().singleOrError());

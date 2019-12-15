@@ -52,7 +52,7 @@ public class RemotePointsEventHandler implements EventListener {
     public Single<JsonObject> readRemoteDeviceMultiplePointsValue(RequestData requestData) {
         String network = requestData.body().getString("network");
         String instanceNumber = requestData.body().getString("deviceId");
-        String oidStr = requestData.getFilter().getString("objectIds");
+        String oidStr = requestData.filter().getString("objectIds");
 
         try {
             ArrayList<String> objectIds = new ArrayList<>(Arrays.asList(oidStr.split(",")));

@@ -1,6 +1,5 @@
 package com.nubeiot.core.micro.transfomer;
 
-import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
 import lombok.NonNull;
@@ -14,9 +13,10 @@ public interface RecordTransformer {
         return new DetailRecordTransformer();
     }
 
-    @NonNull JsonObject transform(@NonNull Record record);
+    @NonNull RecordOutput transform(@NonNull Record record);
 
     enum RecordView {
+
         END_USER, TECHNICAL;
 
         public static RecordView parse(String view) {

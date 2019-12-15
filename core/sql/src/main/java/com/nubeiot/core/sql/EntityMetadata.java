@@ -28,20 +28,37 @@ import lombok.NonNull;
 /**
  * Entity metadata Holder
  *
- * @param <K> Entity Primary Key type
- * @param <P> Pojo entity type
- * @param <R> Record type
- * @param <D> DAO type
+ * @param <K> Type of {@code primary key}
+ * @param <P> Type of {@code VertxPojo}
+ * @param <R> Type of {@code UpdatableRecord}
+ * @param <D> Type of {@code VertxDAO}
  * @see EntityService
+ * @since 1.0.0
  */
 public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>>
     extends EntityValidation<P> {
 
+    /**
+     * Create request key name.
+     *
+     * @param <POJO>      Type of {@code VertxPojo}
+     * @param modelClass  the model class
+     * @param jsonKeyName the json key name
+     * @return request key name
+     * @since 1.0.0
+     */
     static <POJO extends VertxPojo> String createRequestKeyName(@NonNull Class<POJO> modelClass, String jsonKeyName) {
         return (Strings.toSnakeCaseLC(modelClass.getSimpleName()) + "_" +
                 Strings.requireNotBlank(jsonKeyName)).toLowerCase(Locale.ENGLISH);
     }
 
+    /**
+     * Create json key name.
+     *
+     * @param table the table
+     * @return the json key name
+     * @since 1.0.0
+     */
     static String createJsonKeyName(@NonNull Table<? extends Record> table) {
         if (table.getPrimaryKey().getFields().size() != 1) {
             throw new UnsupportedOperationException("Doesn't support composite key or no primary key");
@@ -55,41 +72,47 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      *
      * @return {@code true} if enable time audit in application layer
      * @see TimeAudit
+     * @since 1.0.0
      */
     default boolean enableTimeAudit() {
         return true;
     }
 
     /**
-     * Declare entity table
+     * Declares entity table
      *
      * @return entity table
      * @see Table
      * @see JsonTable
+     * @since 1.0.0
      */
     @NonNull JsonTable<R> table();
 
     /**
-     * Pojo model class
+     * Declares Pojo model class
      *
+     * @param <PP> Type of {@code VertxPojo}
      * @return model class
+     * @since 1.0.0
      */
     @NonNull <PP extends P> Class<PP> modelClass();
 
     /**
-     * DAO class
+     * Declares DAO class
      *
      * @return dao class
+     * @since 1.0.0
      */
     @NonNull Class<D> daoClass();
 
     /**
-     * Get DAO
+     * Create DAO by given entity handler
      *
      * @param handler Entity handler
      * @return DAO that corresponding to {@link #daoClass()}
+     * @since 1.0.0
      */
-    default @NonNull D dao(EntityHandler handler) {
+    default @NonNull D dao(@NonNull EntityHandler handler) {
         return handler.dao(daoClass());
     }
 
@@ -97,11 +120,13 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     default EntityMetadata context() { return this; }
 
     /**
-     * Parse given data from entity database to {@code pojo} object
+     * Parses given data from entity database to {@code pojo} object
      *
+     * @param <PP>    Type of {@code VertxPojo}
      * @param request Given entity data
      * @return {@code pojo} object resource
      * @throws IllegalArgumentException if cannot parse
+     * @since 1.0.0
      */
     @NonNull
     @SuppressWarnings("unchecked")
@@ -110,17 +135,27 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     }
 
     /**
-     * Parse given data from service request to {@code pojo} object
+     * Parses given data from service request to {@code pojo} object
      *
+     * @param <PP>    Type of {@code VertxPojo}
      * @param request Given request data
      * @return {@code pojo} object resource
      * @throws IllegalArgumentException if cannot parse
+     * @since 1.0.0
      */
     @NonNull
     default <PP extends P> PP parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
         return parseFromEntity(request);
     }
 
+    /**
+     * Gets key.
+     *
+     * @param requestData the request data
+     * @return the optional key
+     * @throws IllegalArgumentException if cannot parse key in request data
+     * @since 1.0.0
+     */
     @NonNull
     default Optional<K> getKey(@NonNull RequestData requestData) throws IllegalArgumentException {
         return Optional.ofNullable(requestData.body())
@@ -134,9 +169,10 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      *
      * @param requestData Request data
      * @return Actual primary key
-     * @throws IllegalArgumentException if data key is not valid or missing
+     * @throws IllegalArgumentException if data key is invalid or missing
      * @see #requestKeyName()
      * @see #parseKey(String)
+     * @since 1.0.0
      */
     @NonNull
     default K parseKey(@NonNull RequestData requestData) throws IllegalArgumentException {
@@ -148,7 +184,8 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      *
      * @param dataKey Request data key
      * @return Actual primary key
-     * @throws IllegalArgumentException if data key is not valid or missing
+     * @throws IllegalArgumentException if data key is invalid or missing
+     * @since 1.0.0
      */
     @NonNull K parseKey(@NonNull String dataKey) throws IllegalArgumentException;
 
@@ -157,8 +194,9 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      * {@code get /update /patch /delete} resource
      *
      * @return request key name. Default is {@code <model_name>_<json_key_name>}
-     * @apiNote It is not represents for actual primary key column in database table
+     * @apiNote It might not represents for actual primary key column in database table
      * @see #modelClass()
+     * @since 1.0.0
      */
     @NonNull
     default String requestKeyName() {
@@ -173,6 +211,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      * @return primary key column in json
      * @apiNote It doesn't support composite key or no primary key in {@code table}
      * @see #table()
+     * @since 1.0.0
      */
     @NonNull
     default String jsonKeyName() {
@@ -184,6 +223,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      *
      * @return response key name
      * @apiNote Default is {@link #table()} name in lowercase
+     * @since 1.0.0
      */
     default @NonNull String singularKeyName() {
         return table().getName().toLowerCase();
@@ -194,6 +234,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      *
      * @return response key name
      * @apiNote Default is {@link #singularKeyName()} appends "{@code s}" character
+     * @since 1.0.0
      */
     default @NonNull String pluralKeyName() {
         return singularKeyName() + "s";
@@ -203,6 +244,8 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      * Default order fields
      *
      * @return order fields
+     * @see OrderField
+     * @since 1.0.0
      */
     default @NonNull List<OrderField<?>> orderFields() {
         return Collections.singletonList((OrderField<?>) table().getField(jsonKeyName()).asc());
@@ -211,7 +254,11 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     /**
      * Represents entity primary key is in {@code Integer} data type
      *
+     * @param <P> Type of {@code VertxPojo}
+     * @param <R> Type of {@code UpdatableRecord}
+     * @param <D> Type of {@code VertxDAO}
      * @see EntityMetadata
+     * @since 1.0.0
      */
     interface SerialKeyEntity<P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, Integer>>
         extends EntityMetadata<Integer, P, R, D> {
@@ -226,7 +273,11 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     /**
      * Represents entity primary key is in {@code Long} data type
      *
+     * @param <P> Type of {@code VertxPojo}
+     * @param <R> Type of {@code UpdatableRecord}
+     * @param <D> Type of {@code VertxDAO}
      * @see EntityMetadata
+     * @since 1.0.0
      */
     interface BigSerialKeyEntity<P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, Long>>
         extends EntityMetadata<Long, P, R, D> {
@@ -241,7 +292,11 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     /**
      * Represents entity primary key is in {@code String} data type
      *
+     * @param <P> Type of {@code VertxPojo}
+     * @param <R> Type of {@code UpdatableRecord}
+     * @param <D> Type of {@code VertxDAO}
      * @see EntityMetadata
+     * @since 1.0.0
      */
     interface StringKeyEntity<P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, String>>
         extends EntityMetadata<String, P, R, D> {
@@ -256,14 +311,18 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     /**
      * Represents entity primary key is in {@code UUID} data type
      *
+     * @param <P> Type of {@code VertxPojo}
+     * @param <R> Type of {@code UpdatableRecord}
+     * @param <D> Type of {@code VertxDAO}
      * @see EntityMetadata
+     * @since 1.0.0
      */
     interface UUIDKeyEntity<P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, UUID>>
         extends EntityMetadata<UUID, P, R, D> {
 
         default UUID parseKey(String dataKey) throws IllegalArgumentException {
             return Functions.getOrThrow(() -> Functions.toUUID().apply(dataKey),
-                                        () -> new IllegalArgumentException("Invalid key"));
+                                        t -> new IllegalArgumentException("Invalid key", t));
         }
 
     }

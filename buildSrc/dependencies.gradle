@@ -91,6 +91,7 @@ ext.repos = {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
     mavenCentral()
     jcenter()
+    maven { url "http://45.63.30.129:8081/repository/maven-releases/" }
 }
 
 ext.loggers = [

@@ -1,6 +1,7 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -16,11 +17,25 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
+import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.validation.EntityValidation;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Entity Service Delegate wraps actual {@code entity service} in case it cannot {@code extends} directly default {@code
+ * entity service}*
+ *
+ * @param <P> Type of {@code VertxPojo}
+ * @param <M> Type of {@code EntityMetadata}
+ * @param <S> Type of {@code EntityService}
+ * @see EntityService
+ * @see OneToManyReferenceEntityService
+ * @see GroupEntityService
+ * @see ManyToManyReferenceEntityService
+ * @since 1.0.0
+ */
 @RequiredArgsConstructor
 public abstract class EntityServiceDelegate<P extends VertxPojo, M extends EntityMetadata, S extends EntityService<P, M>>
     implements EntityService<P, M> {
@@ -53,8 +68,13 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public @NonNull EntityPostService asyncPostService() {
-        return unwrap().asyncPostService();
+    public Optional<? extends EntityTask> prePersistTask() {
+        return unwrap().prePersistTask();
+    }
+
+    @Override
+    public Optional<? extends EntityTask> postPersistAsyncTask() {
+        return unwrap().postPersistAsyncTask();
     }
 
     @Override

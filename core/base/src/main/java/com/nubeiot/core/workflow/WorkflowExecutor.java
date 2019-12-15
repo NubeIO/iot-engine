@@ -41,9 +41,9 @@ public interface WorkflowExecutor<D extends WorkflowDefinition> {
 
         @Override
         default void execute(DeliveryEventDefinition definition) {
-            final WorkflowDefinition postWorkflow = definition.postStep();
-            DeliveryEvent event = JsonData.from(definition.step().metadata(), DeliveryEvent.class);
-            SharedDataDelegate.getEventController(vertx(), sharedKey()).request(event);
+            final WorkflowDefinition postWorkflow = definition.postTask();
+            final DeliveryEvent event = JsonData.from(definition.task().metadata(), DeliveryEvent.class);
+            SharedDataDelegate.getEventController(vertx(), sharedKey()).fire(event);
         }
 
     }

@@ -14,13 +14,17 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 @Getter
+@Accessors(fluent = true)
 public final class RequestData extends AbstractDTO {
 
     @JsonProperty(value = "filter")
     private JsonObject filter;
+    @JsonProperty(value = "pagination")
     private Pagination pagination;
+    @JsonProperty(value = "sort")
     private Sort sort;
 
     @JsonCreator
@@ -36,7 +40,7 @@ public final class RequestData extends AbstractDTO {
     }
 
     public boolean hasAudit() {
-        return Optional.ofNullable(this.getFilter()).map(o -> o.containsKey(Filters.AUDIT)).orElse(false);
+        return Optional.ofNullable(this.filter()).map(o -> o.containsKey(Filters.AUDIT)).orElse(false);
     }
 
     @Override

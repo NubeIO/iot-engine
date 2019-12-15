@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import com.nubeiot.core.sql.CompositeMetadata;
-import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.ManyToManyEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
@@ -10,23 +9,28 @@ import com.nubeiot.core.sql.validation.CompositeValidation;
 import lombok.NonNull;
 
 /**
- * Represents service that holds a {@code resource} has one or more {@code reference} to other resources. It presents
- * many-to-one relationship.
+ * Represents {@code middlemen} service that holds a {@code middlemen resource} has one or more {@code reference} to
+ * other resources.
+ * <p>
+ * It presents {@code many-to-one} connection between {@code middlemen resource} with {@code reference resource}. But
+ * between among {@code reference resources}, it is {@code many-to-many} relationship
  *
- * @param <P> Composite pojo
- * @param <M> Composite Metadata Type
+ * @param <CP> Type of {@code CompositePojo}
+ * @param <CM> Type of {@code CompositeMetadata}
+ * @see ManyToManyMarker
+ * @since 1.0.0
  */
-public interface ManyToManyReferenceEntityService<P extends CompositePojo, M extends CompositeMetadata>
-    extends OneToManyReferenceEntityService<P, M>, ManyToManyResource {
+public interface ManyToManyReferenceEntityService<CP extends CompositePojo, CM extends CompositeMetadata>
+    extends OneToManyReferenceEntityService<CP, CM>, ManyToManyMarker {
 
     /**
      * Represents physical database entity
      *
      * @return physical entity metadata
-     * @apiNote It represents for a joining table in many-to-many relationship
+     * @apiNote It represents for a joining table in {@code many-to-many} relationship
      */
     @Override
-    @NonNull M context();
+    @NonNull CM context();
 
     /**
      * Composite validation
@@ -37,33 +41,23 @@ public interface ManyToManyReferenceEntityService<P extends CompositePojo, M ext
     @NonNull CompositeValidation validation();
 
     /**
-     * Represents logical database entity
-     *
-     * @return logical entity metadata
-     * @apiNote Represents one reference table in {@code many-to-many} relationship that is actual {@code service
-     *     resource context}
+     * @return complex query executor
+     * @see ComplexQueryExecutor
      */
-    @NonNull EntityMetadata reference();
-
-    /**
-     * Represents presentation resource of service
-     *
-     * @return presentation entity metadata
-     * @apiNote Represents one reference table in {@code many-to-many} relationship that is {@code service resource
-     *     presentation}
-     */
-    @NonNull EntityMetadata resource();
-
     @Override
     @SuppressWarnings("unchecked")
-    default @NonNull ComplexQueryExecutor<P> queryExecutor() {
+    default @NonNull ComplexQueryExecutor<CP> queryExecutor() {
         return entityHandler().complexQuery()
                               .from(context())
                               .context(reference())
                               .with(resource())
-                              .references(transformer().ref().entityReferences());
+                              .references(transformer().marker().entityReferences());
     }
 
+    /**
+     * @return many to many entity transformer
+     * @see ManyToManyEntityTransformer
+     */
     @Override
     @NonNull ManyToManyEntityTransformer transformer();
 

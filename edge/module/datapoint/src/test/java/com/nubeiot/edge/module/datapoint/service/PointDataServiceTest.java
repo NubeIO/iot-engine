@@ -87,7 +87,7 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
                                                                                        .setPriority(5)
                                                                                        .setValue(24d), false);
         Async async = context.async(1);
-        controller().request(event, EventbusHelper.replyAsserter(context, body -> {
+        controller().fire(event, EventbusHelper.replyAsserter(context, body -> {
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"value\":24.0,\"priority\":5,\"priority_values\":" +
                 "{\"5\":24.0}}");
@@ -175,7 +175,7 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
                                                                    .setValue(24d), true);
         CountDownLatch latch = new CountDownLatch(2);
         Async async = context.async(2);
-        controller().request(event, EventbusHelper.replyAsserter(context, body -> {
+        controller().fire(event, EventbusHelper.replyAsserter(context, body -> {
             latch.countDown();
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0,\"priority\":5,\"priority_values\":" +
@@ -192,7 +192,7 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
                                                 new PointValueData().setPoint(PrimaryKey.P_BACNET_SWITCH)
                                                                     .setPriority(9)
                                                                     .setValue(28d), true);
-        controller().request(event2, EventbusHelper.replyAsserter(context, body -> {
+        controller().fire(event2, EventbusHelper.replyAsserter(context, body -> {
             latch.countDown();
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0,\"priority\":5," +

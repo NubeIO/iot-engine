@@ -7,27 +7,32 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.micro.ServiceGatewayIndex.Params;
 
 import lombok.NonNull;
 
+/**
+ * Master record predicate
+ */
 public interface RecordPredicate extends Function<JsonObject, Predicate<Record>> {
 
-    String IDENTIFIER = "identifier";
-    String TYPE = "type";
-    String STATUS = "status";
-    String SCOPE = "scope";
-    String BY = "by";
-
-    static @NonNull Function<Record, Boolean> filter(@NonNull JsonObject filter, EventAction action) {
-        JsonObject advanceFilter = new JsonObject().put(TYPE, filter.remove(TYPE))
-                                                   .put(STATUS, filter.remove(STATUS))
-                                                   .put(SCOPE, filter.remove(SCOPE))
-                                                   .put(IDENTIFIER, filter.remove(IDENTIFIER))
-                                                   .put(BY, filter.remove(BY));
-        return record -> new CommonPredicate().apply(advanceFilter)
-                                              .and(new IdentifierPredicate(action).apply(advanceFilter))
-                                              .and(r -> r.match(filter))
-                                              .test(record);
+    /**
+     * Create service record filter
+     *
+     * @param filter Given filter parameters
+     * @param action Given query action: {@link EventAction#GET_LIST} or {@link EventAction#GET_ONE}
+     * @return filter function
+     */
+    static @NonNull Function<Record, Boolean> filter(@NonNull JsonObject filter, @NonNull EventAction action) {
+        JsonObject advancedFilter = new JsonObject().put(Params.TYPE, filter.remove(Params.TYPE))
+                                                    .put(Params.STATUS, filter.remove(Params.STATUS))
+                                                    .put(Params.SCOPE, filter.remove(Params.SCOPE))
+                                                    .put(Params.IDENTIFIER, filter.remove(Params.IDENTIFIER))
+                                                    .put(Params.BY, filter.remove(Params.BY));
+        return new CommonPredicate().apply(advancedFilter)
+                                    .and(new IdentifierPredicate(action).apply(advancedFilter))
+                                    .and(r -> MetadataPredicate.apply(r, filter))
+                                    .and(r -> r.match(filter))::test;
     }
 
     @Override

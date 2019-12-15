@@ -11,9 +11,9 @@ import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.base.HttpScheme;
 import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
 import com.nubeiot.core.http.base.Urls;
@@ -32,18 +32,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UploadFileHandler implements RestEventRequestDispatcher {
 
-    private final EventController controller;
+    private final EventbusClient controller;
     private final EventModel eventModel;
     private final Path uploadDir;
     private final String publicUrl;
 
-    public static UploadFileHandler create(String handlerClass, @NonNull EventController controller,
+    public static UploadFileHandler create(String handlerClass, @NonNull EventbusClient controller,
                                            @NonNull EventModel eventModel, @NonNull Path uploadDir, String publicUrl) {
         if (Strings.isBlank(handlerClass) || UploadFileHandler.class.getName().equals(handlerClass)) {
             return new UploadFileHandler(controller, eventModel, uploadDir, publicUrl);
         }
         Map<Class, Object> inputs = new LinkedHashMap<>();
-        inputs.put(EventController.class, controller);
+        inputs.put(EventbusClient.class, controller);
         inputs.put(EventModel.class, eventModel);
         inputs.put(Path.class, uploadDir);
         inputs.put(String.class, publicUrl);

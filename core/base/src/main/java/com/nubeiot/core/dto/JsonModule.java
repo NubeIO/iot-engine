@@ -7,10 +7,13 @@ import java.util.Map;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 final class JsonModule {
@@ -19,7 +22,8 @@ final class JsonModule {
 
     static {
         BASIC = new SimpleModule().addDeserializer(JsonObject.class, new JsonObjectDeserializer())
-                                  .addDeserializer(JsonArray.class, new JsonArrayDeserializer());
+                                  .addDeserializer(JsonArray.class, new JsonArrayDeserializer())
+                                  .addSerializer(PlainType.class, new PlainTypeSerializer());
     }
 
 
@@ -38,6 +42,16 @@ final class JsonModule {
         @Override
         public JsonArray deserialize(JsonParser p, DeserializationContext context) throws IOException {
             return new JsonArray(context.readValue(p, List.class));
+        }
+
+    }
+
+
+    private static class PlainTypeSerializer extends JsonSerializer<PlainType> {
+
+        @Override
+        public void serialize(PlainType value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeString(value.type());
         }
 
     }

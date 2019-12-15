@@ -21,7 +21,7 @@ import io.vertx.reactivex.core.AbstractVerticle;
 import com.nubeiot.core.ConfigProcessor;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.core.utils.ExecutorHelpers;
@@ -38,7 +38,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, Consumer<? extends UnitContext>> afterSuccesses = new HashMap<>();
     private final Set<String> deployments = new HashSet<>();
     @Getter
-    private EventController eventController;
+    private EventbusClient eventbusClient;
     @Getter
     protected NubeConfig nubeConfig;
     private Handler<Void> successHandler;
@@ -47,11 +47,11 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     public void start() {
         final NubeConfig fileConfig = computeConfig(config());
         this.nubeConfig = new ConfigProcessor(vertx).override(fileConfig.toJson(), true, false).orElse(fileConfig);
-        this.eventController = new DefaultEventClient(this.vertx.getDelegate(), this.nubeConfig.getSystemConfig()
-                                                                                               .getEventBusConfig()
-                                                                                               .getDeliveryOptions());
-        this.registerEventbus(eventController);
-        this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventController)
+        this.eventbusClient = new DefaultEventClient(this.vertx.getDelegate(), this.nubeConfig.getSystemConfig()
+                                                                                              .getEventBusConfig()
+                                                                                              .getDeliveryOptions());
+        this.registerEventbus(eventbusClient);
+        this.addSharedData(SharedDataDelegate.SHARED_EVENTBUS, this.eventbusClient)
             .addSharedData(SharedDataDelegate.SHARED_DATADIR, this.nubeConfig.getDataDir().toAbsolutePath().toString());
     }
 
@@ -67,7 +67,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     }
 
     @Override
-    public void registerEventbus(EventController eventClient) { }
+    public void registerEventbus(EventbusClient eventClient) { }
 
     @Override
     public final Container addSharedData(String key, Object data) {
