@@ -32,7 +32,7 @@ import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
-import com.nubeiot.edge.module.datapoint.model.pojos.ThingComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.dto.Protocol;
@@ -726,7 +726,7 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     final class PointThingMetadata
-        extends AbstractCompositeMetadata<Long, PointThing, PointThingRecord, PointThingDao, ThingComposite>
+        extends AbstractCompositeMetadata<Long, PointThing, PointThingRecord, PointThingDao, PointThingComposite>
         implements BigSerialKeyEntity<PointThing, PointThingRecord, PointThingDao> {
 
         public static final PointThingMetadata INSTANCE = new PointThingMetadata().addSubItem(
@@ -745,8 +745,8 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull Class<ThingComposite> modelClass() {
-            return ThingComposite.class;
+        public @NonNull Class<PointThingComposite> modelClass() {
+            return PointThingComposite.class;
         }
 
         @Override
