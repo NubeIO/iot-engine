@@ -1,11 +1,9 @@
 package com.nubeiot.edge.module.datapoint.service;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Test;
 
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
@@ -17,8 +15,6 @@ import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
-
-import lombok.NonNull;
 
 public class PointByThingServiceWriterTest extends BaseDataPointServiceTest {
 
@@ -55,16 +51,6 @@ public class PointByThingServiceWriterTest extends BaseDataPointServiceTest {
                                                    .put("point", JsonPojo.from(newOne).toJson());
         asserter(context, false, expected, PointByThingService.class.getName(), EventAction.CREATE,
                  RequestData.builder().body(reqBody).build());
-    }
-
-    private JsonObject constructListPoints(@NonNull Map<Integer, Point> pointThingMap) {
-        final JsonArray array = pointThingMap.entrySet()
-                                             .stream()
-                                             .map(entry -> new JsonObject().put("id", entry.getKey())
-                                                                           .put("point", JsonPojo.from(entry.getValue())
-                                                                                                 .toJson()))
-                                             .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
-        return new JsonObject().put("points", array);
     }
 
 }

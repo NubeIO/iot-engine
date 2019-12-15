@@ -1,6 +1,6 @@
 package com.nubeiot.core.exceptions;
 
-public class ServiceNotFoundException extends ServiceException {
+public final class ServiceNotFoundException extends ServiceException {
 
     public ServiceNotFoundException(String message, Throwable e) {
         super(ErrorCode.SERVICE_NOT_FOUND, message, e);

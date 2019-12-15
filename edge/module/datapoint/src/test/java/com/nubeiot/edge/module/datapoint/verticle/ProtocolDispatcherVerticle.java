@@ -19,7 +19,7 @@ public class ProtocolDispatcherVerticle extends BaseDataPointVerticleTest {
     @Test
     public void test_get_protocols_410(TestContext context) {
         assertRestByClient(context, HttpMethod.POST, "/api/s/dispatcher", 410, new JsonObject(
-            "{\"message\":\"Not found '/dispatcher' with HTTP method POST\",\"code\":\"NOT_FOUND\"}"));
+            "{\"message\":\"Unsupported HTTP method POST in '/dispatcher'\",\"code\":\"NOT_FOUND\"}"));
     }
 
     @Test

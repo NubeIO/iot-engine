@@ -93,6 +93,7 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
                          .filter(Objects::nonNull)
                          .filter(m -> !context().requestKeyName().equals(m.requestKeyName()))
                          .map(ref -> new SimpleEntry<>(ref.requestKeyName(), data.getValue(ref.requestKeyName())))
+                         .filter(entry -> Objects.nonNull(entry.getValue()))
                          .map(Strings.kvMsg())
                          .collect(Collectors.joining(" and "));
     }

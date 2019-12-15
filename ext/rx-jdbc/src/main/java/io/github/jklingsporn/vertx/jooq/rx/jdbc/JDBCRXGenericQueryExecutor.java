@@ -57,7 +57,7 @@ public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
                 if (cause instanceof NubeException) {
                     throw new DatabaseException(
                         "Database error. Code: " + e.sqlStateClass() + " | Cause:" + cause.getMessage(),
-                        new HiddenException(cause));
+                        new HiddenException(e.getCause()));
                 }
                 throw new DatabaseException("Database error. Code: " + e.sqlStateClass(), new HiddenException(e));
             }
