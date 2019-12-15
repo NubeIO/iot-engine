@@ -10,13 +10,13 @@ import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
-import io.vertx.reactivex.RxHelper;
 
 import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
@@ -72,9 +72,8 @@ final class DefaultEventClient implements EventController {
     public EventController register(String address, boolean local, @NonNull EventListener handler) {
         LOGGER.info("Registering {} Event Listener '{}' | Address '{}'...", local ? "Local" : "Cluster",
                     handler.getClass().getName(), Strings.requireNotBlank(address));
-        final Handler<Message<Object>> msgHandler = msg -> handler.apply(msg)
-                                                                  .subscribeOn(RxHelper.blockingScheduler(vertx))
-                                                                  .subscribe();
+        final Handler<Message<Object>> msgHandler = msg -> ExecutorHelpers.blocking(vertx, handler.apply(msg))
+                                                                          .subscribe();
         if (local) {
             vertx.eventBus().localConsumer(address, msgHandler);
         } else {

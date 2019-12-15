@@ -163,8 +163,8 @@ class DockerBuildTask extends DockerTask implements DockerHostAware {
         def exposePorts = ProjectUtils.extraProp(project, "docker.exposePorts", "8000 5000 5701")
                                       .tokenize()
                                       .stream()
-                                      .map { p -> Integer.valueOf(p) }
-                                      .filter { p -> p > 0 && p < 65536 }
+                                      .map { p -> DockerPort.parse(p) }
+                                      .filter { p -> p.port > 0 }
                                       .map { p -> p.toString() }
                                       .collect(Collectors.joining(" "))
         project.copy {

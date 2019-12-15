@@ -24,11 +24,7 @@ public final class Functions {
 
     private static final Logger logger = LoggerFactory.getLogger(Functions.class);
 
-    public static <T> Optional<T> getIfThrow(@NonNull Supplier<T> provider) {
-        return getIfThrow(provider, logger::trace);
-    }
-
-    public static <T> Optional<T> getIfThrow(@NonNull Supplier<T> provider, Consumer<Throwable> consumer) {
+    public static <T> Optional<T> getIfThrow(Consumer<Throwable> consumer, @NonNull Provider<T> provider) {
         try {
             return Optional.ofNullable(provider.get());
         } catch (Exception t) {
@@ -37,17 +33,8 @@ public final class Functions {
         }
     }
 
-    public static <T> T getOrThrow(@NonNull Supplier<T> provider,
-                                   @NonNull Supplier<? extends RuntimeException> override) {
-        try {
-            return provider.get();
-        } catch (Exception t) {
-            throw (RuntimeException) override.get().initCause(t);
-        }
-    }
-
-    public static <T> T getOrThrow(@NonNull Supplier<T> provider,
-                                   @NonNull Function<Throwable, ? extends RuntimeException> override) {
+    public static <T> T getOrThrow(@NonNull Function<Throwable, ? extends RuntimeException> override,
+                                   @NonNull Provider<T> provider) {
         try {
             return provider.get();
         } catch (Exception t) {
@@ -55,14 +42,56 @@ public final class Functions {
         }
     }
 
-    public static <T> T getOrDefault(@NonNull Supplier<T> provider, @NonNull Supplier<T> def) {
+    public static <T> Optional<T> getIfThrow(@NonNull Supplier<T> supplier) {
+        return getIfThrow(supplier, logger::trace);
+    }
+
+    public static <T> Optional<T> getIfThrow(@NonNull Supplier<T> supplier, Consumer<Throwable> consumer) {
+        try {
+            return Optional.ofNullable(supplier.get());
+        } catch (Exception t) {
+            consumer.accept(t);
+            return Optional.empty();
+        }
+    }
+
+    public static <T> T getOrThrow(@NonNull Supplier<T> supplier,
+                                   @NonNull Supplier<? extends RuntimeException> override) {
+        try {
+            return supplier.get();
+        } catch (Exception t) {
+            throw (RuntimeException) override.get().initCause(t);
+        }
+    }
+
+    public static <T> T getOrThrow(@NonNull Supplier<T> supplier,
+                                   @NonNull Function<Throwable, ? extends RuntimeException> override) {
+        try {
+            return supplier.get();
+        } catch (Exception t) {
+            throw override.apply(t);
+        }
+    }
+
+    public static <T> T getOrDefault(@NonNull Supplier<T> supplier, @NonNull Supplier<T> def) {
+        try {
+            return supplier.get();
+        } catch (Exception t) {
+            if (logger.isTraceEnabled()) {
+                logger.trace("Fallback default", t);
+            }
+            return def.get();
+        }
+    }
+
+    public static <T> T getOrDefault(T def, @NonNull Provider<T> provider) {
         try {
             return provider.get();
         } catch (Exception t) {
             if (logger.isTraceEnabled()) {
                 logger.trace("Fallback default", t);
             }
-            return def.get();
+            return def;
         }
     }
 
@@ -88,9 +117,21 @@ public final class Functions {
         return Long::parseLong;
     }
 
+    public static Function<String, Double> toDouble() {
+        return Double::parseDouble;
+    }
+
     public static Function<String, UUID> toUUID() {
         return UUID64::uuid64ToUuid;
     }
+
+    @FunctionalInterface
+    public interface Provider<T> {
+
+        T get() throws Exception;
+
+    }
+
 
     public static class Silencer<T> implements BiConsumer<T, HiddenException>, Supplier<T> {
 

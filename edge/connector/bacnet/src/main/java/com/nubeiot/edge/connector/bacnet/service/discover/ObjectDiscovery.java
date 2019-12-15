@@ -1,0 +1,99 @@
+package com.nubeiot.edge.connector.bacnet.service.discover;
+
+import java.util.HashMap;
+
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.protocol.CommunicationProtocol;
+import com.nubeiot.core.utils.Functions;
+import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
+import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierSerializer;
+import com.serotonin.bacnet4j.LocalDevice;
+import com.serotonin.bacnet4j.RemoteDevice;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
+import com.serotonin.bacnet4j.util.RequestUtils;
+
+import lombok.NonNull;
+
+public final class ObjectDiscovery extends AbstractBACnetDiscoveryService implements BACnetDiscoveryService {
+
+    ObjectDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
+        super(vertx, sharedKey);
+    }
+
+    @Override
+    public @NonNull String servicePath() {
+        return "/discovery/bacnet/network/:" + Fields.networkCode + "/device/:" + Fields.deviceCode + "/object";
+    }
+
+    @Override
+    public String paramPath() {
+        return Fields.objectCode;
+    }
+
+    @Override
+    public Single<JsonObject> list(RequestData reqData) {
+        final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.DEVICE);
+        final DiscoverOptions options = parseDiscoverOptions(reqData);
+        final CommunicationProtocol protocol = parseNetworkProtocol(request);
+        logger.info("Discover objects in device '{}' by network {}", request.getDeviceCode(), protocol.toJson());
+        final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+        final BACnetDevice device = cache.get(protocol);
+        return device.discoverRemoteDevice(request.getDeviceCode(), options)
+                     .flatMap(remote -> getRemoteObjects(device.getLocalDevice(), remote, options.isDetail()))
+                     .doFinally(device::stop);
+    }
+
+    @Override
+    public Single<JsonObject> get(RequestData reqData) {
+        final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.OBJECT);
+        final DiscoverOptions options = parseDiscoverOptions(reqData);
+        final CommunicationProtocol protocol = parseNetworkProtocol(request);
+        logger.info("Discover object '{}' in device '{}' by network {}", request.getObjectCode(),
+                    request.getDeviceCode(), protocol.toJson());
+        final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+        final BACnetDevice device = cache.get(protocol);
+        final ObjectIdentifier objId = ObjectIdentifierSerializer.deserialize(request.getObjectCode());
+        return device.discoverRemoteDevice(request.getDeviceCode(), options)
+                     .flatMap(rd -> parseRemoteObject(device.getLocalDevice(), rd, objId, true, options.isDetail()))
+                     .doFinally(device::stop);
+    }
+
+    @Override
+    public Single<JsonObject> batchPersist(RequestData reqData) {
+        return Single.just(new JsonObject());
+    }
+
+    @Override
+    public Single<JsonObject> persist(RequestData reqData) {
+        return Single.just(new JsonObject());
+    }
+
+    @Override
+    public String destination() {
+        return null;
+    }
+
+    private Single<JsonObject> getRemoteObjects(@NonNull LocalDevice local, @NonNull RemoteDevice rd, boolean detail) {
+        return Observable.fromIterable(Functions.getOrThrow(t -> new NubeException(ErrorCode.ENGINE_ERROR, t),
+                                                            () -> RequestUtils.getObjectList(local, rd)))
+                         .filter(objId -> objId.getObjectType() != ObjectType.device)
+                         .collect(HashMap::new,
+                                  (map, objId) -> map.put(objId, parseRemoteObject(local, rd, objId, detail, false)))
+                         .map(JsonObject::mapFrom);
+    }
+
+}

@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,6 +29,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Functions.Silencer;
 
 import lombok.AccessLevel;
@@ -195,6 +197,15 @@ public final class Reflections {
 
     public static class ReflectionMethod {
 
+        public static Object executeMethod(@NonNull Object instance, @NonNull Method method) {
+            try {
+                method.setAccessible(true);
+                return method.invoke(instance);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw handleError(method, e);
+            }
+        }
+
         /**
          * Execute method from object instance by only one param.
          *
@@ -227,17 +238,7 @@ public final class Reflections {
                 method.setAccessible(true);
                 return (O) method.invoke(instance, inputData);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                logger.debug("Cannot execute method {}", e, method.getName());
-                if (e instanceof InvocationTargetException) {
-                    Throwable targetException = ((InvocationTargetException) e).getTargetException();
-                    if (targetException instanceof NubeException) {
-                        throw (NubeException) targetException;
-                    }
-                    if (Objects.nonNull(targetException)) {
-                        throw new NubeException(targetException);
-                    }
-                }
-                throw new NubeException(e);
+                throw handleError(method, e);
             }
         }
 
@@ -249,11 +250,11 @@ public final class Reflections {
          * @return List of matching {@code methods}
          */
         public static List<Method> find(@NonNull Class<?> clazz, Predicate<Method> predicate) {
-            Stream<Method> methods = Stream.of(clazz.getDeclaredMethods());
-            if (Objects.nonNull(predicate)) {
-                methods = methods.filter(predicate);
-            }
-            return methods.collect(Collectors.toList());
+            return find(Optional.ofNullable(predicate).orElse(method -> true), clazz).collect(Collectors.toList());
+        }
+
+        public static Stream<Method> find(@NonNull Predicate<Method> predicate, @NonNull Class<?> clazz) {
+            return Stream.of(clazz.getDeclaredMethods()).filter(predicate);
         }
 
         /**
@@ -292,6 +293,20 @@ public final class Reflections {
                 }
             }
             return true;
+        }
+
+        private static NubeException handleError(@NonNull Method method, ReflectiveOperationException e) {
+            logger.debug("Cannot execute method {}", e, method.getName());
+            if (e instanceof InvocationTargetException) {
+                Throwable targetException = ((InvocationTargetException) e).getTargetException();
+                if (targetException instanceof NubeException) {
+                    throw (NubeException) targetException;
+                }
+                if (Objects.nonNull(targetException)) {
+                    throw new NubeException(targetException);
+                }
+            }
+            throw new NubeException(e);
         }
 
         @Getter
@@ -443,7 +458,7 @@ public final class Reflections {
                 constructor.setAccessible(true);
                 silencer.accept(constructor.newInstance(), null);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                silencer.accept(null, new HiddenException(NubeException.ErrorCode.INITIALIZER_ERROR,
+                silencer.accept(null, new HiddenException(ErrorCode.INITIALIZER_ERROR,
                                                           "Cannot init instance of " + clazz.getName(), e));
             }
             return silencer;
@@ -452,14 +467,14 @@ public final class Reflections {
         public static <T> Silencer<T> createObject(Class<T> clazz, @NonNull Map<Class, Object> inputs,
                                                    Silencer<T> silencer) {
             if (inputs.size() > 1 && !(inputs instanceof LinkedHashMap)) {
-                throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
+                throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
             }
             try {
                 Constructor<T> constructor = clazz.getDeclaredConstructor(inputs.keySet().toArray(new Class[] {}));
                 constructor.setAccessible(true);
                 silencer.accept(constructor.newInstance(inputs.values().toArray(new Object[] {})), null);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                silencer.accept(null, new HiddenException(NubeException.ErrorCode.INITIALIZER_ERROR,
+                silencer.accept(null, new HiddenException(ErrorCode.INITIALIZER_ERROR,
                                                           "Cannot init instance of " + clazz.getName(), e));
             }
             return silencer;

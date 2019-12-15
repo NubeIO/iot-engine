@@ -1,13 +1,11 @@
 repositories {
     project.repos
-    maven { url "https://maven.mangoautomation.net/repository/ias-snapshot/" }
     maven { url "https://maven.mangoautomation.net/repository/ias-release/" }
 }
 
 dependencies {
-    compile project(':core:base')
     compile project(':core:micro')
-    compile "com.infiniteautomation:bacnet4j:5.0.0"
+    compile project(':edge:connector:bacnet:base')
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:micro")

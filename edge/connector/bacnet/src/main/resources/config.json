@@ -25,13 +25,11 @@
       }
     },
     "__bacnet__": {
-      "deviceName": "NubeIOEdge28",
-      "deviceId": 4321,
-      "__ipConfigs__": [
-        {
-          "name": "ip1"
-        }
-      ]
+      "modelName": "NubeIO-Edge28",
+      "maxDiscoverTimeout": 6,
+      "maxDiscoverTimeoutUnit": "SECONDS",
+      "allowSlave": true,
+      "gatewayDiscoverAddress": ""
     }
   }
 }

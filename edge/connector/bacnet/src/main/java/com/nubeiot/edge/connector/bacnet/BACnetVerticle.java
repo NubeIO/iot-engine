@@ -1,117 +1,91 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.servicediscovery.Record;
 
-import com.nubeiot.core.IConfig;
-import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.event.ReplyEventHandler;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.edge.connector.bacnet.handlers.DeviceEventHandler;
-import com.nubeiot.edge.connector.bacnet.handlers.NubeServiceEventHandler;
-import com.nubeiot.edge.connector.bacnet.handlers.PointsEventHandler;
+import com.nubeiot.core.micro.ServiceDiscoveryController;
+import com.nubeiot.core.protocol.CommunicationProtocol;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
+import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
+import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
+import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
+import com.nubeiot.edge.connector.bacnet.service.discover.BACnetDiscoveryService;
+
+import lombok.NonNull;
 
 /*
  * Main BACnetInstance verticle
  */
-public class BACnetVerticle extends ContainerVerticle {
+public final class BACnetVerticle extends AbstractBACnetVerticle<BacnetConfig> {
 
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    protected final Map<String, BACnetInstance> bacnetInstances = new HashMap<>();
+    private MicroContext microContext;
 
     @Override
     public void start() {
         super.start();
-
-        JsonObject configJson = this.nubeConfig.getAppConfig().toJson();
-        BACnetConfig bacnetConfig = IConfig.from(configJson, BACnetConfig.class);
-        logger.info("BACNet configuration: {}", configJson);
-
-        if (bacnetConfig.getIpConfigs().isEmpty() && bacnetConfig.getMstpConfigs().isEmpty()) {
-            throw new NubeException("No network information provided");
-        }
-
-        startBACnet(bacnetConfig);
-        initLocalPoints(bacnetConfig.getLocalPointsAddress());
-        //TODO: init all configs from DB when ready to implement
-        addProvider(new MicroserviceProvider(), this::publishServices);
+        this.addProvider(new MicroserviceProvider(), ctx -> microContext = (MicroContext) ctx);
     }
 
     @Override
-    public void registerEventbus(EventController eventClient) {
-        if (bacnetInstances.isEmpty()) {
-            return; //Prevents super.start() from registering before BACnetInstance is started
-        }
-        eventClient.register(BACnetEventModels.NUBE_SERVICE, new NubeServiceEventHandler(bacnetInstances));
-        eventClient.register(BACnetEventModels.DEVICES, new DeviceEventHandler(bacnetInstances));
-        eventClient.register(BACnetEventModels.POINTS, new PointsEventHandler(bacnetInstances));
-        this.eventController = eventClient;
+    protected void successHandler(@NonNull BacnetConfig config) {
+        new BACnetCacheInitializer(config).init(this);
+        super.successHandler(config);
     }
 
     @Override
-    public void stop() {
-        bacnetInstances.forEach((s, baCnet) -> {
-            logger.info("Terminating Network Transport {}", s);
-            baCnet.terminate();
-        });
+    protected @NonNull Class<BacnetConfig> bacnetConfigClass() {
+        return BacnetConfig.class;
     }
 
-    protected void startBACnet(BACnetConfig bacnetConfig) {
-        bacnetConfig.getIpConfigs().forEach(ipConfig -> {
-            logger.info("Initialising bacnet instance for network {}", ipConfig.getName());
-            bacnetInstances.put(ipConfig.getName(),
-                                BACnetInstance.createBACnet(bacnetConfig, ipConfig, eventController, vertx));
-        });
+    @Override
+    protected Maybe<JsonObject> registerServices(@NonNull BacnetConfig config) {
+        final EventController client = getEventController();
+        return Observable.fromIterable(BACnetDiscoveryService.createServices(getVertx(), getSharedKey()))
+                         .doOnEach(s -> Optional.ofNullable(s.getValue())
+                                                .ifPresent(service -> client.register(service.address(), service)))
+                         .filter(s -> Objects.nonNull(s.definitions()))
+                         .flatMap(s -> registerEndpoint(microContext.getLocalController(), s))
+                         .map(Record::toJson)
+                         .count()
+                         .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet service(s)"))
+                         .toMaybe();
     }
 
-    protected void publishServices(MicroContext microContext) {
-        microContext.getLocalController()
-                    .addEventMessageRecord("bacnet-local-service", BACnetEventModels.NUBE_SERVICE.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet", "/bacnet"), new JsonObject())
-                    .subscribe();
-
-        microContext.getLocalController()
-                    .addEventMessageRecord("bacnet-device-service", BACnetEventModels.DEVICES.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet/:network/",
-                                                                               "/bacnet/:network/:deviceID"),
-                                           new JsonObject())
-                    .subscribe();
-
-        microContext.getLocalController()
-                    .addEventMessageRecord("bacnet-points-service", BACnetEventModels.POINTS.getAddress(),
-                                           EventMethodDefinition.createDefault("/bacnet/:network/:deviceID/points",
-                                                                               "/bacnet/:network/:deviceID/points" +
-                                                                               "/:objectID"), new JsonObject())
-                    .subscribe();
+    @Override
+    protected @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull BacnetConfig config) {
+        return Single.just(new ArrayList<>());
     }
 
-    protected void initLocalPoints(String localPointsAddress) {
-        logger.info("Requesting local points from address {}", localPointsAddress);
-        ReplyEventHandler handler = ReplyEventHandler.builder()
-                                                     .system("BACNET_API")
-                                                     .action(EventAction.GET_LIST)
-                                                     .success(this::initLocalPoints)
-                                                     .error(error -> logger.error(error.toJson()))
-                                                     .build();
-        eventController.fire(localPointsAddress, EventPattern.REQUEST_RESPONSE,
-                             EventMessage.initial(EventAction.GET_LIST), handler, null);
+    @Override
+    protected BACnetDevice onEachStartup(BACnetDevice device) {
+        return device.addListener(new WhoIsListener());
     }
 
-    private void initLocalPoints(EventMessage msg) {
-        final JsonObject data = Objects.isNull(msg.getData()) ? new JsonObject() : msg.getData();
-        bacnetInstances.values().forEach(instance -> instance.initialiseLocalObjectsFromJson(data));
+    @Override
+    protected Future<Void> stopBACnet() {
+        return Future.succeededFuture();
+    }
+
+    private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, BACnetDiscoveryService s) {
+        return Observable.fromIterable(s.definitions())
+                         .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
+    }
+
+    @Override
+    protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
+        return new BACnetDiscoverFinisher();
     }
 
 }

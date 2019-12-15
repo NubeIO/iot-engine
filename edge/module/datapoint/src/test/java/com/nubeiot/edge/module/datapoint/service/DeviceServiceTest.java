@@ -14,6 +14,7 @@ import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
@@ -24,6 +25,7 @@ import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
+import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 public class DeviceServiceTest extends BaseDataPointServiceTest {
@@ -95,7 +97,10 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_get_network_by_device(TestContext context) {
-        JsonObject expected = JsonPojo.from(MockData.NETWORK).toJson();
+        JsonObject expected = JsonPojo.from(MockData.NETWORK)
+                                      .toJson()
+                                      .put("protocol", Protocol.UNKNOWN.type())
+                                      .put("state", State.NONE);
         expected.remove("device");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE.toString())

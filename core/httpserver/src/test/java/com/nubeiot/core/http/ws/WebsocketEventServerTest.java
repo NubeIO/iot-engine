@@ -25,7 +25,7 @@ import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
 import com.nubeiot.core.http.base.Urls;
@@ -139,7 +139,7 @@ public class WebsocketEventServerTest extends HttpServerTestBase {
 
     @Test
     public void test_send_error_websocketMessage_format(TestContext context) throws InterruptedException {
-        EventMessage body = EventMessage.error(EventAction.RETURN, NubeException.ErrorCode.INVALID_ARGUMENT,
+        EventMessage body = EventMessage.error(EventAction.RETURN, ErrorCode.INVALID_ARGUMENT,
                                                "Invalid websocket event body format");
         startServer(context, new HttpServerRouter().registerEventBusSocket(MockWebsocketEvent.NO_PUBLISHER));
         String pushAddress = MockWebsocketEvent.ALL_EVENTS.getListener().getAddress();

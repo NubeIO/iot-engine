@@ -420,7 +420,7 @@
     "name": "DO1",
     "value": 0,
     "pinValue": 0,
-    "priority": "null",
+    "priority": 16,
     "priorityArray": {
       "1": "null",
       "2": "null",
@@ -437,8 +437,7 @@
       "13": "null",
       "14": "null",
       "15": "null",
-      "16": "null",
-      "null": 0
+      "16": 0
     },
     "kind": "Bool",
     "unit": "null",

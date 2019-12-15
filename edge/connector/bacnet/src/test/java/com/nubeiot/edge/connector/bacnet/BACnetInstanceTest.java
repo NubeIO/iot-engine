@@ -1,45 +1,53 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import static org.junit.Assert.assertEquals;
-
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.function.Consumer;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.edge.connector.bacnet.utils.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
+import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.cache.RemoteEntityCachePolicy;
+import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
 import com.serotonin.bacnet4j.type.constructed.Address;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
+import com.serotonin.bacnet4j.util.RemoteDeviceDiscoverer;
 
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class BACnetInstanceTest {
 
     private LocalDevice localDevice;
     private DefaultTransport transport;
     private BACnetInstance bacnetInstance;
-    private Map<String, Integer> remoteSubscriptions;
+    private JsonObject points;
+    private Vertx vertx;
 
     @Before
     public void beforeEach() throws Exception {
-        Vertx vertx = Mockito.mock(Vertx.class);
+        vertx = Mockito.mock(Vertx.class);
         transport = Mockito.mock(DefaultTransport.class);
         localDevice = new LocalDevice(1234, transport);
-        remoteSubscriptions = new HashMap<>();
-        bacnetInstance = BACnetInstance.createBACnet(localDevice, vertx, remoteSubscriptions);
+        bacnetInstance = BACnetInstance.create(vertx, BACnetInstanceTest.class.getName(), localDevice);
+        final URL POINTS_RESOURCE = FileUtils.class.getClassLoader().getResource("points.json");
+        points = new JsonObject(FileUtils.readFileToString(POINTS_RESOURCE.toString()));
     }
 
     @After
@@ -47,12 +55,119 @@ public class BACnetInstanceTest {
         localDevice.terminate();
     }
 
-    @Test
-    public void initPointsFromJsonTest() {
-        final URL POINTS_RESOURCE = FileUtils.class.getClassLoader().getResource("points.json");
-        JsonObject points = new JsonObject(FileUtils.readFileToString(POINTS_RESOURCE.toString()));
-
+    private void initPointsFromJson() throws Exception {
         bacnetInstance.initialiseLocalObjectsFromJson(points);
+    }
+
+    @Test
+    public void initPointsFromJsonTest() throws Exception {
+        initPointsFromJson();
+        points.getMap().keySet().forEach(s -> {
+            try {
+                Assert.assertNotNull(bacnetInstance.getLocalObjectId(s));
+            } catch (Exception e) {
+                Assert.fail(e.getMessage());
+            }
+        });
+    }
+
+    @Test
+    public void discoveryTest() throws Exception {
+        LocalDevice ld = Mockito.mock(LocalDevice.class);
+        BACnetInstance inst = BACnetInstance.create(vertx, BACnetInstanceTest.class.getName(), ld);
+        Mockito.when(ld.startRemoteDeviceDiscovery()).thenReturn(Mockito.mock(RemoteDeviceDiscoverer.class));
+        inst.startRemoteDiscover();
+        Mockito.verify(ld).clearRemoteDevices();
+        Mockito.verify(ld).startRemoteDeviceDiscovery(Mockito.any(Consumer.class));
+        Mockito.verify(vertx).setTimer(Mockito.anyLong(), Mockito.any(Handler.class));
+    }
+
+    @Test
+    public void getLocalObjectId() throws Exception {
+        initPointsFromJson();
+
+        points.getMap().keySet().forEach(s -> {
+            try {
+                Assert.assertNotNull(bacnetInstance.getLocalObjectId(s));
+            } catch (Exception e) {
+                Assert.fail(e.getMessage());
+            }
+        });
+    }
+
+    @Test(expected = BACnetException.class)
+    public void getLocalObjectIdError() throws Exception {
+        bacnetInstance.getLocalObjectId("no_point");
+    }
+
+    @Test
+    public void getLocalObjectNubeId() throws Exception {
+
+        points.getMap().keySet().forEach(s -> {
+            try {
+                EdgePoint p = EdgePoint.fromJson(s, points.getJsonObject(s));
+                ObjectIdentifier oid = bacnetInstance.addLocalObject(p).getId();
+                Assert.assertEquals(s, bacnetInstance.getLocalObjectNubeId(oid));
+            } catch (Exception e) {
+                Assert.fail(e.getMessage());
+            }
+        });
+    }
+
+    @Test
+    public void getLocalObjectNubeIdError() throws Exception {
+        Assert.assertNull(bacnetInstance.getLocalObjectNubeId(new ObjectIdentifier(ObjectType.binaryValue, 11)));
+    }
+
+    @Test
+    public void addLocalPoint() throws Exception {
+        points.getMap().forEach((s, o) -> {
+            EdgePoint p = EdgePoint.fromJson(s, JsonObject.mapFrom(o));
+            try {
+                bacnetInstance.addLocalObject(p);
+                Assert.assertNotNull(bacnetInstance.getLocalObjectId(s));
+                Assert.assertNotNull(localDevice.getObject(bacnetInstance.getLocalObjectId(s)));
+            } catch (Exception e) {
+                Assert.fail(e.getMessage());
+            }
+        });
+    }
+
+    @Test
+    public void removeLocalPoint() throws Exception {
+        initPointsFromJson();
+
+        points.getMap().keySet().forEach(s -> {
+            try {
+                ObjectIdentifier oid = bacnetInstance.getLocalObjectId(s);
+                bacnetInstance.removeLocalObject(s);
+                Assert.assertNull(localDevice.getObject(oid));
+                try {
+                    bacnetInstance.getLocalObjectId(s);
+                    Assert.fail();
+                } catch (BACnetException ex) {
+                }
+            } catch (Exception e) {
+                Assert.fail(e.getMessage());
+            }
+        });
+    }
+
+    @Test
+    public void getLocalObjectIdTest() throws Exception {
+        initPointsFromJsonTest();
+        Assert.assertNotNull(bacnetInstance.getLocalObjectId("UI1"));
+        Assert.assertNotNull(bacnetInstance.getLocalObjectId("DI1"));
+        Assert.assertNotNull(bacnetInstance.getLocalObjectId("UO1"));
+        Assert.assertNotNull(bacnetInstance.getLocalObjectId("DO1"));
+        Assert.assertNotNull(bacnetInstance.getLocalObjectId("4AB28169_MOVEMENT"));
+        Assert.assertNotNull(bacnetInstance.getLocalObjectId("4AB28169_TEMP"));
+    }
+
+    @Test(expected = BACnetException.class)
+    public void getLocalObjectIdTest_invalidPoint() throws Exception {
+        Assert.assertNull(bacnetInstance.getLocalObjectId("UI9"));
+        Assert.assertNull(bacnetInstance.getLocalObjectId("no_point"));
     }
 
     @Test
@@ -90,4 +205,5 @@ public class BACnetInstanceTest {
                       .test()
                       .assertError(BACnetRuntimeException.class);
     }
+
 }
