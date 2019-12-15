@@ -2,6 +2,7 @@ package com.nubeiot.edge.module.scheduler;
 
 import java.util.function.Consumer;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -67,6 +68,7 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
     }
 
     @Test
+    @Ignore
     public void test_create_job_unsupported(TestContext context) {
         TestHelper.sleep(1000);
         final JsonObject job = MockSchedulerEntityHandler.JOB_2.toJson().put("name", "unknown").put("type", "XXX");
