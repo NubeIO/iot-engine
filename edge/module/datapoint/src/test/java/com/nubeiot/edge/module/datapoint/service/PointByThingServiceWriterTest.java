@@ -28,22 +28,33 @@ public class PointByThingServiceWriterTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_create_point_by_thing(TestContext context) {
+    public void test_create_point_by_thing_actuator(TestContext context) {
         final UUID uuid = UUID.randomUUID();
         final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
-        final JsonObject expected = new JsonObject();
-        final JsonObject reqBody = new JsonObject().put("thing_id", UUID64.uuidToBase64(PrimaryKey.THING_FAN_HVAC))
+        final JsonObject expected = new JsonObject(
+            "{\"resource\":{\"id\":6,\"point\":{\"id\":\"" + uuid + "\",\"code\":\"NEW_TEMP\",\"edge\":\"" +
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.NETWORK + "\",\"label\":null,\"enabled\":true," +
+            "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
+            "\"unit_alias\":null,\"min_scale\":null,\"max_scale\":null,\"precision\":3,\"offset\":0,\"version\":null," +
+            "\"metadata\":null}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}");
+        final JsonObject reqBody = new JsonObject().put("thing_id", UUID64.uuidToBase64(PrimaryKey.THING_SWITCH_HVAC))
                                                    .put("point", JsonPojo.from(newOne).toJson());
         asserter(context, true, expected, PointByThingService.class.getName(), EventAction.CREATE,
                  RequestData.builder().body(reqBody).build());
     }
 
     @Test
-    public void test_create_point_by_thing_n_device(TestContext context) {
-    }
-
-    @Test
-    public void test_create_point_by_thing_n_device_n_network(TestContext context) {
+    public void test_create_point_by_duplicate_sensor(TestContext context) {
+        final UUID uuid = UUID.randomUUID();
+        final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
+        final JsonObject expected = new JsonObject(
+            "{\"code\":\"DATABASE_ERROR\",\"message\":\"Database error. Code: C23_INTEGRITY_CONSTRAINT_VIOLATION | " +
+            "Cause:Thing " + PrimaryKey.THING_TEMP_HVAC + " with type SENSOR is already assigned to Point " +
+            PrimaryKey.P_BACNET_TEMP + "\"}}");
+        final JsonObject reqBody = new JsonObject().put("thing_id", UUID64.uuidToBase64(PrimaryKey.THING_TEMP_HVAC))
+                                                   .put("point", JsonPojo.from(newOne).toJson());
+        asserter(context, false, expected, PointByThingService.class.getName(), EventAction.CREATE,
+                 RequestData.builder().body(reqBody).build());
     }
 
     private JsonObject constructListPoints(@NonNull Map<Integer, Point> pointThingMap) {

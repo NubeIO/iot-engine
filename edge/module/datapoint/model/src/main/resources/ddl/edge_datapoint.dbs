@@ -317,14 +317,14 @@ Thing with type is SENSOR is attached to only one Point. It will be validated by
 			<column name="COMPUTED_THING" type="varchar" length="100" jt="12" >
 				<comment><![CDATA[Computed Thing Id and Thing Type to ensure unique sensor thing]]></comment>
 			</column>
-			<column name="EDGE_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" >
-				<comment><![CDATA[Egde value is inherited from Point]]></comment>
-			</column>
-			<column name="NETWORK_ID" type="uuid" length="2147483647" jt="-2" >
-				<comment><![CDATA[Network value is inherited from Point]]></comment>
-			</column>
 			<column name="DEVICE_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" >
 				<comment><![CDATA[Device value is inherited from Thing]]></comment>
+			</column>
+			<column name="NETWORK_ID" type="uuid" length="2147483647" jt="-2" >
+				<comment><![CDATA[Network value is inherited from Thing]]></comment>
+			</column>
+			<column name="EDGE_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" >
+				<comment><![CDATA[Egde value is inherited from Thing]]></comment>
 			</column>
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
@@ -511,11 +511,11 @@ Thing with type is SENSOR is attached to only one Point. It will be validated by
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="DEVICE" color="CCE6FF" x="1184" y="640" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT" color="C7F4BE" x="368" y="336" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE_DEVICE" color="CCE6FF" x="960" y="736" />
-		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="CCE6FF" x="912" y="416" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="EDGE" color="CCE6FF" x="656" y="672" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="656" y="80" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="THING" color="CCE6FF" x="1184" y="336" />
 		<entity schema="01_edge_datapoint.sql.PUBLIC" name="POINT_THING" color="CCE6FF" x="672" y="352" />
+		<entity schema="01_edge_datapoint.sql.PUBLIC" name="NETWORK" color="CCE6FF" x="912" y="416" />
 		<group name="SYSTEM" color="FFCCE6" >
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="PROTOCOL_DISPATCHER" />
 			<entity schema="01_edge_datapoint.sql.PUBLIC" name="SYNC_DISPATCHER" />

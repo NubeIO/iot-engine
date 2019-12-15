@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.jooq.OrderField;
-import org.jooq.TableField;
 
 import io.vertx.core.json.JsonObject;
 
@@ -29,6 +28,7 @@ import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
@@ -36,6 +36,7 @@ import com.nubeiot.edge.module.datapoint.model.pojos.ThingComposite;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.dto.Protocol;
+import com.nubeiot.iotdata.dto.ThingType;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDao;
@@ -731,6 +732,13 @@ public interface DataPointIndex extends MetadataIndex {
         public static final PointThingMetadata INSTANCE = new PointThingMetadata().addSubItem(
             PointCompositeMetadata.INSTANCE, ThingMetadata.INSTANCE);
 
+        public static String genComputedThing(@NonNull ThingType type, @NonNull UUID thingId) {
+            if (type != ThingType.SENSOR) {
+                return null;
+            }
+            return UUID64.uuidToBase64(thingId) + "-" + type.type();
+        }
+
         @Override
         public @NonNull Class<PointThing> rawClass() {
             return PointThing.class;
@@ -749,37 +757,6 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<PointThingDao> daoClass() {
             return PointThingDao.class;
-        }
-
-        @Override
-        public ThingComposite onCreating(RequestData reqData) throws IllegalArgumentException {
-            ThingComposite thing = super.onCreating(reqData);
-            //            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
-            //            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
-            return thing;
-        }
-
-        @Override
-        public @NonNull ThingComposite onUpdating(@NonNull PointThing dbData, RequestData reqData)
-            throws IllegalArgumentException {
-            ThingComposite thing = super.onUpdating(dbData, reqData);
-            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
-            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
-            return thing;
-        }
-
-        @Override
-        public @NonNull ThingComposite onPatching(@NonNull PointThing dbData, RequestData reqData)
-            throws IllegalArgumentException {
-            ThingComposite thing = super.onPatching(dbData, reqData);
-            Strings.requireNotBlank(thing.getDeviceId(), tempMsg(table().DEVICE_ID));
-            Strings.requireNotBlank(thing.getEdgeId(), tempMsg(table().EDGE_ID));
-            return thing;
-        }
-
-        private String tempMsg(@NonNull TableField field) {
-            return "Provide " + table().getJsonField(field) + " temporarily. " +
-                   "See ticket: https://github.com/NubeIO/iot-engine/issues/242";
         }
 
     }
