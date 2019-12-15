@@ -12,24 +12,13 @@
   "__app__": {
     "__bacnet__": {
       "deviceName": "NubeIOMaster",
-      "deviceId": 11111,
-      "__ipConfigs__": [
-        {
-          "name": "ip1",
-          "networkInterface": "br-2e592f75ad7b"
+      "deviceId": 111,
+      "__networks__": {
+        "ip1": {
+          "type": "IP",
+          "networkInterface": "br-dbe3c69dbbb3"
         }
-      ]
+      }
     }
   }
 }
-
-
-
-
-
-
-}
-
-
-
-

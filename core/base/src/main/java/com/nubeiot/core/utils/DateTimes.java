@@ -3,6 +3,7 @@ package com.nubeiot.core.utils;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -33,12 +34,16 @@ public final class DateTimes {
         return fromUTC(Instant.now());
     }
 
-    public static LocalDateTime fromUTC(Instant instant) {
+    public static LocalDateTime fromUTC(@NonNull Instant instant) {
         return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     public static ZonedDateTime toUTC(@NonNull Date date) {
-        return DateTimes.toUTC(date.toInstant().atZone(ZoneId.systemDefault()));
+        return DateTimes.toUTC(date.toInstant());
+    }
+
+    public static ZonedDateTime toUTC(@NonNull Instant date) {
+        return DateTimes.toUTC(date.atZone(ZoneId.systemDefault()));
     }
 
     public static ZonedDateTime toUTC(@NonNull LocalDateTime time) {
@@ -53,7 +58,7 @@ public final class DateTimes {
         return DateTimes.toZone(dateTime, ZoneOffset.UTC);
     }
 
-    public static ZonedDateTime toZone(ZonedDateTime dateTime, @NonNull ZoneId toZone) {
+    public static ZonedDateTime toZone(@NonNull ZonedDateTime dateTime, @NonNull ZoneId toZone) {
         return dateTime.withZoneSameInstant(toZone);
     }
 
@@ -65,7 +70,7 @@ public final class DateTimes {
         return Instant.now().toEpochMilli();
     }
 
-    public static OffsetDateTime from(Instant instant) {
+    public static OffsetDateTime from(@NonNull Instant instant) {
         return OffsetDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
@@ -75,6 +80,18 @@ public final class DateTimes {
 
     public static Instant parseISO8601(String datetime) {
         return Instant.from(parseFromISO8601(datetime));
+    }
+
+    public static String formatDate(@NonNull ZonedDateTime offsetDate) {
+        return offsetDate.format(DateTimeFormatter.ISO_OFFSET_DATE);
+    }
+
+    public static String formatDate(@NonNull OffsetDateTime offsetDate) {
+        return offsetDate.format(DateTimeFormatter.ISO_OFFSET_DATE);
+    }
+
+    public static String formatTime(@NonNull OffsetTime value) {
+        return DateTimeFormatter.ISO_TIME.format(value);
     }
 
     public static String format(@NonNull ZonedDateTime zonedDateTime) {

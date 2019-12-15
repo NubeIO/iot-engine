@@ -10,7 +10,7 @@ public abstract class AbstractEnumConverter<T extends EnumType> implements Conve
 
     @Override
     public final T from(String databaseObject) {
-        return EnumType.factory(databaseObject, toType());
+        return EnumType.factory(databaseObject, toType(), def());
     }
 
     @Override

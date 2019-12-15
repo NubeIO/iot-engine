@@ -38,7 +38,7 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, Consumer<? extends UnitContext>> afterSuccesses = new HashMap<>();
     private final Set<String> deployments = new HashSet<>();
     @Getter
-    protected EventController eventController;
+    private EventController eventController;
     @Getter
     protected NubeConfig nubeConfig;
     private Handler<Void> successHandler;
@@ -96,29 +96,20 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     @Override
     @SuppressWarnings("unchecked")
     public final void installUnits(Future<Void> future) {
-        if (components.isEmpty()) {
+        ExecutorHelpers.blocking(getVertx(), components::entrySet).flattenAsObservable(s -> s).flatMapSingle(entry -> {
+            Unit unit = entry.getValue().get().registerSharedKey(getSharedKey());
+            JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
+            DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
+            return vertx.rxDeployVerticle(unit, options)
+                        .doOnSuccess(deployId -> succeed(unit, deployId))
+                        .doOnError(t -> logger.error("Cannot start unit verticle {}", t, unit.getClass().getName()));
+        }).count().subscribe(ignored -> {
+            if (Objects.nonNull(successHandler)) {
+                this.successHandler.handle(null);
+            }
+            logger.info("Deployed {} unit verticle(s)...", ignored);
             future.complete();
-            return;
-        }
-        ExecutorHelpers.blocking(vertx.getDelegate(), components::entrySet)
-                       .flattenAsObservable(s -> s)
-                       .flatMapSingle(entry -> {
-                           Unit unit = entry.getValue().get().registerSharedKey(getSharedKey());
-                           JsonObject deployConfig = IConfig.from(this.nubeConfig, unit.configClass()).toJson();
-                           DeploymentOptions options = new DeploymentOptions().setConfig(deployConfig);
-                           return vertx.rxDeployVerticle(unit, options)
-                                       .doOnSuccess(deployId -> succeed(unit, deployId))
-                                       .doOnError(t -> logger.error("Cannot start unit verticle {}", t,
-                                                                    unit.getClass().getName()));
-                       })
-                       .toList()
-                       .subscribe(ignored -> {
-                           if (Objects.nonNull(successHandler)) {
-                               this.successHandler.handle(null);
-                           }
-                           logger.info("Deployed {} verticle(s)...", ignored.size());
-                           future.complete();
-                       }, throwable -> fail(future, throwable));
+        }, throwable -> fail(future, throwable));
     }
 
     @Override

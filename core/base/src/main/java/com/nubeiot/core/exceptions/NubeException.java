@@ -50,7 +50,7 @@ public class NubeException extends RuntimeException {
         DATABASE_ERROR,
         STATE_ERROR,
         TIMEOUT_ERROR,
-        NETWORK_ERROR,
+        NETWORK_ERROR, COMMUNICATION_PROTOCOL_ERROR,
         UNKNOWN_ERROR
     }
 

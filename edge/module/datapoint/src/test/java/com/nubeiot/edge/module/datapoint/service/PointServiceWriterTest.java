@@ -15,7 +15,7 @@ import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
-import com.nubeiot.iotdata.dto.PointCategory;
+import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
@@ -85,7 +85,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     public void test_create_directly(TestContext context) {
         final UUID id = UUID.randomUUID();
         JsonObject data = new JsonObject(
-            "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"category" +
+            "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"GPIO\",\"unit\":{\"type\":\"meters_per_second\",\"symbol\":\"m/s\",\"category\":\"VELOCITY\"," +
             "\"alias\":{\"= 10.0\":\"hah\",\"> 10.0\":\"xyz\"}},\"device\":\"" + PrimaryKey.DEVICE +
             "\",\"enabled\":true}");
@@ -97,7 +97,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                               .setDevice(PrimaryKey.DEVICE)
                               .setKind(PointKind.INPUT)
                               .setType(PointType.DIGITAL)
-                              .setCategory(PointCategory.GPIO)
+                              .setProtocol(Protocol.GPIO)
                               .setMeasureUnit(Velocity.M_PER_SECOND.type())
                               .setUnitAlias(new UnitAlias().add("10", "hah").add(">10", "xyz"));
         RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();
@@ -108,7 +108,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     public void test_create_by_device(TestContext context) {
         final UUID id = UUID.randomUUID();
         JsonObject data = new JsonObject(
-            "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"OUTPUT\",\"type\":\"DIGITAL\",\"category" +
+            "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"OUTPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"BACNET\",\"unit\":{\"type\":\"fahrenheit\",\"symbol\":\"°F\",\"category\":\"TEMPERATURE\"}," +
             "\"device\":\"" + PrimaryKey.DEVICE + "\",\"enabled\":true}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
@@ -118,7 +118,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                               .setCode("TET_01")
                               .setKind(PointKind.OUTPUT)
                               .setType(PointType.DIGITAL)
-                              .setCategory(PointCategory.BACNET)
+                              .setProtocol(Protocol.BACNET)
                               .setMeasureUnit(Temperature.FAHRENHEIT.type());
         RequestData req = RequestData.builder()
                                      .body(JsonPojo.from(p1).toJson().put("device_id", PrimaryKey.DEVICE.toString()))
@@ -130,7 +130,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     public void test_create_by_device_and_network(TestContext context) {
         final UUID id = UUID.randomUUID();
         JsonObject data = new JsonObject(
-            "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"OUTPUT\",\"type\":\"DIGITAL\",\"category" +
+            "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"OUTPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"BACNET\",\"unit\":{\"type\":\"fahrenheit\",\"symbol\":\"°F\",\"category\":\"TEMPERATURE\"}," +
             "\"device\":\"" + PrimaryKey.DEVICE + "\",\"network\":\"" + PrimaryKey.NETWORK + "\",\"enabled\":true}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
@@ -140,7 +140,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                               .setCode("TET_01")
                               .setKind(PointKind.OUTPUT)
                               .setType(PointType.DIGITAL)
-                              .setCategory(PointCategory.BACNET)
+                              .setProtocol(Protocol.BACNET)
                               .setMeasureUnit(Temperature.FAHRENHEIT.type());
         RequestData req = RequestData.builder()
                                      .body(JsonPojo.from(p1)
@@ -156,13 +156,13 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         JsonObject body = new JsonObject(
             "{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"code\":\"NUBE_HUMIDITY\",\"device\":\"" +
             PrimaryKey.DEVICE + "\",\"network\":\"" + PrimaryKey.NETWORK +
-            "\",\"enabled\":false,\"category\":\"BACNET\",\"kind\":\"OUTPUT\",\"type\":\"10K-THERMISTOR\"," +
+            "\",\"enabled\":false,\"protocol\":\"BACNET\",\"kind\":\"OUTPUT\",\"type\":\"10K-THERMISTOR\"," +
             "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\",\"alias\":{\"= 0.0\":\"OFF\",\"= 1.0\":\"ON\"}}}");
         JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", body);
         final Point p1 = new Point().setCode("NUBE_HUMIDITY")
-                                    .setCategory(PointCategory.BACNET)
+                                    .setProtocol(Protocol.BACNET)
                                     .setDevice(PrimaryKey.DEVICE)
                                     .setNetwork(PrimaryKey.NETWORK)
                                     .setKind(PointKind.OUTPUT)
@@ -181,13 +181,13 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     public void test_update_by_device(TestContext context) {
         JsonObject body = new JsonObject(
             "{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"code\":\"NUBE_VELOCITY\",\"device\":\"" +
-            PrimaryKey.DEVICE + "\",\"enabled\":false,\"category\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"UNKNOWN\"" +
+            PrimaryKey.DEVICE + "\",\"enabled\":false,\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"UNKNOWN\"" +
             ",\"unit\":{\"type\":\"kilometers_per_hour\",\"category\":\"VELOCITY\",\"symbol\":\"km/h\"}}");
         JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", body);
         final Point p1 = new Point().setCode("NUBE_VELOCITY")
-                                    .setCategory(PointCategory.BACNET)
+                                    .setProtocol(Protocol.BACNET)
                                     .setKind(PointKind.INPUT)
                                     .setMeasureUnit(Velocity.KM_PER_HOUR.type())
                                     .setEnabled(false);
@@ -203,14 +203,14 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     public void test_update_by_device_network(TestContext context) {
         JsonObject body = new JsonObject(
             "{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"code\":\"NUBE_VELOCITY\",\"device\":\"" +
-            PrimaryKey.DEVICE + "\",\"enabled\":false,\"category\":\"BACNET\",\"kind\":\"INPUT\"," +
+            PrimaryKey.DEVICE + "\",\"enabled\":false,\"protocol\":\"BACNET\",\"kind\":\"INPUT\"," +
             "\"type\":\"UNKNOWN\",\"unit\":{\"type\":\"kilometers_per_hour\",\"category\":\"VELOCITY\"," +
             "\"symbol\":\"km/h\"}}");
         JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", body);
         final Point p1 = new Point().setCode("NUBE_VELOCITY")
-                                    .setCategory(PointCategory.BACNET)
+                                    .setProtocol(Protocol.BACNET)
                                     .setKind(PointKind.INPUT)
                                     .setMeasureUnit(Velocity.KM_PER_HOUR.type())
                                     .setEnabled(false);
@@ -268,7 +268,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                                               .put("status", Status.SUCCESS)
                                               .put("resource", body);
         Point p1 = new Point().setCode("NUBE_FAN")
-                              .setCategory(PointCategory.BACNET)
+                              .setProtocol(Protocol.BACNET)
                               .setMeasureUnit(AngularVelocity.RAD_PER_SECOND.type());
         RequestData req = RequestData.builder()
                                      .body(JsonPojo.from(p1)

@@ -1,0 +1,8 @@
+{
+  "__app__": {
+    "__bacnet__": {
+      "deviceName": "NubeIO-Edge28",
+      "deviceId": 123456
+    }
+  }
+}

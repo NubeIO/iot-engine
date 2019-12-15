@@ -30,7 +30,7 @@ import com.nubeiot.edge.module.datapoint.BaseDataPointVerticleTest;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
-import com.nubeiot.iotdata.dto.PointCategory;
+import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
@@ -97,7 +97,7 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
         Async async = context.async();
         final UUID id = UUID.randomUUID();
         JsonObject data = new JsonObject(
-            "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"OUTPUT\",\"type\":\"DIGITAL\",\"category" +
+            "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"OUTPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"BACNET\",\"unit\":{\"type\":\"fahrenheit\",\"symbol\":\"°F\",\"category\":\"TEMPERATURE\"}," +
             "\"device\":\"" + PrimaryKey.DEVICE + "\",\"enabled\":true}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
@@ -107,7 +107,7 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                               .setCode("TET_01")
                               .setKind(PointKind.OUTPUT)
                               .setType(PointType.DIGITAL)
-                              .setCategory(PointCategory.BACNET)
+                              .setProtocol(Protocol.BACNET)
                               .setMeasureUnit(Temperature.FAHRENHEIT.type());
         final Consumer<ResponseData> after = r -> {
             try {

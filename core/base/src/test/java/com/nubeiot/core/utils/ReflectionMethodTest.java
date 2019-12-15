@@ -9,6 +9,7 @@ import org.junit.Test;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Reflections.ReflectionMethod;
 import com.nubeiot.core.utils.mock.MockReflection;
 
@@ -54,7 +55,7 @@ public class ReflectionMethodTest {
             ReflectionMethod.executeMethod(mock, method, Void.class, Collections.singletonList(String.class), "hey");
         } catch (NubeException e) {
             Assert.assertEquals("hey", e.getMessage());
-            Assert.assertEquals(NubeException.ErrorCode.SERVICE_ERROR, e.getErrorCode());
+            Assert.assertEquals(ErrorCode.SERVICE_ERROR, e.getErrorCode());
             Assert.assertNull(e.getCause());
             throw e;
         }
@@ -68,7 +69,7 @@ public class ReflectionMethodTest {
             ReflectionMethod.executeMethod(mock, method, Void.class, Collections.singletonList(String.class), "hey");
         } catch (NubeException e) {
             Assert.assertNull(e.getMessage());
-            Assert.assertEquals(NubeException.ErrorCode.UNKNOWN_ERROR, e.getErrorCode());
+            Assert.assertEquals(ErrorCode.UNKNOWN_ERROR, e.getErrorCode());
             Assert.assertEquals("hey", e.getCause().getMessage());
             throw e.getCause();
         }

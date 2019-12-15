@@ -13,6 +13,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -31,8 +32,7 @@ public final class Configs {
         try (Scanner scanner = new Scanner(resourceAsStream).useDelimiter("\\A")) {
             return new JsonObject(scanner.next());
         } catch (DecodeException | NoSuchElementException e) {
-            throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Config file is not valid JSON object",
-                                    e);
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Config file is not valid JSON object", e);
         }
     }
 

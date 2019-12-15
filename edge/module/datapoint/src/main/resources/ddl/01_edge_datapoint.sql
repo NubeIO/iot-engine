@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS NETWORK (
 	ID                   uuid   NOT NULL,
 	CODE                 varchar(63)   NOT NULL,
 	DEVICE               uuid   NOT NULL,
+	PROTOCOL             varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
+	STATE                varchar(31)  DEFAULT 'NONE' NOT NULL,
 	LABEL                varchar(1000)   ,
 	METADATA_JSON        clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
@@ -130,7 +132,7 @@ CREATE TABLE IF NOT EXISTS POINT (
 	NETWORK              uuid   ,
 	LABEL                varchar(1000)   ,
 	ENABLED              boolean  DEFAULT TRUE NOT NULL,
-	POINT_CATEGORY       varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
+	PROTOCOL             varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
 	POINT_KIND           varchar(15)  DEFAULT 'UNKNOWN' NOT NULL,
 	POINT_TYPE           varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
 	MEASURE_UNIT         varchar(63)  NOT NULL,
@@ -156,7 +158,7 @@ CREATE INDEX IDX_FK_POINT_DEVICE ON POINT ( DEVICE );
 CREATE INDEX IDX_FK_POINT_NETWORK ON POINT ( NETWORK );
 
 COMMENT ON TABLE POINT IS 'Represents for:\n- Edge device pin if category is GPIO\n- Virtual point if category is not GPIO';
-COMMENT ON COLUMN POINT.POINT_CATEGORY IS 'One of BACNET | GPIO | MODBUS | UNKNOWN';
+COMMENT ON COLUMN POINT.PROTOCOL IS 'One of BACNET | GPIO | MODBUS | UNKNOWN';
 COMMENT ON COLUMN POINT.POINT_KIND IS 'INPUT|OUTPUT|UNKNOWN';
 COMMENT ON COLUMN POINT.POINT_TYPE IS 'ANALOG | DIGITAL | DC_10 | DC_12 | MA_20 | THERMISTOR_10K';
 

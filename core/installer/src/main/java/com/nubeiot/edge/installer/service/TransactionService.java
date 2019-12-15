@@ -11,6 +11,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.model.tables.interfaces.ITblTransaction;
@@ -32,7 +33,7 @@ public abstract class TransactionService implements InstallerService {
         boolean systemCfg = Boolean.parseBoolean(filter.getString("system_cfg"));
         ITblTransaction transaction = new TblTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getTransactionId())) {
-            throw new NubeException(NubeException.ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");
         }
         return this.entityHandler.findTransactionById(transaction.getTransactionId())
                                  .map(o -> o.orElseThrow(() -> new NotFoundException(

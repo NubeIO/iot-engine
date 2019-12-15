@@ -8,8 +8,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -51,7 +49,7 @@ public final class DeliveryEvent implements JsonData {
 
     public static DeliveryEvent from(@NonNull EventModel model, @NonNull EventAction action) {
         if (!model.getEvents().contains(action)) {
-            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Action must match one of EventModel Actions");
+            throw new IllegalArgumentException("Action must match one of EventModel Actions");
         }
         return new DeliveryEvent(model.getAddress(), model.getPattern(), action, null);
     }
