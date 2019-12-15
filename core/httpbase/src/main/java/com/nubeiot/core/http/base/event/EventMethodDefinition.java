@@ -213,6 +213,7 @@ public final class EventMethodDefinition implements JsonData {
                        .filter(path -> path.matches(searchRegex(this.servicePath)));
     }
 
+    //TODO replace NotFoundException to ServiceNotFound
     public EventAction search(String actualPath, @NonNull HttpMethod method) {
         final String path = search(actualPath).orElseThrow(() -> new NotFoundException("Not found path " + actualPath));
         return mapping.stream()
@@ -223,7 +224,7 @@ public final class EventMethodDefinition implements JsonData {
                       .map(EventMethodMapping::getAction)
                       .findFirst()
                       .orElseThrow(() -> new NotFoundException(
-                          Strings.format("Not found ''{0}'' with HTTP method {1}", actualPath, method)));
+                          Strings.format("Unsupported HTTP method {0} in ''{1}''", method, actualPath)));
     }
 
     @JsonPOJOBuilder(withPrefix = "")

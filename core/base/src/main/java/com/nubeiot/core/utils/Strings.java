@@ -303,7 +303,10 @@ public final class Strings {
     }
 
     public static String kvMsg(@NonNull JsonObject json) {
-        return json.stream().map(kvMsg()).collect(Collectors.joining(" and "));
+        return json.stream()
+                   .filter(entry -> Objects.nonNull(entry.getValue()))
+                   .map(kvMsg())
+                   .collect(Collectors.joining(" and "));
     }
 
     @NonNull
