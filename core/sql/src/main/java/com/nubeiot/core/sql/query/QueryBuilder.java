@@ -33,6 +33,8 @@ import org.jooq.impl.DSL;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.dto.Sort.SortType;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -41,43 +43,94 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
+/**
+ * Represents Query builder.
+ *
+ * @see EntityMetadata
+ * @since 1.0.0
+ */
 //TODO join part is still in beta mode, with limited supported for many joins
 public final class QueryBuilder {
 
     private final EntityMetadata base;
+    private final Map<EntityMetadata, Condition> joinBy = new HashMap<>();
     private List<OrderField<?>> orderFields;
     private Collection<EntityMetadata> references;
     private Predicate<EntityMetadata> predicate = metadata -> true;
     private JoinType joinType = JoinType.JOIN;
-    private final Map<EntityMetadata, Condition> joinBy = new HashMap<>();
     private Supplier<List<SelectFieldOrAsterisk>> fields = () -> Collections.singletonList(DSL.asterisk());
 
+    /**
+     * Instantiates a new Query builder.
+     *
+     * @param base the base entity metadata
+     * @since 1.0.0
+     */
     @SuppressWarnings("unchecked")
     public QueryBuilder(@NonNull EntityMetadata base) {
         this.base = base;
         this.orderFields = base.orderFields();
     }
 
+    /**
+     * Add references.
+     *
+     * @param references the metadata references
+     * @return a reference to this, so the API can be used fluently
+     * @since 1.0.0
+     */
     public QueryBuilder references(@NonNull Collection<EntityMetadata> references) {
         this.references = references;
         return this;
     }
 
+    /**
+     * Add entity metadata predicate to include/exclude in build {@code SQL query} in view/checking existence.
+     *
+     * @param predicate the predicate
+     * @return a reference to this, so the API can be used fluently
+     * @since 1.0.0
+     */
     public QueryBuilder predicate(@NonNull Predicate<EntityMetadata> predicate) {
         this.predicate = predicate;
         return this;
     }
 
+    /**
+     * Add global {@code Join type}.
+     *
+     * @param type the type
+     * @return a reference to this, so the API can be used fluently
+     * @see JoinType
+     * @since 1.0.0
+     */
     public QueryBuilder joinType(@NonNull JoinType type) {
         this.joinType = type;
         return this;
     }
 
+    /**
+     * Add join by {@code condition} depends on particular {@code entity metadata}.
+     *
+     * @param metadata  the metadata
+     * @param condition the condition
+     * @return a reference to this, so the API can be used fluently
+     * @see Condition
+     * @since 1.0.0
+     */
     public QueryBuilder joinBy(@NonNull EntityMetadata metadata, @NonNull Condition condition) {
         joinBy.put(metadata, condition);
         return this;
     }
 
+    /**
+     * Add join fields. Default is {@code asterisk}
+     *
+     * @param selectFields the select fields
+     * @return a reference to this, so the API can be used fluently
+     * @see SelectFieldOrAsterisk
+     * @since 1.0.0
+     */
     public QueryBuilder joinFields(@NonNull Supplier<List<SelectFieldOrAsterisk>> selectFields) {
         this.fields = selectFields;
         return this;
@@ -90,6 +143,11 @@ public final class QueryBuilder {
      * @param sort       Sort
      * @param pagination pagination
      * @return query function
+     * @see Sort
+     * @see Pagination
+     * @see RequestData#filter() RequestData#filter()
+     * @see Filters
+     * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
     public Function<DSLContext, ? extends ResultQuery<? extends Record>> view(JsonObject filter, Sort sort,
@@ -113,27 +171,56 @@ public final class QueryBuilder {
      * @param filter Request filter
      * @param sort   Sort
      * @return query function
+     * @see Sort
+     * @see RequestData#filter() RequestData#filter()
+     * @since 1.0.0
      */
     public Function<DSLContext, ? extends ResultQuery<? extends Record>> viewOne(JsonObject filter, Sort sort) {
         return view(filter, sort, Pagination.oneValue());
     }
 
+    /**
+     * Create Exist function by {@code primary key}
+     *
+     * @param metadata the metadata
+     * @param key      the primary key
+     * @return the function
+     * @since 1.0.0
+     */
     public Function<DSLContext, Boolean> exist(@NonNull EntityMetadata metadata, @NonNull Object key) {
         return exist(metadata.table(), conditionByPrimary(metadata, key));
     }
 
+    /**
+     * Create Exist function by {@code filter}
+     *
+     * @param metadata the metadata
+     * @param filter   the filter
+     * @return the function
+     * @since 1.0.0
+     */
+    public Function<DSLContext, Boolean> exist(@NonNull EntityMetadata metadata, @NonNull JsonObject filter) {
+        return dsl -> dsl.fetchExists(metadata.table(), condition(metadata, filter));
+    }
+
+    /**
+     * Create Exist function by join with filter.
+     *
+     * @param filter the filter
+     * @return the function
+     * @since 1.0.0
+     */
     @SuppressWarnings("unchecked")
-    public Function<DSLContext, ? extends ResultQuery<? extends Record>> existQueryByJoin(JsonObject filter) {
+    public Function<DSLContext, ? extends ResultQuery<? extends Record>> existQueryByJoin(@NonNull JsonObject filter) {
         final @NonNull JsonTable<? extends Record> table = base.table();
         final JsonObject nullable = new JsonObject();
         return context -> {
             final SelectJoinStep<Record> query = context.select(onlyPrimaryKeys()).from(table);
             if (Objects.nonNull(references)) {
-                references.stream()
-                          .peek(meta -> {
-                              if (!predicate.test(meta)) {
-                                  nullable.put(meta.requestKeyName(), filter.getValue(meta.requestKeyName()));
-                              }
+                references.stream().peek(meta -> {
+                    if (!predicate.test(meta)) {
+                        nullable.put(meta.requestKeyName(), filter.getValue(meta.requestKeyName()));
+                    }
                           })
                           .filter(predicate)
                           .forEach(meta -> doJoin(query, meta, new JsonObject().put(meta.jsonKeyName(), filter.getValue(
@@ -152,12 +239,22 @@ public final class QueryBuilder {
      * @param filter   Filter request
      * @return Database Select DSL
      * @see Condition
+     * @since 1.0.0
      */
     //TODO Rich query depends on RQL in future https://github.com/NubeIO/iot-engine/issues/128
     public Condition condition(@NonNull EntityMetadata metadata, JsonObject filter) {
         return condition(metadata, filter, false);
     }
 
+    /**
+     * Condition condition.
+     *
+     * @param metadata      the metadata
+     * @param filter        the filter
+     * @param allowNullable the allow nullable
+     * @return the condition
+     * @since 1.0.0
+     */
     @SuppressWarnings("unchecked")
     public Condition condition(@NonNull EntityMetadata metadata, JsonObject filter, boolean allowNullable) {
         return condition(metadata.table(), filter, allowNullable);

@@ -55,10 +55,11 @@ public class HandlerDeleteTest extends BaseInstallerVerticleTest {
     public void test_delete_should_success(TestContext context) {
         JsonObject body = new JsonObject().put("service_id", MODULE_ID);
         Async async = context.async();
-        installerVerticle.getEventController()
-                         .request(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE,
-                                                     EventAction.REMOVE, RequestData.builder().body(body).build().toJson()),
-                             EventbusHelper.replyAsserter(context, resp -> {
+        installerVerticle.getEventbusClient()
+                         .fire(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE,
+                                                  EventAction.REMOVE,
+                                                  RequestData.builder().body(body).build().toJson()),
+                               EventbusHelper.replyAsserter(context, resp -> {
                                  System.out.println(resp);
                                  context.assertEquals(resp.getString("status"), Status.SUCCESS.name());
                                  TestHelper.testComplete(async);

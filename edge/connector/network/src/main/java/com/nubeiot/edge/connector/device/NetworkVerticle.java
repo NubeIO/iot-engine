@@ -9,7 +9,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
@@ -24,7 +24,7 @@ public class NetworkVerticle extends ContainerVerticle {
     }
 
     @Override
-    public void registerEventbus(EventController eventClient) {
+    public void registerEventbus(EventbusClient eventClient) {
         NetworkAppConfig networkAppConfig = IConfig.from(this.nubeConfig.getAppConfig(), NetworkAppConfig.class);
         NetworkCommand networkCommand = JsonData.convert(networkAppConfig.toJson(), NetworkCommand.class);
         eventClient.register(NetworkEventModels.NETWORK_IP, new NetworkIPEventHandler(networkCommand));

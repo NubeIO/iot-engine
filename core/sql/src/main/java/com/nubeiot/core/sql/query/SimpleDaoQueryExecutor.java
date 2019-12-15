@@ -31,11 +31,11 @@ class SimpleDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R
 
     @Override
     public Observable<P> findMany(RequestData reqData) {
-        final Pagination paging = Optional.ofNullable(reqData.getPagination()).orElse(Pagination.builder().build());
+        final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
         return entityHandler().dao(metadata().daoClass())
                               .queryExecutor()
-                              .findMany((Function<DSLContext, ResultQuery<R>>) queryBuilder().view(reqData.getFilter(),
-                                                                                                   reqData.getSort(),
+                              .findMany((Function<DSLContext, ResultQuery<R>>) queryBuilder().view(reqData.filter(),
+                                                                                                   reqData.sort(),
                                                                                                    paging))
                               .flattenAsObservable(records -> records);
     }

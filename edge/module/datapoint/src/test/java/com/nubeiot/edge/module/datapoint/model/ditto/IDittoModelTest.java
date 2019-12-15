@@ -12,10 +12,10 @@ import com.nubeiot.core.cache.ClassGraphCache;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointCompositeMetadata;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.PointMetadata;
 import com.nubeiot.iotdata.edge.model.Tables;
 
 @RunWith(VertxUnitRunner.class)
@@ -37,8 +37,10 @@ public class IDittoModelTest {
                             .filter(metadata -> metadata instanceof PointCompositeMetadata ||
                                                 !(metadata instanceof CompositeMetadata ||
                                                   metadata instanceof PointMetadata))
-                            .filter(metadata -> !(Tables.DEVICE_EQUIP.equals(metadata.table()) ||
-                                                  Tables.THING.equals(metadata.table())))
+                            .filter(metadata -> !(Tables.EDGE_DEVICE.equals(metadata.table()) ||
+                                                  Tables.POINT_THING.equals(metadata.table()) ||
+                                                  Tables.PROTOCOL_DISPATCHER.equals(metadata.table()) ||
+                                                  Tables.SYNC_DISPATCHER.equals(metadata.table())))
                             .map(IDittoModel::find)
                             .forEach(Assert::assertNotNull);
     }
@@ -54,19 +56,6 @@ public class IDittoModelTest {
                                                                                                         getClass().getName(),
                                                                                                         DataCacheInitializer.SYNC_CONFIG_CACHE);
         Assert.assertNotNull(cache.get(PointCompositeMetadata.INSTANCE));
-        Assert.assertNotNull(cache.get(PointCompositeMetadata.INSTANCE));
-    }
-
-    private String blockingLoad(String id) {
-
-        // Simulate a blocking action
-        try {
-            Thread.sleep(100);
-            return "someData for " + id + " on thread " + Thread.currentThread().getName();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
 }

@@ -17,7 +17,7 @@ public final class GatewayIndexApi extends AbstractRestEventApi {
 
     @Override
     protected ActionMethodMapping initHttpEventMap() {
-        return ActionMethodMapping.READ_MAP;
+        return ActionMethodMapping.DQL_MAP;
     }
 
 }

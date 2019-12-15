@@ -9,6 +9,7 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 
@@ -19,7 +20,7 @@ public class MigrateCacheTest extends BaseDataPointServiceTest {
 
     @Override
     protected JsonObject testData() {
-        return MockData.data_Device_Network();
+        return MockData.data_Edge_Network();
     }
 
     @Override
@@ -36,11 +37,11 @@ public class MigrateCacheTest extends BaseDataPointServiceTest {
     }
 
     private void assertCache(TestContext context) {
-        context.assertEquals(PrimaryKey.DEVICE.toString(),
-                             SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.DEVICE_ID));
-        context.assertEquals(MockData.DEVICE.getCustomerCode(),
+        context.assertEquals(PrimaryKey.EDGE.toString(),
+                             SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.EDGE_ID));
+        context.assertEquals(MockData.EDGE.getCustomerCode(),
                              SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.CUSTOMER_CODE));
-        context.assertEquals(MockData.DEVICE.getSiteCode(),
+        context.assertEquals(MockData.EDGE.getSiteCode(),
                              SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.SITE_CODE));
     }
 

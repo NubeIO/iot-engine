@@ -12,9 +12,9 @@ import io.vertx.core.logging.LoggerFactory;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.scheduler.SchedulerConfig;
 
@@ -25,7 +25,7 @@ public abstract class AbstractVertxJob<J extends JobModel> implements VertxJob<J
     protected Vertx vertx;
     protected String sharedKey;
     protected SchedulerConfig config;
-    protected EventController controller;
+    protected EventbusClient controller;
     protected DeliveryEvent monitorEvent;
 
     @Override
@@ -61,15 +61,15 @@ public abstract class AbstractVertxJob<J extends JobModel> implements VertxJob<J
             if (logger.isTraceEnabled()) {
                 logger.trace("JOB Result: {}", msg.toJson());
             }
-            controller.response(event.getAddress(), event.getPattern(), EventMessage.override(msg, event.getAction()));
+            controller.fire(event.getAddress(), event.getPattern(), EventMessage.override(msg, event.getAction()));
         };
     }
 
     protected Consumer<ErrorMessage> errorMonitor(JobModel jobModel) {
         return jobModel.forwardIfFailure()
                ? null
-               : msg -> controller.response(monitorEvent.getAddress(), monitorEvent.getPattern(),
-                                            EventMessage.error(monitorEvent.getAction(), null, msg));
+               : msg -> controller.fire(monitorEvent.getAddress(), monitorEvent.getPattern(),
+                                        EventMessage.error(monitorEvent.getAction(), null, msg));
     }
 
 }

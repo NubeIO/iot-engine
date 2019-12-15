@@ -29,7 +29,7 @@ public final class SqlContext<T extends EntityHandler> extends UnitContext {
     @Getter
     private T entityHandler;
 
-    T createHandler(Configuration configuration, Vertx vertx) {
+    T createHandler(@NonNull Configuration configuration, @NonNull Vertx vertx) {
         if (Objects.isNull(entityHandler)) {
             Map<Class, Object> map = new LinkedHashMap<>();
             map.put(Configuration.class, configuration);

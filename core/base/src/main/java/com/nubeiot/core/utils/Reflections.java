@@ -3,6 +3,7 @@ package com.nubeiot.core.utils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
@@ -16,14 +17,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.classgraph.BaseTypeSignature;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.MethodInfo;
 import io.github.classgraph.ScanResult;
+import io.github.classgraph.TypeSignature;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -109,7 +114,7 @@ public final class Reflections {
          * @param predicate Given predicate
          * @return Stream of matching {@code fields}
          */
-        public static Stream<Field> findToStream(@NonNull Class<?> clazz, Predicate<Field> predicate) {
+        public static Stream<Field> stream(@NonNull Class<?> clazz, Predicate<Field> predicate) {
             Stream<Field> stream = Stream.of(clazz.getDeclaredFields());
             if (Objects.nonNull(predicate)) {
                 return stream.filter(predicate);
@@ -118,13 +123,13 @@ public final class Reflections {
         }
 
         public static List<Field> find(@NonNull Class<?> clazz, Predicate<Field> predicate) {
-            return findToStream(clazz, predicate).collect(Collectors.toList());
+            return stream(clazz, predicate).collect(Collectors.toList());
         }
 
         public static <T> T constantByName(@NonNull Class<?> clazz, String name) {
             Predicate<Field> filter = Functions.and(CONSTANT_FILTER,
                                                     f -> f.getName().equals(Strings.requireNotBlank(name)));
-            return (T) findToStream(clazz, filter).map(field -> getConstant(clazz, field)).findFirst().orElse(null);
+            return (T) stream(clazz, filter).map(field -> getConstant(clazz, field)).findFirst().orElse(null);
         }
 
         public static <T> List<T> getConstants(@NonNull Class<?> clazz, @NonNull Class<T> fieldClass) {
@@ -151,7 +156,7 @@ public final class Reflections {
             if (Objects.nonNull(predicate)) {
                 filter = filter.and(predicate);
             }
-            return findToStream(clazz, filter).map(field -> getConstant(clazz, field));
+            return stream(clazz, filter).map(field -> getConstant(clazz, field));
         }
 
         public static <T> T getConstant(@NonNull Class<?> clazz, Field field) {
@@ -177,9 +182,9 @@ public final class Reflections {
         public static <T> List<T> getFieldValuesByType(@NonNull Object obj, @NonNull Class<T> searchType) {
             Predicate<Field> predicate = Functions.and(notModifiers(Modifier.STATIC),
                                                        f -> ReflectionClass.assertDataType(f.getType(), searchType));
-            return findToStream(obj.getClass(), predicate).map(f -> getFieldValue(obj, f, searchType))
-                                                          .filter(Objects::nonNull)
-                                                          .collect(Collectors.toList());
+            return stream(obj.getClass(), predicate).map(f -> getFieldValue(obj, f, searchType))
+                                                    .filter(Objects::nonNull)
+                                                    .collect(Collectors.toList());
         }
 
         public static <T> T getFieldValue(@NonNull Object obj, @NonNull Field f, @NonNull Class<T> type) {
@@ -195,14 +200,85 @@ public final class Reflections {
     }
 
 
+    /**
+     * @see Executable
+     */
+    public static class ReflectionExecutable {
+
+        private static <T> Stream<T> scan(@NonNull Class<?> clazz,
+                                          @NonNull Function<ClassInfo, Stream<T>> scanFunction) {
+            ClassGraph graph = new ClassGraph().enableAnnotationInfo()
+                                               .ignoreClassVisibility()
+                                               .ignoreMethodVisibility()
+                                               .whitelistClasses(clazz.getName());
+            if (logger.isTraceEnabled()) {
+                graph.verbose();
+            }
+            ScanResult scanResult = graph.scan();
+            final ClassInfo classInfo = scanResult.getClassInfo(clazz.getName());
+            if (Objects.isNull(classInfo)) {
+                return Stream.<T>empty().onClose(scanResult::close);
+            }
+            return scanFunction.apply(classInfo).onClose(scanResult::close);
+        }
+
+        public static List<Method> streamMethods(@NonNull Class<?> clazz, @NonNull Predicate<MethodInfo> predicate) {
+            try (Stream<Method> stream = scan(clazz, classInfo -> classInfo.getMethodInfo()
+                                                                           .filter(predicate::test)
+                                                                           .stream()
+                                                                           .map(MethodInfo::loadClassAndGetMethod))) {
+                return stream.collect(Collectors.toList());
+            }
+        }
+
+        public static Stream<MethodInfo> streamConstructors(@NonNull Class<?> clazz,
+                                                            @NonNull Predicate<MethodInfo> predicate) {
+            return scan(clazz, classInfo -> classInfo.getConstructorInfo().filter(predicate::test).stream());
+        }
+
+        public static boolean isBoolean(TypeSignature signature) {
+            return signature instanceof BaseTypeSignature &&
+                   ((BaseTypeSignature) signature).getType().equals(boolean.class);
+        }
+
+        public static boolean isVoid(TypeSignature signature) {
+            return signature instanceof BaseTypeSignature &&
+                   ((BaseTypeSignature) signature).getType().equals(void.class);
+        }
+
+        public static NubeException handleError(@NonNull Executable executable,
+                                                @NonNull ReflectiveOperationException e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Cannot execute method {}", e, executable.getName());
+            }
+            if (e instanceof InvocationTargetException) {
+                Throwable targetException = ((InvocationTargetException) e).getTargetException();
+                if (targetException instanceof NubeException) {
+                    throw (NubeException) targetException;
+                }
+                if (Objects.nonNull(targetException)) {
+                    throw new NubeException(targetException);
+                }
+            }
+            throw new NubeException(e);
+        }
+
+    }
+
+
     public static class ReflectionMethod {
 
-        public static Object executeMethod(@NonNull Object instance, @NonNull Method method) {
+        public static <T> T executeStatic(@NonNull Class<T> clazz, @NonNull String methodName, Object... args) {
+            final Predicate<Method> predicate = m -> m.getReturnType().equals(clazz) && m.getName().equals(methodName);
+            return (T) find(predicate, clazz).findFirst().map(method -> execute(null, method, args)).orElse(null);
+        }
+
+        public static Object execute(@NonNull Object instance, @NonNull Method method) {
             try {
                 method.setAccessible(true);
                 return method.invoke(instance);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw handleError(method, e);
+                throw ReflectionExecutable.handleError(method, e);
             }
         }
 
@@ -219,26 +295,28 @@ public final class Reflections {
          * @return Method result
          * @throws NubeException if any error when invoke method
          */
-        public static <I, O> O executeMethod(@NonNull Object instance, @NonNull Method method,
-                                             @NonNull Class<O> outputType, @NonNull Class<I> paramType, I paramData) {
-            return executeMethod(instance, method, outputType, Collections.singletonList(paramType), paramData);
+        public static <I, O> O execute(@NonNull Object instance, @NonNull Method method, @NonNull Class<O> outputType,
+                                       @NonNull Class<I> paramType, I paramData) {
+            return execute(instance, method, outputType, Collections.singletonList(paramType), paramData);
         }
 
-        public static <O> O executeMethod(@NonNull Object instance, @NonNull Method method,
-                                          @NonNull Class<O> outputType, Collection<Class<?>> inputTypes,
-                                          Object... inputData) {
+        public static <O> O execute(@NonNull Object instance, @NonNull Method method, @NonNull Class<O> outputType,
+                                    Collection<Class<?>> inputTypes, Object... inputData) {
+            if (inputTypes.size() != inputData.length) {
+                throw new IllegalArgumentException("Input types does not match with input data");
+            }
+            if (!validateMethod(method, outputType, inputTypes)) {
+                throw new IllegalArgumentException("Given method does not match with given output type and input type");
+            }
+            return execute(instance, method, inputData);
+        }
+
+        public static <O> O execute(Object instance, @NonNull Method method, Object... args) {
             try {
-                if (inputTypes.size() != inputData.length) {
-                    throw new IllegalArgumentException("Input types does not match with input data");
-                }
-                if (!validateMethod(method, outputType, inputTypes)) {
-                    throw new IllegalArgumentException(
-                        "Given method does not match with given output type and input type");
-                }
                 method.setAccessible(true);
-                return (O) method.invoke(instance, inputData);
+                return (O) method.invoke(instance, args);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw handleError(method, e);
+                throw ReflectionExecutable.handleError(method, e);
             }
         }
 
@@ -293,20 +371,6 @@ public final class Reflections {
                 }
             }
             return true;
-        }
-
-        private static NubeException handleError(@NonNull Method method, ReflectiveOperationException e) {
-            logger.debug("Cannot execute method {}", e, method.getName());
-            if (e instanceof InvocationTargetException) {
-                Throwable targetException = ((InvocationTargetException) e).getTargetException();
-                if (targetException instanceof NubeException) {
-                    throw (NubeException) targetException;
-                }
-                if (Objects.nonNull(targetException)) {
-                    throw new NubeException(targetException);
-                }
-            }
-            throw new NubeException(e);
         }
 
         @Getter
@@ -454,7 +518,7 @@ public final class Reflections {
 
         public static <T> Silencer<T> createObject(Class<T> clazz, Silencer<T> silencer) {
             try {
-                Constructor<T> constructor = clazz.getDeclaredConstructor();
+                final Constructor<T> constructor = clazz.getDeclaredConstructor();
                 constructor.setAccessible(true);
                 silencer.accept(constructor.newInstance(), null);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
@@ -464,20 +528,27 @@ public final class Reflections {
             return silencer;
         }
 
-        public static <T> Silencer<T> createObject(Class<T> clazz, @NonNull Map<Class, Object> inputs,
-                                                   Silencer<T> silencer) {
+        public static <T> Silencer<T> createObject(@NonNull Class<T> clazz, @NonNull Map<Class, Object> inputs,
+                                                   @NonNull Silencer<T> silencer) {
             if (inputs.size() > 1 && !(inputs instanceof LinkedHashMap)) {
                 throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Inputs must be LinkedHashMap");
             }
             try {
-                Constructor<T> constructor = clazz.getDeclaredConstructor(inputs.keySet().toArray(new Class[] {}));
-                constructor.setAccessible(true);
-                silencer.accept(constructor.newInstance(inputs.values().toArray(new Object[] {})), null);
-            } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                final Class[] classes = inputs.keySet().toArray(new Class[] {});
+                final Object[] args = inputs.values().toArray(new Object[] {});
+                silencer.accept(createObject(clazz, classes, args), null);
+            } catch (ReflectiveOperationException e) {
                 silencer.accept(null, new HiddenException(ErrorCode.INITIALIZER_ERROR,
                                                           "Cannot init instance of " + clazz.getName(), e));
             }
             return silencer;
+        }
+
+        public static <T> T createObject(@NonNull Class<T> clazz, Class[] classes, Object[] args)
+            throws ReflectiveOperationException {
+            final Constructor<T> constructor = clazz.getDeclaredConstructor(classes);
+            constructor.setAccessible(true);
+            return constructor.newInstance(args);
         }
 
     }

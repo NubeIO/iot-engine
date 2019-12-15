@@ -3,11 +3,11 @@ package com.nubeiot.edge.connector.bacnet.simulator;
 import java.util.List;
 import java.util.Optional;
 
-import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.connector.bacnet.AbstractBACnetVerticle;
@@ -30,13 +30,21 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     }
 
     @Override
-    protected @NonNull Class<SimulatorConfig> bacnetConfigClass() {
+    @NonNull
+    protected Class<SimulatorConfig> bacnetConfigClass() {
         return SimulatorConfig.class;
     }
 
     @Override
-    protected @NonNull Maybe<JsonObject> registerServices(@NonNull SimulatorConfig config) {
-        return Maybe.empty();
+    @NonNull
+    protected Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
+        return Single.just(new JsonObject().put("message", "No BACnet services")).doOnSuccess(logger::info);
+    }
+
+    @Override
+    @NonNull
+    protected Single<JsonObject> registerSubscriber(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
+        return Single.just(new JsonObject().put("message", "No BACnet Subscriber")).doOnSuccess(logger::info);
     }
 
     @Override
@@ -49,8 +57,8 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     }
 
     @Override
-    protected BACnetDevice onEachStartup(BACnetDevice device) {
-        return device.addListener(new WhoIsListener());
+    protected void addListenerOnEachDevice(BACnetDevice device) {
+        device.addListener(new WhoIsListener());
     }
 
     @Override

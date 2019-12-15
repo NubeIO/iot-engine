@@ -24,9 +24,9 @@
           }
         },
         {
-          "type": "SYNC_DEVICE_INFO",
+          "type": "SYNC_EDGE_INFO",
           "label": {
-            "label": "Sync device information to cloud"
+            "label": "Sync edge information to cloud"
           },
           "enabled": false,
           "trigger": {

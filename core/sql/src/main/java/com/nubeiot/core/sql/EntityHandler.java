@@ -13,74 +13,148 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.event.EventController;
-import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 
+/**
+ * Represents for Entity handler.
+ *
+ * @since 1.0.0
+ */
 public interface EntityHandler {
 
+    /**
+     * Parse pojo.
+     *
+     * @param <P>        Type of {@code VertxPojo}
+     * @param modelClass the model class
+     * @param pojo       the pojo
+     * @return the pojo
+     * @since 1.0.0
+     */
     @SuppressWarnings("unchecked")
-    static <POJO extends VertxPojo> POJO parse(@NonNull Class<POJO> modelClass, @NonNull JsonObject pojo) {
-        return (POJO) ReflectionClass.createObject(modelClass).fromJson(pojo);
+    static <P extends VertxPojo> P parse(@NonNull Class<P> modelClass, @NonNull JsonObject pojo) {
+        return (P) ReflectionClass.createObject(modelClass).fromJson(pojo);
     }
 
-    static <POJO extends VertxPojo> POJO parse(@NonNull Class<POJO> pojoClass, @NonNull Object data) {
+    /**
+     * Parse pojo.
+     *
+     * @param <P>       Type of {@code VertxPojo}
+     * @param pojoClass the pojo class
+     * @param data      the data
+     * @return the pojo
+     * @since 1.0.0
+     */
+    static <P extends VertxPojo> P parse(@NonNull Class<P> pojoClass, @NonNull Object data) {
         return parse(pojoClass, JsonData.tryParse(data).toJson());
     }
 
-    Vertx vertx();
+    /**
+     * Get Vertx.
+     *
+     * @return the vertx
+     * @since 1.0.0
+     */
+    @NonNull Vertx vertx();
 
-    EventController eventClient();
+    /**
+     * Get eventbus client.
+     *
+     * @return the eventbus client
+     * @see EventbusClient
+     * @since 1.0.0
+     */
+    @NonNull EventbusClient eventClient();
 
-    Path dataDir();
+    /**
+     * Data dir path.
+     *
+     * @return the path
+     * @since 1.0.0
+     */
+    @NonNull Path dataDir();
 
+    /**
+     * Get shared data by {@code data key}.
+     *
+     * @param <D>     Type of {@code expectation result}
+     * @param dataKey the data key
+     * @return the result
+     * @since 1.0.0
+     */
     <D> D sharedData(String dataKey);
 
+    /**
+     * Add shared data.
+     *
+     * @param <D>     Type of {@code expectation result}
+     * @param dataKey the data key
+     * @param data    the data
+     * @return the result
+     * @since 1.0.0
+     */
     <D> D addSharedData(String dataKey, D data);
 
-    DSLContext dsl();
+    /**
+     * Get {@code dsl context}.
+     *
+     * @return the dsl context
+     * @see DSLContext
+     * @since 1.0.0
+     */
+    @NonNull DSLContext dsl();
 
-    <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(Class<D> daoClass);
+    /**
+     * Create {@code DAO} by given {@code daoClass}.
+     *
+     * @param <K>      Type of {@code primary key}
+     * @param <M>      Type of {@code VertxPojo}
+     * @param <R>      Type of {@code UpdatableRecord}
+     * @param <D>      Type of {@code VertxDAO}
+     * @param daoClass the dao class
+     * @return the instance of DAO
+     * @since 1.0.0
+     */
+    <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(
+        @NonNull Class<D> daoClass);
 
-    JDBCRXGenericQueryExecutor genericQuery();
+    /**
+     * Get generic query executor.
+     *
+     * @return the generic query executor
+     * @see JDBCRXGenericQueryExecutor
+     * @since 1.0.0
+     */
+    @NonNull JDBCRXGenericQueryExecutor genericQuery();
 
-    ComplexQueryExecutor complexQuery();
+    /**
+     * Get complex query executor.
+     *
+     * @return the complex query executor
+     * @see ComplexQueryExecutor
+     * @since 1.0.0
+     */
+    @NonNull ComplexQueryExecutor complexQuery();
 
     /**
      * Execute any task before setup database
      *
      * @return single of reference to this, so the API can be used fluently
+     * @since 1.0.0
      */
-    Single<EntityHandler> before();
+    @NonNull Single<EntityHandler> before();
 
     /**
-     * Check database is new or not. Normally just checking one specific table is existed or not.
-     * <p>
-     * Currently, it has not yet supported officially from {@code jooq}. So {@code NubeIO} supports 2 kinds: {@code H2}
-     * and {@code PostgreSQL}. Other options, must be implemented by yourself.
+     * Get {@code Schema handler}.
      *
-     * @return {@code true} if new database, else otherwise
-     * @see <a href="https://github.com/jOOQ/jOOQ/issues/8038">https://github.com/jOOQ/jOOQ/issues/8038</a>
+     * @return the schema handler
+     * @see SchemaHandler
+     * @since 1.0.0
      */
-    boolean isNew();
-
-    /**
-     * Init data in case of new database
-     *
-     * @return event message to know the process is success or not.
-     * @see EventMessage
-     */
-    Single<EventMessage> initData();
-
-    /**
-     * Migrate data in case of existed database
-     *
-     * @return event message to know the process is success or not.
-     * @see EventMessage
-     */
-    Single<EventMessage> migrate();
+    @NonNull SchemaHandler schemaHandler();
 
 }

@@ -8,9 +8,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventController;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.converter.RequestDataConverter;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
@@ -31,7 +31,7 @@ public class RestEventApiDispatcher implements RestEventRequestDispatcher {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Getter
     @NonNull
-    private final EventController controller;
+    private final EventbusClient controller;
     @NonNull
     private final String address;
     @NonNull
@@ -42,13 +42,13 @@ public class RestEventApiDispatcher implements RestEventRequestDispatcher {
 
     @SuppressWarnings("unchecked")
     public static <T extends RestEventApiDispatcher> RestEventApiDispatcher create(Class<T> handler,
-                                                                                   EventController eventController,
+                                                                                   EventbusClient eventbusClient,
                                                                                    String address, EventAction action,
                                                                                    EventPattern pattern,
                                                                                    boolean useRequestData) {
         Class<T> handlerClass = Objects.isNull(handler) ? (Class<T>) RestEventApiDispatcher.class : handler;
         LinkedHashMap<Class, Object> inputs = new LinkedHashMap<>();
-        inputs.put(EventController.class, eventController);
+        inputs.put(EventbusClient.class, eventbusClient);
         inputs.put(String.class, Strings.requireNotBlank(address));
         inputs.put(EventAction.class, action);
         inputs.put(EventPattern.class, pattern);

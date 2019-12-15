@@ -1,9 +1,6 @@
 package com.nubeiot.core.sql.service;
 
-import java.util.AbstractMap.SimpleEntry;
-
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -17,15 +14,32 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.SimpleQueryExecutor;
+import com.nubeiot.core.sql.service.workflow.CreationStep;
+import com.nubeiot.core.sql.service.workflow.DefaultDMLWorkflow;
+import com.nubeiot.core.sql.service.workflow.DefaultDQLWorkflow;
+import com.nubeiot.core.sql.service.workflow.DeletionStep;
+import com.nubeiot.core.sql.service.workflow.EntityTaskWorkflow.AsyncEntityTaskWorkflow;
+import com.nubeiot.core.sql.service.workflow.EntityTaskWorkflow.BlockingEntityTaskWorkflow;
+import com.nubeiot.core.sql.service.workflow.GetManyStep;
+import com.nubeiot.core.sql.service.workflow.GetOneStep;
+import com.nubeiot.core.sql.service.workflow.ModificationStep;
 import com.nubeiot.core.sql.validation.EntityValidation;
+import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Abstract service to implement {@code CRUD} listeners for entity
+ * Abstract service to implement {@code CRUD} listeners for {@code database entity}
+ *
+ * @param <P> Type of {@code VertxPojo}
+ * @param <M> Type of {@code EntityMetadata}
+ * @see EntityService
+ * @see EntityTransformer
+ * @since 1.0.0
  */
 @RequiredArgsConstructor
+@SuppressWarnings("unchecked")
 public abstract class AbstractEntityService<P extends VertxPojo, M extends EntityMetadata>
     implements SimpleEntityService<P, M>, EntityTransformer {
 
@@ -47,74 +61,92 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     @Override
     public @NonNull EntityTransformer transformer() { return this; }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(RequestData requestData) {
-        RequestData reqData = onReadingManyResource(requestData);
-        return doGetMany(reqData).flatMapSingle(m -> transformer().afterEachList(m, reqData))
-                                 .collect(JsonArray::new, JsonArray::add)
-                                 .map(transformer()::wrapListData);
+        return DefaultDQLWorkflow.<JsonArray>builder().action(EventAction.GET_LIST)
+                                                      .metadata(context())
+                                                      .normalize(this::onReadingManyResource)
+                                                      .validator(initGetOneValidator())
+                                                      .prePersist(initPrePersistWorkflow())
+                                                      .query(initGetManyStep())
+                                                      .postAsyncPersist(initPostAsyncPersistWorkflow())
+                                                      .transformer((req, res) -> transformer().onMany(res))
+                                                      .build()
+                                                      .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> get(RequestData requestData) {
-        RequestData reqData = onReadingOneResource(requestData);
-        return doGetOne(reqData).flatMap(pojo -> transformer().afterGet(pojo, reqData));
+        return DefaultDQLWorkflow.<P>builder().action(EventAction.GET_ONE)
+                                              .metadata(context())
+                                              .normalize(this::onReadingOneResource)
+                                              .validator(initGetOneValidator())
+                                              .prePersist(initPrePersistWorkflow())
+                                              .query(initGetOneStep())
+                                              .postAsyncPersist(initPostAsyncPersistWorkflow())
+                                              .transformer((req, res) -> transformer().afterGet(res, req))
+                                              .build()
+                                              .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData requestData) {
-        RequestData reqData = onCreatingOneResource(requestData);
-        return doInsert(reqData).flatMap(pk -> doLookupByPrimaryKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
-                                .doOnSuccess(
-                                    j -> asyncPostService().onSuccess(this, EventAction.CREATE, j.getValue(), reqData))
-                                .doOnError(t -> asyncPostService().onError(this, EventAction.CREATE, t))
-                                .flatMap(resp -> transformer().afterCreate(resp.getKey(), resp.getValue(), reqData));
+        return DefaultDMLWorkflow.builder()
+                                 .action(EventAction.CREATE)
+                                 .metadata(context())
+                                 .normalize(this::onCreatingOneResource)
+                                 .validator(initCreationValidator())
+                                 .prePersist(initPrePersistWorkflow())
+                                 .persist(initCreationStep())
+                                 .postAsyncPersist(initPostAsyncPersistWorkflow())
+                                 .transformer((req, res) -> transformer().afterCreate(res.key(), res.pojo(), req))
+                                 .build()
+                                 .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData requestData) {
-        RequestData reqData = onModifyingOneResource(requestData);
-        return doUpdate(reqData).flatMap(pk -> doLookupByPrimaryKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
-                                .doOnSuccess(
-                                    j -> asyncPostService().onSuccess(this, EventAction.UPDATE, j.getValue(), reqData))
-                                .doOnError(t -> asyncPostService().onError(this, EventAction.UPDATE, t))
-                                .flatMap(resp -> transformer().afterUpdate(resp.getKey(), resp.getValue(), reqData));
+        return DefaultDMLWorkflow.builder()
+                                 .action(EventAction.UPDATE)
+                                 .metadata(context())
+                                 .normalize(this::onModifyingOneResource)
+                                 .validator(initUpdateValidator())
+                                 .prePersist(initPrePersistWorkflow())
+                                 .persist(initModificationStep(EventAction.UPDATE))
+                                 .postAsyncPersist(initPostAsyncPersistWorkflow())
+                                 .transformer((req, res) -> transformer().afterUpdate(res.key(), res.pojo(), req))
+                                 .build()
+                                 .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData requestData) {
-        RequestData reqData = onModifyingOneResource(requestData);
-        return doPatch(reqData).flatMap(pk -> doLookupByPrimaryKey(pk).map(pojo -> new SimpleEntry<>(pk, pojo)))
-                               .doOnSuccess(
-                                   j -> asyncPostService().onSuccess(this, EventAction.PATCH, j.getValue(), reqData))
-                               .doOnError(t -> asyncPostService().onError(this, EventAction.PATCH, t))
-                               .flatMap(resp -> transformer().afterPatch(resp.getKey(), resp.getValue(), reqData));
+        return DefaultDMLWorkflow.builder()
+                                 .action(EventAction.PATCH)
+                                 .metadata(context())
+                                 .normalize(this::onModifyingOneResource)
+                                 .validator(initPatchValidator())
+                                 .prePersist(initPrePersistWorkflow())
+                                 .persist(initModificationStep(EventAction.PATCH))
+                                 .postAsyncPersist(initPostAsyncPersistWorkflow())
+                                 .transformer((req, re) -> transformer().afterPatch(re.key(), re.pojo(), req))
+                                 .build()
+                                 .execute(requestData);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData requestData) {
-        RequestData reqData = onModifyingOneResource(requestData);
-        return doDelete(reqData).doOnSuccess(p -> asyncPostService().onSuccess(this, EventAction.REMOVE, p, reqData))
-                                .doOnError(t -> asyncPostService().onError(this, EventAction.REMOVE, t))
-                                .flatMap(p -> transformer().afterDelete(p, reqData));
+        return DefaultDMLWorkflow.builder()
+                                 .action(EventAction.REMOVE)
+                                 .metadata(context())
+                                 .normalize(this::onModifyingOneResource)
+                                 .validator(initDeletionValidator())
+                                 .prePersist(initPrePersistWorkflow())
+                                 .persist(initDeletionStep())
+                                 .postAsyncPersist(initPostAsyncPersistWorkflow())
+                                 .transformer((req, re) -> transformer().afterDelete(re.pojo(), req))
+                                 .build()
+                                 .execute(requestData);
     }
 
     @Override
@@ -122,35 +154,56 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return context();
     }
 
-    protected Observable<? extends VertxPojo> doGetMany(RequestData reqData) {
-        return queryExecutor().findMany(reqData);
+    protected BlockingEntityTaskWorkflow initPrePersistWorkflow() {
+        return BlockingEntityTaskWorkflow.create(prePersistTask().orElse(null));
     }
 
-    protected Single<? extends VertxPojo> doGetOne(RequestData reqData) {
-        return queryExecutor().findOneByKey(reqData);
+    protected AsyncEntityTaskWorkflow initPostAsyncPersistWorkflow() {
+        return AsyncEntityTaskWorkflow.create(postPersistAsyncTask().orElse(null));
     }
 
-    protected Single<? extends VertxPojo> doLookupByPrimaryKey(@NonNull Object key) {
-        return queryExecutor().lookupByPrimaryKey(key);
+    protected GetManyStep initGetManyStep() {
+        return GetManyStep.builder()
+                          .action(EventAction.GET_LIST)
+                          .queryExecutor(queryExecutor())
+                          .transformFunction(transformer()::onEach)
+                          .build();
     }
 
-    @SuppressWarnings("unchecked")
-    protected Single<?> doInsert(RequestData reqData) {
-        return queryExecutor().insertReturningPrimary((P) validation().onCreating(reqData), reqData);
+    protected OperationValidator initGetOneValidator() {
+        return OperationValidator.create((req, pojo) -> Single.just(pojo));
     }
 
-    @SuppressWarnings("unchecked")
-    protected Single<?> doUpdate(RequestData reqData) {
-        return queryExecutor().modifyReturningPrimary(reqData, EventAction.UPDATE, validation()::onUpdating);
+    protected <PP extends P> GetOneStep<PP> initGetOneStep() {
+        return GetOneStep.<PP>builder().action(EventAction.GET_ONE).queryExecutor(queryExecutor()).build();
     }
 
-    @SuppressWarnings("unchecked")
-    protected Single<?> doPatch(RequestData reqData) {
-        return queryExecutor().modifyReturningPrimary(reqData, EventAction.PATCH, validation()::onPatching);
+    protected OperationValidator initCreationValidator() {
+        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onCreating(req)));
     }
 
-    protected Single<P> doDelete(RequestData reqData) {
-        return queryExecutor().deleteOneByKey(reqData);
+    protected CreationStep initCreationStep() {
+        return CreationStep.builder().action(EventAction.CREATE).queryExecutor(queryExecutor()).build();
+    }
+
+    protected OperationValidator initPatchValidator() {
+        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onPatching(dbEntity, req)));
+    }
+
+    protected OperationValidator initUpdateValidator() {
+        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onUpdating(dbEntity, req)));
+    }
+
+    protected ModificationStep initModificationStep(@NonNull EventAction action) {
+        return ModificationStep.builder().action(action).queryExecutor(queryExecutor()).build();
+    }
+
+    protected OperationValidator initDeletionValidator() {
+        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onDeleting(dbEntity, req)));
+    }
+
+    protected DeletionStep initDeletionStep() {
+        return DeletionStep.builder().action(EventAction.REMOVE).queryExecutor(queryExecutor()).build();
     }
 
 }

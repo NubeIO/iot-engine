@@ -6,8 +6,10 @@ import java.util.stream.Stream;
 
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
-import com.nubeiot.edge.module.datapoint.service.DataPointIndex.TagPointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.TagPointMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
 
@@ -23,8 +25,9 @@ public final class TagPointService extends AbstractOneToManyEntityService<PointT
     @Override
     public Set<EventMethodDefinition> definitions() {
         return Stream.concat(DataPointService.super.definitions().stream(),
-                             Stream.of(EventMethodDefinition.createDefault("/point/:point_id/tags", "/:tag_id")))
-                     .collect(Collectors.toSet());
+                             EntityHttpService.createDefinitions(getAvailableEvents(), this::servicePath,
+                                                                 context()::requestKeyName, PointMetadata.INSTANCE)
+                                              .stream()).collect(Collectors.toSet());
     }
 
     @Override

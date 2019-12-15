@@ -1,10 +1,7 @@
-repositories {
-    project.repos
-    maven { url "https://maven.mangoautomation.net/repository/ias-release/" }
-}
-
 dependencies {
     compile project(':core:micro')
+    compile project(':edge:module:datapoint:model')
+    compile project(':edge:module:datapoint:rpc')
     compile project(':edge:connector:bacnet:base')
 
     testCompile project(":core:base").sourceSets.test.output

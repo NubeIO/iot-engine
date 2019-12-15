@@ -36,7 +36,7 @@ public final class DiscoverOptions implements JsonData {
     private final boolean force;
 
     public static DiscoverOptions from(long maxTimeoutInMS, @NonNull RequestData requestData) {
-        return from(maxTimeoutInMS, requestData.getFilter());
+        return from(maxTimeoutInMS, requestData.filter());
     }
 
     public static DiscoverOptions from(long maxTimeoutInMS, JsonObject filter) {

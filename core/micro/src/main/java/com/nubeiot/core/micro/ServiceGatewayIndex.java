@@ -10,11 +10,13 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
-import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.exceptions.ServiceNotFoundException;
 import com.nubeiot.core.micro.filter.RecordPredicate;
+import com.nubeiot.core.micro.transfomer.RecordOutput;
 import com.nubeiot.core.micro.transfomer.RecordTransformer;
 import com.nubeiot.core.micro.transfomer.RecordTransformer.RecordView;
 import com.nubeiot.core.utils.Strings;
@@ -35,31 +37,53 @@ public final class ServiceGatewayIndex implements EventListener {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> get(@NonNull RequestData requestData) {
-        final JsonObject filter = requestData.getFilter();
+        final JsonObject filter = Optional.ofNullable(requestData.filter()).orElse(new JsonObject()).copy();
+        filter.remove(Filters.PRETTY);
         final ServiceDiscoveryController controller = getController(filter);
-        final RecordView view = RecordView.parse((String) filter.remove("view"));
+        final RecordView view = RecordView.parse((String) filter.remove(Params.VIEW));
         final String identifier = Optional.ofNullable(requestData.body())
-                                          .map(body -> body.getString(RecordPredicate.IDENTIFIER))
+                                          .map(body -> body.getString(Params.IDENTIFIER))
                                           .orElse(null);
-        filter.put(RecordPredicate.IDENTIFIER, Strings.requireNotBlank(identifier, "Missing record identifier"));
-        return controller.getRx().rxGetRecord(RecordPredicate.filter(filter, EventAction.GET_ONE))
+        filter.put(Params.IDENTIFIER, Strings.requireNotBlank(identifier, "Missing record identifier"));
+        return controller.getRx()
+                         .rxGetRecord(RecordPredicate.filter(filter, EventAction.GET_ONE))
                          .map(RecordTransformer.create(view)::transform)
-                         .switchIfEmpty(Single.error(new NotFoundException("Not found")));
+                         .map(RecordOutput::toJson)
+                         .switchIfEmpty(
+                             Single.error(new ServiceNotFoundException("Not found service by given parameters")));
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(@NonNull RequestData requestData) {
-        JsonObject filter = requestData.getFilter();
+        JsonObject filter = Optional.ofNullable(requestData.filter()).orElse(new JsonObject()).copy();
+        filter.remove(Filters.PRETTY);
         ServiceDiscoveryController controller = getController(filter);
         RecordTransformer transformer = RecordTransformer.create(RecordView.END_USER);
-        return controller.getRx().rxGetRecords(RecordPredicate.filter(filter, EventAction.GET_LIST))
-                         .flatMap(records -> Observable.fromIterable(records).map(transformer::transform).toList())
-                         .map(records -> new JsonObject().put("apis", new JsonArray(records)));
+        return controller.getRx()
+                         .rxGetRecords(RecordPredicate.filter(filter, EventAction.GET_LIST))
+                         .flatMapObservable(records -> Observable.fromIterable(records).map(transformer::transform))
+                         .map(RecordOutput::toJson)
+                         .collect(JsonArray::new, JsonArray::add)
+                         .map(records -> new JsonObject().put("apis", records));
     }
 
     private ServiceDiscoveryController getController(JsonObject filter) {
-        ServiceDiscoveryKind scope = ServiceDiscoveryKind.parse((String) filter.remove("kind"));
-        return ServiceDiscoveryKind.LOCAL == scope ? context.getLocalController() : context.getClusterController();
+        ServiceKind scope = ServiceKind.parse((String) filter.remove(Params.KIND));
+        return ServiceKind.LOCAL == scope ? context.getLocalController() : context.getClusterController();
+    }
+
+    public static final class Params {
+
+        public static final String IDENTIFIER = "identifier";
+        public static final String TYPE = "type";
+        public static final String STATUS = "status";
+        public static final String SCOPE = "scope";
+        public static final String BY = "by";
+        public static final String VIEW = "view";
+        public static final String KIND = "kind";
+
+        public static final String ACTION = "_action";
+
     }
 
 }
