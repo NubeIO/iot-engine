@@ -15,10 +15,15 @@ import io.vertx.ext.unit.TestContext;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
+import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.component.ReadinessAsserter;
+import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.ExpectedResponse;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.core.sql.SqlConfig;
+import com.nubeiot.edge.module.scheduler.MockSchedulerEntityHandler.MockSchedulerSchemaHandler;
 import com.nubeiot.scheduler.SchedulerConfig;
 
 import ch.qos.logback.classic.Level;
@@ -33,6 +38,17 @@ public abstract class EdgeSchedulerVerticleTest extends DynamicServiceTestBase {
     public static void beforeSuite() {
         TestHelper.setup();
         ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);
+    }
+
+    @Override
+    protected void startGatewayAndService(TestContext context, ContainerVerticle service,
+                                          DeploymentOptions serviceOptions) {
+        final EventbusClient client = SharedDataDelegate.getEventController(vertx.getDelegate(),
+                                                                            service.getClass().getName());
+        client.register(MockSchedulerSchemaHandler.class.getName() + ".readiness",
+                        new ReadinessAsserter(context, context.async(), new JsonObject("{\"records\":7}")));
+        super.startGatewayAndService(context, service, serviceOptions);
+        TestHelper.sleep(500);
     }
 
     @Override

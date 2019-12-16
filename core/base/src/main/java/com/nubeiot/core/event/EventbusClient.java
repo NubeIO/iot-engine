@@ -41,7 +41,8 @@ public interface EventbusClient extends Shareable, Transporter {
      * @param deliveryOptions Delivery options
      * @see EventPattern#REQUEST_RESPONSE
      */
-    default void request(@NonNull String address, @NonNull EventMessage message, @NonNull Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions) {
+    default void request(@NonNull String address, @NonNull EventMessage message,
+                         @NonNull Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions) {
         fire(address, EventPattern.REQUEST_RESPONSE, message, replyHandler, deliveryOptions);
     }
 
@@ -55,6 +56,17 @@ public interface EventbusClient extends Shareable, Transporter {
      */
     default Single<EventMessage> request(@NonNull String address, @NonNull EventMessage message) {
         return request(address, message, (DeliveryOptions) null);
+    }
+
+    /**
+     * Send message then return single response message
+     *
+     * @param event Delivery event
+     * @return response message
+     * @see EventMessage
+     */
+    default Single<EventMessage> request(@NonNull DeliveryEvent event) {
+        return request(event.getAddress(), event.payload(), (DeliveryOptions) null);
     }
 
     /**
@@ -187,7 +199,8 @@ public interface EventbusClient extends Shareable, Transporter {
      * @param deliveryOptions Delivery options
      * @see #fire(String, EventPattern, JsonObject, Handler, DeliveryOptions)
      */
-    default void fire(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message, Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions) {
+    default void fire(@NonNull String address, @NonNull EventPattern pattern, @NonNull EventMessage message,
+                      Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions) {
         fire(address, pattern, message.toJson(), replyHandler, deliveryOptions);
     }
 
@@ -200,7 +213,8 @@ public interface EventbusClient extends Shareable, Transporter {
      * @param replyHandler    Reply message handler
      * @param deliveryOptions Delivery options
      */
-    void fire(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data, Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions);
+    void fire(@NonNull String address, @NonNull EventPattern pattern, @NonNull JsonObject data,
+              Handler<AsyncResult<Message<Object>>> replyHandler, DeliveryOptions deliveryOptions);
 
     /**
      * Register event listener with event model.

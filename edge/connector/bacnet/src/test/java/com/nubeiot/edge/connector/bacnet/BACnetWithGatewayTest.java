@@ -8,6 +8,7 @@ import io.vertx.ext.unit.TestContext;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
+import com.nubeiot.core.component.ReadinessAsserter;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroConfig;
@@ -37,8 +38,8 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
         });
     }
 
-    protected TestReadinessHandler createReadinessHandler(TestContext context, Async async) {
-        return new TestReadinessHandler(context, async, new JsonObject("{\"total\":1}"));
+    protected ReadinessAsserter createReadinessHandler(TestContext context, Async async) {
+        return new ReadinessAsserter(context, async, new JsonObject("{\"total\":1}"));
     }
 
     protected void deployServices(TestContext context, BACnetConfig bacnetCfg, BACnetVerticle verticle) {

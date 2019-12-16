@@ -1,25 +1,11 @@
 package com.nubeiot.core.sql;
 
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.sql.DataSource;
 
 import org.jooq.Catalog;
 import org.jooq.Configuration;
-import org.jooq.Constraint;
-import org.jooq.CreateIndexStep;
-import org.jooq.CreateSchemaFinalStep;
-import org.jooq.ForeignKey;
-import org.jooq.Key;
-import org.jooq.Schema;
-import org.jooq.Table;
 import org.jooq.impl.DefaultConfiguration;
 
 import io.reactivex.Single;
@@ -99,82 +85,6 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
                       .flatMap(schemaHandler -> schemaHandler.execute(handler, catalog))
                       .onErrorResumeNext(throwable -> Single.error(
                           new InitializerError("Unknown error when initializing database", throwable)));
-    }
-
-    private Configuration createNewDatabase(Configuration jooqConfig) {
-        logger.info("Creating database model...");
-        logger.info("Creating schema...");
-        this.catalog.schemaStream()
-                    .map(schema -> createSchema(jooqConfig, schema))
-                    .map(Schema::getTables)
-                    .flatMap(Collection::stream)
-                    .map(table -> createTableAndIndex(jooqConfig, table))
-                    .map(this::listConstraint)
-                    .map(Map::entrySet)
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toMap(Entry::getKey, Entry::getValue, this::merge))
-                    .forEach((table, constraints) -> createConstraints(jooqConfig, table, constraints));
-        logger.info("Created database model successfully");
-        return jooqConfig;
-    }
-
-    private Schema createSchema(Configuration jooqConfig, Schema schema) {
-        try (CreateSchemaFinalStep step = jooqConfig.dsl().createSchemaIfNotExists(schema)) {
-            logger.debug(step.getSQL());
-            step.execute();
-            logger.info("Created schema {} successfully", schema.getName());
-            return schema;
-        }
-    }
-
-    private Map<Table, Set<Constraint>> listConstraint(Table<?> table) {
-        Stream<Constraint> constraints = table.getKeys().stream().map(Key::constraint);
-        if (Objects.nonNull(table.getPrimaryKey())) {
-            constraints = Stream.concat(constraints, Stream.of(table.getPrimaryKey().constraint()));
-        }
-        if (Objects.nonNull(table.getReferences())) {
-            constraints = Stream.concat(constraints, table.getReferences().stream().map(ForeignKey::constraint));
-        }
-        return Collections.singletonMap(table, constraints.collect(Collectors.toSet()));
-    }
-
-    private Table<?> createTableAndIndex(Configuration jooqConfig, Table<?> table) {
-        createTable(jooqConfig, table);
-        createIndex(jooqConfig, table);
-        logger.info("Created table {} successfully",
-                    table.getSchema().getQualifiedName().append(table.getQualifiedName()));
-        return table;
-    }
-
-    private void createTable(Configuration jooqConfig, Table<?> table) {
-        logger.info("Creating table {}...", table.getSchema().getQualifiedName().append(table.getQualifiedName()));
-        jooqConfig.dsl().createTableIfNotExists(table).columns(table.fields()).execute();
-    }
-
-    private void createIndex(Configuration jooqConfig, Table<?> table) {
-        table.getIndexes().forEach(index -> {
-            logger.debug("Creating index {}...", table.getSchema().getQualifiedName().append(index.getQualifiedName()));
-            CreateIndexStep indexStep;
-            if (index.getUnique()) {
-                indexStep = jooqConfig.dsl().createUniqueIndexIfNotExists(index.getName());
-            } else {
-                indexStep = jooqConfig.dsl().createIndexIfNotExists(index.getName());
-            }
-            indexStep.on(table, index.getFields()).where(index.getWhere()).execute();
-        });
-    }
-
-    private void createConstraints(Configuration jooqConfig, Table table, Set<Constraint> constraints) {
-        logger.info("Creating constraints of table {}...", table.getName());
-        jooqConfig.dsl().setSchema(table.getSchema()).execute();
-        constraints.forEach(constraint -> {
-            logger.debug("Constraint: {}", constraint.getQualifiedName());
-            jooqConfig.dsl().alterTable(table).add(constraint).execute();
-        });
-    }
-
-    private Set<Constraint> merge(Set<Constraint> c1, Set<Constraint> c2) {
-        return Stream.of(c1, c2).flatMap(Set::stream).collect(Collectors.toSet());
     }
 
     private EventMessage validateInitOrMigrationData(EventMessage result) {

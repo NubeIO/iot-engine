@@ -83,12 +83,12 @@ public class EdgeSchedulerReadTest extends EdgeSchedulerVerticleTest {
     @Test
     public void test_get_existed_job_by_existed_trigger(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"prev_fire_time\":null,\"id\":1,\"trigger\":{\"id\":1,\"group\":\"group1\",\"name\":\"trigger1\"," +
+            "{\"id\":1,\"trigger\":{\"id\":1,\"group\":\"group1\",\"name\":\"trigger1\"," +
             "\"type\":\"CRON\",\"detail\":{\"expression\":\"0 0 0 ? * SUN *\",\"timezone\":\"Australia/Sydney\"}," +
             "\"thread\":\"0 0 0 ? * SUN *::Australia/Sydney\"},\"job\":{\"id\":1,\"group\":\"group1\"," +
             "\"name\":\"job1\",\"type\":\"EVENT_JOB\",\"forward_if_failure\":true," +
             "\"detail\":{\"process\":{\"address\":\"scheduler.1\",\"pattern\":\"REQUEST_RESPONSE\"," +
-            "\"action\":\"CREATE\"}}},\"next_fire_time\":{\"local\":\"\",\"utc\":\"\"},\"enabled\":true}");
+            "\"action\":\"CREATE\"}}},\"enabled\":true}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/trigger/1/job/1", 200, expected,
                            UTC_DATE.apply("next_fire_time"), LOCAL_DATE.apply("next_fire_time"));
     }
