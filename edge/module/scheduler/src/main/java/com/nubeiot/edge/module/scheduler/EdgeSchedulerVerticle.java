@@ -1,20 +1,11 @@
 package com.nubeiot.edge.module.scheduler;
 
-import java.util.Objects;
-import java.util.Optional;
-
-import io.reactivex.Observable;
-
 import com.nubeiot.core.component.ContainerVerticle;
-import com.nubeiot.core.component.SharedDataDelegate;
-import com.nubeiot.core.event.EventbusClient;
-import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.core.micro.ServiceDiscoveryController;
+import com.nubeiot.core.micro.register.EventHttpServiceRegister;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
-import com.nubeiot.core.utils.ExecutorHelpers;
 import com.nubeiot.edge.module.scheduler.service.SchedulerService;
 import com.nubeiot.iotdata.scheduler.model.DefaultCatalog;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
@@ -31,7 +22,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     private SchedulerEntityHandler entityHandler;
     private MicroContext microCtx;
 
-    public EdgeSchedulerVerticle() {
+    EdgeSchedulerVerticle() {
         this.entityHandlerClass = SchedulerEntityHandler.class;
     }
 
@@ -46,21 +37,14 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
             .registerSuccessHandler(v -> successHandler());
     }
 
-    @SuppressWarnings("unchecked")
     private void successHandler() {
-        EventbusClient controller = SharedDataDelegate.getEventController(vertx.getDelegate(), getSharedKey());
-        ServiceDiscoveryController discovery = microCtx.getLocalController();
-        ExecutorHelpers.blocking(getVertx(), () -> SchedulerService.createServices(entityHandler, schedulerCtx))
-                       .flattenAsObservable(s -> s)
-                       .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                              .ifPresent(service -> controller.register(service.address(), service)))
-                       .filter(s -> Objects.nonNull(s.definitions()))
-                       .flatMap(s -> Observable.fromIterable(s.definitions())
-                                               .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(),
-                                                                                                   (EventMethodDefinition) e)))
-                       .subscribe();
-        //TODO Need to merge with above
-        entityHandler.register(schedulerCtx).subscribe();
+        EventHttpServiceRegister.create(vertx.getDelegate(), getSharedKey(),
+                                        () -> SchedulerService.createServices(entityHandler, schedulerCtx))
+                                .publish(microCtx.getLocalController())
+                                .flatMapObservable(ignore -> entityHandler.register(schedulerCtx))
+                                .toList()
+                                .doOnSuccess(r -> logger.info("Registered {} schedulers", r.size()))
+                                .subscribe();
     }
 
 }

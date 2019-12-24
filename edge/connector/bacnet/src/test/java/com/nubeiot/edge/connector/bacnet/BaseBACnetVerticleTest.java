@@ -17,18 +17,12 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.TestHelper;
-import com.nubeiot.core.TestHelper.JsonHelper;
-import com.nubeiot.core.component.ApplicationProbeHandler.ApplicationReadinessHandler;
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.component.ReadinessAsserter;
 import com.nubeiot.core.event.EventbusClient;
-import com.nubeiot.core.exceptions.ErrorData;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 @RunWith(VertxUnitRunner.class)
 public abstract class BaseBACnetVerticleTest {
@@ -54,7 +48,7 @@ public abstract class BaseBACnetVerticleTest {
         this.vertx.close(context.asyncAssertSuccess());
     }
 
-    protected abstract TestReadinessHandler createReadinessHandler(TestContext context, Async async);
+    protected abstract ReadinessAsserter createReadinessHandler(TestContext context, Async async);
 
     protected abstract void deployServices(TestContext context, BACnetConfig bacnetCfg, BACnetVerticle verticle);
 
@@ -66,32 +60,6 @@ public abstract class BaseBACnetVerticleTest {
 
     protected BACnetConfig createBACnetConfig() {
         return IConfig.fromClasspath("testConfig.json", BACnetConfig.class);
-    }
-
-    @RequiredArgsConstructor
-    public static class TestReadinessHandler implements ApplicationReadinessHandler {
-
-        @NonNull
-        private final TestContext context;
-        @NonNull
-        private final Async async;
-        @NonNull
-        private final JsonObject expected;
-
-        @Override
-        @EventContractor(action = EventAction.NOTIFY, returnType = boolean.class)
-        public boolean success(RequestData requestData) {
-            JsonHelper.assertJson(context, async, expected, requestData.body());
-            return true;
-        }
-
-        @Override
-        @EventContractor(action = EventAction.NOTIFY_ERROR, returnType = boolean.class)
-        public boolean error(ErrorData error) {
-            JsonHelper.assertJson(context, async, expected, error.toJson());
-            return true;
-        }
-
     }
 
 }

@@ -7,15 +7,12 @@ import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.ZoneOffset;
 
-import org.jooq.Catalog;
 import org.jooq.Configuration;
-import org.jooq.Table;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.DatabaseException;
 import com.nubeiot.core.exceptions.InitializerError.MigrationError;
 import com.nubeiot.core.sql.mock.manyschema.mock0.Tables;
@@ -40,22 +37,7 @@ public class MockManyEntityHandler extends AbstractEntityHandler {
     }
 
     static SchemaHandler createSchemaHandler(SchemaInitializer initializer, SchemaMigrator migrator) {
-        return new SchemaHandler() {
-            @Override
-            public @NonNull Table table() {
-                return Tables.TBL_SAMPLE_00;
-            }
-
-            @Override
-            public @NonNull SchemaInitializer initializer() {
-                return initializer;
-            }
-
-            @Override
-            public @NonNull SchemaMigrator migrator() {
-                return migrator;
-            }
-        };
+        return BaseSqlTest.createSchemaHandler(Tables.TBL_SAMPLE_00, initializer, migrator);
     }
 
     @Override
@@ -93,13 +75,7 @@ public class MockManyEntityHandler extends AbstractEntityHandler {
         @Override
         public @NonNull SchemaHandler schemaHandler() {
             return createSchemaHandler(handler -> Single.error(new DatabaseException("Init error")),
-                                       new SchemaMigrator() {
-                                           @Override
-                                           public Single<EventMessage> execute(@NonNull EntityHandler entityHandler,
-                                                                               @NonNull Catalog catalog) {
-                                               return Single.error(new MigrationError("Migrate error"));
-                                           }
-                                       });
+                                       (entityHandler, catalog) -> Single.error(new MigrationError("Migrate error")));
         }
 
     }

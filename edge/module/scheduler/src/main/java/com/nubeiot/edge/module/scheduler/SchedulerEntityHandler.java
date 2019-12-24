@@ -1,10 +1,7 @@
 package com.nubeiot.edge.module.scheduler;
 
-import java.util.Optional;
-
 import org.jooq.Configuration;
 
-import io.reactivex.Notification;
 import io.reactivex.Observable;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -12,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
@@ -52,7 +50,7 @@ class SchedulerEntityHandler extends AbstractEntityHandler
 
     //TODO need to handle error
     @SuppressWarnings("unchecked")
-    Observable register(@NonNull QuartzSchedulerContext schedulerContext) {
+    Observable<EventMessage> register(@NonNull QuartzSchedulerContext schedulerContext) {
         final RequestData reqData = RequestData.builder().filter(new JsonObject().put("enable", true)).build();
         final EventbusClient client = eventClient();
         return complexQuery().from(JobTriggerMetadata.INSTANCE)
@@ -60,12 +58,11 @@ class SchedulerEntityHandler extends AbstractEntityHandler
                              .with(TriggerEntityMetadata.INSTANCE)
                              .viewPredicate(metadata -> true)
                              .findMany(reqData)
-                             .map(jobTrigger -> event((JobTriggerComposite) jobTrigger, schedulerContext))
-                             .doOnEach(no -> Optional.ofNullable(((Notification<DeliveryEvent>) no).getValue())
-                                                     .ifPresent(event -> client.fire(event, replyHandler(event))));
+                             .map(jobTrigger -> createEvent((JobTriggerComposite) jobTrigger, schedulerContext))
+                             .map(event -> client.request((DeliveryEvent) event));
     }
 
-    private DeliveryEvent event(@NonNull JobTriggerComposite composite, @NonNull QuartzSchedulerContext context) {
+    private DeliveryEvent createEvent(@NonNull JobTriggerComposite composite, @NonNull QuartzSchedulerContext context) {
         final JobModel job = JobConverter.convert(
             composite.safeGetOther(JobEntityMetadata.INSTANCE.singularKeyName(), JobEntity.class));
         final TriggerModel trigger = TriggerConverter.convert(

@@ -1,13 +1,20 @@
 package com.nubeiot.core.sql;
 
+import java.util.Optional;
+
 import org.jooq.Catalog;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
 
 import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.exceptions.ErrorData;
 
 import lombok.NonNull;
 
@@ -17,6 +24,8 @@ import lombok.NonNull;
  * @since 1.0.0
  */
 public interface SchemaHandler {
+
+    String READINESS_ADDRESS = "SCHEMA_READINESS_ADDRESS";
 
     /**
      * Defines {@code table} to check whether database is new or not.
@@ -69,6 +78,18 @@ public interface SchemaHandler {
     @NonNull SchemaMigrator migrator();
 
     /**
+     * Declares readiness address for notification after {@link #execute(EntityHandler, Catalog)}.
+     *
+     * @param entityHandler given handler for helping lookup dynamic {@code address}
+     * @return readiness address
+     * @since 1.0.0
+     */
+    default @NonNull String readinessAddress(@NonNull EntityHandler entityHandler) {
+        return Optional.ofNullable((String) entityHandler.sharedData(READINESS_ADDRESS))
+                       .orElse(this.getClass().getName() + ".readiness");
+    }
+
+    /**
      * Do execute the initialization task or migration task.
      *
      * @param entityHandler the entity handler
@@ -80,10 +101,19 @@ public interface SchemaHandler {
      * @since 1.0.0
      */
     default @NonNull Single<EventMessage> execute(@NonNull EntityHandler entityHandler, @NonNull Catalog catalog) {
-        if (isNew(entityHandler.dsl())) {
-            return initializer().execute(entityHandler, catalog);
-        }
-        return migrator().execute(entityHandler, catalog);
+        final Single<EventMessage> result = isNew(entityHandler.dsl())
+                                            ? initializer().execute(entityHandler, catalog)
+                                            : migrator().execute(entityHandler, catalog);
+        final EventbusClient c = entityHandler.eventClient();
+        final String address = readinessAddress(entityHandler);
+        return result.doOnError(t -> c.publish(address, EventMessage.initial(EventAction.NOTIFY_ERROR,
+                                                                             ErrorData.builder().throwable(t).build())))
+                     .doOnSuccess(msg -> {
+                         final JsonObject headers = new JsonObject().put("status", msg.getStatus())
+                                                                    .put("action", msg.getAction());
+                         final RequestData reqData = RequestData.builder().body(msg.getData()).headers(headers).build();
+                         c.publish(address, EventMessage.initial(EventAction.NOTIFY, reqData));
+                     });
     }
 
 }

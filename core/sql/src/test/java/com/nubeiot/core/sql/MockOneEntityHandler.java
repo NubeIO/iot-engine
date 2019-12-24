@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jooq.Configuration;
-import org.jooq.Table;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -47,23 +46,8 @@ public class MockOneEntityHandler extends AbstractEntityHandler implements Entit
         this.bookStoreDao = dao(BookToBookStoreDao.class);
     }
 
-    static SchemaHandler createSchemaHandler(SchemaInitializer initializer, SchemaMigrator migrator) {
-        return new SchemaHandler() {
-            @Override
-            public @NonNull Table table() {
-                return Tables.AUTHOR;
-            }
-
-            @Override
-            public @NonNull SchemaInitializer initializer() {
-                return initializer;
-            }
-
-            @Override
-            public @NonNull SchemaMigrator migrator() {
-                return migrator;
-            }
-        };
+    static SchemaHandler createSchemaHandler(SchemaInitializer initializer) {
+        return BaseSqlTest.createSchemaHandler(Tables.AUTHOR, initializer, SchemaMigrator.NON_MIGRATOR);
     }
 
     public Configuration getJooq() {
@@ -86,7 +70,7 @@ public class MockOneEntityHandler extends AbstractEntityHandler implements Entit
             return Single.concatArray(insert00, insert01, insert02)
                          .reduce(0, Integer::sum)
                          .map(r -> new JsonObject().put("records", r));
-        }, SchemaMigrator.NON_MIGRATOR);
+        });
     }
 
     private List<Language> lang() {

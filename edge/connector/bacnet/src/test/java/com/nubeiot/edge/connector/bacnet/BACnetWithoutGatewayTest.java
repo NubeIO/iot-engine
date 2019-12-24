@@ -6,11 +6,12 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
+import com.nubeiot.core.component.ReadinessAsserter;
 
 public abstract class BACnetWithoutGatewayTest extends BaseBACnetVerticleTest {
 
-    protected TestReadinessHandler createReadinessHandler(TestContext context, Async async) {
-        return new TestReadinessHandler(context, async, new JsonObject("{\"total\":0}"));
+    protected ReadinessAsserter createReadinessHandler(TestContext context, Async async) {
+        return new ReadinessAsserter(context, async, new JsonObject("{\"total\":0}"));
     }
 
     @Override

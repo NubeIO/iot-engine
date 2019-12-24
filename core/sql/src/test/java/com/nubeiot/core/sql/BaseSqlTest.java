@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.jooq.Catalog;
 import org.jooq.SQLDialect;
+import org.jooq.Table;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -40,6 +41,26 @@ public abstract class BaseSqlTest {
         TestHelper.setup();
         ((Logger) LoggerFactory.getLogger("org.jooq")).setLevel(Level.DEBUG);
         ((Logger) LoggerFactory.getLogger("com.zaxxer.hikari")).setLevel(Level.DEBUG);
+    }
+
+    public static SchemaHandler createSchemaHandler(Table table, SchemaInitializer initializer,
+                                                    SchemaMigrator migrator) {
+        return new SchemaHandler() {
+            @Override
+            public @NonNull Table table() {
+                return table;
+            }
+
+            @Override
+            public @NonNull SchemaInitializer initializer() {
+                return initializer;
+            }
+
+            @Override
+            public @NonNull SchemaMigrator migrator() {
+                return migrator;
+            }
+        };
     }
 
     @Before

@@ -1,6 +1,7 @@
 package com.nubeiot.edge.module.scheduler.utils;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 import io.vertx.core.json.JsonObject;
@@ -29,7 +30,8 @@ public interface SchedulerConverter {
             return converter.apply(request);
         } catch (IllegalArgumentException e) {
             if (e.getCause() instanceof InvalidDefinitionException) {
-                throw NubeExceptionConverter.friendly(e.getCause().getCause());
+                throw NubeExceptionConverter.friendly(
+                    Optional.ofNullable(e.getCause()).map(Throwable::getCause).orElse(e.getCause()));
             }
             if (e.getCause() instanceof InvalidTypeIdException) {
                 throw new IllegalArgumentException(

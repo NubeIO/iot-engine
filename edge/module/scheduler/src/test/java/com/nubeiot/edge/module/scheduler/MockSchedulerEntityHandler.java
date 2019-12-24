@@ -97,7 +97,7 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
         return new MockSchedulerSchemaHandler();
     }
 
-    private static class MockSchedulerSchemaHandler extends SchedulerSchemaHandler {
+    static class MockSchedulerSchemaHandler extends SchedulerSchemaHandler {
 
         @Override
         public @NonNull SchemaInitializer initializer() {
@@ -121,7 +121,7 @@ public class MockSchedulerEntityHandler extends SchedulerEntityHandler {
     }
 
 
-    public static class MockSchedulerListener implements EventListener {
+    static class MockSchedulerListener implements EventListener {
 
         @Override
         public @NonNull Collection<EventAction> getAvailableEvents() {

@@ -30,9 +30,10 @@ import lombok.NonNull;
 public interface EntityConstraintHolder {
 
     /**
-     * Key class class.
+     * Declares {@code Key} class that modelling {@code foreign key} relationships and {@code constraints of tables} in
+     * {@code schema}
      *
-     * @return the class
+     * @return {@code Key} class
      * @since 1.0.0
      */
     @NonNull Class keyClass();
