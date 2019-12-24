@@ -68,6 +68,11 @@ public abstract class EdgeSchedulerVerticleTest extends DynamicServiceTestBase {
         return new EdgeSchedulerVerticle(MockSchedulerEntityHandler.class);
     }
 
+    @Override
+    protected int timeoutInSecond() {
+        return super.timeoutInSecond() * 2;
+    }
+
     void createJob(TestContext context, JsonObject job, ExpectedResponse expected) {
         final RequestData reqData = RequestData.builder().body(job).build();
         assertRestByClient(context, HttpMethod.POST, "/api/s/job", reqData, expected);

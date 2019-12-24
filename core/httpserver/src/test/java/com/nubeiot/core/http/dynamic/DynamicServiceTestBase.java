@@ -30,10 +30,11 @@ public abstract class DynamicServiceTestBase extends HttpServerTestBase {
 
     protected void startGatewayAndService(TestContext context, ContainerVerticle service,
                                           DeploymentOptions serviceOptions) {
-        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(2);
         DeploymentOptions config = new DeploymentOptions().setConfig(deployConfig(httpConfig.getPort()));
         VertxHelper.deploy(vertx.getDelegate(), context, config, gateway().get(), id -> {
             System.out.println("Gateway Deploy Id: " + id);
+            latch.countDown();
             VertxHelper.deploy(vertx.getDelegate(), context, serviceOptions, service, d -> {
                 System.out.println("Service Deploy Id: " + d);
                 latch.countDown();
@@ -41,16 +42,13 @@ public abstract class DynamicServiceTestBase extends HttpServerTestBase {
         });
         long start = System.nanoTime();
         try {
-            context.assertTrue(latch.await(TestHelper.TEST_TIMEOUT_SEC, TimeUnit.SECONDS));
+            context.assertTrue(latch.await(timeoutInSecond(), TimeUnit.SECONDS),
+                               "Timeout when deploying gateway and service verticle");
         } catch (InterruptedException e) {
             context.fail("Failed to start Gateway and HTTP Service");
         }
         //small delay for enable dynamic api
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            context.fail(e);
-        }
+        TestHelper.sleep(500);
         System.out.println("FINISHED AFTER: " + (System.nanoTime() - start) / 1e9);
     }
 
@@ -68,5 +66,9 @@ public abstract class DynamicServiceTestBase extends HttpServerTestBase {
     }
 
     protected abstract <T extends ContainerVerticle> T service();
+
+    protected int timeoutInSecond() {
+        return TestHelper.TEST_TIMEOUT_SEC;
+    }
 
 }
