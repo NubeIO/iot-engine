@@ -1,12 +1,8 @@
 package com.nubeiot.edge.module.scheduler;
 
-import java.util.Set;
-import java.util.function.Supplier;
-
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.micro.register.EventHttpServiceRegister;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
@@ -42,19 +38,13 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     }
 
     private void successHandler() {
-        final ServiceDiscoveryController discover = microCtx.getLocalController();
-        final Supplier<Set<SchedulerService>> supplier = () -> SchedulerService.createServices(entityHandler,
-                                                                                               schedulerCtx);
-        final EventHttpServiceRegister<SchedulerService> register = new EventHttpServiceRegister<>(vertx.getDelegate(),
-                                                                                                   getSharedKey(),
-                                                                                                   supplier);
-        register.publish(discover)
-                .toList()
-                .doOnSuccess(r -> logger.info("Publish {} APIs", r.size()))
-                .flatMapObservable(ignore -> entityHandler.register(schedulerCtx))
-                .toList()
-                .doOnSuccess(r -> logger.info("Register {} schedulers", r.size()))
-                .subscribe();
+        EventHttpServiceRegister.create(vertx.getDelegate(), getSharedKey(),
+                                        () -> SchedulerService.createServices(entityHandler, schedulerCtx))
+                                .publish(microCtx.getLocalController())
+                                .flatMapObservable(ignore -> entityHandler.register(schedulerCtx))
+                                .toList()
+                                .doOnSuccess(r -> logger.info("Registered {} schedulers", r.size()))
+                                .subscribe();
     }
 
 }

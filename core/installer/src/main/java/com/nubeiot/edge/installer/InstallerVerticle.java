@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.servicediscovery.Record;
@@ -13,7 +12,6 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.micro.register.EventHttpServiceRegister;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
@@ -78,10 +76,8 @@ public abstract class InstallerVerticle<T extends InstallerService> extends Cont
     }
 
     private Single<List<Record>> publishApis(MicroContext microContext) {
-        final ServiceDiscoveryController discover = microContext.getLocalController();
-        final Observable<Record> recs = new EventHttpServiceRegister<>(vertx.getDelegate(), getSharedKey(),
-                                                                       services(entityHandler)).publish(discover);
-        return recs.toList().doOnSuccess(r -> logger.info("Publish {} APIs", r.size()));
+        return EventHttpServiceRegister.create(vertx.getDelegate(), getSharedKey(), services(entityHandler))
+                                       .publish(microContext.getLocalController());
     }
 
 }
