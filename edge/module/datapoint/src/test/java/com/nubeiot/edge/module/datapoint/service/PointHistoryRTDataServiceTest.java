@@ -127,9 +127,10 @@ public class PointHistoryRTDataServiceTest extends BaseDataPointServiceTest {
         final DeliveryEvent event = PointDataServiceTest.createPointEvent(action, pv, false);
         final Async async = context.async();
         controller().fire(event, EventbusHelper.replyAsserter(context, body -> {
+            JsonObject result = JsonPojo.from(output).toJson();
+            PointPriorityValue.priorityValueTransform().apply(result);
             JsonObject expected = new JsonObject().put("action", event.getAction())
-                                                  .put("status", Status.SUCCESS)
-                                                  .put("resource", JsonPojo.from(output).toJson());
+                                                  .put("status", Status.SUCCESS).put("resource", result);
             JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"));
         }));
         try {

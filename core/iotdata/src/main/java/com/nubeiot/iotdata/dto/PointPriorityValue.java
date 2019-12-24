@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 import io.vertx.core.json.JsonObject;
 
@@ -26,8 +27,8 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
 
     public static final int DEFAULT_PRIORITY = 16;
     private static final String INVALID_PRIORITY = "Priority is only in range [1, 17]";
-    private static final int MIN_PRIORITY = 1;
-    private static final int MAX_PRIORITY = 17;
+    public static final int MIN_PRIORITY = 1;
+    public static final int MAX_PRIORITY = 17;
     private static final String INVALID_VALUE = "Value must be number";
     private final SortedMap<Integer, Double> val = new TreeMap<>();
 
@@ -95,6 +96,18 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
                   .findFirst()
                   .map(entry -> new PointValue(entry.getKey(), entry.getValue()))
                   .orElse(new PointValue(DEFAULT_PRIORITY, null));
+    }
+
+    public static Function<JsonObject, JsonObject> priorityValueTransform() {
+        return result -> {
+            JsonObject priorityValues = result.getJsonObject("priority_values");
+            for (int i = PointPriorityValue.MIN_PRIORITY; i < PointPriorityValue.MAX_PRIORITY; i++) {
+                if (!priorityValues.containsKey(String.valueOf(i))) {
+                    priorityValues.put(String.valueOf(i), "null");
+                }
+            }
+            return result;
+        };
     }
 
     @Override

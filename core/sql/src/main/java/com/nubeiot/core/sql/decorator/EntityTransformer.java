@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
@@ -212,7 +213,7 @@ public interface EntityTransformer {
     default Single<JsonObject> afterDelete(@NonNull VertxPojo pojo, @NonNull RequestData reqData) {
         return Single.just(doTransform(EventAction.REMOVE, pojo, reqData,
                                        (p, r) -> JsonPojo.from(p).toJson(JsonData.MAPPER, ignoreFields(reqData)),
-                                       JsonObject::new));
+                                       (Supplier<JsonObject>) JsonObject::new));
     }
 
     /**
@@ -251,6 +252,25 @@ public interface EntityTransformer {
         } else {
             return ifNotFull.get();
         }
+    }
+
+    /**
+     * Do transform json object.
+     *
+     * @param action          the action
+     * @param pojo            the pojo
+     * @param reqData         the req data
+     * @param converter       the converter
+     * @param resultConverter to transform the result
+     * @return the json object
+     * @since 1.0.0
+     */
+    default JsonObject doTransform(EventAction action, VertxPojo pojo, RequestData reqData,
+                                   BiFunction<VertxPojo, RequestData, JsonObject> converter,
+                                   Function<JsonObject, JsonObject> resultConverter) {
+        JsonObject result = converter.apply(pojo, reqData);
+        resultConverter.apply(result);
+        return fullResponse(action, result);
     }
 
 }
