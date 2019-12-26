@@ -31,9 +31,9 @@ import lombok.RequiredArgsConstructor;
  * @param <M> Type of {@code EntityMetadata}
  * @param <S> Type of {@code EntityService}
  * @see EntityService
- * @see OneToManyReferenceEntityService
+ * @see OneToManyEntityService
  * @see GroupEntityService
- * @see ManyToManyReferenceEntityService
+ * @see ManyToManyEntityService
  * @since 1.0.0
  */
 @RequiredArgsConstructor

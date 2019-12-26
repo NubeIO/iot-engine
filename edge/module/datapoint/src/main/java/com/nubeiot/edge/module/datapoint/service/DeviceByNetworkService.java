@@ -3,6 +3,8 @@ package com.nubeiot.edge.module.datapoint.service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
@@ -30,11 +32,6 @@ public final class DeviceByNetworkService
     }
 
     @Override
-    public EdgeDeviceMetadata context() {
-        return EdgeDeviceMetadata.INSTANCE;
-    }
-
-    @Override
     public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
         return super.onCreatingOneResource(optimizeRequestData(requestData));
     }
@@ -55,6 +52,11 @@ public final class DeviceByNetworkService
     }
 
     @Override
+    public EdgeDeviceMetadata context() {
+        return EdgeDeviceMetadata.INSTANCE;
+    }
+
+    @Override
     public @NonNull EntityMetadata reference() {
         return NetworkMetadata.INSTANCE;
     }
@@ -70,10 +72,8 @@ public final class DeviceByNetworkService
     }
 
     @Override
-    public Set<String> ignoreFields(@NonNull RequestData requestData) {
-        final Set<String> ignores = super.ignoreFields(requestData);
-        ignores.add(getEdgeField());
-        return ignores;
+    public Set<String> ignoreFields() {
+        return Stream.concat(super.ignoreFields().stream(), Stream.of(getEdgeField())).collect(Collectors.toSet());
     }
 
     @Override

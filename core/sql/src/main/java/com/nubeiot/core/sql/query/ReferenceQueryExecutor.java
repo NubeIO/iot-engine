@@ -13,8 +13,8 @@ import io.reactivex.Single;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.service.HasReferenceMarker;
-import com.nubeiot.core.sql.service.HasReferenceMarker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 
 import lombok.NonNull;
 
@@ -42,7 +42,7 @@ public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQuery
      */
     static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> ReferenceQueryExecutor create(
         @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
-        @NonNull HasReferenceMarker marker) {
+        @NonNull ReferencingEntityMarker marker) {
         return new ReferenceDaoQueryExecutor<>(handler, metadata, marker);
     }
 
@@ -50,10 +50,10 @@ public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQuery
      * Defines {@code entity marker}.
      *
      * @return the has reference marker
-     * @see HasReferenceMarker
+     * @see ReferencingEntityMarker
      * @since 1.0.0
      */
-    @NonNull HasReferenceMarker marker();
+    @NonNull ReferencingEntityMarker marker();
 
     /**
      * Verify {@code entity} whether exists or not.
@@ -63,7 +63,7 @@ public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQuery
      * @since 1.0.0
      */
     default Single<Boolean> checkReferenceExistence(@NonNull RequestData reqData) {
-        final EntityReferences references = marker().entityReferences();
+        final EntityReferences references = marker().referencedEntities();
         return Observable.fromIterable(references.getFields().entrySet()).flatMapSingle(entry -> {
             final EntityMetadata meta = entry.getKey();
             final Object key = findReferenceKey(reqData, meta, entry.getValue());

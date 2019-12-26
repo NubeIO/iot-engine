@@ -31,7 +31,7 @@ import com.nubeiot.core.sql.validation.OperationValidator;
 import lombok.NonNull;
 
 /**
- * Represents for a {@code sql executor} do {@code DML} or {@code DQL} on {@code entity}.
+ * Represents for a {@code SQL  Executor} do {@code DML} or {@code DQL} on {@code entity}.
  *
  * @param <P> Type of {@code VertxPojo}
  * @since 1.0.0

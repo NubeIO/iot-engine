@@ -7,7 +7,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.service.TransitiveReferenceMarker;
+import com.nubeiot.core.sql.service.marker.TransitiveReferenceMarker;
 
 import lombok.NonNull;
 

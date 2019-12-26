@@ -27,8 +27,8 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.sql.service.HasReferenceMarker;
-import com.nubeiot.core.sql.service.HasReferenceMarker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.utils.Strings;
 
@@ -47,7 +47,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     private Predicate<EntityMetadata> viewPredicate = existPredicate;
     private EntityReferences references;
 
-    ComplexDaoQueryExecutor(EntityHandler handler) {
+    ComplexDaoQueryExecutor(@NonNull EntityHandler handler) {
         super(handler.dsl().configuration(), io.vertx.reactivex.core.Vertx.newInstance(handler.vertx()));
         this.handler = handler;
     }
@@ -179,7 +179,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     @Override
-    public @NonNull HasReferenceMarker marker() {
+    public @NonNull ReferencingEntityMarker marker() {
         throw new UnsupportedOperationException("Not using it in case of many-to-many");
     }
 

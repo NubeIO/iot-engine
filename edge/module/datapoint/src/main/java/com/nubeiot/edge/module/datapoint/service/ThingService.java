@@ -13,6 +13,7 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractTransitiveEntityService;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
@@ -35,7 +36,7 @@ public final class ThingService extends AbstractTransitiveEntityService<Thing, T
     }
 
     @Override
-    public EntityReferences entityReferences() {
+    public EntityReferences referencedEntities() {
         return new EntityReferences().add(DeviceMetadata.INSTANCE);
     }
 

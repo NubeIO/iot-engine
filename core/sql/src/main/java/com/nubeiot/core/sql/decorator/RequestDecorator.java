@@ -1,4 +1,4 @@
-package com.nubeiot.core.sql.service;
+package com.nubeiot.core.sql.decorator;
 
 import com.nubeiot.core.dto.RequestData;
 

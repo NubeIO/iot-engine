@@ -7,6 +7,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.GroupEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.query.GroupQueryExecutor;
+import com.nubeiot.core.sql.service.marker.GroupReferencingEntityMarker;
 
 import lombok.NonNull;
 
@@ -20,12 +21,12 @@ import lombok.NonNull;
  * @see CompositePojo
  * @see CompositeMetadata
  * @see EntityService
- * @see GroupReferenceMarker
+ * @see GroupReferencingEntityMarker
  * @since 1.0.0
  */
 public interface GroupEntityService<P extends VertxPojo, M extends EntityMetadata, CP extends CompositePojo<P, CP>,
                                        CM extends CompositeMetadata>
-    extends BaseEntityService<M>, GroupReferenceMarker {
+    extends BaseEntityService<M>, GroupReferencingEntityMarker {
 
     /**
      * Declares context group pojo.

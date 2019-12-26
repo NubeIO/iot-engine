@@ -13,6 +13,7 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.GroupEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
+import com.nubeiot.core.sql.service.marker.GroupReferencingEntityMarker;
 import com.nubeiot.core.sql.service.workflow.CreationStep;
 import com.nubeiot.core.sql.service.workflow.DeletionStep;
 import com.nubeiot.core.sql.service.workflow.GetOneStep;
@@ -57,10 +58,10 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
 
     /**
      * @return group reference marker
-     * @see GroupReferenceMarker
+     * @see GroupReferencingEntityMarker
      */
     @Override
-    public GroupReferenceMarker marker() {
+    public GroupReferencingEntityMarker marker() {
         return this;
     }
 
@@ -73,7 +74,7 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     @Override
     public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
         final Stream<Entry<EntityMetadata, String>> stream = Stream.of(
-            marker().entityReferences().getFields().entrySet().stream(),
+            marker().referencedEntities().getFields().entrySet().stream(),
             marker().groupReferences().getFields().entrySet().stream()).flatMap(s -> s);
         return recomputeRequestData(requestData, convertKey(requestData, stream));
     }
@@ -82,7 +83,7 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     public @NonNull RequestData onModifyingOneResource(@NonNull RequestData requestData) {
         final JsonObject extra = convertKey(requestData, context());
         final Stream<Entry<EntityMetadata, String>> stream = Stream.of(
-            marker().entityReferences().getFields().entrySet().stream(),
+            marker().referencedEntities().getFields().entrySet().stream(),
             marker().groupReferences().getFields().entrySet().stream()).flatMap(s -> s);
         return recomputeRequestData(requestData, extra.mergeIn(convertKey(requestData, stream), true));
     }

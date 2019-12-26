@@ -154,14 +154,14 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_update_directly(TestContext context) {
-        JsonObject body = new JsonObject(
+        final JsonObject body = new JsonObject(
             "{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"code\":\"NUBE_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE +
-            "\",\"network\":\"" + PrimaryKey.NETWORK +
-            "\",\"enabled\":false,\"protocol\":\"BACNET\",\"kind\":\"OUTPUT\",\"type\":\"10K-THERMISTOR\"," +
-            "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\",\"alias\":{\"= 0.0\":\"OFF\",\"= 1.0\":\"ON\"}}}");
-        JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
-                                              .put("status", Status.SUCCESS)
-                                              .put("resource", body);
+            "\",\"network\":\"" + PrimaryKey.NETWORK + "\",\"enabled\":false,\"protocol\":\"BACNET\"," +
+            "\"kind\":\"OUTPUT\",\"type\":\"10K-THERMISTOR\",\"unit\":{\"type\":\"bool\",\"category\":\"ALL\"," +
+            "\"alias\":{\"= 0.0\":\"OFF\",\"= 1.0\":\"ON\"}}}");
+        final JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
+                                                    .put("status", Status.SUCCESS)
+                                                    .put("resource", body);
         final Point p1 = new Point().setCode("NUBE_HUMIDITY")
                                     .setProtocol(Protocol.BACNET)
                                     .setEdge(PrimaryKey.EDGE)
@@ -171,9 +171,9 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                                     .setMeasureUnit(Base.BOOLEAN.type())
                                     .setUnitAlias(new UnitAlias().add("=1", "ON").add("=0", "OFF"))
                                     .setEnabled(false);
-        RequestData req = RequestData.builder()
-                                     .body(p1.toJson().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
-                                     .build();
+        final RequestData req = RequestData.builder()
+                                           .body(p1.toJson().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
+                                           .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.UPDATE, req);
     }
 
@@ -203,9 +203,8 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     public void test_update_by_edge_network(TestContext context) {
         JsonObject body = new JsonObject(
             "{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"code\":\"NUBE_VELOCITY\",\"edge\":\"" + PrimaryKey.EDGE +
-            "\",\"enabled\":false,\"protocol\":\"BACNET\",\"kind\":\"INPUT\"," +
-            "\"type\":\"UNKNOWN\",\"unit\":{\"type\":\"kilometers_per_hour\",\"category\":\"VELOCITY\"," +
-            "\"symbol\":\"km/h\"}}");
+            "\",\"enabled\":false,\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"UNKNOWN\"," +
+            "\"unit\":{\"type\":\"kilometers_per_hour\",\"category\":\"VELOCITY\",\"symbol\":\"km/h\"}}");
         JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", body);

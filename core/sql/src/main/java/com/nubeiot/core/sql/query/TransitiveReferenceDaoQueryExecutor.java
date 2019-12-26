@@ -20,9 +20,9 @@ import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.service.HasReferenceMarker.EntityReferences;
-import com.nubeiot.core.sql.service.TransitiveReferenceMarker;
-import com.nubeiot.core.sql.service.TransitiveReferenceMarker.TransitiveEntity;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.TransitiveReferenceMarker;
+import com.nubeiot.core.sql.service.marker.TransitiveReferenceMarker.TransitiveEntity;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
@@ -76,7 +76,7 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
 
     @Override
     public Single<Boolean> checkReferenceExistence(@NonNull RequestData reqData) {
-        final EntityReferences references = marker().entityReferences();
+        final EntityReferences references = marker().referencedEntities();
         final QueryBuilder queryBuilder = queryBuilder();
         return Observable.fromIterable(references.getFields().entrySet()).flatMapSingle(entry -> {
             final EntityMetadata refMeta = entry.getKey();

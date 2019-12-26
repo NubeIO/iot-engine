@@ -5,6 +5,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.ReferenceEntityTransformer;
 import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
+import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 
 import lombok.NonNull;
 
@@ -17,11 +18,11 @@ import lombok.NonNull;
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
  * @see EntityService
- * @see HasReferenceMarker
+ * @see ReferencingEntityMarker
  * @since 1.0.0
  */
-public interface OneToManyReferenceEntityService<P extends VertxPojo, M extends EntityMetadata>
-    extends SimpleEntityService<P, M>, HasReferenceMarker {
+public interface OneToManyEntityService<P extends VertxPojo, M extends EntityMetadata>
+    extends SimpleEntityService<P, M>, ReferencingEntityMarker {
 
     /**
      * @return reference query executor

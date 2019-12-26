@@ -4,6 +4,7 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.decorator.ManyToManyEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
+import com.nubeiot.core.sql.service.marker.ManyToManyMarker;
 import com.nubeiot.core.sql.validation.CompositeValidation;
 
 import lombok.NonNull;
@@ -20,8 +21,8 @@ import lombok.NonNull;
  * @see ManyToManyMarker
  * @since 1.0.0
  */
-public interface ManyToManyReferenceEntityService<CP extends CompositePojo, CM extends CompositeMetadata>
-    extends OneToManyReferenceEntityService<CP, CM>, ManyToManyMarker {
+public interface ManyToManyEntityService<CP extends CompositePojo, CM extends CompositeMetadata>
+    extends SimpleEntityService<CP, CM>, ManyToManyMarker {
 
     /**
      * Represents physical database entity
@@ -41,6 +42,13 @@ public interface ManyToManyReferenceEntityService<CP extends CompositePojo, CM e
     @NonNull CompositeValidation validation();
 
     /**
+     * @return many to many entity transformer
+     * @see ManyToManyEntityTransformer
+     */
+    @Override
+    @NonNull ManyToManyEntityTransformer transformer();
+
+    /**
      * @return complex query executor
      * @see ComplexQueryExecutor
      */
@@ -51,14 +59,7 @@ public interface ManyToManyReferenceEntityService<CP extends CompositePojo, CM e
                               .from(context())
                               .context(reference())
                               .with(resource())
-                              .references(transformer().marker().entityReferences());
+                              .references(transformer().marker().referencedEntities());
     }
-
-    /**
-     * @return many to many entity transformer
-     * @see ManyToManyEntityTransformer
-     */
-    @Override
-    @NonNull ManyToManyEntityTransformer transformer();
 
 }

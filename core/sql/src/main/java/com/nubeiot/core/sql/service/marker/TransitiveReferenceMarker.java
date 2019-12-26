@@ -1,4 +1,4 @@
-package com.nubeiot.core.sql.service;
+package com.nubeiot.core.sql.service.marker;
 
 import java.util.Map;
 
@@ -18,15 +18,15 @@ import lombok.RequiredArgsConstructor;
  *  <li>Table A has <b>transitive reference</b> to Table C</li>
  * </ul>
  *
- * @see HasReferenceMarker
+ * @see ReferencingEntityMarker
  * @since 1.0.0
  */
-public interface TransitiveReferenceMarker extends HasReferenceMarker {
+public interface TransitiveReferenceMarker extends ReferencingEntityMarker {
 
     /**
      * Declares transitive references mapping.
      * <p>
-     * Each mapping key is one of entity metadata in {@link #entityReferences()}, and a corresponding mapping value is
+     * Each mapping key is one of entity metadata in {@link #referencedEntities()}, and a corresponding mapping value is
      * transitive reference of this metadata
      *
      * @return transitive references

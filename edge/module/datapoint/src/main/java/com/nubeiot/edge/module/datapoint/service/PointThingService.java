@@ -1,6 +1,10 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.vertx.core.json.JsonObject;
 
@@ -14,23 +18,21 @@ import com.nubeiot.iotdata.edge.model.tables.PointThing;
 
 import lombok.NonNull;
 
-abstract class PointThingCompositeService
-    extends AbstractManyToManyEntityService<PointThingComposite, PointThingMetadata>
+abstract class PointThingService extends AbstractManyToManyEntityService<PointThingComposite, PointThingMetadata>
     implements DataPointService<PointThingComposite, PointThingMetadata> {
 
-    PointThingCompositeService(@NonNull EntityHandler entityHandler) {
+    PointThingService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public Set<String> ignoreFields(@NonNull RequestData requestData) {
+    public Set<String> ignoreFields() {
         final @NonNull PointThing table = context().table();
-        final Set<String> ignores = super.ignoreFields(requestData);
-        ignores.add(table.getJsonField(table.DEVICE_ID));
-        ignores.add(table.getJsonField(table.NETWORK_ID));
-        ignores.add(table.getJsonField(table.EDGE_ID));
-        ignores.add(table.getJsonField(table.COMPUTED_THING));
-        return ignores;
+        return Stream.of(super.ignoreFields(),
+                         Arrays.asList(table.getJsonField(table.DEVICE_ID), table.getJsonField(table.NETWORK_ID),
+                                       table.getJsonField(table.EDGE_ID), table.getJsonField(table.COMPUTED_THING)))
+                     .flatMap(Collection::stream)
+                     .collect(Collectors.toSet());
     }
 
     @Override

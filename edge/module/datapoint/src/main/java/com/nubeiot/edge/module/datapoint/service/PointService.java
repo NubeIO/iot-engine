@@ -1,5 +1,7 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -15,9 +17,12 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
-import com.nubeiot.core.sql.service.HasReferenceMarker;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.ReferencedEntityMarker;
+import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
@@ -33,7 +38,7 @@ import lombok.NonNull;
 
 public final class PointService
     extends AbstractGroupEntityService<Point, PointMetadata, PointComposite, PointCompositeMetadata>
-    implements DataPointService<Point, PointMetadata> {
+    implements DataPointService<Point, PointMetadata>, ReferencedEntityMarker {
 
     public PointService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
@@ -50,7 +55,7 @@ public final class PointService
     }
 
     @Override
-    public EntityReferences entityReferences() {
+    public EntityReferences referencedEntities() {
         final com.nubeiot.iotdata.edge.model.tables.Point table = context().table();
         return new EntityReferences().add(EdgeMetadata.INSTANCE, table.getJsonField(table.EDGE))
                                      .add(NetworkMetadata.INSTANCE, table.getJsonField(table.NETWORK));
@@ -60,6 +65,19 @@ public final class PointService
     public EntityReferences groupReferences() {
         return new EntityReferences().add(MeasureUnitMetadata.INSTANCE,
                                           context().table().getJsonField(context().table().MEASURE_UNIT));
+    }
+
+    @Override
+    public Set<String> ignoreFields() {
+        return Stream.of(super.ignoreFields(),
+                         Collections.singletonList(context().table().getJsonField(context().table().UNIT_ALIAS)))
+                     .flatMap(Collection::stream)
+                     .collect(Collectors.toSet());
+    }
+
+    @Override
+    public @NonNull EntityReferences referencingEntities() {
+        return new EntityReferences().add(HistorySettingMetadata.INSTANCE);
     }
 
     @Override
@@ -88,13 +106,6 @@ public final class PointService
     }
 
     @Override
-    public Set<String> ignoreFields(@NonNull RequestData requestData) {
-        final Set<String> ignoreFields = super.ignoreFields(requestData);
-        ignoreFields.add(context().table().getJsonField(context().table().UNIT_ALIAS));
-        return ignoreFields;
-    }
-
-    @Override
     public Set<EventMethodDefinition> definitions() {
         return Stream.concat(DataPointService.super.definitions().stream(),
                              EntityHttpService.createDefinitions(getAvailableEvents(), PointMetadata.INSTANCE,
@@ -120,10 +131,10 @@ public final class PointService
                        .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.factory(unit, unitAlias).toJson());
     }
 
-    public interface PointExtension extends HasReferenceMarker {
+    public interface PointExtension extends ReferencingEntityMarker {
 
         @Override
-        default EntityReferences entityReferences() {
+        default EntityReferences referencedEntities() {
             return new EntityReferences().add(PointMetadata.INSTANCE, "point");
         }
 

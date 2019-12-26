@@ -16,8 +16,8 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.sql.service.GroupReferenceMarker;
-import com.nubeiot.core.sql.service.HasReferenceMarker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.GroupReferencingEntityMarker;
 
 import lombok.NonNull;
 
@@ -26,7 +26,7 @@ import lombok.NonNull;
  *
  * @param <P>  Type of {@code VertxPojo}
  * @param <CP> Type of {@code CompositePojo}
- * @see GroupReferenceMarker
+ * @see GroupReferencingEntityMarker
  * @since 1.0.0
  */
 public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePojo> extends ReferenceQueryExecutor<CP> {
@@ -50,17 +50,17 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
     static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
                CP extends CompositePojo<P, CP>> GroupQueryExecutor<P, CP> create(
         @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
-        @NonNull CompositeMetadata<K, P, R, D, CP> compositeMetadata, @NonNull GroupReferenceMarker marker) {
+        @NonNull CompositeMetadata<K, P, R, D, CP> compositeMetadata, @NonNull GroupReferencingEntityMarker marker) {
         return new GroupDaoQueryExecutor<>(handler, metadata, compositeMetadata, marker);
     }
 
     /**
      * @return the group reference marker
-     * @see GroupReferenceMarker
+     * @see GroupReferencingEntityMarker
      * @since 1.0.0
      */
     @Override
-    @NonNull GroupReferenceMarker marker();
+    @NonNull GroupReferencingEntityMarker marker();
 
     /**
      * Verify {@code entity} whether exists or not.

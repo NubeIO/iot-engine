@@ -59,17 +59,6 @@ public interface EntityTransformer {
     }
 
     /**
-     * Gets data.
-     *
-     * @param responseData the response data
-     * @return the data
-     * @since 1.0.0
-     */
-    static JsonObject getData(@NonNull JsonObject responseData) {
-        return responseData.getJsonObject("resource");
-    }
-
-    /**
      * Resource metadata entity metadata.
      *
      * @return resource metadata

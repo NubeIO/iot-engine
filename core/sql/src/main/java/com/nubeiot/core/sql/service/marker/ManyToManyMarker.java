@@ -1,7 +1,10 @@
-package com.nubeiot.core.sql.service;
+package com.nubeiot.core.sql.service.marker;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -16,7 +19,7 @@ import lombok.NonNull;
  *
  * @since 1.0.0
  */
-public interface ManyToManyMarker {
+public interface ManyToManyMarker extends HasReferenceEntityMarker {
 
     /**
      * Declares physical database entity
@@ -58,5 +61,17 @@ public interface ManyToManyMarker {
      * @since 1.0.0
      */
     @NonNull EntityMetadata resource();
+
+    default @NonNull EntityReferences referencedEntities() {
+        final EntityReferences entityReferences = new EntityReferences();
+        references().forEach(entityReferences::add);
+        return entityReferences.add(resource());
+    }
+
+    @Override
+    default Set<String> ignoreFields() {
+        return Stream.concat(Stream.of(context().requestKeyName(), resource().requestKeyName()),
+                             references().stream().map(EntityMetadata::requestKeyName)).collect(Collectors.toSet());
+    }
 
 }
