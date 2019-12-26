@@ -1,5 +1,6 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -11,6 +12,10 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.service.EdgeService.EdgeExtension;
@@ -42,6 +47,35 @@ public final class NetworkService extends AbstractOneToManyEntityService<Network
         final com.nubeiot.iotdata.edge.model.tables.@NonNull Network table = context().table();
         EdgeExtension.optimizeReqData(entityHandler(), requestData, table.getJsonField(table.EDGE));
         return super.recomputeRequestData(requestData, extra);
+    }
+
+    public interface NetworkExtension extends ReferencingEntityMarker {
+
+        static void optimizeAlias(@NonNull EntityHandler handler, @NonNull RequestData requestData) {
+            optimizeAlias(handler, requestData, null);
+        }
+
+        static void optimizeAlias(@NonNull EntityHandler handler, @NonNull RequestData requestData,
+                                  String networkField) {
+            final String networkId = handler.sharedData(DataPointIndex.DEFAULT_NETWORK_ID);
+            final String networkKey = Strings.fallback(networkField, NetworkMetadata.INSTANCE.requestKeyName());
+            optimizeAlias(requestData.body(), networkId, networkKey);
+            optimizeAlias(requestData.filter(), networkId, networkKey);
+        }
+
+        static void optimizeAlias(JsonObject req, @NonNull String networkId, @NonNull String networkKey) {
+            Optional.ofNullable(req).ifPresent(r -> {
+                if (NetworkMetadata.DEFAULT_ALIASES.contains(r.getString(networkKey, "").toUpperCase())) {
+                    r.put(networkKey, networkId);
+                }
+            });
+        }
+
+        @Override
+        default EntityReferences referencedEntities() {
+            return new EntityReferences().add(NetworkMetadata.INSTANCE, "network");
+        }
+
     }
 
 }

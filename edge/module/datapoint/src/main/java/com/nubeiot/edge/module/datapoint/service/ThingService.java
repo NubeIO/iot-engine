@@ -14,11 +14,11 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractTransitiveEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
-import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
+import com.nubeiot.edge.module.datapoint.service.NetworkService.NetworkExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 
 import lombok.NonNull;
@@ -78,8 +78,7 @@ public final class ThingService extends AbstractTransitiveEntityService<Thing, T
     }
 
     private RequestData optimizeRequestData(@NonNull RequestData requestData) {
-        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.body());
-        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.filter());
+        NetworkExtension.optimizeAlias(entityHandler(), requestData);
         return requestData;
     }
 

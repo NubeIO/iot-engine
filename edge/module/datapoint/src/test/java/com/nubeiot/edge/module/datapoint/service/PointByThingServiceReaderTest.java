@@ -54,7 +54,7 @@ public class PointByThingServiceReaderTest extends BaseDataPointServiceTest {
         final JsonObject expected = constructListPoints(Collections.singletonMap(4, search));
         final JsonObject reqBody = new JsonObject().put("thing_id", UUID64.uuidToBase64(PrimaryKey.THING_FAN_HVAC))
                                                    .put("device_id", PrimaryKey.DEVICE_HVAC.toString())
-                                                   .put("network_id", PrimaryKey.NETWORK.toString());
+                                                   .put("network_id", PrimaryKey.BACNET_NETWORK.toString());
 
         asserter(context, true, expected, PointByThingService.class.getName(), EventAction.GET_LIST,
                  RequestData.builder().body(reqBody).build());

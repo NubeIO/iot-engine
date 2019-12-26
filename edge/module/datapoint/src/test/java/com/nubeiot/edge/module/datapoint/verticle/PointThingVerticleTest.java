@@ -27,7 +27,7 @@ public class PointThingVerticleTest extends BaseDataPointVerticleTest {
     public void test_get_points_by_thing_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"points\":[{\"id\":4,\"point\":{\"id\":\"" + PrimaryKey.P_BACNET_FAN + "\"," +
-            "\"code\":\"HVAC_01_FAN\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.NETWORK +
+            "\"code\":\"HVAC_01_FAN\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK +
             "\",\"enabled\":true,\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
             "\"measure_unit\":\"revolutions_per_minute\",\"precision\":3,\"offset\":0}}]}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/thing/" + PrimaryKey.THING_FAN_HVAC + "/point", 200,
@@ -38,7 +38,7 @@ public class PointThingVerticleTest extends BaseDataPointVerticleTest {
     public void test_get_points_by_thing_n_device_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"points\":[{\"id\":4,\"point\":{\"id\":\"" + PrimaryKey.P_BACNET_FAN + "\",\"code\":\"HVAC_01_FAN\"," +
-            "\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.NETWORK + "\",\"enabled\":true," +
+            "\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"enabled\":true," +
             "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
             "\"measure_unit\":\"revolutions_per_minute\",\"precision\":3,\"offset\":0}}]}");
         assertRestByClient(context, HttpMethod.GET,
@@ -50,24 +50,25 @@ public class PointThingVerticleTest extends BaseDataPointVerticleTest {
     public void test_get_points_by_thing_n_device_n_network_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"points\":[{\"id\":4,\"point\":{\"id\":\"" + PrimaryKey.P_BACNET_FAN + "\",\"code\":\"HVAC_01_FAN\"," +
-            "\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.NETWORK + "\",\"enabled\":true," +
+            "\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"enabled\":true," +
             "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
             "\"measure_unit\":\"revolutions_per_minute\",\"precision\":3,\"offset\":0}}]}");
         assertRestByClient(context, HttpMethod.GET,
-                           "/api/s/network/" + PrimaryKey.NETWORK + "/device/" + PrimaryKey.DEVICE_HVAC + "/thing/" +
-                           PrimaryKey.THING_FAN_HVAC + "/point", 200, expected);
+                           "/api/s/network/" + PrimaryKey.BACNET_NETWORK + "/device/" + PrimaryKey.DEVICE_HVAC +
+                           "/thing/" + PrimaryKey.THING_FAN_HVAC + "/point", 200, expected);
     }
 
     @Test
     public void test_get_points_by_device_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"points\":[{\"id\":1,\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\"," +
-            "\"code\":\"2CB2B763_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"enabled\":true," +
-            "\"protocol\":\"GPIO\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"percentage\"," +
-            "\"min_scale\":0,\"max_scale\":100,\"precision\":3,\"offset\":0}},{\"id\":2,\"point\":{\"id\":\"" +
-            PrimaryKey.P_GPIO_TEMP + "\",\"code\":\"2CB2B763_TEMP\",\"edge\":\"" + PrimaryKey.EDGE +
-            "\",\"enabled\":true,\"protocol\":\"GPIO\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
-            "\"measure_unit\":\"celsius\",\"precision\":3,\"offset\":0}}]}");
+            "\"code\":\"2CB2B763_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +
+            PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\"," +
+            "\"type\":\"DIGITAL\",\"measure_unit\":\"percentage\",\"min_scale\":0,\"max_scale\":100,\"precision\":3," +
+            "\"offset\":0}},{\"id\":2,\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_TEMP + "\"," +
+            "\"code\":\"2CB2B763_TEMP\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +
+            PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\"," +
+            "\"type\":\"DIGITAL\"," + "\"measure_unit\":\"celsius\",\"precision\":3,\"offset\":0}}]}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + PrimaryKey.DEVICE_DROPLET + "/point", 200,
                            expected);
     }
@@ -76,12 +77,13 @@ public class PointThingVerticleTest extends BaseDataPointVerticleTest {
     public void test_get_points_by_device_n_network_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"points\":[{\"id\":1,\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\"," +
-            "\"code\":\"2CB2B763_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"enabled\":true," +
-            "\"protocol\":\"GPIO\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"percentage\"," +
-            "\"min_scale\":0,\"max_scale\":100,\"precision\":3,\"offset\":0}},{\"id\":2,\"point\":{\"id\":\"" +
-            PrimaryKey.P_GPIO_TEMP + "\",\"code\":\"2CB2B763_TEMP\",\"edge\":\"" + PrimaryKey.EDGE +
-            "\",\"enabled\":true,\"protocol\":\"GPIO\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
-            "\"measure_unit\":\"celsius\",\"precision\":3,\"offset\":0}}]}");
+            "\"code\":\"2CB2B763_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +
+            PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\"," +
+            "\"type\":\"DIGITAL\",\"measure_unit\":\"percentage\",\"min_scale\":0,\"max_scale\":100,\"precision\":3," +
+            "\"offset\":0}},{\"id\":2,\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_TEMP + "\"," +
+            "\"code\":\"2CB2B763_TEMP\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +
+            PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true,\"protocol\":\"WIRE\"," +
+            "\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\",\"precision\":3,\"offset\":0}}]}");
         assertRestByClient(context, HttpMethod.GET,
                            "/api/s/network/default/device/" + PrimaryKey.DEVICE_DROPLET + "/point", 200, expected);
     }
@@ -90,8 +92,9 @@ public class PointThingVerticleTest extends BaseDataPointVerticleTest {
     public void test_get_point_by_device_n_network_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"id\":2,\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"code\":\"2CB2B763_TEMP\",\"edge\":\"" +
-            PrimaryKey.EDGE + "\",\"enabled\":true,\"protocol\":\"GPIO\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
-            "\"measure_unit\":\"celsius\",\"precision\":3,\"offset\":0}}");
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true," +
+            "\"protocol\":\"WIRE\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
+            "\"precision\":3,\"offset\":0}}");
         assertRestByClient(context, HttpMethod.GET,
                            "/api/s/network/default/device/" + PrimaryKey.DEVICE_DROPLET + "/point/" +
                            PrimaryKey.P_GPIO_TEMP, 200, expected);
@@ -137,7 +140,7 @@ public class PointThingVerticleTest extends BaseDataPointVerticleTest {
         final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
         final JsonObject expected = new JsonObject(
             "{\"resource\":{\"id\":6,\"point\":{\"id\":\"" + uuid + "\",\"code\":\"NEW_TEMP\",\"edge\":\"" +
-            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.NETWORK + "\",\"label\":null,\"enabled\":true," +
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"label\":null,\"enabled\":true," +
             "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
             "\"unit_alias\":null,\"min_scale\":null,\"max_scale\":null,\"precision\":3,\"offset\":0,\"version\":null," +
             "\"metadata\":null}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}");

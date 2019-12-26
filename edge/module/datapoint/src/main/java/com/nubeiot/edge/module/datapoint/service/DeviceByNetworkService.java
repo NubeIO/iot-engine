@@ -12,13 +12,13 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
-import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.edge.module.datapoint.service.EdgeService.EdgeExtension;
+import com.nubeiot.edge.module.datapoint.service.NetworkService.NetworkExtension;
 import com.nubeiot.iotdata.edge.model.tables.EdgeDevice;
 
 import lombok.NonNull;
@@ -84,8 +84,7 @@ public final class DeviceByNetworkService
 
     private RequestData optimizeRequestData(@NonNull RequestData requestData) {
         EdgeExtension.optimizeReqData(entityHandler(), requestData, getEdgeField());
-        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.body());
-        DataPointIndex.NetworkMetadata.optimizeAlias(requestData.filter());
+        NetworkExtension.optimizeAlias(entityHandler(), requestData);
         return requestData;
     }
 

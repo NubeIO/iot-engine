@@ -11,7 +11,7 @@ import com.nubeiot.core.dto.PlainType;
  */
 public final class Protocol extends AbstractEnumType implements PlainType {
 
-    public static final Protocol GPIO = new Protocol("GPIO");
+    public static final Protocol WIRE = new Protocol("WIRE");
     public static final Protocol BACNET = new Protocol("BACNET");
     public static final Protocol MODBUS = new Protocol("MODBUS");
     public static final Protocol UNKNOWN = new Protocol("UNKNOWN");

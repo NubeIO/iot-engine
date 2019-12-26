@@ -26,10 +26,10 @@ public class DeviceByNetworkServiceTest extends BaseDataPointServiceTest {
     public void test_get_list_device_by_edge(TestContext context) {
         JsonObject expected = new JsonObject(
             "{\"devices\":[{\"id\":2,\"device\":{\"id\":\"" + PrimaryKey.DEVICE_HVAC + "\"," +
-            "\"code\":\"HVAC_XYZ\",\"type\":\"HVAC\",\"protocol\":\"UNKNOWN\",\"state\":\"NONE\"," +
+            "\"code\":\"HVAC_XYZ\",\"type\":\"HVAC\",\"protocol\":\"BACNET\",\"state\":\"NONE\"," +
             "\"manufacturer\":\"Lennox\"}}]}");
         RequestData req = RequestData.builder()
-                                     .body(new JsonObject().put("network_id", PrimaryKey.NETWORK.toString()))
+                                     .body(new JsonObject().put("network_id", PrimaryKey.BACNET_NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, DeviceByNetworkService.class.getName(), EventAction.GET_LIST, req);
     }
@@ -64,7 +64,7 @@ public class DeviceByNetworkServiceTest extends BaseDataPointServiceTest {
                                                                                           .put("manufacturer",
                                                                                                "NubeIO"))
                                                            .put("address", new JsonObject().put("hostAddress", "xxx"))
-                                                           .put("network_id", PrimaryKey.NETWORK.toString()))
+                                                           .put("network_id", PrimaryKey.BACNET_NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, DeviceByNetworkService.class.getName(), EventAction.CREATE, req);
     }

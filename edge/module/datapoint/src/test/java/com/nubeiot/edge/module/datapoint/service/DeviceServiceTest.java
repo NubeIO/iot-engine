@@ -22,9 +22,9 @@ public class DeviceServiceTest extends BaseDataPointServiceTest {
     public void test_get_list_device(TestContext context) {
         JsonObject expected = new JsonObject(
             "{\"devices\":[{\"id\":\"" + PrimaryKey.DEVICE_DROPLET + "\",\"code\":\"DROPLET_01\"," +
-            "\"type\":\"DROPLET\",\"protocol\":\"UNKNOWN\",\"state\":\"NONE\",\"manufacturer\":\"NubeIO\"}," +
+            "\"type\":\"DROPLET\",\"protocol\":\"WIRE\",\"state\":\"NONE\",\"manufacturer\":\"NubeIO\"}," +
             "{\"id\":\"" + PrimaryKey.DEVICE_HVAC + "\",\"code\":\"HVAC_XYZ\",\"type\":\"HVAC\"," +
-            "\"protocol\":\"UNKNOWN\",\"state\":\"NONE\",\"manufacturer\":\"Lennox\"}]}");
+            "\"protocol\":\"BACNET\",\"state\":\"NONE\",\"manufacturer\":\"Lennox\"}]}");
         asserter(context, true, expected, DeviceService.class.getName(), EventAction.GET_LIST,
                  RequestData.builder().build());
     }

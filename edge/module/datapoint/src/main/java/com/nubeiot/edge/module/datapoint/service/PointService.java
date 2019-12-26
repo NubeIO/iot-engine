@@ -20,7 +20,6 @@ import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.core.sql.service.marker.ReferencedEntityMarker;
 import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
-import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
@@ -29,6 +28,7 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.service.EdgeService.EdgeExtension;
+import com.nubeiot.edge.module.datapoint.service.NetworkService.NetworkExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.unit.DataType;
@@ -116,8 +116,7 @@ public final class PointService
     @Override
     protected RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
         EdgeExtension.optimizeReqData(entityHandler(), reqData, context().table().getJsonField(context().table().EDGE));
-        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.body());
-        DataPointIndex.NetworkMetadata.optimizeAlias(reqData.filter());
+        NetworkExtension.optimizeAlias(entityHandler(), reqData);
         return super.recomputeRequestData(reqData, extra);
     }
 

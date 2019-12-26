@@ -43,6 +43,8 @@ public class MigrateCacheTest extends BaseDataPointServiceTest {
                              SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.CUSTOMER_CODE));
         context.assertEquals(MockData.EDGE.getSiteCode(),
                              SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.SITE_CODE));
+        context.assertEquals(PrimaryKey.DEFAULT_NETWORK.toString(),
+                             SharedDataDelegate.getLocalDataValue(vertx, sharedKey, DataPointIndex.DEFAULT_NETWORK_ID));
     }
 
 }

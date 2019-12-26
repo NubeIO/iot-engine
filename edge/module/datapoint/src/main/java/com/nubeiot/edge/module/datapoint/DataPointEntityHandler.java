@@ -22,6 +22,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
@@ -35,7 +36,9 @@ import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.workflow.TaskExecuter;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
+import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.Keys;
+import com.nubeiot.iotdata.edge.model.tables.interfaces.INetwork;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
@@ -108,25 +111,42 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
     }
 
     private JsonArray initNetwork(@NonNull JsonObject builtinData, @NonNull UUID edgeId) {
-        final UUID networkId = UUID.randomUUID();
         final Object value = builtinData.getValue(NetworkMetadata.INSTANCE.singularKeyName());
-        final JsonObject defaultNetwork = new Network().setId(networkId).setCode("DEFAULT").setEdge(edgeId).toJson();
+        final UUID networkId = UUID.fromString(addSharedData(DEFAULT_NETWORK_ID, UUID.randomUUID().toString()));
+        final Network defaultNetwork = new Network().setId(networkId)
+                                                    .setCode(NetworkMetadata.DEFAULT_CODE)
+                                                    .setProtocol(Protocol.WIRE)
+                                                    .setState(State.ENABLED)
+                                                    .setEdge(edgeId);
         if (parsable(Network.class, value)) {
-            Network network = EntityHandler.parse(Network.class, value);
-            if ("DEFAULT".equals(network.getCode())) {
-                network.setEdge(edgeId).setId(networkId);
-                return new JsonArray().add(network.toJson());
-            }
-            return new JsonArray().add(network.toJson()).add(defaultNetwork);
+            final Network network = checkNetworkIsDefault(edgeId, networkId, EntityHandler.parse(Network.class, value));
+            final JsonArray array = new JsonArray().add(network.toJson());
+            return network.getCode().equals(NetworkMetadata.DEFAULT_CODE) ? array : array.add(defaultNetwork.toJson());
         }
         final Stream<Object> stream = getArrayStream(value);
         if (Objects.nonNull(stream)) {
-            final JsonArray array = stream.filter(o -> parsable(Network.class, value))
-                                          .map(o -> JsonData.tryParse(o).toJson())
-                                          .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
-            return array.add(defaultNetwork);
+            final JsonArray networks = stream.filter(o -> parsable(Network.class, o))
+                                             .map(o -> EntityHandler.parse(Network.class, o))
+                                             .map(n -> checkNetworkIsDefault(edgeId, networkId, n))
+                                             .map(INetwork::toJson)
+                                             .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
+            if (networks.stream()
+                        .map(JsonObject.class::cast)
+                        .anyMatch(network -> network.getString("code").equals(NetworkMetadata.DEFAULT_CODE))) {
+                return networks;
+            }
+            return networks.add(defaultNetwork.toJson());
         }
-        return new JsonArray().add(defaultNetwork);
+        return new JsonArray().add(defaultNetwork.toJson());
+    }
+
+    private Network checkNetworkIsDefault(@NonNull UUID edgeId, @NonNull UUID networkId, @NonNull Network network) {
+        if (!NetworkMetadata.DEFAULT_CODE.equals(network.getCode())) {
+            return network;
+        }
+        final UUID id = Optional.ofNullable(network.getId()).orElse(networkId);
+        addSharedData(DEFAULT_NETWORK_ID, id.toString());
+        return network.setEdge(edgeId).setId(id);
     }
 
     @SuppressWarnings("unchecked")

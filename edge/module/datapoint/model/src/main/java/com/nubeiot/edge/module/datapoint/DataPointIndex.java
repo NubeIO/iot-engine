@@ -104,6 +104,7 @@ public interface DataPointIndex extends MetadataIndex {
     String CUSTOMER_CODE = "CUSTOMER_CODE";
     String SITE_CODE = "SITE_CODE";
     String EDGE_ID = "EDGE_ID";
+    String DEFAULT_NETWORK_ID = "DEFAULT_NETWORK_ID";
 
     static Map<EntityMetadata, Integer> dependencies() {
         Map<EntityMetadata, Integer> map = new HashMap<>();
@@ -357,17 +358,9 @@ public interface DataPointIndex extends MetadataIndex {
     final class NetworkMetadata implements UUIDKeyEntity<Network, NetworkRecord, NetworkDao>, HasProtocol<Network> {
 
         public static final NetworkMetadata INSTANCE = new NetworkMetadata();
-
-        private static Set<String> NULL_ALIASES = Collections.unmodifiableSet(
-            new HashSet<>(Arrays.asList("default", "gpio")));
-
-        public static void optimizeAlias(JsonObject req) {
-            Optional.ofNullable(req).ifPresent(r -> {
-                if (NULL_ALIASES.contains(r.getString(INSTANCE.requestKeyName(), "").toLowerCase())) {
-                    r.put(INSTANCE.requestKeyName(), (String) null);
-                }
-            });
-        }
+        public static final String DEFAULT_CODE = "DEFAULT";
+        public static Set<String> DEFAULT_ALIASES = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList(DEFAULT_CODE, "LOCAL")));
 
         @Override
         public @NonNull com.nubeiot.iotdata.edge.model.tables.Network table() {

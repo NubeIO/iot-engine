@@ -75,8 +75,8 @@ public class PointVerticleTest extends BaseDataPointVerticleTest {
                                            .put("status", Status.SUCCESS)
                                            .put("resource", new JsonObject(
                                                "{\"id\":\"" + uuid + "\",\"code\":\"New One\",\"edge\":\"" +
-                                               PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.NETWORK + "\"," +
-                                               "\"enabled\":true,\"protocol\":\"BACNET\",\"kind\":\"INPUT\"," +
+                                               PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK +
+                                               "\"," + "\"enabled\":true,\"protocol\":\"BACNET\",\"kind\":\"INPUT\"," +
                                                "\"type\":\"DIGITAL\",\"precision\":3,\"offset\":0," +
                                                "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\"}}")));
     }
